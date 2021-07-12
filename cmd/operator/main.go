@@ -144,7 +144,6 @@ var (
 		logFormatJSON,
 	}
 	cfg             = operator.Config{}
-	rcCPU, rcMemory string
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -235,25 +234,6 @@ func Main() int {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	// Prioritize specific flags over generic ones
-	// If rcCPU has been set but not config.CPURequest/config.CPULimit, default "" to rcCPU
-	// If rcMemory has been set but not config.MemoryRequest or config.MemoryLimit, default "" to rcMemory
-	if rcCPU != "" {
-		if cfg.ReloaderConfig.CPURequest == "" {
-			cfg.ReloaderConfig.CPURequest = rcCPU
-		}
-		if cfg.ReloaderConfig.CPULimit == "" {
-			cfg.ReloaderConfig.CPULimit = rcCPU
-		}
-	}
-	if rcMemory != "" {
-		if cfg.ReloaderConfig.MemoryRequest == "" {
-			cfg.ReloaderConfig.MemoryRequest = rcMemory
-		}
-		if cfg.ReloaderConfig.MemoryLimit == "" {
-			cfg.ReloaderConfig.MemoryLimit = rcMemory
-		}
-	}
 	// Check validity of reloader resource values given to flags
 	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
 	if err1 != nil {
@@ -273,13 +253,6 @@ func Main() int {
 	}
 	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 		return 1
-	}
-	// Warn users that could be utilizing --config-reloader-cpu and --config-reloader-memory of their deprecated nature
-	if rcCPU != defaultReloaderCPU {
-		level.Warn(logger).Log("msg", "The '--config-reloader-cpu' flag has been deprecated! Please use '--config-reloader-cpu-limit' and '--config-reloader-cpu-request' according to your use-case.")
-	}
-	if rcMemory != defaultReloaderMemory {
-		level.Warn(logger).Log("msg", "The '--config-reloader-memory' flag has been deprecated! Please use '--config-reloader-memory-limit' and '--config-reloader-memory-request' according to your use-case.")
 	}
 
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
