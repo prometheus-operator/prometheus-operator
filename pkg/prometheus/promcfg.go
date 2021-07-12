@@ -25,7 +25,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -43,12 +43,14 @@ var (
 	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 )
 
-type configGenerator struct {
+// ConfigGenerator is used to create Prometheus configurations from operator resources.
+type ConfigGenerator struct {
 	logger log.Logger
 }
 
-func newConfigGenerator(logger log.Logger) *configGenerator {
-	cg := &configGenerator{
+// NewConfigGenerator creates a ConfigGenerator instance using the provided Logger.
+func NewConfigGenerator(logger log.Logger) *ConfigGenerator {
+	cg := &ConfigGenerator{
 		logger: logger,
 	}
 	return cg
@@ -153,12 +155,14 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func (cg *configGenerator) generateConfig(
+// GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
+func (cg *ConfigGenerator) GenerateConfig(
 	p *v1.Prometheus,
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
 	bearerTokens map[string]assets.BearerToken,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -302,6 +306,7 @@ func (cg *configGenerator) generateConfig(
 				probes[identifier],
 				apiserverConfig,
 				basicAuthSecrets,
+				bearerTokens,
 				p.Spec.OverrideHonorLabels,
 				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
@@ -379,11 +384,11 @@ func (cg *configGenerator) generateConfig(
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets, oauth2Secrets))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets, oauth2Secrets))
 	}
 
 	return yaml.Marshal(cfg)
@@ -417,7 +422,17 @@ func honorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool, overrideHonor
 	return append(cfg, yaml.MapItem{Key: "honor_timestamps", Value: honor && !overrideHonorTimestamps})
 }
 
-func (cg *configGenerator) generatePodMonitorConfig(
+func initRelabelings() []yaml.MapSlice {
+	// Relabel prometheus job name into a meta label
+	return []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"job"}},
+			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
+		},
+	}
+}
+
+func (cg *ConfigGenerator) generatePodMonitorConfig(
 	version semver.Version,
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
@@ -436,7 +451,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -490,10 +505,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	var (
-		relabelings []yaml.MapSlice
-		labelKeys   []string
-	)
+	relabelings := initRelabelings()
+
+	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
 	for k := range m.Spec.Selector.MatchLabels {
@@ -546,16 +560,17 @@ func (cg *configGenerator) generatePodMonitorConfig(
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
 			{Key: "regex", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil {
+	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		level.Warn(cg.logger).Log("msg", "PodMonitor 'targetPort' is deprecated, use 'port' instead.",
 			"podMonitor", m.Name)
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
 				{Key: "regex", Value: ep.TargetPort.String()},
 			})
-		} else if ep.TargetPort.IntVal != 0 {
+		} else if ep.TargetPort.IntVal != 0 { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
@@ -614,10 +629,10 @@ func (cg *configGenerator) generatePodMonitorConfig(
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" {
+	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
-			{Key: "replacement", Value: ep.TargetPort.String()},
+			{Key: "replacement", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		})
 	}
 
@@ -658,17 +673,18 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	return cfg
 }
 
-func (cg *configGenerator) generateProbeConfig(
+func (cg *ConfigGenerator) generateProbeConfig(
 	version semver.Version,
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	bearerTokens map[string]assets.BearerToken,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
-	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
+	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -694,12 +710,18 @@ func (cg *configGenerator) generateProbeConfig(
 	if m.Spec.ProberSpec.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
+	if m.Spec.ProberSpec.ProxyURL != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: m.Spec.ProberSpec.ProxyURL})
+	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-		{Key: "module", Value: []string{m.Spec.Module}},
-	}})
+	if m.Spec.Module != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
+			{Key: "module", Value: []string{m.Spec.Module}},
+		}})
+	}
 
-	var relabelings []yaml.MapSlice
+	relabelings := initRelabelings()
+
 	if m.Spec.JobName != "" {
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
@@ -854,10 +876,32 @@ func (cg *configGenerator) generateProbeConfig(
 
 	}
 
+	if m.Spec.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
+	}
+
+	if m.Spec.BearerTokenSecret.Name != "" {
+		pnKey := fmt.Sprintf("probe/%s/%s", m.GetNamespace(), m.GetName())
+		if s, ok := bearerTokens[pnKey]; ok {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		}
+	}
+
+	if m.Spec.BasicAuth != nil {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)]; ok {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: s.Username},
+					{Key: "password", Value: s.Password},
+				},
+			})
+		}
+	}
+
 	return cfg
 }
 
-func (cg *configGenerator) generateServiceMonitorConfig(
+func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	version semver.Version,
 	m *v1.ServiceMonitor,
 	ep v1.Endpoint,
@@ -877,7 +921,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -933,7 +977,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	var relabelings []yaml.MapSlice
+	relabelings := initRelabelings()
 
 	// Filter targets by services selected by the monitor.
 
@@ -1060,10 +1104,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
-	// value for it. A single service may potentially have multiple metrics
-	// endpoints, therefore the endpoints labels is filled with the ports name or
-	// as a fallback the port number.
-
+	// value for it.
 	relabelings = append(relabelings, yaml.MapSlice{
 		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 		{Key: "target_label", Value: "job"},
@@ -1078,6 +1119,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		})
 	}
 
+	// A single service may potentially have multiple metrics
+	//	endpoints, therefore the endpoints labels is filled with the ports name or
+	//	as a fallback the port number.
 	if ep.Port != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
@@ -1206,7 +1250,7 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials, role string) yaml.MapItem {
+func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials, role string) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1263,7 +1307,7 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 	}
 }
 
-func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
@@ -1324,8 +1368,12 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 	return cfg
 }
 
-func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
-
+func (cg *ConfigGenerator) generateRemoteReadConfig(
+	version semver.Version,
+	p *v1.Prometheus,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
+) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteRead {
@@ -1370,6 +1418,27 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
+		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
+			oauth2Cfg := yaml.MapSlice{}
+			if s, ok := oauth2Secrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
+				oauth2Cfg = append(oauth2Cfg,
+					yaml.MapItem{Key: "client_id", Value: s.ClientID},
+					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
+					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
+				)
+
+				if len(spec.OAuth2.Scopes) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
+				}
+
+				if len(spec.OAuth2.EndpointParams) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
+				}
+
+				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
+			}
+		}
+
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
@@ -1386,7 +1455,12 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v
 	}
 }
 
-func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
+func (cg *ConfigGenerator) generateRemoteWriteConfig(
+	version semver.Version,
+	p *v1.Prometheus,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
+) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
@@ -1467,6 +1541,27 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
+		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
+			oauth2Cfg := yaml.MapSlice{}
+			if s, ok := oauth2Secrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
+				oauth2Cfg = append(oauth2Cfg,
+					yaml.MapItem{Key: "client_id", Value: s.ClientID},
+					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
+					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
+				)
+
+				if len(spec.OAuth2.Scopes) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
+				}
+
+				if len(spec.OAuth2.EndpointParams) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
+				}
+
+				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
+			}
+		}
+
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
@@ -1498,8 +1593,10 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
 			}
 
-			if spec.QueueConfig.MaxRetries != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
+			if version.LT(semver.MustParse("2.11.0")) {
+				if spec.QueueConfig.MaxRetries != int(0) {
+					queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
+				}
 			}
 
 			if spec.QueueConfig.MinBackoff != "" {
@@ -1511,6 +1608,15 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 			}
 
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
+		}
+
+		if spec.MetadataConfig != nil && version.GTE(semver.MustParse("2.23.0")) {
+			metadataConfig := yaml.MapSlice{}
+			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			if spec.MetadataConfig.SendInterval != "" {
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "metadata_config", Value: metadataConfig})
 		}
 
 		cfgs = append(cfgs, cfg)

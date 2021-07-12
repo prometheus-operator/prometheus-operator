@@ -43,6 +43,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
@@ -63,7 +64,7 @@ const (
 
 const (
 	logFormatLogfmt = "logfmt"
-	logFormatJson   = "json"
+	logFormatJSON   = "json"
 )
 
 const (
@@ -140,7 +141,7 @@ var (
 	}
 	availableLogFormats = []string{
 		logFormatLogfmt,
-		logFormatJson,
+		logFormatJSON,
 	}
 	cfg             = operator.Config{}
 	rcCPU, rcMemory string
@@ -202,7 +203,8 @@ func init() {
 
 func Main() int {
 	versionutil.RegisterFlags()
-	flagset.Parse(os.Args[1:])
+	// No need to check for errors because Parse would exit on error.
+	_ = flagset.Parse(os.Args[1:])
 
 	if versionutil.ShouldPrintVersion() {
 		versionutil.Print(os.Stdout, "prometheus-operator")
@@ -210,7 +212,7 @@ func Main() int {
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	if cfg.LogFormat == logFormatJson {
+	if cfg.LogFormat == logFormatJSON {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	}
 	switch cfg.LogLevel {
@@ -361,7 +363,7 @@ func Main() int {
 		return 1
 	}
 
-	var tlsConfig *tls.Config = nil
+	var tlsConfig *tls.Config
 	if serverTLS {
 		if rawTLSCipherSuites != "" {
 			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
@@ -386,8 +388,8 @@ func Main() int {
 	})
 
 	r.MustRegister(
-		prometheus.NewGoCollector(),
-		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		validationTriggeredCounter,
 		validationErrorsCounter,
 		version.NewCollector("prometheus_operator"),
@@ -424,15 +426,11 @@ func Main() int {
 		tlsConfig.GetCertificate = r.GetCertificate
 
 		wg.Go(func() error {
-			t := time.NewTicker(cfg.ServerTLSConfig.ReloadInterval)
 			for {
-				select {
-				case <-t.C:
-				case <-ctx.Done():
-					return nil
-				}
+				// r.Watch will wait ReloadInterval, so this is not
+				// a hot loop
 				if err := r.Watch(ctx); err != nil {
-					level.Warn(logger).Log("msg", "error reloading server TLS certificate",
+					level.Warn(logger).Log("msg", "error watching certificate reloader",
 						"err", err)
 				} else {
 					return nil
@@ -443,7 +441,10 @@ func Main() int {
 	srv := &http.Server{
 		Handler:   mux,
 		TLSConfig: tlsConfig,
-		ErrorLog:  stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.LstdFlags),
+		// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
+		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
+		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
+		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
@@ -451,7 +452,7 @@ func Main() int {
 		wg.Go(serveTLS(srv, l, logger))
 	}
 
-	term := make(chan os.Signal)
+	term := make(chan os.Signal, 1)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
 
 	select {

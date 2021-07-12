@@ -15,36 +15,31 @@
 package framework
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func CreateNamespace(kubeClient kubernetes.Interface, name string) (*v1.Namespace, error) {
-	namespace, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), &v1.Namespace{
+func (f *Framework) CreateNamespace(t *testing.T, ctx *TestCtx) string {
+	name := ctx.GetObjID()
+
+	_, err := f.KubeClient.CoreV1().Namespaces().Create(f.Ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 	}, metav1.CreateOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to create namespace with name %v", name))
-	}
-	return namespace, nil
-}
 
-func (ctx *TestCtx) CreateNamespace(t *testing.T, kubeClient kubernetes.Interface) string {
-	name := ctx.GetObjID()
-	if _, err := CreateNamespace(kubeClient, name); err != nil {
-		t.Fatal(err)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, fmt.Sprintf("failed to create namespace with name %v", name)))
 	}
 
 	namespaceFinalizerFn := func() error {
-		return DeleteNamespace(kubeClient, name)
+		return f.DeleteNamespace(name)
 	}
 
 	ctx.AddFinalizerFn(namespaceFinalizerFn)
@@ -52,12 +47,12 @@ func (ctx *TestCtx) CreateNamespace(t *testing.T, kubeClient kubernetes.Interfac
 	return name
 }
 
-func DeleteNamespace(kubeClient kubernetes.Interface, name string) error {
-	return kubeClient.CoreV1().Namespaces().Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (f *Framework) DeleteNamespace(name string) error {
+	return f.KubeClient.CoreV1().Namespaces().Delete(f.Ctx, name, metav1.DeleteOptions{})
 }
 
-func AddLabelsToNamespace(kubeClient kubernetes.Interface, name string, additionalLabels map[string]string) error {
-	ns, err := kubeClient.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
+func (f *Framework) AddLabelsToNamespace(name string, additionalLabels map[string]string) error {
+	ns, err := f.KubeClient.CoreV1().Namespaces().Get(f.Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -70,7 +65,39 @@ func AddLabelsToNamespace(kubeClient kubernetes.Interface, name string, addition
 		ns.Labels[k] = v
 	}
 
-	_, err = kubeClient.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
+	_, err = f.KubeClient.CoreV1().Namespaces().Update(f.Ctx, ns, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *Framework) RemoveLabelsFromNamespace(name string, labels ...string) error {
+	ns, err := f.KubeClient.CoreV1().Namespaces().Get(f.Ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if len(ns.Labels) == 0 {
+		return nil
+	}
+
+	type patch struct {
+		Op   string `json:"op"`
+		Path string `json:"path"`
+	}
+
+	var patches []patch
+	for _, l := range labels {
+		patches = append(patches, patch{Op: "remove", Path: "/metadata/labels/" + l})
+	}
+	b, err := json.Marshal(patches)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.KubeClient.CoreV1().Namespaces().Patch(f.Ctx, name, types.JSONPatchType, b, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}

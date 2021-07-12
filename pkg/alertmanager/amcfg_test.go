@@ -18,10 +18,12 @@ import (
 	"context"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -39,6 +41,7 @@ func TestGenerateConfig(t *testing.T) {
 		expected   string
 	}
 
+	ctx := context.Background()
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
 		t.Fatal("Could not parse slack API URL")
@@ -54,6 +57,66 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base with global send_revolved, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 1m
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPRequireTLS: func(b bool) *bool { return &b }(false),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  smtp_require_tls: false
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPRequireTLS: func(b bool) *bool { return &b }(true),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  smtp_require_tls: true
+route:
   receiver: "null"
 receivers:
 - name: "null"
@@ -542,7 +605,6 @@ templates: []
 				},
 			},
 			expected: `global:
-  resolve_timeout: 0s
   slack_api_url: http://slack.example.com
 route:
   receiver: "null"
@@ -573,7 +635,7 @@ templates: []
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 			cg := newConfigGenerator(nil, store)
-			cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
+			cfgBytes, err := cg.generateConfig(ctx, tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)
 			}

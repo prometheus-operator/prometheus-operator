@@ -1,11 +1,18 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
+---
+title: "RBAC"
+description: "High Availability is a must for the monitoring infrastructure."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 400
+toc: true
+---
 
-# RBAC
-
-RBAC for the Prometheus Operator involves two parts, RBAC rules for the Operator itself and RBAC rules for the Prometheus Pods themselves created by the Operator as Prometheus requires access to the Kubernetes API for target and Alertmanager discovery.
+[Role-based access control](https://en.wikipedia.org/wiki/Role-based_access_control) (RBAC) for the Prometheus Operator involves two parts, RBAC rules for the Operator itself and RBAC rules for the Prometheus Pods themselves created by the Operator as Prometheus requires access to the Kubernetes API for target and Alertmanager discovery.
 
 ## Prometheus Operator RBAC
 
@@ -21,7 +28,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.46.0
+    app.kubernetes.io/version: 0.49.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -170,7 +177,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.46.0
+    app.kubernetes.io/version: 0.49.0
   name: prometheus-operator
   namespace: default
 ```
@@ -187,7 +194,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.46.0
+    app.kubernetes.io/version: 0.49.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io

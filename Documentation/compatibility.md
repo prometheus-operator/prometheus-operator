@@ -1,9 +1,16 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# Compatibility
+---
+title: "Compatibility"
+description: "The Prometheus Operator supports a number of Kubernetes and Prometheus releases."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 200
+toc: true
+---
 
 The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
 
@@ -57,6 +64,15 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v2.23.0
 * v2.24.0
 * v2.24.1
+* v2.25.0
+* v2.25.1
+* v2.25.2
+* v2.26.0
+* v2.26.1
+* v2.27.0
+* v2.27.1
+* v2.28.0
+* v2.28.1
 
 ## Alertmanager
 

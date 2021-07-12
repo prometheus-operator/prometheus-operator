@@ -25,12 +25,12 @@ import (
 
 type TestCtx struct {
 	ID         string
-	cleanUpFns []finalizerFn
+	cleanUpFns []FinalizerFn
 }
 
-type finalizerFn func() error
+type FinalizerFn func() error
 
-func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
+func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 	// TestCtx is used among others for namespace names where '/' is forbidden
 	prefix := strings.TrimPrefix(
 		strings.Replace(
@@ -43,7 +43,7 @@ func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
 	)
 
 	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36)
-	return TestCtx{
+	return &TestCtx{
 		ID: id,
 	}
 }
@@ -68,6 +68,6 @@ func (ctx *TestCtx) Cleanup(t *testing.T) {
 	}
 }
 
-func (ctx *TestCtx) AddFinalizerFn(fn finalizerFn) {
+func (ctx *TestCtx) AddFinalizerFn(fn FinalizerFn) {
 	ctx.cleanUpFns = append(ctx.cleanUpFns, fn)
 }

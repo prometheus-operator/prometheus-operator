@@ -325,25 +325,28 @@ func SanitizeSTS(sts *appsv1.StatefulSet) {
 	}
 }
 
-// WaitForCacheSync synchronizes the informer's cache and will log a warning
-// every minute if the operation hasn't completed yet.
+// WaitForNamedCacheSync synchronizes the informer's cache and will log a
+// warning every minute if the operation hasn't completed yet, until it reaches
+// a timeout of 10 minutes.
 // Under normal circumstances, the cache sync should be fast. If it takes more
 // than 1 minute, it means that something is stuck and the message will
 // indicate to the admin which informer is the culprit.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347.
 func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger log.Logger, inf cache.SharedIndexInformer) bool {
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
 
-	done := make(chan struct{})
+	t := time.NewTicker(time.Minute)
+	defer t.Stop()
+
 	go func() {
-		t := time.NewTicker(time.Minute)
-		defer t.Stop()
-
-		select {
-		case <-t.C:
-			level.Warn(logger).Log("msg", "cache sync not yet completed")
-		case <-ctx.Done():
-			close(done)
+		for {
+			select {
+			case <-t.C:
+				level.Warn(logger).Log("msg", "cache sync not yet completed")
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 
@@ -353,10 +356,6 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger lo
 	} else {
 		level.Debug(logger).Log("msg", "successfully synced cache")
 	}
-
-	// Stop the logging goroutine and wait for its exit.
-	cancel()
-	<-done
 
 	return ok
 }

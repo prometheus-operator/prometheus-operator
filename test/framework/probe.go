@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -36,7 +35,7 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app": "blackbox-exporter",
+				"app.kubernetes.io/name": "blackbox-exporter",
 			},
 			Ports: []v1.ServicePort{
 				{
@@ -67,8 +66,7 @@ func (f *Framework) createBlackBoxExporterConfigMapAndWaitExists(ns, name string
 `,
 		},
 	}
-	ctx := context.TODO()
-	if _, err := f.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, cm, metav1.CreateOptions{}); err != nil {
+	if _, err := f.KubeClient.CoreV1().ConfigMaps(ns).Create(f.Ctx, cm, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
@@ -88,13 +86,13 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "blackbox-exporter",
+					"app.kubernetes.io/name": "blackbox-exporter",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "blackbox-exporter",
+						"app.kubernetes.io/name": "blackbox-exporter",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -135,14 +133,13 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string
 			},
 		},
 	}
-	ctx := context.TODO()
 	deploymentInterface := f.KubeClient.AppsV1().Deployments(ns)
-	if _, err := deploymentInterface.Create(ctx, deploy, metav1.CreateOptions{}); err != nil {
+	if _, err := deploymentInterface.Create(f.Ctx, deploy, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
 	return wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
-		blackbox, err := deploymentInterface.Get(ctx, name, metav1.GetOptions{})
+		blackbox, err := deploymentInterface.Get(f.Ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}

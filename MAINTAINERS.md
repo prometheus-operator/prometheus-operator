@@ -1,16 +1,17 @@
-## Core Maintainers of this repository
+## Maintainers of Prometheus Operator organization
 
 | Name                  | Email                       | Kubernetes Slack         | GitHub                                            | Company           |
 |-----------------------|-----------------------------|--------------------------|---------------------------------------------------|-------------------|
 | Frederic Branczyk     | fbranczyk@gmail.com         | `@brancz`                | [@brancz](https://github.com/brancz)              | Polar Signals     |
 | Lili Cosic            | cosiclili@gmail.com         | `@lili`                  | [@lilic](https://github.com/lilic)                | Red Hat           |
-| Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Red Hat           |
+| Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Polar Signals     |
 | Paweł Krupa           | paulfantom@gmail.com        | `@paulfantom`            | [@paulfantom](https://github.com/paulfantom)      | Red Hat           |
-| Paul Gier             | pgier@redhat.com            | ``                       | [@pgier](https://github.com/pgier)                | Red Hat           |
 | Sergiusz Urbaniak     | sergiusz.urbaniak@gmail.com | `@sur`                   | [@s-urbaniak](https://github.com/s-urbaniak)      | Red Hat           |
 | Simon Pasquier        | pasquier.simon@gmail.com    | `@SimonPasquier`         | [@simonpasquier](https://github.com/simonpasquier)| Red Hat           |
-| Lucas Servén Marín    | lserven@gmail.com           | `@squat`                 | [@squat](https://github.com/squat)                | Red Hat           |
 | Vasily Sliouniaev     |                             | `@vas`                   | [@vsliouniaev](https://github.com/vsliouniaev)    |                   |
+| Kemal Akkoyun         | kakkoyun@gmail.com          | `@kakkoyun`              | [@kakkoyun](https://github.com/kakkoyun)          | Polar Signals     |
+| Damien Grisonnet      | dgrisonn@redhat.com         | `@dgrisonnet`            | [@dgrisonnet](https://github.com/dgrisonnet)      | Red Hat           |
+| Arthur Silva Sens     | arthursens2005@gmail.com    | `@Arthur Silva Sens`     | [@ArthurSens](https://github.com/ArthurSens)      | Gitpod            |
 
 Please reach any of the maintainer on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
 
@@ -27,7 +28,7 @@ Full list of triage people is displayed below:
 
 ## How to be maintainer?
 
-Any contributor that shows effort, consistentcy and willingness in maintaining this repository will be invited to join the Maintainers team.
+Any contributor that shows effort, consistentcy and willingness in maintaining a repository will be invited to join the Maintainers team.
 
 Open Source is all about the trust, which is the key factor in decision to add write permissions.
 

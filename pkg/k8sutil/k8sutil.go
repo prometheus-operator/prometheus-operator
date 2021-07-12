@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -65,11 +66,12 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	var cfg *rest.Config
 	var err error
 
-	kubeconfigFile := os.Getenv(KubeConfigEnv)
-	if kubeconfigFile != "" {
-		cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
+	kubeconfigPath := os.Getenv(KubeConfigEnv)
+	if kubeconfigPath != "" {
+		loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+		cfg, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{}).ClientConfig()
 		if err != nil {
-			return nil, fmt.Errorf("Error creating config from specified file: %s %v\n", kubeconfigFile, err)
+			return nil, fmt.Errorf("error creating config from %s: %w", kubeconfigPath, err)
 		}
 	} else {
 		if len(host) == 0 {
@@ -82,7 +84,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 			}
 			hostURL, err := url.Parse(host)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
+				return nil, fmt.Errorf("error parsing host url %s: %w", host, err)
 			}
 			if hostURL.Scheme == "https" {
 				cfg.TLSClientConfig = *tlsConfig
@@ -120,8 +122,13 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 			return errors.Wrap(err, "creating service object failed")
 		}
 	} else {
+		// apply immutable fields from the existing service
 		svc.ResourceVersion = service.ResourceVersion
 		svc.Spec.IPFamilies = service.Spec.IPFamilies
+		svc.Spec.IPFamilyPolicy = service.Spec.IPFamilyPolicy
+		svc.Spec.ClusterIP = service.Spec.ClusterIP
+		svc.Spec.ClusterIPs = service.Spec.ClusterIPs
+
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		mergeMetadata(&svc.ObjectMeta, service.ObjectMeta)
 
@@ -175,20 +182,34 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 	return nil
 }
 
-// UpdateSecret merges metadata of existing Secret with new one and updates it.
-func UpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
-	existingSecret, err := secretClient.Get(ctx, secret.Name, metav1.GetOptions{})
+// CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
+func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
+	existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrap(err, "getting secret object failed")
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(
+				err,
+				"failed to check whether secret %q in namespace %q already exists",
+				desired.Name,
+				desired.Namespace,
+			)
+		}
+		_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
+		return errors.Wrapf(err, "failed to create secret %q in namespace %q", desired.Name, desired.Namespace)
 	}
-
-	mergeMetadata(&secret.ObjectMeta, existingSecret.ObjectMeta)
-
-	_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
+	if apiequality.Semantic.DeepEqual(existingSecret, desired) {
+		return nil
 	}
-
+	if _, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{}); err != nil {
+		return errors.Wrapf(
+			err,
+			"failed to update secret %q in namespace %q",
+			desired.Name,
+			desired.Namespace,
+		)
+	}
 	return nil
 }
 

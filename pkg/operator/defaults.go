@@ -17,17 +17,35 @@ package operator
 import "github.com/prometheus/common/version"
 
 const (
-	DefaultAlertmanagerVersion   = "v0.21.0"
+	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager
+	DefaultAlertmanagerVersion = "v0.22.2"
+	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
-	DefaultAlertmanagerImage     = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
-	DefaultThanosVersion         = "v0.17.2"
-	DefaultThanosBaseImage       = "quay.io/thanos/thanos"
-	DefaultThanosImage           = DefaultThanosBaseImage + ":" + DefaultThanosVersion
+	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager
+	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
+
+	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector
+	DefaultThanosVersion = "v0.21.1"
+	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
+	// storage collector
+	DefaultThanosBaseImage = "quay.io/thanos/thanos"
+	// DefaultThanosImage is a default image pulling address for the Thanos long-term prometheus storage collector
+	DefaultThanosImage = DefaultThanosBaseImage + ":" + DefaultThanosVersion
 )
 
 var (
+	// DefaultPrometheusVersion is a default image tag for the prometheus
+	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
+	// DefaultPrometheusBaseImage is a base container registry address for the prometheus
+	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
+	// DefaultPrometheusImage is a default image pulling address for the prometheus
+	DefaultPrometheusImage = DefaultPrometheusBaseImage + ":" + DefaultPrometheusVersion
+
+	// DefaultPrometheusConfigReloaderImage is an image that will be used as a sidecar to provide dynamic prometheus
+	// configuration reloading
 	DefaultPrometheusConfigReloaderImage = "quay.io/prometheus-operator/prometheus-config-reloader:v" + version.Version
 
+	// PrometheusCompatibilityMatrix is a list of supported prometheus version
 	PrometheusCompatibilityMatrix = []string{
 		"v2.0.0",
 		"v2.2.1",
@@ -67,8 +85,14 @@ var (
 		"v2.23.0",
 		"v2.24.0",
 		"v2.24.1",
+		"v2.25.0",
+		"v2.25.1",
+		"v2.25.2",
+		"v2.26.0",
+		"v2.26.1",
+		"v2.27.0",
+		"v2.27.1",
+		"v2.28.0",
+		"v2.28.1",
 	}
-	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
-	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
-	DefaultPrometheusImage     = DefaultPrometheusBaseImage + ":" + DefaultPrometheusVersion
 )
