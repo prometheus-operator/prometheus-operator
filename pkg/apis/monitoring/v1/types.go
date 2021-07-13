@@ -377,12 +377,13 @@ type PrometheusSpec struct {
 	// AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
 	// This is still experimental in Prometheus so it may change in any upcoming release.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
-	// EnforcedTargetLimit defines a global limit on the number of scraped targets.
-	// This overrides any TargetLimit set per ServiceMonitor or/and PodMonitor.
-	// It is meant to be used by admins to
-	// enforce the TargetLimit to keep overall number of targets under
-	// the desired limit.
-	// Note that if TargetLimit is higher that value will be taken instead.
+	// EnforcedTargetLimit defines a global limit on the number of scraped
+	// targets.  This overrides any TargetLimit set per ServiceMonitor or/and
+	// PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
+	// to keep the overall number of targets under the desired limit.
+	// Note that if TargetLimit is lower, that value will be taken instead,
+	// except if either value is zero, in which case the non-zero value will be
+	// used.  If both values are zero, no limit is enforced.
 	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
 }
 
