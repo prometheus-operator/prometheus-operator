@@ -114,7 +114,7 @@ metadata:
   name: standard
   annotations:
     # disable this default storage class by setting this annotation to false.
-    storageclass.beta.kubernetes.io/is-default-class: "false"
+    storageclass.kubernetes.io/is-default-class: "false"
 provisioner: kubernetes.io/gce-pd
 parameters:
   type: pd-ssd
