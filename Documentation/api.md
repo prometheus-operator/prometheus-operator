@@ -102,6 +102,9 @@ This Document documents the types introduced by the Prometheus Operator to be co
 
 APIServerConfig defines a host and auth methods to access apiserver. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | host | Host of apiserver. A valid string consisting of a hostname or IP followed by an optional port number | string | true |
@@ -116,6 +119,9 @@ APIServerConfig defines a host and auth methods to access apiserver. More info: 
 
 AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | alertmanagers | AlertmanagerEndpoints Prometheus should fire alerts against. | [][AlertmanagerEndpoints](#alertmanagerendpoints) | true |
@@ -125,6 +131,9 @@ AlertingSpec defines parameters for alerting configuration of Prometheus servers
 ## Alertmanager
 
 Alertmanager describes an Alertmanager cluster.
+
+
+<em>appears in: [AlertmanagerList](#alertmanagerlist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -137,6 +146,9 @@ Alertmanager describes an Alertmanager cluster.
 ## AlertmanagerEndpoints
 
 AlertmanagerEndpoints defines a selection of a single Endpoints object containing alertmanager IPs to fire alerts against.
+
+
+<em>appears in: [AlertingSpec](#alertingspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -166,6 +178,9 @@ AlertmanagerList is a list of Alertmanagers.
 ## AlertmanagerSpec
 
 AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+<em>appears in: [Alertmanager](#alertmanager)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -216,6 +231,9 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 
 AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 
+
+<em>appears in: [Alertmanager](#alertmanager)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
@@ -230,6 +248,9 @@ AlertmanagerStatus is the most recent observed status of the Alertmanager cluste
 
 ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service monitor selected by the Prometheus instance is allowed to use arbitrary files on the file system of the Prometheus container. This is the case when e.g. a service monitor specifies a BearerTokenFile in an endpoint. A malicious user could create a service monitor selecting arbitrary secret files in the Prometheus container. Those secrets would then be sent with a scrape request by Prometheus to a malicious target. Denying the above would prevent the attack, users can instead use the BearerTokenSecret field.
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | deny |  | bool | false |
@@ -239,6 +260,9 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 ## BasicAuth
 
 BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints
+
+
+<em>appears in: [APIServerConfig](#apiserverconfig), [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -250,6 +274,9 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 ## EmbeddedObjectMetadata
 
 EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta Only fields which are relevant to embedded resources are included.
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec), [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim), [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -263,6 +290,9 @@ EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimac
 
 EmbeddedPersistentVolumeClaim is an embedded version of k8s.io/api/core/v1.PersistentVolumeClaim. It contains TypeMeta and a reduced ObjectMeta.
 
+
+<em>appears in: [StorageSpec](#storagespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | metadata | EmbeddedMetadata contains metadata relevant to an EmbeddedResource. | [EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
@@ -274,6 +304,9 @@ EmbeddedPersistentVolumeClaim is an embedded version of k8s.io/api/core/v1.Persi
 ## Endpoint
 
 Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+
+
+<em>appears in: [ServiceMonitorSpec](#servicemonitorspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -300,6 +333,9 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 Configures the sending of series metadata to remote storage.
 
+
+<em>appears in: [RemoteWriteSpec](#remotewritespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | send | Whether metric metadata is sent to remote storage or not. | bool | false |
@@ -311,6 +347,9 @@ Configures the sending of series metadata to remote storage.
 
 NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.
 
+
+<em>appears in: [PodMonitorSpec](#podmonitorspec), [ProbeTargetIngress](#probetargetingress), [ServiceMonitorSpec](#servicemonitorspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | any | Boolean describing whether all namespaces are selected in contrast to a list restricting them. | bool | false |
@@ -321,6 +360,9 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 ## OAuth2
 
 OAuth2 allows an endpoint to authenticate with OAuth2. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#oauth2
+
+
+<em>appears in: [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -335,6 +377,9 @@ OAuth2 allows an endpoint to authenticate with OAuth2. More info: https://promet
 ## PodMetricsEndpoint
 
 PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
+
+
+<em>appears in: [PodMonitorSpec](#podmonitorspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -360,6 +405,9 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 
 PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
 
+
+<em>appears in: [PodMetricsEndpoint](#podmetricsendpoint)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
@@ -373,6 +421,9 @@ PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
 ## PodMonitor
 
 PodMonitor defines monitoring for a set of pods.
+
+
+<em>appears in: [PodMonitorList](#podmonitorlist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -396,6 +447,9 @@ PodMonitorList is a list of PodMonitors.
 
 PodMonitorSpec contains specification parameters for a PodMonitor.
 
+
+<em>appears in: [PodMonitor](#podmonitor)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
@@ -411,6 +465,9 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 ## Probe
 
 Probe defines monitoring for a set of static targets or ingresses.
+
+
+<em>appears in: [ProbeList](#probelist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -434,6 +491,9 @@ ProbeList is a list of Probes.
 
 ProbeSpec contains specification parameters for a Probe.
 
+
+<em>appears in: [Probe](#probe)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jobName | The job name assigned to scraped metrics by default. | string | false |
@@ -452,6 +512,9 @@ ProbeSpec contains specification parameters for a Probe.
 
 ProbeTLSConfig specifies TLS configuration parameters.
 
+
+<em>appears in: [ProbeSpec](#probespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
@@ -466,6 +529,9 @@ ProbeTLSConfig specifies TLS configuration parameters.
 
 ProbeTargetIngress defines the set of Ingress objects considered for probing.
 
+
+<em>appears in: [ProbeTargets](#probetargets)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | selector | Select Ingress objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
@@ -477,6 +543,9 @@ ProbeTargetIngress defines the set of Ingress objects considered for probing.
 ## ProbeTargetStaticConfig
 
 ProbeTargetStaticConfig defines the set of static targets considered for probing.
+
+
+<em>appears in: [ProbeTargets](#probetargets)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -490,6 +559,9 @@ ProbeTargetStaticConfig defines the set of static targets considered for probing
 
 ProbeTargets defines a set of static and dynamically discovered targets for the prober.
 
+
+<em>appears in: [ProbeSpec](#probespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | staticConfig | StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[ProbeTargetStaticConfig](#probetargetstaticconfig) | false |
@@ -500,6 +572,9 @@ ProbeTargets defines a set of static and dynamically discovered targets for the 
 ## ProberSpec
 
 ProberSpec contains specification parameters for the Prober used for probing.
+
+
+<em>appears in: [ProbeSpec](#probespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -513,6 +588,9 @@ ProberSpec contains specification parameters for the Prober used for probing.
 ## Prometheus
 
 Prometheus defines a Prometheus deployment.
+
+
+<em>appears in: [PrometheusList](#prometheuslist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -537,6 +615,9 @@ PrometheusList is a list of Prometheuses.
 
 PrometheusRule defines recording and alerting rules for a Prometheus instance
 
+
+<em>appears in: [PrometheusRuleList](#prometheusrulelist)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta) | false |
@@ -547,6 +628,9 @@ PrometheusRule defines recording and alerting rules for a Prometheus instance
 ## PrometheusRuleExcludeConfig
 
 PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces to be ignored while enforcing namespace label for alerts and metrics.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -570,6 +654,9 @@ PrometheusRuleList is a list of PrometheusRules.
 
 PrometheusRuleSpec contains specification parameters for a Rule.
 
+
+<em>appears in: [PrometheusRule](#prometheusrule)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | groups | Content of Prometheus rule file | [][RuleGroup](#rulegroup) | false |
@@ -579,6 +666,9 @@ PrometheusRuleSpec contains specification parameters for a Rule.
 ## PrometheusSpec
 
 PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+<em>appears in: [Prometheus](#prometheus)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -661,6 +751,9 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 
 PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 
+
+<em>appears in: [Prometheus](#prometheus)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
@@ -675,6 +768,9 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. R
 
 QuerySpec defines the query command line flags when starting Prometheus.
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | lookbackDelta | The delta difference allowed for retrieving metrics during expression evaluations. | *string | false |
@@ -687,6 +783,9 @@ QuerySpec defines the query command line flags when starting Prometheus.
 ## QueueConfig
 
 QueueConfig allows the tuning of remote_write queue_config parameters. This object is referenced in the RemoteWriteSpec object.
+
+
+<em>appears in: [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -705,6 +804,9 @@ QueueConfig allows the tuning of remote_write queue_config parameters. This obje
 
 RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 
+
+<em>appears in: [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeTargetIngress](#probetargetingress), [ProbeTargetStaticConfig](#probetargetstaticconfig), [RemoteWriteSpec](#remotewritespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sourceLabels | The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions. | []string | false |
@@ -720,6 +822,9 @@ RelabelConfig allows dynamic rewriting of the label set, being applied to sample
 ## RemoteReadSpec
 
 RemoteReadSpec defines the remote_read configuration for prometheus.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -740,6 +845,9 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 ## RemoteWriteSpec
 
 RemoteWriteSpec defines the remote_write configuration for prometheus.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -763,6 +871,9 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 
 Rule describes an alerting or recording rule See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 
+
+<em>appears in: [RuleGroup](#rulegroup)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | record |  | string | false |
@@ -778,6 +889,9 @@ Rule describes an alerting or recording rule See Prometheus documentation: [aler
 
 RuleGroup is a list of sequentially evaluated recording and alerting rules. Note: PartialResponseStrategy is only used by ThanosRuler and will be ignored by Prometheus instances.  Valid values for this field are 'warn' or 'abort'.  More info: https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md#partial-response
 
+
+<em>appears in: [PrometheusRuleSpec](#prometheusrulespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
@@ -791,6 +905,9 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules. Note
 
 /--rules.*/ command-line arguments
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | alert |  | [RulesAlert](#rulesalert) | false |
@@ -800,6 +917,9 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules. Note
 ## RulesAlert
 
 /--rules.alert.*/ command-line arguments
+
+
+<em>appears in: [Rules](#rules)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -812,6 +932,9 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules. Note
 ## SafeTLSConfig
 
 SafeTLSConfig specifies safe TLS configuration parameters.
+
+
+<em>appears in: [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig), [ProbeTLSConfig](#probetlsconfig), [TLSConfig](#tlsconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -827,6 +950,9 @@ SafeTLSConfig specifies safe TLS configuration parameters.
 
 SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
 
+
+<em>appears in: [OAuth2](#oauth2), [SafeTLSConfig](#safetlsconfig), [WebTLSConfig](#webtlsconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | secret | Secret containing data to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
@@ -837,6 +963,9 @@ SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mu
 ## ServiceMonitor
 
 ServiceMonitor defines monitoring for a set of services.
+
+
+<em>appears in: [ServiceMonitorList](#servicemonitorlist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -860,6 +989,9 @@ ServiceMonitorList is a list of ServiceMonitors.
 
 ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
+
+<em>appears in: [ServiceMonitor](#servicemonitor)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jobLabel | Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics.\n\nDefault & fallback value: the name of the respective Kubernetes `Endpoint`. | string | false |
@@ -877,6 +1009,9 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 StorageSpec defines the configured storage for a group Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
 
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec), [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | disableMountSubPath | Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary. DisableMountSubPath allows to remove any subPath usage in volume mounts. | bool | false |
@@ -888,6 +1023,9 @@ StorageSpec defines the configured storage for a group Prometheus servers. If ne
 ## TLSConfig
 
 TLSConfig extends the safe TLS configuration with file parameters.
+
+
+<em>appears in: [APIServerConfig](#apiserverconfig), [AlertmanagerEndpoints](#alertmanagerendpoints), [Endpoint](#endpoint), [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec), [ThanosSpec](#thanosspec), [ThanosRulerSpec](#thanosrulerspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -905,6 +1043,9 @@ TLSConfig extends the safe TLS configuration with file parameters.
 ## ThanosSpec
 
 ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -931,6 +1072,9 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 
 WebSpec defines the query command line flags when starting Prometheus.
 
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | pageTitle | The prometheus web page title | *string | false |
@@ -941,6 +1085,9 @@ WebSpec defines the query command line flags when starting Prometheus.
 ## WebTLSConfig
 
 WebTLSConfig defines the TLS parameters for HTTPS.
+
+
+<em>appears in: [WebSpec](#webspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -959,6 +1106,9 @@ WebTLSConfig defines the TLS parameters for HTTPS.
 ## ThanosRuler
 
 ThanosRuler defines a ThanosRuler deployment.
+
+
+<em>appears in: [ThanosRulerList](#thanosrulerlist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -982,6 +1132,9 @@ ThanosRulerList is a list of ThanosRulers.
 ## ThanosRulerSpec
 
 ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+<em>appears in: [ThanosRuler](#thanosruler)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1032,6 +1185,9 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 
 ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 
+
+<em>appears in: [ThanosRuler](#thanosruler)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
@@ -1045,6 +1201,9 @@ ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-on
 ## AlertmanagerConfig
 
 AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated across multiple namespaces configuring one Alertmanager cluster.
+
+
+<em>appears in: [AlertmanagerConfigList](#alertmanagerconfiglist)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1068,6 +1227,9 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 
 AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration. By definition, the Alertmanager configuration only applies to alerts for which the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 
+
+<em>appears in: [AlertmanagerConfig](#alertmanagerconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
@@ -1079,6 +1241,9 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 ## EmailConfig
 
 EmailConfig configures notifications via Email.
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1103,6 +1268,9 @@ EmailConfig configures notifications via Email.
 
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
+
+<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | basicAuth | BasicAuth for the client. | *monitoringv1.BasicAuth | false |
@@ -1116,6 +1284,9 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 
 InhibitRule defines an inhibition rule that allows to mute alerts when other alerts are already firing. See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule
 
+
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | targetMatch | Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource’s namespace. | [][Matcher](#matcher) | false |
@@ -1128,6 +1299,9 @@ InhibitRule defines an inhibition rule that allows to mute alerts when other ale
 
 KeyValue defines a (key, value) tuple.
 
+
+<em>appears in: [EmailConfig](#emailconfig), [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [VictorOpsConfig](#victoropsconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | key | Key of the tuple. | string | true |
@@ -1138,6 +1312,9 @@ KeyValue defines a (key, value) tuple.
 ## Matcher
 
 Matcher defines how to match on alert's labels.
+
+
+<em>appears in: [InhibitRule](#inhibitrule), [Route](#route)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1150,6 +1327,9 @@ Matcher defines how to match on alert's labels.
 ## OpsGenieConfig
 
 OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1172,6 +1352,9 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 
 OpsGenieConfigResponder defines a responder to an incident. One of `id`, `name` or `username` has to be defined.
 
+
+<em>appears in: [OpsGenieConfig](#opsgenieconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | id | ID of the responder. | string | false |
@@ -1184,6 +1367,9 @@ OpsGenieConfigResponder defines a responder to an incident. One of `id`, `name` 
 ## PagerDutyConfig
 
 PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1207,6 +1393,9 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 
 PushoverConfig configures notifications via Pushover. See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
 
+
+<em>appears in: [Receiver](#receiver)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
@@ -1229,6 +1418,9 @@ PushoverConfig configures notifications via Pushover. See https://prometheus.io/
 
 Receiver defines one or more notification integrations.
 
+
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name | Name of the receiver. Must be unique across all items from the list. | string | true |
@@ -1247,6 +1439,9 @@ Receiver defines one or more notification integrations.
 
 Route defines a node in the routing tree.
 
+
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | receiver | Name of the receiver for this route. If not empty, it should be listed in the `receivers` field. | string | true |
@@ -1264,6 +1459,9 @@ Route defines a node in the routing tree.
 
 SlackAction configures a single Slack action that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons for more information.
 
+
+<em>appears in: [SlackConfig](#slackconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | type |  | string | true |
@@ -1279,6 +1477,9 @@ SlackAction configures a single Slack action that is sent with each notification
 ## SlackConfig
 
 SlackConfig configures notifications via Slack. See https://prometheus.io/docs/alerting/latest/configuration/#slack_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1311,6 +1512,9 @@ SlackConfig configures notifications via Slack. See https://prometheus.io/docs/a
 
 SlackConfirmationField protect users from destructive actions or particularly distinguished decisions by asking them to confirm their button click one more time. See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields for more information.
 
+
+<em>appears in: [SlackAction](#slackaction)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | text |  | string | true |
@@ -1324,6 +1528,9 @@ SlackConfirmationField protect users from destructive actions or particularly di
 
 SlackField configures a single Slack field that is sent with each notification. Each field must contain a title, value, and optionally, a boolean value to indicate if the field is short enough to be displayed next to other fields designated as short. See https://api.slack.com/docs/message-attachments#fields for more information.
 
+
+<em>appears in: [SlackConfig](#slackconfig)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | title |  | string | true |
@@ -1335,6 +1542,9 @@ SlackField configures a single Slack field that is sent with each notification. 
 ## VictorOpsConfig
 
 VictorOpsConfig configures notifications via VictorOps. See https://prometheus.io/docs/alerting/latest/configuration/#victorops_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1355,6 +1565,9 @@ VictorOpsConfig configures notifications via VictorOps. See https://prometheus.i
 
 WeChatConfig configures notifications via WeChat. See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
 
+
+<em>appears in: [Receiver](#receiver)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
@@ -1374,6 +1587,9 @@ WeChatConfig configures notifications via WeChat. See https://prometheus.io/docs
 ## WebhookConfig
 
 WebhookConfig configures notifications via a generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
