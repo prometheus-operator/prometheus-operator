@@ -141,7 +141,7 @@ func TestAddBearerToken(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			s, found := store.BearerTokenAssets[key]
+			s, found := store.TokenAssets[key]
 
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
@@ -782,4 +782,124 @@ func TestAddTLSConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddAuthorization(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+	)
+
+	for i, tc := range []struct {
+		ns           string
+		selectedName string
+		selectedKey  string
+		authType     string
+
+		err      bool
+		expected string
+	}{
+		{
+			ns:           "ns1",
+			selectedName: "secret",
+			selectedKey:  "key1",
+			authType:     "Bearer",
+
+			expected: "val1",
+		},
+		{
+			ns:           "ns1",
+			selectedName: "secret",
+			selectedKey:  "key1",
+			authType:     "Token",
+
+			expected: "val1",
+		},
+		{
+			ns:           "ns1",
+			selectedName: "secreet",
+			selectedKey:  "key1",
+			authType:     "Token",
+
+			err: true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			store := NewStore(c.CoreV1(), c.CoreV1())
+
+			sel := &monitoringv1.Authorization{
+				SafeAuthorization: monitoringv1.SafeAuthorization{
+					Type: tc.authType,
+					Credentials: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: tc.selectedName},
+						Key: tc.selectedKey,
+					},
+				},
+			}
+
+			key := fmt.Sprintf("foo/auth/%d", i)
+			err := store.AddAuthorizationCredentials(context.Background(), tc.ns, sel, key)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			sec, found := store.TokenAssets[key]
+
+			if !found {
+				t.Fatalf("expecting to find key %q but got nothing", key)
+			}
+
+			s := string(sec)
+			if s != tc.expected {
+				t.Fatalf("expecting %q, got %q", tc.expected, s)
+			}
+		})
+	}
+}
+
+func TestAddAuthorizationNoCredentials(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+	)
+
+	t.Run("", func(t *testing.T) {
+		store := NewStore(c.CoreV1(), c.CoreV1())
+
+		sel := &monitoringv1.Authorization{
+			SafeAuthorization: monitoringv1.SafeAuthorization{
+				Type: "authType",
+			},
+			CredentialsFile: "/path/to/secret",
+		}
+
+		err := store.AddAuthorizationCredentials(context.Background(), "foo", sel, "foo/bar")
+
+		if err != nil {
+			t.Fatalf("expecting no error, got %q", err)
+		}
+	})
 }
