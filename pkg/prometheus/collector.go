@@ -29,6 +29,14 @@ var (
 			"name",
 		}, nil,
 	)
+	descPrometheusSpecShards = prometheus.NewDesc(
+		"prometheus_operator_spec_shards",
+		"Number of expected shards for the object.",
+		[]string{
+			"namespace",
+			"name",
+		}, nil,
+	)
 	descPrometheusEnforcedSampleLimit = prometheus.NewDesc(
 		"prometheus_operator_prometheus_enforced_sample_limit",
 		"Global limit on the number of scraped samples per scrape target.",
@@ -51,6 +59,7 @@ func newPrometheusCollectorForStores(s ...cache.Store) *prometheusCollector {
 func (c *prometheusCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- descPrometheusSpecReplicas
 	ch <- descPrometheusEnforcedSampleLimit
+	ch <- descPrometheusSpecShards
 }
 
 // Collect implements the prometheus.Collector interface.
@@ -71,5 +80,8 @@ func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *
 	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
 	if p.Spec.EnforcedSampleLimit != nil {
 		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*p.Spec.EnforcedSampleLimit), p.Namespace, p.Name)
+	}
+	if p.Spec.Shards != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*p.Spec.Shards), p.Namespace, p.Name)
 	}
 }
