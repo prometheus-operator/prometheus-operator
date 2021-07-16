@@ -34,12 +34,10 @@ This article lists arguments of operator executable.
 | kubelet-service | Service/Endpoints object to write kubelets into in format \"namespace/name\" | "" |
 | tls-insecure | - NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate. | false |
 | prometheus-config-reloader | Prometheus config reloader image | "" |
-| config-reloader-cpu | Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0. | 100m |
-| config-reloader-cpu-request | Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request | "" |
-| config-reloader-cpu-limit | Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit | "" |
-| config-reloader-memory | Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0. | 50Mi |
-| config-reloader-memory-request | Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request | "" |
-| config-reloader-memory-limit | Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit | "" |
+| config-reloader-cpu-request | Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request | 100m |
+| config-reloader-cpu-limit | Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit | 100m |
+| config-reloader-memory-request | Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request | 50Mi |
+| config-reloader-memory-limit | Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit | 50Mi |
 | alertmanager-default-base-image | Alertmanager default base image (path without tag/version) | "" |
 | prometheus-default-base-image | Prometheus default base image (path without tag/version) | "" |
 | thanos-default-base-image | Thanos default base image (path without tag/version) | "" |

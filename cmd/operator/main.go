@@ -143,8 +143,7 @@ var (
 		logFormatLogfmt,
 		logFormatJSON,
 	}
-	cfg             = operator.Config{}
-	rcCPU, rcMemory string
+	cfg = operator.Config{}
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -178,14 +177,10 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	// TODO(JJJJJones): remove the '--config-reloader-cpu' flag before releasing v0.49.
-	flagset.StringVar(&rcCPU, "config-reloader-cpu", defaultReloaderCPU, "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
-	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", "", "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
-	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", "", "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
-	// TODO(JJJJJones): remove the '--config-reloader-memory' flag before releasing v0.49.
-	flagset.StringVar(&rcMemory, "config-reloader-memory", defaultReloaderMemory, "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", "", "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", "", "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
+	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", defaultReloaderCPU, "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
+	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", defaultReloaderCPU, "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
+	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", defaultReloaderMemory, "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
+	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", defaultReloaderMemory, "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
@@ -239,25 +234,6 @@ func Main() int {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	// Prioritize specific flags over generic ones
-	// If rcCPU has been set but not config.CPURequest/config.CPULimit, default "" to rcCPU
-	// If rcMemory has been set but not config.MemoryRequest or config.MemoryLimit, default "" to rcMemory
-	if rcCPU != "" {
-		if cfg.ReloaderConfig.CPURequest == "" {
-			cfg.ReloaderConfig.CPURequest = rcCPU
-		}
-		if cfg.ReloaderConfig.CPULimit == "" {
-			cfg.ReloaderConfig.CPULimit = rcCPU
-		}
-	}
-	if rcMemory != "" {
-		if cfg.ReloaderConfig.MemoryRequest == "" {
-			cfg.ReloaderConfig.MemoryRequest = rcMemory
-		}
-		if cfg.ReloaderConfig.MemoryLimit == "" {
-			cfg.ReloaderConfig.MemoryLimit = rcMemory
-		}
-	}
 	// Check validity of reloader resource values given to flags
 	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
 	if err1 != nil {
@@ -277,13 +253,6 @@ func Main() int {
 	}
 	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 		return 1
-	}
-	// Warn users that could be utilizing --config-reloader-cpu and --config-reloader-memory of their deprecated nature
-	if rcCPU != defaultReloaderCPU {
-		level.Warn(logger).Log("msg", "The '--config-reloader-cpu' flag has been deprecated! Please use '--config-reloader-cpu-limit' and '--config-reloader-cpu-request' according to your use-case.")
-	}
-	if rcMemory != defaultReloaderMemory {
-		level.Warn(logger).Log("msg", "The '--config-reloader-memory' flag has been deprecated! Please use '--config-reloader-memory-limit' and '--config-reloader-memory-request' according to your use-case.")
 	}
 
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
