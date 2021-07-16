@@ -13,7 +13,7 @@ _What type of changes does your code introduce to the Prometheus operator? Put a
 - [ ] `FEATURE` (non-breaking change which adds functionality)
 - [ ] `BUGFIX` (non-breaking change which fixes an issue)
 - [ ] `ENHANCEMENT` (non-breaking change which improves existing functionality)
-- [ ] `NONE` (if none of the other choices apply. Example tooling, build system, CI, docs, etc.)
+- [ ] `NONE` (if none of the other choices apply. Example, tooling, build system, CI, docs, etc.)
 
 ## Changelog entry
 
