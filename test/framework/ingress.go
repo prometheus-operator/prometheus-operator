@@ -21,28 +21,31 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
-	return &v1beta1.Ingress{
+func MakeBasicIngress(serviceName string, servicePort int) *networkv1.Ingress {
+	return &networkv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "monitoring",
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: networkv1.IngressSpec{
+			Rules: []networkv1.IngressRule{
 				{
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networkv1.IngressRuleValue{
+						HTTP: &networkv1.HTTPIngressRuleValue{
+							Paths: []networkv1.HTTPIngressPath{
 								{
-									Backend: v1beta1.IngressBackend{
-										ServiceName: serviceName,
-										ServicePort: intstr.FromInt(servicePort),
+									Backend: networkv1.IngressBackend{
+										Service: &networkv1.IngressServiceBackend{
+											Name: serviceName,
+											Port: networkv1.ServiceBackendPort{
+												Number: int32(servicePort),
+											},
+										},
 									},
 									Path: "/metrics",
 								},
@@ -55,8 +58,8 @@ func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 	}
 }
 
-func (f *Framework) CreateIngress(namespace string, i *v1beta1.Ingress) error {
-	_, err := f.KubeClient.ExtensionsV1beta1().Ingresses(namespace).Create(f.Ctx, i, metav1.CreateOptions{})
+func (f *Framework) CreateIngress(namespace string, i *networkv1.Ingress) error {
+	_, err := f.KubeClient.NetworkingV1().Ingresses(namespace).Create(f.Ctx, i, metav1.CreateOptions{})
 	return errors.Wrap(err, fmt.Sprintf("creating ingress %v failed", i.Name))
 }
 
@@ -125,10 +128,10 @@ func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend(namespace stri
 }
 
 func (f *Framework) GetIngressIP(namespace string, ingressName string) (*string, error) {
-	var ingress *v1beta1.Ingress
+	var ingress *networkv1.Ingress
 	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
 		var err error
-		ingress, err = f.KubeClient.ExtensionsV1beta1().Ingresses(namespace).Get(f.Ctx, ingressName, metav1.GetOptions{})
+		ingress, err = f.KubeClient.NetworkingV1().Ingresses(namespace).Get(f.Ctx, ingressName, metav1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting the ingress %v failed", ingressName))
 		}

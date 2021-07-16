@@ -135,7 +135,7 @@ In addition to the resources Prometheus itself needs to access, the Prometheus s
 
 [embedmd]:# (../example/rbac/prometheus/prometheus-cluster-role.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus
@@ -222,7 +222,7 @@ And then because the `ClusterRole` named `prometheus`, as described above, is li
 
 [embedmd]:# (../example/rbac/prometheus/prometheus-cluster-role-binding.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus

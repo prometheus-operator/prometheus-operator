@@ -16,7 +16,7 @@ package framework
 
 import (
 	"github.com/pkg/errors"
-	"k8s.io/api/admissionregistration/v1beta1"
+	"k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -30,7 +30,7 @@ func (f *Framework) createMutatingHook(certBytes []byte, namespace, yamlPath str
 	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
 	h.Webhooks[0].ClientConfig.CABundle = certBytes
 
-	_, err = f.KubeClient.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(f.Ctx, h, metav1.CreateOptions{})
+	_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(f.Ctx, h, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create mutating webhook %s", h.Name)
 	}
@@ -49,7 +49,7 @@ func (f *Framework) createValidatingHook(certBytes []byte, namespace, yamlPath s
 	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
 	h.Webhooks[0].ClientConfig.CABundle = certBytes
 
-	_, err = f.KubeClient.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations().Create(f.Ctx, h, metav1.CreateOptions{})
+	_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(f.Ctx, h, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create validating webhook %s", h.Name)
 	}
@@ -60,20 +60,20 @@ func (f *Framework) createValidatingHook(certBytes []byte, namespace, yamlPath s
 }
 
 func (f *Framework) deleteMutatingWebhook(name string) error {
-	return f.KubeClient.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(f.Ctx, name, metav1.DeleteOptions{})
+	return f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Delete(f.Ctx, name, metav1.DeleteOptions{})
 }
 
 func (f *Framework) deleteValidatingWebhook(name string) error {
-	return f.KubeClient.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations().Delete(f.Ctx, name, metav1.DeleteOptions{})
+	return f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(f.Ctx, name, metav1.DeleteOptions{})
 }
 
-func parseValidatingHookYaml(pathToYaml string) (*v1beta1.ValidatingWebhookConfiguration, error) {
+func parseValidatingHookYaml(pathToYaml string) (*v1.ValidatingWebhookConfiguration, error) {
 	manifest, err := PathToOSFile(pathToYaml)
 	if err != nil {
 		return nil, err
 	}
 
-	resource := v1beta1.ValidatingWebhookConfiguration{}
+	resource := v1.ValidatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
 		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
 	}
@@ -81,13 +81,13 @@ func parseValidatingHookYaml(pathToYaml string) (*v1beta1.ValidatingWebhookConfi
 	return &resource, nil
 }
 
-func parseMutatingHookYaml(pathToYaml string) (*v1beta1.MutatingWebhookConfiguration, error) {
+func parseMutatingHookYaml(pathToYaml string) (*v1.MutatingWebhookConfiguration, error) {
 	manifest, err := PathToOSFile(pathToYaml)
 	if err != nil {
 		return nil, err
 	}
 
-	resource := v1beta1.MutatingWebhookConfiguration{}
+	resource := v1.MutatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
 		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
 	}

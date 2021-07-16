@@ -21,3 +21,6 @@ webhooks:
           - UPDATE
         resources:
           - prometheusrules
+    sideEffects: None
+    admissionReviewVersions:
+    - v1

@@ -17,7 +17,7 @@ Automatic provisioning of storage requires a `StorageClass`.
 
 [embedmd]:# (../../example/storage/storageclass.yaml)
 ```yaml
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: ssd
@@ -109,12 +109,12 @@ For example, to disable default StorageClasses on a Google Container Engine clus
 
 ```yaml
 kind: StorageClass
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1
 metadata:
   name: standard
   annotations:
     # disable this default storage class by setting this annotation to false.
-    storageclass.beta.kubernetes.io/is-default-class: "false"
+    storageclass.kubernetes.io/is-default-class: "false"
 provisioner: kubernetes.io/gce-pd
 parameters:
   type: pd-ssd
