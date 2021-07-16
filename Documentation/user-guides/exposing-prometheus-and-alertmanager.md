@@ -208,7 +208,7 @@ spec:
 A corresponding Ingress object would be:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: extensions/v1
 kind: Ingress
 metadata:
   name: monitoring

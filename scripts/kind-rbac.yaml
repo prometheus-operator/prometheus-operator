@@ -1,6 +1,6 @@
 # Wide open access to the cluster (mostly for kubelet)
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cluster-writer
 rules:
@@ -14,7 +14,7 @@ rules:
 
 # Full read access to the api and resources
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cluster-reader
 rules:
@@ -26,7 +26,7 @@ rules:
 ---
 # Give admin, kubelet, kube-system, kube-proxy god access
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cluster-write
 subjects:
@@ -49,7 +49,7 @@ roleRef:
 # Setup sd-build as a reader. This has to be a
 # ClusterRoleBinding to get access to non-resource URLs
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cluster-read
 subjects:
@@ -65,7 +65,7 @@ roleRef:
 
 # Setup sd-build as a writer in its namespace
 kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: sd-build-write
 subjects:
