@@ -23,12 +23,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
+
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
+
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -72,6 +77,7 @@ func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator
 
 func (cg *configGenerator) generateConfig(
 	ctx context.Context,
+	a *v1.Alertmanager,
 	baseConfig alertmanagerConfig,
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) ([]byte, error) {
@@ -95,7 +101,7 @@ func (cg *configGenerator) generateConfig(
 
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
-			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(a, &inhibitRule, crKey))
 		}
 
 		// Skip early if there's no route definition.
@@ -731,9 +737,18 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	return out, nil
 }
 
-func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
+func convertInhibitRule(a *v1.Alertmanager, in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
+
+	versionStr := a.Spec.Version
+	if versionStr == "" {
+		versionStr = operator.DefaultAlertmanagerVersion
+	}
+
+	version, _ := semver.ParseTolerant(versionStr)
+
 	sourceMatch := map[string]string{}
 	sourceMatchRE := map[string]string{}
+	sourceMatchers := []string{}
 	for _, sm := range in.SourceMatch {
 		if sm.Regex {
 			sourceMatchRE[sm.Name] = sm.Value
@@ -742,8 +757,14 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	sourceMatch["namespace"] = crKey.Namespace
-	delete(sourceMatchRE, "namespace")
+	if len(sourceMatch) != 0 {
+		sourceMatch["namespace"] = crKey.Namespace
+		delete(sourceMatchRE, "namespace")
+	}
+
+	if len(in.SourceMatchers) != 0 && version.GTE(semver.MustParse("0.22.0")) {
+		sourceMatchers = append(sourceMatchers, "namespace="+crKey.Namespace)
+	}
 
 	// Set to nil if empty so that it doesn't show up in resulting yaml
 	if len(sourceMatchRE) == 0 {
@@ -752,6 +773,7 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 
 	targetMatch := map[string]string{}
 	targetMatchRE := map[string]string{}
+	targetMatchers := []string{}
 	for _, tm := range in.TargetMatch {
 		if tm.Regex {
 			targetMatchRE[tm.Name] = tm.Value
@@ -760,8 +782,14 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	targetMatch["namespace"] = crKey.Namespace
-	delete(targetMatchRE, "namespace")
+	if len(targetMatch) != 0 {
+		targetMatch["namespace"] = crKey.Namespace
+		delete(targetMatchRE, "namespace")
+	}
+
+	if len(in.TargetMatchers) != 0 && version.GTE(semver.MustParse("0.22.0")) {
+		targetMatchers = append(targetMatchers, "namespace="+crKey.Namespace)
+	}
 
 	// Set to nil if empty so that it doesn't show up in resulting yaml
 	if len(targetMatchRE) == 0 {
@@ -773,12 +801,17 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		equal = nil
 	}
 
+	sourceMatchers = append(sourceMatchers, in.SourceMatchers...)
+	targetMatchers = append(targetMatchers, in.TargetMatchers...)
+
 	return &inhibitRule{
-		SourceMatch:   sourceMatch,
-		SourceMatchRE: sourceMatchRE,
-		TargetMatch:   targetMatch,
-		TargetMatchRE: targetMatchRE,
-		Equal:         equal,
+		SourceMatch:    sourceMatch,
+		SourceMatchRE:  sourceMatchRE,
+		SourceMatchers: sourceMatchers,
+		TargetMatch:    targetMatch,
+		TargetMatchRE:  targetMatchRE,
+		TargetMatchers: targetMatchers,
+		Equal:          equal,
 	}
 }
 

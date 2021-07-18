@@ -1291,6 +1291,8 @@ InhibitRule defines an inhibition rule that allows to mute alerts when other ale
 | ----- | ----------- | ------ | -------- |
 | targetMatch | Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource’s namespace. | [][Matcher](#matcher) | false |
 | sourceMatch | Matchers for which one or more alerts have to exist for the inhibition to take effect. The operator enforces that the alert matches the resource’s namespace. | [][Matcher](#matcher) | false |
+| sourceMatchers | A list of matchers for which one or more alerts have to exist for the inhibition to take effect. Available in versions of Alertmanager >= 0.22. | []string | false |
+| targetMatchers | A list of matchers that have to be fulfilled by the target alerts to be muted. Available in versions of Alertmanager >= 0.22. | []string | false |
 | equal | Labels that must have an equal value in the source and target alert for the inhibition to take effect. | []string | false |
 
 [Back to TOC](#table-of-contents)

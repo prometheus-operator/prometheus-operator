@@ -76,11 +76,17 @@ type route struct {
 }
 
 type inhibitRule struct {
-	TargetMatch   map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
-	TargetMatchRE map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
-	SourceMatch   map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
-	SourceMatchRE map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
-	Equal         []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
+	// Deprecated: Use TargetMatchers
+	TargetMatch map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
+	// Deprecated: Use TargetMatchers
+	TargetMatchRE  map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
+	TargetMatchers []string          `yaml:"target_matchers,omitempty" json:"target_matchers,omitempty"`
+	// Deprecated: Use SourceMatchers
+	SourceMatch map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
+	// Deprecated: Use SourceMatchers
+	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
+	SourceMatchers []string          `yaml:"source_matchers,omitempty" json:"source_matchers,omitempty"`
+	Equal          []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
 }
 
 type receiver struct {

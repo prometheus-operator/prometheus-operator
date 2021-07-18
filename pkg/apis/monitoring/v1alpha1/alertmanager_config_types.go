@@ -686,6 +686,14 @@ type InhibitRule struct {
 	// to take effect. The operator enforces that the alert matches the
 	// resource’s namespace.
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
+	// A list of matchers for which one or more alerts have
+	// to exist for the inhibition to take effect.
+	// Available in versions of Alertmanager >= 0.22.
+	SourceMatchers []string `json:"sourceMatchers,omitempty"`
+	// A list of matchers that have to be fulfilled by the target
+	// alerts to be muted.
+	// Available in versions of Alertmanager >= 0.22.
+	TargetMatchers []string `json:"targetMatchers,omitempty"`
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
 	Equal []string `json:"equal,omitempty"`

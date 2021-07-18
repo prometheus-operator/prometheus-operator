@@ -77,6 +77,13 @@ spec:
                         - name
                         type: object
                       type: array
+                    sourceMatchers:
+                      description: A list of matchers for which one or more alerts
+                        have to exist for the inhibition to take effect. Available
+                        in versions of Alertmanager >= 0.22.
+                      items:
+                        type: string
+                      type: array
                     targetMatch:
                       description: Matchers that have to be fulfilled in the alerts
                         to be muted. The operator enforces that the alert matches
@@ -98,6 +105,13 @@ spec:
                         required:
                         - name
                         type: object
+                      type: array
+                    targetMatchers:
+                      description: A list of matchers that have to be fulfilled by
+                        the target alerts to be muted. Available in versions of Alertmanager
+                        >= 0.22.
+                      items:
+                        type: string
                       type: array
                   type: object
                 type: array
