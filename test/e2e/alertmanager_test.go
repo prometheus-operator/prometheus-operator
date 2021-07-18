@@ -893,6 +893,13 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 			}},
+			InhibitRules: []monitoringv1alpha1.InhibitRule{
+				{
+					SourceMatchers: []string{"severity=\"critical\""},
+					TargetMatchers: []string{"severity=\"warning\""},
+					Equal:          []string{"alertname", "cluster", "service"},
+				},
+			},
 		},
 	}
 
@@ -1074,6 +1081,17 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
+inhibit_rules:
+- target_matchers:
+  - namespace=%s
+  - severity="warning"
+  source_matchers:
+  - namespace=%s
+  - severity="critical"
+  equal:
+  - alertname
+  - cluster
+  - service
 receivers:
 - name: "null"
 - name: %v-e2e-test-amconfig-many-receivers-e2e
@@ -1115,7 +1133,7 @@ receivers:
   webhook_configs:
   - url: http://test.url
 templates: []
-`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
+`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
