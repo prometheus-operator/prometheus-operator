@@ -28,11 +28,12 @@ import (
 // marshalling. See the following issue for details:
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
-	Global       *globalConfig  `yaml:"global,omitempty" json:"global,omitempty"`
-	Route        *route         `yaml:"route,omitempty" json:"route,omitempty"`
-	InhibitRules []*inhibitRule `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
-	Receivers    []*receiver    `yaml:"receivers,omitempty" json:"receivers,omitempty"`
-	Templates    []string       `yaml:"templates" json:"templates"`
+	Global            *globalConfig       `yaml:"global,omitempty" json:"global,omitempty"`
+	Route             *route              `yaml:"route,omitempty" json:"route,omitempty"`
+	InhibitRules      []*inhibitRule      `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
+	Receivers         []*receiver         `yaml:"receivers,omitempty" json:"receivers,omitempty"`
+	Templates         []string            `yaml:"templates" json:"templates"`
+	MuteTimeIntervals []*MuteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
 }
 
 type globalConfig struct {
@@ -64,15 +65,16 @@ type globalConfig struct {
 }
 
 type route struct {
-	Receiver       string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
-	GroupByStr     []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
-	Match          map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
-	MatchRE        map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
-	Continue       bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
-	Routes         []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
-	GroupWait      string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
-	GroupInterval  string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
-	RepeatInterval string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
+	Receiver          string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
+	GroupByStr        []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
+	Match             map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
+	MatchRE           map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
+	Continue          bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
+	Routes            []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
+	GroupWait         string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
+	GroupInterval     string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
+	RepeatInterval    string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
+	MuteTimeIntervals []string          `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
 }
 
 type inhibitRule struct {
@@ -296,4 +298,22 @@ type victorOpsConfig struct {
 	EntityDisplayName string            `yaml:"entity_display_name,omitempty" json:"entity_display_name,omitempty"`
 	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
+}
+
+type MuteTimeInterval struct {
+	Name          string         `yaml:"name,omitempty" json:"name,omitempty"`
+	TimeIntervals []TimeInterval `yaml:"time_intervals,omitempty" json:"time_intervals,omitempty"`
+}
+
+type TimeInterval struct {
+	Times            []TimeRange `yaml:"times,omitempty" json:"times,omitempty"`
+	Weekdays         []string    `yaml:"weekdays,flow,omitempty" json:"weekdays,omitempty"`
+	DaysOfMonthRange []string    `yaml:"days_of_month,flow,omitempty" json:"days_of_month,omitempty"`
+	Months           []string    `yaml:"months,flow,omitempty" json:"months,omitempty"`
+	Years            []string    `yaml:"years,flow,omitempty" json:"years,omitempty"`
+}
+
+type TimeRange struct {
+	StartTime string `yaml:"start_time,omitempty" json:"start_time,omitempty"`
+	EndTime   string `yaml:"end_time,omitempty" json:"end_time,omitempty"`
 }

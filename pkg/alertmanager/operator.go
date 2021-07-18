@@ -893,7 +893,7 @@ receivers:
 	}
 
 	generator := newConfigGenerator(c.logger, store)
-	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
+	generatedConfig, err := generator.generateConfig(ctx, am, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
 	}

@@ -787,9 +787,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
-				Receiver: "e2e",
-				Matchers: []monitoringv1alpha1.Matcher{},
-				Continue: true,
+				Receiver:          "e2e",
+				Matchers:          []monitoringv1alpha1.Matcher{},
+				Continue:          true,
+				MuteTimeIntervals: []string{"testing"},
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
@@ -890,6 +891,22 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
+					},
+				}},
+			}},
+
+			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{{
+				Name: "testing",
+				TimeIntervals: []monitoringv1alpha1.TimeInterval{{
+					Weekdays:         []string{"sunday:tuesday", "saturday"},
+					DaysOfMonthRange: []string{"1:5", "-3:-1"},
+					Months:           []string{"1:3", "5:8", "12"},
+					Years:            []string{"2020:2022", "2030"},
+					Times: []monitoringv1alpha1.TimeRange{
+						{
+							StartTime: "09:00",
+							EndTime:   "17:00",
+						},
 					},
 				}},
 			}},
@@ -1049,6 +1066,8 @@ route:
     match:
       namespace: %s
     continue: true
+    mute_time_intervals:
+    - testing
   - receiver: %s-e2e-test-amconfig-sub-routes-e2e
     match:
       namespace: %s
@@ -1115,6 +1134,16 @@ receivers:
   webhook_configs:
   - url: http://test.url
 templates: []
+mute_time_intervals:
+- name: testing
+  time_intervals:
+  - times:
+    - start_time: "09:00"
+      end_time: "17:00"
+    weekdays: ['sunday:tuesday', saturday]
+    days_of_month: ["1:5", '-3:-1']
+    months: ["1:3", "5:8", "12"]
+    years: ['2020:2022', "2030"]
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {

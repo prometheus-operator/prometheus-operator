@@ -19,15 +19,19 @@ import (
 	"fmt"
 	"net"
 	"path"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
@@ -72,9 +76,20 @@ func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator
 
 func (cg *configGenerator) generateConfig(
 	ctx context.Context,
+	a *v1.Alertmanager,
 	baseConfig alertmanagerConfig,
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) ([]byte, error) {
+	versionStr := a.Spec.Version
+	if versionStr == "" {
+		versionStr = operator.DefaultAlertmanagerVersion
+	}
+
+	version, err := semver.ParseTolerant(versionStr)
+	if err != nil {
+		return nil, err
+	}
+
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
 	// same order.
@@ -103,7 +118,7 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		subRoutes = append(subRoutes, convertRoute(a, amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -111,6 +126,12 @@ func (cg *configGenerator) generateConfig(
 				return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
+		}
+
+		if version.GTE(semver.MustParse("0.22.0")) {
+			for _, item := range amConfigs[amConfigIdentifier].Spec.MuteTimeIntervals {
+				baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, convertTimeInterval(&item))
+			}
 		}
 	}
 
@@ -123,7 +144,15 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(baseConfig)
 }
 
-func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
+func convertRoute(a *v1.Alertmanager, in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
+	versionStr := a.Spec.Version
+
+	if versionStr == "" {
+		versionStr = operator.DefaultAlertmanagerVersion
+	}
+
+	version, _ := semver.ParseTolerant(versionStr)
+
 	// Enforce "continue" to be true for the top-level route.
 	cont := in.Continue
 	if firstLevelRoute {
@@ -165,22 +194,28 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = convertRoute(&children[i], crKey, false)
+			routes[i] = convertRoute(a, &children[i], crKey, false)
 		}
+	}
+
+	MuteTimeInterval := []string{}
+	if version.GTE(semver.MustParse("0.22.0")) {
+		MuteTimeInterval = in.MuteTimeIntervals
 	}
 
 	receiver := prefixReceiverName(in.Receiver, crKey)
 
 	return &route{
-		Receiver:       receiver,
-		GroupByStr:     in.GroupBy,
-		GroupWait:      in.GroupWait,
-		GroupInterval:  in.GroupInterval,
-		RepeatInterval: in.RepeatInterval,
-		Continue:       cont,
-		Match:          match,
-		MatchRE:        matchRE,
-		Routes:         routes,
+		Receiver:          receiver,
+		GroupByStr:        in.GroupBy,
+		GroupWait:         in.GroupWait,
+		GroupInterval:     in.GroupInterval,
+		RepeatInterval:    in.RepeatInterval,
+		Continue:          cont,
+		Match:             match,
+		MatchRE:           matchRE,
+		Routes:            routes,
+		MuteTimeIntervals: MuteTimeInterval,
 	}
 }
 
@@ -842,4 +877,42 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	}
 
 	return out
+}
+
+func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInterval {
+	var mti MuteTimeInterval
+	mti.Name = in.Name
+
+	for _, interval := range in.TimeIntervals {
+		times := make([]TimeRange, len(interval.Times))
+		days := make([]string, len(interval.DaysOfMonthRange))
+		months := make([]string, len(interval.Months))
+		week := make([]string, len(interval.Weekdays))
+		years := make([]string, len(interval.Years))
+
+		for j, y := range interval.Times {
+			times[j].StartTime = y.StartTime
+			times[j].EndTime = y.EndTime
+		}
+
+		copy(days, interval.DaysOfMonthRange)
+		copy(months, interval.Months)
+		copy(week, interval.Weekdays)
+		copy(years, interval.Years)
+
+		x := &TimeInterval{
+			Times:            times,
+			DaysOfMonthRange: days,
+			Months:           months,
+			Weekdays:         week,
+			Years:            years,
+		}
+
+		// Prevent empty structs from being added to the yaml
+		if !reflect.DeepEqual(x, TimeInterval{}) {
+			mti.TimeIntervals = append(mti.TimeIntervals, *x)
+		}
+	}
+
+	return &mti
 }

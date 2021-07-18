@@ -101,6 +101,74 @@ spec:
                       type: array
                   type: object
                 type: array
+              muteTimeIntervals:
+                description: List of mute time intervals
+                items:
+                  description: MuteTimeInterval specifies a named interval of time
+                    that may be referenced in the routing tree to mute particular
+                    routes for particular times of the day.
+                  properties:
+                    name:
+                      description: Name of a mute time interval.
+                      minLength: 1
+                      type: string
+                    timeIntervals:
+                      description: Series of time intervals associated with the mute
+                        time interval.
+                      items:
+                        description: TimeInterval  contains the actual definition
+                          for an interval of time.
+                        properties:
+                          daysOfMonthRange:
+                            description: A list of numerical days in the month. Days
+                              begin at 1. Negative values are also accepted which
+                              begin at the end of the month.
+                            items:
+                              type: string
+                            type: array
+                          months:
+                            description: A list of calendar months identified by a
+                              case-insentive name (e.g. ‘January’) or by number, where
+                              January = 1
+                            items:
+                              type: string
+                            type: array
+                          times:
+                            description: Defines a series of start and end times
+                            items:
+                              description: TimeRange defines a start and end time
+                              properties:
+                                endTime:
+                                  description: End time for a time interval, is exclusive
+                                  type: string
+                                startTime:
+                                  description: Start time for a time interval, is
+                                    inclusive
+                                  type: string
+                              required:
+                              - endTime
+                              - startTime
+                              type: object
+                            type: array
+                          weekdays:
+                            description: A list of days of the week, where the week
+                              begins on Sunday and ends on Saturday. Days should be
+                              specified by name (e.g. ‘Sunday’).
+                            items:
+                              type: string
+                            type: array
+                          years:
+                            description: A numerical list of years. Ranges are accepted.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  - timeIntervals
+                  type: object
+                type: array
               receivers:
                 description: List of receivers.
                 items:
@@ -2410,6 +2478,12 @@ spec:
                       required:
                       - name
                       type: object
+                    type: array
+                  muteTimeIntervals:
+                    description: List of names of mute time intervals which are defined
+                      in AlertmanagerConfigSpec
+                    items:
+                      type: string
                     type: array
                   receiver:
                     description: Name of the receiver for this route. If not empty,
