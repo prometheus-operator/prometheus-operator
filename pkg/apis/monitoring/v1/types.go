@@ -869,6 +869,8 @@ type Endpoint struct {
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
@@ -940,6 +942,8 @@ type PodMetricsEndpoint struct {
 	// BasicAuth allow an endpoint to authenticate over basic authentication.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
@@ -996,6 +1000,8 @@ type ProbeSpec struct {
 	// BasicAuth allow an endpoint to authenticate over basic authentication.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 }
 
 // ProbeTargets defines a set of static and dynamically discovered targets for the prober.

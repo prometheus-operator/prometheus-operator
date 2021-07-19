@@ -267,6 +267,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 					apiserverConfig,
 					basicAuthSecrets,
 					bearerTokens,
+					oauth2Secrets,
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
@@ -287,6 +288,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 					apiserverConfig,
 					basicAuthSecrets,
 					bearerTokens,
+					oauth2Secrets,
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
@@ -307,6 +309,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 				apiserverConfig,
 				basicAuthSecrets,
 				bearerTokens,
+				oauth2Secrets,
 				p.Spec.OverrideHonorLabels,
 				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
@@ -439,6 +442,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	i int, apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	bearerTokens map[string]assets.BearerToken,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
@@ -504,6 +508,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			})
 		}
 	}
+
+	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
+	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, oauth2Secrets, assetKey)
 
 	relabelings := initRelabelings()
 
@@ -679,6 +686,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	bearerTokens map[string]assets.BearerToken,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
@@ -898,6 +906,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}
 	}
 
+	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
+	cfg = addOAuth2ToYaml(cfg, version, m.Spec.OAuth2, oauth2Secrets, assetKey)
+
 	return cfg
 }
 
@@ -909,6 +920,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	bearerTokens map[string]assets.BearerToken,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
 	overrideHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
@@ -953,6 +965,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
+
+	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
+	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, oauth2Secrets, assetKey)
 
 	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
 
@@ -1418,26 +1433,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
-			oauth2Cfg := yaml.MapSlice{}
-			if s, ok := oauth2Secrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
-				oauth2Cfg = append(oauth2Cfg,
-					yaml.MapItem{Key: "client_id", Value: s.ClientID},
-					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
-					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
-				)
-
-				if len(spec.OAuth2.Scopes) > 0 {
-					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
-				}
-
-				if len(spec.OAuth2.EndpointParams) > 0 {
-					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
-				}
-
-				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
-			}
-		}
+		cfg = addOAuth2ToYaml(cfg, version, spec.OAuth2, oauth2Secrets, fmt.Sprintf("remoteRead/%d", i))
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
@@ -1446,13 +1442,46 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 		}
 
 		cfgs = append(cfgs, cfg)
-
 	}
 
 	return yaml.MapItem{
 		Key:   "remote_read",
 		Value: cfgs,
 	}
+}
+
+func addOAuth2ToYaml(
+	cfg yaml.MapSlice,
+	version semver.Version,
+	oauth2 *v1.OAuth2,
+	tlsAssets map[string]assets.OAuth2Credentials,
+	assetKey string,
+) yaml.MapSlice {
+	if oauth2 == nil || !version.GTE(semver.MustParse("2.27.0")) {
+		return cfg
+	}
+
+	tlsAsset, ok := tlsAssets[assetKey]
+	if !ok {
+		return cfg
+	}
+
+	oauth2Cfg := yaml.MapSlice{}
+	oauth2Cfg = append(oauth2Cfg,
+		yaml.MapItem{Key: "client_id", Value: tlsAsset.ClientID},
+		yaml.MapItem{Key: "client_secret", Value: tlsAsset.ClientSecret},
+		yaml.MapItem{Key: "token_url", Value: oauth2.TokenURL},
+	)
+
+	if len(oauth2.Scopes) > 0 {
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: oauth2.Scopes})
+	}
+
+	if len(oauth2.EndpointParams) > 0 {
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
+	}
+
+	return append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
@@ -1541,26 +1570,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
-			oauth2Cfg := yaml.MapSlice{}
-			if s, ok := oauth2Secrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
-				oauth2Cfg = append(oauth2Cfg,
-					yaml.MapItem{Key: "client_id", Value: s.ClientID},
-					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
-					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
-				)
-
-				if len(spec.OAuth2.Scopes) > 0 {
-					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
-				}
-
-				if len(spec.OAuth2.EndpointParams) > 0 {
-					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
-				}
-
-				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
-			}
-		}
+		cfg = addOAuth2ToYaml(cfg, version, spec.OAuth2, oauth2Secrets, fmt.Sprintf("remoteWrite/%d", i))
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 

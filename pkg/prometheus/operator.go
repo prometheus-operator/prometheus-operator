@@ -1753,6 +1753,10 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 					break
 				}
 			}
+
+			if err = store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
+				break
+			}
 		}
 
 		if err != nil {
@@ -1843,6 +1847,10 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 				if err = store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
 					break
 				}
+			}
+
+			if err = store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
+				break
 			}
 		}
 
@@ -1935,10 +1943,15 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
 			break
 		}
+
 		if probe.Spec.TLSConfig != nil {
 			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
 				break
 			}
+		}
+
+		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
+			break
 		}
 
 		res[probeName] = probe

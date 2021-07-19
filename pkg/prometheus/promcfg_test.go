@@ -17,6 +17,7 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/go-openapi/swag"
@@ -2862,6 +2863,212 @@ alerting:
 	if expected != result {
 		fmt.Println(pretty.Compare(expected, result))
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func TestEndpointOAuth2(t *testing.T) {
+	oauth2 := monitoringv1.OAuth2{
+		ClientID: monitoringv1.SecretOrConfigMap{
+			ConfigMap: &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "oauth2",
+				},
+				Key: "client_id",
+			},
+		},
+		ClientSecret: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "oauth2",
+			},
+			Key: "client_secret",
+		},
+		TokenURL: "http://test.url",
+		Scopes:   []string{"scope 1", "scope 2"},
+		EndpointParams: map[string]string{
+			"param1": "value1",
+			"param2": "value2",
+		},
+	}
+
+	expectedCfg := strings.TrimSpace(`
+oauth2:
+    client_id: test_client_id
+    client_secret: test_client_secret
+    token_url: http://test.url
+    scopes:
+    - scope 1
+    - scope 2
+    endpoint_params:
+      param1: value1
+      param2: value2`)
+
+	testCases := []struct {
+		name              string
+		p                 *monitoringv1.Prometheus
+		sMons             map[string]*monitoringv1.ServiceMonitor
+		pMons             map[string]*monitoringv1.PodMonitor
+		probes            map[string]*monitoringv1.Probe
+		oauth2Credentials map[string]assets.OAuth2Credentials
+		expectedCfg       string
+	}{
+		{
+			name: "service monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:   "web",
+								OAuth2: &oauth2,
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"serviceMonitor/default/testservicemonitor1/0": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:   "web",
+								OAuth2: &oauth2,
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"podMonitor/default/testpodmonitor1/0": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ProbeSpec{
+						OAuth2: &oauth2,
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"probe/default/testprobe1": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &ConfigGenerator{}
+			cfg, err := cg.GenerateConfig(
+				tt.p,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				map[string]assets.BasicAuthCredentials{},
+				tt.oauth2Credentials,
+				map[string]assets.BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
 	}
 }
 

@@ -403,6 +403,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		*out = new(BasicAuth)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
 		*out = make([]*RelabelConfig, len(*in))
@@ -558,6 +563,11 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(OAuth2)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.MetricRelabelConfigs != nil {
@@ -750,6 +760,11 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(OAuth2)
 		(*in).DeepCopyInto(*out)
 	}
 }
