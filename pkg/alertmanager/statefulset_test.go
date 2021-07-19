@@ -1007,12 +1007,12 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	containsClusterListenAddress := false
 
 	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=[$(POD_IP)]:9094" {
+		if arg == "--cluster.listen-address=:9094" {
 			containsClusterListenAddress = true
 		}
 	}
 
 	if !containsClusterListenAddress {
-		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
+		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=:9094'")
 	}
 }

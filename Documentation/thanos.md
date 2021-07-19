@@ -49,8 +49,6 @@ spec:
 ...
 ```
 
-Note: If you're using Istio you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost.
-
 ## Configuring Thanos Object Storage
 
 If you want sidecar to be able to upload blocks to object storage you need to tell Prometheus Operator about it.
