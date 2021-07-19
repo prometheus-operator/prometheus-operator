@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
@@ -226,6 +227,105 @@ inhibit_rules:
   source_match:
     alertname: NodeNotReady
     namespace: mynamespace
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, CR with source and target matchers only",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatchers: []string{"severity=\"critical\""},
+								TargetMatchers: []string{"severity=\"warning\""},
+								Equal:          []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - namespace=mynamespace
+  - severity="warning"
+  source_matchers:
+  - namespace=mynamespace
+  - severity="critical"
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+
+		{
+			name:    "skeleton base, CR with SourceMatch, TargetMatch, SourceMatchers and TargetMatchers",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "NodeNotReady",
+									},
+								},
+								TargetMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "TargetDown",
+									},
+								},
+								SourceMatchers: []string{"severity=\"critical\""},
+								TargetMatchers: []string{"severity=\"warning\""},
+								Equal:          []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_match:
+    alertname: TargetDown
+    namespace: mynamespace
+  target_matchers:
+  - namespace=mynamespace
+  - severity="warning"
+  source_match:
+    alertname: NodeNotReady
+    namespace: mynamespace
+  source_matchers:
+  - namespace=mynamespace
+  - severity="critical"
   equal:
   - node
 receivers:
@@ -635,7 +735,7 @@ templates: []
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 			cg := newConfigGenerator(nil, store)
-			cfgBytes, err := cg.generateConfig(ctx, tc.baseConfig, tc.amConfigs)
+			cfgBytes, err := cg.generateConfig(ctx, &v1.Alertmanager{}, tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)
 			}

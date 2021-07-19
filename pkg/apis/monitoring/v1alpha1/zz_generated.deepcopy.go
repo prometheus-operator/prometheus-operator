@@ -192,6 +192,16 @@ func (in *InhibitRule) DeepCopyInto(out *InhibitRule) {
 		*out = make([]Matcher, len(*in))
 		copy(*out, *in)
 	}
+	if in.SourceMatchers != nil {
+		in, out := &in.SourceMatchers, &out.SourceMatchers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.TargetMatchers != nil {
+		in, out := &in.TargetMatchers, &out.TargetMatchers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Equal != nil {
 		in, out := &in.Equal, &out.Equal
 		*out = make([]string, len(*in))
