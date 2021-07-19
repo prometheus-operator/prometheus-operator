@@ -938,81 +938,103 @@ func TestTerminationPolicy(t *testing.T) {
 	}
 }
 
-func TestClusterListenAddressForSingleReplica(t *testing.T) {
-	a := monitoringv1.Alertmanager{}
-	replicas := int32(1)
-	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
+func TestClusterListenAddress(t *testing.T) {
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-	if err != nil {
-		t.Fatal(err)
+	type testcase struct {
+		Name                   string
+		Replicas               int32
+		ClusterListenLocal     bool
+		ForceEnableClusterMode bool
+		ExpectedResult         string
 	}
 
-	amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-	containsEmptyClusterListenAddress := false
-
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
-			containsEmptyClusterListenAddress = true
-		}
+	testcases := []testcase{
+		{
+			Name:                   "ClusterListenAddressForSingleReplica",
+			Replicas:               1,
+			ForceEnableClusterMode: false,
+			ClusterListenLocal:     false,
+			ExpectedResult:         "--cluster.listen-address=",
+		},
+		{
+			Name:                   "ClusterListenAddressForSingleReplicaWithForceEnableClusterMode",
+			Replicas:               1,
+			ForceEnableClusterMode: true,
+			ClusterListenLocal:     false,
+			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
+		},
+		{
+			Name:                   "ClusterListenAddressForSingleReplicaWithClusterListenLocal",
+			Replicas:               1,
+			ForceEnableClusterMode: false,
+			ClusterListenLocal:     true,
+			ExpectedResult:         "--cluster.listen-address=",
+		},
+		{
+			Name:                   "ClusterListenAddressForSingleReplicaWithForceEnableClusterModeAndClusterListenLocal",
+			Replicas:               1,
+			ForceEnableClusterMode: true,
+			ClusterListenLocal:     true,
+			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
+		},
+		{
+			Name:                   "ClusterListenAddressForMultipleReplicas",
+			Replicas:               3,
+			ForceEnableClusterMode: false,
+			ClusterListenLocal:     false,
+			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
+		},
+		{
+			Name:                   "ClusterListenAddressForMultipleReplicaWithForceEnableClusterMode",
+			Replicas:               3,
+			ForceEnableClusterMode: true,
+			ClusterListenLocal:     false,
+			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
+		},
+		{
+			Name:                   "ClusterListenAddressForMultipleReplicasWithClusterListenLocal",
+			Replicas:               3,
+			ForceEnableClusterMode: false,
+			ClusterListenLocal:     true,
+			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
+		},
+		{
+			Name:                   "ClusterListenAddressForMultipleReplicasWithForceEnableClusterModeAndClusterListenLocal",
+			Replicas:               3,
+			ForceEnableClusterMode: true,
+			ClusterListenLocal:     true,
+			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
+		},
 	}
 
-	if !containsEmptyClusterListenAddress {
-		t.Fatal("expected stateful set to contain arg '--cluster.listen-address='")
-	}
-}
+	for _, tc := range testcases {
+		t.Run(tc.Name, func(t *testing.T) {
 
-func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
-	a := monitoringv1.Alertmanager{}
-	replicas := int32(1)
-	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
-	a.Spec.ForceEnableClusterMode = true
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = &tc.Replicas
+			a.Spec.ForceEnableClusterMode = tc.ForceEnableClusterMode
+			a.Spec.ClusterListenLocal = tc.ClusterListenLocal
+			a.Spec.Version = operator.DefaultAlertmanagerVersion
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
+			statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	amArgs := statefulSet.Template.Spec.Containers[0].Args
+			amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-	containsEmptyClusterListenAddress := false
+			containsClusterListenAddress := ""
 
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
-			containsEmptyClusterListenAddress = true
-		}
-	}
+			for _, arg := range amArgs {
+				if strings.HasPrefix(arg, "--cluster.listen-address=") {
+					containsClusterListenAddress = arg
+					break
+				}
+			}
 
-	if containsEmptyClusterListenAddress {
-		t.Fatal("expected stateful set to not contain arg '--cluster.listen-address='")
-	}
-}
-
-func TestClusterListenAddressForMultiReplica(t *testing.T) {
-	a := monitoringv1.Alertmanager{}
-	replicas := int32(3)
-	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
-
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-	containsClusterListenAddress := false
-
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=[$(POD_IP)]:9094" {
-			containsClusterListenAddress = true
-		}
-	}
-
-	if !containsClusterListenAddress {
-		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
+			if containsClusterListenAddress != tc.ExpectedResult {
+				t.Errorf("expected stateful set to contain arg '%s', got '%s'", tc.ExpectedResult, containsClusterListenAddress)
+			}
+		})
 	}
 }
