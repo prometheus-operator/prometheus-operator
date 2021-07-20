@@ -374,7 +374,7 @@ func TestAddAutho(t *testing.T) {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
 
-			if s.Credentials != tc.expectedCredentials {
+			if s != AuthorizationCredentials(tc.expectedCredentials) {
 				t.Fatalf("expecting credentials %q, got %q", tc.expectedCredentials, s)
 			}
 		})

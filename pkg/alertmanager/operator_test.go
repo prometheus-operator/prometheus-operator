@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
@@ -38,6 +39,11 @@ func strPtr(str string) *string {
 }
 
 func TestCheckAlertmanagerConfig(t *testing.T) {
+	version, err := semver.ParseTolerant("v0.22.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -801,7 +807,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			err := checkAlertmanagerConfig(context.Background(), "0.22.1", tc.amConfig, store)
+			err := checkAlertmanagerConfig(context.Background(), version, tc.amConfig, store)
 			if tc.ok {
 				if err != nil {
 					t.Fatalf("expecting no error but got %q", err)

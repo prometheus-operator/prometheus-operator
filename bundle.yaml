@@ -420,6 +420,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -745,6 +747,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1054,6 +1058,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1478,6 +1484,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1796,6 +1804,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2058,6 +2068,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2370,6 +2382,8 @@ spec:
                                     description: The type of the token to use. Defaults
                                       to `Bearer`.
                                     type: string
+                                required:
+                                - credentials
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually

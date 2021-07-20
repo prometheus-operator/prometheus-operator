@@ -265,7 +265,7 @@ Authorization allow an endpoint to authenticate by configuring the authenticatio
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | type | The type of the token to use. Defaults to `Bearer`. | string | false |
-| credentials | The secret to pass to in the header. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| credentials | The secret to pass to in the header. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | true |
 
 [Back to TOC](#table-of-contents)
 

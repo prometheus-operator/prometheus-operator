@@ -214,9 +214,7 @@ func (s *Store) AddAuthorization(ctx context.Context, ns string, auth *monitorin
 		return errors.Wrap(err, "failed to get authorization credential")
 	}
 
-	s.AuthorizationAssets[key] = AuthorizationCredentials{
-		Credentials: credentials,
-	}
+	s.AuthorizationAssets[key] = AuthorizationCredentials(credentials)
 
 	return nil
 }

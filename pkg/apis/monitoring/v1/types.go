@@ -1103,7 +1103,7 @@ type Authorization struct {
 	// The type of the token to use. Defaults to `Bearer`.
 	Type string `json:"type,omitempty"`
 	// The secret to pass to in the header.
-	Credentials v1.SecretKeySelector `json:"credentials,omitempty"`
+	Credentials v1.SecretKeySelector `json:"credentials"`
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication
