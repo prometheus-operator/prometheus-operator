@@ -52,14 +52,14 @@ type Store struct {
 // NewStore returns an empty assetStore.
 func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *Store {
 	return &Store{
-		cmClient:          cmClient,
-		sClient:           sClient,
-		TLSAssets:         make(map[TLSAssetKey]TLSAsset),
-		BearerTokenAssets: make(map[string]BearerToken),
-		BasicAuthAssets:   make(map[string]BasicAuthCredentials),
+		cmClient:            cmClient,
+		sClient:             sClient,
+		TLSAssets:           make(map[TLSAssetKey]TLSAsset),
+		BearerTokenAssets:   make(map[string]BearerToken),
+		BasicAuthAssets:     make(map[string]BasicAuthCredentials),
 		AuthorizationAssets: make(map[string]AuthorizationCredentials),
-		OAuth2Assets:      make(map[string]OAuth2Credentials),
-		objStore:          cache.NewStore(assetKeyFunc),
+		OAuth2Assets:        make(map[string]OAuth2Credentials),
+		objStore:            cache.NewStore(assetKeyFunc),
 	}
 }
 

@@ -260,7 +260,7 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 
 ## Authorization
 
-Authorization allows configuring authentication with endpoint via a token. More info: https://prometheus.io/docs/operating/configuration/#endpoints
+Authorization allow an endpoint to authenticate by configuring the authentication token More info: https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1288,8 +1288,8 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from alertmanager v0.22+ | *monitoringv1.Authorization | false |
-| basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization | *monitoringv1.BasicAuth | false |
+| authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+. | *monitoringv1.Authorization | false |
+| basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence. | *monitoringv1.BasicAuth | false |
 | bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
 | proxyURL | Optional proxy URL. | string | false |

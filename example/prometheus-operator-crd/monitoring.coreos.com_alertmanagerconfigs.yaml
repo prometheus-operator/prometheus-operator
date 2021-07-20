@@ -393,8 +393,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -423,7 +423,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -717,8 +718,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -747,7 +748,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1025,8 +1027,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1055,7 +1057,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1448,8 +1451,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1478,7 +1481,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1765,8 +1769,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1795,7 +1799,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -2026,8 +2031,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -2056,7 +2061,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -2337,8 +2343,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
-                                  and is only available starting from alertmanager
-                                  v0.22+
+                                  and is only available starting from Alertmanager
+                                  v0.22+.
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -2367,7 +2373,8 @@ spec:
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
-                                  exclusive with Authorization
+                                  exclusive with Authorization. If both are defined,
+                                  BasicAuth takes precedence.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
