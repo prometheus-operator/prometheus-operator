@@ -808,6 +808,19 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		if username != "" && password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
+	} else if in.Authorization != nil {
+		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.Authorization.Credentials)
+		if err != nil {
+			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
+		}
+
+		if credentials != "" {
+			authorizationType := out.Authorization.Type
+			if authorizationType == "" {
+				authorizationType = "Bearer"
+			}
+			out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
+		}
 	}
 
 	if in.TLSConfig != nil {

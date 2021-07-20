@@ -836,7 +836,18 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
 					URL: func(s string) *string {
 						return &s
-					}("http://test.url"),
+					}("http://test1.url"),
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.Authorization{
+							Type: "Bearer",
+							Credentials: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testingSecret,
+								},
+								Key: testingSecretKey,
+							},
+						},
+					},
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &v1.SecretKeySelector{
@@ -1093,7 +1104,11 @@ receivers:
       confirm:
         text: text
   webhook_configs:
-  - url: http://test.url
+  - url: http://test1.url
+    http_config:
+      authorization:
+        type: Bearer
+        credentials: 1234abc
   wechat_configs:
   - api_secret: 1234abc
     corp_id: testingCorpID

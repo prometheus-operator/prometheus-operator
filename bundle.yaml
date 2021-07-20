@@ -390,8 +390,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -682,8 +712,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -958,8 +1018,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1349,8 +1439,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1634,8 +1754,38 @@ spec:
                           httpConfig:
                             description: The HTTP client's configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1863,8 +2013,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -2142,8 +2322,38 @@ spec:
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
+                              authorization:
+                                description: Authorization header configuration for
+                                  the client. This is mutually exclusive with BasicAuth
+                                properties:
+                                  credentials:
+                                    description: The secret to pass to in the header.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  type:
+                                    description: The type of the token to use. Defaults
+                                      to `Bearer`.
+                                    type: string
+                                type: object
                               basicAuth:
-                                description: BasicAuth for the client.
+                                description: BasicAuth for the client. This is mutually
+                                  exclusive with Authorization
                                 properties:
                                   password:
                                     description: The secret in the service monitor

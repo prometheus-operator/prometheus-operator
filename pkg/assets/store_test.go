@@ -127,7 +127,7 @@ func TestAddBearerToken(t *testing.T) {
 				Key: tc.selectedKey,
 			}
 
-			key := fmt.Sprintf("basicauth/%d", i)
+			key := fmt.Sprintf("bearertoken/%d", i)
 			err := store.AddBearerToken(context.Background(), tc.ns, sel, key)
 
 			if tc.err {
@@ -283,6 +283,99 @@ func TestAddBasicAuth(t *testing.T) {
 			}
 			if s.Password != tc.expectedPassword {
 				t.Fatalf("expecting password %q, got %q", tc.expectedPassword, s)
+			}
+		})
+	}
+}
+
+func TestAddAutho(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+				"key2": []byte("val2"),
+			},
+		},
+	)
+
+	for i, tc := range []struct {
+		ns                      string
+		selectedCredentialsName string
+		selectedCredentialsKey  string
+
+		err                 bool
+		expectedCredentials string
+	}{
+		{
+			ns:                      "ns1",
+			selectedCredentialsName: "secret",
+			selectedCredentialsKey:  "key1",
+
+			expectedCredentials: "val1",
+		},
+		// Wrong namespace.
+		{
+			ns:                      "ns2",
+			selectedCredentialsName: "secret",
+			selectedCredentialsKey:  "key1",
+
+			err: true,
+		},
+		// Wrong name for credentials selector.
+		{
+			ns:                      "ns1",
+			selectedCredentialsName: "secreet",
+			selectedCredentialsKey:  "key1",
+
+			err: true,
+		},
+		// Wrong key for credentials selector.
+		{
+			ns:                      "ns1",
+			selectedCredentialsName: "secret",
+			selectedCredentialsKey:  "key3",
+
+			err: true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			store := NewStore(c.CoreV1(), c.CoreV1())
+
+			authorization := &monitoringv1.Authorization{
+				Credentials: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedCredentialsName,
+					},
+					Key: tc.selectedCredentialsKey,
+				},
+			}
+
+			key := fmt.Sprintf("authorization/%d", i)
+			err := store.AddAuthorization(context.Background(), tc.ns, authorization, key)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			s, found := store.AuthorizationAssets[key]
+
+			if !found {
+				t.Fatalf("expecting to find key %q but got nothing", key)
+			}
+
+			if s.Credentials != tc.expectedCredentials {
+				t.Fatalf("expecting credentials %q, got %q", tc.expectedCredentials, s)
 			}
 		})
 	}
