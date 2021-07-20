@@ -4163,7 +4163,22 @@ spec:
                         accessKey:
                           description: AccessKey is the AWS API key. If blank, the
                             environment variable `AWS_ACCESS_KEY_ID` is used
-                          type: string
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
                         profile:
                           description: Profile is the named AWS profile used to authenticate.
                           type: string
@@ -4177,7 +4192,22 @@ spec:
                         secretKey:
                           description: SecretKey is the AWS API secret. If blank,
                             the environment variable `AWS_SECRET_ACCESS_KEY` is used
-                          type: string
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
                       type: object
                     tlsConfig:
                       description: TLS Config to use for remote write.
