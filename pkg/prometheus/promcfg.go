@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"regexp"
@@ -168,7 +169,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
-) ([]byte, error) {
+	store *assets.Store) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = operator.DefaultPrometheusVersion
@@ -387,7 +388,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets, oauth2Secrets))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets, oauth2Secrets, store))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 {
@@ -1489,6 +1490,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 	p *v1.Prometheus,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	oauth2Secrets map[string]assets.OAuth2Credentials,
+	store *assets.Store,
 ) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
@@ -1503,7 +1505,6 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
-
 		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.25.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
 		}
@@ -1576,6 +1577,40 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
+		}
+
+		if spec.Sigv4 != nil && version.GTE(semver.MustParse("2.26.0")) {
+			sigv4 := yaml.MapSlice{}
+			if spec.Sigv4.Region != "" {
+				sigv4 = append(sigv4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
+			}
+			if spec.Sigv4.AccessKey != nil {
+				key, err := store.GetSecretKey(context.Background(), p.Namespace, *spec.Sigv4.AccessKey)
+				if err != nil {
+					level.Error(cg.logger).Log("msg", "Could not read AWS access key from secret",
+						"secret", spec.Sigv4.AccessKey.LocalObjectReference.Name, "key", spec.Sigv4.AccessKey.Key,
+						"error", err.Error())
+				} else {
+					sigv4 = append(sigv4, yaml.MapItem{Key: "access_key", Value: key})
+				}
+			}
+			if spec.Sigv4.SecretKey != nil {
+				key, err := store.GetSecretKey(context.Background(), p.Namespace, *spec.Sigv4.SecretKey)
+				if err != nil {
+					level.Error(cg.logger).Log("msg", "Could not read AWS secret key from secret",
+						"secret", spec.Sigv4.SecretKey.LocalObjectReference.Name, "key", spec.Sigv4.SecretKey.Key,
+						"error", err.Error())
+				} else {
+					sigv4 = append(sigv4, yaml.MapItem{Key: "secret_key", Value: key})
+				}
+			}
+			if spec.Sigv4.Profile != "" {
+				sigv4 = append(sigv4, yaml.MapItem{Key: "profile", Value: spec.Sigv4.Profile})
+			}
+			if spec.Sigv4.RoleArn != "" {
+				sigv4 = append(sigv4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "sigv4", Value: sigv4})
 		}
 
 		if spec.QueueConfig != nil {

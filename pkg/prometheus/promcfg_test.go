@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
@@ -31,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/pointer"
 )
 
@@ -214,7 +216,7 @@ alerting:
 			nil,
 			nil,
 			nil,
-		)
+			nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -443,8 +445,8 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -557,7 +559,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -665,7 +667,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -734,10 +736,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 					},
 				},
 			},
-		},
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
+		}, nil, nil, map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
@@ -771,7 +770,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -885,7 +884,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -1011,6 +1010,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		},
 		map[string]assets.BasicAuthCredentials{},
 		map[string]assets.OAuth2Credentials{},
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1197,6 +1197,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1277,7 +1278,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1358,7 +1359,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1441,7 +1442,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 `),
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1547,6 +1548,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		map[string]assets.BasicAuthCredentials{},
 		map[string]assets.OAuth2Credentials{},
 		map[string]assets.BearerToken{},
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1709,11 +1711,11 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	expected := `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -1808,8 +1810,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{
 				EnforcedNamespaceLabel: "ns-key",
 			},
-		},
-		map[string]*monitoringv1.ServiceMonitor{
+		}, map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -1855,7 +1856,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1984,7 +1985,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
     - localhost
 `),
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2031,7 +2032,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
+func
+TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2078,7 +2080,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2174,7 +2176,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
+func
+TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2221,7 +2224,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2298,7 +2301,8 @@ alerting:
 	}
 }
 
-func TestHonorTimestampsOverriding(t *testing.T) {
+func
+TestHonorTimestampsOverriding(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2346,7 +2350,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2442,7 +2446,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorLabels(t *testing.T) {
+func
+TestSettingHonorLabels(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2488,7 +2493,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2630,7 +2635,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2771,7 +2776,7 @@ func TestTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3058,7 +3063,7 @@ oauth2:
 				nil,
 				nil,
 				nil,
-			)
+				nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3117,7 +3122,7 @@ func TestPodTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3257,7 +3262,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3370,7 +3375,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3517,7 +3522,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		nil,
 		nil,
 		nil,
-	)
+		nil)
 }
 
 func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
@@ -3836,7 +3841,6 @@ func TestHonorLabels(t *testing.T) {
 		OverrideHonorLabels bool
 		Expected            bool
 	}
-
 	testCases := []testCase{
 		{
 			UserHonorLabels:     false,
@@ -3874,7 +3878,6 @@ func TestHonorTimestamps(t *testing.T) {
 		OverrideHonorTimestamps bool
 		Expected                string
 	}
-
 	testCases := []testCase{
 		{
 			UserHonorTimestamps:     nil,
@@ -4142,6 +4145,7 @@ alerting:
 				map[string]assets.BasicAuthCredentials{},
 				map[string]assets.OAuth2Credentials{},
 				map[string]assets.BearerToken{},
+				nil,
 				nil,
 				nil,
 				nil,
@@ -4418,6 +4422,7 @@ alerting:
 				nil,
 				nil,
 				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4540,6 +4545,7 @@ remote_read:
 				nil,
 				nil,
 				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4564,7 +4570,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 		{
 			version: "v2.22.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL:   "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -4607,9 +4613,26 @@ remote_write:
 `,
 		},
 		{
-			version: "v2.23.0",
+			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/Webserver",
+					AccessKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -4641,6 +4664,12 @@ alerting:
 remote_write:
 - url: http://example.com
   remote_timeout: 30s
+  sigv4:
+    region: us-central-0
+    access_key: access-key
+    secret_key: secret-key
+    profile: profilename
+    role_arn: arn:aws:iam::123456789012:instance-profile/Webserver
   queue_config:
     capacity: 1000
     min_shards: 1
@@ -4785,7 +4814,9 @@ remote_write:
 		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
-			cg := &ConfigGenerator{}
+			cg := &ConfigGenerator{
+				logger: log.NewNopLogger(),
+			}
 
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
@@ -4800,7 +4831,24 @@ remote_write:
 						},
 					},
 					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+					Secrets:     []string{"sigv4-secret"},
 				},
+			}
+
+			var store *assets.Store
+			if tc.remoteWrite.Sigv4 != nil {
+				// Prepare a fake K8s client for secrets
+				sClient := fake.NewSimpleClientset(&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      tc.remoteWrite.Sigv4.AccessKey.Name,
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						tc.remoteWrite.Sigv4.AccessKey.Key: []byte("access-key"),
+						tc.remoteWrite.Sigv4.SecretKey.Key: []byte("secret-key"),
+					},
+				}).CoreV1()
+				store = assets.NewStore(nil, sClient)
 			}
 
 			cfg, err := cg.GenerateConfig(
@@ -4820,7 +4868,7 @@ remote_write:
 				nil,
 				nil,
 				nil,
-			)
+				store)
 			if err != nil {
 				t.Fatal(err)
 			}

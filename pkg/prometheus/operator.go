@@ -1589,7 +1589,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
-	)
+		store)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}

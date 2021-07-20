@@ -67,6 +67,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
+* [Sigv4](#sigv4)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
@@ -863,6 +864,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
+| sigv4 | Sigv4 allows to configures AWS's Signature Verification 4 | *[Sigv4](#sigv4) | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
@@ -1005,6 +1007,20 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | namespaceSelector | Selector to select which namespaces the Kubernetes Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
+
+[Back to TOC](#table-of-contents)
+
+## Sigv4
+
+Sigv4 optionally configures AWS's Signature Verification 4 signing process to sign requests. Cannot be set at the same time as basic_auth or authorization.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| region | Region is the AWS region. If blank, the region from the default credentials chain used. | string | false |
+| accessKey | AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used | string | false |
+| secretKey | SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used | string | false |
+| profile | Profile is the named AWS profile used to authenticate. | string | false |
+| roleArn | RoleArn is the named AWS profile used to authenticate. | string | false |
 
 [Back to TOC](#table-of-contents)
 
