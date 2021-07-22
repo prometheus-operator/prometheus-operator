@@ -1255,6 +1255,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	name := "test"
 
 	alertManager := framework.MakeBasicAlertmanager(name, 3)
+	alertManager.Namespace = ns
 
 	alertManager, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertManager)
 	if err != nil {
