@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,8 +27,9 @@ import (
 )
 
 func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
 	// create 3 namespaces:
 	//
@@ -39,38 +41,39 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 	//
 	// 3. "nonInstance" ns:
 	//   - hosts an Alertmanager CR which must not be reconciled
-	operatorNs := framework.CreateNamespace(t, ctx)
-	instanceNs := framework.CreateNamespace(t, ctx)
-	nonInstanceNs := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
+	operatorNs := framework.CreateNamespace(ctx, t, testCtx)
+	instanceNs := framework.CreateNamespace(ctx, t, testCtx)
+	nonInstanceNs := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBACGlobal(ctx, t, testCtx, instanceNs)
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false, true)
+	_, err := framework.CreatePrometheusOperator(ctx, operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	am := framework.MakeBasicAlertmanager("non-instance", 3)
 	am.Namespace = nonInstanceNs
-	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(framework.Ctx, am, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(ctx, am, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	am = framework.MakeBasicAlertmanager("instance", 3)
 	am.Namespace = instanceNs
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(instanceNs, am); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, instanceNs, am); err != nil {
 		t.Fatal(err)
 	}
 
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(framework.Ctx, "alertmanager-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(ctx, "alertmanager-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 }
 
 func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
 	// create two namespaces:
 	//
@@ -81,25 +84,26 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 	//   - will be configured on prometheus operator as --alertmanager-instance-namespaces="instance"
 	//   - will additionally be configured on prometheus operator as --deny-namespaces="instance"
 	//   - hosts an alertmanager CR which must be reconciled.
-	operatorNs := framework.CreateNamespace(t, ctx)
-	instanceNs := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
+	operatorNs := framework.CreateNamespace(ctx, t, testCtx)
+	instanceNs := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBACGlobal(ctx, t, testCtx, instanceNs)
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
+	_, err := framework.CreatePrometheusOperator(ctx, operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	am := framework.MakeBasicAlertmanager("instance", 3)
 	am.Namespace = instanceNs
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(instanceNs, am); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, instanceNs, am); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
 	// create 3 namespaces:
 	//
@@ -115,13 +119,13 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	//   - will be configured on prometheus operator as --namespaces="allowed"
 	//   - hosts an AlertmanagerConfig CR which must be reconciled
 	//   - hosts an Alertmanager CR which must not reconciled.
-	operatorNs := framework.CreateNamespace(t, ctx)
-	instanceNs := framework.CreateNamespace(t, ctx)
-	allowedNs := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
+	operatorNs := framework.CreateNamespace(ctx, t, testCtx)
+	instanceNs := framework.CreateNamespace(ctx, t, testCtx)
+	allowedNs := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBACGlobal(ctx, t, testCtx, instanceNs)
 
 	for _, ns := range []string{allowedNs, instanceNs} {
-		err := framework.AddLabelsToNamespace(ns, map[string]string{
+		err := framework.AddLabelsToNamespace(ctx, ns, map[string]string{
 			"monitored": "true",
 		})
 		if err != nil {
@@ -130,7 +134,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, []string{"notfound", allowedNs}, nil, nil, []string{"notfound", instanceNs}, false, true)
+	_, err := framework.CreatePrometheusOperator(ctx, operatorNs, *opImage, []string{"notfound", allowedNs}, nil, nil, []string{"notfound", instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,18 +155,18 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Create an Alertmanager resource in the "allowedNs" namespace which must *not* be reconciled.
-	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(framework.Ctx, am.DeepCopy(), metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(ctx, am.DeepCopy(), metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create an Alertmanager resource in the "instance" namespace which must be reconciled.
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(instanceNs, am); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, instanceNs, am); err != nil {
 		t.Fatal(err)
 	}
 
 	// Check that the Alertmanager resource created in the "allowed" namespace hasn't been reconciled.
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(framework.Ctx, "alertmanager-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(ctx, "alertmanager-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -185,16 +189,16 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		},
 	}
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(framework.Ctx, amConfig, metav1.CreateOptions{}); err != nil {
+	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(ctx, amConfig, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(framework.Ctx, amConfig, metav1.CreateOptions{}); err != nil {
+	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(ctx, amConfig, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
 	// Check that the AlertmanagerConfig resource in the "allowed" namespace is reconciled but not the one in "instance".
-	err = framework.PollAlertmanagerConfiguration(instanceNs, "instance",
+	err = framework.PollAlertmanagerConfiguration(ctx, instanceNs, "instance",
 		func(config string) error {
 			if !strings.Contains(config, "void") {
 				return fmt.Errorf("expected generated configuration to contain %q but got %q", "void", config)

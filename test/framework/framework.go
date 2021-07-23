@@ -172,11 +172,10 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist,
+func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
 	createRuleAdmissionHooks, createClusterRoleBindings bool) ([]FinalizerFn, error) {
 
-	ctx := context.Background()
 	var finalizers []FinalizerFn
 
 	_, err := f.createServiceAccount(
