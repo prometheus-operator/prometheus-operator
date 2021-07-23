@@ -44,8 +44,8 @@ func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpo
 	}
 }
 
-func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Create(f.Ctx, tr, metav1.CreateOptions{})
+func (f *Framework) CreateThanosRulerAndWaitUntilReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
+	result, err := f.MonClientV1.ThanosRulers(ns).Create(ctx, tr, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v ThanosRuler instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
@@ -57,8 +57,8 @@ func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoring
 	return result, nil
 }
 
-func (f *Framework) UpdateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Update(f.Ctx, tr, metav1.UpdateOptions{})
+func (f *Framework) UpdateThanosRulerAndWaitUntilReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
+	result, err := f.MonClientV1.ThanosRulers(ns).Update(ctx, tr, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +113,12 @@ func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.Se
 	return service
 }
 
-func (f *Framework) WaitForThanosFiringAlert(ns, svcName, alertName string) error {
+func (f *Framework) WaitForThanosFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
 	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
 		var firing bool
-		firing, loopError = f.CheckThanosFiringAlert(ns, svcName, alertName)
+		firing, loopError = f.CheckThanosFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil
 	})
 
@@ -133,8 +133,9 @@ func (f *Framework) WaitForThanosFiringAlert(ns, svcName, alertName string) erro
 	return nil
 }
 
-func (f *Framework) CheckThanosFiringAlert(ns, svcName, alertName string) (bool, error) {
+func (f *Framework) CheckThanosFiringAlert(ctx context.Context, ns, svcName, alertName string) (bool, error) {
 	response, err := f.ThanosSVCGetRequest(
+		ctx,
 		ns,
 		svcName,
 		"/api/v1/alerts",
@@ -161,23 +162,24 @@ func (f *Framework) CheckThanosFiringAlert(ns, svcName, alertName string) (bool,
 	return false, fmt.Errorf("failed to find %q alert in the list of %d alerts", alertName, len(apiResponse.Data.Alerts))
 }
 
-func (f *Framework) ThanosSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+func (f *Framework) ThanosSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.DoRaw(f.Ctx)
+	return request.DoRaw(ctx)
 }
 
-func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.ThanosRulers(ns).Get(f.Ctx, name, metav1.GetOptions{})
+func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ctx context.Context, ns, name string) error {
+	_, err := f.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting ThanosRuler custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.ThanosRulers(ns).Delete(f.Ctx, name, metav1.DeleteOptions{}); err != nil {
+	if err := f.MonClientV1.ThanosRulers(ns).Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting ThanosRuler custom resource %v failed", name))
 	}
 
 	if err := f.WaitForPodsReady(
+		ctx,
 		ns,
 		f.DefaultTimeout,
 		0,

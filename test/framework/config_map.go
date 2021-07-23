@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -49,7 +50,7 @@ func MakeConfigMapWithCert(kubeClient kubernetes.Interface, ns, name, keyKey, ce
 	return cm
 }
 
-func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error) {
+func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) (*v1.ConfigMap, error) {
 	var configMap *v1.ConfigMap
 	err := wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
 		var err error
@@ -57,7 +58,7 @@ func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error
 			KubeClient.
 			CoreV1().
 			ConfigMaps(ns).
-			Get(f.Ctx, name, metav1.GetOptions{})
+			Get(ctx, name, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -71,14 +72,14 @@ func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error
 	return configMap, errors.Wrapf(err, "waiting for ConfigMap '%v' in namespace '%v'", name, ns)
 }
 
-func (f *Framework) WaitForConfigMapNotExist(ns, name string) error {
+func (f *Framework) WaitForConfigMapNotExist(ctx context.Context, ns, name string) error {
 	err := wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
 		var err error
 		_, err = f.
 			KubeClient.
 			CoreV1().
 			ConfigMaps(ns).
-			Get(f.Ctx, name, metav1.GetOptions{})
+			Get(ctx, name, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 			return true, nil
