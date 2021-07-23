@@ -8,7 +8,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/evanphx/json-patch/v5 v5.5.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-kit/kit v0.10.0
+	github.com/go-kit/log v0.1.0
 	github.com/go-openapi/swag v0.19.15
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.6
@@ -35,7 +35,6 @@ require (
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/component-base v0.21.2
-	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/utils v0.0.0-20210629042839-4a2b36d8d73f
 )
@@ -46,6 +45,5 @@ replace (
 	// A replace directive is needed for k8s.io/client-go because Cortex (which
 	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
 	k8s.io/client-go => k8s.io/client-go v0.21.2
-	k8s.io/klog => github.com/simonpasquier/klog-gokit v0.3.0
-	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v2 v2.1.0
+	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.0.0
 )
