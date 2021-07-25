@@ -13792,10 +13792,6 @@ spec:
                       object storage configuration file. When used alongside with
                       ObjectStorageConfig, ObjectStorageConfigFile takes precedence.
                     type: string
-                  readyTimeout:
-                    description: ReadyTimeout is the maximum time Thanos sidecar will
-                      wait for Prometheus to start. Eg 10m
-                    type: string
                   resources:
                     description: Resources defines the resource requirements for the
                       Thanos sidecar. If not provided, no requests/limits will be
