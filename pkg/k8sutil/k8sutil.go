@@ -173,7 +173,7 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 	}
 
 	mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
-	// Propagate annotations set by kubectl. e.g performing a rolling restart.
+	// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
 	mergeKubectlAnnotations(&sset.Spec.Template.ObjectMeta, existingSset.Spec.Template.ObjectMeta)
 
 	_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
