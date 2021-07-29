@@ -1122,7 +1122,7 @@ func TestThanosSideCarVolumes(t *testing.T) {
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Volumes: []v1.Volume{
-				v1.Volume{
+				{
 					Name: testVolume,
 					VolumeSource: v1.VolumeSource{
 						EmptyDir: &v1.EmptyDirVolumeSource{},
@@ -1131,7 +1131,7 @@ func TestThanosSideCarVolumes(t *testing.T) {
 			},
 			Thanos: &monitoringv1.ThanosSpec{
 				VolumeMounts: []v1.VolumeMount{
-					v1.VolumeMount{
+					{
 						Name:      testVolume,
 						MountPath: testVolumeMountPath,
 					},
