@@ -21,4 +21,4 @@ metadata:
 rules:
 - apiGroups: ["monitoring.coreos.com"]
   resources: ["alertmanagers", "alertmanagerconfigs", "prometheuses", "prometheusrules", "servicemonitors", "podmonitors", "probes"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  verbs: ["create", "update", "patch", "delete","deletecollection"]
