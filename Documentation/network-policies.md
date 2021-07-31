@@ -51,8 +51,7 @@ networkpolicy "prometheus" configured
 * Allow inbound tcp dst port 9093 from any source to alertmanager
 * Allow inbound tcp & udp dst port 9094 from only alertmanager to alertmanager
 
-[embedmd]:# (../example/networkpolicies/alertmanager.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/alertmanager.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -101,8 +100,7 @@ spec:
 
 * Allow inbound tcp dst port 3000 from any source to grafana
 
-[embedmd]:# (../example/networkpolicies/grafana.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/grafana.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -121,8 +119,7 @@ spec:
 
 * Allow inbound tcp dst port 9090 from any source to prometheus
 
-[embedmd]:# (../example/networkpolicies/prometheus.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/prometheus.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -142,8 +139,7 @@ spec:
 
 * Allow inbound tcp dst port 9100 from only prometheus to node-exporter
 
-[embedmd]:# (../example/networkpolicies/node-exporter.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/node-exporter.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -173,8 +169,7 @@ spec:
 
 * Allow inbound tcp dst port 8080 from only prometheus to kube-state-metrics
 
-[embedmd]:# (../example/networkpolicies/kube-state-metrics.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/kube-state-metrics.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

@@ -21,8 +21,7 @@ The Prometheus Operator also introduces an AlertmanagerConfig resource, which al
 
 First, create an example Alertmanager cluster, with three instances.
 
-[embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
 metadata:
@@ -39,8 +38,7 @@ For more information on configuring Alertmanager, see the Prometheus [Alerting C
 
 The following example configuration creates an AlertmanagerConfig resource that sends notifications to a non-existent `wechat` receiver:
 
-[embedmd]:# (../../example/user-guides/alerting/alertmanager-config-example.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-config-example.yaml"
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
@@ -81,8 +79,7 @@ $ kubectl create -f alertmanager-config.yaml
 
 The `alertmanagerConfigSelector` field in the Alertmanager resource Spec needs to be specified so that the operator can select such AlertmanagerConfig resources. In the previous example, the label `alertmanagerConfig: example` is added, so the Alertmanager instance should be updated, adding the `alertmanagerConfigSelector`:
 
-[embedmd]:# (../../example/user-guides/alerting/alertmanager-selector-example.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-selector-example.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
 metadata:
@@ -98,8 +95,7 @@ spec:
 
 The following example configuration sends notifications against to a `webhook`:
 
-[embedmd]:# (../../example/user-guides/alerting/alertmanager.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
 global:
   resolve_timeout: 5m
 route:
@@ -150,8 +146,7 @@ Once the operator merges the optional manually specified Secret with any selecte
 
 To be able to view the web UI, expose it through a Service. A simple way to do this is to use a Service of type `NodePort`.
 
-[embedmd]:# (../../example/user-guides/alerting/alertmanager-example-service.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-service.yaml"
 apiVersion: v1
 kind: Service
 metadata:
@@ -174,8 +169,7 @@ Once created it allows the web UI to be accessible via a Node's IP and the port 
 
 This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create  Prometheus instances to fire alerts to the Alertmanagers.
 
-[embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -202,8 +196,7 @@ Prometheus rule files are held in `PrometheusRule` custom resources. Use the lab
 
 The best practice is to label the `PrometheusRule`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
-[embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example-rules.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

@@ -32,8 +32,7 @@ The Prometheus resource includes a field called `serviceMonitorSelector`, which 
 
 First, deploy three instances of a simple example application, which listens and exposes metrics on port `8080`.
 
-[embedmd]:# (../../example/user-guides/getting-started/example-app-deployment.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-deployment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,8 +57,7 @@ spec:
 
 The ServiceMonitor has a label selector to select Services and their underlying Endpoint objects. The Service object for the example application selects the Pods by the `app` label having the `example-app` value. The Service object also specifies the port on which the metrics are exposed.
 
-[embedmd]:# (../../example/user-guides/getting-started/example-app-service.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service.yaml"
 kind: Service
 apiVersion: v1
 metadata:
@@ -76,8 +74,7 @@ spec:
 
 This Service object is discovered by a ServiceMonitor, which selects in the same way. The `app` label must have the value `example-app`.
 
-[embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -98,16 +95,14 @@ If [RBAC][rbac-auth] authorization is activated, you must create RBAC rules for 
 
 Create a ClusterRole and ClusterRoleBinding for the Prometheus Pods:
 
-[embedmd]:# (../../example/rbac/prometheus/prometheus-service-account.yaml)
-```yaml
+```yaml mdox-exec="cat example/rbac/prometheus/prometheus-service-account.yaml"
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus
 ```
 
-[embedmd]:# (../../example/rbac/prometheus/prometheus-cluster-role.yaml)
-```yaml
+```yaml mdox-exec="cat example/rbac/prometheus/prometheus-cluster-role.yaml"
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -134,8 +129,7 @@ rules:
   verbs: ["get"]
 ```
 
-[embedmd]:# (../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml)
-```yaml
+```yaml mdox-exec="cat example/rbac/prometheus/prometheus-cluster-role-binding.yaml"
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -156,8 +150,7 @@ For more information, see the [Prometheus Operator RBAC guide][prom-rbac].
 
 A Prometheus object defines the `serviceMonitorSelector` to specify which ServiceMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-service-monitor.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-service-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -181,8 +174,7 @@ This enables the frontend team to create new ServiceMonitors and Services which 
 
 Finally, a Prometheus object defines the `podMonitorSelector` to specify which PodMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-pod-monitor.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-pod-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -206,8 +198,7 @@ This enables the frontend team to create new PodMonitors which allow Prometheus 
 
 To access the Prometheus instance it must be exposed to the outside. This example exposes the instance using a Service of type `NodePort`.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-service.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-service.yaml"
 apiVersion: v1
 kind: Service
 metadata:
@@ -238,8 +229,7 @@ This API access is disabled by default and can be toggled using this boolean fla
 > user is advised to add additional authentication authorization via a proxy to
 > ensure only clients authorized to perform these actions can do so.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-admin-api.yaml)
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-admin-api.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:

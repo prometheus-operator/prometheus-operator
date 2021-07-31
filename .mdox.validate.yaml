@@ -1,0 +1,15 @@
+version: 1
+
+validators:
+  # Cloudflare protection, so returns 503 if not in browser. Cannot curl as well.
+  - regex: 'wise\.com'
+    type: "ignore"
+  # Adopters example link.
+  - regex: "our-link"
+    type: "ignore"
+  # 301 errors even when curl-ed.
+  - regex: "envoyproxy"
+    type: "ignore"
+  # Ignore release links.
+  - regex: 'https:\/\/github\.com\/prometheus-operator\/prometheus-operator\/releases'
+    type: "ignore"
