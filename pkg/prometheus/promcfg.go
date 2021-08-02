@@ -116,8 +116,23 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 	return cfg
 }
 
-func addSafeAuthorizationToYaml(cfg yaml.MapSlice, version semver.Version, assetStoreKey string, store *assets.Store, auth *v1.SafeAuthorization) yaml.MapSlice {
-	if auth == nil || version.LT(semver.MustParse("2.26.0")) {
+func addSafeAuthorizationToYaml(
+	cfg yaml.MapSlice,
+	version semver.Version,
+	assetStoreKey string,
+	store *assets.Store,
+	auth *v1.SafeAuthorization,
+	logger log.Logger,
+) yaml.MapSlice {
+	if auth == nil {
+		return cfg
+	}
+	if version.LT(semver.MustParse("2.26.0")) {
+		// extract current cfg section from assetStoreKey, assuming
+		// "<component>/something..."
+		component := strings.Split(assetStoreKey, "/")[0]
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s: found authorization section, but prometheus is < 2.26.0, ignoring", component),
+			component)
 		return cfg
 	}
 	authCfg := yaml.MapSlice{}
@@ -133,13 +148,28 @@ func addSafeAuthorizationToYaml(cfg yaml.MapSlice, version semver.Version, asset
 	return append(cfg, yaml.MapItem{Key: "authorization", Value: authCfg})
 }
 
-func addAuthorizationToYaml(cfg yaml.MapSlice, version semver.Version, assetStoreKey string, store *assets.Store, auth *v1.Authorization) yaml.MapSlice {
-	if auth == nil || version.LT(semver.MustParse("2.26.0")) {
+func addAuthorizationToYaml(
+	cfg yaml.MapSlice,
+	version semver.Version,
+	assetStoreKey string,
+	store *assets.Store,
+	auth *v1.Authorization,
+	logger log.Logger,
+) yaml.MapSlice {
+	if auth == nil {
+		return cfg
+	}
+	if version.LT(semver.MustParse("2.26.0")) {
+		// extract current cfg section from assetStoreKey, assuming
+		// "<component>/something..."
+		component := strings.Split(assetStoreKey, "/")[0]
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s: found authorization section, but prometheus is < 2.26.0, ignoring", component),
+			component)
 		return cfg
 	}
 	// reuse addSafeAuthorizationToYaml and unpack the part we're interested
 	// in, namely the value under the "authorization" key
-	authCfg := addSafeAuthorizationToYaml(yaml.MapSlice{}, version, assetStoreKey, store, &auth.SafeAuthorization)[0].Value.(yaml.MapSlice)
+	authCfg := addSafeAuthorizationToYaml(yaml.MapSlice{}, version, assetStoreKey, store, &auth.SafeAuthorization, logger)[0].Value.(yaml.MapSlice)
 	if auth.CredentialsFile != "" {
 		authCfg = append(authCfg, yaml.MapItem{Key: "credentials_file", Value: auth.CredentialsFile})
 	}
@@ -528,7 +558,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization, cg.logger)
 
 	relabelings := initRelabelings()
 
@@ -925,7 +955,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = addOAuth2ToYaml(cfg, version, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization, cg.logger)
 
 	return cfg
 }
@@ -1008,7 +1038,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization, cg.logger)
 
 	relabelings := initRelabelings()
 
@@ -1327,7 +1357,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(version semver.Version, namespace
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = addAuthorizationToYaml(k8sSDConfig, version, "apiserver/auth", store, apiserverConfig.Authorization)
+		k8sSDConfig = addAuthorizationToYaml(k8sSDConfig, version, "apiserver/auth", store, apiserverConfig.Authorization, cg.logger)
 
 		// TODO: If we want to support secret refs for k8s service discovery tls
 		// config as well, make sure to path the right namespace here.
@@ -1375,7 +1405,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, al
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
+		cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization, cg.logger)
 
 		if version.Major > 2 || (version.Major == 2 && version.Minor >= 11) {
 			if am.APIVersion == "v1" || am.APIVersion == "v2" {
@@ -1465,7 +1495,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
-		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
+		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization, cg.logger)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
@@ -1603,7 +1633,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
-		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
+		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization, cg.logger)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
