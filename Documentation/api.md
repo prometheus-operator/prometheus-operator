@@ -1071,11 +1071,14 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 Sigv4 optionally configures AWS's Signature Verification 4 signing process to sign requests. Cannot be set at the same time as basic_auth or authorization.
 
+
+<em>appears in: [RemoteWriteSpec](#remotewritespec)</em>
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | region | Region is the AWS region. If blank, the region from the default credentials chain used. | string | false |
-| accessKey | AccessKey is the AWS API key. If blank, the default AWS SDK credentials are used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| secretKey | SecretKey is the AWS API secret. If blank, the default AWS SDK credentials are used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| accessKey | AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| secretKey | SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | profile | Profile is the named AWS profile used to authenticate. | string | false |
 | roleArn | RoleArn is the named AWS profile used to authenticate. | string | false |
 

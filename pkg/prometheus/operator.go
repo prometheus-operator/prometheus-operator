@@ -1549,10 +1549,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		key := fmt.Sprintf("remoteWrite/%d", i)
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
-		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
@@ -1560,6 +1561,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if remote.Sigv4.AccessKey != nil && remote.Sigv4.SecretKey != nil {
+			if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4.AccessKey, remote.Sigv4.SecretKey, key); err != nil {
+				return errors.Wrapf(err, "remote write %d", i)
+			}
 		}
 	}
 

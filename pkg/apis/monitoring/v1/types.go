@@ -746,9 +746,9 @@ type QueueConfig struct {
 type Sigv4 struct {
 	// Region is the AWS region. If blank, the region from the default credentials chain used.
 	Region string `json:"region,omitempty"`
-	// AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used
+	// AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used.
 	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
-	// SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used
+	// SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used.
 	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
 	// Profile is the named AWS profile used to authenticate.
 	Profile string `json:"profile,omitempty"`
