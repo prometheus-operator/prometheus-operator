@@ -17,6 +17,7 @@ package assets
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -902,4 +903,109 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 			t.Fatalf("expecting no error, got %q", err)
 		}
 	})
+}
+
+func TestAddSigV4(t *testing.T) {
+	const (
+		accessKey = "accessKey"
+		secretKey = "secretKey"
+	)
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				accessKey: []byte("val1"),
+				secretKey: []byte("val2"),
+			},
+		},
+	)
+
+	for i, tc := range []struct {
+		ns                   string
+		selectedName         string
+		accessKey, secretKey string
+
+		err      bool
+		expected SigV4Credentials
+	}{
+		{
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			expected: SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
+		},
+		// Wrong namespace.
+		{
+			ns:           "ns2",
+			selectedName: "secret",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		// Wrong name.
+		{
+			ns:           "ns1",
+			selectedName: "faulty",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		// Wrong key.
+		{
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    "wrong-access-key",
+			secretKey:    "wrong-secret-key",
+
+			err: true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			store := NewStore(c.CoreV1(), c.CoreV1())
+
+			accessKey := &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: tc.selectedName,
+				},
+				Key: tc.accessKey,
+			}
+			secretKey := &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: tc.selectedName,
+				},
+				Key: tc.secretKey,
+			}
+
+			key := fmt.Sprintf("remoteWrite/%d", i)
+			err := store.AddSigV4(context.Background(), tc.ns, accessKey, secretKey, key)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			sigV4, found := store.SigV4Assets[key]
+
+			if !found {
+				t.Fatalf("expecting to find key %q but got nothing", key)
+			}
+
+			if !reflect.DeepEqual(sigV4, tc.expected) {
+				t.Fatalf("expecting %#v, got %#v", tc.expected, sigV4)
+			}
+		})
+	}
 }

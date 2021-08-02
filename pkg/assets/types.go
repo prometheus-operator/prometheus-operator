@@ -35,3 +35,10 @@ type Token string
 // TLSAsset represents any TLS related opaque string, e.g. CA files, client
 // certificates.
 type TLSAsset string
+
+// SigV4Credentials represents a pair of AWS credentials to be used in the Sigv4
+// protocol for remote write to AWS Managed Prometheus.
+type SigV4Credentials struct {
+	AccessKeyID string
+	SecretKeyID string
+}
