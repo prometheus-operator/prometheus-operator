@@ -205,6 +205,20 @@ Details (optional):
 - ~15mn samples/s
 - ~200mn active series
 
+## Clyso 
+
+[clyso.com](https://www.clyso.com/en)
+
+Environments: Bare Metal, Opennebula
+
+Uses kube-prometheus: Yes
+
+Details:
+- multiple K8s cluster with prometheus deployed through prom-operator
+- several own ceph cluster providing metrics via ceph mgr prometheus module
+- several customer ceph clusters pushing metrics via external pushgateway to our our central monitoring instances
+- thanos receiver connected to own S3 storage
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
