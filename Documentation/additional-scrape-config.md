@@ -32,6 +32,12 @@ Then you will need to make a secret out of this configuration.
 kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run -oyaml > additional-scrape-configs.yaml
 ```
 
+Next, apply the generated kubernetes manifest
+
+```
+kubectl apply -f additional-scrape-configs.yaml -n monitoring
+```
+
 Finally, reference this additional configuration in your `prometheus.yaml` CRD.
 
 ```yaml

@@ -17,8 +17,10 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
@@ -206,9 +208,7 @@ alerting:
 			map[string]*monitoringv1.ServiceMonitor{},
 			nil,
 			nil,
-			map[string]assets.BasicAuthCredentials{},
-			map[string]assets.OAuth2Credentials{},
-			map[string]assets.BearerToken{},
+			&assets.Store{},
 			nil,
 			nil,
 			nil,
@@ -331,7 +331,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 
 	for _, tc := range testcases {
 		selectedNamespaces := getNamespacesFromNamespaceSelector(&tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, tc.IgnoreNamespaceSelectors)
-		c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
+		c := cg.generateK8SSDConfig(semver.Version{}, selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -360,7 +360,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 
 	cg := &ConfigGenerator{}
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&pm.Spec.NamespaceSelector, pm.Namespace, false)
-	c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRolePod)
+	c := cg.generateK8SSDConfig(semver.Version{}, selectedNamespaces, nil, nil, kubernetesSDRolePod)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -435,9 +435,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -549,9 +547,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -657,9 +653,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -763,9 +757,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -877,9 +869,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1008,9 +998,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		nil,
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1103,9 +1091,9 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	cg := &ConfigGenerator{}
 
 	testcases := []struct {
-		apiserverConfig  *monitoringv1.APIServerConfig
-		basicAuthSecrets map[string]assets.BasicAuthCredentials
-		expected         string
+		apiserverConfig *monitoringv1.APIServerConfig
+		store           *assets.Store
+		expected        string
 	}{
 		{
 			nil,
@@ -1125,11 +1113,15 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				BearerTokenFile: "bearer_token_file",
 				TLSConfig:       nil,
 			},
-			map[string]assets.BasicAuthCredentials{
-				"apiserver": {
-					Username: "foo",
-					Password: "bar",
+			&assets.Store{
+				BasicAuthAssets: map[string]assets.BasicAuthCredentials{
+					"apiserver": {
+						Username: "foo",
+						Password: "bar",
+					},
 				},
+				OAuth2Assets: map[string]assets.OAuth2Credentials{},
+				TokenAssets:  map[string]assets.Token{},
 			},
 			`kubernetes_sd_configs:
 - role: endpoints
@@ -1148,9 +1140,10 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 
 	for _, tc := range testcases {
 		c := cg.generateK8SSDConfig(
+			semver.Version{},
 			getNamespacesFromNamespaceSelector(&sm.Spec.NamespaceSelector, sm.Namespace, false),
 			tc.apiserverConfig,
-			tc.basicAuthSecrets,
+			tc.store,
 			kubernetesSDRoleEndpoint,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -1189,9 +1182,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1269,9 +1260,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1350,9 +1339,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1429,9 +1416,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -1543,9 +1528,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1701,9 +1684,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1847,9 +1828,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -1973,9 +1952,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -2070,9 +2047,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2213,9 +2188,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2338,9 +2311,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2480,9 +2451,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2622,9 +2591,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2763,9 +2730,7 @@ func TestTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -2865,6 +2830,214 @@ alerting:
 	}
 }
 
+func TestEndpointOAuth2(t *testing.T) {
+	oauth2 := monitoringv1.OAuth2{
+		ClientID: monitoringv1.SecretOrConfigMap{
+			ConfigMap: &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "oauth2",
+				},
+				Key: "client_id",
+			},
+		},
+		ClientSecret: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "oauth2",
+			},
+			Key: "client_secret",
+		},
+		TokenURL: "http://test.url",
+		Scopes:   []string{"scope 1", "scope 2"},
+		EndpointParams: map[string]string{
+			"param1": "value1",
+			"param2": "value2",
+		},
+	}
+
+	expectedCfg := strings.TrimSpace(`
+oauth2:
+    client_id: test_client_id
+    client_secret: test_client_secret
+    token_url: http://test.url
+    scopes:
+    - scope 1
+    - scope 2
+    endpoint_params:
+      param1: value1
+      param2: value2`)
+
+	testCases := []struct {
+		name              string
+		p                 *monitoringv1.Prometheus
+		sMons             map[string]*monitoringv1.ServiceMonitor
+		pMons             map[string]*monitoringv1.PodMonitor
+		probes            map[string]*monitoringv1.Probe
+		oauth2Credentials map[string]assets.OAuth2Credentials
+		expectedCfg       string
+	}{
+		{
+			name: "service monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:   "web",
+								OAuth2: &oauth2,
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"serviceMonitor/default/testservicemonitor1/0": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:   "web",
+								OAuth2: &oauth2,
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"podMonitor/default/testpodmonitor1/0": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe monitor with oauth2",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ProbeSpec{
+						OAuth2: &oauth2,
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			oauth2Credentials: map[string]assets.OAuth2Credentials{
+				"probe/default/testprobe1": {
+					ClientID:     "test_client_id",
+					ClientSecret: "test_client_secret",
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &ConfigGenerator{}
+			cfg, err := cg.GenerateConfig(
+				tt.p,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					OAuth2Assets:    tt.oauth2Credentials,
+					TokenAssets:     map[string]assets.Token{},
+				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
+	}
+}
+
 func TestPodTargetLabels(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
@@ -2903,9 +3076,7 @@ func TestPodTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -3043,9 +3214,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -3156,9 +3325,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -3303,9 +3470,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		makeServiceMonitors(),
 		makePodMonitors(),
 		nil,
-		map[string]assets.BasicAuthCredentials{},
-		map[string]assets.OAuth2Credentials{},
-		map[string]assets.BearerToken{},
+		&assets.Store{},
 		nil,
 		nil,
 		nil,
@@ -3932,9 +4097,7 @@ alerting:
 				},
 				nil,
 				nil,
-				map[string]assets.BasicAuthCredentials{},
-				map[string]assets.OAuth2Credentials{},
-				map[string]assets.BearerToken{},
+				&assets.Store{},
 				nil,
 				nil,
 				nil,
@@ -4204,9 +4367,7 @@ alerting:
 				},
 				nil,
 				nil,
-				map[string]assets.BasicAuthCredentials{},
-				map[string]assets.OAuth2Credentials{},
-				map[string]assets.BearerToken{},
+				&assets.Store{},
 				nil,
 				nil,
 				nil,
@@ -4296,6 +4457,40 @@ remote_read:
   remote_timeout: 30s
 `,
 		},
+		{
+			version: "v2.26.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL: "http://example.com",
+				Authorization: &monitoringv1.Authorization{
+					SafeAuthorization: monitoringv1.SafeAuthorization{
+						Credentials: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "key"},
+						},
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+  authorization:
+    type: Bearer
+    credentials: secret
+`,
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			cg := &ConfigGenerator{}
@@ -4321,14 +4516,17 @@ remote_read:
 				nil,
 				nil,
 				nil,
-				map[string]assets.BasicAuthCredentials{},
-				map[string]assets.OAuth2Credentials{
-					"remoteRead/0": {
-						ClientID:     "client-id",
-						ClientSecret: "client-secret",
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					OAuth2Assets: map[string]assets.OAuth2Credentials{
+						"remoteRead/0": {
+							ClientID:     "client-id",
+							ClientSecret: "client-secret",
+						},
 					},
-				},
-				map[string]assets.BearerToken{},
+					TokenAssets: map[string]assets.Token{
+						"remoteRead/auth/0": assets.Token("secret"),
+					}},
 				nil,
 				nil,
 				nil,
@@ -4576,6 +4774,40 @@ remote_write:
       param: value
 `,
 		},
+		{
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Authorization: &monitoringv1.Authorization{
+					SafeAuthorization: monitoringv1.SafeAuthorization{
+						Credentials: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "key"},
+						},
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  authorization:
+    type: Bearer
+    credentials: secret
+`,
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			cg := &ConfigGenerator{}
@@ -4601,14 +4833,17 @@ remote_write:
 				nil,
 				nil,
 				nil,
-				map[string]assets.BasicAuthCredentials{},
-				map[string]assets.OAuth2Credentials{
-					"remoteWrite/0": {
-						ClientID:     "client-id",
-						ClientSecret: "client-secret",
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					OAuth2Assets: map[string]assets.OAuth2Credentials{
+						"remoteWrite/0": {
+							ClientID:     "client-id",
+							ClientSecret: "client-secret",
+						},
 					},
-				},
-				map[string]assets.BearerToken{},
+					TokenAssets: map[string]assets.Token{
+						"remoteWrite/auth/0": assets.Token("secret"),
+					}},
 				nil,
 				nil,
 				nil,

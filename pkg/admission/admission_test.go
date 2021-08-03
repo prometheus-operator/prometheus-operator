@@ -18,19 +18,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	jsonpatch "github.com/evanphx/json-patch/v5"
 	"io/ioutil"
-	v1 "k8s.io/api/admission/v1"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/api/admission/v1beta1"
+	"k8s.io/api/admission/v1"
 )
 
 func TestMutateRule(t *testing.T) {
@@ -182,7 +181,7 @@ func server(s serveFunc) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(s))
 }
 
-func send(t *testing.T, ts *httptest.Server, rules []byte) *v1beta1.AdmissionReview {
+func send(t *testing.T, ts *httptest.Server, rules []byte) *v1.AdmissionReview {
 	resp, err := http.Post(ts.URL, "application/json", bytes.NewReader(rules))
 	if err != nil {
 		t.Errorf("Publish() returned an error: %s", err)
@@ -193,7 +192,7 @@ func send(t *testing.T, ts *httptest.Server, rules []byte) *v1beta1.AdmissionRev
 		t.Errorf("ioutil.ReadAll(resp.Body) returned an error: %s", err)
 	}
 
-	rev := &v1beta1.AdmissionReview{}
+	rev := &v1.AdmissionReview{}
 	if err := json.Unmarshal(body, rev); err != nil {
 		t.Errorf("unable to parse webhook response: %s", err)
 	}
@@ -204,7 +203,7 @@ func send(t *testing.T, ts *httptest.Server, rules []byte) *v1beta1.AdmissionRev
 var goodRulesWithAnnotations = []byte(`
 {
   "kind": "AdmissionReview",
-  "apiVersion": "admission.k8s.io/v1beta1",
+  "apiVersion": "admission.k8s.io/v1",
   "request": {
     "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
     "kind": {
@@ -270,7 +269,7 @@ var goodRulesWithAnnotations = []byte(`
 var goodRulesWithExternalLabelsInAnnotations = []byte(`
 {
   "kind": "AdmissionReview",
-  "apiVersion": "admission.k8s.io/v1beta1",
+  "apiVersion": "admission.k8s.io/v1",
   "request": {
     "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
     "kind": {
@@ -335,7 +334,7 @@ var goodRulesWithExternalLabelsInAnnotations = []byte(`
 var badRulesNoAnnotations = []byte(`
 {
   "kind": "AdmissionReview",
-  "apiVersion": "admission.k8s.io/v1beta1",
+  "apiVersion": "admission.k8s.io/v1",
   "request": {
     "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
     "kind": {
@@ -398,7 +397,7 @@ var badRulesNoAnnotations = []byte(`
 var badRulesWithBooleanInAnnotations = []byte(`
 {
   "kind": "AdmissionReview",
-  "apiVersion": "admission.k8s.io/v1beta1",
+  "apiVersion": "admission.k8s.io/v1",
   "request": {
     "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
     "kind": {
@@ -465,7 +464,7 @@ var badRulesWithBooleanInAnnotations = []byte(`
 var nonStringsInLabelsAnnotations = []byte(`
 {
   "kind": "AdmissionReview",
-  "apiVersion": "admission.k8s.io/v1beta1",
+  "apiVersion": "admission.k8s.io/v1",
   "request": {
     "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
     "kind": {

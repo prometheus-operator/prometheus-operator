@@ -235,3 +235,75 @@ func TestValidateTLSConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAuthorization(t *testing.T) {
+	creds := &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "key"},
+	}
+	for _, tc := range []struct {
+		name   string
+		config *Authorization
+		err    bool
+	}{
+		{
+			name: "minimal example",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "explicit Bearer type",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "Bearer",
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "custom type",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "token",
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "type Basic not allowed",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "Basic",
+					Credentials: creds,
+				},
+			},
+			err: true,
+		},
+		{
+			name: "conflict between credentials and credentials_file",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Credentials: creds,
+				},
+				CredentialsFile: "/some/file",
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.err && err == nil {
+				t.Fatalf("expected validation of %+v to fail, but got no error", tc.config)
+			}
+			if !tc.err && err != nil {
+				t.Fatalf("expected validation of %+v not to fail, err: %s", tc.config, err)
+			}
+		})
+	}
+}

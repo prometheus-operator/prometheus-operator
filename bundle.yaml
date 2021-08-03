@@ -7402,6 +7402,33 @@ spec:
                   description: PodMetricsEndpoint defines a scrapeable endpoint of
                     a Kubernetes Pod serving Prometheus metrics.
                   properties:
+                    authorization:
+                      description: Authorization section for this endpoint
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: 'BasicAuth allow an endpoint to authenticate over
                         basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
@@ -7522,6 +7549,90 @@ spec:
                             type: string
                         type: object
                       type: array
+                    oauth2:
+                      description: OAuth2 for the URL. Only valid in Prometheus versions
+                        2.27.0 and newer.
+                      properties:
+                        clientId:
+                          description: The secret or configmap containing the OAuth2
+                            client id
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                          type: object
+                        clientSecret:
+                          description: The secret containing the OAuth2 client secret
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        endpointParams:
+                          additionalProperties:
+                            type: string
+                          description: Parameters to append to the token URL
+                          type: object
+                        scopes:
+                          description: OAuth2 scopes used for the token request
+                          items:
+                            type: string
+                          type: array
+                        tokenUrl:
+                          description: The URL to fetch the token from
+                          minLength: 1
+                          type: string
+                      required:
+                      - clientId
+                      - clientSecret
+                      - tokenUrl
+                      type: object
                     params:
                       additionalProperties:
                         items:
@@ -7834,6 +7945,33 @@ spec:
             description: Specification of desired Ingress selection for target discovery
               by Prometheus.
             properties:
+              authorization:
+                description: Authorization section for this endpoint
+                properties:
+                  credentials:
+                    description: The secret's key that contains the credentials of
+                      the request
+                    properties:
+                      key:
+                        description: The key of the secret to select from.  Must be
+                          a valid secret key.
+                        type: string
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                      optional:
+                        description: Specify whether the Secret or its key must be
+                          defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  type:
+                    description: Set the authentication type. Defaults to Bearer,
+                      Basic will cause an error
+                    type: string
+                type: object
               basicAuth:
                 description: 'BasicAuth allow an endpoint to authenticate over basic
                   authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
@@ -7908,6 +8046,87 @@ spec:
                   the target. Example module configuring in the blackbox exporter:
                   https://github.com/prometheus/blackbox_exporter/blob/master/example.yml'
                 type: string
+              oauth2:
+                description: OAuth2 for the URL. Only valid in Prometheus versions
+                  2.27.0 and newer.
+                properties:
+                  clientId:
+                    description: The secret or configmap containing the OAuth2 client
+                      id
+                    properties:
+                      configMap:
+                        description: ConfigMap containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      secret:
+                        description: Secret containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                    type: object
+                  clientSecret:
+                    description: The secret containing the OAuth2 client secret
+                    properties:
+                      key:
+                        description: The key of the secret to select from.  Must be
+                          a valid secret key.
+                        type: string
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                      optional:
+                        description: Specify whether the Secret or its key must be
+                          defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  endpointParams:
+                    additionalProperties:
+                      type: string
+                    description: Parameters to append to the token URL
+                    type: object
+                  scopes:
+                    description: OAuth2 scopes used for the token request
+                    items:
+                      type: string
+                    type: array
+                  tokenUrl:
+                    description: The URL to fetch the token from
+                    minLength: 1
+                    type: string
+                required:
+                - clientId
+                - clientSecret
+                - tokenUrl
+                type: object
               prober:
                 description: Specification for the prober to use for probing targets.
                   The prober.URL parameter is required. Targets cannot be probed if
@@ -8967,6 +9186,35 @@ spec:
                           description: Version of the Alertmanager API that Prometheus
                             uses to send alerts. It can be "v1" or "v2".
                           type: string
+                        authorization:
+                          description: Authorization section for this alertmanager
+                            endpoint
+                          properties:
+                            credentials:
+                              description: The secret's key that contains the credentials
+                                of the request
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            type:
+                              description: Set the authentication type. Defaults to
+                                Bearer, Basic will cause an error
+                              type: string
+                          type: object
                         bearerTokenFile:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
@@ -9148,6 +9396,37 @@ spec:
                   inside of the cluster and will discover API servers automatically
                   and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
                 properties:
+                  authorization:
+                    description: Authorization section for accessing apiserver
+                    properties:
+                      credentials:
+                        description: The secret's key that contains the credentials
+                          of the request
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      credentialsFile:
+                        description: File to read a secret from, mutually exclusive
+                          with Credentials (from SafeAuthorization)
+                        type: string
+                      type:
+                        description: Set the authentication type. Defaults to Bearer,
+                          Basic will cause an error
+                        type: string
+                    type: object
                   basicAuth:
                     description: BasicAuth allow an endpoint to authenticate over
                       basic authentication
@@ -11889,6 +12168,37 @@ spec:
                   description: RemoteReadSpec defines the remote_read configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote read
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:
@@ -12184,6 +12494,37 @@ spec:
                   description: RemoteWriteSpec defines the remote_write configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote write
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:
@@ -15274,6 +15615,33 @@ spec:
                   description: Endpoint defines a scrapeable endpoint serving Prometheus
                     metrics.
                   properties:
+                    authorization:
+                      description: Authorization section for this endpoint
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: 'BasicAuth allow an endpoint to authenticate over
                         basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
@@ -15397,6 +15765,90 @@ spec:
                             type: string
                         type: object
                       type: array
+                    oauth2:
+                      description: OAuth2 for the URL. Only valid in Prometheus versions
+                        2.27.0 and newer.
+                      properties:
+                        clientId:
+                          description: The secret or configmap containing the OAuth2
+                            client id
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                          type: object
+                        clientSecret:
+                          description: The secret containing the OAuth2 client secret
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        endpointParams:
+                          additionalProperties:
+                            type: string
+                          description: Parameters to append to the token URL
+                          type: object
+                        scopes:
+                          description: OAuth2 scopes used for the token request
+                          items:
+                            type: string
+                          type: array
+                        tokenUrl:
+                          description: The URL to fetch the token from
+                          minLength: 1
+                          type: string
+                      required:
+                      - clientId
+                      - clientSecret
+                      - tokenUrl
+                      type: object
                     params:
                       additionalProperties:
                         items:

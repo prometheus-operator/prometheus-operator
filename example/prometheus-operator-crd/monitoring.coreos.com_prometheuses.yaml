@@ -738,6 +738,35 @@ spec:
                           description: Version of the Alertmanager API that Prometheus
                             uses to send alerts. It can be "v1" or "v2".
                           type: string
+                        authorization:
+                          description: Authorization section for this alertmanager
+                            endpoint
+                          properties:
+                            credentials:
+                              description: The secret's key that contains the credentials
+                                of the request
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            type:
+                              description: Set the authentication type. Defaults to
+                                Bearer, Basic will cause an error
+                              type: string
+                          type: object
                         bearerTokenFile:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
@@ -919,6 +948,37 @@ spec:
                   inside of the cluster and will discover API servers automatically
                   and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
                 properties:
+                  authorization:
+                    description: Authorization section for accessing apiserver
+                    properties:
+                      credentials:
+                        description: The secret's key that contains the credentials
+                          of the request
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      credentialsFile:
+                        description: File to read a secret from, mutually exclusive
+                          with Credentials (from SafeAuthorization)
+                        type: string
+                      type:
+                        description: Set the authentication type. Defaults to Bearer,
+                          Basic will cause an error
+                        type: string
+                    type: object
                   basicAuth:
                     description: BasicAuth allow an endpoint to authenticate over
                       basic authentication
@@ -3660,6 +3720,37 @@ spec:
                   description: RemoteReadSpec defines the remote_read configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote read
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:
@@ -3955,6 +4046,37 @@ spec:
                   description: RemoteWriteSpec defines the remote_write configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote write
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:

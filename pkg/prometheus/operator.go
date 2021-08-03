@@ -34,8 +34,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -1543,6 +1543,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote read %d", i)
+		}
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
@@ -1555,11 +1558,24 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
 	}
 
 	if p.Spec.APIServerConfig != nil {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
 			return errors.Wrap(err, "apiserver config")
+		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
+			return errors.Wrapf(err, "apiserver config")
+		}
+	}
+	if p.Spec.Alerting != nil {
+		for i, am := range p.Spec.Alerting.Alertmanagers {
+			if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+				return errors.Wrapf(err, "apiserver config")
+			}
 		}
 	}
 
@@ -1582,9 +1598,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		smons,
 		pmons,
 		bmons,
-		store.BasicAuthAssets,
-		store.OAuth2Assets,
-		store.BearerTokenAssets,
+		store,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1753,6 +1767,15 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 					break
 				}
 			}
+
+			if err = store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
+				break
+			}
+
+			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+			if err = store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
+				break
+			}
 		}
 
 		if err != nil {
@@ -1843,6 +1866,15 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 				if err = store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
 					break
 				}
+			}
+
+			if err = store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
+				break
+			}
+
+			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+			if err = store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+				break
 			}
 		}
 
@@ -1935,10 +1967,19 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
 			break
 		}
+
 		if probe.Spec.TLSConfig != nil {
 			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
 				break
 			}
+		}
+		pnAuthKey := fmt.Sprintf("probe/auth/%s/%s", probe.GetNamespace(), probe.GetName())
+		if err = store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization, pnAuthKey); err != nil {
+			break
+		}
+
+		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
+			break
 		}
 
 		res[probeName] = probe
