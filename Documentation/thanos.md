@@ -49,7 +49,7 @@ spec:
 ...
 ```
 
-Note: If you're using Istio you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost.
+Note: If you're using Istio prior to version 1.10, you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost. This however isn't needed from Istio 1.10 onward due [networking changes](https://istio.io/latest/blog/2021/upcoming-networking-changes/) implemented in 1.10.
 
 ## Configuring Thanos Object Storage
 
