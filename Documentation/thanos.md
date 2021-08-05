@@ -2,7 +2,7 @@
 title: "Thanos"
 description: "Thanos and the Prometheus Operator."
 lead: "Thanos and the Prometheus Operator."
-date: 2021-03-08T08:49:31+00:00
+date: 2021-08-05T20:27:31+00:00
 draft: false
 images: []
 menu:
@@ -49,7 +49,7 @@ spec:
 ...
 ```
 
-Note: If you're using Istio prior to version 1.10, you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost. This however isn't needed from Istio 1.10 onward due [networking changes](https://istio.io/latest/blog/2021/upcoming-networking-changes/) implemented in 1.10.
+Note: If you're using Istio prior to version 1.10, you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost. This however isn't needed from Istio 1.10 onward due to [networking changes](https://istio.io/latest/blog/2021/upcoming-networking-changes/) implemented in 1.10.
 
 ## Configuring Thanos Object Storage
 
