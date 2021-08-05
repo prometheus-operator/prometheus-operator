@@ -1060,18 +1060,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 
-	if enforcedLabelLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: enforcedLabelLimit})
-	}
-
-	if enforcedLabelNameLengthLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: enforcedLabelNameLengthLimit})
-	}
-
-	if enforcedLabelValueLengthLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: enforcedLabelValueLengthLimit})
-	}
-
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, store.OAuth2Assets, assetKey)
 
