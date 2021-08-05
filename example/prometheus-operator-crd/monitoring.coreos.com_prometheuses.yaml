@@ -2272,6 +2272,27 @@ spec:
                 items:
                   type: string
                 type: array
+              enforcedLabelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. If more than this number of labels are present post
+                  metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              enforcedLabelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. If a label name is longer than this number
+                  post metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              enforcedLabelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. If a label value is longer than this number
+                  post metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
               enforcedNamespaceLabel:
                 description: "EnforcedNamespaceLabel If set, a label will be added
                   to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor`
