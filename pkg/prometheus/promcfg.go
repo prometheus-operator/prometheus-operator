@@ -201,11 +201,11 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 		}
 	}
 
-	if prometheusExternalLabelName != "" {
+	if prometheusExternalLabelName == "" {
 		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
 	}
 
-	if replicaExternalLabelName != "" {
+	if replicaExternalLabelName == "" {
 		m[replicaExternalLabelName] = "$(POD_NAME)"
 	}
 
