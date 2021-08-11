@@ -17,6 +17,8 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-kit/log"
+	"os"
 	"strings"
 	"testing"
 
@@ -4844,6 +4846,730 @@ remote_write:
 					TokenAssets: map[string]assets.Token{
 						"remoteWrite/auth/0": assets.Token("secret"),
 					}},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestLabelLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  label_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		version            string
+		enforcedLabelLimit int
+		labelLimit         int
+		expected           string
+	}{
+		{
+			version:            "v2.26.0",
+			enforcedLabelLimit: -1,
+			labelLimit:         -1,
+			expected:           expectNoLimit,
+		},
+		{
+			version:            "v2.27.0",
+			enforcedLabelLimit: -1,
+			labelLimit:         -1,
+			expected:           expectNoLimit,
+		},
+		{
+			version:            "v2.26.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         -1,
+			expected:           expectNoLimit,
+		},
+		{
+			version:            "v2.27.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         -1,
+			expected:           fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:            "v2.26.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         2000,
+			expected:           expectNoLimit,
+		},
+		{
+			version:            "v2.27.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         2000,
+			expected:           fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:            "v2.26.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         500,
+			expected:           expectNoLimit,
+		},
+		{
+			version:            "v2.27.0",
+			enforcedLabelLimit: 1000,
+			labelLimit:         500,
+			expected:           fmt.Sprintf(expectLimit, 500),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedLabelLimit(%d) labelLimit(%d)", tc.version, tc.enforcedLabelLimit, tc.labelLimit), func(t *testing.T) {
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLabelLimit >= 0 {
+				i := uint64(tc.enforcedLabelLimit)
+				prometheus.Spec.EnforcedLabelLimit = &i
+			}
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.labelLimit >= 0 {
+				serviceMonitor.Spec.LabelLimit = uint64(tc.labelLimit)
+			}
+
+			cfg, err := cg.GenerateConfig(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestLabelNameLengthLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: podMonitor/default/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: default/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: podMonitor/default/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: default/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  label_name_length_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		version                      string
+		enforcedLabelNameLengthLimit int
+		labelNameLengthLimit         int
+		expected                     string
+	}{
+		{
+			version:                      "v2.26.0",
+			enforcedLabelNameLengthLimit: -1,
+			labelNameLengthLimit:         -1,
+			expected:                     expectNoLimit,
+		},
+		{
+			version:                      "v2.27.0",
+			enforcedLabelNameLengthLimit: -1,
+			labelNameLengthLimit:         -1,
+			expected:                     expectNoLimit,
+		},
+		{
+			version:                      "v2.26.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         -1,
+			expected:                     expectNoLimit,
+		},
+		{
+			version:                      "v2.27.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         -1,
+			expected:                     fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:                      "v2.26.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         2000,
+			expected:                     expectNoLimit,
+		},
+		{
+			version:                      "v2.27.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         2000,
+			expected:                     fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:                      "v2.26.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         500,
+			expected:                     expectNoLimit,
+		},
+		{
+			version:                      "v2.27.0",
+			enforcedLabelNameLengthLimit: 1000,
+			labelNameLengthLimit:         500,
+			expected:                     fmt.Sprintf(expectLimit, 500),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedLabelNameLengthLimit(%d) labelNameLengthLimit(%d)", tc.version, tc.enforcedLabelNameLengthLimit, tc.labelNameLengthLimit), func(t *testing.T) {
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLabelNameLengthLimit >= 0 {
+				i := uint64(tc.enforcedLabelNameLengthLimit)
+				prometheus.Spec.EnforcedLabelNameLengthLimit = &i
+			}
+
+			podMonitor := monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.labelNameLengthLimit >= 0 {
+				podMonitor.Spec.LabelNameLengthLimit = uint64(tc.labelNameLengthLimit)
+			}
+
+			cfg, err := cg.GenerateConfig(
+				&prometheus,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": &podMonitor,
+				},
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestLabelValueLengthLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  proxy_url: socks://myproxy:9095
+  params:
+    module:
+    - http_2xx
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+      static: label
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  proxy_url: socks://myproxy:9095
+  params:
+    module:
+    - http_2xx
+  label_value_length_limit: %d
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+      static: label
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		version                       string
+		enforcedLabelValueLengthLimit int
+		labelValueLengthLimit         int
+		expected                      string
+	}{
+		{
+			version:                       "v2.26.0",
+			enforcedLabelValueLengthLimit: -1,
+			labelValueLengthLimit:         -1,
+			expected:                      expectNoLimit,
+		},
+		{
+			version:                       "v2.27.0",
+			enforcedLabelValueLengthLimit: -1,
+			labelValueLengthLimit:         -1,
+			expected:                      expectNoLimit,
+		},
+		{
+			version:                       "v2.26.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         -1,
+			expected:                      expectNoLimit,
+		},
+		{
+			version:                       "v2.27.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         -1,
+			expected:                      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:                       "v2.26.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         2000,
+			expected:                      expectNoLimit,
+		},
+		{
+			version:                       "v2.27.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         2000,
+			expected:                      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:                       "v2.26.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         500,
+			expected:                      expectNoLimit,
+		},
+		{
+			version:                       "v2.27.0",
+			enforcedLabelValueLengthLimit: 1000,
+			labelValueLengthLimit:         500,
+			expected:                      fmt.Sprintf(expectLimit, 500),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedLabelValueLengthLimit(%d) labelValueLengthLimit(%d)", tc.version, tc.enforcedLabelValueLengthLimit, tc.labelValueLengthLimit), func(t *testing.T) {
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLabelValueLengthLimit >= 0 {
+				i := uint64(tc.enforcedLabelValueLengthLimit)
+				prometheus.Spec.EnforcedLabelValueLengthLimit = &i
+			}
+
+			probe := monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme:   "http",
+						URL:      "blackbox.exporter.io",
+						Path:     "/probe",
+						ProxyURL: "socks://myproxy:9095",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{
+								"prometheus.io",
+								"promcon.io",
+							},
+							Labels: map[string]string{
+								"static": "label",
+							},
+						},
+					},
+				},
+			}
+			if tc.labelValueLengthLimit >= 0 {
+				probe.Spec.LabelValueLengthLimit = uint64(tc.labelValueLengthLimit)
+			}
+
+			cfg, err := cg.GenerateConfig(
+				&prometheus,
+				nil,
+				nil,
+				map[string]*monitoringv1.Probe{
+					"testprobe1": &probe,
+				},
+				&assets.Store{},
 				nil,
 				nil,
 				nil,

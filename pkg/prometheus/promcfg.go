@@ -330,6 +330,9 @@ func (cg *ConfigGenerator) GenerateConfig(
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
+					p.Spec.EnforcedLabelLimit,
+					p.Spec.EnforcedLabelNameLengthLimit,
+					p.Spec.EnforcedLabelValueLengthLimit,
 					shards,
 				),
 			)
@@ -349,6 +352,9 @@ func (cg *ConfigGenerator) GenerateConfig(
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
+					p.Spec.EnforcedLabelLimit,
+					p.Spec.EnforcedLabelNameLengthLimit,
+					p.Spec.EnforcedLabelValueLengthLimit,
 					shards,
 				),
 			)
@@ -366,6 +372,9 @@ func (cg *ConfigGenerator) GenerateConfig(
 				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
 				p.Spec.EnforcedNamespaceLabel,
+				p.Spec.EnforcedLabelLimit,
+				p.Spec.EnforcedLabelNameLengthLimit,
+				p.Spec.EnforcedLabelValueLengthLimit,
 			),
 		)
 	}
@@ -495,6 +504,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
+	enforcedLabelLimit *uint64,
+	enforcedLabelNameLengthLimit *uint64,
+	enforcedLabelValueLengthLimit *uint64,
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
@@ -712,6 +724,33 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
+		}
+	}
+
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
+		}
+	}
+
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
+		}
+	}
+
 	if ep.MetricRelabelConfigs != nil {
 		var metricRelabelings []yaml.MapSlice
 		for _, c := range ep.MetricRelabelConfigs {
@@ -736,7 +775,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string) yaml.MapSlice {
+	enforcedNamespaceLabel string,
+	enforcedLabelLimit *uint64,
+	enforcedLabelNameLengthLimit *uint64,
+	enforcedLabelValueLengthLimit *uint64) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
@@ -772,6 +814,33 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
 			{Key: "module", Value: []string{m.Spec.Module}},
 		}})
+	}
+
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
+		}
+	}
+
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
+		}
+	}
+
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
+		}
 	}
 
 	relabelings := initRelabelings()
@@ -973,6 +1042,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
+	enforcedLabelLimit *uint64,
+	enforcedLabelNameLengthLimit *uint64,
+	enforcedLabelValueLengthLimit *uint64,
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
@@ -1216,6 +1288,33 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if version.Major == 2 && version.Minor >= 21 &&
 		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+	}
+
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
+		}
+	}
+
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
+		}
+	}
+
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
+			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
+		}
 	}
 
 	if ep.MetricRelabelConfigs != nil {
