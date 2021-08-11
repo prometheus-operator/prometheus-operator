@@ -17,6 +17,8 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-kit/log"
+	"os"
 	"strings"
 	"testing"
 
@@ -5064,7 +5066,7 @@ alerting:
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedLabelLimit(%d) labelLimit(%d)", tc.version, tc.enforcedLabelLimit, tc.labelLimit), func(t *testing.T) {
-			cg := &ConfigGenerator{}
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
 
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
@@ -5296,7 +5298,7 @@ alerting:
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedLabelNameLengthLimit(%d) labelNameLengthLimit(%d)", tc.version, tc.enforcedLabelNameLengthLimit, tc.labelNameLengthLimit), func(t *testing.T) {
-			cg := &ConfigGenerator{}
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
 
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
@@ -5506,7 +5508,7 @@ alerting:
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedLabelValueLengthLimit(%d) labelValueLengthLimit(%d)", tc.version, tc.enforcedLabelValueLengthLimit, tc.labelValueLengthLimit), func(t *testing.T) {
-			cg := &ConfigGenerator{}
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
 
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
