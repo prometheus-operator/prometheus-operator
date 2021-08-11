@@ -727,18 +727,27 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
 		}
 	}
 
 	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
 		}
 	}
 
 	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"podMonitor", m.Name)
 		}
 	}
 
@@ -810,18 +819,27 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
 		}
 	}
 
 	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
 		}
 	}
 
 	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"probe", m.Name)
 		}
 	}
 
@@ -1275,18 +1293,27 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
 		}
 	}
 
 	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelNameLengthLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
 		}
 	}
 
 	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
 		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'labelValueLengthLimit' is only available from prometheus 2.27.",
+				"serviceMonitor", m.Name)
 		}
 	}
 
