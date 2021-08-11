@@ -724,17 +724,20 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
-	// since label limits are only available from prometheus 2.27
-	if version.Major == 2 && version.Minor >= 27 {
-		if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
 		}
+	}
 
-		if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
 		}
+	}
 
-		if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
 		}
 	}
@@ -804,17 +807,20 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}})
 	}
 
-	// since label limits are only available from prometheus 2.27
-	if version.Major == 2 && version.Minor >= 27 {
-		if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
 		}
+	}
 
-		if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
 		}
+	}
 
-		if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
 		}
 	}
@@ -1266,17 +1272,20 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
-	// since label limits are only available from prometheus 2.27
-	if version.Major == 2 && version.Minor >= 27 {
-		if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_limit", Value: getLimit(m.Spec.LabelLimit, enforcedLabelLimit)})
 		}
+	}
 
-		if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+	if m.Spec.LabelNameLengthLimit > 0 || enforcedLabelNameLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_name_length_limit", Value: getLimit(m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)})
 		}
+	}
 
-		if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+	if m.Spec.LabelValueLengthLimit > 0 || enforcedLabelValueLengthLimit != nil {
+		if version.Major == 2 && version.Minor >= 27 {
 			cfg = append(cfg, yaml.MapItem{Key: "label_value_length_limit", Value: getLimit(m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)})
 		}
 	}
