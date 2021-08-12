@@ -258,9 +258,19 @@ spec:
                 required:
                 - url
                 type: object
+              sampleLimit:
+                description: SampleLimit defines per-scrape limit on number of scraped
+                  samples that will be accepted.
+                format: int64
+                type: integer
               scrapeTimeout:
                 description: Timeout for scraping metrics from the Prometheus exporter.
                 type: string
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
               targets:
                 description: Targets defines a set of static and/or dynamically discovered
                   targets to be probed using the prober.

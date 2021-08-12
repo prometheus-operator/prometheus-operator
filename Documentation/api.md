@@ -533,6 +533,8 @@ ProbeSpec contains specification parameters for a Probe.
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
+| sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
+| targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
