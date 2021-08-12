@@ -4320,7 +4320,7 @@ alerting:
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedlimit(%d) limit(%d)", tc.version, tc.enforcedLimit, tc.limit), func(t *testing.T) {
-			cg := &ConfigGenerator{}
+			cg := NewConfigGenerator(log.NewLogfmtLogger(os.Stdout))
 
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
