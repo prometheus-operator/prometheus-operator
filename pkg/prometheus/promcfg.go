@@ -721,9 +721,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
-	if version.Major == 2 && version.Minor >= 21 &&
-		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
-		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+		if version.Major == 2 && version.Minor >= 21 {
+			cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "PodMonitor 'targetLimit' is only available from prometheus 2.21.",
+				"podMonitor", m.Name)
+		}
 	}
 
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
@@ -1302,9 +1306,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
-	if version.Major == 2 && version.Minor >= 21 &&
-		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
-		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+		if version.Major == 2 && version.Minor >= 21 {
+			cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "ServiceMonitor 'targetLimit' is only available from prometheus 2.21.",
+				"serviceMonitor", m.Name)
+		}
 	}
 
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {
