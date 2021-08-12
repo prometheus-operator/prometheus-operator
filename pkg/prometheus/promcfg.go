@@ -372,6 +372,8 @@ func (cg *ConfigGenerator) GenerateConfig(
 				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
 				p.Spec.EnforcedNamespaceLabel,
+				p.Spec.EnforcedSampleLimit,
+				p.Spec.EnforcedTargetLimit,
 				p.Spec.EnforcedLabelLimit,
 				p.Spec.EnforcedLabelNameLengthLimit,
 				p.Spec.EnforcedLabelValueLengthLimit,
@@ -776,6 +778,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
+	enforcedSampleLimit *uint64,
+	enforcedTargetLimit *uint64,
 	enforcedLabelLimit *uint64,
 	enforcedLabelNameLengthLimit *uint64,
 	enforcedLabelValueLengthLimit *uint64) yaml.MapSlice {
@@ -814,6 +818,19 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
 			{Key: "module", Value: []string{m.Spec.Module}},
 		}})
+	}
+
+	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+	}
+
+	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+		if version.Major == 2 && version.Minor >= 21 {
+			cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "Probe 'targetLimit' is only available from prometheus 2.21.",
+				"probe", m.Name)
+		}
 	}
 
 	if m.Spec.LabelLimit > 0 || enforcedLabelLimit != nil {

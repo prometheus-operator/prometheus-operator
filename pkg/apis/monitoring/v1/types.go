@@ -1050,6 +1050,10 @@ type ProbeSpec struct {
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// Authorization section for this endpoint
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
+	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	SampleLimit uint64 `json:"sampleLimit,omitempty"`
+	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
+	TargetLimit uint64 `json:"targetLimit,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelLimit uint64 `json:"labelLimit,omitempty"`
