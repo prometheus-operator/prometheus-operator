@@ -65,6 +65,7 @@ make clean generate
 Bump the version of the `pkg/apis/monitoring` and `pkg/client` packages in `go.mod`:
 
 ```bash
+go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring@v$(< VERSION)" pkg/client/go.mod
 go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring@v$(< VERSION)"
 go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/client@v$(< VERSION)"
 ```
