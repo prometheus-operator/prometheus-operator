@@ -4299,6 +4299,12 @@ spec:
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.
                       type: string
+                    sendExemplars:
+                      description: Enables sending of exemplars over remote write.
+                        Note that exemplar-storage itself must be enabled using the
+                        enableFeature option for exemplars to be scraped in the first
+                        place.  Only valid in Prometheus versions 2.27.0 and newer.
+                      type: boolean
                     tlsConfig:
                       description: TLS Config to use for remote write.
                       properties:
