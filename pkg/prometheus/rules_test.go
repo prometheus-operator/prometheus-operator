@@ -41,7 +41,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 func shouldAcceptValidRule(t *testing.T) {
 	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 		{
-			Name:                    "group",
+			Name: "group",
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: "alert",
