@@ -9,8 +9,9 @@ on:
     tags:
       - 'v*'
 env:
-  kind-version: 'v0.11.0'
-  kind-image: 'kindest/node:v1.21.2'  # Image defines which k8s version is used
+  kind-version: 'v0.11.1'
+  kind-image: 'kindest/node:v1.22.0'  # Image defines which k8s version is used
+  golang-version: '1.16'
 jobs:
   e2e-tests:
     name: E2E tests
@@ -39,6 +40,7 @@ jobs:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
         wait: 300s
+        go-version: ${{ env.golang-version }}
     - name: Wait for cluster to finish bootstraping
       run: |
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
