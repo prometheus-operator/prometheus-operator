@@ -1328,22 +1328,33 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Assert labels preserved
-	for _, rConf := range resourceConfigs {
-		res, err := rConf.get()
-		if err != nil {
-			t.Fatal(err)
-		}
+	failed := false
+	// Run check 3 times in loop to prevent test flakes caused by stale data
+	for i := 0; i < 3; i++ {
+		// Assert labels preserved
+		for _, rConf := range resourceConfigs {
+			res, err := rConf.get()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		labels := res.GetLabels()
-		if !containsValues(labels, updatedLabels) {
-			t.Errorf("%s: labels do not contain updated labels, found: %q, should contain: %q", rConf.name, labels, updatedLabels)
-		}
+			labels := res.GetLabels()
+			if !containsValues(labels, updatedLabels) {
+				t.Logf("%s: labels do not contain updated labels, found: %q, should contain: %q", rConf.name, labels, updatedLabels)
+			}
 
-		annotations := res.GetAnnotations()
-		if !containsValues(annotations, updatedAnnotations) {
-			t.Fatalf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
+			annotations := res.GetAnnotations()
+			if !containsValues(annotations, updatedAnnotations) {
+				t.Logf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
+			}
 		}
+		if !failed {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if failed {
+		t.Fatal()
 	}
 
 	if err := framework.DeleteAlertmanagerAndWaitUntilGone(ns, name); err != nil {
