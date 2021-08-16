@@ -22,6 +22,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/prometheus/prometheus/pkg/rulefmt"
+	thanostypes "github.com/thanos-io/thanos/pkg/store/storepb"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 
@@ -29,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/ghodss/yaml"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 )
@@ -186,7 +190,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 				return
 			}
 
-			content, err := generateContent(promRule.Spec)
+			content, err := GenerateContent(promRule.Spec, c.logger)
 			if err != nil {
 				marshalErr = err
 				return
@@ -219,14 +223,6 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	}
 
 	return rules, nil
-}
-
-func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
-	content, err := yaml.Marshal(promRule)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal content")
-	}
-	return string(content), nil
 }
 
 // makeRulesConfigMaps takes a Prometheus configuration and rule files and
@@ -318,4 +314,45 @@ func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string)
 
 func prometheusRuleConfigMapName(prometheusName string) string {
 	return "prometheus-" + prometheusName + "-rulefiles"
+}
+
+// GenerateContent takes a PrometheusRuleSpec and generates the rule content
+func GenerateContent(promRule monitoringv1.PrometheusRuleSpec, logger log.Logger) (string, error) {
+	content, err := yaml.Marshal(promRule)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal content")
+	}
+	errs := ValidateRule(promRule)
+	if len(errs) != 0 {
+		const m = "Invalid rule"
+		level.Debug(logger).Log("msg", m, "content", content)
+		for _, err := range errs {
+			level.Info(logger).Log("msg", m, "err", err)
+		}
+		return "", errors.New(m)
+	}
+	return string(content), nil
+}
+
+// ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator
+func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
+	for i, group := range promRule.Groups {
+		if group.PartialResponseStrategy == "" {
+			continue
+		}
+		if _, ok := thanostypes.PartialResponseStrategy_value[strings.ToUpper(group.PartialResponseStrategy)]; !ok {
+			return []error{
+				fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
+			}
+		}
+		// reset this as the upstream prometheus rule validator
+		// is not aware of the partial_response_strategy field
+		promRule.Groups[i].PartialResponseStrategy = ""
+	}
+	content, err := yaml.Marshal(promRule)
+	if err != nil {
+		return []error{errors.Wrap(err, "failed to marshal content")}
+	}
+	_, errs := rulefmt.Parse(content)
+	return errs
 }
