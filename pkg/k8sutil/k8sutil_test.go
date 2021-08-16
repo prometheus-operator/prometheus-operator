@@ -68,6 +68,77 @@ func Test_SanitizeVolumeName(t *testing.T) {
 	}
 }
 
+func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
+	ctx := context.Background()
+
+	testCases := []struct {
+		name                string
+		expectedAnnotations map[string]string
+		modifiedAnnotations map[string]string
+	}{
+		{
+			name:                "no change",
+			expectedAnnotations: map[string]string{},
+		},
+		{
+			name: "added kubectl annotation",
+			expectedAnnotations: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+			},
+			modifiedAnnotations: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+				"annotation":                        "value",
+			},
+		},
+		{
+			name:                "added another annotation",
+			expectedAnnotations: map[string]string{},
+			modifiedAnnotations: map[string]string{
+				"app.kubernetes.io/name": "overridden-value",
+			},
+		},
+	}
+
+	namespace := "ns-1"
+
+	t.Run("UpdateStatefulSet", func(t *testing.T) {
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				sset := &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "prometheus",
+						Namespace: namespace,
+					},
+				}
+
+				ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+
+				modifiedSset := sset.DeepCopy()
+				if modifiedSset.Spec.Template.Annotations == nil {
+					modifiedSset.Spec.Template.Annotations = make(map[string]string, len(tc.modifiedAnnotations))
+				}
+				for k, v := range tc.modifiedAnnotations {
+					modifiedSset.Spec.Template.Annotations[k] = v
+				}
+
+				err := UpdateStatefulSet(ctx, ssetClient, modifiedSset)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSset.Spec.Template.Annotations) {
+					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSset.Spec.Template.Annotations)
+				}
+			})
+		}
+	})
+}
+
 func TestMergeMetadata(t *testing.T) {
 	ctx := context.Background()
 	testCases := []struct {
