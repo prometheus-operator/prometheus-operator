@@ -1,13 +1,7 @@
 name: publish
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      # "publish" workflow will start on ANY other workflow specified in this list.
-      # Specifying the one that is potentially longest running will delay publishing
-      # and allow checking status of other workflows in steps
-      - "e2e"
-    types: [completed]
+  push:
     branches:
       - 'release-*'
       - 'master'
@@ -19,31 +13,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     name: Publish container images
-    if: > 
-      ${{ 
-        github.event.workflow_run.event == 'push' && 
-        github.event.workflow_run.conclusion == 'success'
-      }}
     steps:
-      - name: Wait for checks to succeed
-        uses: fountainhead/action-wait-for-check@v1.0.0
-        id: wait-for-checks
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: checks
-      - name: Wait for unit tests to succeed
-        uses: fountainhead/action-wait-for-check@v1.0.0
-        id: wait-for-unit
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: unit
-      - name: Exit if other workflows didn't succeeded
-        if: >
-          ${{
-            steps.wait-for-checks.outputs.conclusion != 'success' &&
-            steps.wait-for-unit.outputs.conclusion != 'success'
-          }}
-        run: exit 1
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install Go
