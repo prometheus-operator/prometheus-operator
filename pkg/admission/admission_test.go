@@ -242,6 +242,7 @@ var goodRulesWithAnnotations = []byte(`
         "groups": [
           {
             "name": "test.rules",
+            "partial_response_strategy": "abort",
             "rules": [
               {
                 "alert": "Test",
