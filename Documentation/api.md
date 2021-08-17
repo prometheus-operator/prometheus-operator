@@ -63,6 +63,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [RuleGroup](#rulegroup)
 * [Rules](#rules)
 * [RulesAlert](#rulesalert)
+* [SafeAuthorization](#safeauthorization)
 * [SafeTLSConfig](#safetlsconfig)
 * [SecretOrConfigMap](#secretorconfigmap)
 * [ServiceMonitor](#servicemonitor)
@@ -113,6 +114,7 @@ APIServerConfig defines a host and auth methods to access apiserver. More info: 
 | bearerToken | Bearer token for accessing apiserver. | string | false |
 | bearerTokenFile | File to read bearer token for accessing apiserver. | string | false |
 | tlsConfig | TLS Config to use for accessing apiserver. | *[TLSConfig](#tlsconfig) | false |
+| authorization | Authorization section for accessing apiserver | *[Authorization](#authorization) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -160,6 +162,7 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
 | tlsConfig | TLS Config to use for alertmanager connection. | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | BearerTokenFile to read from filesystem to use when authenticating to Alertmanager. | string | false |
+| authorization | Authorization section for this alertmanager endpoint | *[SafeAuthorization](#safeauthorization) | false |
 | apiVersion | Version of the Alertmanager API that Prometheus uses to send alerts. It can be \"v1\" or \"v2\". | string | false |
 | timeout | Timeout is a per-target Alertmanager timeout when pushing alerts. | *string | false |
 
@@ -260,12 +263,16 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 
 ## Authorization
 
-Authorization allow an endpoint to authenticate by configuring the authentication token More info: https://prometheus.io/docs/alerting/latest/configuration/#http_config
+Authorization contains optional `Authorization` header configuration. This section is only understood by versions of Prometheus >= 2.26.0.
+
+
+<em>appears in: [APIServerConfig](#apiserverconfig), [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| type | The type of the token to use. Defaults to `Bearer`. | string | false |
-| credentials | The secret to pass to in the header. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | true |
+| type | Set the authentication type. Defaults to Bearer, Basic will cause an error | string | false |
+| credentials | The secret's key that contains the credentials of the request | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| credentialsFile | File to read a secret from, mutually exclusive with Credentials (from SafeAuthorization) | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -332,6 +339,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
@@ -409,6 +417,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
+| authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
@@ -473,6 +482,9 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
+| labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -520,6 +532,12 @@ ProbeSpec contains specification parameters for a Probe.
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
+| authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
+| sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
+| targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
+| labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -759,6 +777,9 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedSampleLimit | EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead. | *uint64 | false |
 | allowOverlappingBlocks | AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus. This is still experimental in Prometheus so it may change in any upcoming release. | bool | false |
 | enforcedTargetLimit | EnforcedTargetLimit defines a global limit on the number of scraped targets.  This overrides any TargetLimit set per ServiceMonitor or/and PodMonitor.  It is meant to be used by admins to enforce the TargetLimit to keep the overall number of targets under the desired limit. Note that if TargetLimit is lower, that value will be taken instead, except if either value is zero, in which case the non-zero value will be used.  If both values are zero, no limit is enforced. | *uint64 | false |
+| enforcedLabelLimit | Per-scrape limit on number of labels that will be accepted for a sample. If more than this number of labels are present post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
+| enforcedLabelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. If a label name is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
+| enforcedLabelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -852,6 +873,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | bearerToken | Bearer token for remote read. | string | false |
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
+| authorization | Authorization section for remote read | *[Authorization](#authorization) | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 
@@ -868,6 +890,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | ----- | ----------- | ------ | -------- |
 | url | The URL of the endpoint to send samples to. | string | true |
 | name | The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer. | string | false |
+| sendExemplars | Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer. | *bool | false |
 | remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
@@ -875,6 +898,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
+| authorization | Authorization section for remote write | *[Authorization](#authorization) | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
@@ -941,6 +965,20 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules. Note
 | forOutageTolerance | Max time to tolerate prometheus outage for restoring 'for' state of alert. | string | false |
 | forGracePeriod | Minimum duration between alert and restored 'for' state. This is maintained only for alerts with configured 'for' time greater than grace period. | string | false |
 | resendDelay | Minimum amount of time to wait before resending an alert to Alertmanager. | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## SafeAuthorization
+
+SafeAuthorization specifies a subset of the Authorization struct, that is safe for use in Endpoints (no CredentialsFile field)
+
+
+<em>appears in: [AlertmanagerEndpoints](#alertmanagerendpoints), [Authorization](#authorization), [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| type | Set the authentication type. Defaults to Bearer, Basic will cause an error | string | false |
+| credentials | The secret's key that contains the credentials of the request | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1017,6 +1055,9 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | namespaceSelector | Selector to select which namespaces the Kubernetes Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
+| labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 
 [Back to TOC](#table-of-contents)
 

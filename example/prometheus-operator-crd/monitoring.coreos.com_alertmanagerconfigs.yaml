@@ -397,7 +397,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -416,12 +417,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -724,7 +727,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -743,12 +747,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1035,7 +1041,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1054,12 +1061,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1461,7 +1470,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1480,12 +1490,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1781,7 +1793,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1800,12 +1813,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2045,7 +2060,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2064,12 +2080,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2359,7 +2377,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2378,12 +2397,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually

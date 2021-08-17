@@ -45,6 +45,33 @@ spec:
                   description: Endpoint defines a scrapeable endpoint serving Prometheus
                     metrics.
                   properties:
+                    authorization:
+                      description: Authorization section for this endpoint
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: 'BasicAuth allow an endpoint to authenticate over
                         basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
@@ -467,6 +494,23 @@ spec:
                   \n Default & fallback value: the name of the respective Kubernetes
                   `Endpoint`."
                 type: string
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               namespaceSelector:
                 description: Selector to select which namespaces the Kubernetes Endpoints
                   objects are discovered from.

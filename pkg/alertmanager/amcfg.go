@@ -817,7 +817,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
 	} else if in.Authorization != nil && cg.amVersion.GTE(semver.MustParse("0.22.0")) {
-		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.Authorization.Credentials)
+		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
 		if err != nil {
 			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
 		}

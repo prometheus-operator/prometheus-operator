@@ -27,6 +27,20 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/master/ADOPTERS.md) to the list.
 
+## Clyso 
+
+[clyso.com](https://www.clyso.com/en)
+
+Environments: Bare Metal, Opennebula
+
+Uses kube-prometheus: Yes
+
+Details:
+- multiple K8s cluster with prometheus deployed through prom-operator
+- several own ceph cluster providing metrics via ceph mgr prometheus module
+- several customer ceph clusters pushing metrics via external pushgateway to our our central monitoring instances
+- thanos receiver connected to own S3 storage
+
 ## Giant Swarm
 
 [giantswarm.io](https://www.giantswarm.io/)

@@ -28,13 +28,9 @@ type OAuth2Credentials struct {
 	ClientSecret string
 }
 
-// AuthorizationCredentials represents a credential to be used with
-// authorization header http authentication, see https://tools.ietf.org/html/rfc7617.
-type AuthorizationCredentials string
-
-// BearerToken represents a bearer token, see
+// Token represents text tokens such as bearer token, see
 // https://tools.ietf.org/html/rfc6750.
-type BearerToken string
+type Token string
 
 // TLSAsset represents any TLS related opaque string, e.g. CA files, client
 // certificates.

@@ -9,8 +9,9 @@ on:
     tags:
       - 'v*'
 env:
-  kind-version: 'v0.11.0'
-  kind-image: 'kindest/node:v1.21.2'  # Image defines which k8s version is used
+  kind-version: 'v0.11.1'
+  kind-image: 'kindest/node:v1.22.0'  # Image defines which k8s version is used
+  golang-version: '1.16'
 jobs:
   e2e-tests:
     name: E2E tests
@@ -33,6 +34,13 @@ jobs:
             thanosruler: ""
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - name: Build images
+      run: |
+        export SHELL=/bin/bash
+        make build image
     - name: Start KinD
       uses: engineerd/setup-kind@v0.5.0
       with:
@@ -44,10 +52,8 @@ jobs:
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
-    - name: Build and load images
+    - name: Load images
       run: |
-        export SHELL=/bin/bash
-        make build image
         kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
         kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/kind-rbac.yaml

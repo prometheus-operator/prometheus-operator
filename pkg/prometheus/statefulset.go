@@ -671,7 +671,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			return nil, errors.Wrap(err, "failed to build image path")
 		}
 
-		bindAddress := "[$(POD_IP)]"
+		bindAddress := "" // Listen to all available IP addresses by default
 		if p.Spec.Thanos.ListenLocal {
 			bindAddress = "127.0.0.1"
 		}
@@ -700,16 +700,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args:                     thanosArgs,
-			Env: []v1.EnvVar{
-				{
-					Name: "POD_IP",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
-					},
-				},
-			},
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",

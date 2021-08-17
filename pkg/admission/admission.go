@@ -24,8 +24,8 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -201,17 +201,10 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, []error{err})
 	}
 
-	rules := &PrometheusRules{}
-	if err := json.Unmarshal(ar.Request.Object.Raw, rules); err != nil {
-		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
-		a.validationErrorsCounter.Inc()
-		return toAdmissionResponseFailure(errUnmarshalAdmission, []error{err})
-	}
-
-	_, errors := rulefmt.Parse(rules.Spec.Raw)
+	errors := promoperator.ValidateRule(promRule.Spec)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
-		level.Debug(a.logger).Log("msg", m, "content", rules.Spec.Raw)
+		level.Debug(a.logger).Log("msg", m, "content", promRule.Spec)
 		for _, err := range errors {
 			level.Info(a.logger).Log("msg", m, "err", err)
 		}

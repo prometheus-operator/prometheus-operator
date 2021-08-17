@@ -1379,7 +1379,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		}
 	}
 
-	if err = store.AddAuthorization(ctx, namespace, httpConfig.Authorization, key); err != nil {
+	if err = store.AddAuthorizationCredentials(ctx, namespace, httpConfig.Authorization, key); err != nil {
 		return err
 	}
 

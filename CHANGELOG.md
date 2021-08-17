@@ -1,3 +1,22 @@
+## 0.50.0 / 2021-08-17
+
+* [CHANGE] Remove deprecated flags `--config-reloader-memory` and `--config-reloader-cpu` in favor of `--config-reloader-memory-limit`, `--config-reloader-memory-request`, `--config-reloader-cpu-limit`, and `--config-reloader-cpu-request`. #3884
+* [CHANGE] Remove use of Kubernetes API versions being removed in v1.22. #4171
+* [FEATURE] Added support for OAuth2 authentication in remote read and remote write configuration. #4113
+* [FEATURE] Added OAuth2 configuration for ServiceMonitor, PodMonitor and Probe. #4170
+* [FEATURE] Added `prometheus_operator_spec_shards` metric for exposing the number of shards set on prometheus operator spec. #4173
+* [FEATURE] Support for `Authorization` section in various prometheus sections. #4180
+* [FEATURE] Validate prometheus rules when generating rule file content. #4184
+* [FEATURE] Support `label_limit`, `label_name_length_limit` and `label_value_length_limit` configuration fields at the Prometheus CRD level as well as support individual limits per ServiceMonitor, PodMonitor and Probe resources. #4195
+* [FEATURE] Added sample and target limits to Probe. #4207
+* [FEATURE] Added `send_exemplars` field to the `remote_write` configuration in Prometheus. #4215 #4160
+* [ENHANCEMENT] Support loading ClusterConfig from concatenated KUBECONFIG env. #4154
+* [ENHANCEMENT] Include PrometheusRule in prometheus-operator CRD category. #4213
+* [ENHANCEMENT] Preserve annotations set by kubectl. #4185
+* [BUGFIX] Thanos: listen to all available IP addresses instead of `POD_IP`, simplifies istio management. #4038
+* [BUGFIX] Add port name mapping to ConfigReloader to avoid reloader-web probe failure. #4187
+* [BUGFIX] Handle Thanos rules `partial_response_strategy` field in validating admission webhook. #4217
+
 ## 0.49.0 / 2021-07-06
 
 * [CHANGE] Flag "storage.tsdb.no-lockfile" will now default to false. #4066

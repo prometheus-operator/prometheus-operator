@@ -397,7 +397,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -416,12 +417,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -724,7 +727,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -743,12 +747,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1035,7 +1041,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1054,12 +1061,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1461,7 +1470,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1480,12 +1490,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -1781,7 +1793,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1800,12 +1813,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2045,7 +2060,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2064,12 +2080,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -2359,7 +2377,8 @@ spec:
                                   v0.22+.
                                 properties:
                                   credentials:
-                                    description: The secret to pass to in the header.
+                                    description: The secret's key that contains the
+                                      credentials of the request
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2378,12 +2397,14 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  type:
-                                    description: The type of the token to use. Defaults
-                                      to `Bearer`.
+                                  credentialsFile:
+                                    description: File to read a secret from, mutually
+                                      exclusive with Credentials (from SafeAuthorization)
                                     type: string
-                                required:
-                                - credentials
+                                  type:
+                                    description: Set the authentication type. Defaults
+                                      to Bearer, Basic will cause an error
+                                    type: string
                                 type: object
                               basicAuth:
                                 description: BasicAuth for the client. This is mutually
@@ -7627,6 +7648,23 @@ spec:
               jobLabel:
                 description: The label to use to retrieve the job name from.
                 type: string
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               namespaceSelector:
                 description: Selector to select which namespaces the Endpoints objects
                   are discovered from.
@@ -7647,6 +7685,33 @@ spec:
                   description: PodMetricsEndpoint defines a scrapeable endpoint of
                     a Kubernetes Pod serving Prometheus metrics.
                   properties:
+                    authorization:
+                      description: Authorization section for this endpoint
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: 'BasicAuth allow an endpoint to authenticate over
                         basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
@@ -8163,6 +8228,33 @@ spec:
             description: Specification of desired Ingress selection for target discovery
               by Prometheus.
             properties:
+              authorization:
+                description: Authorization section for this endpoint
+                properties:
+                  credentials:
+                    description: The secret's key that contains the credentials of
+                      the request
+                    properties:
+                      key:
+                        description: The key of the secret to select from.  Must be
+                          a valid secret key.
+                        type: string
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                      optional:
+                        description: Specify whether the Secret or its key must be
+                          defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  type:
+                    description: Set the authentication type. Defaults to Bearer,
+                      Basic will cause an error
+                    type: string
+                type: object
               basicAuth:
                 description: 'BasicAuth allow an endpoint to authenticate over basic
                   authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
@@ -8232,6 +8324,23 @@ spec:
               jobName:
                 description: The job name assigned to scraped metrics by default.
                 type: string
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               module:
                 description: 'The module to use for probing specifying how to probe
                   the target. Example module configuring in the blackbox exporter:
@@ -8338,9 +8447,19 @@ spec:
                 required:
                 - url
                 type: object
+              sampleLimit:
+                description: SampleLimit defines per-scrape limit on number of scraped
+                  samples that will be accepted.
+                format: int64
+                type: integer
               scrapeTimeout:
                 description: Timeout for scraping metrics from the Prometheus exporter.
                 type: string
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
               targets:
                 description: Targets defines a set of static and/or dynamically discovered
                   targets to be probed using the prober.
@@ -9377,6 +9496,35 @@ spec:
                           description: Version of the Alertmanager API that Prometheus
                             uses to send alerts. It can be "v1" or "v2".
                           type: string
+                        authorization:
+                          description: Authorization section for this alertmanager
+                            endpoint
+                          properties:
+                            credentials:
+                              description: The secret's key that contains the credentials
+                                of the request
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            type:
+                              description: Set the authentication type. Defaults to
+                                Bearer, Basic will cause an error
+                              type: string
+                          type: object
                         bearerTokenFile:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
@@ -9558,6 +9706,37 @@ spec:
                   inside of the cluster and will discover API servers automatically
                   and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
                 properties:
+                  authorization:
+                    description: Authorization section for accessing apiserver
+                    properties:
+                      credentials:
+                        description: The secret's key that contains the credentials
+                          of the request
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      credentialsFile:
+                        description: File to read a secret from, mutually exclusive
+                          with Credentials (from SafeAuthorization)
+                        type: string
+                      type:
+                        description: Set the authentication type. Defaults to Bearer,
+                          Basic will cause an error
+                        type: string
+                    type: object
                   basicAuth:
                     description: BasicAuth allow an endpoint to authenticate over
                       basic authentication
@@ -10851,6 +11030,27 @@ spec:
                 items:
                   type: string
                 type: array
+              enforcedLabelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. If more than this number of labels are present post
+                  metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              enforcedLabelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. If a label name is longer than this number
+                  post metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              enforcedLabelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. If a label value is longer than this number
+                  post metric-relabeling, the entire scrape will be treated as failed.
+                  0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
               enforcedNamespaceLabel:
                 description: "EnforcedNamespaceLabel If set, a label will be added
                   to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor`
@@ -12299,6 +12499,37 @@ spec:
                   description: RemoteReadSpec defines the remote_read configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote read
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:
@@ -12594,6 +12825,37 @@ spec:
                   description: RemoteWriteSpec defines the remote_write configuration
                     for prometheus.
                   properties:
+                    authorization:
+                      description: Authorization section for remote write
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with Credentials (from SafeAuthorization)
+                          type: string
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: BasicAuth for the URL.
                       properties:
@@ -12795,6 +13057,12 @@ spec:
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.
                       type: string
+                    sendExemplars:
+                      description: Enables sending of exemplars over remote write.
+                        Note that exemplar-storage itself must be enabled using the
+                        enableFeature option for exemplars to be scraped in the first
+                        place.  Only valid in Prometheus versions 2.27.0 and newer.
+                      type: boolean
                     tlsConfig:
                       description: TLS Config to use for remote write.
                       properties:
@@ -15542,6 +15810,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: PrometheusRule
     listKind: PrometheusRuleList
     plural: prometheusrules
@@ -15678,6 +15948,33 @@ spec:
                   description: Endpoint defines a scrapeable endpoint serving Prometheus
                     metrics.
                   properties:
+                    authorization:
+                      description: Authorization section for this endpoint
+                      properties:
+                        credentials:
+                          description: The secret's key that contains the credentials
+                            of the request
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        type:
+                          description: Set the authentication type. Defaults to Bearer,
+                            Basic will cause an error
+                          type: string
+                      type: object
                     basicAuth:
                       description: 'BasicAuth allow an endpoint to authenticate over
                         basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
@@ -16100,6 +16397,23 @@ spec:
                   \n Default & fallback value: the name of the respective Kubernetes
                   `Endpoint`."
                 type: string
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               namespaceSelector:
                 description: Selector to select which namespaces the Kubernetes Endpoints
                   objects are discovered from.
@@ -21237,7 +21551,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.49.0
+    app.kubernetes.io/version: 0.50.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21254,7 +21568,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.49.0
+    app.kubernetes.io/version: 0.50.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -21334,7 +21648,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.49.0
+    app.kubernetes.io/version: 0.50.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -21350,13 +21664,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.49.0
+        app.kubernetes.io/version: 0.50.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.49.0
-        image: quay.io/prometheus-operator/prometheus-operator:v0.49.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.50.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.50.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -21383,7 +21697,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.49.0
+    app.kubernetes.io/version: 0.50.0
   name: prometheus-operator
   namespace: default
 ---
@@ -21393,7 +21707,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.49.0
+    app.kubernetes.io/version: 0.50.0
   name: prometheus-operator
   namespace: default
 spec:
