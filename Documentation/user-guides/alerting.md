@@ -5,7 +5,7 @@
 
 # Alerting
 
-This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started guide][getting-started].
+This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started guide](getting-started.md).
 
 The Prometheus Operator introduces an Alertmanager resource, which allows users to declaratively describe an Alertmanager cluster. To successfully deploy an Alertmanager cluster, it is important to understand the contract between Prometheus and Alertmanager.
 
@@ -15,7 +15,7 @@ The Alertmanager may be used to:
 * Silence alerts
 * Route and send grouped notifications via providers (PagerDuty, OpsGenie, ...)
 
-Prometheus' configuration also includes "rule files", which contain the [alerting rules][alerting-rules]. When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description][ha-scheme].
+Prometheus' configuration also includes "rule files", which contain the [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description](../high-availability.md).
 
 The Prometheus Operator also introduces an AlertmanagerConfig resource, which allows users to declaratively describe Alertmanager configurations. The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
 
@@ -32,7 +32,7 @@ spec:
 
 The Alertmanager instances will not be able to start up, unless a valid configuration is given. An config file Secret will be composed by taking an optional base config file Secret specified through the `configSecret` field in the Alertmanager resource Spec, and merging that with any AlertmanagerConfig resources that get matched by using the `alertmanagerConfigSelector` and `alertmanagerConfigNamespaceSelector` selectors from the `Alertmanager` resource.
 
-For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document][alerting-config].
+For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document](https://prometheus.io/docs/alerting/configuration/).
 
 ## AlertmanagerConfig Resource
 
@@ -167,7 +167,7 @@ Once created it allows the web UI to be accessible via a Node's IP and the port 
 
 ## Fire Alerts
 
-This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create  Prometheus instances to fire alerts to the Alertmanagers.
+This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create Prometheus instances to fire alerts to the Alertmanagers.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -235,10 +235,4 @@ Looking at the status page for "Runtime & Build Information" on the Prometheus w
 
 These show three discovered Alertmanagers.
 
-Heading to the Alertmanager web UI now shows one active alert, although all Prometheus instances are firing it. [Configuring the Alertmanager][alerting-config] further allows custom alert routing, grouping and notification mechanisms.
-
-
-[alerting-config]: https://prometheus.io/docs/alerting/configuration/
-[alerting-rules]: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-[ha-scheme]: ../high-availability.md
-[getting-started]: getting-started.md
+Heading to the Alertmanager web UI now shows one active alert, although all Prometheus instances are firing it. [Configuring the Alertmanager](https://prometheus.io/docs/alerting/configuration/) further allows custom alert routing, grouping and notification mechanisms.

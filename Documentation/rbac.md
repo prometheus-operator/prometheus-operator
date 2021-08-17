@@ -1,15 +1,15 @@
 ---
-title: "RBAC"
-description: "High Availability is a must for the monitoring infrastructure."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
 weight: 400
 toc: true
+title: RBAC
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: High Availability is a must for the monitoring infrastructure.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
 [Role-based access control](https://en.wikipedia.org/wiki/Role-based_access_control) (RBAC) for the Prometheus Operator involves two parts, RBAC rules for the Operator itself and RBAC rules for the Prometheus Pods themselves created by the Operator as Prometheus requires access to the Kubernetes API for target and Alertmanager discovery.
@@ -159,7 +159,7 @@ rules:
   verbs: ["get"]
 ```
 
-> Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus `Pod`s.  The `ServiceAccount` used by the Prometheus `Pod`s can be specified in the `Prometheus` object.
+> Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus `Pod`s. The `ServiceAccount` used by the Prometheus `Pod`s can be specified in the `Prometheus` object.
 
 ## Example
 

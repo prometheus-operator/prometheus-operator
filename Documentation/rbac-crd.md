@@ -1,15 +1,15 @@
 ---
-title: "RBAC for CRDs"
-description: "Aggregate permissions on the Prometheus Operator CustomResourceDefinitions."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
-weight: 420 # nice
+weight: 420
 toc: true
+title: RBAC for CRDs
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: Aggregate permissions on the Prometheus Operator CustomResourceDefinitions.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
 ## Aggregated ClusterRoles
@@ -18,11 +18,11 @@ It can be useful to aggregate permissions on the Prometheus Operator CustomResou
 
 This can be achieved using ClusterRole aggregation. This lets admins include rules for custom resources, such as those served by CustomResourceDefinitions or Aggregated API servers, on the default roles.
 
-> Note: ClusterRole aggregation is available starting Kubernetes 1.9. 
+> Note: ClusterRole aggregation is available starting Kubernetes 1.9.
 
 ## Example
 
-In order to aggregate _read_ (resp. _edit_) permissions for the Prometheus Operator CustomResourceDefinitions to the `view` (resp. `edit` / `admin`) role(s), a cluster admin can create the `ClusterRole`s below.
+In order to aggregate *read* (resp. *edit*) permissions for the Prometheus Operator CustomResourceDefinitions to the `view` (resp. `edit` / `admin`) role(s), a cluster admin can create the `ClusterRole`s below.
 
 This grants:
 - Users with `view` role permissions to view the Prometheus Operator CRDs within their namespaces,

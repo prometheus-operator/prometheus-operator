@@ -73,8 +73,8 @@ github.com/GeertJohan/go.incremental v1.0.0/go.mod h1:6fAjUhbVuX1KcMD3c8TEgVUqmo
 github.com/GeertJohan/go.rice v1.0.0/go.mod h1:eH6gbSOAUv07dQuZVnBmoDP8mgsM1rtixis4Tib9if0=
 github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20190418212003-6ac0b49e7197/go.mod h1:aJ4qN3TfrelA6NZ6AXsXRfmEVaYin3EDbSPJrKS8OXo=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
-github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210622145915-e6bf3dcd02de h1:VpixUG1dDCCTtgTdSPoxuyzwDqLLt1dXZ5v4Ur0c9PY=
-github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210622145915-e6bf3dcd02de/go.mod h1:LFJueuHZej/Z7Xhqh/XgClfkDjZiiEBOLVTt1Duq1r0=
+github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210810103848-727f02f4c51c h1:rnouiLtDKeaWKnxRViK454oCI8jkhWv5fItCvZ9nJOU=
+github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210810103848-727f02f4c51c/go.mod h1:LFJueuHZej/Z7Xhqh/XgClfkDjZiiEBOLVTt1Duq1r0=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
@@ -182,8 +182,8 @@ github.com/bombsimon/wsl/v3 v3.3.0 h1:Mka/+kRLoQJq7g2rggtgQsjuI/K5Efd87WX96EWFxj
 github.com/bombsimon/wsl/v3 v3.3.0/go.mod h1:st10JtZYLE4D5sC7b8xV4zTKZwAQjCH/Hy2Pm1FNZIc=
 github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742 h1:PdvQdwUXiFnSmWsOJcBXLpyH3mJfP2FMPTT3J0i7+8o=
 github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742/go.mod h1:IyUJYN1gvWjtLF5ZuygmxbnsAyP3aJS6cHzIuZY50B0=
-github.com/bwplotka/mdox v0.2.2-0.20210731105602-946757ef5f98 h1:ngs7TmL/tpcMHye7SfXVQQQQrpb9wysgFguZspqxzRM=
-github.com/bwplotka/mdox v0.2.2-0.20210731105602-946757ef5f98/go.mod h1:OamjXQNkD6dtDz7f0QmcTT3O7W6bpe1SXOb12h2TwUQ=
+github.com/bwplotka/mdox v0.2.2-0.20210817102948-ffcf1df22cbc h1:BkVHkrp8xP2ImhwNkHZHWRF+hzjNI/HlpUC0595PiiU=
+github.com/bwplotka/mdox v0.2.2-0.20210817102948-ffcf1df22cbc/go.mod h1:LQ56NADXiE02c1gvLtmTTFNYCvJFQpZgCU/1+hAYC5U=
 github.com/campoy/embedmd v1.0.0/go.mod h1:oxyr9RCiSXg0M3VJ3ks0UGfp98BpSSGr0kpiX3MzVl8=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=

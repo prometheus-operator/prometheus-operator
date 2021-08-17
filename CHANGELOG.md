@@ -2,7 +2,7 @@
 
 No change since v0.51.0.
 
-_The CI automation failed to build the v0.51.0 images so we had to create a new patch release._
+*The CI automation failed to build the v0.51.0 images so we had to create a new patch release.*
 
 ## 0.51.0 / 2021-09-24
 
@@ -181,11 +181,12 @@ future.
 
 ## 0.42.1 / 2020-09-21
 
-* [BUGFIX] Bump client-go to fix watch bug 
+* [BUGFIX] Bump client-go to fix watch bug
 
 ## 0.42.0 / 2020-09-09
 
-The Prometheus Operator now lives in its own independent GitHub organization.  
+The Prometheus Operator now lives in its own independent GitHub organization.
+
 We have also added a governance (#3398).
 
 * [FEATURE] Move API types out into their own module (#3395)
@@ -230,12 +231,12 @@ We have also added a governance (#3398).
 
 * [CHANGE] Update dependencies to prometheus 2.18 (#3231)
 * [CHANGE] Add support for new prometheus versions (v2.18 & v2.19) (#3284)
-* [CHANGE] bump Alertmanager default version to v0.21.0 (#3286) 
+* [CHANGE] bump Alertmanager default version to v0.21.0 (#3286)
 * [FEATURE] Automatically disable high availability mode for 1 replica alertmanager (#3233)
 * [FEATURE] thanos-sidecar: Add minTime arg (#3253)
-* [FEATURE] Add scrapeTimeout as global configurable parameter (#3250) 
-* [FEATURE] Add EnforcedSampleLimit which enforces a global sample limit (#3276) 
-* [FEATURE] add ability to exclude rules from namespace label enforcement (#3207) 
+* [FEATURE] Add scrapeTimeout as global configurable parameter (#3250)
+* [FEATURE] Add EnforcedSampleLimit which enforces a global sample limit (#3276)
+* [FEATURE] add ability to exclude rules from namespace label enforcement (#3207)
 * [BUGFIX] thanos sidecar: log flags double definition (#3242)
 * [BUGFIX] Mutate rule labels, annotations to strings (#3230)
 
@@ -513,7 +514,7 @@ and accepts and comma-separated list of namespaces as a string.
 ## 0.22.0 / 2018-07-09
 
 * [FEATURE] Allow setting volume name via volumetemplateclaimtemplate in prom and alertmanager (#1538)
-* [FEATURE] Allow setting custom tags of container images (#1584) 
+* [FEATURE] Allow setting custom tags of container images (#1584)
 * [ENHANCEMENT] Update default Thanos to v0.1.0-rc.2 (#1585)
 * [ENHANCEMENT] Split rule config map mounted into Prometheus if it exceeds Kubernetes config map limit (#1562)
 * [BUGFIX] Mount Prometheus data volume into Thanos sidecar & pass correct path to Thanos sidecar (#1583)

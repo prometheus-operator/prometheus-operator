@@ -1,17 +1,17 @@
 ## Maintainers of Prometheus Operator organization
 
-| Name                  | Email                       | Kubernetes Slack         | GitHub                                            | Company           |
-|-----------------------|-----------------------------|--------------------------|---------------------------------------------------|-------------------|
-| Frederic Branczyk     | fbranczyk@gmail.com         | `@brancz`                | [@brancz](https://github.com/brancz)              | Polar Signals     |
-| Lili Cosic            | cosiclili@gmail.com         | `@lili`                  | [@lilic](https://github.com/lilic)                | Red Hat           |
-| Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Polar Signals     |
-| Paweł Krupa           | paulfantom@gmail.com        | `@paulfantom`            | [@paulfantom](https://github.com/paulfantom)      | Timescale         |
-| Sergiusz Urbaniak     | sergiusz.urbaniak@gmail.com | `@sur`                   | [@s-urbaniak](https://github.com/s-urbaniak)      | Red Hat           |
-| Simon Pasquier        | pasquier.simon@gmail.com    | `@SimonPasquier`         | [@simonpasquier](https://github.com/simonpasquier)| Red Hat           |
-| Vasily Sliouniaev     |                             | `@vas`                   | [@vsliouniaev](https://github.com/vsliouniaev)    |                   |
-| Kemal Akkoyun         | kakkoyun@gmail.com          | `@kakkoyun`              | [@kakkoyun](https://github.com/kakkoyun)          | Polar Signals     |
-| Damien Grisonnet      | dgrisonn@redhat.com         | `@dgrisonnet`            | [@dgrisonnet](https://github.com/dgrisonnet)      | Red Hat           |
-| Arthur Silva Sens     | arthursens2005@gmail.com    | `@Arthur Silva Sens`     | [@ArthurSens](https://github.com/ArthurSens)      | Gitpod            |
+| Name              | Email                       | Kubernetes Slack     | GitHub                                             | Company       |
+|-------------------|-----------------------------|----------------------|----------------------------------------------------|---------------|
+| Frederic Branczyk | fbranczyk@gmail.com         | `@brancz`            | [@brancz](https://github.com/brancz)               | Polar Signals |
+| Lili Cosic        | cosiclili@gmail.com         | `@lili`              | [@lilic](https://github.com/lilic)                 | Red Hat       |
+| Matthias Loibl    | mail@matthiasloibl.com      | `@metalmatze`        | [@metalmatze](https://github.com/metalmatze)       | Polar Signals |
+| Paweł Krupa       | paulfantom@gmail.com        | `@paulfantom`        | [@paulfantom](https://github.com/paulfantom)       | Timescale     |
+| Sergiusz Urbaniak | sergiusz.urbaniak@gmail.com | `@sur`               | [@s-urbaniak](https://github.com/s-urbaniak)       | Red Hat       |
+| Simon Pasquier    | pasquier.simon@gmail.com    | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier) | Red Hat       |
+| Vasily Sliouniaev |                             | `@vas`               | [@vsliouniaev](https://github.com/vsliouniaev)     |               |
+| Kemal Akkoyun     | kakkoyun@gmail.com          | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)           | Polar Signals |
+| Damien Grisonnet  | dgrisonn@redhat.com         | `@dgrisonnet`        | [@dgrisonnet](https://github.com/dgrisonnet)       | Red Hat       |
+| Arthur Silva Sens | arthursens2005@gmail.com    | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Gitpod        |
 
 Please reach any of the maintainer on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
 
@@ -21,10 +21,9 @@ We also have some nice souls that help triaging issues and PRs. See [here](https
 
 Full list of triage people is displayed below:
 
-| Name                  | Slack                    | GitHub                                                     | Company         |
-|-----------------------|--------------------------|------------------------------------------------------------|-----------------|
-| Noah Kantrowitz       | `@coderanger`            | [@coderanger](https://github.com/coderanger)                | Geomagical/IKEA |
-
+| Name            | Slack         | GitHub                                       | Company         |
+|-----------------|---------------|----------------------------------------------|-----------------|
+| Noah Kantrowitz | `@coderanger` | [@coderanger](https://github.com/coderanger) | Geomagical/IKEA |
 
 ## How to be maintainer?
 
@@ -36,5 +35,5 @@ Reach us if you have any questions on how to join maintainer team.
 
 ## Notes
 
-This document is heavily inspired by Thanos MANTAINERS.md file. <3 
+This document is heavily inspired by Thanos MANTAINERS.md file. <3
 If you find anything not clear in this file feel free to open an issue or reach out to one of the maintainers.

@@ -1,18 +1,18 @@
 ---
-title: "Thanos"
-description: "Thanos and the Prometheus Operator."
-lead: "Thanos and the Prometheus Operator."
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
 weight: 500
 toc: true
+title: Thanos
+menu:
+    docs:
+        parent: operator
+lead: Thanos and the Prometheus Operator.
+images: []
+draft: false
+description: Thanos and the Prometheus Operator.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
-_Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above._
+*Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above.*
 
 [Thanos](https://github.com/thanos-io/thanos/) is a set of components that can be composed into a highly available,
 multi Prometheus metric system with potentially unlimited storage capacity, if your Object Storage allows for it.
@@ -23,8 +23,8 @@ Before continuing with Prometheus Operator Thanos integration, it is recommended
 
 Prometheus Operator operates `Prometheus` and optionally `ThanosRuler` components.
 Other Thanos components, such as the querier and store gateway, must be configured
-separately.  The Thanos system integrates with Prometheus by adding a Thanos
-sidecar to each Prometheus instance.  The Thanos sidecar can be configured directly in the `Prometheus` CRD. This Sidecar can hook into the Thanos querying system as well as **optionally** back up your data in object storage.
+separately. The Thanos system integrates with Prometheus by adding a Thanos
+sidecar to each Prometheus instance. The Thanos sidecar can be configured directly in the `Prometheus` CRD. This Sidecar can hook into the Thanos querying system as well as **optionally** back up your data in object storage.
 
 Each component other than the sidecar and `ThanosRuler` is deployed independently of the Prometheus Operator and its Thanos configuration. The
 [kube-thanos](https://github.com/thanos-io/kube-thanos/) project has some starting points for other Thanos components deployments.
@@ -92,7 +92,7 @@ spec:
 ...
 ```
 
-This will attach Thanos sidecar that will backup all _new blocks_ that Prometheus produces every 2 hours to the object storage.
+This will attach Thanos sidecar that will backup all *new blocks* that Prometheus produces every 2 hours to the object storage.
 
 NOTE: This option will also disable local Prometheus compaction. This means that Thanos compactor is the main singleton component
 responsible for compactions on a global, object storage level.
@@ -100,7 +100,7 @@ responsible for compactions on a global, object storage level.
 ## Thanos Ruler
 
 The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md) component allows recording and alerting rules to be processed across
-multiple Prometheus instances.  A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances.  The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
+multiple Prometheus instances. A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
 
 ```yaml
 ...
@@ -120,8 +120,7 @@ spec:
     - dnssrv+_http._tcp.my-thanos-querier.monitoring.svc.cluster.local
 ```
 
-The recording and alerting rules used by a `ThanosRuler` component, are configured using the same `PrometheusRule` objects which are used by Prometheus.  In the given example, the rules contained in any `PrometheusRule` object which match the label `role=my-thanos-rules` will be added to the Thanos Ruler POD.
-
+The recording and alerting rules used by a `ThanosRuler` component, are configured using the same `PrometheusRule` objects which are used by Prometheus. In the given example, the rules contained in any `PrometheusRule` object which match the label `role=my-thanos-rules` will be added to the Thanos Ruler POD.
 
 ## Other Thanos Components
 

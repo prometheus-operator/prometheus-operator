@@ -4,18 +4,18 @@ This document describes the rules and governance of the project. It is a slightl
 
 It is meant to be followed by all the developers of the Prometheus Operator project and the Prometheus Operator community. Common terminology used in this governance document are listed below:
 
-* **Maintainers Team**: A core Prometheus Operator team that have owner access to https://github.com/prometheus-operator organization and all projects within it. Current list is available [here][maintainers-doc].
+* **Maintainers Team**: A core Prometheus Operator team that have owner access to https://github.com/prometheus-operator organization and all projects within it. Current list is available [here](MAINTAINERS.md).
 
 * **Triage Team**: Contributors who does not belong to Maintainer's team, but has `Triage` GitHub role on [Prometheus Operator](https://github.com/prometheus-operator) repository allowing to change GitHub issues and PRs statuses and labels.
-They are listed [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/MAINTAINERS.md#triage).
+  They are listed [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/MAINTAINERS.md#triage).
 
-* **The Prometheus Operator project**: The sum of all activities performed under the [prometheus-operator organization on GitHub][gh], concerning one or more repositories or the community.
+* **The Prometheus Operator project**: The sum of all activities performed under the [prometheus-operator organization on GitHub](https://github.com/prometheus-operator), concerning one or more repositories or the community.
 
-Both Triage and Maintainers are part of [`prometheus-operator-team@googlegroups.com`][team] email list.
+Both Triage and Maintainers are part of [`prometheus-operator-team@googlegroups.com`](https://groups.google.com/forum/#!forum/prometheus-operator-team) email list.
 
 ## Values
 
-The Prometheus Operator developers and community are expected to follow the values defined in the [Code of Conduct][coc].
+The Prometheus Operator developers and community are expected to follow the values defined in the [Code of Conduct](code-of-conduct.md).
 
 Furthermore, the Prometheus Operator community strives for kindness, giving feedback effectively, and building a welcoming environment. The Prometheus Operator developers generally decide by consensus and only resort to conflict resolution by a majority vote if consensus cannot be reached.
 
@@ -26,22 +26,22 @@ Furthermore, the Prometheus Operator community strives for kindness, giving feed
 Team member status may be given to those who have made ongoing contributions to the Prometheus Operator project for at least 3 months.
 This is usually in the form of code improvements, pull-request reviews, issue triaging or notable work on documentation, but organizing events or user support could also be taken into account.
 
-New members may be proposed by any existing Maintainer by email to [prometheus-operator-team][team]. It is highly desirable to reach consensus about acceptance of a new member.
+New members may be proposed by any existing Maintainer by email to [prometheus-operator-team](https://groups.google.com/forum/#!forum/prometheus-operator-team). It is highly desirable to reach consensus about acceptance of a new member.
 However, the proposal is ultimately voted on by a formal [supermajority vote](#supermajority-vote) of Team Maintainers.
 
 If the new member proposal is accepted, the proposed team member should be contacted privately via email to confirm or deny their acceptance of team membership.
-This email will also be CC'd to [prometheus-operator-team][team] for record-keeping purposes.
+This email will also be CC'd to [prometheus-operator-team](https://groups.google.com/forum/#!forum/prometheus-operator-team) for record-keeping purposes.
 
 If they choose to accept, the following steps are taken:
 
-* Maintainer is added to the [GitHub organization][gh] as _Owner_.
-* Maintainer is added to the [prometheus-operator-team][team].
-* Maintainer is added to the list of team members [here][maintainers-doc]
-* New maintainer is announced on the [Prometheus Operator Twitter][twitter] by an existing team member.
+* Maintainer is added to the [GitHub organization](https://github.com/prometheus-operator) as *Owner*.
+* Maintainer is added to the [prometheus-operator-team](https://groups.google.com/forum/#!forum/prometheus-operator-team).
+* Maintainer is added to the list of team members [here](MAINTAINERS.md)
+* New maintainer is announced on the [Prometheus Operator Twitter](https://twitter.com/PromOperator) by an existing team member.
 
-Team members may retire at any time by emailing [prometheus-operator-team@googlegroups.com][team].
+Team members may retire at any time by emailing [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team).
 
-Team members can be removed by [supermajority vote](#supermajority-vote) on [prometheus-operator-team@googlegroups.com][team]. For this vote, the member in question is not eligible to vote and does not count towards the quorum.
+Team members can be removed by [supermajority vote](#supermajority-vote) on [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team). For this vote, the member in question is not eligible to vote and does not count towards the quorum.
 
 Upon death of a member, their team membership ends automatically.
 
@@ -49,29 +49,29 @@ Upon death of a member, their team membership ends automatically.
 
 Triage team has similar rules, however the contributions made to the projects does not need to be as significant as expected by potential maintainer.
 
-New members as well may be proposed by any existing Maintainer or Triage person by email to [prometheus-operator-team@googlegroups.com][team]. It is highly desirable to reach consensus about acceptance of a new member.
+New members as well may be proposed by any existing Maintainer or Triage person by email to [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team). It is highly desirable to reach consensus about acceptance of a new member.
 However, the proposal is ultimately voted on by a formal [majority vote](#majority-vote) (in comparison to Maintainer's vote which requires supermajority).
 
 If the new member proposal is accepted, the proposed team member should be contacted privately via email to confirm or deny their acceptance of team membership.
-This email will also be CC'd to [prometheus-operator-team@googlegroups.com][team] for record-keeping purposes.
+This email will also be CC'd to [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team) for record-keeping purposes.
 
 If they choose to accept, the following steps are taken:
 
 * Triage member is added to the [Prometheus Operator project](http://github.com/prometheus-operator/prometheus-operator) with `Triage` access.
-* Triage member is added to the [prometheus-operator-team][team].
-* Triage member is added to the list of Triage members [here][maintainers-doc].
-* New team Triage member are announced on the [Prometheus Operator Twitter][twitter] by an existing team member.
+* Triage member is added to the [prometheus-operator-team](https://groups.google.com/forum/#!forum/prometheus-operator-team).
+* Triage member is added to the list of Triage members [here](MAINTAINERS.md).
+* New team Triage member are announced on the [Prometheus Operator Twitter](https://twitter.com/PromOperator) by an existing team member.
 
-Triage member may retire at any time by emailing [prometheus-operator-team@googlegroups.com][team].
+Triage member may retire at any time by emailing [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team).
 
-Triage member can be removed by [majority vote](#majority-vote) on [prometheus-operator-team@googlegroups.com][team]. Only Maintainers team has right to vote.
+Triage member can be removed by [majority vote](#majority-vote) on [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team). Only Maintainers team has right to vote.
 
 Upon death of a member, their Triage team membership ends automatically.
 
 ### Technical decisions
 
 Smaller technical decisions are made informally and [lazy consensus](#consensus) is assumed. Technical decisions that span multiple parts of the Prometheus Operator project
-should be discussed and made on the [GitHub issues][issues] and in most cases followed by proposal as described [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/CONTRIBUTING.md).
+should be discussed and made on the [GitHub issues](https://github.com/prometheus-operator/prometheus-operator/issues) and in most cases followed by proposal as described [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/CONTRIBUTING.md).
 
 Decisions are usually made by [lazy consensus](#consensus). If no consensus can be reached, the matter may be resolved by [majority vote](#majority-vote).
 
@@ -83,7 +83,7 @@ Any change requires a [supermajority](#supermajority-vote) in favor. Editorial c
 ### Other matters
 
 Any matter that needs a decision, including but not limited to financial matters, may be called to a vote by any Maintainer if they deem it necessary.
-For financial, private, or personnel matters, discussion and voting takes place on the [prometheus-operator-team@googlegroups.com][team]; Otherwise discussion and votes are held in public on the GitHub issues or #prometheus-operator-dev Kubernetes slack channel.
+For financial, private, or personnel matters, discussion and voting takes place on the [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team); Otherwise discussion and votes are held in public on the GitHub issues or #prometheus-operator-dev Kubernetes slack channel.
 
 ## Voting
 
@@ -96,7 +96,7 @@ A vote may be called and closed early if enough votes have come in one way so th
 
 In all cases, all and only [Maintainers](#maintainers-team) are eligible to vote, with the sole exception of the forced removal of a team member, in which said member is not eligible to vote.
 
-Discussion and votes on personnel matters (including but not limited to team membership and maintainership) are held in private on the [prometheus-operator-team@googlegroups.com][team]. All other discussion and votes are held in public on the GitHub issues or #prometheus-operator-dev CNCF slack channel.
+Discussion and votes on personnel matters (including but not limited to team membership and maintainership) are held in private on the [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team). All other discussion and votes are held in public on the GitHub issues or #prometheus-operator-dev CNCF slack channel.
 
 For public discussions, anyone interested is encouraged to participate. Formal power to object or vote is limited to [Maintainers Team](#maintainers-team).
 
@@ -110,7 +110,7 @@ We also encourage any other company interested in helping maintaining Prometheus
 
 ### Consensus
 
-The default decision making mechanism for the Prometheus Operator project is [lazy consensus][lazy]. This means that any decision on technical issues is considered supported by the [team][team] as long as nobody objects.
+The default decision making mechanism for the Prometheus Operator project is [lazy consensus](https://couchdb.apache.org/bylaws.html#lazy). This means that any decision on technical issues is considered supported by the [team](https://groups.google.com/forum/#!forum/prometheus-operator-team) as long as nobody objects.
 
 Silence on any consensus decision is implicit agreement and equivalent to explicit agreement. Explicit agreement may be stated at will.
 
@@ -170,15 +170,15 @@ To become an official member of Maintainers Team, you should make ongoing contri
 At that point, a team member (typically a maintainer of the project) may propose you for membership.
 The discussion about this will be held in private, and you will be informed privately when a decision has been made. A possible, but not required, graduation path is to become a maintainer first.
 
-Should the decision be in favor, your new membership will also be announced on the [Prometheus Operator Twitter][twitter]
+Should the decision be in favor, your new membership will also be announced on the [Prometheus Operator Twitter](https://twitter.com/PromOperator)
 
 ### How do I add a project?
 
-As a team member, propose the new project on the [Prometheus Operator GitHub Issue][issues]. However, currently to maintain project in our organization you have to become Prometheus Operator Maintainers.
+As a team member, propose the new project on the [Prometheus Operator GitHub Issue](https://github.com/prometheus-operator/prometheus-operator/issues). However, currently to maintain project in our organization you have to become Prometheus Operator Maintainers.
 
 ### How do I remove a Maintainer or Triage member?
 
-All members may resign by notifying the [prometheus-operator-team@googlegroups.com][team]. If you think a team member should be removed against their will, propose this to the [prometheus-operator-team@googlegroups.com][team].
+All members may resign by notifying the [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team). If you think a team member should be removed against their will, propose this to the [prometheus-operator-team@googlegroups.com](https://groups.google.com/forum/#!forum/prometheus-operator-team).
 Discussions will be held there in private.
 
 ### Can majority/supermajority vote be done on GitHub PR by just approving PR?
@@ -190,11 +190,3 @@ No,`[VOTE]` email has to be created.
 For majority voting this means that member that did not send a response agree with the proposal.
 
 For supermajority voting team has to wait for all answers.
-
-[twitter]: https://twitter.com/PromOperator
-[issues]: https://github.com/prometheus-operator/prometheus-operator/issues
-[maintainers-doc]: MAINTAINERS.md
-[team]: https://groups.google.com/forum/#!forum/prometheus-operator-team
-[gh]: https://github.com/prometheus-operator
-[coc]: code-of-conduct.md
-[lazy]: https://couchdb.apache.org/bylaws.html#lazy
