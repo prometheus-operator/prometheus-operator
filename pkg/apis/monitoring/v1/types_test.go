@@ -15,44 +15,10 @@
 package v1
 
 import (
-	"encoding/json"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func TestMarshallServiceMonitor(t *testing.T) {
-	sm := &ServiceMonitor{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "default",
-			Labels: map[string]string{
-				"group": "group1",
-			},
-		},
-		Spec: ServiceMonitorSpec{
-			NamespaceSelector: NamespaceSelector{
-				MatchNames: []string{"test"},
-			},
-			Endpoints: []Endpoint{
-				{
-					Port: "metric",
-				},
-			},
-		},
-	}
-	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"endpoints":[{"port":"metric","bearerTokenSecret":{"key":""}}],"selector":{},"namespaceSelector":{"matchNames":["test"]}}}`
-
-	r, err := json.Marshal(sm)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	rs := string(r)
-	if rs != expected {
-		t.Fatalf("Got %s expected: %s ", rs, expected)
-	}
-}
 
 func TestValidateSecretOrConfigMap(t *testing.T) {
 	for _, good := range []SecretOrConfigMap{
