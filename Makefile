@@ -15,7 +15,13 @@ TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
-TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/prometheus_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/prometheus_rule_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/service_monitor_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/pod_monitor_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/probe_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_ruler_types.go
 
 TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
 
