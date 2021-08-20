@@ -154,7 +154,7 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 	*out = *in
 	if in.Authorization != nil {
 		in, out := &in.Authorization, &out.Authorization
-		*out = new(monitoringv1.Authorization)
+		*out = new(monitoringv1.SafeAuthorization)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.BasicAuth != nil {

@@ -417,10 +417,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -747,10 +743,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -1061,10 +1053,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -1490,10 +1478,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -1813,10 +1797,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -2080,10 +2060,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error
@@ -2397,10 +2373,6 @@ spec:
                                     required:
                                     - key
                                     type: object
-                                  credentialsFile:
-                                    description: File to read a secret from, mutually
-                                      exclusive with Credentials (from SafeAuthorization)
-                                    type: string
                                   type:
                                     description: Set the authentication type. Defaults
                                       to Bearer, Basic will cause an error

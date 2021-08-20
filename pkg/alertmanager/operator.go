@@ -1367,19 +1367,14 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return nil
 	}
 
-	// Version checks before we configure the http config
 	var err error
-	if httpConfig.Authorization != nil && amVersion.LT(semver.MustParse("0.22.0")) {
-		return errors.Wrap(err, "Authorization is only supported for alertmanager versions greater than v0.22+")
-	}
-
 	if httpConfig.BearerTokenSecret != nil {
 		if err = store.AddBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
 			return err
 		}
 	}
 
-	if err = store.AddAuthorizationCredentials(ctx, namespace, httpConfig.Authorization, key); err != nil {
+	if err = store.AddSafeAuthorizationCredentials(ctx, namespace, httpConfig.Authorization, key); err != nil {
 		return err
 	}
 

@@ -816,18 +816,23 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		if username != "" && password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
-	} else if in.Authorization != nil && cg.amVersion.GTE(semver.MustParse("0.22.0")) {
-		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
-		if err != nil {
-			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
-		}
-
-		if credentials != "" {
-			authorizationType := in.Authorization.Type
-			if authorizationType == "" {
-				authorizationType = "Bearer"
+	} else if in.Authorization != nil {
+		if cg.amVersion.GTE(semver.MustParse("0.22.0")) {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("%s: found authorization section, but alertmanager is < 0.22.0, ignoring", crKey.Namespace+"-"+crKey.Name),
+				crKey.Namespace+"-"+crKey.Name)
+		} else {
+			credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
+			if err != nil {
+				return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
 			}
-			out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
+
+			if credentials != "" {
+				authorizationType := in.Authorization.Type
+				if authorizationType == "" {
+					authorizationType = "Bearer"
+				}
+				out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
+			}
 		}
 	}
 
