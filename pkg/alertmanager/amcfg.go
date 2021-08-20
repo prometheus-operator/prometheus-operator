@@ -823,7 +823,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		}
 
 		if credentials != "" {
-			authorizationType := out.Authorization.Type
+			authorizationType := in.Authorization.Type
 			if authorizationType == "" {
 				authorizationType = "Bearer"
 			}
