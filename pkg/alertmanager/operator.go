@@ -894,7 +894,7 @@ receivers:
 		return errors.Wrap(err, "failed to parse alertmanager version")
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
@@ -948,7 +948,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -996,7 +996,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfig(ctx, amVersion, amc, store); err != nil {
+		if err := checkAlertmanagerConfig(ctx, amc, store); err != nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
@@ -1027,8 +1027,8 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amVersion semver.Version, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
-	receiverNames, err := checkReceivers(ctx, amVersion, amc, store)
+func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
+	receiverNames, err := checkReceivers(ctx, amc, store)
 	if err != nil {
 		return err
 	}
@@ -1036,7 +1036,7 @@ func checkAlertmanagerConfig(ctx context.Context, amVersion semver.Version, amc 
 	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames, true)
 }
 
-func checkReceivers(ctx context.Context, amVersion semver.Version, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
+func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
 	var err error
 	receiverNames := make(map[string]struct{})
 
@@ -1048,26 +1048,26 @@ func checkReceivers(ctx context.Context, amVersion semver.Version, amc *monitori
 
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
-		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
 
-		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
-		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amVersion, amc.GetNamespace(), amcKey, store)
-		if err != nil {
-			return nil, err
-		}
-
-		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
 
-		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
+
+		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
@@ -1077,12 +1077,12 @@ func checkReceivers(ctx context.Context, amVersion semver.Version, amc *monitori
 			return nil, err
 		}
 
-		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
 
-		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amVersion, amc.GetNamespace(), amcKey, store)
+		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
@@ -1091,7 +1091,7 @@ func checkReceivers(ctx context.Context, amVersion semver.Version, amc *monitori
 	return receiverNames, nil
 }
 
-func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		pagerDutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
 
@@ -1107,7 +1107,7 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 			}
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, pagerDutyConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pagerDutyConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1115,7 +1115,7 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 	return nil
 }
 
-func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
 
@@ -1129,7 +1129,7 @@ func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsG
 			return err
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, opsgenieConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, opsgenieConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1137,7 +1137,7 @@ func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsG
 	return nil
 }
 
-func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
 
@@ -1151,7 +1151,7 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 			return err
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, slackConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, slackConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1159,7 +1159,7 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 	return nil
 }
 
-func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
 
@@ -1173,7 +1173,7 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 			}
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, webhookConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, webhookConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1181,7 +1181,7 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 	return nil
 }
 
-func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
@@ -1198,7 +1198,7 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 			}
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, wechatConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, wechatConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1250,7 +1250,7 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 	return nil
 }
 
-func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 
 		if config.APIKey != nil {
@@ -1283,7 +1283,7 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 		}
 
 		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, victoropsConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, victoropsConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1291,7 +1291,7 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 	return nil
 }
 
-func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
 	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
 		if secret == nil {
 			return errors.Errorf("mandatory field %s is empty", name)
@@ -1329,7 +1329,7 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 		}
 
 		pushoverConfigKey := fmt.Sprintf("%s/pushover/%d", key, i)
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, amVersion, namespace, pushoverConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pushoverConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1362,7 +1362,7 @@ func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]s
 }
 
 // configureHTTPConfigInStore configure the asset store for HTTPConfigs.
-func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
+func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string, store *assets.Store) error {
 	if httpConfig == nil {
 		return nil
 	}
