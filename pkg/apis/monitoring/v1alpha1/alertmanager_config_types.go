@@ -493,7 +493,7 @@ type HTTPConfig struct {
 	// Authorization header configuration for the client.
 	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
 	// +optional
-	Authorization *monitoringv1.Authorization `json:"authorization,omitempty"`
+	Authorization *monitoringv1.SafeAuthorization `json:"authorization,omitempty"`
 	// BasicAuth for the client.
 	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
 	// +optional
