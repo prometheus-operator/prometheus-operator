@@ -818,6 +818,17 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		*out = new(OAuth2)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.MetricRelabelConfigs != nil {
+		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
+		*out = make([]*RelabelConfig, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(RelabelConfig)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.Authorization != nil {
 		in, out := &in.Authorization, &out.Authorization
 		*out = new(SafeAuthorization)

@@ -532,6 +532,7 @@ ProbeSpec contains specification parameters for a Probe.
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
+| metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
@@ -841,7 +842,7 @@ QueueConfig allows the tuning of remote_write queue_config parameters. This obje
 RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 
 
-<em>appears in: [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeTargetIngress](#probetargetingress), [ProbeTargetStaticConfig](#probetargetstaticconfig), [RemoteWriteSpec](#remotewritespec)</em>
+<em>appears in: [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [ProbeTargetIngress](#probetargetingress), [ProbeTargetStaticConfig](#probetargetstaticconfig), [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

@@ -17,12 +17,12 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-kit/log"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
@@ -546,6 +546,12 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 							},
 						},
 					},
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Regex:  "noisy_labels.*",
+							Action: "labeldrop",
+						},
+					},
 				},
 			},
 		},
@@ -596,6 +602,9 @@ scrape_configs:
     replacement: blackbox.exporter.io
   - target_label: namespace
     replacement: default
+  metric_relabel_configs:
+  - regex: noisy_labels.*
+    action: labeldrop
 alerting:
   alert_relabel_configs:
   - action: labeldrop
