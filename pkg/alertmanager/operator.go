@@ -757,7 +757,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config)
+	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
+	exists := !apierrors.IsNotFound(err)
+	if err != nil && exists {
+		return errors.Wrap(err, "failed to retrieve statefulset")
+	}
+
+	oldSpec := appsv1.StatefulSetSpec{}
+	if obj != nil {
+		ss := obj.(*appsv1.StatefulSet)
+		oldSpec = ss.Spec
+	}
+
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, oldSpec)
 	if err != nil {
 		return err
 	}
@@ -770,22 +782,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 
-	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
-	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrap(err, "failed to retrieve statefulset")
-		}
-
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return errors.Wrap(err, "failed to create statefulset")
-		}
-
+	var oldSSetInputHash string
+	if obj != nil {
+		oldSSetInputHash = obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+	}
+	if newSSetInputHash == oldSSetInputHash {
+		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
-	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	if newSSetInputHash == oldSSetInputHash {
-		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+	if !exists {
+		level.Debug(logger).Log("msg", "no current statefulset found")
+		level.Debug(logger).Log("msg", "creating statefulset")
+		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+			return errors.Wrap(err, "creating statefulset failed")
+		}
 		return nil
 	}
 
@@ -816,11 +827,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(a monitoringv1.Alertmanager, c Config) (string, error) {
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config, s appsv1.StatefulSetSpec) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		A monitoringv1.Alertmanager
 		C Config
-	}{a, c},
+		S appsv1.StatefulSetSpec
+	}{a, c, s},
 		nil,
 	)
 	if err != nil {
