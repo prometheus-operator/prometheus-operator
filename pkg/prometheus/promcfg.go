@@ -1047,6 +1047,19 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization, cg.logger)
 
+	if m.Spec.MetricRelabelConfigs != nil {
+		var metricRelabelings []yaml.MapSlice
+		for _, c := range m.Spec.MetricRelabelConfigs {
+			if c.TargetLabel != "" && enforcedNamespaceLabel != "" && c.TargetLabel == enforcedNamespaceLabel {
+				continue
+			}
+			relabeling := generateRelabelConfig(c)
+
+			metricRelabelings = append(metricRelabelings, relabeling)
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: metricRelabelings})
+	}
+
 	return cfg
 }
 
