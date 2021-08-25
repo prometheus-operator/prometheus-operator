@@ -390,6 +390,14 @@ func (cg *ConfigGenerator) GenerateConfig(
 		return nil, errors.Wrap(err, "unmarshalling additional scrape configs failed")
 	}
 
+	// Make shards take effect on additionalScrapeConfigs
+	if shards > 1 {
+		additionalScrapeConfigsYaml, err = generateShardingAdditionalScrapeConfigs(additionalScrapeConfigsYaml, shards)
+		if err != nil {
+			level.Warn(cg.logger).Log("msg", "shard additional scrape configs failed", path.Join(p.Namespace, p.Name))
+		}
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
 		Value: append(scrapeConfigs, additionalScrapeConfigsYaml...),
@@ -1825,4 +1833,27 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 		Key:   "remote_write",
 		Value: cfgs,
 	}
+}
+
+func generateShardingAdditionalScrapeConfigs(additionalScrapeConfigs []yaml.MapSlice, shards int32) ([]yaml.MapSlice, error) {
+	for i, additionalScrapeConfig := range additionalScrapeConfigs {
+		var appendRelabelConfigs = false
+		for j, item := range additionalScrapeConfig {
+			if item.Key == "relabel_configs" {
+				appendRelabelConfigs = true
+				relabelConfigs, ok := item.Value.([]yaml.MapSlice)
+				if !ok {
+					return additionalScrapeConfigs, errors.New("cannot resolve relabel_configs")
+				}
+				additionalScrapeConfig[j].Value = generateAddressShardingRelabelingRules(relabelConfigs, shards)
+			}
+		}
+		if !appendRelabelConfigs {
+			additionalScrapeConfigs[i] = append(additionalScrapeConfig, yaml.MapItem{
+				Key:   "relabel_configs",
+				Value: generateAddressShardingRelabelingRules(nil, shards),
+			})
+		}
+	}
+	return additionalScrapeConfigs, nil
 }
