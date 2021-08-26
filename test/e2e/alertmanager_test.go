@@ -1315,9 +1315,24 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		updateObjectLabels(res, updatedLabels)
 		updateObjectAnnotations(res, updatedAnnotations)
 
-		_, err = rConf.update(res)
+		o, err := rConf.update(res)
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		// Log object's metadata to understand why the test is flaky.
+		t.Logf("resource: %s", rConf.name)
+		t.Logf("resourceVersion: %s", o.GetResourceVersion())
+		t.Logf("generation: %v", o.GetGeneration())
+		t.Logf("labels: %v", o.GetLabels())
+		t.Logf("annotations: %v", o.GetAnnotations())
+		for i, mf := range o.GetManagedFields() {
+			t.Logf("managedField[%d].Manager: %s", i, mf.Manager)
+			t.Logf("managedField[%d].Operation: %s", i, mf.Operation)
+			t.Logf("managedField[%d].Time: %s", i, mf.Time)
+			if mf.FieldsV1 != nil {
+				t.Logf("managedField[%d].FieldsV1: %s", i, mf.FieldsV1)
+			}
 		}
 	}
 
@@ -1333,6 +1348,20 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		res, err := rConf.get()
 		if err != nil {
 			t.Fatal(err)
+		}
+		// Log object's metadata to understand why the test is flaky.
+		t.Logf("resource: %s", rConf.name)
+		t.Logf("resourceVersion: %s", res.GetResourceVersion())
+		t.Logf("generation: %v", res.GetGeneration())
+		t.Logf("labels: %v", res.GetLabels())
+		t.Logf("annotations: %v", res.GetAnnotations())
+		for i, mf := range res.GetManagedFields() {
+			t.Logf("managedField[%d].Manager: %s", i, mf.Manager)
+			t.Logf("managedField[%d].Operation: %s", i, mf.Operation)
+			t.Logf("managedField[%d].Time: %s", i, mf.Time)
+			if mf.FieldsV1 != nil {
+				t.Logf("managedField[%d].FieldsV1: %s", i, mf.FieldsV1)
+			}
 		}
 
 		labels := res.GetLabels()
