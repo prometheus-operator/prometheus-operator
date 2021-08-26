@@ -222,6 +222,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
 	store *assets.Store,
+	additionalScrapeEnableShards bool,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
@@ -391,10 +392,10 @@ func (cg *ConfigGenerator) GenerateConfig(
 	}
 
 	// Make shards take effect on additionalScrapeConfigs
-	if shards > 1 {
+	if additionalScrapeEnableShards && shards > 1 {
 		additionalScrapeConfigsYaml, err = generateShardingAdditionalScrapeConfigs(additionalScrapeConfigsYaml, shards)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "shard additional scrape configs failed", path.Join(p.Namespace, p.Name))
+			level.Warn(cg.logger).Log("msg", "shard additional scrape configs failed", "prometheus", path.Join(p.Namespace, p.Name))
 		}
 	}
 

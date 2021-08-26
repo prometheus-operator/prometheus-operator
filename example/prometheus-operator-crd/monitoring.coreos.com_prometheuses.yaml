@@ -118,6 +118,10 @@ spec:
                   release notes to ensure that no incompatible scrape configs are
                   going to break Prometheus after the upgrade.'
                 properties:
+                  enableShards:
+                    description: If EnableShards is true, target will split according
+                      to the sharding strategy.
+                    type: boolean
                   key:
                     description: The key of the secret to select from.  Must be a
                       valid secret key.

@@ -1210,11 +1210,13 @@ func testPromAdditionalScrapeConfig(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
-			Name: "additional-scrape-configs",
+	p.Spec.AdditionalScrapeConfigs = &monitoringv1.AdditionalScrapeConfigs{
+		SecretKeySelector: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "additional-scrape-configs",
+			},
+			Key: "prometheus-additional.yaml",
 		},
-		Key: "prometheus-additional.yaml",
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)

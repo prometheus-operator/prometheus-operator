@@ -1458,21 +1458,28 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *monitoringv1.AdditionalScrapeConfigs, s *v1.SecretList) ([]byte, error) {
 	if additionalScrapeConfigs != nil {
+		return c.loadAdditionalSecret(&additionalScrapeConfigs.SecretKeySelector, s)
+	}
+	return nil, nil
+}
+
+func (c *Operator) loadAdditionalSecret(selector *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+	if selector != nil {
 		for _, secret := range s.Items {
-			if secret.Name == additionalScrapeConfigs.Name {
-				if c, ok := secret.Data[additionalScrapeConfigs.Key]; ok {
+			if secret.Name == selector.Name {
+				if c, ok := secret.Data[selector.Key]; ok {
 					return c, nil
 				}
 
-				return nil, fmt.Errorf("key %v could not be found in Secret %v", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
+				return nil, fmt.Errorf("key %v could not be found in Secret %v", selector.Key, selector.Name)
 			}
 		}
-		if additionalScrapeConfigs.Optional == nil || !*additionalScrapeConfigs.Optional {
-			return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
+		if selector.Optional == nil || !*selector.Optional {
+			return nil, fmt.Errorf("secret %v could not be found", selector.Name)
 		}
-		level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", additionalScrapeConfigs.Name))
+		level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", selector.Name))
 	}
 	return nil, nil
 }
@@ -1583,13 +1590,18 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
-	additionalAlertRelabelConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	additionalAlertRelabelConfigs, err := c.loadAdditionalSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
 	}
-	additionalAlertManagerConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
+	additionalAlertManagerConfigs, err := c.loadAdditionalSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
+	}
+
+	var additionalScrapeEnableShards bool
+	if p.Spec.AdditionalScrapeConfigs != nil {
+		additionalScrapeEnableShards = p.Spec.AdditionalScrapeConfigs.EnableShards
 	}
 
 	// Update secret based on the most recent configuration.
@@ -1599,6 +1611,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		store,
+		additionalScrapeEnableShards,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,

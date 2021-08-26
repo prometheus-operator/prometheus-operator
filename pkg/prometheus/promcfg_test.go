@@ -211,6 +211,7 @@ alerting:
 			nil,
 			nil,
 			&assets.Store{},
+			false,
 			nil,
 			nil,
 			nil,
@@ -438,6 +439,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -550,6 +552,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -656,6 +659,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -760,6 +764,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -872,6 +877,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1001,6 +1007,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 		},
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1185,6 +1192,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1263,6 +1271,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1342,6 +1351,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1419,6 +1429,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -1467,6 +1478,90 @@ alerting:
       regex: web
 `
 
+	result := string(cfg)
+
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func TestAdditionalScrapeConfigsEnableShards(t *testing.T) {
+	cg := &ConfigGenerator{}
+	var shards int32 = 3
+	cfg, err := cg.GenerateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Shards: &shards,
+				AdditionalScrapeConfigs: &monitoringv1.AdditionalScrapeConfigs{
+					SecretKeySelector: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test",
+						},
+						Key: "test.yaml",
+					},
+					EnableShards: true,
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		true,
+		[]byte(`- job_name: test
+  honor_timestamps: true
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  metrics_path: /metrics
+  scheme: http
+  kubernetes_sd_configs:
+  - role: node
+`),
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: test
+  honor_timestamps: true
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  metrics_path: /metrics
+  scheme: http
+  kubernetes_sd_configs:
+  - role: node
+  relabel_configs:
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 3
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
 	result := string(cfg)
 
 	if expected != result {
@@ -1531,6 +1626,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1687,6 +1783,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		},
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1831,6 +1928,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -1955,6 +2053,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -2050,6 +2149,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -2191,6 +2291,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		},
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -2314,6 +2415,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -2454,6 +2556,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -2594,6 +2697,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -2733,6 +2837,7 @@ func TestTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -3022,6 +3127,7 @@ oauth2:
 					OAuth2Assets:    tt.oauth2Credentials,
 					TokenAssets:     map[string]assets.Token{},
 				},
+				false,
 				nil,
 				nil,
 				nil,
@@ -3079,6 +3185,7 @@ func TestPodTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -3217,6 +3324,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		},
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -3328,6 +3436,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -3473,6 +3582,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		makePodMonitors(),
 		nil,
 		&assets.Store{},
+		false,
 		nil,
 		nil,
 		nil,
@@ -4100,6 +4210,7 @@ alerting:
 				nil,
 				nil,
 				&assets.Store{},
+				false,
 				nil,
 				nil,
 				nil,
@@ -4370,6 +4481,7 @@ alerting:
 				nil,
 				nil,
 				&assets.Store{},
+				false,
 				nil,
 				nil,
 				nil,
@@ -4529,6 +4641,7 @@ remote_read:
 					TokenAssets: map[string]assets.Token{
 						"remoteRead/auth/0": assets.Token("secret"),
 					}},
+				false,
 				nil,
 				nil,
 				nil,
@@ -4846,6 +4959,7 @@ remote_write:
 					TokenAssets: map[string]assets.Token{
 						"remoteWrite/auth/0": assets.Token("secret"),
 					}},
+				false,
 				nil,
 				nil,
 				nil,
@@ -5116,6 +5230,7 @@ alerting:
 				nil,
 				nil,
 				&assets.Store{},
+				false,
 				nil,
 				nil,
 				nil,
@@ -5348,6 +5463,7 @@ alerting:
 				},
 				nil,
 				&assets.Store{},
+				false,
 				nil,
 				nil,
 				nil,
@@ -5570,6 +5686,7 @@ alerting:
 					"testprobe1": &probe,
 				},
 				&assets.Store{},
+				false,
 				nil,
 				nil,
 				nil,
