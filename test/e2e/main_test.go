@@ -151,6 +151,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMAlertmanagerConfigCRD":         testAlertmanagerConfigCRD,
 		"AMUserDefinedAlertmanagerConfig": testUserDefinedAlertmanagerConfig,
 		"AMPreserveUserAddedMetadata":     testAMPreserveUserAddedMetadata,
+		"AMRollbackManualChanges":         testAMRollbackManualChanges,
 	}
 
 	for name, f := range testFuncs {

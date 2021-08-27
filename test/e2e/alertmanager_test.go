@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -1347,6 +1348,42 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	}
 
 	if err := framework.DeleteAlertmanagerAndWaitUntilGone(ns, name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testAMRollbackManualChanges(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
+
+	name := "test"
+	alertManager := framework.MakeBasicAlertmanager(name, 3)
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertManager)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ssetClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sset, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	replicas := int32(0)
+	sset.Spec.Replicas = &replicas
+	if _, err := ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerReady(ns, name, 0, false); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerReady(ns, name, 3, false); err != nil {
 		t.Fatal(err)
 	}
 }
