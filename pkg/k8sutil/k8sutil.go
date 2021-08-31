@@ -26,7 +26,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 
 	"github.com/hashicorp/go-version"
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +36,7 @@ import (
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/retry"
 )
 
 // KubeConfigEnv (optionally) specify the location of kubeconfig file
@@ -111,19 +111,19 @@ func IsResourceNotFoundError(err error) bool {
 }
 
 func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) error {
-	service, err := sclient.Get(ctx, svc.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "retrieving service object failed")
-	}
-
-	if apierrors.IsNotFound(err) {
-		_, err = sclient.Create(ctx, svc, metav1.CreateOptions{})
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		service, err := sclient.Get(ctx, svc.Name, metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrap(err, "creating service object failed")
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = sclient.Create(ctx, svc, metav1.CreateOptions{})
+			return err
 		}
-	} else {
-		// apply immutable fields from the existing service
-		svc.ResourceVersion = service.ResourceVersion
+
+		// Apply immutable fields from the existing service.
 		svc.Spec.IPFamilies = service.Spec.IPFamilies
 		svc.Spec.IPFamilyPolicy = service.Spec.IPFamilyPolicy
 		svc.Spec.ClusterIP = service.Spec.ClusterIP
@@ -132,87 +132,71 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		mergeMetadata(&svc.ObjectMeta, service.ObjectMeta)
 
-		_, err := sclient.Update(ctx, svc, metav1.UpdateOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
-			return errors.Wrap(err, "updating service object failed")
-		}
-	}
-
-	return nil
+		_, err = sclient.Update(ctx, svc, metav1.UpdateOptions{})
+		return err
+	})
 }
 
 func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
-	endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "retrieving existing kubelet endpoints object failed")
-	}
-
-	if apierrors.IsNotFound(err) {
-		_, err = eclient.Create(ctx, eps, metav1.CreateOptions{})
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrap(err, "creating kubelet endpoints object failed")
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = eclient.Create(ctx, eps, metav1.CreateOptions{})
+			return err
 		}
-	} else {
-		eps.ResourceVersion = endpoints.ResourceVersion
+
 		mergeMetadata(&eps.ObjectMeta, endpoints.ObjectMeta)
 
 		_, err = eclient.Update(ctx, eps, metav1.UpdateOptions{})
-		if err != nil {
-			return errors.Wrap(err, "updating kubelet endpoints object failed")
-		}
-	}
-
-	return nil
+		return err
+	})
 }
 
 // UpdateStatefulSet merges metadata of existing StatefulSet with new one and updates it.
 func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) error {
-	existingSset, err := sstClient.Get(ctx, sset.Name, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrap(err, "getting stateful set object failed")
-	}
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingSset, err := sstClient.Get(ctx, sset.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
 
-	mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
-	// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-	mergeKubectlAnnotations(&sset.Spec.Template.ObjectMeta, existingSset.Spec.Template.ObjectMeta)
+		mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
+		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
+		mergeKubectlAnnotations(&sset.Spec.Template.ObjectMeta, existingSset.Spec.Template.ObjectMeta)
 
-	_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
-	if err != nil {
+		_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
 		return err
-	}
-
-	return nil
+	})
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
 func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
-	existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
-	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether secret %q in namespace %q already exists",
-				desired.Name,
-				desired.Namespace,
-			)
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
+			return err
 		}
-		_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
-		return errors.Wrapf(err, "failed to create secret %q in namespace %q", desired.Name, desired.Namespace)
-	}
-	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
-	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
-	if apiequality.Semantic.DeepEqual(existingSecret, desired) {
-		return nil
-	}
-	if _, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrapf(
-			err,
-			"failed to update secret %q in namespace %q",
-			desired.Name,
-			desired.Namespace,
-		)
-	}
-	return nil
+
+		mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
+		if apiequality.Semantic.DeepEqual(existingSecret, desired) {
+			return nil
+		}
+		_, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{})
+		return err
+	})
 }
 
 // GetMinorVersion returns the minor version as an integer
@@ -254,19 +238,19 @@ func mergeOwnerReferences(old []metav1.OwnerReference, new []metav1.OwnerReferen
 	return old
 }
 
+// mergeMetadata takes labels and annotations from the old resource and merges
+// them into the new resource. If a key is present in both resources, the new
+// resource wins. It also copies the ResourceVersion from the old resource to
+// the new resource to prevent update conflicts.
 func mergeMetadata(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
+	new.ResourceVersion = old.ResourceVersion
+
 	new.SetLabels(mergeMaps(new.Labels, old.Labels))
 	new.SetAnnotations(mergeMaps(new.Annotations, old.Annotations))
 }
 
 func mergeMaps(new map[string]string, old map[string]string) map[string]string {
-	if old == nil {
-		old = make(map[string]string, len(new))
-	}
-	for k, v := range new {
-		old[k] = v
-	}
-	return old
+	return mergeMapsByPrefix(new, old, "")
 }
 
 func mergeKubectlAnnotations(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
@@ -277,10 +261,12 @@ func mergeMapsByPrefix(new map[string]string, old map[string]string, prefix stri
 	if old == nil {
 		old = make(map[string]string, len(new))
 	}
+
 	for k, v := range new {
 		if strings.HasPrefix(k, prefix) {
 			old[k] = v
 		}
 	}
+
 	return old
 }
