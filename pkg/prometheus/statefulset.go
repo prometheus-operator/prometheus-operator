@@ -713,6 +713,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Resources: p.Spec.Thanos.Resources,
 		}
 
+		for _, thanosSideCarVM := range p.Spec.Thanos.VolumeMounts {
+			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+				Name:      thanosSideCarVM.Name,
+				MountPath: thanosSideCarVM.MountPath,
+			})
+		}
+
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
 			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
 				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
