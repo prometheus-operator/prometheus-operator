@@ -416,8 +416,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 		}
 	}
 
-	// action 'labeldrop' is not supported <= v1.4.1
-	if replicaExternalLabelName != "" && version.GT(semver.MustParse("1.4.1")) {
+	if replicaExternalLabelName != "" {
 		// Drop replica label, to make alerts from multiple Prometheus replicas alike
 		alertRelabelConfigs = append(alertRelabelConfigs, yaml.MapSlice{
 			{Key: "action", Value: "labeldrop"},
