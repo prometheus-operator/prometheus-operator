@@ -256,7 +256,7 @@ func createK8sAppMonitoring(
 	svcIP string,
 	svcTLSPort int32,
 ) (*monitoringv1.Prometheus, error) {
-	
+
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
 		{
@@ -2209,7 +2209,6 @@ func testShardingProvisioning(t *testing.T) {
 func testResharding(t *testing.T) {
 	t.Parallel()
 
-	
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -2631,7 +2630,7 @@ func testPromGetAuthSecret(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			testCtx := framework.NewTestCtx(t)
 			defer testCtx.Cleanup(t)
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -2719,7 +2718,7 @@ func testOperatorNSScope(t *testing.T) {
 	secondAlertName := "secondAlert"
 
 	t.Run("SingleNS", func(t *testing.T) {
-		
+
 		testCtx := framework.NewTestCtx(t)
 		defer testCtx.Cleanup(t)
 
@@ -2790,7 +2789,7 @@ func testOperatorNSScope(t *testing.T) {
 	})
 
 	t.Run("MultiNS", func(t *testing.T) {
-		
+
 		testCtx := framework.NewTestCtx(t)
 		defer testCtx.Cleanup(t)
 
