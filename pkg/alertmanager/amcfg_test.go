@@ -44,7 +44,6 @@ func TestGenerateConfig(t *testing.T) {
 		expected   string
 	}
 
-	ctx := context.Background()
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
 		t.Fatal("Could not parse slack API URL")
@@ -715,7 +714,7 @@ templates: []
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 			cg := newConfigGenerator(nil, version, store)
-			cfgBytes, err := cg.generateConfig(ctx, tc.baseConfig, tc.amConfigs)
+			cfgBytes, err := cg.generateConfig(context.Background(), tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)
 			}

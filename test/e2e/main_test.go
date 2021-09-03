@@ -88,13 +88,12 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
-	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
-	ns := framework.CreateNamespace(ctx, t, testCtx)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreatePrometheusOperator(ctx, ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +102,7 @@ func TestAllNS(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(ctx, t, ns))
+	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -120,14 +119,14 @@ func TestAllNS(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if expected := 1; len(pl.Items) != expected {
 		t.Fatalf("expected %v Prometheus Operator pods, but got %v", expected, len(pl.Items))
 	}
-	restarts, err := framework.GetPodRestartCount(ctx, ns, pl.Items[0].GetName())
+	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
 	if err != nil {
 		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
 	}
@@ -291,7 +290,7 @@ const (
 func testServerTLS(ctx context.Context, t *testing.T, namespace string) func(t *testing.T) {
 
 	return func(t *testing.T) {
-		if err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName); err != nil {
+		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
 

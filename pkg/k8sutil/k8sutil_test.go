@@ -140,7 +140,6 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 }
 
 func TestMergeMetadata(t *testing.T) {
-	ctx := context.Background()
 	testCases := []struct {
 		name                string
 		expectedLabels      map[string]string
@@ -216,17 +215,17 @@ func TestMergeMetadata(t *testing.T) {
 				for a, v := range tc.modifiedAnnotations {
 					modifiedSvc.Annotations[a] = v
 				}
-				_, err := svcClient.Update(ctx, modifiedSvc, metav1.UpdateOptions{})
+				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				err = CreateOrUpdateService(ctx, svcClient, service)
+				err = CreateOrUpdateService(context.Background(), svcClient, service)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				updatedSvc, err := svcClient.Get(ctx, "prometheus-operated", metav1.GetOptions{})
+				updatedSvc, err := svcClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -262,17 +261,17 @@ func TestMergeMetadata(t *testing.T) {
 				for a, v := range tc.modifiedAnnotations {
 					modifiedEndpoints.Annotations[a] = v
 				}
-				_, err := endpointsClient.Update(ctx, modifiedEndpoints, metav1.UpdateOptions{})
+				_, err := endpointsClient.Update(context.Background(), modifiedEndpoints, metav1.UpdateOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				err = CreateOrUpdateEndpoints(ctx, endpointsClient, endpoints)
+				err = CreateOrUpdateEndpoints(context.Background(), endpointsClient, endpoints)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				updatedEndpoints, err := endpointsClient.Get(ctx, "prometheus-operated", metav1.GetOptions{})
+				updatedEndpoints, err := endpointsClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -308,17 +307,17 @@ func TestMergeMetadata(t *testing.T) {
 				for a, v := range tc.modifiedAnnotations {
 					modifiedSset.Annotations[a] = v
 				}
-				_, err := ssetClient.Update(ctx, modifiedSset, metav1.UpdateOptions{})
+				_, err := ssetClient.Update(context.Background(), modifiedSset, metav1.UpdateOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				err = UpdateStatefulSet(ctx, ssetClient, sset)
+				err = UpdateStatefulSet(context.Background(), ssetClient, sset)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
+				updatedSset, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -354,17 +353,17 @@ func TestMergeMetadata(t *testing.T) {
 				for a, v := range tc.modifiedAnnotations {
 					modifiedSecret.Annotations[a] = v
 				}
-				_, err := sClient.Update(ctx, modifiedSecret, metav1.UpdateOptions{})
+				_, err := sClient.Update(context.Background(), modifiedSecret, metav1.UpdateOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				err = CreateOrUpdateSecret(ctx, sClient, secret)
+				err = CreateOrUpdateSecret(context.Background(), sClient, secret)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				updatedSecret, err := sClient.Get(ctx, "prometheus-tls-assets", metav1.GetOptions{})
+				updatedSecret, err := sClient.Get(context.Background(), "prometheus-tls-assets", metav1.GetOptions{})
 				if err != nil {
 					t.Fatal(err)
 				}
