@@ -21,8 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/intstr"
-
+	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
@@ -30,8 +29,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kylelemons/godebug/pretty"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
@@ -1835,6 +1833,35 @@ func TestExpectedStatefulSetShardNames(t *testing.T) {
 		if res[i] != name {
 			t.Fatal("Unexpected StatefulSet shard name")
 		}
+	}
+}
+
+func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
+	statefulSet, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{},
+	}, defaultTestConfig, nil, "", 0)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	// assert defaults to zero if nil
+	if statefulSet.Spec.MinReadySeconds != 0 {
+		t.Fatalf("expected MinReadySeconds to be zero but got %d", statefulSet.Spec.MinReadySeconds)
+	}
+
+	var expect uint32 = 5
+	statefulSet, err = makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			MinReadySeconds: &expect,
+		},
+	}, defaultTestConfig, nil, "", 0)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if statefulSet.Spec.MinReadySeconds != int32(expect) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.Spec.MinReadySeconds)
 	}
 }
 

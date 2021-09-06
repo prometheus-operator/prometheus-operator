@@ -809,6 +809,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
+	var minReadySeconds int32
+	if p.Spec.MinReadySeconds != nil {
+		minReadySeconds = int32(*p.Spec.MinReadySeconds)
+	}
+
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
@@ -872,6 +877,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
+		MinReadySeconds: minReadySeconds,
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
