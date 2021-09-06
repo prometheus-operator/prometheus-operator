@@ -817,7 +817,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
 	} else if in.Authorization != nil {
-		if cg.amVersion.GTE(semver.MustParse("0.22.0")) {
+		if cg.amVersion.LT(semver.MustParse("0.22.0")) {
 			level.Warn(cg.logger).Log("msg", fmt.Sprintf("%s: found authorization section, but alertmanager is < 0.22.0, ignoring", crKey.Namespace+"-"+crKey.Name),
 				crKey.Namespace+"-"+crKey.Name)
 		} else {
