@@ -185,6 +185,12 @@ type ThanosRulerSpec struct {
 	// of all alerts.
 	// Maps to the '--alert.query-url' CLI arg.
 	AlertQueryURL string `json:"alertQueryUrl,omitempty"`
+	// Minimum number of seconds for which a newly created pod should be ready
+	// without any of its container crashing for it to be considered available.
+	// Defaults to 0 (pod will be considered available as soon as it is ready)
+	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
+	// +optional
+	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
