@@ -3739,6 +3739,51 @@ func testPromWebTLS(t *testing.T) {
 	}
 }
 
+func testPromMinReadySeconds(t *testing.T) {
+	runFeatureGatedTests(t)
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
+
+	kubeClient := framework.KubeClient
+
+	var setMinReadySecondsInitial uint32 = 5
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom.Spec.MinReadySeconds = &setMinReadySecondsInitial
+
+	prom, err := framework.CreatePrometheusAndWaitUntilReady(ns, prom)
+	if err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if promSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, promSS.Spec.MinReadySeconds)
+	}
+
+	var updated uint32 = 10
+	prom.Spec.MinReadySeconds = &updated
+	if _, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prom); err != nil {
+		t.Fatal("Updating prometheus failed: ", err)
+	}
+
+	promSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if promSS.Spec.MinReadySeconds != int32(updated) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, promSS.Spec.MinReadySeconds)
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(framework.Ctx, alertmanager.ListOptions(alertmanagerName))
