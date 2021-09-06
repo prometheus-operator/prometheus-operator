@@ -794,12 +794,13 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
+	logger := log.With(cg.logger, "namespace", crKey.Namespace, "name", crKey.Name)
 	out := &httpClientConfig{
 		ProxyURL: in.ProxyURL,
 	}
 
 	if in.BasicAuth != nil && in.Authorization != nil {
-		level.Warn(cg.logger).Log("msg", "Basic auth and Authorization are mutually exclusive. Basic auth will take precedence.")
+		level.Warn(logger).Log("msg", "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' will take precedence.")
 	}
 
 	if in.BasicAuth != nil {
@@ -818,8 +819,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		}
 	} else if in.Authorization != nil {
 		if cg.amVersion.LT(semver.MustParse("0.22.0")) {
-			level.Warn(cg.logger).Log("msg", fmt.Sprintf("%s: found authorization section, but alertmanager is < 0.22.0, ignoring", crKey.Namespace+"-"+crKey.Name),
-				crKey.Namespace+"-"+crKey.Name)
+			level.Warn(logger).Log("msg", "found authorization section, but alertmanager is < 0.22.0, ignoring", "version", cg.amVersion)
 		} else {
 			credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
 			if err != nil {
