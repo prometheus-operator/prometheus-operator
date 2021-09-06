@@ -490,7 +490,12 @@ func (r *OpsGenieConfigResponder) Validate() error {
 // HTTPConfig defines a client HTTP configuration.
 // See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 type HTTPConfig struct {
+	// Authorization header configuration for the client.
+	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
+	// +optional
+	Authorization *monitoringv1.SafeAuthorization `json:"authorization,omitempty"`
 	// BasicAuth for the client.
+	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
 	// +optional
 	BasicAuth *monitoringv1.BasicAuth `json:"basicAuth,omitempty"`
 	// The secret's key that contains the bearer token to be used by the client

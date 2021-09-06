@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
@@ -631,10 +632,15 @@ templates: []
 		},
 	}
 
+	version, err := semver.ParseTolerant("v0.22.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
-			cg := newConfigGenerator(nil, store)
+			cg := newConfigGenerator(nil, version, store)
 			cfgBytes, err := cg.generateConfig(ctx, tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)

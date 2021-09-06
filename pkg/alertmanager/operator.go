@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -899,12 +900,18 @@ receivers:
 		return nil
 	}
 
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+	version, err := semver.ParseTolerant(amVersion)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse alertmanager version")
+	}
+
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	generator := newConfigGenerator(c.logger, store)
+	generator := newConfigGenerator(c.logger, version, store)
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
@@ -999,6 +1006,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
+
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfig(ctx, amc, store); err != nil {
 			rejected++
@@ -1296,7 +1304,6 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 }
 
 func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
-
 	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
 		if secret == nil {
 			return errors.Errorf("mandatory field %s is empty", name)
@@ -1377,6 +1384,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		if err = store.AddBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
 			return err
 		}
+	}
+
+	if err = store.AddSafeAuthorizationCredentials(ctx, namespace, httpConfig.Authorization, key); err != nil {
+		return err
 	}
 
 	if err = store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth, key); err != nil {

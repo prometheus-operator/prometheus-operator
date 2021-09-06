@@ -127,7 +127,7 @@ func TestAddBearerToken(t *testing.T) {
 				Key: tc.selectedKey,
 			}
 
-			key := fmt.Sprintf("basicauth/%d", i)
+			key := fmt.Sprintf("bearertoken/%d", i)
 			err := store.AddBearerToken(context.Background(), tc.ns, sel, key)
 
 			if tc.err {

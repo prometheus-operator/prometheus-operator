@@ -1697,7 +1697,7 @@ type ProbeTLSConfig struct {
 }
 
 // SafeAuthorization specifies a subset of the Authorization struct, that is
-// safe for use in Endpoints (no CrendetialsFile field)
+// safe for use in Endpoints (no CredentialsFile field)
 // +k8s:openapi-gen=true
 type SafeAuthorization struct {
 	// Set the authentication type. Defaults to Bearer, Basic will cause an
