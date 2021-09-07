@@ -1961,25 +1961,30 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		}
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
-			break
+			level.Error(c.logger).Log("msg", "probes", pnKey, "addBearerToken", "err", err)
+			continue
 		}
 
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
-			break
+			level.Error(c.logger).Log("msg", "probes", pnKey, "addBasicAuth", "err", err)
+			continue
 		}
 
 		if probe.Spec.TLSConfig != nil {
 			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
-				break
+				level.Error(c.logger).Log("msg", "probes", pnKey, "addSafeTLSConfig", "err", err)
+				continue
 			}
 		}
 		pnAuthKey := fmt.Sprintf("probe/auth/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization, pnAuthKey); err != nil {
-			break
+			level.Error(c.logger).Log("msg", "probes", pnKey, "addSafeAuthorizationCredentials", "err", err)
+			continue
 		}
 
 		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
-			break
+			level.Error(c.logger).Log("msg", "probes", pnKey, "addOAuth2", "err", err)
+			continue
 		}
 
 		res[probeName] = probe
