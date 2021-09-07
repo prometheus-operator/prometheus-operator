@@ -1549,6 +1549,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
+		if err := validateRemoteWriteSpec(remote); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
 		key := fmt.Sprintf("remoteWrite/%d", i)
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
@@ -2042,4 +2045,27 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 		return nil, errors.Wrap(err, "failed to list namespaces")
 	}
 	return ns, nil
+}
+
+// validateRemoteWriteSpec checks that mutually exclusive configurations are not
+// included in the Prometheus' remoteWrite configuration section.
+// Reference:
+// https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+	mxFields := []interface{}{
+		spec.BasicAuth,
+		spec.OAuth2,
+		spec.Authorization,
+		spec.Sigv4}
+	var count int
+	for i, v := range mxFields {
+		if !reflect.ValueOf(v).IsNil() {
+			count++
+		}
+		if count > 1 {
+			return fmt.Errorf("invalid RemoteWriteSpec:\n%#v is not allowed together with\n%#v",
+				mxFields[i], mxFields[i-1])
+		}
+	}
+	return nil
 }

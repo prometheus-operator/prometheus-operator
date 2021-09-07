@@ -4921,6 +4921,56 @@ remote_write:
     send: false
     send_interval: 1m
 `,
+		}, {
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:           "http://example.com",
+				RemoteTimeout: "1s",
+				Sigv4:         nil,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 1s
+`,
+		},
+		{
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:           "http://example.com",
+				Sigv4:         &monitoringv1.Sigv4{},
+				RemoteTimeout: "1s",
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 1s
+  sigv4: {}
+`,
 		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
@@ -4954,7 +5004,7 @@ remote_write:
 				TokenAssets: map[string]assets.Token{
 					"remoteWrite/auth/0": assets.Token("secret"),
 				}}
-			if tc.remoteWrite.Sigv4 != nil {
+			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
 				store.SigV4Assets = map[string]assets.SigV4Credentials{
 					"remoteWrite/0": {
 						AccessKeyID: "access-key",
