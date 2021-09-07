@@ -51,6 +51,7 @@ type globalConfig struct {
 	SMTPAuthIdentity string          `yaml:"smtp_auth_identity,omitempty" json:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS   *bool           `yaml:"smtp_require_tls,omitempty" json:"smtp_require_tls,omitempty"`
 	SlackAPIURL      *config.URL     `yaml:"slack_api_url,omitempty" json:"slack_api_url,omitempty"`
+	SlackAPIURLFile  string          `yaml:"slack_api_url_file,omitempty" json:"slack_api_url_file,omitempty"`
 	PagerdutyURL     *config.URL     `yaml:"pagerduty_url,omitempty" json:"pagerduty_url,omitempty"`
 	HipchatAPIURL    *config.URL     `yaml:"hipchat_api_url,omitempty" json:"hipchat_api_url,omitempty"`
 	HipchatAuthToken string          `yaml:"hipchat_auth_token,omitempty" json:"hipchat_auth_token,omitempty"`
@@ -154,6 +155,7 @@ type slackConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	APIKeyFile    string            `yaml:"api_key_file,omitempty" json:"api_key_file,omitempty"`
 	Channel       string            `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username      string            `yaml:"username,omitempty" json:"username,omitempty"`
 	Color         string            `yaml:"color,omitempty" json:"color,omitempty"`
