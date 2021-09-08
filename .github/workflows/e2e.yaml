@@ -24,14 +24,17 @@ jobs:
             prometheus: "exclude"
             alertmanager: ""
             thanosruler: "exclude"
+            featureGated: "include"
           - suite: prometheus
             prometheus: ""
             alertmanager: "exclude"
             thanosruler: "exclude"
+            featureGated: "include"
           - suite: thanosruler
             prometheus: "exclude"
             alertmanager: "exclude"
             thanosruler: ""
+            featureGated: "include"
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
@@ -47,6 +50,7 @@ jobs:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
         wait: 300s
+        config: /test/e2e/kind-conf.yaml
     - name: Wait for cluster to finish bootstraping
       run: |
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
@@ -62,4 +66,5 @@ jobs:
         EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
+        FEATURE_GATED_TESTS=${{ matrix.featureGated }}
         make test-e2e

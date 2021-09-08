@@ -889,3 +889,31 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		}
 	}
 }
+
+func TestStatefulSetMinReadySeconds(t *testing.T) {
+	tr := monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			MinReadySeconds: nil,
+			QueryEndpoints:  emptyQueryEndpoints,
+		},
+	}
+
+	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if statefulSet.MinReadySeconds != 0 {
+		t.Fatalf("expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
+	}
+
+	// assert set correctly if not nil
+	var expect uint32 = 5
+	tr.Spec.MinReadySeconds = &expect
+	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if statefulSet.MinReadySeconds != int32(expect) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	}
+}

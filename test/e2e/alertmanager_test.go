@@ -1388,3 +1388,46 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func testAlertManagerMinReadySeconds(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	runFeatureGatedTests(t)
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
+
+	var setMinReadySecondsInitial uint32 = 5
+	am := framework.MakeBasicAlertmanager("basic-am", 3)
+	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am)
+	if err != nil {
+		t.Fatal("Creating AlertManager failed: ", err)
+	}
+
+	amSS, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if amSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, amSS.Spec.MinReadySeconds)
+	}
+
+	var updated uint32 = 10
+	am.Spec.MinReadySeconds = &updated
+	if _, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+		t.Fatal("Updating AlertManager failed: ", err)
+	}
+
+	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if amSS.Spec.MinReadySeconds != int32(updated) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, amSS.Spec.MinReadySeconds)
+	}
+}
