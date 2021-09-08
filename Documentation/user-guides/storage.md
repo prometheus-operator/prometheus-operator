@@ -122,7 +122,7 @@ parameters:
 ```
 
 
-[volumes-changelog]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#volumes
+[volumes-changelog]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes
 [api-doc]: ../api.md#storagespec
 [pv-provisioning]: https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning
 [persistent-volumes]: https://kubernetes.io/docs/user-guide/persistent-volumes/#aws
