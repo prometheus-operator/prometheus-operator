@@ -553,6 +553,7 @@ func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName,
 
 func (f *Framework) PrometheusQuery(ns, svcName, query string) ([]PrometheusQueryResult, error) {
 	response, err := f.PrometheusSVCGetRequest(
+		context.Background(),
 		ns,
 		svcName,
 		"/api/v1/query",

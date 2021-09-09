@@ -3713,10 +3713,10 @@ func testPromMinReadySeconds(t *testing.T) {
 	runFeatureGatedTests(t)
 	t.Parallel()
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	kubeClient := framework.KubeClient
 
@@ -3740,11 +3740,11 @@ func testPromMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	prom.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prom); err != nil {
+	if _, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
 		t.Fatal("Updating prometheus failed: ", err)
 	}
 
-	promSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
+	promSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3815,11 +3815,10 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-
 			ctx := framework.NewTestCtx(t)
 			defer ctx.Cleanup(t)
-			ns := framework.CreateNamespace(t, ctx)
-			framework.SetupPrometheusRBAC(t, ctx, ns)
+			ns := framework.CreateNamespace(context.Background(), t, ctx)
+			framework.SetupPrometheusRBAC(context.Background(), t, ctx, ns)
 
 			prometheusName := "test"
 			group := "servicediscovery-test"
@@ -3828,29 +3827,29 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 			s := framework.MakeBasicServiceMonitor(group)
 			s.Spec.Endpoints[0].RelabelConfigs = tc.relabelConfigs
 			s.Spec.Endpoints[0].MetricRelabelConfigs = tc.metricRelabelConfigs
-			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
 				t.Fatal("Creating ServiceMonitor failed: ", err)
 			}
 
 			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 			p.Spec.EnforcedNamespaceLabel = "namespace"
-			_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(ns, svc); err != nil {
+			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 				t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 			} else {
 				ctx.AddFinalizerFn(finalizerFn)
 			}
 
-			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(framework.Ctx, fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 			if err != nil {
 				t.Fatal("Generated Secret could not be retrieved: ", err)
 			}
 
-			err = framework.WaitForDiscoveryWorking(ns, svc.Name, prometheusName)
+			err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 			}

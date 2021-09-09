@@ -1347,14 +1347,14 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 func testAMRollbackManualChanges(t *testing.T) {
 	t.Parallel()
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
 	alertManager := framework.MakeBasicAlertmanager(name, 3)
-	_, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertManager)
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertManager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1371,11 +1371,11 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(ns, name, 0, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 0, false); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(ns, name, 3, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 3, false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1385,15 +1385,15 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	runFeatureGatedTests(t)
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	var setMinReadySecondsInitial uint32 = 5
 	am := framework.MakeBasicAlertmanager("basic-am", 3)
 	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
-	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
 	if err != nil {
 		t.Fatal("Creating AlertManager failed: ", err)
 	}
@@ -1409,7 +1409,7 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	am.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+	if _, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am); err != nil {
 		t.Fatal("Updating AlertManager failed: ", err)
 	}
 

@@ -219,22 +219,22 @@ func testTRMinReadySeconds(t *testing.T) {
 	runFeatureGatedTests(t)
 	t.Parallel()
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	kubeClient := framework.KubeClient
 
 	var setMinReadySecondsInitial uint32 = 5
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
 	thanosRuler.Spec.MinReadySeconds = &setMinReadySecondsInitial
-	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "thanos-ruler-test-thanos", metav1.GetOptions{})
+	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,11 +245,11 @@ func testTRMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	thanosRuler.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler); err != nil {
+	if _, err = framework.UpdateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler); err != nil {
 		t.Fatal("Updating ThanosRuler failed: ", err)
 	}
 
-	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "thanos-ruler-test-thanos", metav1.GetOptions{})
+	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
