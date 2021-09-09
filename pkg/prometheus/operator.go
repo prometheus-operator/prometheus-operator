@@ -1947,79 +1947,47 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 
 	var rejected int
 	res := make(map[string]*monitoringv1.Probe, len(probes))
-	for probeName, probe := range probes {
 
-		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+	for probeName, probe := range probes {
+		rejectFn := func(probe *monitoringv1.Probe, err error) {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping probe",
-				"error", "Probe needs at least one target of type staticConfig or ingress",
-				"probe", probeName,
+				"error", err.Error(),
+				"probe", probe,
 				"namespace", p.Namespace,
 				"prometheus", p.Name,
 			)
+		}
+		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+			rejectFn(probe, err)
 			continue
 		}
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
-			rejected++
-			level.Warn(c.logger).Log(
-				"msg", "skipping probe",
-				"error", "Probe add bearerToken error",
-				"probe", probeName,
-				"namespace", p.Namespace,
-				"prometheus", p.Name,
-			)
+			rejectFn(probe, err)
 			continue
 		}
 
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
-			rejected++
-			level.Warn(c.logger).Log(
-				"msg", "skipping probe",
-				"error", "Probe add basicAuth error",
-				"probe", probeName,
-				"namespace", p.Namespace,
-				"prometheus", p.Name,
-			)
+			rejectFn(probe, err)
 			continue
 		}
 
 		if probe.Spec.TLSConfig != nil {
 			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
-				rejected++
-				level.Warn(c.logger).Log(
-					"msg", "skipping probe",
-					"error", "Probe add safeTLSConfig error",
-					"probe", probeName,
-					"namespace", p.Namespace,
-					"prometheus", p.Name,
-				)
+				rejectFn(probe, err)
 				continue
 			}
 		}
 		pnAuthKey := fmt.Sprintf("probe/auth/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization, pnAuthKey); err != nil {
-			rejected++
-			level.Warn(c.logger).Log(
-				"msg", "skipping probe",
-				"error", "Probe add safeAuthorizationCredentials error",
-				"probe", probeName,
-				"namespace", p.Namespace,
-				"prometheus", p.Name,
-			)
+			rejectFn(probe, err)
 			continue
 		}
 
 		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
-			rejected++
-			level.Warn(c.logger).Log(
-				"msg", "skipping probe",
-				"error", "Probe add OAuth2 error",
-				"probe", probeName,
-				"namespace", p.Namespace,
-				"prometheus", p.Name,
-			)
+			rejectFn(probe, err)
 			continue
 		}
 
