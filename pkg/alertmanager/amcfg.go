@@ -794,13 +794,8 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
-	logger := log.With(cg.logger, "namespace", crKey.Namespace, "name", crKey.Name)
 	out := &httpClientConfig{
 		ProxyURL: in.ProxyURL,
-	}
-
-	if in.BasicAuth != nil && in.Authorization != nil {
-		level.Warn(logger).Log("msg", "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' will take precedence.")
 	}
 
 	if in.BasicAuth != nil {
@@ -817,22 +812,20 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		if username != "" && password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
-	} else if in.Authorization != nil {
-		if cg.amVersion.LT(semver.MustParse("0.22.0")) {
-			level.Warn(logger).Log("msg", "found authorization section, but alertmanager is < 0.22.0, ignoring", "version", cg.amVersion)
-		} else {
-			credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
-			if err != nil {
-				return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
-			}
+	}
 
-			if credentials != "" {
-				authorizationType := in.Authorization.Type
-				if authorizationType == "" {
-					authorizationType = "Bearer"
-				}
-				out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
+	if in.Authorization != nil {
+		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
+		if err != nil {
+			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
+		}
+
+		if credentials != "" {
+			authorizationType := in.Authorization.Type
+			if authorizationType == "" {
+				authorizationType = "Bearer"
 			}
+			out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
 		}
 	}
 
