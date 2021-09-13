@@ -124,7 +124,9 @@ func (cg *configGenerator) generateConfig(
 	// alerts will fallthrough.
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
-	return yaml.Marshal(baseConfig)
+	generatedConf := &baseConfig
+	generatedConf.sanitize(cg.amVersion, cg.logger)
+	return yaml.Marshal(generatedConf)
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
@@ -861,4 +863,79 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	}
 
 	return out
+}
+
+// sanitize the config against a specific AlertManager version
+// strips fields from config if unsupported
+func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if c == nil {
+		return
+	}
+
+	if c.Global != nil {
+		c.Global.sanitize(amVersion, logger)
+	}
+
+	// We need to sanitize the config for slack receivers
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	for _, receiver := range c.Receivers {
+		for _, slackConfig := range receiver.SlackConfigs {
+			if slackConfig.APIURLFile == "" {
+				continue
+			}
+
+			if slackConfig.APIURL != "" {
+				msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
+				level.Warn(logger).Log("msg", msg, "receiver", receiver.Name)
+				slackConfig.APIURLFile = ""
+			}
+
+			if !fileURLAllowed {
+				msg := "'api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+				level.Warn(logger).Log("msg", msg, "current_version", amVersion.String(), "receiver", receiver.Name)
+				slackConfig.APIURLFile = ""
+			}
+		}
+	}
+}
+
+// sanitize globalConfig - gc must not be nil
+func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if gc.HTTPConfig != nil {
+		gc.HTTPConfig.sanitize(amVersion, logger)
+	}
+
+	// We need to sanitize the config for slack globally
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if gc.SlackAPIURLFile != "" {
+
+		if gc.SlackAPIURL != nil {
+			msg := "'slack_api_url' and 'slack_api_url_file' are mutually exclusive - 'slack_api_url' has taken precedence"
+			level.Warn(logger).Log("msg", msg)
+			gc.SlackAPIURLFile = ""
+		}
+
+		if !fileURLAllowed {
+			msg := "'slack_api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+			level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+			gc.SlackAPIURLFile = ""
+		}
+	}
+}
+
+// sanitize httpClientConfig - hc must not be nil
+func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if hc.BasicAuth != nil {
+		msg := "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		hc.Authorization = nil
+	}
+
+	if httpAuthzAllowed := amVersion.GTE(semver.MustParse("0.22.0")); !httpAuthzAllowed {
+		msg := "'authorization' set in 'http_config' but  supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		hc.Authorization = nil
+	}
 }

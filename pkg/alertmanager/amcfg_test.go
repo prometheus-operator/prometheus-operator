@@ -17,10 +17,12 @@ package alertmanager
 import (
 	"context"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
@@ -560,7 +562,7 @@ templates: []
 		},
 		{
 
-			name:    "CR with Slack Receiver",
+			name:    "CR with Slack Receiver and global Slack URL",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
@@ -630,6 +632,78 @@ receivers:
 templates: []
 `,
 		},
+		{
+
+			name:    "CR with Slack Receiver and global Slack URL File",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/etc/test",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							}},
+						}},
+					},
+				},
+			},
+			expected: `global:
+  slack_api_url_file: /etc/test
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  slack_configs:
+  - fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
+templates: []
+`,
+		},
 	}
 
 	version, err := semver.ParseTolerant("v0.22.2")
@@ -657,6 +731,233 @@ templates: []
 			_, err = config.Load(result)
 			if err != nil {
 				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestSanitizeBaseConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
+	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
+
+	versionAuthzAllowed := versionFileURLAllowed
+	versionAuthzNotAllowed := versionFileURLNotAllowed
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+	}{
+		{
+			name:           "Test slack_api_url takes precedence in global config",
+			againstVersion: versionFileURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+					SlackAPIURLFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+					SlackAPIURLFile: "",
+				},
+			},
+		},
+		{
+			name:           "Test slack_api_url_file is dropped for unsupported versions",
+			againstVersion: versionFileURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "",
+				},
+			},
+		},
+		{
+			name:           "Test api_url takes precedence in slack config",
+			againstVersion: versionFileURLAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:     "www.test.com",
+								APIURLFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:     "www.test.com",
+								APIURLFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test api_url_file is dropped in slack config for unsupported versions",
+			againstVersion: versionFileURLNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURLFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURLFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test basicAuth takes precedence over authorization in http config",
+			againstVersion: versionFileURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: &authorization{
+							Type:            "any",
+							Credentials:     "some",
+							CredentialsFile: "/must/drop",
+						},
+						BasicAuth: &basicAuth{
+							Username:     "tester",
+							Password:     "testing",
+							PasswordFile: "/test",
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: nil,
+						BasicAuth: &basicAuth{
+							Username:     "tester",
+							Password:     "testing",
+							PasswordFile: "/test",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test authorization is dropped in http config for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: &authorization{
+							Type:            "any",
+							Credentials:     "some",
+							CredentialsFile: "/must/drop",
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: nil,
+					},
+				},
+			},
+		},
+		{
+			name:           "Test slack config happy path",
+			againstVersion: versionFileURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/test",
+				},
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURLFile: "/test/case",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/test",
+				},
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURLFile: "/test/case",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test http config happy path",
+			againstVersion: versionAuthzAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: &authorization{
+							Type:            "any",
+							Credentials:     "some",
+							CredentialsFile: "/must/keep",
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						Authorization: &authorization{
+							Type:            "any",
+							Credentials:     "some",
+							CredentialsFile: "/must/keep",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.in.sanitize(tc.againstVersion, logger)
+			out := *tc.in
+			if !reflect.DeepEqual(out, tc.expect) {
+				t.Fatalf("wanted %v but got %v", tc.expect, out)
 			}
 		})
 	}
