@@ -847,6 +847,8 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, s appsv1.Statefu
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
+	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+
 	secretName := defaultConfigSecretName(am.Name)
 	if am.Spec.ConfigSecret != "" {
 		secretName = am.Spec.ConfigSecret
@@ -872,11 +874,10 @@ receivers:
 		rawBaseConfig = secretData[alertmanagerConfigFile]
 	} else {
 		if secret == nil {
-			level.Info(c.logger).Log("msg", "base config secret not found",
-				"secret", secretName, "alertmanager", am.Name, "namespace", am.Namespace)
+			level.Info(namespacedLogger).Log("msg", "base config secret not found", "secret", secretName)
 		} else {
-			level.Info(c.logger).Log("msg", "key not found in base config secret",
-				"secret", secretName, "key", alertmanagerConfigFile, "alertmanager", am.Name, "namespace", am.Namespace)
+			level.Info(namespacedLogger).
+				Log("msg", "key not found in base config secret", "secret", secretName, "key", alertmanagerConfigFile)
 		}
 	}
 
@@ -888,10 +889,9 @@ receivers:
 	// If no AlertmanagerConfig selectors are configured, the user wants to
 	// manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil {
-		level.Debug(c.logger).Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
-			"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name),
-			"alertmanager", am.Name, "namespace", am.Namespace,
-		)
+		level.Debug(namespacedLogger).
+			Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
+				"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name))
 
 		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, rawBaseConfig, secretData)
 		if err != nil {
@@ -911,7 +911,7 @@ receivers:
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	generator := newConfigGenerator(c.logger, version, store)
+	generator := newConfigGenerator(namespacedLogger, version, store)
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
