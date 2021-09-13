@@ -547,6 +547,29 @@ func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (b
 	return true, nil
 }
 
+func (f *Framework) PrometheusQuery(ns, svcName, query string) ([]PrometheusQueryResult, error) {
+	response, err := f.PrometheusSVCGetRequest(
+		ns,
+		svcName,
+		"/api/v1/query",
+		map[string]string{"query": query},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	q := PrometheusQueryAPIResponse{}
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
+		return nil, err
+	}
+
+	if q.Status != "success" {
+		return nil, fmt.Errorf("expecting status to be 'success', got %q instead", q.Status)
+	}
+
+	return q.Data.Result, nil
+}
+
 // PrintPrometheusLogs prints the logs for each Prometheus replica.
 func (f *Framework) PrintPrometheusLogs(t *testing.T, p *monitoringv1.Prometheus) {
 	if p == nil {

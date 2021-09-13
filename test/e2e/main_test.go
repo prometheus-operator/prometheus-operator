@@ -206,6 +206,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
 		"PromWebTLS":                             testPromWebTLS,
 		"PromMinReadySeconds":                    testPromMinReadySeconds,
+		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
 	}
 
 	for name, f := range testFuncs {

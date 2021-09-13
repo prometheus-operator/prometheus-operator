@@ -3784,6 +3784,148 @@ func testPromMinReadySeconds(t *testing.T) {
 	}
 }
 
+// testPromEnforcedNamespaceLabel checks that the enforcedNamespaceLabel field
+// is honored even if a user tries to bypass the enforcement.
+func testPromEnforcedNamespaceLabel(t *testing.T) {
+	t.Parallel()
+
+	for i, tc := range []struct {
+		relabelConfigs       []*monitoringv1.RelabelConfig
+		metricRelabelConfigs []*monitoringv1.RelabelConfig
+	}{
+		{
+			// override label using the labeldrop action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Regex:  "namespace",
+					Action: "labeldrop",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Regex:  "namespace",
+					Action: "labeldrop",
+				},
+			},
+		},
+		{
+			// override label using the replace action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: "ns1",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: "ns1",
+				},
+			},
+		},
+		{
+			// override label using the labelmap action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "temp_namespace",
+					Replacement: "ns1",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Action:      "labelmap",
+					Regex:       "temp_namespace",
+					Replacement: "namespace",
+				},
+				{
+					Action: "labeldrop",
+					Regex:  "temp_namespace",
+				},
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := framework.CreateNamespace(t, ctx)
+			framework.SetupPrometheusRBAC(t, ctx, ns)
+
+			prometheusName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+			s := framework.MakeBasicServiceMonitor(group)
+			s.Spec.Endpoints[0].RelabelConfigs = tc.relabelConfigs
+			s.Spec.Endpoints[0].MetricRelabelConfigs = tc.metricRelabelConfigs
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
+
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			p.Spec.EnforcedNamespaceLabel = "namespace"
+			_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(ns, svc); err != nil {
+				t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			} else {
+				ctx.AddFinalizerFn(finalizerFn)
+			}
+
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(framework.Ctx, fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatal("Generated Secret could not be retrieved: ", err)
+			}
+
+			err = framework.WaitForDiscoveryWorking(ns, svc.Name, prometheusName)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
+			}
+
+			// Check that the namespace label is enforced to the correct value.
+			var (
+				loopErr        error
+				namespaceLabel string
+			)
+
+			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+				loopErr = nil
+				res, err := framework.PrometheusQuery(ns, svc.Name, "prometheus_build_info")
+				if err != nil {
+					loopErr = errors.Wrap(err, "failed to query Prometheus")
+					return false, nil
+				}
+
+				if len(res) != 1 {
+					loopErr = fmt.Errorf("expecting 1 item but got %d", len(res))
+					return false, nil
+				}
+
+				for k, v := range res[0].Metric {
+					if k == "namespace" {
+						namespaceLabel = v
+						return true, nil
+					}
+				}
+
+				loopErr = fmt.Errorf("expecting to find 'namespace' label in %v", res[0].Metric)
+				return false, nil
+			})
+
+			if err != nil {
+				t.Fatalf("%v: %v", err, loopErr)
+			}
+
+			if namespaceLabel != ns {
+				t.Fatalf("expecting 'namespace' label value to be %q but got %q instead", ns, namespaceLabel)
+			}
+		})
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(framework.Ctx, alertmanager.ListOptions(alertmanagerName))
