@@ -736,7 +736,7 @@ templates: []
 	}
 }
 
-func TestSanitizeBaseConfig(t *testing.T) {
+func TestSanitizeConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
 	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
@@ -873,7 +873,7 @@ func TestSanitizeBaseConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test authorization is dropped in http config for unsupported versions",
+			name:           "Test authorization is dropped in global http config for unsupported versions",
 			againstVersion: versionAuthzNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -961,4 +961,75 @@ func TestSanitizeBaseConfig(t *testing.T) {
 			}
 		})
 	}
+
+	// test the http config independently since all receivers rely on same behaviour
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *httpClientConfig
+		expect         httpClientConfig
+	}{
+		{
+			name: "Test authorization is dropped in http config for unsupported versions",
+			in: &httpClientConfig{
+				Authorization: &authorization{
+					Type:            "any",
+					Credentials:     "some",
+					CredentialsFile: "/must/drop",
+				},
+			},
+			againstVersion: versionAuthzNotAllowed,
+			expect:         httpClientConfig{},
+		},
+		{
+			name: "Test authorization is dropped in favour of basicAuth for http config",
+			in: &httpClientConfig{
+				Authorization: &authorization{
+					Type:            "any",
+					Credentials:     "some",
+					CredentialsFile: "/must/drop",
+				},
+				BasicAuth: &basicAuth{
+					Username:     "tester",
+					Password:     "testing",
+					PasswordFile: "/test",
+				},
+			},
+			againstVersion: versionAuthzNotAllowed,
+			expect: httpClientConfig{
+				BasicAuth: &basicAuth{
+					Username:     "tester",
+					Password:     "testing",
+					PasswordFile: "/test",
+				},
+			},
+		},
+		{
+			name: "Test happy path",
+			in: &httpClientConfig{
+				Authorization: &authorization{
+					Type:            "any",
+					Credentials:     "some",
+					CredentialsFile: "/must/keep",
+				},
+			},
+			againstVersion: versionAuthzAllowed,
+			expect: httpClientConfig{
+				Authorization: &authorization{
+					Type:            "any",
+					Credentials:     "some",
+					CredentialsFile: "/must/keep",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.in.sanitize(tc.againstVersion, logger)
+			out := *tc.in
+			if !reflect.DeepEqual(out, tc.expect) {
+				t.Fatalf("wanted %v but got %v", tc.expect, out)
+			}
+		})
+	}
+
 }
