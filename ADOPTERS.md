@@ -41,6 +41,21 @@ Details:
 - several customer ceph clusters pushing metrics via external pushgateway to our our central monitoring instances
 - thanos receiver connected to own S3 storage
 
+## Coralogix
+
+[coralogix.com](https://coralogix.com)
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- Operator installed on each Kubernetes cluster, with Thanos aggregating metrics from a central query endpoint
+- Two Prometheus instances per cluster
+- Loose coupling between Kubernetes cluster administrators who manage alerting sinks and service owners who define alerts for their services
+- 800K samples/s
+- 30M active series
+
 ## Giant Swarm
 
 [giantswarm.io](https://www.giantswarm.io/)
