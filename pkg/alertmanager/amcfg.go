@@ -814,7 +814,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 			return nil, errors.Errorf("failed to get BasicAuth password key %q from secret %q", in.BasicAuth.Password.Key, in.BasicAuth.Password.Name)
 		}
 
-		if username != "" && password != "" {
+		if username != "" || password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
 	} else if in.Authorization != nil {
