@@ -124,7 +124,9 @@ func (cg *configGenerator) generateConfig(
 	// alerts will fallthrough.
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
-	return yaml.Marshal(baseConfig)
+	generatedConf := &baseConfig
+	generatedConf.sanitize(cg.amVersion, cg.logger)
+	return yaml.Marshal(generatedConf)
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
@@ -794,13 +796,8 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
-	logger := log.With(cg.logger, "namespace", crKey.Namespace, "name", crKey.Name)
 	out := &httpClientConfig{
 		ProxyURL: in.ProxyURL,
-	}
-
-	if in.BasicAuth != nil && in.Authorization != nil {
-		level.Warn(logger).Log("msg", "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' will take precedence.")
 	}
 
 	if in.BasicAuth != nil {
@@ -817,22 +814,20 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		if username != "" || password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
-	} else if in.Authorization != nil {
-		if cg.amVersion.LT(semver.MustParse("0.22.0")) {
-			level.Warn(logger).Log("msg", "found authorization section, but alertmanager is < 0.22.0, ignoring", "version", cg.amVersion)
-		} else {
-			credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
-			if err != nil {
-				return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
-			}
+	}
 
-			if credentials != "" {
-				authorizationType := in.Authorization.Type
-				if authorizationType == "" {
-					authorizationType = "Bearer"
-				}
-				out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
+	if in.Authorization != nil {
+		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
+		if err != nil {
+			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)
+		}
+
+		if credentials != "" {
+			authorizationType := in.Authorization.Type
+			if authorizationType == "" {
+				authorizationType = "Bearer"
 			}
+			out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
 		}
 	}
 
@@ -868,4 +863,157 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	}
 
 	return out
+}
+
+// sanitize the config against a specific AlertManager version
+// strips fields from config if unsupported
+func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if c == nil {
+		return
+	}
+
+	c.Global.sanitize(amVersion, logger)
+
+	for _, receiver := range c.Receivers {
+		receiver.sanitize(amVersion, logger)
+	}
+
+}
+
+// sanitize globalConfig
+func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if gc == nil {
+		return
+	}
+
+	if gc.HTTPConfig != nil {
+		gc.HTTPConfig.sanitize(amVersion, logger)
+	}
+
+	// We need to sanitize the config for slack globally
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if gc.SlackAPIURLFile != "" {
+
+		if gc.SlackAPIURL != nil {
+			msg := "'slack_api_url' and 'slack_api_url_file' are mutually exclusive - 'slack_api_url' has taken precedence"
+			level.Warn(logger).Log("msg", msg)
+			gc.SlackAPIURLFile = ""
+		}
+
+		if !fileURLAllowed {
+			msg := "'slack_api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+			level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+			gc.SlackAPIURLFile = ""
+		}
+	}
+}
+
+// sanitize httpClientConfig
+func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	if hc == nil {
+		return
+	}
+	// we don't need to do any sanitization in this case and return early
+	if hc.Authorization == nil {
+		return
+	}
+
+	if hc.BasicAuth != nil {
+		msg := "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		hc.Authorization = nil
+	}
+	// we could have returned here but useful to grab the log and bubble up the warning
+	if httpAuthzAllowed := amVersion.GTE(semver.MustParse("0.22.0")); !httpAuthzAllowed {
+		msg := "'authorization' set in 'http_config' but  supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		hc.Authorization = nil
+	}
+}
+
+// sanitize the receiver
+func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) {
+	if r == nil {
+		return
+	}
+	withLogger := log.With(logger, "receiver", r.Name)
+
+	for _, conf := range r.OpsgenieConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.PagerdutyConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.PagerdutyConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.PushoverConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.SlackConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.VictorOpsConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.WebhookConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+
+	for _, conf := range r.WeChatConfigs {
+		conf.sanitize(amVersion, withLogger)
+	}
+}
+
+func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	ogc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	pdc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	poc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	sc.HTTPConfig.sanitize(amVersion, logger)
+
+	if sc.APIURLFile == "" {
+		return
+	}
+	// We need to sanitize the config for slack receivers
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if sc.APIURL != "" {
+		msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		sc.APIURLFile = ""
+	}
+
+	if !fileURLAllowed {
+		msg := "'api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		sc.APIURLFile = ""
+	}
+}
+
+func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	voc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	whc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+	wcc.HTTPConfig.sanitize(amVersion, logger)
 }
