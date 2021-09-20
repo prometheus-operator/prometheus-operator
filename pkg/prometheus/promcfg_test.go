@@ -486,6 +486,7 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -605,6 +606,8 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+  - target_label: namespace
+    replacement: default
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -710,6 +713,7 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -811,6 +815,7 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -939,6 +944,7 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -1070,6 +1076,9 @@ scrape_configs:
     action: replace
   - target_label: namespace
     replacement: default
+  metric_relabel_configs:
+  - target_label: namespace
+    replacement: default
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -1078,8 +1087,8 @@ alerting:
 `
 
 	result := string(cfg)
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
 	}
 }
 
@@ -1774,6 +1783,8 @@ scrape_configs:
     target_label: my-ns
     regex: my-job-pod-.+
     action: drop
+  - target_label: ns-key
+    replacement: pod-monitor-ns
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -1783,8 +1794,8 @@ alerting:
 
 	result := string(cfg)
 	if expected != result {
-		fmt.Println(pretty.Compare(expected, result))
-		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match\n%s", diff)
 	}
 }
 
@@ -1925,7 +1936,14 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []
+  metric_relabel_configs:
+  - source_labels:
+    - pod_name
+    target_label: ns-key
+    regex: my-job-pod-.+
+    action: drop
+  - target_label: ns-key
+    replacement: default
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -1935,8 +1953,8 @@ alerting:
 
 	result := string(cfg)
 	if expected != result {
-		fmt.Println(pretty.Compare(expected, result))
-		t.Fatal("expected Prometheus configuration and actual configuration do not match for enforced namespace label test")
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match for enforced namespace label test:\n%s", diff)
 	}
 }
 
@@ -2144,6 +2162,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2266,6 +2285,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2408,6 +2428,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2547,6 +2568,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2687,6 +2709,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2826,6 +2849,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3172,6 +3196,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3291,6 +3316,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3411,6 +3437,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3952,6 +3979,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -4025,6 +4053,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   sample_limit: %d
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -4193,6 +4222,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -4266,6 +4296,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   target_limit: %d
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -4939,6 +4970,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -5012,6 +5044,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   label_limit: %d
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -5190,6 +5223,7 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -5244,6 +5278,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   label_name_length_limit: %d
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -5411,6 +5446,7 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -5454,6 +5490,7 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
+  metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
   - action: labeldrop
