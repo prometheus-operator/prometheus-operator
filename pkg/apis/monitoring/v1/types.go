@@ -401,6 +401,14 @@ type PrometheusSpec struct {
 	// entire scrape will be treated as failed. 0 means no limit.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	// EnforcedBodySizeLimit defines the maximum size of uncompressed response body
+	// that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
+	// will cause the scrape to fail. Example: 100MB.
+	// If defined, the limit will apply to all service/pod monitors and probes.
+	// This is an experimental feature, this behaviour could
+	// change or be removed in the future.
+	// Only valid in Prometheus versions 2.28.0 and newer.
+	EnforcedBodySizeLimit string `json:"enforcedBodySizeLimit,omitempty"`
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)

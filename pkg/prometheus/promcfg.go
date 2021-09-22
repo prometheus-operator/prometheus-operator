@@ -333,6 +333,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 					p.Spec.EnforcedLabelLimit,
 					p.Spec.EnforcedLabelNameLengthLimit,
 					p.Spec.EnforcedLabelValueLengthLimit,
+					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -355,6 +356,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 					p.Spec.EnforcedLabelLimit,
 					p.Spec.EnforcedLabelNameLengthLimit,
 					p.Spec.EnforcedLabelValueLengthLimit,
+					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -377,6 +379,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 				p.Spec.EnforcedLabelLimit,
 				p.Spec.EnforcedLabelNameLengthLimit,
 				p.Spec.EnforcedLabelValueLengthLimit,
+				p.Spec.EnforcedBodySizeLimit,
 			),
 		)
 	}
@@ -508,6 +511,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	enforcedLabelLimit *uint64,
 	enforcedLabelNameLengthLimit *uint64,
 	enforcedLabelValueLengthLimit *uint64,
+	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
 	logger := log.With(cg.logger, "podMonitor", m.Name, "namespace", m.Namespace)
@@ -724,6 +728,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
 
+	// Since BodySizeLimit is defined only in PrometheusCRD
+	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
+
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
 
 	return cfg
@@ -742,7 +749,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	enforcedTargetLimit *uint64,
 	enforcedLabelLimit *uint64,
 	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64) yaml.MapSlice {
+	enforcedLabelValueLengthLimit *uint64,
+	enforcedBodySizeLimit string) yaml.MapSlice {
 	logger := log.With(cg.logger, "probe", m.Name, "namespace", m.Namespace)
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
@@ -790,6 +798,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = enforcer.addLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+
+	// Since BodySizeLimit is defined only in PrometheusCRD
+	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
 
 	relabelings := initRelabelings()
 
@@ -996,6 +1007,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedLabelLimit *uint64,
 	enforcedLabelNameLengthLimit *uint64,
 	enforcedLabelValueLengthLimit *uint64,
+	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
 	logger := log.With(cg.logger, "serviceMonitor", m.Name, "namespace", m.Namespace)
@@ -1240,6 +1252,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = enforcer.addLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+
+	// Since BodySizeLimit is defined only in PrometheusCRD
+	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
 
@@ -1782,4 +1797,17 @@ func (rcg relabelConfigGenerator) generate(c []*v1.RelabelConfig) []yaml.MapSlic
 	}
 
 	return cfg
+}
+
+func (l *limitEnforcer) addBodySizeLimitsToYAML(cfg yaml.MapSlice, enforcedLimit string) yaml.MapSlice {
+	if enforcedLimit == "" {
+		return cfg
+	}
+
+	if l.prometheusVersion.LT(semver.MustParse("2.28.0")) {
+		level.Warn(l.logger).Log("msg", "body_size_limit is only available starting from prometheus 2.28.0",
+			"version", l.prometheusVersion)
+		return cfg
+	}
+	return append(cfg, yaml.MapItem{Key: "body_size_limit", Value: enforcedLimit})
 }
