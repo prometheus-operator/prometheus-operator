@@ -34,6 +34,7 @@ import (
 
 var (
 	defaultTestConfig = &operator.Config{
+		LocalHost: "localhost",
 		ReloaderConfig: operator.ReloaderConfig{
 			CPURequest:    "100m",
 			CPULimit:      "100m",
@@ -448,6 +449,7 @@ func TestListenTLS(t *testing.T) {
 					},
 				},
 			},
+			Thanos: &monitoringv1.ThanosSpec{},
 		},
 	}, defaultTestConfig, nil, "", 0)
 	if err != nil {
@@ -470,6 +472,30 @@ func TestListenTLS(t *testing.T) {
 	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
 	}
+
+	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
+	reloadURLFound := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
+		if arg == expectedConfigReloaderReloadURL {
+			reloadURLFound = true
+		}
+	}
+	if !reloadURLFound {
+		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
+	}
+
+	expectedThanosSidecarPrometheusURL := "--prometheus.url=https://localhost:9090/"
+	prometheusURLFound := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+		if arg == expectedThanosSidecarPrometheusURL {
+			prometheusURLFound = true
+		}
+	}
+	if !prometheusURLFound {
+		t.Fatalf("expected to find arg %s in thanos sidecar", expectedThanosSidecarPrometheusURL)
+	}
+
+	fmt.Println(sset.Spec.Template.Spec.Containers[2].Args)
 }
 
 func TestTagAndShaAndVersion(t *testing.T) {
@@ -1872,7 +1898,7 @@ func TestConfigReloader(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
-		"--reload-url=http://:9090/-/reload",
+		"--reload-url=http://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
 	}
