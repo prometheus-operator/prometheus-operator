@@ -16,7 +16,7 @@ set -e
 # only exit with zero if all commands of the pipeline exit successfully
 set -o pipefail
 
-CPU_ARCHS="amd64 arm64 arm"
+CPU_ARCHS="amd64 arm64 arm ppc64le"
 REGISTRIES="${REGISTRIES:-"quay.io ghcr.io"}"
 
 # IMAGE_OPERATOR and IMAGER_RELOADER need to be exported to be used by `make`
@@ -75,7 +75,8 @@ for r in ${OPERATORS} ${RELOADERS}; do
 	docker manifest create -a "${r}:${TAG}" \
 				  "${r}:${TAG}-amd64" \
 				  "${r}:${TAG}-arm64" \
-				  "${r}:${TAG}-arm"
+				  "${r}:${TAG}-arm" \
+				  "${r}:${TAG}-ppc64le"
 
 	# Annotate to set which image is build for which CPU architecture
 	for arch in $CPU_ARCHS; do
