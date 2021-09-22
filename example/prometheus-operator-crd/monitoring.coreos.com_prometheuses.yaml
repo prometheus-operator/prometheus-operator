@@ -2272,6 +2272,15 @@ spec:
                 items:
                   type: string
                 type: array
+              enforcedBodySizeLimit:
+                description: 'EnforcedBodySizeLimit defines the maximum size of uncompressed
+                  response body that will be accepted by Prometheus. Targets responding
+                  with a body larger than this many bytes will cause the scrape to
+                  fail. Example: 100MB. If defined, the limit will apply to all service/pod
+                  monitors and probes. This is an experimental feature, this behaviour
+                  could change or be removed in the future. Only valid in Prometheus
+                  versions 2.28.0 and newer.'
+                type: string
               enforcedLabelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. If more than this number of labels are present post
