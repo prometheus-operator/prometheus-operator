@@ -659,6 +659,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	var additionalContainers, operatorInitContainers []v1.Container
 
 	disableCompaction := p.Spec.DisableCompaction
+	prometheusURIScheme := "http"
+	if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil {
+		prometheusURIScheme = "https"
+	}
 	if p.Spec.Thanos != nil {
 		thanosImage, err := operator.BuildImagePath(
 			operator.StringPtrValOrDefault(p.Spec.Thanos.Image, ""),
@@ -677,7 +681,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 
 		thanosArgs := []string{"sidecar",
-			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
+			fmt.Sprintf("--prometheus.url=%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix)),
 			fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
 			fmt.Sprintf("--http-address=%s:10902", bindAddress),
 		}
@@ -849,7 +853,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			"config-reloader",
 			operator.ReloaderResources(c.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
-				Scheme: "http",
+				Scheme: prometheusURIScheme,
 				Host:   c.LocalHost + ":9090",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
