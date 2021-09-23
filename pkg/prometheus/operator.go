@@ -2048,24 +2048,26 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 }
 
 // validateRemoteWriteSpec checks that mutually exclusive configurations are not
-// included in the Prometheus' remoteWrite configuration section.
+// included in the Prometheus remoteWrite configuration section.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
 func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
-	mxFields := []interface{}{
-		spec.BasicAuth,
-		spec.OAuth2,
-		spec.Authorization,
-		spec.Sigv4}
-	var count int
-	for i, v := range mxFields {
-		if !reflect.ValueOf(v).IsNil() {
-			count++
+	var nonNilFields []string
+	for k, v := range map[string]interface{}{
+		"basicAuth":     spec.BasicAuth,
+		"oauth2":        spec.OAuth2,
+		"authorization": spec.Authorization,
+		"sigv4":         spec.Sigv4,
+	} {
+		if reflect.ValueOf(v).IsNil() {
+			continue
 		}
-		if count > 1 {
-			return fmt.Errorf("invalid RemoteWriteSpec:\n%#v is not allowed together with\n%#v",
-				mxFields[i], mxFields[i-1])
-		}
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
 	}
+
+	if len(nonNilFields) > 1 {
+		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
 	return nil
 }

@@ -241,6 +241,14 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				Sigv4:     &monitoringv1.Sigv4{},
 			},
 			expectErr: true,
+		}, {
+			name: "with_BasicAuth_and_SigV4_and_OAuth2",
+			spec: monitoringv1.RemoteWriteSpec{
+				BasicAuth: &monitoringv1.BasicAuth{},
+				Sigv4:     &monitoringv1.Sigv4{},
+				OAuth2:    &monitoringv1.OAuth2{},
+			},
+			expectErr: true,
 		},
 	}
 	for _, c := range cases {

@@ -264,13 +264,11 @@ func (s *Store) AddSigV4(ctx context.Context, ns string, accessKeySel *v1.Secret
 
 	accessKey, err := s.GetSecretKey(ctx, ns, *accessKeySel)
 	if err != nil {
-		return errors.Wrap(err,
-			fmt.Sprintf("failed to read SigV4 access-key with reference %s", accessKeySel.Key))
+		return errors.Wrap(err, "failed to read SigV4 access-key")
 	}
 	secretKey, err := s.GetSecretKey(ctx, ns, *secretKeySel)
 	if err != nil {
-		return errors.Wrap(err,
-			fmt.Sprintf("failed to read SigV4 secret-key with reference %s", secretKeySel.Key))
+		return errors.Wrap(err, "failed to read SigV4 secret-key")
 	}
 
 	s.SigV4Assets[key] = SigV4Credentials{
