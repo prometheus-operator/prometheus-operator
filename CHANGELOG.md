@@ -1,3 +1,18 @@
+## 0.51.0 / 2021-09-24
+
+* [FEATURE] Added `metricRelabelings` field to the Probe CRD for configuring the metric relabel configs. #4226
+* [FEATURE] Added `volumeMounts` field to the Prometheus CRD for configuring the volume mounts of the thanos-sidecar container. #4238
+* [FEATURE] Added `enforcedBodySizeLimit` field to the Prometheus CRD. #4275
+* [FEATURE] Added `authorization` field to all HTTP configurations in the AlertmanagerConfig CRD. #4110
+* [FEATURE] Added `minReadySeconds` field to AlertManager, Prometheus and ThanosRuler CRDs. #4246
+* [FEATURE] Added support for Slack webhook URL via file path in the Alertmanager configuration secret. #4234
+* [FEATURE] Added support the `authorization` field for all HTTP configurations in the Alertmanager configuration secret. #4234
+* [ENHANCEMENT] Improved detection and rollback of manual changes to Alertmanager statefulsets. #4228
+* [BUGFIX] Invalid probes are discarded instead of stopping after the first error when reconciling probes. #4248
+* [BUGFIX] Empty basic auth username is allowed in the AlertmanagerConfig CRD. #4260
+* [BUGFIX] Update conflicts for secrets are handled properly which avoids overwriting user-defined metadata. #4235
+* [BUGFIX] The namespace label is always enforced with metricRelabelConfigs. #4272
+
 ## 0.50.0 / 2021-08-17
 
 * [CHANGE] Remove deprecated flags `--config-reloader-memory` and `--config-reloader-cpu` in favor of `--config-reloader-memory-limit`, `--config-reloader-memory-request`, `--config-reloader-cpu-limit`, and `--config-reloader-cpu-request`. #3884
@@ -39,7 +54,7 @@
 
 ## 0.48.0 / 2021-05-19
 
-Deprecation notice:  
+Deprecation notice:
 app labels will be removed in v0.50.
 
 * [CHANGE] Replace app label names with app.kubernetes.io/name. #3939
