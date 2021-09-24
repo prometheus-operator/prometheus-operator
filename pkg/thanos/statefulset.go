@@ -183,13 +183,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}
 
-	if len(tr.Spec.Labels) == 0 {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
-	} else {
-		for k, v := range tr.Spec.Labels {
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
-		}
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
+
+	for k, v := range tr.Spec.Labels {
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
 	}
 
 	for _, lb := range tr.Spec.AlertDropLabels {

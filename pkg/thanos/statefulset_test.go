@@ -354,25 +354,16 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				"test": "test",
 			},
 			AlertDropLabels:         nil,
-			ExpectedLabels:          []string{`test="test"`},
-			ExpectedAlertDropLabels: []string{},
+			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica"},
 		},
 		{
 			Labels: map[string]string{
 				"test": "test",
 			},
 			AlertDropLabels:         []string{"test"},
-			ExpectedLabels:          []string{`test="test"`},
-			ExpectedAlertDropLabels: []string{"test"},
-		},
-		{
-			Labels: map[string]string{
-				"thanos_ruler_replica": "$(POD_NAME)",
-				"test":                 "test",
-			},
-			AlertDropLabels:         []string{"test", "aaa"},
 			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
-			ExpectedAlertDropLabels: []string{"test", "aaa"},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test"},
 		},
 	}
 	for _, tc := range tests {
