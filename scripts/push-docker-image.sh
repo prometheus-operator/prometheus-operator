@@ -29,8 +29,9 @@ export TAG="${GITHUB_REF##*/}"
 # Push `-dev` images unless commit is tagged
 IMAGE_SUFFIX="-dev"
 
-# Use main image repositories if TAG is a semver tag or it is a master branch
-# Prepare image tag from VERSION file and short commit SHA in other cases
+# Use the main image repository if TAG is a semver tag or it is a master branch.
+# Otherwise assemble the image tag from VERSION file + short commit SHA and
+# push them to the dev image repository.
 if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+ ]] || [ "${TAG}" == "master" ]; then
 	# Reset suffixes as images are not development ones
 	IMAGE_SUFFIX=""
