@@ -6,6 +6,9 @@ on:
       - 'release-*'
       - 'master'
       - 'main'
+    tags:
+      - 'v*'
+      - '!pkg*'
 
 env:
   golang-version: '1.16'
