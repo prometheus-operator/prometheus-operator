@@ -168,7 +168,7 @@ type ThanosRulerSpec struct {
 	// `thanos_ruler_replica` will be always added  as a label with the value of the pod's name and it will be dropped in the alerts.
 	Labels map[string]string `json:"labels,omitempty"`
 	// AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
-	// Default replica label `thanos_ruler_replica` will be dropped in alerts by default.
+	// The replica label `thanos_ruler_replica` will always be dropped in alerts.
 	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
 	// The external URL the Thanos Ruler instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Thanos Ruler is not
