@@ -111,6 +111,6 @@ Bump the operator's version in the [website](https://github.com/prometheus-opera
 
 ## Update kube-prometheus
 
-Bump the versions of `github.com/prometheus-operator/prometheus-operator` in [prometheus-operator/kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) (see this [pull request](https://github.com/prometheus-operator/kube-prometheus/pull/674) for example).
+Bump the versions of `github.com/prometheus-operator/prometheus-operator` in [prometheus-operator/kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) by triggering the ["Upgrade to latest versions"](https://github.com/prometheus-operator/kube-prometheus/actions/workflows/versions.yaml) workflow.
 
 Take a breath. You're done releasing.
