@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -5786,6 +5787,7 @@ alerting:
 		version               string
 		enforcedBodySizeLimit string
 		expected              string
+		expectedErr           error
 	}{
 		{
 			version:               "v2.27.0",
@@ -5801,6 +5803,26 @@ alerting:
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "",
 			expected:              expectNoLimit,
+		},
+		{
+			version:               "v2.28.0",
+			enforcedBodySizeLimit: "100",
+			expectedErr:           errors.New("Invalid config value passed: Invalid body_size_limit value specified: units: unknown unit  in 100"),
+		},
+		{
+			version:               "v2.28.0",
+			enforcedBodySizeLimit: "200kb",
+			expectedErr:           errors.New("Invalid config value passed: Invalid body_size_limit value specified: units: unknown unit kb in 200kb"),
+		},
+		{
+			version:               "v2.28.0",
+			enforcedBodySizeLimit: "300 MB",
+			expectedErr:           errors.New("Invalid config value passed: Invalid body_size_limit value specified: units: unknown unit  MB in 300 MB"),
+		},
+		{
+			version:               "v2.28.0",
+			enforcedBodySizeLimit: "150M",
+			expectedErr:           errors.New("Invalid config value passed: Invalid body_size_limit value specified: units: unknown unit M in 150M"),
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedBodySizeLimit(%s)", tc.version, tc.enforcedBodySizeLimit), func(t *testing.T) {
@@ -5856,8 +5878,13 @@ alerting:
 				nil,
 				nil,
 			)
-			if err != nil {
-				t.Fatal(err)
+
+			if tc.expectedErr != nil {
+				if tc.expectedErr.Error() != err.Error() {
+					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
+					t.Fatal("expected error and actual error do not match")
+				}
+				return
 			}
 
 			result := string(cfg)
