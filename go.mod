@@ -3,6 +3,7 @@ module github.com/prometheus-operator/prometheus-operator
 go 1.16
 
 require (
+	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.8.0
 	github.com/docker/distribution v2.7.1+incompatible
