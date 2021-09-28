@@ -5884,12 +5884,12 @@ alerting:
 					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
 					t.Fatal("expected error and actual error do not match")
 				}
-			}
-
-			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
-				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			} else {
+				result := string(cfg)
+				if tc.expected != result {
+					t.Logf("\n%s", pretty.Compare(tc.expected, result))
+					t.Fatal("expected Prometheus configuration and actual configuration do not match")
+				}
 			}
 		})
 	}
