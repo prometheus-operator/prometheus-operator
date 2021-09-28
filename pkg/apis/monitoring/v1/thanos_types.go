@@ -164,8 +164,8 @@ type ThanosRulerSpec struct {
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
-	// Labels configure the external label pairs to ThanosRuler. Default replica label
-	// `thanos_ruler_replica` will be added as a label and be dropped in alerts.
+	// Labels configure the external label pairs to ThanosRuler. A default replica label
+	// `thanos_ruler_replica` will be always added  as a label with the value of the pod's name and it will be dropped in the alerts.
 	Labels map[string]string `json:"labels,omitempty"`
 	// AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
 	// Default replica label `thanos_ruler_replica` will be dropped in alerts by default.
