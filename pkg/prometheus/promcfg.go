@@ -233,7 +233,7 @@ func validateBodySizeLimit(enforcedLimit string) error {
 	_, err := units.ParseBase2Bytes(enforcedLimit)
 
 	if err != nil {
-		return errors.Wrap(err, "Invalid body_size_limit value specified")
+		return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
 	}
 	return nil
 }
@@ -254,7 +254,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 	err := validateConfigInputs(p)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "Invalid config value passed")
+		return nil, errors.Wrap(err, "invalid config value passed")
 	}
 
 	versionStr := p.Spec.Version
