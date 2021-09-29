@@ -1,3 +1,9 @@
+## 0.51.1 / 2021-09-27
+
+No change since v0.51.0.
+
+_The CI automation failed to build the v0.51.0 images so we had to create a new patch release._
+
 ## 0.51.0 / 2021-09-24
 
 * [FEATURE] Added `metricRelabelings` field to the Probe CRD for configuring the metric relabel configs. #4226
