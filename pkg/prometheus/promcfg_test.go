@@ -5807,22 +5807,22 @@ alerting:
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "100",
-			expectedErr:           errors.New("invalid config value passed: invalid enforcedBodySizeLimit value specified: units: unknown unit  in 100"),
+			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit  in 100"),
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "200kb",
-			expectedErr:           errors.New("invalid config value passed: invalid enforcedBodySizeLimit value specified: units: unknown unit kb in 200kb"),
+			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit kb in 200kb"),
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "300 MB",
-			expectedErr:           errors.New("invalid config value passed: invalid enforcedBodySizeLimit value specified: units: unknown unit  MB in 300 MB"),
+			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit  MB in 300 MB"),
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "150M",
-			expectedErr:           errors.New("invalid config value passed: invalid enforcedBodySizeLimit value specified: units: unknown unit M in 150M"),
+			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit M in 150M"),
 		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedBodySizeLimit(%s)", tc.version, tc.enforcedBodySizeLimit), func(t *testing.T) {

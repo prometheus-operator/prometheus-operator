@@ -216,23 +216,19 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-// ValidateConfigInputs validates if inputs passed are valid
+// validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(p *v1.Prometheus) error {
 	if p.Spec.EnforcedBodySizeLimit != "" {
-		err := validateBodySizeLimit(p.Spec.EnforcedBodySizeLimit)
-		if err != nil {
+		if err := validateBodySizeLimit(p.Spec.EnforcedBodySizeLimit); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Validate EnforcedBodySizeLimit
 func validateBodySizeLimit(enforcedLimit string) error {
 	// To validate if given value is parsable for the acceptable body_size_limit values
-	_, err := units.ParseBase2Bytes(enforcedLimit)
-
-	if err != nil {
+	if _, err := units.ParseBase2Bytes(enforcedLimit); err != nil {
 		return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
 	}
 	return nil
@@ -251,10 +247,8 @@ func (cg *ConfigGenerator) GenerateConfig(
 	ruleConfigMapNames []string,
 ) ([]byte, error) {
 	// Validate Prometheus Config Inputs at Prometheus CRD level
-	err := validateConfigInputs(p)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "invalid config value passed")
+	if err := validateConfigInputs(p); err != nil {
+		return nil, err
 	}
 
 	versionStr := p.Spec.Version
