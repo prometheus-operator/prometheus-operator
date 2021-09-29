@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/alecthomas/units"
 	"path"
 	"regexp"
 	"sort"
@@ -215,6 +216,24 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
+// validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
+func validateConfigInputs(p *v1.Prometheus) error {
+	if p.Spec.EnforcedBodySizeLimit != "" {
+		if err := validateBodySizeLimit(p.Spec.EnforcedBodySizeLimit); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateBodySizeLimit(enforcedLimit string) error {
+	// To validate if given value is parsable for the acceptable body_size_limit values
+	if _, err := units.ParseBase2Bytes(enforcedLimit); err != nil {
+		return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
+	}
+	return nil
+}
+
 // GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateConfig(
 	p *v1.Prometheus,
@@ -227,6 +246,11 @@ func (cg *ConfigGenerator) GenerateConfig(
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
 ) ([]byte, error) {
+	// Validate Prometheus Config Inputs at Prometheus CRD level
+	if err := validateConfigInputs(p); err != nil {
+		return nil, err
+	}
+
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = operator.DefaultPrometheusVersion
