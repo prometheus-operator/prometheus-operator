@@ -632,8 +632,8 @@ spec:
                 type: object
               alertDropLabels:
                 description: AlertDropLabels configure the label names which should
-                  be dropped in ThanosRuler alerts. If `labels` field is not provided,
-                  `thanos_ruler_replica` will be dropped in alerts by default.
+                  be dropped in ThanosRuler alerts. Default replica label `thanos_ruler_replica`
+                  will be dropped in alerts by default.
                 items:
                   type: string
                 type: array
@@ -2962,8 +2962,8 @@ spec:
                 additionalProperties:
                   type: string
                 description: Labels configure the external label pairs to ThanosRuler.
-                  If not provided, default replica label `thanos_ruler_replica` will
-                  be added as a label and be dropped in alerts.
+                  Default replica label `thanos_ruler_replica` will be added as a
+                  label and be dropped in alerts.
                 type: object
               listenLocal:
                 description: ListenLocal makes the Thanos ruler listen on loopback,
