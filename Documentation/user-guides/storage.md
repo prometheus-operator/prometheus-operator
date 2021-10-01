@@ -101,7 +101,7 @@ To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable 
 
 The default StorageClass behavior will override manual storage provisioning, preventing PersistentVolumeClaims from automatically binding to manually created PersistentVolumes.
 
-To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#volumes) for more information.)
+To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes) for more information.)
 
 For example, to disable default StorageClasses on a Google Container Engine cluster, create the following StorageClass:
 
