@@ -1228,7 +1228,7 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 		if config.Smarthost != "" {
 			_, _, err := net.SplitHostPort(config.Smarthost)
 			if err != nil {
-				return errors.New("invalid email field SMARTHOST")
+				return errors.New("failed to extract host and port from SMARTHOST")
 			}
 		}
 		if config.AuthPassword != nil {
