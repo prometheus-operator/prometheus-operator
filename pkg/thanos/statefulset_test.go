@@ -374,7 +374,6 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`, `thanos_ruler_replica="$(POD_NAME)"`},
 			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test", "aaa"},
 		},
-
 	}
 	for _, tc := range tests {
 		actualLabels := []string{}

@@ -632,8 +632,8 @@ spec:
                 type: object
               alertDropLabels:
                 description: AlertDropLabels configure the label names which should
-                  be dropped in ThanosRuler alerts. Default replica label `thanos_ruler_replica`
-                  will be dropped in alerts by default.
+                  be dropped in ThanosRuler alerts. The replica label `thanos_ruler_replica`
+                  will always be dropped in alerts.
                 items:
                   type: string
                 type: array
@@ -2962,8 +2962,9 @@ spec:
                 additionalProperties:
                   type: string
                 description: Labels configure the external label pairs to ThanosRuler.
-                  Default replica label `thanos_ruler_replica` will be added as a
-                  label and be dropped in alerts.
+                  A default replica label `thanos_ruler_replica` will be always added  as
+                  a label with the value of the pod's name and it will be dropped
+                  in the alerts.
                 type: object
               listenLocal:
                 description: ListenLocal makes the Thanos ruler listen on loopback,
