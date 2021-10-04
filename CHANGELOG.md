@@ -1,3 +1,7 @@
+## 0.51.2 / 2021-&0-04
+
+* [BUGFIX] Validated the value of the `EnforcedBodySizeLimit` field to avoid Prometheus crash. #4285
+
 ## 0.51.1 / 2021-09-27
 
 No change since v0.51.0.
