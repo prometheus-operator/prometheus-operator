@@ -197,7 +197,8 @@ spec:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
                           smarthost:
-                            description: The SMTP host through which emails are sent.
+                            description: The SMTP host and port through which emails
+                              are sent. E.g. example.com:25
                             type: string
                           text:
                             description: The text body of the email notification.
