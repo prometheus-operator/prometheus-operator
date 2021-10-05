@@ -191,6 +191,14 @@ type ThanosRulerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// AlertRelabelConfigs configures alert relabeling in ThanosRuler.
+	// Alert relabel configurations must have the form as specified in the official Prometheus documentation:
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs
+	// Alternative to AlertRelabelConfigFile, and lower order priority.
+	AlertRelabelConfigs *v1.SecretKeySelector `json:"alertRelabelConfigs,omitempty"`
+	// AlertRelabelConfigFile specifies the path of the alert relabeling configuration file.
+	// When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence.
+	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

@@ -1240,6 +1240,8 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | grpcServerTlsConfig | GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads recorded rule data. Note: Currently only the CAFile, CertFile, and KeyFile fields are supported. Maps to the '--grpc-server-tls-*' CLI args. | *[TLSConfig](#tlsconfig) | false |
 | alertQueryUrl | The external Query URL the Thanos Ruler will set in the 'Source' field of all alerts. Maps to the '--alert.query-url' CLI arg. | string | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
+| alertRelabelConfigs | AlertRelabelConfigs configures alert relabeling in ThanosRuler. Alert relabel configurations must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs Alternative to AlertRelabelConfigFile, and lower order priority. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| alertRelabelConfigFile | AlertRelabelConfigFile specifies the path of the alert relabeling configuration file. When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence. | *string | false |
 
 [Back to TOC](#table-of-contents)
 

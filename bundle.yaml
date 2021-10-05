@@ -17239,6 +17239,31 @@ spec:
                   'Source' field of all alerts. Maps to the '--alert.query-url' CLI
                   arg.
                 type: string
+              alertRelabelConfigFile:
+                description: AlertRelabelConfigFile specifies the path of the alert
+                  relabeling configuration file. When used alongside with AlertRelabelConfigs,
+                  alertRelabelConfigFile takes precedence.
+                type: string
+              alertRelabelConfigs:
+                description: 'AlertRelabelConfigs configures alert relabeling in ThanosRuler.
+                  Alert relabel configurations must have the form as specified in
+                  the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs
+                  Alternative to AlertRelabelConfigFile, and lower order priority.'
+                properties:
+                  key:
+                    description: The key of the secret to select from.  Must be a
+                      valid secret key.
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                  optional:
+                    description: Specify whether the Secret or its key must be defined
+                    type: boolean
+                required:
+                - key
+                type: object
               alertmanagersConfig:
                 description: Define configuration for connecting to alertmanager.  Only
                   available with thanos v0.10.0 and higher.  Maps to the `alertmanagers.config`

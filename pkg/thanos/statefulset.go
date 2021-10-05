@@ -249,7 +249,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		}
 	}
 
-	if tr.Spec.ObjectStorageConfig != nil {
+	if tr.Spec.ObjectStorageConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
+	} else if tr.Spec.ObjectStorageConfig != nil {
 		trCLIArgs = append(trCLIArgs, "--objstore.config=$(OBJSTORE_CONFIG)")
 		trEnvVars = append(trEnvVars, v1.EnvVar{
 			Name: "OBJSTORE_CONFIG",
@@ -257,10 +259,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecretKeyRef: tr.Spec.ObjectStorageConfig,
 			},
 		})
-	}
-
-	if tr.Spec.ObjectStorageConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
 	}
 
 	if tr.Spec.TracingConfig != nil {
@@ -296,6 +294,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if tr.Spec.AlertQueryURL != "" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
+	}
+
+	if tr.Spec.AlertRelabelConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+*tr.Spec.AlertRelabelConfigFile)
+	} else if tr.Spec.AlertRelabelConfigs != nil {
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)")
+		trEnvVars = append(trEnvVars, v1.EnvVar{
+			Name: "ALERT_RELABEL_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: tr.Spec.AlertRelabelConfigs,
+			},
+		})
 	}
 
 	var additionalContainers []v1.Container
