@@ -1183,6 +1183,13 @@ func testUserDefinedAlertmanagerConfig(t *testing.T) {
   receiver: "void"
 receivers:
 - name: "void"
+inhibit_rules:
+- target_matchers:
+  - test!=dropped
+  - expect=~this-value
+  source_matchers:
+  - test!=dropped
+  - expect=~this-value
 `
 	amConfig := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

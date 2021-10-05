@@ -1032,7 +1032,7 @@ func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) err
 
 	if matchersV2Allowed && checkNotEmptyMap(ir.SourceMatch, ir.TargetMatch, ir.SourceMatchRE, ir.TargetMatchRE) {
 		msg := "inhibit rule is using a deprecated match syntax which will be removed in future versions"
-		level.Warn(logger).Log("msg", msg)
+		level.Warn(logger).Log("msg", msg, "source_match", ir.SourceMatch, "target_match", ir.TargetMatch, "source_match_re", ir.SourceMatchRE, "target_match_re", ir.TargetMatchRE)
 	}
 
 	if !matchersV2Allowed && checkNotEmptySlice(ir.SourceMatchers, ir.TargetMatchers) {
