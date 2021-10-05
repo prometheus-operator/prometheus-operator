@@ -3,6 +3,7 @@ module github.com/prometheus-operator/prometheus-operator
 go 1.16
 
 require (
+	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.8.0
 	github.com/docker/distribution v2.7.1+incompatible
@@ -18,8 +19,8 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.3.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.51.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.51.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.51.2
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.51.2
 	github.com/prometheus/alertmanager v0.23.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0
