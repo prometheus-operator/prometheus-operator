@@ -1,15 +1,15 @@
 ---
-title: "Design"
-description: "This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
 weight: 100
 toc: true
+title: Design
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
 This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces.
@@ -35,7 +35,6 @@ The CRD specifies which `ServiceMonitor`s should be covered by the deployed Prom
 
 If no selection of `ServiceMonitor`s is provided, the Operator leaves management of the `Secret` to the user, which allows to provide custom configurations while still benefiting from the Operator's capabilities of managing Prometheus setups.
 
-
 ## Alertmanager
 
 The `Alertmanager` custom resource definition (CRD) declaratively defines a desired Alertmanager setup to run in a Kubernetes cluster. It provides options to configure replication and persistent storage.
@@ -44,14 +43,12 @@ For each `Alertmanager` resource, the Operator deploys a properly configured `St
 
 When there are two or more configured replicas the operator runs the Alertmanager instances in high availability mode.
 
-
 ## ThanosRuler
 
 The `ThanosRuler` custom resource definition (CRD) declaratively defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md) setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.
 
-A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances.  The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
+A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
 Further information can also be found in the [Thanos doc](thanos.md).
-
 
 ## ServiceMonitor
 
@@ -69,12 +66,12 @@ The `endpoints` section of the `ServiceMonitorSpec`, is used to configure which 
 
 Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
 To discover targets in all namespaces the `namespaceSelector` has to be empty:
+
 ```yaml
 spec:
   namespaceSelector:
     any: true
 ```
-
 
 ## PodMonitor
 
@@ -91,17 +88,16 @@ The `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure 
 Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
 Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
 To discover targets in all namespaces the `namespaceSelector` has to be empty:
+
 ```yaml
 spec:
   namespaceSelector:
     any: true
 ```
 
-
 ## Probe
 
 The `Probe` custom resource definition (CRD) allows to declarative define how groups of ingresses and static targets should be monitored. Besides the target, the `Probe` object requires a `prober` which is the service that monitors the target and provides metrics for Prometheus to scrape. This could be for example achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter/).
-
 
 ## PrometheusRule
 
@@ -109,8 +105,6 @@ The `PrometheusRule` custom resource definition (CRD) declaratively defines a de
 
 Alerts and recording rules can be saved and applied as YAML files, and dynamically loaded without requiring any restart.
 
-
 ## AlertmanagerConfig
 
 The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibit rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated config to Alertmanager. An example on how to use it is provided [here](../example/user-guides/alerting/alertmanager-config-example.yaml). Please be aware that this CRD is not stable yet.
-

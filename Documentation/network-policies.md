@@ -16,6 +16,7 @@ This example will close all inbound communication on the namespace monitoring, a
 First, follow the instructions to [add Calico to an existing Kubernetes cluster](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/).
 
 Next, use the following configuration to deny all the ingress (inbound) traffic.
+
 ```yaml
  apiVersion: networking.k8s.io/v1
  kind: NetworkPolicy
@@ -26,6 +27,7 @@ Next, use the following configuration to deny all the ingress (inbound) traffic.
    podSelector:
      matchLabels:
 ```
+
 Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
 
 ```sh
@@ -51,8 +53,7 @@ networkpolicy "prometheus" configured
 * Allow inbound tcp dst port 9093 from any source to alertmanager
 * Allow inbound tcp & udp dst port 9094 from only alertmanager to alertmanager
 
-[embedmd]:# (../example/networkpolicies/alertmanager.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/alertmanager.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -101,8 +102,7 @@ spec:
 
 * Allow inbound tcp dst port 3000 from any source to grafana
 
-[embedmd]:# (../example/networkpolicies/grafana.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/grafana.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -121,8 +121,7 @@ spec:
 
 * Allow inbound tcp dst port 9090 from any source to prometheus
 
-[embedmd]:# (../example/networkpolicies/prometheus.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/prometheus.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -142,8 +141,7 @@ spec:
 
 * Allow inbound tcp dst port 9100 from only prometheus to node-exporter
 
-[embedmd]:# (../example/networkpolicies/node-exporter.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/node-exporter.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -173,8 +171,7 @@ spec:
 
 * Allow inbound tcp dst port 8080 from only prometheus to kube-state-metrics
 
-[embedmd]:# (../example/networkpolicies/kube-state-metrics.yaml)
-```yaml
+```yaml mdox-exec="cat example/networkpolicies/kube-state-metrics.yaml"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

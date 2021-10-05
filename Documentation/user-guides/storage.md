@@ -9,14 +9,13 @@ To maintain data across deployments and version upgrades, the data must be persi
 
 Kubernetes supports several kinds of storage volumes. The Prometheus Operator works with PersistentVolumeClaims, which support the underlying PersistentVolume to be provisioned when requested.
 
-This document assumes a basic understanding of PersistentVolumes, PersistentVolumeClaims, and their [provisioning][pv-provisioning].
+This document assumes a basic understanding of PersistentVolumes, PersistentVolumeClaims, and their [provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
 
 ## Storage Provisioning on AWS
 
 Automatic provisioning of storage requires a `StorageClass`.
 
-[embedmd]:# (../../example/storage/storageclass.yaml)
-```yaml
+```yaml mdox-exec="cat example/storage/storageclass.yaml"
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -28,12 +27,11 @@ parameters:
 
 > Make sure that AWS as a cloud provider is properly configured with your cluster, or storage provisioning will not work.
 
-For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes][persistent-volumes] documentation to adapt this `StorageClass` to your needs.
+For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws) documentation to adapt this `StorageClass` to your needs.
 
 The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/master/examples/prometheus-pvc.jsonnet) example).
 
-[embedmd]:# (../../example/storage/persisted-prometheus.yaml)
-```yaml
+```yaml mdox-exec="cat example/storage/persisted-prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -48,7 +46,7 @@ spec:
             storage: 40Gi
 ```
 
-> The full documentation of the `storage` field can be found in the [API documentation][api-doc].
+> The full documentation of the `storage` field can be found in the [API documentation](../api.md#storagespec).
 
 When creating the Prometheus object, a PersistentVolumeClaim is used for each Pod in the StatefulSet, and the storage should automatically be provisioned, mounted and used.
 
@@ -103,7 +101,7 @@ To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable 
 
 The default StorageClass behavior will override manual storage provisioning, preventing PersistentVolumeClaims from automatically binding to manually created PersistentVolumes.
 
-To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog][volumes-changelog] for more information.)
+To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes) for more information.)
 
 For example, to disable default StorageClasses on a Google Container Engine cluster, create the following StorageClass:
 
@@ -120,9 +118,3 @@ parameters:
   type: pd-ssd
   zone: us-east1-d
 ```
-
-
-[volumes-changelog]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes
-[api-doc]: ../api.md#storagespec
-[pv-provisioning]: https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning
-[persistent-volumes]: https://kubernetes.io/docs/user-guide/persistent-volumes/#aws

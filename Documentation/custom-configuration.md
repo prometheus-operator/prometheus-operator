@@ -3,9 +3,7 @@
     <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
 </div>
 
-
-**Deprecation Warning:** The _custom configuration_ option of the Prometheus Operator will be deprecated in favor of the [_additional scrape config_](additional-scrape-config.md) option.
-
+**Deprecation Warning:** The *custom configuration* option of the Prometheus Operator will be deprecated in favor of the [*additional scrape config*](additional-scrape-config.md) option.
 
 # Custom Configuration
 

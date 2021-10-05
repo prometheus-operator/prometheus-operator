@@ -1,7 +1,7 @@
 ---
-title: "Adopters"
-date: 2021-03-08T23:50:39+01:00
+title: Adopters
 draft: false
+date: "2021-03-08T23:50:39+01:00"
 ---
 
 <!--
@@ -27,7 +27,7 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/master/ADOPTERS.md) to the list.
 
-## Clyso 
+## Clyso
 
 [clyso.com](https://www.clyso.com/en)
 
@@ -83,7 +83,7 @@ Details:
 - 20000 samples/s
 - 1M active series
 
-## Innovaccer ##
+## Innovaccer
 
 https://innovaccer.com/
 

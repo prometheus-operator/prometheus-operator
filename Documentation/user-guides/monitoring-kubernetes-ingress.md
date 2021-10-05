@@ -5,6 +5,7 @@ This documentation is for an alpha feature.
 </div>
 
 # Monitoring Kubernetes Ingress with Ambassador
+
 [Ambassador](https://getambassador.io/) is a popular open-source API gateway for Kubernetes. Built on [Envoy Proxy](https://envoyproxy.io), Ambassador natively exposes statistics that give you better insight to what is happening at the edge of your Kubernetes cluster. In this guide we will:
 
 * Create a simple Kubernetes application
@@ -17,6 +18,7 @@ This documentation is for an alpha feature.
 * The [Kubernetes command line tool](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Deploy and Expose an Application on Kubernetes
+
 First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
 
 We can quickly deploy this application using `kubectl`:
@@ -38,60 +40,64 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 1. Deploy Ambassador to your cluster with `kubectl`:
 
-    ```sh
-    kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml
-    ```
-    Ambassador is now running in your cluster and is ready to start routing traffic to your application.
+   ```sh
+   kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml
+   ```
+
+   Ambassador is now running in your cluster and is ready to start routing traffic to your application.
 
 2. Expose Ambassador to the internet.
 
-    ```sh
-    kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-service.yaml
-    ```
-    This will create a `LoadBalancer` service in Kubernetes which will automatically create a cloud load balancer if you are running in cloud-managed Kubernetes.
+   ```sh
+   kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-service.yaml
+   ```
 
-    Kubernetes will automatically assign the load balancer's IP address as the `EXTERNAL_IP` of the service. You can view this with `kubectl`:
+   This will create a `LoadBalancer` service in Kubernetes which will automatically create a cloud load balancer if you are running in cloud-managed Kubernetes.
 
-    ```console
-    $ kubectl get svc ambassador
+   Kubernetes will automatically assign the load balancer's IP address as the `EXTERNAL_IP` of the service. You can view this with `kubectl`:
 
-    NAME         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)       AGE
-    ambassador   LoadBalancer   10.96.110.170   34.233.165.XXX   80:33241/TCP  87m
-    ```
-    **Note:** If you are running in a different Kubernetes environment that does not automatically create a load balancer (like minikube), you can still access Ambassador using the `NodePort` of the service (33241 in this example).
+   ```console
+   $ kubectl get svc ambassador
+
+   NAME         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)       AGE
+   ambassador   LoadBalancer   10.96.110.170   34.233.165.XXX   80:33241/TCP  87m
+   ```
+
+   **Note:** If you are running in a different Kubernetes environment that does not automatically create a load balancer (like minikube), you can still access Ambassador using the `NodePort` of the service (33241 in this example).
 
 3. Route traffic to your application
 
-    You configure Ambassador to expose your application using [annotations](https://getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
+   You configure Ambassador to expose your application using [annotations](https://getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
 
-    ```yaml
-    ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: tour
-      annotations:
-        getambassador.io/config: |
-          ---
-          apiVersion: ambassador/v1
-          kind: Mapping
-          name: tour-ui_mapping
-          prefix: /
-          service: tour:5000
-    spec:
-      ports:
-      - name: ui
-        port: 5000
-        targetPort: 5000
-      selector:
-        app: tour
-    ```
+   ```yaml
+   ---
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: tour
+     annotations:
+       getambassador.io/config: |
+         ---
+         apiVersion: ambassador/v1
+         kind: Mapping
+         name: tour-ui_mapping
+         prefix: /
+         service: tour:5000
+   spec:
+     ports:
+     - name: ui
+       port: 5000
+       targetPort: 5000
+     selector:
+       app: tour
+   ```
 
-    The example application above was deployed with a pre-configured annotation to expose it. You can can now access this application using the `EXTERNAL_IP` above and going to http://{AMBASSADOR_EXTERNAL_IP}/ from a web-browser.
+   The example application above was deployed with a pre-configured annotation to expose it. You can can now access this application using the `EXTERNAL_IP` above and going to http://{AMBASSADOR_EXTERNAL_IP}/ from a web-browser.
 
 You now have an application running in Kubernetes and exposed to the internet.
 
 ## Deploy Prometheus
+
 Now that we have an application running and exposed by Ambassador, we need to configure Prometheus to scrape the metrics from Ambassador. The Prometheus Operator gives us a way to deploy and manage Prometheus deployments using Kubernetes-style resources
 
 The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/prometheus-operator/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
@@ -150,6 +156,7 @@ spec:
 ```sh
 kubectl apply -f prometheus.yaml
 ```
+
 We now have Prometheus running in the cluster and exposed through Ambassador. View the Prometheus UI by going to http://{AMBASSADOR_EXTERNAL_IP}/prometheus/graph from a web browser.
 
 Finally, we need tell Prometheus where to scrape metrics from. The Prometheus Operator easily manages this using a `ServiceMonitor` CRD. To tell Prometheus to scrape metrics from Ambassador's `/metrics` endpoint, we will use the Ambassador admin service and port `ambassador-admin`(8877). Copy the following YAML to a file called `ambassador-monitor.yaml` and apply it with `kubectl`:
@@ -188,10 +195,9 @@ Envoy's metrics data model is remarkably similar to that of Prometheus and uses 
 
 **Notable Metrics:**
 
-| Metric Category | Notable Metrics | Description |
-| --------------- | --------------- | ----------- |
-| envoy_http_downstream_rq | envoy_http_downstream_rq_http1_total <br></br> envoy_http_downstream_rq_http1_total <br></br> envoy_http_downstream_rq_total <br></br> envoy_http_downstream_rq_xx | Statistics regarding traffic from the internet, to each Ambassador instance. Tracking this will give you insight into how each pod is performing for various requests. |
-| envoy_cluster_upstream_rq | envoy_cluster_upstream_rq <br></br> envoy_cluster_upstream_rq_xx <br></br> envoy_cluster_upstream_rq_total <br></br> envoy_cluster_upstream_rq_retry | Statistics regarding traffic from Envoy to each upstream service. Tracking this will give you insight to how the request is performing after reaching Ambassador. It will help you pinpoint whether failures are happening in Ambassador or the upstream service. |
-
+| Metric Category           | Notable Metrics                                                                                                                         | Description                                                                                                                                                                                                                                                       |
+|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| envoy_http_downstream_rq  | envoy_http_downstream_rq_http1_total, envoy_http_downstream_rq_http1_total, envoy_http_downstream_rq_total, envoy_http_downstream_rq_xx | Statistics regarding traffic from the internet, to each Ambassador instance. Tracking this will give you insight into how each pod is performing for various requests.                                                                                            |
+| envoy_cluster_upstream_rq | envoy_cluster_upstream_rq, envoy_cluster_upstream_rq_xx, envoy_cluster_upstream_rq_total, envoy_cluster_upstream_rq_retry               | Statistics regarding traffic from Envoy to each upstream service. Tracking this will give you insight to how the request is performing after reaching Ambassador. It will help you pinpoint whether failures are happening in Ambassador or the upstream service. |
 
 Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.

@@ -165,13 +165,13 @@ Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/de
 
 ## Ingress
 
-Exposing the Prometheus or Alertmanager web UI through an Ingress object requires a running Ingress controller. For more information, see the Kubernetes documentation on [Ingress][ingress-doc].
+Exposing the Prometheus or Alertmanager web UI through an Ingress object requires a running Ingress controller. For more information, see the Kubernetes documentation on [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
-This example was tested with the [NGINX Ingress Controller][nginx-ingress]. For a quick-start for running the NGINX Ingress Controller follow the instructions in the [NGINX Ingress installation guide][nginx-ingress-installation-guide]. 
+This example was tested with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx). For a quick-start for running the NGINX Ingress Controller follow the instructions in the [NGINX Ingress installation guide](https://github.com/kubernetes/ingress-nginx/blob/master/docs/deploy/index.md).
 
-> Be certain to evaluate available Ingress controllers for the specifics of your  production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Traefik, GCE, or AWS.
+> Be certain to evaluate available Ingress controllers for the specifics of your production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Traefik, GCE, or AWS.
 
-> WARNING: If your Ingress is exposed to the internet, everyone can have full access on your resources. It's strongly recommend to enable an [external authentication][external-auth] or [whitelisting IP address][whitelist-ip].
+> WARNING: If your Ingress is exposed to the internet, everyone can have full access on your resources. It's strongly recommend to enable an [external authentication](https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/examples/auth/external-auth/README.md) or [whitelisting IP address](https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range).
 
 An Ingress object also requires a Service to be set up, as the requests are routed from the Ingress endpoint to the internal Service.
 
@@ -255,10 +255,3 @@ spec:
 ```
 
 > Note the path `/prometheus` at the end of the `externalUrl`, as specified in the `Ingress` object.
-
-
-[ingress-doc]: https://kubernetes.io/docs/concepts/services-networking/ingress/
-[nginx-ingress]: https://github.com/kubernetes/ingress-nginx
-[nginx-ingress-installation-guide]: https://github.com/kubernetes/ingress-nginx/blob/master/docs/deploy/index.md
-[external-auth]: https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/examples/auth/external-auth/README.md
-[whitelist-ip]: https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range

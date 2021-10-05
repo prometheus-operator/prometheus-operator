@@ -24,7 +24,6 @@ export PATH := $(TOOLS_BIN_DIR):$(PATH)
 
 PO_DOCGEN_BINARY:=$(TOOLS_BIN_DIR)/po-docgen
 CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)/controller-gen
-EMBEDMD_BINARY=$(TOOLS_BIN_DIR)/embedmd
 JB_BINARY=$(TOOLS_BIN_DIR)/jb
 GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
 JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
@@ -32,7 +31,8 @@ JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
 SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY)
+MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY)
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -224,10 +224,6 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TA
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md"`
-
-
 ##############
 # Formatting #
 ##############
@@ -259,6 +255,19 @@ check-metrics: $(PROMLINTER_BINARY)
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run
+
+MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
+MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(shell ls *.md)
+
+.PHONY: docs
+docs: $(MDOX_BINARY)
+	@echo ">> formatting and local/remote link check"
+	$(MDOX_BINARY) fmt --soft-wraps -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
+
+.PHONY: check-docs
+check-docs: $(MDOX_BINARY)
+	@echo ">> checking formatting and local/remote links"
+	$(MDOX_BINARY) fmt --soft-wraps --check -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
 
 ###########
 # Testing #

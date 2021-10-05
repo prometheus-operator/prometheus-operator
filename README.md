@@ -1,4 +1,5 @@
 # Prometheus Operator
+
 [![Build Status](https://github.com/prometheus-operator/prometheus-operator/workflows/ci/badge.svg)](https://github.com/prometheus-operator/prometheus-operator/actions)
 [![Go Report Card](https://goreportcard.com/badge/prometheus-operator/prometheus-operator "Go Report Card")](https://goreportcard.com/report/prometheus-operator/prometheus-operator)
 [![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
@@ -10,7 +11,7 @@ Note: Project was previously known as coreos/prometheus-operator.
 ## Overview
 
 The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of
-[Prometheus](https://prometheus.io/) and related monitoring components.  The purpose of this project is to
+[Prometheus](https://prometheus.io/) and related monitoring components. The purpose of this project is to
 simplify and automate the configuration of a Prometheus based monitoring stack for Kubernetes clusters.
 
 The Prometheus operator includes, but is not limited to, the following features:
@@ -29,15 +30,18 @@ For an introduction to the Prometheus Operator, see the [getting started](https:
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
 ### Prometheus Operator
+
 The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplify the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
 ### kube-prometheus
+
 [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
-stack based on Prometheus and the Prometheus Operator.  This includes deployment of multiple Prometheus and Alertmanager instances,
+stack based on Prometheus and the Prometheus Operator. This includes deployment of multiple Prometheus and Alertmanager instances,
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
 
 ### helm chart
+
 The [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Prometheus community.
 For more information, please see the [chart's readme](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack)
@@ -98,10 +102,10 @@ For more information on this feature, see the [user guide](Documentation/user-gu
 ## Quickstart
 
 **Note:** this quickstart does not provision an entire monitoring stack; if that is what you are looking for,
-see the [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project.  If you want the whole stack,
+see the [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project. If you want the whole stack,
 but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
-To quickly try out _just_ the Prometheus Operator inside a cluster, **choose a release** and run the following command:
+To quickly try out *just* the Prometheus Operator inside a cluster, **choose a release** and run the following command:
 
 ```sh
 kubectl apply -f bundle.yaml
@@ -172,15 +176,14 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version.
 2. `kubectl cluster-info --context kind-kind`. kind version >= 0.6.x
-3. `make image` - build Prometheus Operator  docker image locally.
+3. `make image` - build Prometheus Operator docker image locally.
 4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/prometheus-operator/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish
-built locally images to be accessible inside kind.
+   built locally images to be accessible inside kind.
 5. `make test-e2e`
 
 #### Running *end-to-end* tests on local minikube cluster:
 
-1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
-   --extra-config=apiserver.authorization-mode=RBAC`
+1. `minikube start --kubernetes-version=v1.10.0 --memory=4096 --extra-config=apiserver.authorization-mode=RBAC`
 2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
    docker image on minikube's docker
 3. `make test-e2e`
@@ -188,13 +191,12 @@ built locally images to be accessible inside kind.
 ## Contributing
 
 Many files (documentation, manifests, ...) in this repository are
-auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
+auto-generated. E.g. `bundle.yaml` originates from the *Jsonnet* files in
 `/jsonnet/prometheus-operator`. Before proposing a pull request:
 
 1. Commit your changes.
 2. Run `make generate`.
 3. Commit the generated changes.
-
 
 ## Security
 
@@ -202,11 +204,9 @@ If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [MAINTAINERS.md](MAINTAINERS.md) file.
 
-[operator-vs-kube]: https://github.com/prometheus-operator/prometheus-operator/issues/2510#issuecomment-476692399
-
 ## Troubleshooting
 
-Check the [troubleshooting documentation](Documentation/troubleshooting.md) for 
+Check the [troubleshooting documentation](Documentation/troubleshooting.md) for
 common issues and frequently asked questions (FAQ).
 
 ## Acknowledgements

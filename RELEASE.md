@@ -4,23 +4,23 @@ Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELE
 
 Release cadence of first pre-releases being cut is 6 weeks.
 
-| Release | Date of first pre-release (year-month-day) | Release shepherd                            |
-|---------|--------------------------------------------|---------------------------------------------|
-| v0.39   | 2020-05-06                                 | Pawel Krupa (GitHub: @paulfantom)           |
-| v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)                 |
-| v0.41   | 2020-07-29                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
-| v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)        |
-| v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier)     |
-| v0.44   | 2020-12-02                                 | Pawel Krupa (GitHub: @paulfantom)           |
-| v0.45   | 2021-01-13                                 | Lili Cosic (GitHub: @lilic)                 |
-| v0.46   | 2021-02-24                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
-| v0.47   | 2021-04-07                                 | Simon Pasquier (GitHub: @simonpasquier)     |
-| v0.48   | 2021-05-19                                 | Matthias Loibl (GitHub: @metalmatze)        |
-| v0.49   | 2021-06-30                                 | Pawel Krupa (GitHub: @paulfantom)           |
-| v0.50   | 2021-08-11                                 | Pawel Krupa (GitHub: @paulfantom)           |
-| v0.51   | 2021-09-22                                 | Simon Pasquier (GitHub: @simonpasquier)     |
-| v0.52   | 2021-11-03                                 | **searching for volunteer**                 |
-| v0.53   | 2021-12-15                                 | **searching for volunteer**                 |
+| Release | Date of first pre-release (year-month-day) | Release shepherd                        |
+|---------|--------------------------------------------|-----------------------------------------|
+| v0.39   | 2020-05-06                                 | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)             |
+| v0.41   | 2020-07-29                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak) |
+| v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)    |
+| v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.44   | 2020-12-02                                 | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.45   | 2021-01-13                                 | Lili Cosic (GitHub: @lilic)             |
+| v0.46   | 2021-02-24                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak) |
+| v0.47   | 2021-04-07                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.48   | 2021-05-19                                 | Matthias Loibl (GitHub: @metalmatze)    |
+| v0.49   | 2021-06-30                                 | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.50   | 2021-08-11                                 | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.51   | 2021-09-22                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.52   | 2021-11-03                                 | **searching for volunteer**             |
+| v0.53   | 2021-12-15                                 | **searching for volunteer**             |
 
 # How to cut a new release
 
@@ -101,7 +101,7 @@ Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to
 
 Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator).
 
-Go to  https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+Go to https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
 
 For patch releases, submit a pull request to merge back the release branch into the `master` branch.
 
