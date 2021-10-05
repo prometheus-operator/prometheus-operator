@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -31,8 +32,8 @@ import (
 )
 
 // GetCRD gets a custom resource definition from the apiserver.
-func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
-	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(f.Ctx, name, metav1.GetOptions{})
+func (f *Framework) GetCRD(ctx context.Context, name string) (*v1.CustomResourceDefinition, error) {
+	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to get CRD with name %v", name)
 	}
@@ -40,8 +41,8 @@ func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
 }
 
 // ListCRDs gets a list of custom resource definitions from the apiserver.
-func (f *Framework) ListCRDs() (*v1.CustomResourceDefinitionList, error) {
-	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(f.Ctx, metav1.ListOptions{})
+func (f *Framework) ListCRDs(ctx context.Context) (*v1.CustomResourceDefinitionList, error) {
+	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list CRDs")
 	}
@@ -49,14 +50,14 @@ func (f *Framework) ListCRDs() (*v1.CustomResourceDefinitionList, error) {
 }
 
 // CreateCRD creates a custom resource definition on the apiserver.
-func (f *Framework) CreateCRD(crd *v1.CustomResourceDefinition) error {
-	_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(f.Ctx, crd.Name, metav1.GetOptions{})
+func (f *Framework) CreateCRD(ctx context.Context, crd *v1.CustomResourceDefinition) error {
+	_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 	}
 
 	if apierrors.IsNotFound(err) {
-		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Create(f.Ctx, crd, metav1.CreateOptions{})
+		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Create(ctx, crd, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "create CRD: %s", crd.Spec.Names.Kind)
 		}
@@ -100,7 +101,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 
 // CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
 // manifest on the apiserver and wait until it is available for use.
-func (f *Framework) CreateCRDAndWaitUntilReady(crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
+func (f *Framework) CreateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 	group := monitoring.GroupName
 	assetPath := "../../example/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
@@ -113,7 +114,7 @@ func (f *Framework) CreateCRDAndWaitUntilReady(crdName string, listFunc func(opt
 	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
 	crd.Spec.Group = group
 
-	err = f.CreateCRD(crd)
+	err = f.CreateCRD(ctx, crd)
 	if err != nil {
 		return errors.Wrapf(err, "create CRD %s on the apiserver", crdName)
 	}

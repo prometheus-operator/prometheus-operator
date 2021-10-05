@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -43,24 +44,24 @@ var (
 	}
 )
 
-func (f *Framework) CreateClusterRole(relativePath string) (*rbacv1.ClusterRole, error) {
+func (f *Framework) CreateClusterRole(ctx context.Context, relativePath string) (*rbacv1.ClusterRole, error) {
 	clusterRole, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = f.KubeClient.RbacV1().ClusterRoles().Get(f.Ctx, clusterRole.Name, metav1.GetOptions{})
+	_, err = f.KubeClient.RbacV1().ClusterRoles().Get(ctx, clusterRole.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// ClusterRole already exists -> Update
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Update(f.Ctx, clusterRole, metav1.UpdateOptions{})
+		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Update(ctx, clusterRole, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, err
 		}
 
 	} else {
 		// ClusterRole doesn't exists -> Create
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Create(f.Ctx, clusterRole, metav1.CreateOptions{})
+		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -69,17 +70,17 @@ func (f *Framework) CreateClusterRole(relativePath string) (*rbacv1.ClusterRole,
 	return clusterRole, nil
 }
 
-func (f *Framework) DeleteClusterRole(relativePath string) error {
+func (f *Framework) DeleteClusterRole(ctx context.Context, relativePath string) error {
 	clusterRole, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return err
 	}
 
-	return f.KubeClient.RbacV1().ClusterRoles().Delete(f.Ctx, clusterRole.Name, metav1.DeleteOptions{})
+	return f.KubeClient.RbacV1().ClusterRoles().Delete(ctx, clusterRole.Name, metav1.DeleteOptions{})
 }
 
-func (f *Framework) UpdateClusterRole(clusterRole *rbacv1.ClusterRole) error {
-	_, err := f.KubeClient.RbacV1().ClusterRoles().Update(f.Ctx, clusterRole, metav1.UpdateOptions{})
+func (f *Framework) UpdateClusterRole(ctx context.Context, clusterRole *rbacv1.ClusterRole) error {
+	_, err := f.KubeClient.RbacV1().ClusterRoles().Update(ctx, clusterRole, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}

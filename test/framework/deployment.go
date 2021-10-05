@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -27,12 +28,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (f *Framework) GetDeployment(ns, name string) (*appsv1.Deployment, error) {
-	return f.KubeClient.AppsV1().Deployments(ns).Get(f.Ctx, name, metav1.GetOptions{})
+func (f *Framework) GetDeployment(ctx context.Context, ns, name string) (*appsv1.Deployment, error) {
+	return f.KubeClient.AppsV1().Deployments(ns).Get(ctx, name, metav1.GetOptions{})
 }
 
-func (f *Framework) UpdateDeployment(deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
-	return f.KubeClient.AppsV1().Deployments(deployment.Namespace).Update(f.Ctx, deployment, metav1.UpdateOptions{})
+func (f *Framework) UpdateDeployment(ctx context.Context, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	return f.KubeClient.AppsV1().Deployments(deployment.Namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 }
 
 func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
@@ -48,17 +49,17 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 	return &deployment, nil
 }
 
-func (f *Framework) CreateDeployment(namespace string, d *appsv1.Deployment) error {
+func (f *Framework) CreateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
 	d.Namespace = namespace
-	_, err := f.KubeClient.AppsV1().Deployments(namespace).Create(f.Ctx, d, metav1.CreateOptions{})
+	_, err := f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
 	}
 	return nil
 }
 
-func (f *Framework) DeleteDeployment(namespace, name string) error {
-	d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(f.Ctx, name, metav1.GetOptions{})
+func (f *Framework) DeleteDeployment(ctx context.Context, namespace, name string) error {
+	d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -66,18 +67,18 @@ func (f *Framework) DeleteDeployment(namespace, name string) error {
 	zero := int32(0)
 	d.Spec.Replicas = &zero
 
-	d, err = f.KubeClient.AppsV1().Deployments(namespace).Update(f.Ctx, d, metav1.UpdateOptions{})
+	d, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, d, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
-	return f.KubeClient.AppsV1beta2().Deployments(namespace).Delete(f.Ctx, d.Name, metav1.DeleteOptions{})
+	return f.KubeClient.AppsV1beta2().Deployments(namespace).Delete(ctx, d.Name, metav1.DeleteOptions{})
 }
 
-func (f *Framework) WaitUntilDeploymentGone(kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
+func (f *Framework) WaitUntilDeploymentGone(ctx context.Context, kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
 		_, err := f.KubeClient.
 			AppsV1beta2().Deployments(namespace).
-			Get(f.Ctx, name, metav1.GetOptions{})
+			Get(ctx, name, metav1.GetOptions{})
 
 		if err != nil {
 			if apierrors.IsNotFound(err) {

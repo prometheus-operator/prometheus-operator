@@ -15,20 +15,21 @@
 package framework
 
 import (
+	"context"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) createServiceAccount(namespace string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteServiceAccount(namespace, relativePath) }
+func (f *Framework) createServiceAccount(ctx context.Context, namespace string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteServiceAccount(ctx, namespace, relativePath) }
 
 	serviceAccount, err := parseServiceAccountYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
 	serviceAccount.Namespace = namespace
-	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(f.Ctx, serviceAccount, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
 	if err != nil {
 		return finalizerFn, err
 	}
@@ -50,11 +51,11 @@ func parseServiceAccountYaml(relativePath string) (*v1.ServiceAccount, error) {
 	return &serviceAccount, nil
 }
 
-func (f *Framework) DeleteServiceAccount(namespace string, relativePath string) error {
+func (f *Framework) DeleteServiceAccount(ctx context.Context, namespace string, relativePath string) error {
 	serviceAccount, err := parseServiceAccountYaml(relativePath)
 	if err != nil {
 		return err
 	}
 
-	return f.KubeClient.CoreV1().ServiceAccounts(namespace).Delete(f.Ctx, serviceAccount.Name, metav1.DeleteOptions{})
+	return f.KubeClient.CoreV1().ServiceAccounts(namespace).Delete(ctx, serviceAccount.Name, metav1.DeleteOptions{})
 }

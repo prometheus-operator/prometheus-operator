@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -26,40 +27,40 @@ import (
 )
 
 func testThanosRulerCreateDeleteCluster(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
+	if err := framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
-	thanosNamespace := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, thanosNamespace)
+	thanosNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, thanosNamespace)
 
 	name := "test"
 
 	// Create a Prometheus resource because Thanos ruler needs a query API.
-	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(thanosNamespace, framework.MakeBasicPrometheus(thanosNamespace, name, name, 1))
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), thanosNamespace, framework.MakeBasicPrometheus(thanosNamespace, name, name, 1))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	if _, err := framework.CreateServiceAndWaitUntilReady(thanosNamespace, svc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -72,45 +73,45 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 	thanos.Spec.EvaluationInterval = "1s"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(thanosNamespace, thanos); err != nil {
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), thanosNamespace, thanos); err != nil {
 		t.Fatal(err)
 	}
 
-	ruleNamespace := framework.CreateNamespace(t, ctx)
-	if err := framework.AddLabelsToNamespace(ruleNamespace, map[string]string{
+	ruleNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
+	if err := framework.AddLabelsToNamespace(context.Background(), ruleNamespace, map[string]string{
 		"monitored": "true",
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	const testAlert = "alert1"
-	_, err = framework.MakeAndCreateFiringRule(ruleNamespace, "rule1", testAlert)
+	_, err = framework.MakeAndCreateFiringRule(context.Background(), ruleNamespace, "rule1", testAlert)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(thanosNamespace, thanosService); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService); err != nil {
 		t.Fatalf("creating Thanos ruler service failed: %v", err)
 	} else {
-		ctx.AddFinalizerFn(finalizerFn)
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
-	if err := framework.WaitForThanosFiringAlert(thanosNamespace, thanosService.Name, testAlert); err != nil {
+	if err := framework.WaitForThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert); err != nil {
 		t.Fatal(err)
 	}
 
 	// Remove the selecting label from ruleNamespace and wait until the rule is
 	// removed from the Thanos ruler.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := framework.RemoveLabelsFromNamespace(ruleNamespace, "monitored"); err != nil {
+	if err := framework.RemoveLabelsFromNamespace(context.Background(), ruleNamespace, "monitored"); err != nil {
 		t.Fatal(err)
 	}
 
 	var loopError error
 	err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
 		var firing bool
-		firing, loopError = framework.CheckThanosFiringAlert(thanosNamespace, thanosService.Name, testAlert)
+		firing, loopError = framework.CheckThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert)
 		return !firing, nil
 	})
 
@@ -121,16 +122,15 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 
 func testTRPreserveUserAddedMetadata(t *testing.T) {
 	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
 
 	thanosRuler := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
-	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,19 +153,19 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		{
 			name: "thanos-ruler-operated service",
 			get: func() (metav1.Object, error) {
-				return svcClient.Get(framework.Ctx, "thanos-ruler-operated", metav1.GetOptions{})
+				return svcClient.Get(context.Background(), "thanos-ruler-operated", metav1.GetOptions{})
 			},
 			update: func(object metav1.Object) (metav1.Object, error) {
-				return svcClient.Update(framework.Ctx, asService(t, object), metav1.UpdateOptions{})
+				return svcClient.Update(context.Background(), asService(t, object), metav1.UpdateOptions{})
 			},
 		},
 		{
 			name: "thanos-ruler stateful set",
 			get: func() (metav1.Object, error) {
-				return ssetClient.Get(framework.Ctx, "thanos-ruler-test", metav1.GetOptions{})
+				return ssetClient.Get(context.Background(), "thanos-ruler-test", metav1.GetOptions{})
 			},
 			update: func(object metav1.Object) (metav1.Object, error) {
-				return ssetClient.Update(framework.Ctx, asStatefulSet(t, object), metav1.UpdateOptions{})
+				return ssetClient.Update(context.Background(), asStatefulSet(t, object), metav1.UpdateOptions{})
 			},
 		},
 	}
@@ -187,7 +187,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	thanosRuler.Spec.Replicas = proto.Int32(2)
-	_, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	_, err = framework.UpdateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		}
 	}
 
-	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
+	if err := framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -219,22 +219,22 @@ func testTRMinReadySeconds(t *testing.T) {
 	runFeatureGatedTests(t)
 	t.Parallel()
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := framework.CreateNamespace(t, ctx)
-	framework.SetupPrometheusRBAC(t, ctx, ns)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	kubeClient := framework.KubeClient
 
 	var setMinReadySecondsInitial uint32 = 5
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
 	thanosRuler.Spec.MinReadySeconds = &setMinReadySecondsInitial
-	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "thanos-ruler-test-thanos", metav1.GetOptions{})
+	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,11 +245,11 @@ func testTRMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	thanosRuler.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler); err != nil {
+	if _, err = framework.UpdateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler); err != nil {
 		t.Fatal("Updating ThanosRuler failed: ", err)
 	}
 
-	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(framework.Ctx, "thanos-ruler-test-thanos", metav1.GetOptions{})
+	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}

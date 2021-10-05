@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
@@ -87,21 +88,21 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
-	ns := framework.CreateNamespace(t, ctx)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, f := range finalizers {
-		ctx.AddFinalizerFn(f)
+		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(t, ns))
+	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -118,14 +119,14 @@ func TestAllNS(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(framework.Ctx, opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if expected := 1; len(pl.Items) != expected {
 		t.Fatalf("expected %v Prometheus Operator pods, but got %v", expected, len(pl.Items))
 	}
-	restarts, err := framework.GetPodRestartCount(ns, pl.Items[0].GetName())
+	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
 	if err != nil {
 		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
 	}
@@ -286,16 +287,16 @@ const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
 
-func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
+func testServerTLS(ctx context.Context, t *testing.T, namespace string) func(t *testing.T) {
 
 	return func(t *testing.T) {
-		if err := framework.WaitForServiceReady(namespace, prometheusOperatorServiceName); err != nil {
+		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
 
 		operatorService := framework.KubeClient.CoreV1().Services(namespace)
 		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
-		_, err := request.DoRaw(framework.Ctx)
+		_, err := request.DoRaw(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}

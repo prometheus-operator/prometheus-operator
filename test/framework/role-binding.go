@@ -15,24 +15,25 @@
 package framework
 
 import (
+	"context"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) CreateRoleBinding(ns string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteRoleBinding(ns, relativePath) }
+func (f *Framework) CreateRoleBinding(ctx context.Context, ns string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, relativePath) }
 	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
 
-	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(f.Ctx, roleBinding, metav1.CreateOptions{})
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
 	return finalizerFn, err
 }
 
-func (f *Framework) CreateRoleBindingForSubjectNamespace(ns, subjectNs string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteRoleBinding(ns, relativePath) }
+func (f *Framework) CreateRoleBindingForSubjectNamespace(ctx context.Context, ns, subjectNs string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, relativePath) }
 	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 
 	for i := range roleBinding.Subjects {
@@ -43,17 +44,17 @@ func (f *Framework) CreateRoleBindingForSubjectNamespace(ns, subjectNs string, r
 		return finalizerFn, err
 	}
 
-	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(f.Ctx, roleBinding, metav1.CreateOptions{})
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
 	return finalizerFn, err
 }
 
-func (f *Framework) DeleteRoleBinding(ns string, relativePath string) error {
+func (f *Framework) DeleteRoleBinding(ctx context.Context, ns string, relativePath string) error {
 	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {
 		return err
 	}
 
-	return f.KubeClient.RbacV1().RoleBindings(ns).Delete(f.Ctx, roleBinding.Name, metav1.DeleteOptions{})
+	return f.KubeClient.RbacV1().RoleBindings(ns).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
 }
 
 func (f *Framework) parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {

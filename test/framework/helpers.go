@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -46,9 +47,9 @@ func PathToOSFile(relativePath string) (*os.File, error) {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
-		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(f.Ctx, opts)
+		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return false, err
 		}
@@ -72,9 +73,9 @@ func (f *Framework) WaitForPodsReady(namespace string, timeout time.Duration, ex
 	})
 }
 
-func (f *Framework) WaitForPodsRunImage(namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsRunImage(ctx context.Context, namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(f.Ctx, opts)
+		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return false, err
 		}
@@ -121,13 +122,13 @@ func podRunsImage(p v1.Pod, image string) bool {
 	return false
 }
 
-func (f *Framework) GetLogs(namespace string, podName, containerName string) (string, error) {
+func (f *Framework) GetLogs(ctx context.Context, namespace string, podName, containerName string) (string, error) {
 	logs, err := f.KubeClient.CoreV1().RESTClient().Get().
 		Resource("pods").
 		Namespace(namespace).
 		Name(podName).SubResource("log").
 		Param("container", containerName).
-		Do(f.Ctx).
+		Do(ctx).
 		Raw()
 	if err != nil {
 		return "", err
