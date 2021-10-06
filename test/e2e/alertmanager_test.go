@@ -1181,6 +1181,8 @@ func testUserDefinedAlertmanagerConfig(t *testing.T) {
 
 	yamlConfig := `route:
   receiver: "void"
+  matchers:
+  - namespace=test
 receivers:
 - name: "void"
 inhibit_rules:
