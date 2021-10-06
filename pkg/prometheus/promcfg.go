@@ -219,19 +219,99 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 // validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(p *v1.Prometheus) error {
 	if p.Spec.EnforcedBodySizeLimit != "" {
-		if err := validateBodySizeLimit(p.Spec.EnforcedBodySizeLimit); err != nil {
-			return err
+		if err := validateSizeField(p.Spec.EnforcedBodySizeLimit); err != nil {
+			return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
 		}
+	}
+
+	if p.Spec.RetentionSize != "" {
+		if err := validateSizeField(p.Spec.RetentionSize); err != nil {
+			return errors.Wrap(err, "invalid retentionSize value specified")
+		}
+	}
+
+	if p.Spec.Retention != "" {
+		if !validateDurationField(p.Spec.Retention) {
+			return errors.New("invalid retention value specified")
+		}
+	}
+
+	if p.Spec.ScrapeInterval != "" {
+		if !validateDurationField(p.Spec.ScrapeInterval) {
+			return errors.New("invalid scrapeInterval value specified")
+		}
+	}
+
+	if p.Spec.ScrapeTimeout != "" {
+		if !validateDurationField(p.Spec.ScrapeTimeout) {
+			return errors.New("invalid scrapeTimeout value specified")
+		}
+	}
+
+	if p.Spec.EvaluationInterval != "" {
+		if !validateDurationField(p.Spec.EvaluationInterval) {
+			return errors.New("invalid evaluationInterval value specified")
+		}
+	}
+
+	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
+		if !validateDurationField(p.Spec.Thanos.ReadyTimeout) {
+			return errors.New("invalid Thanos readyTimeout value specified")
+		}
+	}
+
+	if p.Spec.Query != nil && *p.Spec.Query.Timeout != "" {
+		if !validateDurationField(*p.Spec.Query.Timeout) {
+			return errors.New("invalid Query Timeout value specified")
+		}
+	}
+
+	for i, rr := range p.Spec.RemoteRead {
+		if rr.RemoteTimeout != "" {
+			if !validateDurationField(rr.RemoteTimeout) {
+				return errors.New(fmt.Sprintf("invalid RemoteRead[%v].RemoteTimeout value specified", i))
+			}
+		}
+	}
+
+	for i, rw := range p.Spec.RemoteWrite {
+		if rw.RemoteTimeout != "" {
+			if !validateDurationField(rw.RemoteTimeout) {
+				return errors.New(fmt.Sprintf("invalid RemoteWrite[%v].RemoteTimeout value specified", i))
+			}
+		}
+
+		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
+			if !validateDurationField(rw.MetadataConfig.SendInterval) {
+				return errors.New(fmt.Sprintf("invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", i))
+			}
+		}
+	}
+
+	if p.Spec.Alerting != nil {
+		for i, ap := range p.Spec.Alerting.Alertmanagers {
+			if ap.Timeout != nil && *ap.Timeout != "" {
+				if !validateDurationField(*ap.Timeout) {
+					return errors.New(fmt.Sprintf("invalid Alertmanagers[%v].Timeout value specified", i))
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func validateSizeField(sizeField string) error {
+	// To validate if given value is parsable for the acceptable size values
+	if _, err := units.ParseBase2Bytes(sizeField); err != nil {
+		return err
 	}
 	return nil
 }
 
-func validateBodySizeLimit(enforcedLimit string) error {
-	// To validate if given value is parsable for the acceptable body_size_limit values
-	if _, err := units.ParseBase2Bytes(enforcedLimit); err != nil {
-		return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
-	}
-	return nil
+func validateDurationField(durationField string) bool {
+	matched, _ := regexp.MatchString("[0-9]+(ms|s|m|h|d|w|y)", durationField)
+	return matched
 }
 
 // GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
