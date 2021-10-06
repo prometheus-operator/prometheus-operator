@@ -69,6 +69,7 @@ type route struct {
 	GroupByStr     []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
 	Match          map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
 	MatchRE        map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
+	Matchers       []string          `yaml:"matchers,omitempty" json:"matchers,omitempty"`
 	Continue       bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
 	Routes         []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
 	GroupWait      string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
