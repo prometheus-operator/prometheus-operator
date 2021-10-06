@@ -297,11 +297,16 @@ func TestObjectStorage(t *testing.T) {
 
 func TestObjectStorageFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-objstore-config-secret"
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:          emptyQueryEndpoints,
 			ObjectStorageConfigFile: &testPath,
+			ObjectStorageConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -309,20 +314,117 @@ func TestObjectStorageFile(t *testing.T) {
 	}
 
 	{
-		var containsArg bool
-		expectedArg := "--objstore.config-file=" + testPath
+		var containsArgConfigFile, containsArgConfig bool
+		expectedArgConfigFile := "--objstore.config-file=" + testPath
+		expectedArgConfig := "--objstore.config=$(OBJSTORE_CONFIG)"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
-					if arg == expectedArg {
-						containsArg = true
-						break
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfig {
+						containsArgConfig = true
 					}
 				}
 			}
 		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfig {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfig)
+		}
+	}
+}
+
+func TestAlertRelabel(t *testing.T) {
+	testKey := "thanos-alertrelabel-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			AlertRelabelConfigs: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
+		if env.Name == "ALERT_RELABEL_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos ruler is missing expected ALERT_RELABEL_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
 		if !containsArg {
 			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
+func TestAlertRelabelFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-alertrelabel-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:         emptyQueryEndpoints,
+			AlertRelabelConfigFile: &testPath,
+			AlertRelabelConfigs: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArgConfigFile, containsArgConfigs bool
+		expectedArgConfigFile := "--alert.relabel-config-file=" + testPath
+		expectedArgConfigs := "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfigs {
+						containsArgConfigs = true
+					}
+				}
+			}
+		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfigs {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfigs)
 		}
 	}
 }
