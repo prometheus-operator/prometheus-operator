@@ -1313,7 +1313,7 @@ EmailConfig configures notifications via Email.
 | to | The email address to send notifications to. | string | false |
 | from | The sender address. | string | false |
 | hello | The hostname to identify to the SMTP server. | string | false |
-| smarthost | The SMTP host through which emails are sent. | string | false |
+| smarthost | The SMTP host and port through which emails are sent. E.g. example.com:25 | string | false |
 | authUsername | The username to use for authentication. | string | false |
 | authPassword | The secret's key that contains the password to use for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | authSecret | The secret's key that contains the CRAM-MD5 secret. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
