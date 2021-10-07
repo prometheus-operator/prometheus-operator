@@ -11,7 +11,7 @@ on:
 env:
   kind-version: 'v0.11.1'
   kind-image: 'kindest/node:v1.22.0'  # Image defines which k8s version is used
-  golang-version: '1.16'
+  golang-version: '1.17'
 jobs:
   e2e-tests:
     name: E2E tests

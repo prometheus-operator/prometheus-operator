@@ -11,7 +11,7 @@ on:
       - '!pkg*'
 
 env:
-  golang-version: '1.16'
+  golang-version: '1.17'
 jobs:
   publish:
     runs-on: ubuntu-latest
