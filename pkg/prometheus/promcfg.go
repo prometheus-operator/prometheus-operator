@@ -26,6 +26,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -231,59 +232,59 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	}
 
 	if p.Spec.Retention != "" {
-		if !validateDurationField(p.Spec.Retention) {
-			return errors.New("invalid retention value specified")
+		if err := validateDurationField(p.Spec.Retention); err != nil {
+			return errors.Wrap(err, "invalid retention value specified")
 		}
 	}
 
 	if p.Spec.ScrapeInterval != "" {
-		if !validateDurationField(p.Spec.ScrapeInterval) {
-			return errors.New("invalid scrapeInterval value specified")
+		if err := validateDurationField(p.Spec.ScrapeInterval); err != nil {
+			return errors.Wrap(err, "invalid scrapeInterval value specified")
 		}
 	}
 
 	if p.Spec.ScrapeTimeout != "" {
-		if !validateDurationField(p.Spec.ScrapeTimeout) {
-			return errors.New("invalid scrapeTimeout value specified")
+		if err := validateDurationField(p.Spec.ScrapeTimeout); err != nil {
+			return errors.Wrap(err, "invalid scrapeTimeout value specified")
 		}
 	}
 
 	if p.Spec.EvaluationInterval != "" {
-		if !validateDurationField(p.Spec.EvaluationInterval) {
-			return errors.New("invalid evaluationInterval value specified")
+		if err := validateDurationField(p.Spec.EvaluationInterval); err != nil {
+			return errors.Wrap(err, "invalid evaluationInterval value specified")
 		}
 	}
 
 	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
-		if !validateDurationField(p.Spec.Thanos.ReadyTimeout) {
-			return errors.New("invalid Thanos readyTimeout value specified")
+		if err := validateDurationField(p.Spec.Thanos.ReadyTimeout); err != nil {
+			return errors.Wrap(err, "invalid Thanos readyTimeout value specified")
 		}
 	}
 
-	if p.Spec.Query != nil && *p.Spec.Query.Timeout != "" {
-		if !validateDurationField(*p.Spec.Query.Timeout) {
-			return errors.New("invalid Query Timeout value specified")
+	if p.Spec.Query != nil && p.Spec.Query.Timeout != nil && *p.Spec.Query.Timeout != "" {
+		if err := validateDurationField(*p.Spec.Query.Timeout); err != nil {
+			return errors.Wrap(err, "invalid Query Timeout value specified")
 		}
 	}
 
 	for i, rr := range p.Spec.RemoteRead {
 		if rr.RemoteTimeout != "" {
-			if !validateDurationField(rr.RemoteTimeout) {
-				return fmt.Errorf("invalid RemoteRead[%v].RemoteTimeout value specified", i)
+			if err := validateDurationField(rr.RemoteTimeout); err != nil {
+				return fmt.Errorf("%v invalid RemoteRead[%v].RemoteTimeout value specified", err, i)
 			}
 		}
 	}
 
 	for i, rw := range p.Spec.RemoteWrite {
 		if rw.RemoteTimeout != "" {
-			if !validateDurationField(rw.RemoteTimeout) {
-				return fmt.Errorf("invalid RemoteWrite[%v].RemoteTimeout value specified", i)
+			if err := validateDurationField(rw.RemoteTimeout); err != nil {
+				return fmt.Errorf("%v invalid RemoteWrite[%v].RemoteTimeout value specified", err, i)
 			}
 		}
 
 		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
-			if !validateDurationField(rw.MetadataConfig.SendInterval) {
-				return fmt.Errorf("invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", i)
+			if err := validateDurationField(rw.MetadataConfig.SendInterval); err != nil {
+				return fmt.Errorf("%v invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", err, i)
 			}
 		}
 	}
@@ -291,8 +292,8 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	if p.Spec.Alerting != nil {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {
-				if !validateDurationField(*ap.Timeout) {
-					return fmt.Errorf("invalid Alertmanagers[%v].Timeout value specified", i)
+				if err := validateDurationField(*ap.Timeout); err != nil {
+					return fmt.Errorf("%v invalid Alertmanagers[%v].Timeout value specified", err, i)
 				}
 			}
 		}
@@ -309,9 +310,12 @@ func validateSizeField(sizeField string) error {
 	return nil
 }
 
-func validateDurationField(durationField string) bool {
-	matched, _ := regexp.MatchString("[0-9]+(ms|s|m|h|d|w|y)", durationField)
-	return matched
+func validateDurationField(durationField string) error {
+	// To validate if given value is parsable for the acceptable duration values
+	if _, err := model.ParseDuration(durationField); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
