@@ -269,7 +269,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	for i, rr := range p.Spec.RemoteRead {
 		if rr.RemoteTimeout != "" {
 			if !validateDurationField(rr.RemoteTimeout) {
-				return errors.New(fmt.Sprintf("invalid RemoteRead[%v].RemoteTimeout value specified", i))
+				return fmt.Errorf("invalid RemoteRead[%v].RemoteTimeout value specified", i)
 			}
 		}
 	}
@@ -277,13 +277,13 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	for i, rw := range p.Spec.RemoteWrite {
 		if rw.RemoteTimeout != "" {
 			if !validateDurationField(rw.RemoteTimeout) {
-				return errors.New(fmt.Sprintf("invalid RemoteWrite[%v].RemoteTimeout value specified", i))
+				return fmt.Errorf("invalid RemoteWrite[%v].RemoteTimeout value specified", i)
 			}
 		}
 
 		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
 			if !validateDurationField(rw.MetadataConfig.SendInterval) {
-				return errors.New(fmt.Sprintf("invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", i))
+				return fmt.Errorf("invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", i)
 			}
 		}
 	}
@@ -292,7 +292,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {
 				if !validateDurationField(*ap.Timeout) {
-					return errors.New(fmt.Sprintf("invalid Alertmanagers[%v].Timeout value specified", i))
+					return fmt.Errorf("invalid Alertmanagers[%v].Timeout value specified", i)
 				}
 			}
 		}
