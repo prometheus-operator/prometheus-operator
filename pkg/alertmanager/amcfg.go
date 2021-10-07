@@ -192,6 +192,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 	}
 }
 
+// convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver
 func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
 
@@ -568,17 +569,8 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.To == "" {
-		return nil, errors.New("missing to address in email config")
-	}
-
 	if in.Smarthost != "" {
-		host, port, err := net.SplitHostPort(in.Smarthost)
-		if err != nil {
-			return nil, errors.New("failed to extract host and port from Smarthost")
-		}
-		out.Smarthost.Host = host
-		out.Smarthost.Port = port
+		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
 	}
 
 	if in.AuthPassword != nil {
@@ -597,20 +589,13 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 		out.AuthSecret = authSecret
 	}
 
-	var headers map[string]string
 	if l := len(in.Headers); l > 0 {
-		headers = make(map[string]string, l)
-
-		var key string
+		headers := make(map[string]string, l)
 		for _, d := range in.Headers {
-			key = strings.Title(d.Key)
-			if _, ok := headers[key]; ok {
-				return nil, errors.Errorf("duplicate header %q in email config", key)
-			}
-			headers[key] = d.Value
+			headers[strings.Title(d.Key)] = d.Value
 		}
+		out.Headers = headers
 	}
-	out.Headers = headers
 
 	if in.TLSConfig != nil {
 		out.TLSConfig = cg.convertTLSConfig(ctx, in.TLSConfig, crKey)
@@ -636,9 +621,6 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 			return nil, errors.Errorf("failed to get secret %q", in.APIKey)
 		}
 		out.APIKey = apiKey
-	}
-	if in.RoutingKey == "" {
-		return nil, errors.New("missing Routing key in VictorOps config")
 	}
 
 	var customFields map[string]string
@@ -685,9 +667,6 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	}
 
 	{
-		if in.UserKey == nil {
-			return nil, errors.Errorf("mandatory field %q is empty", "userKey")
-		}
 		userKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
 		if err != nil {
 			return nil, errors.Errorf("failed to get secret %q", in.UserKey)
@@ -699,9 +678,6 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	}
 
 	{
-		if in.Token == nil {
-			return nil, errors.Errorf("mandatory field %q is empty", "token")
-		}
 		token, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
 		if err != nil {
 			return nil, errors.Errorf("failed to get secret %q", in.Token)
@@ -712,20 +688,16 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 		out.Token = token
 	}
 
-	if in.Retry != "" {
-		retry, err := time.ParseDuration(in.Retry)
-		if err != nil {
-			return nil, errors.Errorf("failed to parse Retry duration: %s", err)
+	{
+		if in.Retry != "" {
+			retry, _ := time.ParseDuration(in.Retry)
+			out.Retry = duration(retry)
 		}
-		out.Retry = duration(retry)
-	}
 
-	if in.Expire != "" {
-		expire, err := time.ParseDuration(in.Expire)
-		if err != nil {
-			return nil, errors.Errorf("failed to parse Expire duration: %s", err)
+		if in.Expire != "" {
+			expire, _ := time.ParseDuration(in.Expire)
+			out.Expire = duration(expire)
 		}
-		out.Expire = duration(expire)
 	}
 
 	if in.HTTPConfig != nil {
