@@ -1,6 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.16
+go 1.17
 
 require (
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
