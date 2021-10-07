@@ -560,7 +560,7 @@ type EmailConfig struct {
 	// The hostname to identify to the SMTP server.
 	// +optional
 	Hello string `json:"hello,omitempty"`
-	// The SMTP host through which emails are sent.
+	// The SMTP host and port through which emails are sent. E.g. example.com:25
 	// +optional
 	Smarthost string `json:"smarthost,omitempty"`
 	// The username to use for authentication.
