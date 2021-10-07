@@ -17,8 +17,6 @@ package alertmanager
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -1045,19 +1043,16 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames, true)
+	return validateAlertManagerRoutes(amc.Spec.Route, receiverNames, true)
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
-	var err error
-	receiverNames := make(map[string]struct{})
+	receiverNames, err := validateReceivers(amc.Spec.Receivers)
+	if err != nil {
+		return nil, errors.Wrap(err, "checkReceivers: failed to validateReceivers")
+	}
 
 	for i, receiver := range amc.Spec.Receivers {
-		if _, found := receiverNames[receiver.Name]; found {
-			return nil, errors.Errorf("%q receiver is not unique", receiver.Name)
-		}
-		receiverNames[receiver.Name] = struct{}{}
-
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
 		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
@@ -1137,10 +1132,6 @@ func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsG
 			}
 		}
 
-		if err := config.Validate(); err != nil {
-			return err
-		}
-
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, opsgenieConfigKey, store); err != nil {
 			return err
 		}
@@ -1159,10 +1150,6 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 			}
 		}
 
-		if err := config.Validate(); err != nil {
-			return err
-		}
-
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, slackConfigKey, store); err != nil {
 			return err
 		}
@@ -1174,10 +1161,6 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
-
-		if config.URL == nil && config.URLSecret == nil {
-			return errors.New("one of url or urlSecret should be specified")
-		}
 
 		if config.URLSecret != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.URLSecret); err != nil {
@@ -1197,13 +1180,6 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 	for i, config := range configs {
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
-		if len(config.APIURL) > 0 {
-			_, err := url.Parse(config.APIURL)
-			if err != nil {
-				return errors.New("API URL not valid")
-			}
-		}
-
 		if config.APISecret != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret); err != nil {
 				return err
@@ -1220,17 +1196,6 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 
 func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, key string, store *assets.Store) error {
 	for _, config := range configs {
-
-		if config.To == "" {
-			return errors.New("missing to address in email config")
-		}
-
-		if config.Smarthost != "" {
-			_, _, err := net.SplitHostPort(config.Smarthost)
-			if err != nil {
-				return errors.New("failed to extract host and port from SMARTHOST")
-			}
-		}
 		if config.AuthPassword != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
 				return err
@@ -1239,18 +1204,6 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 		if config.AuthSecret != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthSecret); err != nil {
 				return err
-			}
-		}
-
-		if config.Headers != nil {
-			// Header names are case-insensitive, check for collisions.
-			normalizedHeaders := map[string]struct{}{}
-			for _, v := range config.Headers {
-				normalized := strings.Title(v.Key)
-				if _, ok := normalizedHeaders[normalized]; ok {
-					return fmt.Errorf("duplicate header %q in email config", normalized)
-				}
-				normalizedHeaders[normalized] = struct{}{}
 			}
 		}
 
@@ -1269,29 +1222,6 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
 				return err
 			}
-		}
-
-		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
-		reservedFields := map[string]struct{}{
-			"routing_key":         {},
-			"message_type":        {},
-			"state_message":       {},
-			"entity_display_name": {},
-			"monitoring_tool":     {},
-			"entity_id":           {},
-			"entity_state":        {},
-		}
-
-		if len(config.CustomFields) > 0 {
-			for _, v := range config.CustomFields {
-				if _, ok := reservedFields[v.Key]; ok {
-					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", v.Key)
-				}
-			}
-		}
-
-		if config.RoutingKey == "" {
-			return errors.New("missing Routing key in VictorOps config")
 		}
 
 		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
@@ -1327,46 +1257,9 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 			return err
 		}
 
-		if config.Retry != "" {
-			_, err := time.ParseDuration(config.Retry)
-			if err != nil {
-				return errors.New("invalid retry duration")
-			}
-		}
-		if config.Expire != "" {
-			_, err := time.ParseDuration(config.Expire)
-			if err != nil {
-				return errors.New("invalid expire duration")
-			}
-		}
-
 		pushoverConfigKey := fmt.Sprintf("%s/pushover/%d", key, i)
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pushoverConfigKey, store); err != nil {
 			return err
-		}
-	}
-
-	return nil
-}
-
-// checkAlertmanagerRoutes verifies that the given route and all its children are semantically valid.
-func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]struct{}, topLevelRoute bool) error {
-	if r == nil {
-		return nil
-	}
-
-	if _, found := receivers[r.Receiver]; !found && (r.Receiver != "" || topLevelRoute) {
-		return errors.Errorf("receiver %q not found", r.Receiver)
-	}
-
-	children, err := r.ChildRoutes()
-	if err != nil {
-		return err
-	}
-
-	for i := range children {
-		if err := checkAlertmanagerRoutes(&children[i], receivers, false); err != nil {
-			return errors.Wrapf(err, "route[%d]", i)
 		}
 	}
 
