@@ -9,7 +9,7 @@ on:
     tags:
       - 'v*'
 env:
-  golang-version: '1.16'
+  golang-version: '1.17'
 jobs:
   generate:
     runs-on: ${{ matrix.os }}
