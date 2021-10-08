@@ -125,7 +125,9 @@ func (cg *configGenerator) generateConfig(
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
 	generatedConf := &baseConfig
-	generatedConf.sanitize(cg.amVersion, cg.logger)
+	if err := generatedConf.sanitize(cg.amVersion, cg.logger); err != nil {
+		return nil, err
+	}
 	return yaml.Marshal(generatedConf)
 }
 
@@ -865,11 +867,12 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	return out
 }
 
-// sanitize the config against a specific AlertManager version
-// strips fields from config if unsupported
-func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+// types may be sanitized in one of two ways:
+// 1. stripping the unsupported config and log a warning
+// 2. error which ensures that config will not be reconciled - this will be logged by a calling function
+func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if c == nil {
-		return
+		return nil
 	}
 
 	c.Global.sanitize(amVersion, logger)
@@ -878,6 +881,12 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		receiver.sanitize(amVersion, logger)
 	}
 
+	for i, rule := range c.InhibitRules {
+		if err := rule.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "inhibit_rules[%d]", i)
+		}
+	}
+	return nil
 }
 
 // sanitize globalConfig
@@ -1016,4 +1025,37 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) {
 	wcc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) error {
+	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+
+	if matchersV2Allowed && checkNotEmptyMap(ir.SourceMatch, ir.TargetMatch, ir.SourceMatchRE, ir.TargetMatchRE) {
+		msg := "inhibit rule is using a deprecated match syntax which will be removed in future versions"
+		level.Warn(logger).Log("msg", msg, "source_match", ir.SourceMatch, "target_match", ir.TargetMatch, "source_match_re", ir.SourceMatchRE, "target_match_re", ir.TargetMatchRE)
+	}
+
+	if !matchersV2Allowed && checkNotEmptySlice(ir.SourceMatchers, ir.TargetMatchers) {
+		msg := fmt.Sprintf(`target_matchers and source_matchers matching is supported in Alertmanager >= 0.22.0 only (target_matchers=%v, source_matchers=%v)`, ir.TargetMatchers, ir.SourceMatchers)
+		return errors.New(msg)
+	}
+	return nil
+}
+
+func checkNotEmptyMap(in ...map[string]string) bool {
+	for _, input := range in {
+		if len(input) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func checkNotEmptySlice(in ...[]string) bool {
+	for _, input := range in {
+		if len(input) > 0 {
+			return true
+		}
+	}
+	return false
 }
