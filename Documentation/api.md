@@ -873,6 +873,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | name | The name of the remote read queue, must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
+| headers | Custom HTTP headers to be sent along with each remote read request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.26.0 and newer. | map[string]string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |

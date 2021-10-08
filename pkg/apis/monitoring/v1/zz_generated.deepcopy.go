@@ -1476,6 +1476,13 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.Headers != nil {
+		in, out := &in.Headers, &out.Headers
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)

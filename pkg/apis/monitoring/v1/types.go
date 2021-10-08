@@ -775,6 +775,10 @@ type RemoteReadSpec struct {
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 	// Timeout for requests to the remote read endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	// Custom HTTP headers to be sent along with each remote read request.
+	// Be aware that headers that are set by Prometheus itself can't be overwritten.
+	// Only valid in Prometheus versions 2.26.0 and newer.
+	Headers map[string]string `json:"headers,omitempty"`
 	// Whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
 	ReadRecent bool `json:"readRecent,omitempty"`
