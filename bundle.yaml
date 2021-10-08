@@ -62,13 +62,24 @@ spec:
                       items:
                         description: Matcher defines how to match on alert's labels.
                         properties:
+                          matchType:
+                            description: Match operation available with AlertManager
+                              >= v0.22.0 and takes precedence over Regex (deprecated)
+                              if non-empty.
+                            enum:
+                            - '!='
+                            - =
+                            - =~
+                            - '!~'
+                            type: string
                           name:
                             description: Label to match.
                             minLength: 1
                             type: string
                           regex:
                             description: Whether to match on equality (false) or regular-expression
-                              (true).
+                              (true). Deprecated as of AlertManager >= v0.22.0 where
+                              a user should use MatchType instead.
                             type: boolean
                           value:
                             description: Label value to match.
@@ -84,13 +95,24 @@ spec:
                       items:
                         description: Matcher defines how to match on alert's labels.
                         properties:
+                          matchType:
+                            description: Match operation available with AlertManager
+                              >= v0.22.0 and takes precedence over Regex (deprecated)
+                              if non-empty.
+                            enum:
+                            - '!='
+                            - =
+                            - =~
+                            - '!~'
+                            type: string
                           name:
                             description: Label to match.
                             minLength: 1
                             type: string
                           regex:
                             description: Whether to match on equality (false) or regular-expression
-                              (true).
+                              (true). Deprecated as of AlertManager >= v0.22.0 where
+                              a user should use MatchType instead.
                             type: boolean
                           value:
                             description: Label value to match.
@@ -2635,13 +2657,24 @@ spec:
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:
+                        matchType:
+                          description: Match operation available with AlertManager
+                            >= v0.22.0 and takes precedence over Regex (deprecated)
+                            if non-empty.
+                          enum:
+                          - '!='
+                          - =
+                          - =~
+                          - '!~'
+                          type: string
                         name:
                           description: Label to match.
                           minLength: 1
                           type: string
                         regex:
                           description: Whether to match on equality (false) or regular-expression
-                            (true).
+                            (true). Deprecated as of AlertManager >= v0.22.0 where
+                            a user should use MatchType instead.
                           type: boolean
                         value:
                           description: Label value to match.
