@@ -257,20 +257,20 @@ func validateConfigInputs(p *v1.Prometheus) error {
 
 	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
 		if err := validateDurationField(p.Spec.Thanos.ReadyTimeout); err != nil {
-			return errors.Wrap(err, "invalid Thanos readyTimeout value specified")
+			return errors.Wrap(err, "invalid thanos.readyTimeout value specified")
 		}
 	}
 
 	if p.Spec.Query != nil && p.Spec.Query.Timeout != nil && *p.Spec.Query.Timeout != "" {
 		if err := validateDurationField(*p.Spec.Query.Timeout); err != nil {
-			return errors.Wrap(err, "invalid Query Timeout value specified")
+			return errors.Wrap(err, "invalid query.timeout value specified")
 		}
 	}
 
 	for i, rr := range p.Spec.RemoteRead {
 		if rr.RemoteTimeout != "" {
 			if err := validateDurationField(rr.RemoteTimeout); err != nil {
-				return fmt.Errorf("%v invalid RemoteRead[%v].RemoteTimeout value specified", err, i)
+				return errors.Wrapf(err, "invalid remoteRead[%d].remoteTimeout value specified", i)
 			}
 		}
 	}
@@ -278,13 +278,13 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	for i, rw := range p.Spec.RemoteWrite {
 		if rw.RemoteTimeout != "" {
 			if err := validateDurationField(rw.RemoteTimeout); err != nil {
-				return fmt.Errorf("%v invalid RemoteWrite[%v].RemoteTimeout value specified", err, i)
+				return errors.Wrapf(err, "invalid remoteWrite[%d].remoteTimeout value specified", i)
 			}
 		}
 
 		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
 			if err := validateDurationField(rw.MetadataConfig.SendInterval); err != nil {
-				return fmt.Errorf("%v invalid RemoteWrite[%v].MetadataConfig.SendInterval value specified", err, i)
+				return errors.Wrapf(err, "invalid remoteWrite[%d].metadataConfig.sendInterval value specified", i)
 			}
 		}
 	}
@@ -293,7 +293,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {
 				if err := validateDurationField(*ap.Timeout); err != nil {
-					return fmt.Errorf("%v invalid Alertmanagers[%v].Timeout value specified", err, i)
+					return errors.Wrapf(err, "invalid alertmanagers[%d].timeout value specified", i)
 				}
 			}
 		}
