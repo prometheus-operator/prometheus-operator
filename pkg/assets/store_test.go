@@ -924,23 +924,25 @@ func TestAddSigV4(t *testing.T) {
 	)
 
 	for i, tc := range []struct {
+		title                string
 		ns                   string
 		selectedName         string
 		accessKey, secretKey string
 
 		err      bool
-		expected SigV4Credentials
+		expected *SigV4Credentials
 	}{
 		{
+			title:        "valid access and secret keys",
 			ns:           "ns1",
 			selectedName: "secret",
 			accessKey:    accessKey,
 			secretKey:    secretKey,
 
-			expected: SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
+			expected: &SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
 		},
-		// Wrong namespace.
 		{
+			title:        "wrong namespace",
 			ns:           "ns2",
 			selectedName: "secret",
 			accessKey:    accessKey,
@@ -948,8 +950,8 @@ func TestAddSigV4(t *testing.T) {
 
 			err: true,
 		},
-		// Wrong name.
 		{
+			title:        "wrong name",
 			ns:           "ns1",
 			selectedName: "faulty",
 			accessKey:    accessKey,
@@ -957,8 +959,8 @@ func TestAddSigV4(t *testing.T) {
 
 			err: true,
 		},
-		// Wrong key.
 		{
+			title:        "wrong key selector",
 			ns:           "ns1",
 			selectedName: "secret",
 			accessKey:    "wrong-access-key",
@@ -966,25 +968,50 @@ func TestAddSigV4(t *testing.T) {
 
 			err: true,
 		},
+		{
+			title:        "missing access key",
+			ns:           "ns1",
+			selectedName: "secret",
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		{
+			title:        "missing secret key",
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    accessKey,
+
+			err: true,
+		},
+		{
+			title:        "empty keys",
+			ns:           "ns1",
+			selectedName: "secret",
+		},
 	} {
 		t.Run("", func(t *testing.T) {
 			store := NewStore(c.CoreV1(), c.CoreV1())
 
-			accessKey := &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: tc.selectedName,
-				},
-				Key: tc.accessKey,
-			}
-			secretKey := &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: tc.selectedName,
-				},
-				Key: tc.secretKey,
-			}
-
 			key := fmt.Sprintf("remoteWrite/%d", i)
-			err := store.AddSigV4(context.Background(), tc.ns, accessKey, secretKey, key)
+			sigV4 := monitoringv1.Sigv4{}
+			if tc.accessKey != "" {
+				sigV4.AccessKey = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedName,
+					},
+					Key: tc.accessKey,
+				}
+			}
+			if tc.secretKey != "" {
+				sigV4.SecretKey = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedName,
+					},
+					Key: tc.secretKey,
+				}
+			}
+			err := store.AddSigV4(context.Background(), tc.ns, &sigV4, key)
 
 			if tc.err {
 				if err == nil {
@@ -997,14 +1024,17 @@ func TestAddSigV4(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			sigV4, found := store.SigV4Assets[key]
+			sigV4Creds, found := store.SigV4Assets[key]
 
 			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
+				if tc.expected != nil {
+					t.Fatalf("expecting to find key %q but got nothing", key)
+				}
+				return
 			}
 
-			if !reflect.DeepEqual(sigV4, tc.expected) {
-				t.Fatalf("expecting %#v, got %#v", tc.expected, sigV4)
+			if !reflect.DeepEqual(&sigV4Creds, tc.expected) {
+				t.Fatalf("expecting %#v, got %#v", tc.expected, &sigV4Creds)
 			}
 		})
 	}

@@ -260,21 +260,30 @@ func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace strin
 }
 
 // AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
-func (s *Store) AddSigV4(ctx context.Context, ns string, accessKeySel *v1.SecretKeySelector, secretKeySel *v1.SecretKeySelector, key string) error {
+func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
+		return nil
+	}
 
-	accessKey, err := s.GetSecretKey(ctx, ns, *accessKeySel)
+	if sigv4.AccessKey == nil || sigv4.SecretKey == nil {
+		return errors.New("both accessKey and secretKey should be provided")
+	}
+
+	sigV4Credentials := SigV4Credentials{}
+
+	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to read SigV4 access-key")
 	}
-	secretKey, err := s.GetSecretKey(ctx, ns, *secretKeySel)
+	sigV4Credentials.AccessKeyID = accessKey
+
+	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to read SigV4 secret-key")
 	}
+	sigV4Credentials.SecretKeyID = secretKey
 
-	s.SigV4Assets[key] = SigV4Credentials{
-		AccessKeyID: accessKey,
-		SecretKeyID: secretKey,
-	}
+	s.SigV4Assets[key] = sigV4Credentials
 
 	return nil
 }

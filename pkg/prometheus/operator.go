@@ -1565,10 +1565,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
-		if remote.Sigv4.AccessKey != nil && remote.Sigv4.SecretKey != nil {
-			if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4.AccessKey, remote.Sigv4.SecretKey, key); err != nil {
-				return errors.Wrapf(err, "remote write %d", i)
-			}
+		if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
 		}
 	}
 
