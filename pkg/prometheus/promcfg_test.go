@@ -1414,6 +1414,189 @@ alerting:
 	}
 }
 
+func TestAdditionalScrapeConfigs(t *testing.T) {
+	int32Ptr := func(i int32) *int32 {
+		return &i
+	}
+	getCfg := func(shards *int32) string {
+		cg := &ConfigGenerator{}
+		cfg, err := cg.GenerateConfig(
+			&monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Shards: shards,
+				},
+			},
+			nil,
+			nil,
+			nil,
+			&assets.Store{},
+			[]byte(`- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['localhost:9090']
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+    - project: foo
+      zone: us-central1
+  relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_gce_label_app
+      regex: my_app
+`),
+			nil,
+			nil,
+			nil,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(cfg)
+	}
+
+	testCases := []struct {
+		name     string
+		result   string
+		expected string
+	}{
+		{
+			name:   "unsharded prometheus",
+			result: getCfg(nil),
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - localhost:9090
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+  - project: foo
+    zone: us-central1
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_gce_label_app
+    regex: my_app
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
+			name:   "one prometheus shard",
+			result: getCfg(int32Ptr(1)),
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - localhost:9090
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+  - project: foo
+    zone: us-central1
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_gce_label_app
+    regex: my_app
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
+			name:   "sharded prometheus",
+			result: getCfg(int32Ptr(3)),
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - localhost:9090
+  relabel_configs:
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 3
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+  - project: foo
+    zone: us-central1
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_gce_label_app
+    regex: my_app
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 3
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(
+			tt.name, func(t *testing.T) {
+				if tt.expected != tt.result {
+					fmt.Println(pretty.Compare(tt.expected, tt.result))
+					t.Fatal("expected Prometheus configuration and actual configuration do not match")
+				}
+			},
+		)
+	}
+}
+
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(

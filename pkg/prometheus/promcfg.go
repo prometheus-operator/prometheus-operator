@@ -411,15 +411,15 @@ func (cg *ConfigGenerator) GenerateConfig(
 	var alertmanagerConfigs []yaml.MapSlice
 	alertmanagerConfigs = cg.generateAlertmanagerConfig(version, p.Spec.Alerting, apiserverConfig, store)
 
-	var additionalScrapeConfigsYaml []yaml.MapSlice
-	err = yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
+	var addlScrapeConfigs []yaml.MapSlice
+	addlScrapeConfigs, err = cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshalling additional scrape configs failed")
+		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
 
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
-		Value: append(scrapeConfigs, additionalScrapeConfigsYaml...),
+		Value: append(scrapeConfigs, addlScrapeConfigs...),
 	})
 
 	var additionalAlertManagerConfigsYaml []yaml.MapSlice
@@ -1482,6 +1482,49 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, al
 	}
 
 	return alertmanagerConfigs
+}
+
+func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
+	additionalScrapeConfigs []byte,
+	shards int32,
+) ([]yaml.MapSlice, error) {
+	var additionalScrapeConfigsYaml []yaml.MapSlice
+	err := yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshalling additional scrape configs failed")
+	}
+	if shards == 1 {
+		return additionalScrapeConfigsYaml, nil
+	}
+
+	var addlScrapeConfigs []yaml.MapSlice
+	for _, mapSlice := range additionalScrapeConfigsYaml {
+		var addlScrapeConfig yaml.MapSlice
+		var relabelings []yaml.MapSlice
+		var otherConfigItems []yaml.MapItem
+		for _, mapItem := range mapSlice {
+			if mapItem.Key == "relabel_configs" {
+				values, ok := mapItem.Value.([]interface{})
+				if !ok {
+					return nil, errors.Wrap(err, "error parsing relabel configs")
+				}
+				for _, value := range values {
+					relabeling, ok := value.(yaml.MapSlice)
+					if !ok {
+						return nil, errors.Wrap(err, "error parsing relabel config")
+					}
+					relabelings = append(relabelings, relabeling)
+				}
+				continue
+			}
+			otherConfigItems = append(otherConfigItems, mapItem)
+		}
+		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
+		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
+	}
+	return addlScrapeConfigs, nil
 }
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
