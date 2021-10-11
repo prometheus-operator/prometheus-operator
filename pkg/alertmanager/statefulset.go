@@ -130,6 +130,14 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 				EmptyDir: emptyDir,
 			},
 		})
+	} else if storageSpec.Ephemeral != nil {
+		ephemeral := storageSpec.Ephemeral
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(am.Name),
+			VolumeSource: v1.VolumeSource{
+				Ephemeral: ephemeral,
+			},
+		})
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {

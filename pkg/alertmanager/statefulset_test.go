@@ -241,6 +241,46 @@ func TestStatefulEmptyDir(t *testing.T) {
 		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
 	}
 }
+
+func TestStatefulSetEphemeral(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	ephemeral := v1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				StorageClassName: &storageClass,
+			},
+		},
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Storage: &monitoringv1.StorageSpec{
+				Ephemeral: &ephemeral,
+			},
+		},
+	}, defaultTestConfig, "")
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral != nil &&
+		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
+		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
+	}
+}
+
 func TestListenLocal(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
