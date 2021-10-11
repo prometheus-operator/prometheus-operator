@@ -4851,6 +4851,127 @@ remote_write:
     credentials: secret
 `,
 		},
+		{
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
+					AccessKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  sigv4:
+    region: us-central-0
+    access_key: access-key
+    secret_key: secret-key
+    profile: profilename
+    role_arn: arn:aws:iam::123456789012:instance-profile/prometheus
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    min_backoff: 1s
+    max_backoff: 10s
+  metadata_config:
+    send: false
+    send_interval: 1m
+`,
+		}, {
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:           "http://example.com",
+				RemoteTimeout: "1s",
+				Sigv4:         nil,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 1s
+`,
+		},
+		{
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:           "http://example.com",
+				Sigv4:         &monitoringv1.Sigv4{},
+				RemoteTimeout: "1s",
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 1s
+  sigv4: {}
+`,
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			cg := &ConfigGenerator{}
@@ -4868,7 +4989,28 @@ remote_write:
 						},
 					},
 					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+					Secrets:     []string{"sigv4-secret"},
 				},
+			}
+
+			store := &assets.Store{
+				BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+				OAuth2Assets: map[string]assets.OAuth2Credentials{
+					"remoteWrite/0": {
+						ClientID:     "client-id",
+						ClientSecret: "client-secret",
+					},
+				},
+				TokenAssets: map[string]assets.Token{
+					"remoteWrite/auth/0": assets.Token("secret"),
+				}}
+			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
+				store.SigV4Assets = map[string]assets.SigV4Credentials{
+					"remoteWrite/0": {
+						AccessKeyID: "access-key",
+						SecretKeyID: "secret-key",
+					},
+				}
 			}
 
 			cfg, err := cg.GenerateConfig(
@@ -4876,22 +5018,11 @@ remote_write:
 				nil,
 				nil,
 				nil,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-					OAuth2Assets: map[string]assets.OAuth2Credentials{
-						"remoteWrite/0": {
-							ClientID:     "client-id",
-							ClientSecret: "client-secret",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"remoteWrite/auth/0": assets.Token("secret"),
-					}},
+				store,
 				nil,
 				nil,
 				nil,
-				nil,
-			)
+				nil)
 			if err != nil {
 				t.Fatal(err)
 			}

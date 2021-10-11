@@ -17,6 +17,7 @@ package assets
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -902,4 +903,139 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 			t.Fatalf("expecting no error, got %q", err)
 		}
 	})
+}
+
+func TestAddSigV4(t *testing.T) {
+	const (
+		accessKey = "accessKey"
+		secretKey = "secretKey"
+	)
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				accessKey: []byte("val1"),
+				secretKey: []byte("val2"),
+			},
+		},
+	)
+
+	for i, tc := range []struct {
+		title                string
+		ns                   string
+		selectedName         string
+		accessKey, secretKey string
+
+		err      bool
+		expected *SigV4Credentials
+	}{
+		{
+			title:        "valid access and secret keys",
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			expected: &SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
+		},
+		{
+			title:        "wrong namespace",
+			ns:           "ns2",
+			selectedName: "secret",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		{
+			title:        "wrong name",
+			ns:           "ns1",
+			selectedName: "faulty",
+			accessKey:    accessKey,
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		{
+			title:        "wrong key selector",
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    "wrong-access-key",
+			secretKey:    "wrong-secret-key",
+
+			err: true,
+		},
+		{
+			title:        "missing access key",
+			ns:           "ns1",
+			selectedName: "secret",
+			secretKey:    secretKey,
+
+			err: true,
+		},
+		{
+			title:        "missing secret key",
+			ns:           "ns1",
+			selectedName: "secret",
+			accessKey:    accessKey,
+
+			err: true,
+		},
+		{
+			title:        "empty keys",
+			ns:           "ns1",
+			selectedName: "secret",
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			store := NewStore(c.CoreV1(), c.CoreV1())
+
+			key := fmt.Sprintf("remoteWrite/%d", i)
+			sigV4 := monitoringv1.Sigv4{}
+			if tc.accessKey != "" {
+				sigV4.AccessKey = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedName,
+					},
+					Key: tc.accessKey,
+				}
+			}
+			if tc.secretKey != "" {
+				sigV4.SecretKey = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedName,
+					},
+					Key: tc.secretKey,
+				}
+			}
+			err := store.AddSigV4(context.Background(), tc.ns, &sigV4, key)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			sigV4Creds, found := store.SigV4Assets[key]
+
+			if !found {
+				if tc.expected != nil {
+					t.Fatalf("expecting to find key %q but got nothing", key)
+				}
+				return
+			}
+
+			if !reflect.DeepEqual(&sigV4Creds, tc.expected) {
+				t.Fatalf("expecting %#v, got %#v", tc.expected, &sigV4Creds)
+			}
+		})
+	}
 }

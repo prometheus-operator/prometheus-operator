@@ -46,6 +46,7 @@ type Store struct {
 	TokenAssets     map[string]Token
 	BasicAuthAssets map[string]BasicAuthCredentials
 	OAuth2Assets    map[string]OAuth2Credentials
+	SigV4Assets     map[string]SigV4Credentials
 }
 
 // NewStore returns an empty assetStore.
@@ -57,6 +58,7 @@ func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.Secre
 		TokenAssets:     make(map[string]Token),
 		BasicAuthAssets: make(map[string]BasicAuthCredentials),
 		OAuth2Assets:    make(map[string]OAuth2Credentials),
+		SigV4Assets:     make(map[string]SigV4Credentials),
 		objStore:        cache.NewStore(assetKeyFunc),
 	}
 }
@@ -254,6 +256,35 @@ func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace strin
 	if err != nil {
 		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
 	}
+	return nil
+}
+
+// AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
+func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
+		return nil
+	}
+
+	if sigv4.AccessKey == nil || sigv4.SecretKey == nil {
+		return errors.New("both accessKey and secretKey should be provided")
+	}
+
+	sigV4Credentials := SigV4Credentials{}
+
+	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to read SigV4 access-key")
+	}
+	sigV4Credentials.AccessKeyID = accessKey
+
+	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to read SigV4 secret-key")
+	}
+	sigV4Credentials.SecretKeyID = secretKey
+
+	s.SigV4Assets[key] = sigV4Credentials
+
 	return nil
 }
 

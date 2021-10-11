@@ -202,3 +202,65 @@ func TestPrometheusKeyToStatefulSetKey(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateRemoteWriteConfig(t *testing.T) {
+	cases := []struct {
+		name      string
+		spec      monitoringv1.RemoteWriteSpec
+		expectErr bool
+	}{
+		{
+			name: "with_OAuth2",
+			spec: monitoringv1.RemoteWriteSpec{
+				OAuth2: &monitoringv1.OAuth2{},
+			},
+		}, {
+			name: "with_SigV4",
+			spec: monitoringv1.RemoteWriteSpec{
+				Sigv4: &monitoringv1.Sigv4{},
+			},
+		},
+		{
+			name: "with_OAuth2_and_SigV4",
+			spec: monitoringv1.RemoteWriteSpec{
+				OAuth2: &monitoringv1.OAuth2{},
+				Sigv4:  &monitoringv1.Sigv4{},
+			},
+			expectErr: true,
+		}, {
+			name: "with_OAuth2_and_BasicAuth",
+			spec: monitoringv1.RemoteWriteSpec{
+				OAuth2:    &monitoringv1.OAuth2{},
+				BasicAuth: &monitoringv1.BasicAuth{},
+			},
+			expectErr: true,
+		}, {
+			name: "with_BasicAuth_and_SigV4",
+			spec: monitoringv1.RemoteWriteSpec{
+				BasicAuth: &monitoringv1.BasicAuth{},
+				Sigv4:     &monitoringv1.Sigv4{},
+			},
+			expectErr: true,
+		}, {
+			name: "with_BasicAuth_and_SigV4_and_OAuth2",
+			spec: monitoringv1.RemoteWriteSpec{
+				BasicAuth: &monitoringv1.BasicAuth{},
+				Sigv4:     &monitoringv1.Sigv4{},
+				OAuth2:    &monitoringv1.OAuth2{},
+			},
+			expectErr: true,
+		},
+	}
+	for _, c := range cases {
+		test := c
+		t.Run(test.name, func(t *testing.T) {
+			err := validateRemoteWriteSpec(test.spec)
+			if err != nil && !test.expectErr {
+				t.Fatalf("unexpected error occurred: %v", err)
+			}
+			if err == nil && test.expectErr {
+				t.Fatalf("expected an error, got nil")
+			}
+		})
+	}
+}

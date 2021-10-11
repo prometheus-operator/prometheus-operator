@@ -1604,7 +1604,6 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
-
 		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.25.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
 		}
@@ -1683,6 +1682,27 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
+		}
+
+		if spec.Sigv4 != nil && version.GTE(semver.MustParse("2.26.0")) {
+			sigV4 := yaml.MapSlice{}
+			if spec.Sigv4.Region != "" {
+				sigV4 = append(sigV4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
+			}
+			key := fmt.Sprintf("remoteWrite/%d", i)
+			if store.SigV4Assets[key].AccessKeyID != "" {
+				sigV4 = append(sigV4, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[key].AccessKeyID})
+			}
+			if store.SigV4Assets[key].SecretKeyID != "" {
+				sigV4 = append(sigV4, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[key].SecretKeyID})
+			}
+			if spec.Sigv4.Profile != "" {
+				sigV4 = append(sigV4, yaml.MapItem{Key: "profile", Value: spec.Sigv4.Profile})
+			}
+			if spec.Sigv4.RoleArn != "" {
+				sigV4 = append(sigV4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "sigv4", Value: sigV4})
 		}
 
 		if spec.QueueConfig != nil {
