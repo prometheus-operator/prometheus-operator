@@ -16,11 +16,12 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/alecthomas/units"
 	"path"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/alecthomas/units"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
@@ -616,8 +617,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	for _, k := range labelKeys {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: m.Spec.Selector.MatchLabels[k]},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
+			{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Selector.MatchLabels[k])},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
@@ -901,8 +902,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		for _, k := range labelKeys {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k)}},
-				{Key: "regex", Value: m.Spec.Targets.Ingress.Selector.MatchLabels[k]},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
+				{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Targets.Ingress.Selector.MatchLabels[k])},
 			})
 		}
 
@@ -1115,8 +1116,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	for _, k := range labelKeys {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: m.Spec.Selector.MatchLabels[k]},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
+			{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Selector.MatchLabels[k])},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
