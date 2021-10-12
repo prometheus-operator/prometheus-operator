@@ -1019,3 +1019,115 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
 	}
 }
+
+func TestStatefulSetPVC(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Annotations: annotations,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				VolumeClaimTemplate: pvc,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
+	if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
+		t.Fatal("Error adding PVC Spec to StatefulSetSpec")
+	}
+}
+
+func TestStatefulEmptyDir(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	emptyDir := v1.EmptyDirVolumeSource{
+		Medium: v1.StorageMediumMemory,
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				EmptyDir: &emptyDir,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir == nil || !reflect.DeepEqual(emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium) {
+		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
+	}
+}
+
+func TestStatefulSetEphemeral(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	ephemeral := v1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				StorageClassName: &storageClass,
+			},
+		},
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				Ephemeral: &ephemeral,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
+		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
+		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
+	}
+}
