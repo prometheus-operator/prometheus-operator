@@ -782,3 +782,17 @@ var validMatchTypes = map[MatchType]bool{
 	MatchRegexp:    true,
 	MatchNotRegexp: true,
 }
+
+// openMetricsEscape is similar to the usual string escaping, but more
+// restricted. It merely replaces a new-line character with '\n', a double-quote
+// character with '\"', and a backslash with '\\', which is the escaping used by
+// OpenMetrics.
+// * Copied from alertmanager codebase pkg/labels *
+func openMetricsEscape(s string) string {
+	r := strings.NewReplacer(
+		`\`, `\\`,
+		"\n", `\n`,
+		`"`, `\"`,
+	)
+	return r.Replace(s)
+}
