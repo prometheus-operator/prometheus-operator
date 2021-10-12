@@ -12,6 +12,7 @@
 | Kemal Akkoyun     | kakkoyun@gmail.com          | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)           | Polar Signals |
 | Damien Grisonnet  | dgrisonn@redhat.com         | `@dgrisonnet`        | [@dgrisonnet](https://github.com/dgrisonnet)       | Red Hat       |
 | Arthur Silva Sens | arthursens2005@gmail.com    | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Gitpod        |
+| Filip Petkovski   | filip.petkovsky@gmail.com   | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat       |
 
 Please reach any of the maintainer on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
 
