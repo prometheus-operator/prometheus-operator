@@ -137,7 +137,7 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		subRoutes = append(subRoutes, cg.convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -161,17 +161,33 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(generatedConf)
 }
 
-func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
+func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
+	var matchers []string
+	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+
+	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
+		Name:      "namespace",
+		Value:     crKey.Namespace,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+
 	// Enforce "continue" to be true for the top-level route.
 	cont := in.Continue
 	if firstLevelRoute {
 		cont = true
 	}
 
+	// deprecated
 	match := map[string]string{}
 	matchRE := map[string]string{}
 
 	for _, matcher := range in.Matchers {
+		// prefer matchers to deprecated config
+		if matcher.MatchType != "" {
+			matchers = append(matchers, matcher.String())
+			continue
+		}
+
 		if matcher.Regex {
 			matchRE[matcher.Name] = matcher.Value
 		} else {
@@ -179,17 +195,11 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		}
 	}
 	if firstLevelRoute {
-		match["namespace"] = crKey.Namespace
-		delete(matchRE, "namespace")
-	}
-
-	// Set to nil if empty so that it doesn't show up in the resulting yaml.
-	if len(match) == 0 {
-		match = nil
-	}
-	// Set to nil if empty so that it doesn't show up in the resulting yaml.
-	if len(matchRE) == 0 {
-		matchRE = nil
+		if matchersV2Allowed {
+			matchers = append(matchers, v2NamespaceMatcher)
+		} else {
+			match["namespace"] = crKey.Namespace
+		}
 	}
 
 	var routes []*route
@@ -203,7 +213,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = convertRoute(&children[i], crKey, false)
+			routes[i] = cg.convertRoute(&children[i], crKey, false)
 		}
 	}
 
@@ -218,6 +228,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		Continue:       cont,
 		Match:          match,
 		MatchRE:        matchRE,
+		Matchers:       matchers,
 		Routes:         routes,
 	}
 }
@@ -1123,13 +1134,13 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	withLogger := log.With(logger, "receiver", r.Receiver)
 
+	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
+		return fmt.Errorf(`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v)`, r.Matchers)
+	}
+
 	if matchersV2Allowed && checkNotEmptyMap(r.Match, r.MatchRE) {
 		msg := "'matchers' field is using a deprecated syntax which will be removed in future versions"
 		level.Warn(withLogger).Log("msg", msg, "match", r.Match, "match_re", r.MatchRE)
-	}
-
-	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
-		return fmt.Errorf(`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v)`, r.Matchers)
 	}
 
 	for i, child := range r.Routes {
@@ -1137,6 +1148,10 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 			return errors.Wrapf(err, "route[%d]", i)
 		}
 	}
+	// Set to nil if empty so that it doesn't show up in the resulting yaml.
+	r.Match = convertMapToNilIfEmpty(r.Match)
+	r.MatchRE = convertMapToNilIfEmpty(r.MatchRE)
+	r.Matchers = convertSliceToNilIfEmpty(r.Matchers)
 	return nil
 }
 

@@ -279,8 +279,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -473,8 +473,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
   - receiver: "null"
 receivers:
@@ -530,8 +530,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test-pd
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -575,8 +575,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -633,8 +633,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -695,8 +695,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -757,8 +757,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -822,8 +822,8 @@ route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
@@ -894,8 +894,8 @@ route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
-    match:
-      namespace: mynamespace
+    matchers:
+    - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
