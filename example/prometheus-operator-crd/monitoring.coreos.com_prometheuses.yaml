@@ -5462,7 +5462,9 @@ spec:
                     type: object
                   ephemeral:
                     description: 'EphemeralVolumeSource to be used by the Prometheus
-                      StatefulSets. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
+                      StatefulSets. This is a beta field in k8s 1.21, for lower versions,
+                      starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
+                      feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
                     properties:
                       volumeClaimTemplate:
                         description: "Will be used to create a stand-alone PVC to
