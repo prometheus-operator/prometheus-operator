@@ -888,8 +888,13 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		}
 	}
 
-	err := c.Route.sanitize(amVersion, logger)
-	return err
+	if len(c.MuteTimeIntervals) > 0 {
+		if muteTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.22.0")); !muteTimeIntervalsAllowed {
+			return errors.Errorf(`mute_time_intervals is supported in Alertmanager >= 0.22.0 only (mute_time_intervals=%v)`, c.MuteTimeIntervals)
+		}
+	}
+
+	return c.Route.sanitize(amVersion, logger)
 }
 
 // sanitize globalConfig
