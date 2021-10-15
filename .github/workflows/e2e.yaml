@@ -8,10 +8,6 @@ on:
       - 'main'
     tags:
       - 'v*'
-env:
-  kind-version: 'v0.11.1'
-  kind-image: 'kindest/node:v1.22.0'  # Image defines which k8s version is used
-  golang-version: '1.17'
 jobs:
   e2e-tests:
     name: E2E tests
@@ -37,9 +33,12 @@ jobs:
             featureGated: "include"
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
+    - name: Install Go
+      uses: actions/setup-go@v2
       with:
-        go-version: ${{ env.golang-version }}
+        go-version: '${{ env.golang-version }}'
     - name: Build images
       run: |
         export SHELL=/bin/bash
