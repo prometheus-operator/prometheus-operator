@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"reflect"
 	"testing"
@@ -154,12 +155,14 @@ templates: []
 `,
 		},
 		{
-			name:    "base with sub route, no CRs",
+			name:    "base with sub route and matchers, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
+					Matchers: []string{"namespace=test"},
 					Routes: []*route{{
+						Matchers: []string{"namespace=custom-test"},
 						Receiver: "custom",
 					}},
 				},
@@ -171,8 +174,12 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
+  matchers:
+  - namespace=test
   routes:
   - receiver: custom
+    matchers:
+    - namespace=custom-test
 receivers:
 - name: "null"
 - name: custom
@@ -264,7 +271,7 @@ templates: []
 `,
 		},
 		{
-			name:    "base with subroute, simple CR",
+			name:    "base with subroute - deprecated matching pattern, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
@@ -1132,4 +1139,118 @@ func TestSanitizeConfig(t *testing.T) {
 		})
 	}
 
+}
+
+func TestSanitizeRoute(t *testing.T) {
+	logger := log.NewNopLogger()
+	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
+	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
+
+	namespaceLabel := "namespace"
+	namespaceValue := "test-ns"
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *route
+		expectErr      bool
+		expect         route
+	}{
+		{
+			name:           "Test route with new syntax not supported fails",
+			againstVersion: matcherV2SyntaxNotAllowed,
+			in: &route{
+				Receiver: "test",
+				Match: map[string]string{
+					namespaceLabel: namespaceValue,
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+				Routes: []*route{
+					{
+						Match: map[string]string{
+							"keep": "me",
+						},
+						Matchers: []string{"strip=~me"},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test route with new syntax supported and no child routes",
+			againstVersion: matcherV2SyntaxAllowed,
+			in: &route{
+				Receiver: "test",
+				Match: map[string]string{
+					namespaceLabel: namespaceValue,
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+			},
+			expect: route{
+				Receiver: "test",
+				Match: map[string]string{
+					namespaceLabel: namespaceValue,
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+			},
+		},
+		{
+			name:           "Test route with new syntax supported with child routes",
+			againstVersion: matcherV2SyntaxAllowed,
+			in: &route{
+				Receiver: "test",
+				Match: map[string]string{
+					"some": "value",
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+				Routes: []*route{
+					{
+						Match: map[string]string{
+							"keep": "me",
+						},
+						Matchers: []string{"keep=~me"},
+					},
+				},
+			},
+			expect: route{
+				Receiver: "test",
+				Match: map[string]string{
+					"some": "value",
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+				Routes: []*route{
+					{
+						Match: map[string]string{
+							"keep": "me",
+						},
+						Matchers: []string{"keep=~me"},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("wanted %v but got error %s", tc.expect, err.Error())
+			}
+
+			out := *tc.in
+			if !reflect.DeepEqual(out, tc.expect) {
+				t.Fatalf("wanted %v but got %v", tc.expect, out)
+			}
+		})
+	}
 }

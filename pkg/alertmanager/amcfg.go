@@ -867,6 +867,7 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	return out
 }
 
+// sanitize the config against a specific AlertManager version
 // types may be sanitized in one of two ways:
 // 1. stripping the unsupported config and log a warning
 // 2. error which ensures that config will not be reconciled - this will be logged by a calling function
@@ -886,7 +887,9 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 			return errors.Wrapf(err, "inhibit_rules[%d]", i)
 		}
 	}
-	return nil
+
+	err := c.Route.sanitize(amVersion, logger)
+	return err
 }
 
 // sanitize globalConfig
@@ -1038,6 +1041,34 @@ func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) err
 	if !matchersV2Allowed && checkNotEmptySlice(ir.SourceMatchers, ir.TargetMatchers) {
 		msg := fmt.Sprintf(`target_matchers and source_matchers matching is supported in Alertmanager >= 0.22.0 only (target_matchers=%v, source_matchers=%v)`, ir.TargetMatchers, ir.SourceMatchers)
 		return errors.New(msg)
+	}
+	return nil
+}
+
+// sanitize a route and all its child routes.
+// Warns if the config is using deprecated syntax against a later version.
+// Returns an error if the config could potentially break routing logic
+func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if r == nil {
+		return nil
+	}
+
+	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	withLogger := log.With(logger, "receiver", r.Receiver)
+
+	if matchersV2Allowed && checkNotEmptyMap(r.Match, r.MatchRE) {
+		msg := "'matchers' field is using a deprecated syntax which will be removed in future versions"
+		level.Warn(withLogger).Log("msg", msg, "match", r.Match, "match_re", r.MatchRE)
+	}
+
+	if !matchersV2Allowed && checkNotEmptySlice(r.Matchers) {
+		return fmt.Errorf(`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v)`, r.Matchers)
+	}
+
+	for i, child := range r.Routes {
+		if err := child.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "route[%d]", i)
+		}
 	}
 	return nil
 }
