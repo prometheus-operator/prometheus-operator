@@ -236,7 +236,7 @@ func createK8sSampleApp(t *testing.T, name, ns string) {
 		t.Fatal(err)
 	}
 
-	svc, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), name, metav1.GetOptions{})
+	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
