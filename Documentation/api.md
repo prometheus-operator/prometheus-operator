@@ -1086,7 +1086,7 @@ Sigv4 optionally configures AWS's Signature Verification 4 signing process to si
 
 ## StorageSpec
 
-StorageSpec defines the configured storage for a group Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
+StorageSpec defines the configured storage for a group Prometheus servers. If no storage option is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used. If multiple storage options are specified, priority will be given as follows: EmptyDir, Ephemeral, and lastly VolumeClaimTemplate.
 
 
 <em>appears in: [AlertmanagerSpec](#alertmanagerspec), [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
