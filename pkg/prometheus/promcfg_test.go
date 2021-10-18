@@ -75,6 +75,7 @@ func TestGlobalSettings(t *testing.T) {
 		QueryLogFile       string
 		Version            string
 		Expected           string
+		ExpectedErr        error
 	}
 
 	testcases := []testCase{
@@ -114,6 +115,16 @@ alerting:
 `,
 		},
 		{
+			Version:            "v2.15.2",
+			EvaluationInterval: "60 s",
+			ExpectedErr:        errors.New("invalid evaluationInterval value specified: not a valid duration string: \"60 s\""),
+		},
+		{
+			Version:            "v2.28.0",
+			EvaluationInterval: "randomvalue",
+			ExpectedErr:        errors.New("invalid evaluationInterval value specified: not a valid duration string: \"randomvalue\""),
+		},
+		{
 			Version:        "v2.15.2",
 			ScrapeInterval: "60s",
 			Expected: `global:
@@ -130,6 +141,11 @@ alerting:
     regex: prometheus_replica
   alertmanagers: []
 `,
+		},
+		{
+			Version:        "v2.28.0",
+			ScrapeInterval: "30 k",
+			ExpectedErr:    errors.New("invalid scrapeInterval value specified: not a valid duration string: \"30 k\""),
 		},
 		{
 			Version:       "v2.15.2",
@@ -149,6 +165,11 @@ alerting:
     regex: prometheus_replica
   alertmanagers: []
 `,
+		},
+		{
+			Version:       "v2.29.0",
+			ScrapeTimeout: "some value",
+			ExpectedErr:   errors.New("invalid scrapeTimeout value specified: not a valid duration string: \"some value\""),
 		},
 		{
 			Version: "v2.15.2",
@@ -217,13 +238,17 @@ alerting:
 			nil,
 			nil,
 		)
-		if err != nil {
-			t.Fatal(err)
-		}
-		result := string(cfg)
-		if tc.Expected != string(cfg) {
-			fmt.Println(pretty.Compare(tc.Expected, result))
-			t.Fatal("expected Prometheus configuration and actual configuration do not match")
+		if tc.ExpectedErr != nil {
+			if tc.ExpectedErr.Error() != err.Error() {
+				t.Logf("\n%s", pretty.Compare(tc.ExpectedErr.Error(), err.Error()))
+				t.Fatal("expected error and actual error do not match")
+			}
+		} else {
+			result := string(cfg)
+			if tc.Expected != string(cfg) {
+				fmt.Println(pretty.Compare(tc.Expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
 		}
 	}
 }
@@ -4431,10 +4456,10 @@ alerting:
 
 func TestRemoteReadConfig(t *testing.T) {
 	for _, tc := range []struct {
-		version    string
-		remoteRead monitoringv1.RemoteReadSpec
-
-		expected string
+		version     string
+		remoteRead  monitoringv1.RemoteReadSpec
+		expected    string
+		expectedErr error
 	}{
 		{
 			version: "v2.27.1",
@@ -4534,6 +4559,19 @@ remote_read:
     credentials: secret
 `,
 		},
+		{
+			version: "v2.26.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL: "http://example.com",
+				OAuth2: &monitoringv1.OAuth2{
+					TokenURL:       "http://token-url",
+					Scopes:         []string{"scope1"},
+					EndpointParams: map[string]string{"param": "value"},
+				},
+				RemoteTimeout: "30 g",
+			},
+			expectedErr: errors.New("invalid remoteRead[0].remoteTimeout value specified: not a valid duration string: \"30 g\""),
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			cg := &ConfigGenerator{}
@@ -4575,14 +4613,18 @@ remote_read:
 				nil,
 				nil,
 			)
-			if err != nil {
-				t.Fatal(err)
-			}
+			if tc.expectedErr != nil {
+				if tc.expectedErr.Error() != err.Error() {
+					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
+					t.Fatal("expected error and actual error do not match")
+				}
+			} else {
 
-			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
-				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+				result := string(cfg)
+				if tc.expected != result {
+					t.Logf("\n%s", pretty.Compare(tc.expected, result))
+					t.Fatal("expected Prometheus configuration and actual configuration do not match")
+				}
 			}
 		})
 	}
@@ -4592,8 +4634,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 	for _, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
-
-		expected string
+		expected    string
+		expectedErr error
 	}{
 		{
 			version: "v2.22.0",
@@ -4972,6 +5014,30 @@ remote_write:
   sigv4: {}
 `,
 		},
+		{
+			version: "v2.27.1",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				OAuth2: &monitoringv1.OAuth2{
+					TokenURL:       "http://token-url",
+					Scopes:         []string{"scope1"},
+					EndpointParams: map[string]string{"param": "value"},
+				},
+				RemoteTimeout: "30ss",
+			},
+			expectedErr: errors.New("invalid remoteWrite[0].remoteTimeout value specified: not a valid duration string: \"30ss\""),
+		},
+		{
+			version: "v2.26.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1p",
+				},
+			},
+			expectedErr: errors.New("invalid remoteWrite[0].metadataConfig.sendInterval value specified: not a valid duration string: \"1p\""),
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			cg := &ConfigGenerator{}
@@ -5023,14 +5089,17 @@ remote_write:
 				nil,
 				nil,
 				nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
-				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			if tc.expectedErr != nil {
+				if tc.expectedErr.Error() != err.Error() {
+					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
+					t.Fatal("expected error and actual error do not match")
+				}
+			} else {
+				result := string(cfg)
+				if tc.expected != result {
+					t.Logf("\n%s", pretty.Compare(tc.expected, result))
+					t.Fatal("expected Prometheus configuration and actual configuration do not match")
+				}
 			}
 		})
 	}
