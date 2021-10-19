@@ -1503,21 +1503,21 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 		var relabelings []yaml.MapSlice
 		var otherConfigItems []yaml.MapItem
 		for _, mapItem := range mapSlice {
-			if mapItem.Key == "relabel_configs" {
-				values, ok := mapItem.Value.([]interface{})
-				if !ok {
-					return nil, errors.Wrap(err, "error parsing relabel configs")
-				}
-				for _, value := range values {
-					relabeling, ok := value.(yaml.MapSlice)
-					if !ok {
-						return nil, errors.Wrap(err, "error parsing relabel config")
-					}
-					relabelings = append(relabelings, relabeling)
-				}
+			if mapItem.Key != "relabel_configs" {
+				otherConfigItems = append(otherConfigItems, mapItem)
 				continue
 			}
-			otherConfigItems = append(otherConfigItems, mapItem)
+			values, ok := mapItem.Value.([]interface{})
+			if !ok {
+				return nil, errors.Wrap(err, "error parsing relabel configs")
+			}
+			for _, value := range values {
+				relabeling, ok := value.(yaml.MapSlice)
+				if !ok {
+					return nil, errors.Wrap(err, "error parsing relabel config")
+				}
+				relabelings = append(relabelings, relabeling)
+			}
 		}
 		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
