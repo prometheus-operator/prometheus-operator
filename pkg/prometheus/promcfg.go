@@ -628,14 +628,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		case metav1.LabelSelectorOpIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpExists:
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -914,8 +914,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			case metav1.LabelSelectorOpIn:
 				relabelings = append(relabelings, yaml.MapSlice{
 					{Key: "action", Value: "keep"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: strings.Join(exp.Values, "|")},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
 				})
 			case metav1.LabelSelectorOpNotIn:
 				relabelings = append(relabelings, yaml.MapSlice{
@@ -1127,14 +1127,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		case metav1.LabelSelectorOpIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpExists:
 			relabelings = append(relabelings, yaml.MapSlice{
