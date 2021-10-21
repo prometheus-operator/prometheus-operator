@@ -16,8 +16,9 @@ package framework
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
-	"k8s.io/api/admissionregistration/v1"
+	v1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -44,7 +45,7 @@ func (f *Framework) createMutatingHook(ctx context.Context, certBytes []byte, na
 func (f *Framework) createValidatingHook(ctx context.Context, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
 	h, err := parseValidatingHookYaml(yamlPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed parsing mutating webhook")
+		return nil, errors.Wrap(err, "Failed parsing validating webhook")
 	}
 
 	h.Webhooks[0].ClientConfig.Service.Namespace = namespace

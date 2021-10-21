@@ -174,7 +174,7 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // Returns the CA, which can bs used to access the operator over TLS
 func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createRuleAdmissionHooks, createClusterRoleBindings bool) ([]FinalizerFn, error) {
+	createResourceAdmissionHooks, createClusterRoleBindings bool) ([]FinalizerFn, error) {
 
 	var finalizers []FinalizerFn
 
@@ -349,7 +349,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 
 	// The addition of rule admission webhooks requires TLS, so enable it and
 	// switch to a more common https port
-	if createRuleAdmissionHooks {
+	if createResourceAdmissionHooks {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			"--web.enable-tls=true",
@@ -381,7 +381,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 		return finalizers, errors.Wrap(err, "failed to create prometheus operator service")
 	}
 
-	if createRuleAdmissionHooks {
+	if createResourceAdmissionHooks {
 		finalizer, err := f.createMutatingHook(ctx, certBytes, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create mutating webhook")
@@ -391,6 +391,12 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 		finalizer, err = f.createValidatingHook(ctx, certBytes, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook")
+		}
+		finalizers = append(finalizers, finalizer)
+
+		finalizer, err = f.createValidatingHook(ctx, certBytes, ns, "../../test/framework/resources/alertmanager-config-validating-webhook.yaml")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create validating webhook for AlertManagerConfigs")
 		}
 		finalizers = append(finalizers, finalizer)
 	}

@@ -1,0 +1,26 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-alertmanager-config-validation
+webhooks:
+  - clientConfig:
+      service:
+        name: prometheus-operator
+        namespace: default
+        path: /admission-alertmanagerconfigs/validate
+    failurePolicy: Fail
+    name: alertmanagerconfigs-validate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - alertmanagerconfigs
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
