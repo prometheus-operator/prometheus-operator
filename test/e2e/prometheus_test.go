@@ -116,6 +116,10 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 		[]string{"key.pem", "cert.pem"}, [][]byte{serverKey, serverCert})
 	secrets = append(secrets, s)
 
+	s = testFramework.MakeSecretWithCert(ns, "server-tls-ca",
+		[]string{"ca.pem"}, [][]byte{serverCert})
+	secrets = append(secrets, s)
+
 	if cKey.Filename != "" && cCert.Filename != "" {
 		s = testFramework.MakeSecretWithCert(ns, cKey.SecretName,
 			[]string{"key.pem"}, [][]byte{clientKey})
@@ -141,7 +145,7 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 	if ca.Filename != "" {
 		if ca.ResourceType == testFramework.SECRET {
 			if ca.ResourceName == cKey.SecretName {
-				secrets[2].Data["ca.pem"] = caCert
+				secrets[3].Data["ca.pem"] = caCert
 			} else if ca.ResourceName == cCert.ResourceName {
 				s.Data["ca.pem"] = caCert
 			} else {
@@ -616,44 +620,44 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			InsecureSkipVerify: false,
 			ShouldSuccess:      false,
 		},
-		//{
-		//	Name: "variant-17",
-		//	ClientKey: testFramework.Key{
-		//		Filename:   "",
-		//		SecretName: "",
-		//	},
-		//	ClientCert: testFramework.Cert{
-		//		Filename:     "",
-		//		ResourceName: "",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	CA: testFramework.Cert{
-		//		Filename:     "bad_ca.crt",
-		//		ResourceName: "client-tls-ca",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	InsecureSkipVerify: false,
-		//	ShouldSuccess:      false,
-		//},
-		//{
-		//	Name: "variant-18",
-		//	ClientKey: testFramework.Key{
-		//		Filename:   "",
-		//		SecretName: "",
-		//	},
-		//	ClientCert: testFramework.Cert{
-		//		Filename:     "",
-		//		ResourceName: "",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	CA: testFramework.Cert{
-		//		Filename:     "",
-		//		ResourceName: "",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	InsecureSkipVerify: false,
-		//	ShouldSuccess:      false,
-		//},
+		{
+			Name: "variant-17",
+			ClientKey: testFramework.Key{
+				Filename:   "",
+				SecretName: "",
+			},
+			ClientCert: testFramework.Cert{
+				Filename:     "",
+				ResourceName: "",
+				ResourceType: testFramework.SECRET,
+			},
+			CA: testFramework.Cert{
+				Filename:     "bad_ca.crt",
+				ResourceName: "client-tls-ca",
+				ResourceType: testFramework.SECRET,
+			},
+			InsecureSkipVerify: false,
+			ShouldSuccess:      false,
+		},
+		{
+			Name: "variant-18",
+			ClientKey: testFramework.Key{
+				Filename:   "",
+				SecretName: "",
+			},
+			ClientCert: testFramework.Cert{
+				Filename:     "",
+				ResourceName: "",
+				ResourceType: testFramework.SECRET,
+			},
+			CA: testFramework.Cert{
+				Filename:     "",
+				ResourceName: "",
+				ResourceType: testFramework.SECRET,
+			},
+			InsecureSkipVerify: false,
+			ShouldSuccess:      false,
+		},
 		{
 			Name: "variant-19",
 			ClientKey: testFramework.Key{
@@ -673,25 +677,25 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			InsecureSkipVerify: false,
 			ShouldSuccess:      false,
 		},
-		//{
-		//	Name: "variant-20",
-		//	ClientKey: testFramework.Key{
-		//		Filename:   "",
-		//		SecretName: "",
-		//	},
-		//	ClientCert: testFramework.Cert{
-		//		Filename:     "",
-		//		ResourceName: "",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	CA: testFramework.Cert{
-		//		Filename:     "ca.crt",
-		//		ResourceName: "client-tls-ca",
-		//		ResourceType: testFramework.SECRET,
-		//	},
-		//	InsecureSkipVerify: false,
-		//	ShouldSuccess:      false,
-		//},
+		{
+			Name: "variant-20",
+			ClientKey: testFramework.Key{
+				Filename:   "",
+				SecretName: "",
+			},
+			ClientCert: testFramework.Cert{
+				Filename:     "",
+				ResourceName: "",
+				ResourceType: testFramework.SECRET,
+			},
+			CA: testFramework.Cert{
+				Filename:     "ca.crt",
+				ResourceName: "client-tls-ca",
+				ResourceType: testFramework.SECRET,
+			},
+			InsecureSkipVerify: false,
+			ShouldSuccess:      true,
+		},
 	}
 	for _, test := range tests {
 		test := test

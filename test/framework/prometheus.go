@@ -109,7 +109,7 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 
 		p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 			SafeTLSConfig: monitoringv1.SafeTLSConfig{
-				ServerName: "PrometheusRemoteWriteClient",
+				ServerName: "caandserver.com",
 			},
 		}
 
@@ -165,59 +165,33 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus, prwtc PromRemoteWriteTestConfig) {
 	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
 
-	p.Spec.Web = &monitoringv1.WebSpec{
-		TLSConfig: &monitoringv1.WebTLSConfig{},
-	}
-
-	if (prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "") || prwtc.CA.ResourceName != "" {
-
-		if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
-			p.Spec.Web.TLSConfig.KeySecret = v1.SecretKeySelector{
+	p.Spec.Web = &monitoringv1.WebSpec{}
+	p.Spec.Web.TLSConfig = &monitoringv1.WebTLSConfig{
+		ClientCA: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
-					Name: prwtc.ClientKey.SecretName,
+					Name: "server-tls-ca",
 				},
-				Key: "key.pem",
-			}
-			p.Spec.Web.TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
-
-			if prwtc.ClientCert.ResourceType == SECRET {
-				p.Spec.Web.TLSConfig.Cert.Secret = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.ClientCert.ResourceName,
-					},
-					Key: "cert.pem",
-				}
-			} else { //certType == CONFIGMAP
-				p.Spec.Web.TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.ClientCert.ResourceName,
-					},
-					Key: "cert.pem",
-				}
-			}
-		}
-
-		if prwtc.CA.ResourceName != "" {
-			p.Spec.Web.TLSConfig.ClientCA = monitoringv1.SecretOrConfigMap{}
-			if prwtc.CA.ResourceType == SECRET {
-				p.Spec.Web.TLSConfig.ClientAuthType = "RequestClientCert"
-				p.Spec.Web.TLSConfig.ClientCA.Secret = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.CA.ResourceName,
-					},
-					Key: "ca.pem",
-				}
-			} else { //caType == CONFIGMAP
-				p.Spec.Web.TLSConfig.ClientAuthType = "RequestClientCert"
-				p.Spec.Web.TLSConfig.ClientCA.ConfigMap = &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.CA.ResourceName,
-					},
-					Key: "ca.pem",
-				}
-			}
-		}
+				Key: "ca.pem",
+			},
+		},
+		Cert: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "server-tls",
+				},
+				Key: "cert.pem",
+			},
+		},
+		KeySecret: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "server-tls",
+			},
+			Key: "key.pem",
+		},
+		ClientAuthType: "VerifyClientCertIfGiven",
 	}
+
 }
 
 func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {
