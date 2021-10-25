@@ -921,7 +921,8 @@ scrape_configs:
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
-    regex: "true"
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: true;true
   - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
@@ -1051,7 +1052,8 @@ scrape_configs:
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
-    regex: "true"
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: true;true
   - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
@@ -1765,7 +1767,8 @@ scrape_configs:
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
-    regex: bar
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: bar;true
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2067,7 +2070,8 @@ scrape_configs:
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
-    regex: bar
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: bar;true
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -3581,7 +3585,8 @@ scrape_configs:
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
-    regex: bar
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: bar;true
   - source_labels:
     - __meta_kubernetes_endpoint_address_target_kind
     - __meta_kubernetes_endpoint_address_target_name
