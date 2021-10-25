@@ -677,6 +677,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			InsecureSkipVerify: false,
 			ShouldSuccess:      false,
 		},
+		// Had to change the success flag to True, because prometheus receiver is running in VerifyClientCertIfGiven mode. Details here - https://github.com/prometheus-operator/prometheus-operator/pull/4337#discussion_r735064646
 		{
 			Name: "variant-20",
 			ClientKey: testFramework.Key{
