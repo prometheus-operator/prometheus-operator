@@ -243,13 +243,15 @@ alerting:
 				t.Logf("\n%s", pretty.Compare(tc.ExpectedErr.Error(), err.Error()))
 				t.Fatal("expected error and actual error do not match")
 			}
-		} else {
-			result := string(cfg)
-			if tc.Expected != string(cfg) {
-				fmt.Println(pretty.Compare(tc.Expected, result))
-				t.Fatal("expected Prometheus configuration and actual configuration do not match")
-			}
+			return
 		}
+
+		result := string(cfg)
+		if tc.Expected != string(cfg) {
+			fmt.Println(pretty.Compare(tc.Expected, result))
+			t.Fatal("expected Prometheus configuration and actual configuration do not match")
+		}
+
 	}
 }
 
@@ -4618,14 +4620,15 @@ remote_read:
 					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
 					t.Fatal("expected error and actual error do not match")
 				}
-			} else {
-
-				result := string(cfg)
-				if tc.expected != result {
-					t.Logf("\n%s", pretty.Compare(tc.expected, result))
-					t.Fatal("expected Prometheus configuration and actual configuration do not match")
-				}
+				return
 			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+
 		})
 	}
 }
@@ -5094,13 +5097,14 @@ remote_write:
 					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
 					t.Fatal("expected error and actual error do not match")
 				}
-			} else {
-				result := string(cfg)
-				if tc.expected != result {
-					t.Logf("\n%s", pretty.Compare(tc.expected, result))
-					t.Fatal("expected Prometheus configuration and actual configuration do not match")
-				}
+				return
 			}
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+
 		})
 	}
 }
@@ -6084,12 +6088,12 @@ alerting:
 					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
 					t.Fatal("expected error and actual error do not match")
 				}
-			} else {
-				result := string(cfg)
-				if tc.expected != result {
-					t.Logf("\n%s", pretty.Compare(tc.expected, result))
-					t.Fatal("expected Prometheus configuration and actual configuration do not match")
-				}
+				return
+			}
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
 	}
