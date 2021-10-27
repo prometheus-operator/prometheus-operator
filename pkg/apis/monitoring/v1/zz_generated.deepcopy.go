@@ -1855,6 +1855,11 @@ func (in *StorageSpec) DeepCopyInto(out *StorageSpec) {
 		*out = new(corev1.EmptyDirVolumeSource)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Ephemeral != nil {
+		in, out := &in.Ephemeral, &out.Ephemeral
+		*out = new(corev1.EphemeralVolumeSource)
+		(*in).DeepCopyInto(*out)
+	}
 	in.VolumeClaimTemplate.DeepCopyInto(&out.VolumeClaimTemplate)
 }
 
