@@ -195,7 +195,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 				marshalErr = err
 				return
 			}
-			rules[fmt.Sprintf("%v-%v.yaml", promRule.Namespace, promRule.Name)] = content
+			rules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = content
 		})
 		if err != nil {
 			return nil, err
