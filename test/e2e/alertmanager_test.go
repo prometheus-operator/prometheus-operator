@@ -986,7 +986,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	}
 
 	// An AlertmanagerConfig resource that contains an invalid sub-route.
-	// It should be rejected by the operator.
+	// It should be rejected by the validating webhook.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "e2e-test-amconfig-invalid-route",
@@ -1013,8 +1013,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	if err == nil {
+		t.Fatal(err, "expected validating webhook to reject invalid config")
 	}
 
 	// Wait for the change above to take effect.

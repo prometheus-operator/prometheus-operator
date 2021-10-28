@@ -25,6 +25,15 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
+func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
+	receivers, err := validateReceivers(amc.Spec.Receivers)
+	if err != nil {
+		return err
+	}
+
+	return validateAlertManagerRoutes(amc.Spec.Route, receivers, true)
+}
+
 func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]struct{}, error) {
 	var err error
 	receiverNames := make(map[string]struct{})

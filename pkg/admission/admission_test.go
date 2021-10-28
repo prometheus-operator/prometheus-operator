@@ -29,7 +29,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/api/admission/v1"
+	v1 "k8s.io/api/admission/v1"
 )
 
 func TestMutateRule(t *testing.T) {
@@ -157,6 +157,115 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 	}
 }
 
+// TestAlertManagerConfigAdmission tests the admission controller
+// validation of the AlertManagerConfig but does not aim to cover
+// all the edge cases of the Validate function in pkg/alertmanager
+func TestAlertManagerConfigAdmission(t *testing.T) {
+	ts := server(api().serveAlertManagerConfigValidate)
+	t.Cleanup(ts.Close)
+
+	testCases := []struct {
+		name                   string
+		send                   string
+		expectAdmissionAllowed bool
+	}{
+		{
+			name: "Test reject on duplicate receiver",
+			send: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example"
+    },
+    {
+      "name": "wechat-example"
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
+			name: "Test reject on invalid receiver",
+			send: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "https://%<>wechatserver:8080/",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
+			name: "Test happy path",
+			send: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "http://wechatserver:8080/",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := send(t, ts, buildAlertManagerConfigFromSpec(t, tc.send))
+			if resp.Response.Allowed != tc.expectAdmissionAllowed {
+				t.Errorf(
+					"Unexpected admission result, wanted %v but got %v - (warnings=%v) - (details=%v)",
+					tc.expectAdmissionAllowed, resp.Response.Allowed, resp.Response.Warnings, resp.Response.Result.Details)
+			}
+		})
+	}
+}
+
 func api() *Admission {
 	validationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
@@ -167,11 +276,18 @@ func api() *Admission {
 		Name: "prometheus_operator_rule_validation_errors_total",
 		Help: "Number of errors that occurred while validating a prometheusRules object",
 	})
-	a := &Admission{
-		logger:                     log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
-		validationErrorsCounter:    validationErrors,
-		validationTriggeredCounter: validationTriggered}
-	a.logger = level.NewFilter(a.logger, level.AllowNone())
+	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
+		Help: "Number of times an alertmanagerconfig object triggered validation",
+	})
+
+	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
+		Help: "Number of errors that occurred while validating a alertmanagerconfig object",
+	})
+
+	a := New(level.NewFilter(log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)), level.AllowNone()))
+	a.RegisterMetrics(validationTriggered, validationErrors, alertManagerConfigValidationTriggered, alertManagerConfigValidationError)
 	return a
 }
 
@@ -534,3 +650,58 @@ var nonStringsInLabelsAnnotations = []byte(`
     "dryRun": false
   }
 }`)
+
+func buildAlertManagerConfigFromSpec(t *testing.T, spec string) []byte {
+	t.Helper()
+	tmpl := fmt.Sprintf(`
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1",
+  "request": {
+    "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
+    "kind": {
+      "group": "%s",
+      "version": "%s",
+      "kind": "%s"
+    },
+    "resource": {
+      "group": "monitoring.coreos.com",
+      "version": "%s",
+      "resource": "%s"
+    },
+    "namespace": "monitoring",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "kubernetes-admin",
+      "groups": [
+        "system:masters",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "apiVersion": "monitoring.coreos.com/%s",
+      "kind": "%s",
+      "metadata": {
+        "creationTimestamp": "2019-03-27T13:02:09Z",
+        "generation": 1,
+        "name": "test",
+        "namespace": "monitoring",
+        "uid": "87c5d31d-5090-11e9-b9b4-02425473f309"
+      },
+    "spec": %s,
+    "oldObject": null,
+    "dryRun": false
+  }
+ }
+}
+`,
+		group,
+		alertManagerConfigCurrentVersion,
+		alertManagerConfigKind,
+		alertManagerConfigCurrentVersion,
+		alertManagerConfigResource,
+		alertManagerConfigCurrentVersion,
+		alertManagerConfigKind,
+		spec)
+	return []byte(tmpl)
+}
