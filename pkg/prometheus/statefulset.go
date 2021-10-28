@@ -633,8 +633,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		"app.kubernetes.io/version": version.String(),
 	}
 	podSelectorLabels := map[string]string{
-		// TODO(fpetkovski): remove `app` label after 0.50 release
-		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/instance":   p.Name,

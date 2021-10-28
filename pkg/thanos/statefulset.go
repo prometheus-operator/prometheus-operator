@@ -367,8 +367,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			}
 		}
 	}
-	// TODO(paulfantom): remove `app` label after 0.50 release
-	podLabels["app"] = thanosRulerLabel
 	podLabels["app.kubernetes.io/name"] = thanosRulerLabel
 	podLabels["app.kubernetes.io/managed-by"] = "prometheus-operator"
 	podLabels["app.kubernetes.io/instance"] = tr.Name

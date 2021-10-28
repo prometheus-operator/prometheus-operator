@@ -65,7 +65,6 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	expectedPodLabels := map[string]string{
 		"alertmanager":                 "",
-		"app":                          "alertmanager",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultAlertmanagerVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
