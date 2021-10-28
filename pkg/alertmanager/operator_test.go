@@ -857,11 +857,38 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 		{
 			am: &monitoringv1.Alertmanager{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "invalid-user-config",
+					Name:      "invalid-user-config-in-secret-with-no-config-selector",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret:               "amconfig",
+					AlertmanagerConfigSelector: nil,
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`invalid`),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "invalid-user-config-provided-to-operator",
 					Namespace: "test",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
 					ConfigSecret: "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"test": "test"},
+					},
 				},
 			},
 			objects: []runtime.Object{

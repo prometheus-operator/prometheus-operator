@@ -879,11 +879,6 @@ receivers:
 		}
 	}
 
-	baseConfig, err := loadCfg(string(rawBaseConfig))
-	if err != nil {
-		return errors.Wrap(err, "base config from Secret could not be parsed")
-	}
-
 	// If no AlertmanagerConfig selectors are configured, the user wants to
 	// manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil {
@@ -896,6 +891,11 @@ receivers:
 			return errors.Wrap(err, "create or update generated config secret failed")
 		}
 		return nil
+	}
+
+	baseConfig, err := loadCfg(string(rawBaseConfig))
+	if err != nil {
+		return errors.Wrap(err, "base config from Secret could not be parsed")
 	}
 
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
