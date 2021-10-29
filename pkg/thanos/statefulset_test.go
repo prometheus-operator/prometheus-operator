@@ -570,38 +570,49 @@ func TestAdditionalContainers(t *testing.T) {
 }
 
 func TestRetention(t *testing.T) {
-	tests := []struct {
+	for _, tc := range []struct {
 		specRetention     string
 		expectedRetention string
+		ok                bool
 	}{
-		{"", "24h"},
-		{"1d", "1d"},
-	}
+		{"", "24h", true},
+		{"1d", "1d", true},
+		{"1k", "", false},
+		{"somevalue", "", false},
+	} {
+		t.Run(tc.specRetention, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Retention:      tc.specRetention,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "")
 
-	for _, test := range tests {
-		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-			Spec: monitoringv1.ThanosRulerSpec{
-				Retention:      test.specRetention,
-				QueryEndpoints: emptyQueryEndpoints,
-			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		trArgs := sset.Spec.Template.Spec.Containers[0].Args
-		expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", test.expectedRetention)
-		found := false
-		for _, flag := range trArgs {
-			if flag == expectedRetentionArg {
-				found = true
-				break
+			if !tc.ok {
+				if err == nil {
+					t.Fatal("expecting error but got none")
+				}
+				return
 			}
-		}
 
-		if !found {
-			t.Fatalf("expected ThanosRuler args to contain %v, but got %v", expectedRetentionArg, trArgs)
-		}
+			if err != nil {
+				t.Fatalf("expecting no error but got %q", err)
+			}
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+			expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)
+			found := false
+			for _, flag := range trArgs {
+				if flag == expectedRetentionArg {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Fatalf("expected ThanosRuler args to contain %v, but got %v", expectedRetentionArg, trArgs)
+			}
+		})
 	}
 }
 
