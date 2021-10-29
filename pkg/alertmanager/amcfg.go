@@ -77,6 +77,11 @@ func newConfigGenerator(logger log.Logger, amVersion semver.Version, store *asse
 
 // validateConfigInputs runs extra validation on the AlertManager fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(am *monitoringv1.Alertmanager) error {
+	if am.Spec.Retention != "" {
+		if err := operator.ValidateDurationField(am.Spec.Retention); err != nil {
+			return errors.Wrap(err, "invalid retention value specified")
+		}
+	}
 	if am.Spec.ClusterGossipInterval != "" {
 		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
 			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
