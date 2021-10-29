@@ -847,6 +847,11 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, s appsv1.Statefu
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
+	// Validate AlertManager Config Inputs at AlertManager CRD level
+	if err := validateConfigInputs(am); err != nil {
+		return err
+	}
+
 	secretName := defaultConfigSecretName(am.Name)
 	if am.Spec.ConfigSecret != "" {
 		secretName = am.Spec.ConfigSecret
