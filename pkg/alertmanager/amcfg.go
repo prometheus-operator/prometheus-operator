@@ -30,7 +30,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/common"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,19 +78,19 @@ func newConfigGenerator(logger log.Logger, amVersion semver.Version, store *asse
 // validateConfigInputs runs extra validation on the AlertManager fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(am *monitoringv1.Alertmanager) error {
 	if am.Spec.ClusterGossipInterval != "" {
-		if err := common.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
+		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
 			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
 		}
 	}
 
 	if am.Spec.ClusterPushpullInterval != "" {
-		if err := common.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
 			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
 		}
 	}
 
 	if am.Spec.ClusterPeerTimeout != "" {
-		if err := common.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
 			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
 		}
 	}

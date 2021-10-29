@@ -22,7 +22,6 @@ import (
 
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/common"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	appsv1 "k8s.io/api/apps/v1"
@@ -175,7 +174,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	if tr.Spec.EvaluationInterval != "" {
-		if err := common.ValidateDurationField(tr.Spec.EvaluationInterval); err != nil {
+		if err := operator.ValidateDurationField(tr.Spec.EvaluationInterval); err != nil {
 			return nil, errors.Wrap(err, "invalid evaluationInterval value specified")
 		}
 	}
@@ -185,7 +184,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	if tr.Spec.Retention != "" {
-		if err := common.ValidateDurationField(tr.Spec.Retention); err != nil {
+		if err := operator.ValidateDurationField(tr.Spec.Retention); err != nil {
 			return nil, errors.Wrap(err, "invalid retention value specified")
 		}
 	}
