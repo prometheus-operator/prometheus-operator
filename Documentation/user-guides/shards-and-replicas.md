@@ -1,7 +1,7 @@
 # Shards and Replicas
 
 If single prometheus can't hold current targets metrics,user can reshard targets on multiple prometheus servers.
-Shards use prometheus `modulus` configuration to implement,which take of the hash of the source label values,split scrape targets based on the number of shards.
+Shards use prometheus `modulus` configuration to implement, which take of the hash of the source label values, split scrape targets based on the number of shards.
 
 Prometheus operator will create  number of `shards` multiplied by `replicas` pods.
 
@@ -13,7 +13,7 @@ To query globally use Thanos sidecar and Thanos querier or remote write data to 
 The complete yaml can see: [Shards][shards].
 
 The following manifest create a prometheus server with two replicas:
-```
+```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -44,7 +44,7 @@ prometheus-prometheus-1                1/2     Running   1          10s
 
 Deploy example application and monitor it:
 
-```
+```yaml mdox-exec="cat example/shards/example-app-deployment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -67,7 +67,7 @@ spec:
           containerPort: 8080
 ```
 
-```
+```yaml mdox-exec="cat example/shards/example-app-service.yaml"
 kind: Service
 apiVersion: v1
 metadata:
@@ -82,7 +82,7 @@ spec:
     port: 8080
 ```
 
-```
+```yaml mdox-exec="cat example/shards/example-app-service-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -108,7 +108,7 @@ We can find the prometheus server scrape three targets.
 ### Reshard targets and Expand Prometheus
 
 Expand prometheus to two shards like below:
-```
+```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
