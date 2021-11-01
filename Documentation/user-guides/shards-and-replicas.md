@@ -3,40 +3,42 @@
 If single prometheus can't hold current targets metrics,user can reshard targets on multiple prometheus servers.
 Shards use prometheus `modulus` configuration to implement, which take of the hash of the source label values, split scrape targets based on the number of shards.
 
-Prometheus operator will create  number of `shards` multiplied by `replicas` pods.
+Prometheus operator will create number of `shards` multiplied by `replicas` pods.
 
-Note that scaling down shards will not reshard data onto remaining instances,it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. 
+Note that scaling down shards will not reshard data onto remaining instances,it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances.
 To query globally use Thanos sidecar and Thanos querier or remote write data to a central location. Sharding is done on the content of the `__address__` target meta-label.
 
 ## Example
 
-The complete yaml can see: [Shards][shards].
+The complete yaml can see: [Shards](../../example/shards).
 
 The following manifest create a prometheus server with two replicas:
+
 ```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   labels:
-    prometheus: shards
+    prometheus: prometheus
   name: prometheus
   namespace: default
 spec:
   serviceAccountName: prometheus
   replicas: 2
+  shards: 2
   serviceMonitorSelector:
     matchLabels:
       team: frontend
 ```
 
 This could by verified by the following command:
-  
+
 ```bash
 > kubectl get pods -n <namespace>
 ```
-  
+
 The output is similar to this:
-  
+
 ```bash
 prometheus-prometheus-0                2/2     Running   1          10s
 prometheus-prometheus-1                1/2     Running   1          10s
@@ -108,6 +110,7 @@ We can find the prometheus server scrape three targets.
 ### Reshard targets and Expand Prometheus
 
 Expand prometheus to two shards like below:
+
 ```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -126,13 +129,13 @@ spec:
 ```
 
 This could by verified by the following command:
-  
+
 ```bash
 > kubectl get pods -n <namespace>
 ```
-  
+
 The output is similar to this:
-  
+
 ```bash
 prometheus-prometheus-0                2/2     Running   1          11m
 prometheus-prometheus-1                2/2     Running   1          11m
@@ -149,11 +152,3 @@ Explore one of expand monitoring prometheus instances:
 We find two targets in scraping,the origin prometheus instance scrape one targets.
 
 We must use thanos sidecar to query globally,because the original data in prometheus will not be rebalanced.
-
-
-[shards]: ../../example/shards
-
-
-
-
-
