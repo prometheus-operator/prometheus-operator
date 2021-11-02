@@ -14,7 +14,7 @@ To query globally, use Thanos sidecar and Thanos querier. Alternatively, remote 
 
 View the complete [Shards manifests](../../example/shards).
 
-The following manifest create a prometheus server with two replicas:
+The following manifest creates a Prometheus server with two replicas:
 
 ```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
