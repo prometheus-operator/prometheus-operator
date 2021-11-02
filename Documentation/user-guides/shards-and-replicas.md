@@ -9,7 +9,7 @@ Prometheus operator will create number of `shards` multiplied by `replicas` pods
 
 Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances.
 To query globally use Thanos sidecar and Thanos querier or remote write data to a central location. Sharding is done on the content of the `__address__` target meta-label.
-
+To query globally, use Thanos sidecar and Thanos querier. Alternatively, remote write to a central location. Sharding is done on the content of the `__address__` target meta-label.
 ## Example
 
 The complete yaml can see: [Shards](../../example/shards).
