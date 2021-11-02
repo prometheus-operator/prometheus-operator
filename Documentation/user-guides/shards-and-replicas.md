@@ -153,4 +153,4 @@ Explore one of expand monitoring prometheus instances:
 
 We find two targets in scraping. The origin Prometheus instance scrapes one target.
 
-We must use thanos sidecar to query globally,because the original data in prometheus will not be rebalanced.
+To query globally, we must use Thanos sidecar, since the original data in Prometheus will not be rebalanced.
