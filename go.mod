@@ -23,10 +23,10 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.51.2
 	github.com/prometheus/alertmanager v0.23.0
 	github.com/prometheus/client_golang v1.11.0
-	github.com/prometheus/common v0.30.0
-	github.com/prometheus/prometheus v1.8.2-0.20210914090109-37468d88dce8
+	github.com/prometheus/common v0.32.0
+	github.com/prometheus/prometheus v1.8.2-0.20211005150130-f29caccc4255
 	github.com/stretchr/testify v1.7.0
-	github.com/thanos-io/thanos v0.23.0
+	github.com/thanos-io/thanos v0.23.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
