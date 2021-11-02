@@ -151,6 +151,6 @@ Explore one of expand monitoring prometheus instances:
 > kubectl port-forward prometheus-prometheus-shard-1-0  9091:9090
 ```
 
-We find two targets in scraping,the origin prometheus instance scrape one targets.
+We find two targets in scraping. The origin Prometheus instance scrapes one target.
 
 We must use thanos sidecar to query globally,because the original data in prometheus will not be rebalanced.
