@@ -12,7 +12,7 @@ To query globally use Thanos sidecar and Thanos querier or remote write data to 
 To query globally, use Thanos sidecar and Thanos querier. Alternatively, remote write to a central location. Sharding is done on the content of the `__address__` target meta-label.
 ## Example
 
-The complete yaml can see: [Shards](../../example/shards).
+View the complete [Shards manifests](../../example/shards).
 
 The following manifest create a prometheus server with two replicas:
 
