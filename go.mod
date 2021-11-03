@@ -3,11 +3,11 @@ module github.com/prometheus-operator/prometheus-operator
 go 1.17
 
 require (
-	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
+	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.8.0
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/evanphx/json-patch/v5 v5.5.0
+	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/log v0.2.0
 	github.com/go-openapi/swag v0.19.15
@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.51.2
 	github.com/prometheus/alertmanager v0.23.0
 	github.com/prometheus/client_golang v1.11.0
-	github.com/prometheus/common v0.32.0
+	github.com/prometheus/common v0.32.1
 	github.com/prometheus/prometheus v1.8.2-0.20211005150130-f29caccc4255
 	github.com/stretchr/testify v1.7.0
 	github.com/thanos-io/thanos v0.23.1
@@ -33,11 +33,11 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.2
 	k8s.io/apiextensions-apiserver v0.22.2
-	k8s.io/apimachinery v0.22.2
+	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/component-base v0.22.2
-	k8s.io/klog/v2 v2.20.0
-	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e
+	k8s.io/component-base v0.22.3
+	k8s.io/klog/v2 v2.30.0
+	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
 )
 
 require (
