@@ -1,3 +1,27 @@
+## 0.52.0 / 2021-11-03
+
+* [CHANGE] Automatically add sharding `relabel_configs` to all scrape jobs in `additionalScrapeConfigs` if `shards > 1`. #4324
+* [CHANGE] Remov app label from prometheus, alertmanager and thanosruler statefulsets/pods. #4350
+* [FEATURE] Add alertRelabelConfigs field to the Thanos Ruler CRD for configuring Prometheus alert relabeling features. #4303
+* [FEATURE] Add support for updated matching syntax in Alertmanager's raw config for `inhibit_rules`. #4307
+* [FEATURE] Add support for updated matching syntax in Alertmanager's raw config for `route`. #4309
+* [FEATURE] Add "generic ephemeral storage" as a data storage option for Alertmanager, Prometheus and Thanos Ruler. #4326
+* [FEATURE] Add validating webhook for AlertManagerConfig. #4338
+* [FEATURE] Add input validations for duration fields in alertmanager and thanos. #4352
+* [EHNAHCEMENT] Improve docs and error message for "smarthost" field. #4299
+* [ENHANCEMENT] Add alerts for config reloader sidecars. #4294
+* [ENHANCEMENT] Adds support for Sigv4 when configuring RemoteWrite. #3994
+* [ENHANCEMENT] Add validations for duration and size fields for Prometheus resources #4308
+* [ENHANCEMENT] Add s390x support to docker images. #4351
+* [ENHANCEMENT] Only load alertmanager configuration when writing configration. #4333
+* [ENHANCEMENT] Update default Prometheus version to v2.31.0. #4362
+* [ENHANCEMENT] Update default Thanos version to v0.23.1. #4362
+* [ENHANCEMENT] Update documentation on sharding support and prometheus replication. #4358
+* [BUGFIX] Fix matchLabels selector to have empty label values in ServiceMonitor, PodMonitor and Probe. #4327
+* [BUGFIX] Prevent rule file name collision. #4347
+* [BUGFIX] Update native kubernetes fields used in prometheus-operator CRDs. #4221
+* [BUGFIX] Change the quickstart guidelines to use kubectl `create` instead of `apply`. #4349
+
 ## 0.51.2 / 2021-10-04
 
 * [BUGFIX] Validated the value of the `EnforcedBodySizeLimit` field to avoid Prometheus crash. #4285
