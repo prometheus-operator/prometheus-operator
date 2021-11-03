@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-community/prom-label-proxy v0.3.0
+	github.com/prometheus-community/prom-label-proxy v0.4.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.52.0
 	github.com/prometheus/alertmanager v0.23.0
@@ -31,12 +31,12 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.22.2
-	k8s.io/apiextensions-apiserver v0.22.2
+	k8s.io/api v0.22.3
+	k8s.io/apiextensions-apiserver v0.22.3
 	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/component-base v0.22.3
-	k8s.io/klog/v2 v2.30.0
+	k8s.io/klog/v2 v2.10.0
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
 )
 
@@ -120,6 +120,6 @@ replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
 	// A replace directive is needed for k8s.io/client-go because Cortex (which
 	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
-	k8s.io/client-go => k8s.io/client-go v0.22.2
+	k8s.io/client-go => k8s.io/client-go v0.22.3
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.0.0
 )
