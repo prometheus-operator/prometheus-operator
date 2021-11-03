@@ -195,6 +195,22 @@ Details (optional):
 - 25000 samples/s
 - 1.2M active series
 
+## SUSE Rancher
+
+[suse.com/products/suse-rancher](https://www.suse.com/products/suse-rancher/)
+
+Environments: RKE, RKE2, K3s, Windows, AWS, Azure, Google Cloud, Bare Metal, etc.
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Rancher Monitoring supports use cases for Prometheus Operator across various different
+cluster types and setups that are managed via the Rancher product. All Rancher users that
+install Monitoring V2 deploy this chart.
+
+For more information, please see [how Rancher monitoring works](https://rancher.com/docs/rancher/v2.6/en/monitoring-alerting/how-monitoring-works/).
+
+The open-source rancher-monitoring Helm chart (based on [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)) can be found at [rancher/charts](https://github.com/rancher/charts).
+
 ## Veepee
 
 [veepee.com](https://www.veepee.com)
