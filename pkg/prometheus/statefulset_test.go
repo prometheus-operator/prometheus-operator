@@ -444,17 +444,21 @@ func TestListenLocal(t *testing.T) {
 		t.Fatal("Prometheus not listening on loopback when it should.")
 	}
 
-	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		Handler: v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.Handler {
+		return v1.Handler{
 			Exec: &v1.ExecAction{
 				Command: []string{
 					`sh`,
 					`-c`,
-					`if [ -x "$(command -v curl)" ]; then exec curl http://localhost:9090/-/ready; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null http://localhost:9090/-/ready; else exit 1; fi`,
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
 				},
 			},
-		},
+		}
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 120,
@@ -494,15 +498,19 @@ func TestListenTLS(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		Handler: v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.Handler {
+		return v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
-				Path:   "/-/ready",
+				Path:   probePath,
 				Port:   intstr.FromString("web"),
 				Scheme: "HTTPS",
 			},
-		},
+		}
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 120,
