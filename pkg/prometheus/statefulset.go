@@ -630,7 +630,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		Handler:          probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
-		FailureThreshold: 120, // Allow up to 10m on startup for data recovery
+		FailureThreshold: 3,
 	}
 
 	podAnnotations := map[string]string{}

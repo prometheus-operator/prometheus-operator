@@ -472,7 +472,7 @@ func TestListenLocal(t *testing.T) {
 		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
-		FailureThreshold: 120,
+		FailureThreshold: 3,
 	}
 	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
@@ -535,7 +535,7 @@ func TestListenTLS(t *testing.T) {
 		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
-		FailureThreshold: 120,
+		FailureThreshold: 3,
 	}
 	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
