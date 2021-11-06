@@ -1,0 +1,9 @@
+---
+kind: pipeline
+type: digitalocean
+name: default
+
+steps:
+- name: greeting
+  commands:
+  - echo hello world
