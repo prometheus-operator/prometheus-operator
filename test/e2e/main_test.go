@@ -237,6 +237,7 @@ func testAllNSThanosRuler(t *testing.T) {
 // TestMultiNS tests the Prometheus Operator configured to watch specific
 // namespaces.
 func TestMultiNS(t *testing.T) {
+	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"OperatorNSScope": testOperatorNSScope,
 	}
@@ -294,8 +295,8 @@ const (
 )
 
 func testServerTLS(ctx context.Context, t *testing.T, namespace string) func(t *testing.T) {
-
 	return func(t *testing.T) {
+		skipPrometheusTests(t)
 		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
