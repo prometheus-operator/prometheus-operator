@@ -3,6 +3,9 @@ kind: pipeline
 type: digitalocean
 name: default
 
+clone:
+  disable: true
+
 token:
   from_secret: digital-ocean-token
 
