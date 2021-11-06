@@ -7,11 +7,54 @@ token:
   from_secret: digital-ocean-token
 
 server:
-  image: docker-18-04
-  size: s-1vcpu-1gb
-  region: nyc1
+  image: docker-20-04
+  size: s-4vcpu-8gb
+  region: fra1
 
 steps:
-- name: greeting
+- name: Install Golang
   commands:
-  - echo "hello world"
+  - sudo snap install go --classic
+  - go version
+
+- name: Install make
+  commands:
+  - sudo apt-get update -y
+  - sudo apt-get install -y make build-essential
+
+- name: Install kubectl
+  commands:
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x ./kubectl
+  - sudo mv ./kubectl /usr/local/bin/
+
+- name: Install KinD
+  commands:
+  - mkdir -p $(pwd)/tmp/bin
+  - GOBIN=$(pwd)/tmp/bin go install sigs.k8s.io/kind@v0.11.1
+  - chmod +x ./tmp/bin/kind
+  - sudo mv ./tmp/bin/kind /usr/local/bin/
+
+- name: Build images
+  commands:
+  - make build image
+
+- name: Create KinD Cluster
+  commands:
+  - kind create cluster
+
+- name: Load Images
+  commands:
+  - kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+  - kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+  - kubectl apply -f scripts/kind-rbac.yaml
+
+- name: Wait for cluster to finish bootstraping
+  commands: 
+  - kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
+  - kubectl cluster-info
+  - kubectl get pods -A
+
+- name: Run tests
+  commands:
+  - make test-e2e EXCLUDE_ALERTMANAGER_TESTS="exclude" EXCLUDE_THANOSRULER_TESTS="exclude"
