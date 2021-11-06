@@ -3,11 +3,13 @@ kind: pipeline
 type: digitalocean
 name: default
 
-clone:
-  disable: true
-
 token:
   from_secret: digital-ocean-token
+
+server:
+  image: docker-18-04
+  size: s-1vcpu-1gb
+  region: nyc1
 
 steps:
 - name: greeting
