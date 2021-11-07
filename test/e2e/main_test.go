@@ -32,6 +32,12 @@ var (
 	opImage   *string
 )
 
+func skipPrometheusAllNSTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_PROMETHEUS_ALL_NS_TESTS") != "" {
+		t.Skip("Skipping Prometheus all namespace tests")
+	}
+}
+
 func skipPrometheusTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_PROMETHEUS_TESTS") != "" {
 		t.Skip("Skipping Prometheus tests")
@@ -169,7 +175,7 @@ func testAllNSAlertmanager(t *testing.T) {
 }
 
 func testAllNSPrometheus(t *testing.T) {
-	skipPrometheusTests(t)
+	skipPrometheusAllNSTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"PromRemoteWriteWithTLS":                 testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,

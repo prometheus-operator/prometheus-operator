@@ -57,4 +57,4 @@ steps:
 
 - name: Run tests
   commands:
-  - make test-e2e EXCLUDE_ALERTMANAGER_TESTS="exclude" EXCLUDE_THANOSRULER_TESTS="exclude"
+  - make test-e2e EXCLUDE_ALERTMANAGER_TESTS="exclude" EXCLUDE_PROMETHEUS_TESTS="exclude" EXCLUDE_THANOSRULER_TESTS="exclude"
