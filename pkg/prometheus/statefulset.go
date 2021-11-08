@@ -594,35 +594,40 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
-	const localProbe = `if [ -x "$(command -v curl)" ]; then exec curl %s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %s; else exit 1; fi`
-
-	var readinessProbeHandler v1.Handler
-	{
-		readyPath := path.Clean(webRoutePrefix + "/-/ready")
+	probeHandler := func(probePath string) v1.Handler {
+		probePath = path.Clean(webRoutePrefix + probePath)
+		handler := v1.Handler{}
 		if p.Spec.ListenLocal {
-			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
+			handler.Exec = &v1.ExecAction{
 				Command: []string{
 					"sh",
 					"-c",
-					fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
 				},
 			}
 		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: readyPath,
+			handler.HTTPGet = &v1.HTTPGetAction{
+				Path: probePath,
 				Port: intstr.FromString(p.Spec.PortName),
 			}
 			if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
-				readinessProbeHandler.HTTPGet.Scheme = v1.URISchemeHTTPS
+				handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 			}
 		}
+		return handler
 	}
 
-	// TODO(paulfantom): Re-add livenessProbe and add startupProbe when kubernetes 1.21 is available.
+	startupProbe := &v1.Probe{
+		Handler:          probeHandler("/-/healthy"),
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+
+	// TODO(paulfantom): Re-add livenessProbe when kubernetes 1.21 is available.
 	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
 	readinessProbe := &v1.Probe{
-		Handler:          readinessProbeHandler,
+		Handler:          probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
 		FailureThreshold: 120, // Allow up to 10m on startup for data recovery
@@ -851,6 +856,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Ports:                    ports,
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
+			StartupProbe:             startupProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,

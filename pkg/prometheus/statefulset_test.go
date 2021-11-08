@@ -456,6 +456,17 @@ func TestListenLocal(t *testing.T) {
 		}
 	}
 
+	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
+	expectedStartupProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
+		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
+	}
+
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
 		Handler:          expectedProbeHandler("/-/ready"),
@@ -506,6 +517,17 @@ func TestListenTLS(t *testing.T) {
 				Scheme: "HTTPS",
 			},
 		}
+	}
+
+	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
+	expectedStartupProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
+		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
 	}
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
