@@ -194,7 +194,7 @@ templates: []
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
-				MuteTimeIntervals: []muteTimeInterval{
+				MuteTimeIntervals: []*muteTimeInterval{
 					{
 						Name: "maintenance_windows",
 						TimeIntervals: []timeinterval.TimeInterval{
@@ -916,6 +916,122 @@ receivers:
 templates: []
 `,
 		},
+		{
+
+			name:    "CR with Mute Time Intervals",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/etc/test",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver:          "test",
+							MuteTimeIntervals: []string{"test"},
+						},
+						MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+							{
+								Name: "test",
+								TimeIntervals: []monitoringv1alpha1.TimeInterval{
+									{
+										Times: []monitoringv1alpha1.TimeRange{
+											{
+												StartTime: "08:00",
+												EndTime:   "17:00",
+											},
+										},
+										Weekdays: []monitoringv1alpha1.WeekdayRange{
+											monitoringv1alpha1.WeekdayRange("Saturday"),
+											monitoringv1alpha1.WeekdayRange("Sunday"),
+										},
+										Months: []monitoringv1alpha1.MonthRange{
+											"January:March",
+										},
+										DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
+											{
+												Start: 1,
+												End:   10,
+											},
+										},
+										Years: []monitoringv1alpha1.YearRange{
+											"2030:2050",
+										},
+									},
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							}},
+						}},
+					},
+				},
+			},
+			expected: `global:
+  slack_api_url_file: /etc/test
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+    mute_time_intervals:
+    - mynamespace-myamc-test
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  slack_configs:
+  - fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
+mute_time_intervals:
+- name: mynamespace-myamc-test
+  time_intervals:
+  - times:
+    - start_time: "08:00"
+      end_time: "17:00"
+    weekdays: [saturday, sunday]
+    days_of_month: ["1:10"]
+    months: ["1:3"]
+    years: ['2030:2050']
+templates: []
+`,
+		},
 	}
 
 	logger := log.NewNopLogger()
@@ -1472,7 +1588,7 @@ templates: []
 						Name: "null",
 					},
 				},
-				MuteTimeIntervals: []muteTimeInterval{
+				MuteTimeIntervals: []*muteTimeInterval{
 					{
 						Name: "maintenance_windows",
 						TimeIntervals: []timeinterval.TimeInterval{

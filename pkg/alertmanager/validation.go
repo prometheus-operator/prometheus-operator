@@ -31,7 +31,12 @@ func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 		return err
 	}
 
-	return validateAlertManagerRoutes(amc.Spec.Route, receivers, true)
+	muteTimeIntervals, err := validateMuteTimeIntervals(amc.Spec.MuteTimeIntervals)
+	if err != nil {
+		return err
+	}
+
+	return validateAlertManagerRoutes(amc.Spec.Route, receivers, muteTimeIntervals, true)
 }
 
 func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]struct{}, error) {
@@ -209,7 +214,7 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 }
 
 // validateAlertManagerRoutes verifies that the given route and all its children are semantically valid.
-func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]struct{}, topLevelRoute bool) error {
+func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map[string]struct{}, topLevelRoute bool) error {
 	if r == nil {
 		return nil
 	}
@@ -231,16 +236,34 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers map[strin
 		}
 	}
 
+	for _, namedMuteTimeInterval := range r.MuteTimeIntervals {
+		if _, found := muteTimeIntervals[namedMuteTimeInterval]; !found {
+			return errors.Errorf("mute time interval %q not found", namedMuteTimeInterval)
+		}
+	}
+
 	children, err := r.ChildRoutes()
 	if err != nil {
 		return err
 	}
 
 	for i := range children {
-		if err := validateAlertManagerRoutes(&children[i], receivers, false); err != nil {
+		if err := validateAlertManagerRoutes(&children[i], receivers, muteTimeIntervals, false); err != nil {
 			return errors.Wrapf(err, "route[%d]", i)
 		}
 	}
 
 	return nil
+}
+
+func validateMuteTimeIntervals(muteTimeIntervals []monitoringv1alpha1.MuteTimeInterval) (map[string]struct{}, error) {
+	muteTimeIntervalNames := make(map[string]struct{}, len(muteTimeIntervals))
+
+	for i, mti := range muteTimeIntervals {
+		if err := mti.Validate(); err != nil {
+			return nil, errors.Wrapf(err, "mute time interval[%d] is invalid", i)
+		}
+		muteTimeIntervalNames[mti.Name] = struct{}{}
+	}
+	return muteTimeIntervalNames, nil
 }

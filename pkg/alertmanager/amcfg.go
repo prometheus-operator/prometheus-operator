@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/alertmanager/timeinterval"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -146,6 +147,14 @@ func (cg *configGenerator) generateConfig(
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
+
+		for _, muteTimeInterval := range amConfigs[amConfigIdentifier].Spec.MuteTimeIntervals {
+			mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, mti)
+		}
 	}
 
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
@@ -217,19 +226,27 @@ func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey type
 		}
 	}
 
-	receiver := prefixReceiverName(in.Receiver, crKey)
+	receiver := makeNamespacedString(in.Receiver, crKey)
+
+	var prefixedMuteTimeIntervals []string
+	if len(in.MuteTimeIntervals) > 0 {
+		for _, mti := range in.MuteTimeIntervals {
+			prefixedMuteTimeIntervals = append(prefixedMuteTimeIntervals, makeNamespacedString(mti, crKey))
+		}
+	}
 
 	return &route{
-		Receiver:       receiver,
-		GroupByStr:     in.GroupBy,
-		GroupWait:      in.GroupWait,
-		GroupInterval:  in.GroupInterval,
-		RepeatInterval: in.RepeatInterval,
-		Continue:       cont,
-		Match:          match,
-		MatchRE:        matchRE,
-		Matchers:       matchers,
-		Routes:         routes,
+		Receiver:          receiver,
+		GroupByStr:        in.GroupBy,
+		GroupWait:         in.GroupWait,
+		GroupInterval:     in.GroupInterval,
+		RepeatInterval:    in.RepeatInterval,
+		Continue:          cont,
+		Match:             match,
+		MatchRE:           matchRE,
+		Matchers:          matchers,
+		Routes:            routes,
+		MuteTimeIntervals: prefixedMuteTimeIntervals,
 	}
 }
 
@@ -333,7 +350,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 	}
 
 	return &receiver{
-		Name:             prefixReceiverName(in.Name, crKey),
+		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
 		SlackConfigs:     slackConfigs,
@@ -847,11 +864,83 @@ func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule
 	}
 }
 
-func prefixReceiverName(receiverName string, crKey types.NamespacedName) string {
-	if receiverName == "" {
+func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey types.NamespacedName) (*muteTimeInterval, error) {
+	muteTimeInterval := &muteTimeInterval{}
+
+	for _, timeInterval := range in.TimeIntervals {
+		ti := timeinterval.TimeInterval{}
+
+		for _, time := range timeInterval.Times {
+			parsedTime, err := time.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Times = append(ti.Times, timeinterval.TimeRange{
+				StartMinute: parsedTime.Start,
+				EndMinute:   parsedTime.End,
+			})
+		}
+
+		for _, wd := range timeInterval.Weekdays {
+			parsedWeekday, err := wd.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Weekdays = append(ti.Weekdays, timeinterval.WeekdayRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedWeekday.Start,
+					End:   parsedWeekday.End,
+				},
+			})
+		}
+
+		for _, dom := range timeInterval.DaysOfMonth {
+			ti.DaysOfMonth = append(ti.DaysOfMonth, timeinterval.DayOfMonthRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: dom.Start,
+					End:   dom.End,
+				},
+			})
+		}
+
+		for _, month := range timeInterval.Months {
+			parsedMonth, err := month.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Months = append(ti.Months, timeinterval.MonthRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedMonth.Start,
+					End:   parsedMonth.End,
+				},
+			})
+		}
+
+		for _, year := range timeInterval.Years {
+			parsedYear, err := year.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Years = append(ti.Years, timeinterval.YearRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedYear.Start,
+					End:   parsedYear.End,
+				},
+			})
+		}
+
+		muteTimeInterval.Name = makeNamespacedString(in.Name, crKey)
+		muteTimeInterval.TimeIntervals = append(muteTimeInterval.TimeIntervals, ti)
+	}
+
+	return muteTimeInterval, nil
+}
+
+func makeNamespacedString(in string, crKey types.NamespacedName) string {
+	if in == "" {
 		return ""
 	}
-	return crKey.Namespace + "-" + crKey.Name + "-" + receiverName
+	return crKey.Namespace + "-" + crKey.Name + "-" + in
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
