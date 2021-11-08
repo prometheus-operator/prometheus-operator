@@ -80,6 +80,9 @@ type AlertmanagerConfigSpec struct {
 	// the resource’s namespace.
 	// +optional
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
+	// List of MuteTimeInterval specifying when the routes should be muted.
+	// +optional
+	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeIntervals,omitempty"`
 }
 
 // Route defines a node in the routing tree.
@@ -128,6 +131,9 @@ type Route struct {
 	// an alternative type to circumvent the limitation. The downside is that
 	// the Kube API can't validate the data beyond the fact that it is a valid
 	// JSON representation.
+	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	// +optional
+	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.
@@ -797,4 +803,151 @@ func openMetricsEscape(s string) string {
 		`"`, `\"`,
 	)
 	return r.Replace(s)
+}
+
+// MuteTimeInterval specifies the periods in time when notifications will be muted
+type MuteTimeInterval struct {
+	// Name of the time interval
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// TimeIntervals is a list of TimeInterval
+	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
+}
+
+// TimeInterval describes intervals of time
+type TimeInterval struct {
+	// Times is a list of TimeRange
+	// +optional
+	Times []TimeRange `json:"times,omitempty"`
+	// Weekdays is a list of WeekdayRange
+	// +optional
+	Weekdays []WeekdayRange `json:"weekdays,omitempty"`
+	// DaysOfMonth is a list of DayOfMonthRange
+	// +optional
+	DaysOfMonth []DayOfMonthRange `json:"daysOfMonth,omitempty"`
+	// Months is a list of MonthRange
+	// +optional
+	Months []MonthRange `json:"months,omitempty"`
+	// Years is a list of YearRange
+	// +optional
+	Years []YearRange `json:"years,omitempty"`
+}
+
+// Time defines a time in 24hr format
+// +kubebuilder:validation:Pattern=`^((([01][0-9])|(2[0-3])):[0-5][0-9])$|(^24:00$)`
+type Time string
+
+// TimeRange defines a start and end time in 24hr format
+type TimeRange struct {
+	// StartTime is the start time in 24hr format.
+	StartTime Time `json:"startTime,omitempty"`
+	// EndTime is the end time in 24hr format.
+	EndTime Time `json:"endTime,omitempty"`
+}
+
+// WeekdayRange is an inclusive range of days of the week beginning on Sunday
+// Days can be specified by name (e.g 'Sunday') or as an inclusive range (e.g 'Monday:Friday')
+// +kubebuilder:validation:Pattern=`^((?i)sun|mon|tues|wednes|thurs|fri|satur)day(?:((:(sun|mon|tues|wednes|thurs|fri|satur)day)$)|$)`
+type WeekdayRange string
+
+// DayOfMonthRange is an inclusive range of days of the month beginning at 1
+type DayOfMonthRange struct {
+	// Start of the inclusive range
+	// +kubebuilder:validation:Minimum=-31
+	// +kubebuilder:validation:Maximum=31
+	Start int `json:"start,omitempty"`
+	// End of the inclusive range
+	// +kubebuilder:validation:Minimum=-31
+	// +kubebuilder:validation:Maximum=31
+	End int `json:"end,omitempty"`
+}
+
+// MonthRange is an inclusive range of months of the year beginning in January
+// Months can be specified by name (e.g 'January') by numerical month (e.g '1') or as an inclusive range (e.g 'January:March', '1:3', '1:March')
+// +kubebuilder:validation:Pattern=`^((?i)january|febuary|march|april|may|june|july|august|september|october|november|december|[1-12])(?:((:((?i)january|febuary|march|april|may|june|july|august|september|october|november|december|[1-12]))$)|$)`
+type MonthRange string
+
+// YearRange is an inclusive range of years
+// +kubebuilder:validation:Pattern=`^2\d{3}(?::2\d{3}|$)`
+type YearRange string
+
+// Weekday is day of the week
+type Weekday string
+
+const (
+	Sunday    Weekday = "sunday"
+	Monday    Weekday = "monday"
+	Tuesday   Weekday = "tuesday"
+	Wednesday Weekday = "wednesday"
+	Thursday  Weekday = "thursday"
+	Friday    Weekday = "friday"
+	Saturday  Weekday = "saturday"
+)
+
+var daysOfWeek = map[Weekday]int{
+	Sunday:    0,
+	Monday:    1,
+	Tuesday:   2,
+	Wednesday: 3,
+	Thursday:  4,
+	Friday:    5,
+	Saturday:  6,
+}
+
+var daysOfWeekInv = map[int]Weekday{
+	0: Sunday,
+	1: Monday,
+	2: Tuesday,
+	3: Wednesday,
+	4: Thursday,
+	5: Friday,
+	6: Saturday,
+}
+
+// Month of the year
+type Month string
+
+const (
+	January   Month = "january"
+	February  Month = "february"
+	March     Month = "march"
+	April     Month = "april"
+	May       Month = "may"
+	June      Month = "june"
+	July      Month = "july"
+	August    Month = "august"
+	September Month = "september"
+	October   Month = "october"
+	November  Month = "november"
+	December  Month = "december"
+)
+
+var months = map[Month]int{
+	January:   1,
+	February:  2,
+	March:     3,
+	April:     4,
+	May:       5,
+	June:      6,
+	July:      7,
+	August:    8,
+	September: 9,
+	October:   10,
+	November:  11,
+	December:  12,
+}
+
+var monthsInv = map[int]Month{
+	1:  January,
+	2:  February,
+	3:  March,
+	4:  April,
+	5:  May,
+	6:  June,
+	7:  July,
+	8:  August,
+	9:  September,
+	10: October,
+	11: November,
+	12: December,
 }
