@@ -84,6 +84,11 @@ Create a PR for the changes to be reviewed.
 ## Publish the new release
 
 For new minor and major releases, create the `release-<major>.<minor>` branch starting at the PR merge commit.
+Push the branch to the remote repository with
+
+```
+git push origin release-<major>.<minor>
+```
 
 From now on, all work happens on the `release-<major>.<minor>` branch.
 
@@ -108,9 +113,5 @@ For patch releases, submit a pull request to merge back the release branch into 
 ## Update website
 
 Bump the operator's version in the [website](https://github.com/prometheus-operator/website/blob/main/data/prometheusOperator.json) repository.
-
-## Update kube-prometheus
-
-Bump the versions of `github.com/prometheus-operator/prometheus-operator` in [prometheus-operator/kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) by triggering the ["Upgrade to latest versions"](https://github.com/prometheus-operator/kube-prometheus/actions/workflows/versions.yaml) workflow.
 
 Take a breath. You're done releasing.
