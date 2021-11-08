@@ -631,8 +631,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		FailureThreshold: 60,
 	}
 
-	// TODO(paulfantom): Re-add livenessProbe when kubernetes 1.21 is available.
-	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
+	livenessProbe := &v1.Probe{
+		Handler:          probeHandler("/-/healthy"),
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+
 	readinessProbe := &v1.Probe{
 		Handler:          probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
@@ -864,6 +869,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
+			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
