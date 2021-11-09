@@ -444,20 +444,35 @@ func TestListenLocal(t *testing.T) {
 		t.Fatal("Prometheus not listening on loopback when it should.")
 	}
 
-	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		Handler: v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.Handler {
+		return v1.Handler{
 			Exec: &v1.ExecAction{
 				Command: []string{
 					`sh`,
 					`-c`,
-					`if [ -x "$(command -v curl)" ]; then exec curl http://localhost:9090/-/ready; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null http://localhost:9090/-/ready; else exit 1; fi`,
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
 				},
 			},
-		},
+		}
+	}
+
+	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
+	expectedStartupProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
+		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
-		FailureThreshold: 120,
+		FailureThreshold: 3,
 	}
 	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
@@ -494,18 +509,33 @@ func TestListenTLS(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		Handler: v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.Handler {
+		return v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
-				Path:   "/-/ready",
+				Path:   probePath,
 				Port:   intstr.FromString("web"),
 				Scheme: "HTTPS",
 			},
-		},
+		}
+	}
+
+	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
+	expectedStartupProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
+		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
-		FailureThreshold: 120,
+		FailureThreshold: 3,
 	}
 	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
