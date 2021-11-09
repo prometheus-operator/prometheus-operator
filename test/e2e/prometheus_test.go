@@ -2383,7 +2383,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 			Endpoints: []monitoringv1.Endpoint{
 				{
 					TargetPort: &targetPort,
-					Interval:   "30s",
+					Interval:   "5s",
 				},
 			},
 		},
