@@ -680,6 +680,8 @@ type ThanosSpec struct {
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+	// EnableLocalCompaction enables Prometheus local TSDB compaction even if object storage config is provided.
+	EnableLocalCompaction bool `json:"enableLocalCompaction,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

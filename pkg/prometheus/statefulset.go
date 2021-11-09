@@ -752,9 +752,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			)
 
-			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
-			// to avoid races during upload, if the uploads are configured.
-			disableCompaction = true
+			// By default, Prometheus local TSDB compaction is disabled when uploads are configured.
+			disableCompaction = !p.Spec.Thanos.EnableLocalCompaction
 		}
 
 		if p.Spec.Thanos.TracingConfig != nil || len(p.Spec.Thanos.TracingConfigFile) > 0 {

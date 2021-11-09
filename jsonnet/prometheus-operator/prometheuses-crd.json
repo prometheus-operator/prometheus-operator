@@ -5563,6 +5563,10 @@
                         "description": "Thanos base image if other than default. Deprecated: use 'image' instead",
                         "type": "string"
                       },
+                      "enableLocalCompaction": {
+                        "description": "EnableLocalCompaction enables Prometheus local TSDB compaction even if object storage config is provided.",
+                        "type": "boolean"
+                      },
                       "grpcServerTlsConfig": {
                         "description": "GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads recorded rule data. Note: Currently only the CAFile, CertFile, and KeyFile fields are supported. Maps to the '--grpc-server-tls-*' CLI args.",
                         "properties": {
