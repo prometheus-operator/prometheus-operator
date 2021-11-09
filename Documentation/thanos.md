@@ -57,7 +57,7 @@ In this mode, sidecar assumes an existing Kubernetes Secret containing the Thano
 Inside this secret you configure how to run Thanos with your object storage.
 
 For more information and examples about the configuration itself, take a look at the Thanos documentation:
-https://github.com/thanos-io/thanos/blob/master/docs/storage.md
+https://github.com/thanos-io/thanos/blob/main/docs/storage.md
 
 Once you have written your configuration save it to a file.
 Here's an example:
@@ -99,7 +99,7 @@ responsible for compactions on a global, object storage level.
 
 ## Thanos Ruler
 
-The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md) component allows recording and alerting rules to be processed across
+The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) component allows recording and alerting rules to be processed across
 multiple Prometheus instances. A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
 
 ```yaml

@@ -28,7 +28,7 @@ Users depending on kube-prometheus with jsonnet-bundler, should change this thei
 +                    "subdir": "jsonnet/kube-prometheus"
                  }
              },
-             "version": "master"
+             "version": "main"
 ```
 
 *Note: We needed to merge the two repositories and commit hashes are not the same anymore, when referencing prometheus-operator/kube-prometheus.*

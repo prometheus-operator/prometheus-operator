@@ -45,7 +45,7 @@ When there are two or more configured replicas the operator runs the Alertmanage
 
 ## ThanosRuler
 
-The `ThanosRuler` custom resource definition (CRD) declaratively defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md) setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.
+The `ThanosRuler` custom resource definition (CRD) declaratively defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.
 
 A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
 Further information can also be found in the [Thanos doc](thanos.md).
