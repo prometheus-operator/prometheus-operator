@@ -1034,10 +1034,10 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		}
 	}
 
-	if len(c.MuteTimeIntervals) > 0 {
-		if muteTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.22.0")); !muteTimeIntervalsAllowed {
-			return errors.Errorf(`mute_time_intervals is supported in Alertmanager >= 0.22.0 only (mute_time_intervals=%v)`, c.MuteTimeIntervals)
-		}
+	if len(c.MuteTimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		// mute time intervals are unsupported < 0.22.0, and we already log the situation
+		// when handling the routes so just set to nil
+		c.MuteTimeIntervals = nil
 	}
 
 	return c.Route.sanitize(amVersion, logger)
@@ -1221,6 +1221,7 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 	}
 
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	muteTimeIntervalsAllowed := matchersV2Allowed
 	withLogger := log.With(logger, "receiver", r.Receiver)
 
 	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
@@ -1230,6 +1231,12 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if matchersV2Allowed && checkNotEmptyMap(r.Match, r.MatchRE) {
 		msg := "'matchers' field is using a deprecated syntax which will be removed in future versions"
 		level.Warn(withLogger).Log("msg", msg, "match", r.Match, "match_re", r.MatchRE)
+	}
+
+	if !muteTimeIntervalsAllowed {
+		msg := "named mute time intervals in route is supported in Alertmanager >= 0.22.0 only - dropping config"
+		level.Warn(withLogger).Log("msg", msg, "mute_time_intervals", r.MuteTimeIntervals)
+		r.MuteTimeIntervals = nil
 	}
 
 	for i, child := range r.Routes {
