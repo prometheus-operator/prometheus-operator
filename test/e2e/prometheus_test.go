@@ -305,6 +305,7 @@ func createK8sAppMonitoring(
 }
 
 func testPromRemoteWriteWithTLS(t *testing.T) {
+	t.Parallel()
 	// can't extend the names since ns cannot be created with more than 63 characters
 	tests := []testFramework.PromRemoteWriteTestConfig{
 		// working configurations
