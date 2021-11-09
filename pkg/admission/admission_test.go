@@ -223,6 +223,61 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 			expectAdmissionAllowed: false,
 		},
 		{
+			name: "Test reject on invalid mute time intervals",
+			send: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "https://wechatserver:8080",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ],
+  "muteTimeIntervals": [
+    {
+      "name": "out-of-business-hours",
+      "timeIntervals": [
+        {
+          "weekdays": [
+            "Xaturday",
+            "Sunday"
+          ]
+        },
+        {
+          "times": [
+            {
+              "startTime": "50:00",
+              "endTime": "08:00"
+            },
+            {
+              "startTime": "18:00",
+              "endTime": "24:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
 			name: "Test happy path",
 			send: `{
   "route": {
@@ -245,6 +300,31 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
             "name": "wechat-config",
             "key": "apiSecret"
           }
+        }
+      ]
+    }
+  ],
+  "muteTimeIntervals": [
+    {
+      "name": "out-of-business-hours",
+      "timeIntervals": [
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ]
+        },
+        {
+          "times": [
+            {
+              "startTime": "00:00",
+              "endTime": "08:00"
+            },
+            {
+              "startTime": "18:00",
+              "endTime": "24:00"
+            }
+          ]
         }
       ]
     }
