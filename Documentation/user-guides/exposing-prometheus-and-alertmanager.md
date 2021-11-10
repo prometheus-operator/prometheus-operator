@@ -85,7 +85,7 @@ The Alertmanager web UI will be available at `http://<node-ip>:30903/`.
 The Kubernetes API has a feature of forwarding requests from the API to a cluster internal Service. The general URL scheme to access these is:
 
 ```
-http(s)://master-host/api/v1/proxy/namespaces/<namespace>/services/<service-name>:<port-name-or-number>/
+http(s)://control-plane-host/api/v1/proxy/namespaces/<namespace>/services/<service-name>:<port-name-or-number>/
 ```
 
 > For ease of use, use `kubectl proxy`. It proxies requests from a local address to the Kubernetes API server and handles authentication.
@@ -167,7 +167,7 @@ Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/de
 
 Exposing the Prometheus or Alertmanager web UI through an Ingress object requires a running Ingress controller. For more information, see the Kubernetes documentation on [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
-This example was tested with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx). For a quick-start for running the NGINX Ingress Controller follow the instructions in the [NGINX Ingress installation guide](https://github.com/kubernetes/ingress-nginx/blob/master/docs/deploy/index.md).
+This example was tested with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx). For a quick-start for running the NGINX Ingress Controller follow the instructions in the [NGINX Ingress installation guide](https://github.com/kubernetes/ingress-nginx/blob/main/docs/deploy/index.md).
 
 > Be certain to evaluate available Ingress controllers for the specifics of your production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Traefik, GCE, or AWS.
 

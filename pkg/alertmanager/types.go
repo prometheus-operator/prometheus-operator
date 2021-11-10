@@ -22,7 +22,7 @@ import (
 )
 
 // Customization of Config type from alertmanager repo:
-// https://github.com/prometheus/alertmanager/blob/master/config/config.go
+// https://github.com/prometheus/alertmanager/blob/main/config/config.go
 //
 // Custom global type to get around obfuscation of secret values when
 // marshalling. See the following issue for details:

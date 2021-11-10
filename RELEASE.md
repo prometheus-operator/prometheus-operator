@@ -1,6 +1,6 @@
 # Release schedule
 
-Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictable release schedule.
+Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/main/docs/release-process.md), this project aims for a predictable release schedule.
 
 Release cadence of first pre-releases being cut is 6 weeks.
 
@@ -26,7 +26,7 @@ Release cadence of first pre-releases being cut is 6 weeks.
 
 # How to cut a new release
 
-> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/master/RELEASE.md).
+> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/main/RELEASE.md).
 
 ## Branch management and versioning strategy
 
@@ -34,15 +34,15 @@ We use [Semantic Versioning](http://semver.org/).
 
 We maintain a separate branch for each minor release, named `release-<major>.<minor>`, e.g. `release-1.1`, `release-2.0`.
 
-The usual flow is to merge new features and changes into the master branch and to merge bug fixes into the latest release branch. Bug fixes are then merged into master from the latest release branch. The master branch should always contain all commits from the latest release branch.
+The usual flow is to merge new features and changes into the `main` branch and to merge bug fixes into the latest release branch. Bug fixes are then merged into `main` from the latest release branch. The `main` branch should always contain all commits from the latest release branch.
 
-If a bug fix got accidentally merged into master, cherry-pick commits have to be created in the latest release branch, which then have to be merged back into master. Try to avoid that situation.
+If a bug fix got accidentally merged into `main`, cherry-pick commits have to be created in the latest release branch, which then have to be merged back into `main`. Try to avoid that situation.
 
 Maintaining the release branches for older minor releases happens on a best effort basis.
 
 ## Update Go dependencies
 
-A couple of days before the release, consider submitting a PR against the `master` branch to update the Go dependencies.
+A couple of days before the release, consider submitting a PR against the `main` branch to update the Go dependencies.
 
 ```bash
 make update-go-deps
@@ -54,7 +54,7 @@ A couple of days before the release, update the [default versions](https://githu
 
 ## Prepare your release
 
-For a new major or minor release, work from the `master` branch. For a patch release, work in the branch of the minor release you want to patch (e.g. `release-0.43` if you're releasing `v0.43.2`).
+For a new major or minor release, work from the `main` branch. For a patch release, work in the branch of the minor release you want to patch (e.g. `release-0.43` if you're releasing `v0.43.2`).
 
 Bump the version in the `VERSION` file in the root of the repository.
 
@@ -106,11 +106,11 @@ git push origin "${tag}" "pkg/apis/monitoring/${tag}" "pkg/client/${tag}"
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
 
-Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator).
+Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator) and [ghcr.io](https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator)
 
 Go to https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
 
-For patch releases, submit a pull request to merge back the release branch into the `master` branch.
+For patch releases, submit a pull request to merge back the release branch into the `main` branch.
 
 ## Update website
 

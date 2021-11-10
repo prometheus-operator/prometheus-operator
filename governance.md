@@ -7,7 +7,7 @@ It is meant to be followed by all the developers of the Prometheus Operator proj
 * **Maintainers Team**: A core Prometheus Operator team that have owner access to https://github.com/prometheus-operator organization and all projects within it. Current list is available [here](MAINTAINERS.md).
 
 * **Triage Team**: Contributors who does not belong to Maintainer's team, but has `Triage` GitHub role on [Prometheus Operator](https://github.com/prometheus-operator) repository allowing to change GitHub issues and PRs statuses and labels.
-  They are listed [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/MAINTAINERS.md#triage).
+  They are listed [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/MAINTAINERS.md#triage).
 
 * **The Prometheus Operator project**: The sum of all activities performed under the [prometheus-operator organization on GitHub](https://github.com/prometheus-operator), concerning one or more repositories or the community.
 
@@ -71,7 +71,7 @@ Upon death of a member, their Triage team membership ends automatically.
 ### Technical decisions
 
 Smaller technical decisions are made informally and [lazy consensus](#consensus) is assumed. Technical decisions that span multiple parts of the Prometheus Operator project
-should be discussed and made on the [GitHub issues](https://github.com/prometheus-operator/prometheus-operator/issues) and in most cases followed by proposal as described [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/CONTRIBUTING.md).
+should be discussed and made on the [GitHub issues](https://github.com/prometheus-operator/prometheus-operator/issues) and in most cases followed by proposal as described [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/CONTRIBUTING.md).
 
 Decisions are usually made by [lazy consensus](#consensus). If no consensus can be reached, the matter may be resolved by [majority vote](#majority-vote).
 
@@ -162,7 +162,7 @@ It's about number of up votes to agree on the decision.
 
 ### How do I propose a decision?
 
-See [Contributor doc](https://github.com/prometheus-operator/prometheus-operator/blob/master/CONTRIBUTING.md)
+See [Contributor doc](https://github.com/prometheus-operator/prometheus-operator/blob/main/CONTRIBUTING.md)
 
 ### How do I become a team member?
 

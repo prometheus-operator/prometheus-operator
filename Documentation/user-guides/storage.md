@@ -29,7 +29,7 @@ parameters:
 
 For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws) documentation to adapt this `StorageClass` to your needs.
 
-The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/master/examples/prometheus-pvc.jsonnet) example).
+The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/main/examples/prometheus-pvc.jsonnet) example).
 
 ```yaml mdox-exec="cat example/storage/persisted-prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
