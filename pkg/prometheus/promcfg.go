@@ -1611,6 +1611,10 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
+		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.26.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
+		}
+
 		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
 		}
