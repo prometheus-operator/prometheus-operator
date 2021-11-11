@@ -14,10 +14,13 @@ IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
-TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
-TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
+PROM_V1_TARGET := pkg/apis/monitoring/v1/types.go
+THANOS_V1_TARGET := pkg/apis/monitoring/v1/thanos_types.go
+TYPES_V1_TARGET += $(PROM_V1_TARGET)
+TYPES_V1_TARGET += $(THANOS_V1_TARGET)
 
-TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+AM_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+TYPES_V1ALPHA1_TARGET += $(AM_V1ALPHA1_TARGET)
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
@@ -32,7 +35,8 @@ SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY)
+CRDOC_BINARY=$(TOOLS_BIN_DIR)/crdoc
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(CRDOC_BINARY)
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -188,7 +192,9 @@ generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yam
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	cd pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
+	cd pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/crds/v1
 	cd pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
+	cd pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/crds/v1alpha1
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
 
 
@@ -224,6 +230,8 @@ Documentation/operator.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPH
 	$(PO_DOCGEN_BINARY) operator cmd/operator/main.go > $@
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+	$(CRDOC_BINARY) --resources "$(PWD)/example/crds/v1" --output "$(PWD)/Documentation/apis/v1/api.md"
+	$(CRDOC_BINARY) --resources "$(PWD)/example/crds/v1alpha1" --output "$(PWD)/Documentation/apis/v1alpha1/api.md"
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
