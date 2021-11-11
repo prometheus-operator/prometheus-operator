@@ -949,7 +949,7 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
-    regex: true;true
+    regex: (true);true
   - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
@@ -1080,7 +1080,7 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
-    regex: true;true
+    regex: (true);true
   - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
@@ -1795,7 +1795,7 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_service_label_foo
     - __meta_kubernetes_service_labelpresent_foo
-    regex: bar;true
+    regex: (bar);true
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2036,6 +2036,13 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 						MatchLabels: map[string]string{
 							"foo": "bar",
 						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "alpha",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"beta", "gamma"},
+							},
+						},
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
@@ -2098,7 +2105,12 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_service_label_foo
     - __meta_kubernetes_service_labelpresent_foo
-    regex: bar;true
+    regex: (bar);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_alpha
+    - __meta_kubernetes_service_labelpresent_alpha
+    regex: (beta|gamma);true
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -3613,7 +3625,7 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_service_label_foo
     - __meta_kubernetes_service_labelpresent_foo
-    regex: bar;true
+    regex: (bar);true
   - source_labels:
     - __meta_kubernetes_endpoint_address_target_kind
     - __meta_kubernetes_endpoint_address_target_name
@@ -6284,5 +6296,136 @@ alerting:
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
+	}
+}
+
+func TestMatchExpressionsServiceMonitor(t *testing.T) {
+	cg := &ConfigGenerator{}
+	cfg, err := cg.GenerateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "ns-value",
+			},
+		},
+		map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "alpha",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"beta", "gamma"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: ns-value/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: serviceMonitor/default/test/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_alpha
+    - __meta_kubernetes_service_labelpresent_alpha
+    regex: (beta|gamma);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match for enforced namespace label test:\n%s", diff)
 	}
 }
