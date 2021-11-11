@@ -20,6 +20,7 @@
 package tools
 
 import (
+	_ "fybrik.io/crdoc"
 	_ "github.com/brancz/gojsontoyaml"
 	_ "github.com/bwplotka/mdox"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
