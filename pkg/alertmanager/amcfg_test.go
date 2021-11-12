@@ -42,6 +42,7 @@ func TestGenerateConfig(t *testing.T) {
 		name       string
 		kclient    kubernetes.Interface
 		baseConfig alertmanagerConfig
+		amVersion  *semver.Version
 		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
 		expected   string
 	}
@@ -288,11 +289,15 @@ templates: []
 `,
 		},
 		{
-			name:    "skeleton base, CR with inhibition rules only (deprecated matchers)",
+			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
+			},
+			amVersion: &semver.Version{
+				Major: 0,
+				Minor: 20,
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
@@ -330,6 +335,109 @@ inhibit_rules:
   source_match:
     alertname: NodeNotReady
     namespace: mynamespace
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, CR with inhibition rules only (deprecated matchers are converted)",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "NodeNotReady",
+										Regex: true,
+									},
+								},
+								TargetMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "TargetDown",
+									},
+								},
+								Equal: []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - alertname="TargetDown"
+  - namespace="mynamespace"
+  source_matchers:
+  - alertname=~"NodeNotReady"
+  - namespace="mynamespace"
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, CR with inhibition rules only",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:      "alertname",
+										MatchType: monitoringv1alpha1.MatchRegexp,
+										Value:     "NodeNotReady",
+									},
+								},
+								TargetMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:      "alertname",
+										MatchType: monitoringv1alpha1.MatchNotEqual,
+										Value:     "TargetDown",
+									},
+								},
+								Equal: []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - alertname!="TargetDown"
+  - namespace="mynamespace"
+  source_matchers:
+  - alertname=~"NodeNotReady"
+  - namespace="mynamespace"
   equal:
   - node
 receivers:
@@ -807,16 +915,20 @@ templates: []
 		},
 	}
 
-	version, err := semver.ParseTolerant("v0.22.2")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	logger := log.NewNopLogger()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
-			cg := newConfigGenerator(logger, version, store)
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				if err != nil {
+					t.Fatal(err)
+				}
+				tc.amVersion = &version
+			}
+
+			cg := newConfigGenerator(logger, *tc.amVersion, store)
 			cfgBytes, err := cg.generateConfig(context.Background(), tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)

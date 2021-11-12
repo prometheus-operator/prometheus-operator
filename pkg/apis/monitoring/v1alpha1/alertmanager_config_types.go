@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
@@ -713,9 +714,49 @@ type Matcher struct {
 	// Label value to match.
 	// +optional
 	Value string `json:"value"`
+	// Match operation available with AlertManager >= v0.22.0 and
+	// takes precedence over Regex (deprecated) if non-empty.
+	// +kubebuilder:validation:Enum=!=;=;=~;!~
+	// +optional
+	MatchType MatchType `json:"matchType,omitempty"`
 	// Whether to match on equality (false) or regular-expression (true).
+	// Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead.
 	// +optional
 	Regex bool `json:"regex,omitempty"`
+}
+
+// String returns Matcher as a string
+// Use only for MatchType Matcher
+func (in Matcher) String() string {
+	return fmt.Sprintf(`%s%s"%s"`, in.Name, in.MatchType, openMetricsEscape(in.Value))
+}
+
+// Validate the Matcher returns an error if the matcher is invalid
+// Validates only non-deprecated matching fields
+func (in Matcher) Validate() error {
+	// nothing to do
+	if in.MatchType == "" {
+		return nil
+	}
+
+	if !in.MatchType.Valid() {
+		return fmt.Errorf("invalid 'matchType' '%s' provided'", in.MatchType)
+	}
+
+	if strings.TrimSpace(in.Name) == "" {
+		return errors.New("matcher 'name' is required")
+	}
+
+	return nil
+}
+
+// MatchType is a comparison operator on a Matcher
+type MatchType string
+
+// Valid MatchType returns true if the operator is acceptable
+func (mt MatchType) Valid() bool {
+	_, ok := validMatchTypes[mt]
+	return ok
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -726,4 +767,32 @@ func (l *AlertmanagerConfig) DeepCopyObject() runtime.Object {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *AlertmanagerConfigList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+const (
+	MatchEqual     MatchType = "="
+	MatchNotEqual  MatchType = "!="
+	MatchRegexp    MatchType = "=~"
+	MatchNotRegexp MatchType = "!~"
+)
+
+var validMatchTypes = map[MatchType]bool{
+	MatchEqual:     true,
+	MatchNotEqual:  true,
+	MatchRegexp:    true,
+	MatchNotRegexp: true,
+}
+
+// openMetricsEscape is similar to the usual string escaping, but more
+// restricted. It merely replaces a new-line character with '\n', a double-quote
+// character with '\"', and a backslash with '\\', which is the escaping used by
+// OpenMetrics.
+// * Copied from alertmanager codebase pkg/labels *
+func openMetricsEscape(s string) string {
+	r := strings.NewReplacer(
+		`\`, `\\`,
+		"\n", `\n`,
+		`"`, `\"`,
+	)
+	return r.Replace(s)
 }

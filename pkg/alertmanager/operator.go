@@ -909,7 +909,7 @@ receivers:
 		return errors.Wrap(err, "failed to parse alertmanager version")
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
@@ -963,7 +963,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1011,7 +1011,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfig(ctx, amc, store); err != nil {
+		if err := checkAlertmanagerConfig(ctx, amc, amVersion, store); err != nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
@@ -1042,13 +1042,17 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
+func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
 	receiverNames, err := checkReceivers(ctx, amc, store)
 	if err != nil {
 		return err
 	}
 
-	return validateAlertManagerRoutes(amc.Spec.Route, receiverNames, true)
+	if err := validateAlertManagerRoutes(amc.Spec.Route, receiverNames, true); err != nil {
+		return err
+	}
+
+	return checkInhibitRules(ctx, amc, amVersion)
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
@@ -1268,6 +1272,36 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 		}
 	}
 
+	return nil
+}
+
+func checkInhibitRules(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
+	matchersV2Allowed := version.GTE(semver.MustParse("0.22.0"))
+
+	for i, rule := range amc.Spec.InhibitRules {
+		if !matchersV2Allowed {
+			// check if rule has provided invalid syntax and error if true
+			if checkIsV2Matcher(rule.SourceMatch, rule.TargetMatch) {
+				msg := fmt.Sprintf(
+					`'sourceMatch' and/or 'targetMatch' are using matching syntax which is supported in Alertmanager >= 0.22.0 only (sourceMatch=%v, targetMatch=%v)`,
+					rule.SourceMatch, rule.TargetMatch)
+				return errors.New(msg)
+			}
+			continue
+		}
+
+		for j, tm := range rule.TargetMatch {
+			if err := tm.Validate(); err != nil {
+				return errors.Wrapf(err, "invalid targetMatchers[%d] in inhibitRule[%d] in config %s", j, i, amc.Name)
+			}
+		}
+
+		for j, sm := range rule.SourceMatch {
+			if err := sm.Validate(); err != nil {
+				return errors.Wrapf(err, "invalid sourceMatchers[%d] in inhibitRule[%d] in config %s", j, i, amc.Name)
+			}
+		}
+	}
 	return nil
 }
 
