@@ -683,7 +683,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Selector.MatchLabels[k])},
+			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
@@ -694,13 +694,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpExists:
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -968,7 +968,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
-				{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Targets.Ingress.Selector.MatchLabels[k])},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Targets.Ingress.Selector.MatchLabels[k])},
 			})
 		}
 
@@ -980,13 +980,13 @@ func (cg *ConfigGenerator) generateProbeConfig(
 				relabelings = append(relabelings, yaml.MapSlice{
 					{Key: "action", Value: "keep"},
 					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 				})
 			case metav1.LabelSelectorOpNotIn:
 				relabelings = append(relabelings, yaml.MapSlice{
 					{Key: "action", Value: "drop"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: strings.Join(exp.Values, "|")},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 				})
 			case metav1.LabelSelectorOpExists:
 				relabelings = append(relabelings, yaml.MapSlice{
@@ -1182,7 +1182,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("%s;true", m.Spec.Selector.MatchLabels[k])},
+			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
@@ -1193,13 +1193,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("%s;true", strings.Join(exp.Values, "|"))},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
 			})
 		case metav1.LabelSelectorOpExists:
 			relabelings = append(relabelings, yaml.MapSlice{
