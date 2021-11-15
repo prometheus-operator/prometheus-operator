@@ -1048,11 +1048,43 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	if err := validateAlertManagerRoutes(amc.Spec.Route, receiverNames, true); err != nil {
+	if err := checkRoutes(ctx, amc.Spec.Route, receiverNames, amVersion); err != nil {
 		return err
 	}
 
 	return checkInhibitRules(ctx, amc, amVersion)
+}
+
+func checkRoutes(ctx context.Context, route *monitoringv1alpha1.Route, receiverNames map[string]struct{}, amVersion semver.Version) error {
+	if route == nil {
+		return nil
+	}
+
+	if err := validateAlertManagerRoutes(route, receiverNames, true); err != nil {
+		return err
+	}
+
+	return checkRoute(ctx, *route, amVersion)
+}
+
+func checkRoute(ctx context.Context, route monitoringv1alpha1.Route, amVersion semver.Version) error {
+	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if !matchersV2Allowed && checkIsV2Matcher(route.Matchers) {
+		return fmt.Errorf(
+			`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v) (receiver=%v)`,
+			route.Matchers, route.Receiver)
+	}
+
+	childRoutes, err := route.ChildRoutes()
+	if err != nil {
+		return err
+	}
+	for _, route := range childRoutes {
+		if err := checkRoute(ctx, route, amVersion); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
