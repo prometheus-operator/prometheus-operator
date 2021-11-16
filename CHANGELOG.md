@@ -1,3 +1,7 @@
+## 0.52.1 / 2021-11-06
+
+* [BUGFIX] Fixed regex in relabel_configs
+
 ## 0.52.0 / 2021-11-03
 
 * [CHANGE] Extend sharding capabilities to `additionalScrapeConfigs`. #4324
