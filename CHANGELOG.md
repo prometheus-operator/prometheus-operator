@@ -1,4 +1,4 @@
-## 0.52.1 / 2021-11-06
+## 0.52.1 / 2021-11-16
 
 * [BUGFIX] Fixed regex in relabel_configs
 
