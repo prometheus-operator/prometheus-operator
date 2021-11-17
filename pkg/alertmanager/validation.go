@@ -218,6 +218,19 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers map[strin
 		return errors.Errorf("receiver %q not found", r.Receiver)
 	}
 
+	if groupLen := len(r.GroupBy); groupLen > 0 {
+		groupedBy := make(map[string]struct{}, groupLen)
+		for _, str := range r.GroupBy {
+			if _, found := groupedBy[str]; found {
+				return errors.Errorf("duplicate values not permitted in route 'groupBy': %v", r.GroupBy)
+			}
+			groupedBy[str] = struct{}{}
+		}
+		if _, found := groupedBy["..."]; found && groupLen > 1 {
+			return errors.Errorf("'...' must be a sole value in route 'groupBy': %v", r.GroupBy)
+		}
+	}
+
 	children, err := r.ChildRoutes()
 	if err != nil {
 		return err
