@@ -1532,7 +1532,7 @@ Route defines a node in the routing tree.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | receiver | Name of the receiver for this route. If not empty, it should be listed in the `receivers` field. | string | true |
-| groupBy | List of labels to group by. | []string | false |
+| groupBy | List of labels to group by. Labels must not be repeated (unique list). Special label \"...\" (aggregate by all possible labels), if provided, must be the only element in the list. | []string | false |
 | groupWait | How long to wait before sending the initial notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
 | groupInterval | How long to wait before sending an updated notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
 | repeatInterval | How long to wait before repeating the last notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |

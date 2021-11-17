@@ -2768,7 +2768,7 @@
                         "type": "boolean"
                       },
                       "groupBy": {
-                        "description": "List of labels to group by.",
+                        "description": "List of labels to group by. Labels must not be repeated (unique list). Special label \"...\" (aggregate by all possible labels), if provided, must be the only element in the list.",
                         "items": {
                           "type": "string"
                         },
