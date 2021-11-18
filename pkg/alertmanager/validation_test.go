@@ -332,6 +332,40 @@ func TestValidateConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fail to validate routes with duplicate groupBy",
+			in: &monitoringv1alpha1.AlertmanagerConfig{
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "same",
+						GroupBy:  []string{"job", "job"},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate routes with exclusive value and other in groupBy",
+			in: &monitoringv1alpha1.AlertmanagerConfig{
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "same",
+						GroupBy:  []string{"job", "..."},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test happy path",
 			in: &monitoringv1alpha1.AlertmanagerConfig{
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -419,6 +453,7 @@ func TestValidateConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "same",
+						GroupBy:  []string{"..."},
 					},
 				},
 			},

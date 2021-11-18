@@ -89,6 +89,8 @@ type Route struct {
 	// +optional
 	Receiver string `json:"receiver"`
 	// List of labels to group by.
+	// Labels must not be repeated (unique list).
+	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// How long to wait before sending the initial notification. Must match the

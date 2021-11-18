@@ -270,6 +270,7 @@ templates: []
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
+							GroupBy:  []string{"job"},
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
 					},
@@ -279,6 +280,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
+    group_by:
+    - job
     matchers:
     - namespace="mynamespace"
     continue: true
