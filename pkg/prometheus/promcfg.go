@@ -43,17 +43,34 @@ var (
 	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 )
 
-// ConfigGenerator is used to create Prometheus configurations from operator resources.
+// ConfigGenerator knows how to generate a Prometheus configuration which is
+// compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger log.Logger
+	logger  log.Logger
+	version semver.Version
 }
 
-// NewConfigGenerator creates a ConfigGenerator instance using the provided Logger.
-func NewConfigGenerator(logger log.Logger) *ConfigGenerator {
-	cg := &ConfigGenerator{
-		logger: logger,
+// NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
+func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, error) {
+	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse prometheus version")
 	}
-	return cg
+
+	logger = log.With(logger, "version", promVersion)
+
+	return &ConfigGenerator{
+		logger:  logger,
+		version: version,
+	}, nil
+}
+
+func (cg *ConfigGenerator) WithLogger(logger log.Logger) *ConfigGenerator {
+	return &ConfigGenerator{
+		logger:  logger,
+		version: cg.version,
+	}
 }
 
 func sanitizeLabelName(name string) string {
@@ -100,39 +117,41 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig)
 }
 
 func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
-	if tls != nil {
-		tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
-		if tls.CAFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
-		}
-		if tls.CertFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
-		}
-		if tls.KeyFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
-		}
-		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	if tls == nil {
+		return cfg
 	}
+
+	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
+	if tls.CAFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+	}
+	if tls.CertFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+	}
+	if tls.KeyFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+	}
+	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+
 	return cfg
 }
 
-func addSafeAuthorizationToYaml(
+func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
-	version semver.Version,
 	assetStoreKey string,
 	store *assets.Store,
 	auth *v1.SafeAuthorization,
-	logger log.Logger,
 ) yaml.MapSlice {
 	if auth == nil {
 		return cfg
 	}
-	if version.LT(semver.MustParse("2.26.0")) {
+
+	if cg.version.LT(semver.MustParse("2.26.0")) {
 		// extract current cfg section from assetStoreKey, assuming
 		// "<component>/something..."
 		component := strings.Split(assetStoreKey, "/")[0]
-		level.Warn(logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
-			"component", component, "version", version)
+		level.Warn(cg.logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
+			"component", component)
 		return cfg
 	}
 	authCfg := yaml.MapSlice{}
@@ -148,28 +167,26 @@ func addSafeAuthorizationToYaml(
 	return append(cfg, yaml.MapItem{Key: "authorization", Value: authCfg})
 }
 
-func addAuthorizationToYaml(
+func (cg *ConfigGenerator) addAuthorizationToYaml(
 	cfg yaml.MapSlice,
-	version semver.Version,
 	assetStoreKey string,
 	store *assets.Store,
 	auth *v1.Authorization,
-	logger log.Logger,
 ) yaml.MapSlice {
 	if auth == nil {
 		return cfg
 	}
-	if version.LT(semver.MustParse("2.26.0")) {
+	if cg.version.LT(semver.MustParse("2.26.0")) {
 		// extract current cfg section from assetStoreKey, assuming
 		// "<component>/something..."
 		component := strings.Split(assetStoreKey, "/")[0]
-		level.Warn(logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
-			"component", component, "version", version)
+		level.Warn(cg.logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
+			"component", component)
 		return cfg
 	}
 	// reuse addSafeAuthorizationToYaml and unpack the part we're interested
 	// in, namely the value under the "authorization" key
-	authCfg := addSafeAuthorizationToYaml(yaml.MapSlice{}, version, assetStoreKey, store, &auth.SafeAuthorization, logger)[0].Value.(yaml.MapSlice)
+	authCfg := cg.addSafeAuthorizationToYaml(yaml.MapSlice{}, assetStoreKey, store, &auth.SafeAuthorization)[0].Value.(yaml.MapSlice)
 	if auth.CredentialsFile != "" {
 		authCfg = append(authCfg, yaml.MapItem{Key: "credentials_file", Value: auth.CredentialsFile})
 	}
@@ -179,32 +196,22 @@ func addAuthorizationToYaml(
 func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	m := map[string]string{}
 
-	// Use "prometheus" external label name by default if field is missing.
-	// Do not add external label if field is set to empty string.
 	prometheusExternalLabelName := "prometheus"
 	if p.Spec.PrometheusExternalLabelName != nil {
-		if *p.Spec.PrometheusExternalLabelName != "" {
-			prometheusExternalLabelName = *p.Spec.PrometheusExternalLabelName
-		} else {
-			prometheusExternalLabelName = ""
-		}
+		prometheusExternalLabelName = *p.Spec.PrometheusExternalLabelName
 	}
 
-	// Use defaultReplicaExternalLabelName constant by default if field is missing.
-	// Do not add external label if field is set to empty string.
-	replicaExternalLabelName := defaultReplicaExternalLabelName
-	if p.Spec.ReplicaExternalLabelName != nil {
-		if *p.Spec.ReplicaExternalLabelName != "" {
-			replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
-		} else {
-			replicaExternalLabelName = ""
-		}
-	}
-
+	// Do not add the external label if the resulting value is empty.
 	if prometheusExternalLabelName != "" {
 		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
 	}
 
+	replicaExternalLabelName := defaultReplicaExternalLabelName
+	if p.Spec.ReplicaExternalLabelName != nil {
+		replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
+	}
+
+	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
 		m[replicaExternalLabelName] = "$(POD_NAME)"
 	}
@@ -300,8 +307,8 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	return nil
 }
 
-// GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
-func (cg *ConfigGenerator) GenerateConfig(
+// Generate creates a serialized YAML representation of a Prometheus configuration using the provided resources.
+func (cg *ConfigGenerator) Generate(
 	p *v1.Prometheus,
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
@@ -411,7 +418,6 @@ func (cg *ConfigGenerator) GenerateConfig(
 		for i, ep := range sMons[identifier].Spec.Endpoints {
 			scrapeConfigs = append(scrapeConfigs,
 				cg.generateServiceMonitorConfig(
-					version,
 					sMons[identifier],
 					ep, i,
 					apiserverConfig,
@@ -435,7 +441,6 @@ func (cg *ConfigGenerator) GenerateConfig(
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
 			scrapeConfigs = append(scrapeConfigs,
 				cg.generatePodMonitorConfig(
-					version,
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
@@ -458,7 +463,6 @@ func (cg *ConfigGenerator) GenerateConfig(
 	for _, identifier := range probeIdentifiers {
 		scrapeConfigs = append(scrapeConfigs,
 			cg.generateProbeConfig(
-				version,
 				probes[identifier],
 				apiserverConfig,
 				store,
@@ -476,9 +480,6 @@ func (cg *ConfigGenerator) GenerateConfig(
 		)
 	}
 
-	var alertmanagerConfigs []yaml.MapSlice
-	alertmanagerConfigs = cg.generateAlertmanagerConfig(version, p.Spec.Alerting, apiserverConfig, store)
-
 	var addlScrapeConfigs []yaml.MapSlice
 	addlScrapeConfigs, err = cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
 	if err != nil {
@@ -490,29 +491,50 @@ func (cg *ConfigGenerator) GenerateConfig(
 		Value: append(scrapeConfigs, addlScrapeConfigs...),
 	})
 
-	var additionalAlertManagerConfigsYaml []yaml.MapSlice
-	err = yaml.Unmarshal([]byte(additionalAlertManagerConfigs), &additionalAlertManagerConfigsYaml)
+	cfg, err = cg.appendAlertingConfig(cfg, p, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshalling additional alert manager configs failed")
+		return nil, errors.Wrap(err, "generating alerting configuration failed")
 	}
 
-	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertManagerConfigsYaml...)
+	if len(p.Spec.RemoteWrite) > 0 {
+		cfg = append(cfg, cg.generateRemoteWriteConfig(p, store))
+	}
+
+	if len(p.Spec.RemoteRead) > 0 {
+		cfg = append(cfg, cg.generateRemoteReadConfig(p, store))
+	}
+
+	return yaml.Marshal(cfg)
+}
+
+func (cg *ConfigGenerator) appendAlertingConfig(
+	cfg yaml.MapSlice,
+	p *v1.Prometheus,
+	additionalAlertRelabelConfigs []byte,
+	additionalAlertmanagerConfigs []byte,
+	store *assets.Store,
+) (yaml.MapSlice, error) {
+	if p.Spec.Alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
+		return cfg, nil
+	}
+
+	alertmanagerConfigs := cg.generateAlertmanagerConfig(p.Spec.Alerting, p.Spec.APIServerConfig, store)
+
+	var additionalAlertmanagerConfigsYaml []yaml.MapSlice
+	if err := yaml.Unmarshal([]byte(additionalAlertmanagerConfigs), &additionalAlertmanagerConfigsYaml); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling additional alertmanager configs failed")
+	}
+	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertmanagerConfigsYaml...)
 
 	var alertRelabelConfigs []yaml.MapSlice
 
-	// Use defaultReplicaExternalLabelName constant by default if field is missing.
-	// Do not add external label if field is set to empty string.
 	replicaExternalLabelName := defaultReplicaExternalLabelName
 	if p.Spec.ReplicaExternalLabelName != nil {
-		if *p.Spec.ReplicaExternalLabelName != "" {
-			replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
-		} else {
-			replicaExternalLabelName = ""
-		}
+		replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
 	}
 
 	if replicaExternalLabelName != "" {
-		// Drop replica label, to make alerts from multiple Prometheus replicas alike
+		// Drop the replica label to enable proper deduplication on the Alertmanager side.
 		alertRelabelConfigs = append(alertRelabelConfigs, yaml.MapSlice{
 			{Key: "action", Value: "labeldrop"},
 			{Key: "regex", Value: regexp.QuoteMeta(replicaExternalLabelName)},
@@ -520,38 +542,24 @@ func (cg *ConfigGenerator) GenerateConfig(
 	}
 
 	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
-	err = yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml)
-	if err != nil {
+	if err := yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml); err != nil {
 		return nil, errors.Wrap(err, "unmarshalling additional alerting relabel configs failed")
 	}
+	alertRelabelConfigs = append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...)
 
-	if p.Spec.Alerting != nil ||
-		additionalAlertRelabelConfigs != nil ||
-		additionalAlertManagerConfigs != nil {
-		cfg = append(cfg, yaml.MapItem{
-			Key: "alerting",
-			Value: yaml.MapSlice{
-				{
-					Key:   "alert_relabel_configs",
-					Value: append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...),
-				},
-				{
-					Key:   "alertmanagers",
-					Value: alertmanagerConfigs,
-				},
+	return append(cfg, yaml.MapItem{
+		Key: "alerting",
+		Value: yaml.MapSlice{
+			{
+				Key:   "alert_relabel_configs",
+				Value: alertRelabelConfigs,
 			},
-		})
-	}
-
-	if len(p.Spec.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, store))
-	}
-
-	if len(p.Spec.RemoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, store))
-	}
-
-	return yaml.Marshal(cfg)
+			{
+				Key:   "alertmanagers",
+				Value: alertmanagerConfigs,
+			},
+		},
+	}), nil
 }
 
 // honorLabels determines the value of honor_labels.
@@ -593,7 +601,6 @@ func initRelabelings() []yaml.MapSlice {
 }
 
 func (cg *ConfigGenerator) generatePodMonitorConfig(
-	version semver.Version,
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
@@ -623,12 +630,12 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			Value: hl,
 		},
 	}
-	if version.Major == 2 && version.Minor >= 9 {
+	if cg.version.GTE(semver.MustParse("2.9.0")) {
 		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
 	}
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(version, selectedNamespaces, apiserverConfig, store, kubernetesSDRolePod))
+	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRolePod))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -671,9 +678,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, store.OAuth2Assets, assetKey)
+	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization, logger)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -816,7 +823,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	enforcer := limitEnforcer{
 		logger:            logger,
-		prometheusVersion: version,
+		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
@@ -833,7 +840,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 }
 
 func (cg *ConfigGenerator) generateProbeConfig(
-	version semver.Version,
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
@@ -887,7 +893,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	enforcer := limitEnforcer{
 		logger:            logger,
-		prometheusVersion: version,
+		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
@@ -1010,7 +1016,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}
 
 		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-		cfg = append(cfg, cg.generateK8SSDConfig(version, selectedNamespaces, apiserverConfig, store, kubernetesSDRoleIngress))
+		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleIngress))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1078,9 +1084,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
-	cfg = addOAuth2ToYaml(cfg, version, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
+	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization, logger)
+	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(m.Spec.MetricRelabelConfigs)})
 
@@ -1088,7 +1094,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 }
 
 func (cg *ConfigGenerator) generateServiceMonitorConfig(
-	version semver.Version,
 	m *v1.ServiceMonitor,
 	ep v1.Endpoint,
 	i int,
@@ -1119,12 +1124,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			Value: hl,
 		},
 	}
-	if version.Major == 2 && version.Minor >= 9 {
+	if cg.version.GTE(semver.MustParse("2.9.0")) {
 		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
 	}
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(version, selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))
+	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1146,7 +1151,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = addOAuth2ToYaml(cfg, version, ep.OAuth2, store.OAuth2Assets, assetKey)
+	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
 	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
 
@@ -1171,7 +1176,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization, logger)
+	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1341,7 +1346,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	enforcer := limitEnforcer{
 		logger:            logger,
-		prometheusVersion: version,
+		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
 	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
@@ -1427,7 +1432,7 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *ConfigGenerator) generateK8SSDConfig(version semver.Version, namespaces []string, apiserverConfig *v1.APIServerConfig, store *assets.Store, role string) yaml.MapItem {
+func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, store *assets.Store, role string) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1471,7 +1476,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(version semver.Version, namespace
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = addAuthorizationToYaml(k8sSDConfig, version, "apiserver/auth", store, apiserverConfig.Authorization, cg.logger)
+		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, "apiserver/auth", store, apiserverConfig.Authorization)
 
 		// TODO: If we want to support secret refs for k8s service discovery tls
 		// config as well, make sure to path the right namespace here.
@@ -1486,11 +1491,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(version semver.Version, namespace
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, alerting *v1.AlertingSpec, apiserverConfig *v1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
-	var alertmanagerConfigs []yaml.MapSlice
-	if alerting == nil {
-		return alertmanagerConfigs
+func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec, apiserverConfig *v1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
+	if alerting == nil || len(alerting.Alertmanagers) == 0 {
+		return nil
 	}
+
+	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
 	for i, am := range alerting.Alertmanagers {
 		if am.Scheme == "" {
 			am.Scheme = "http"
@@ -1513,15 +1519,15 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, al
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(version, []string{am.Namespace}, apiserverConfig, store, kubernetesSDRoleEndpoint))
+		cfg = append(cfg, cg.generateK8SSDConfig([]string{am.Namespace}, apiserverConfig, store, kubernetesSDRoleEndpoint))
 
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = addSafeAuthorizationToYaml(cfg, version, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization, cg.logger)
+		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
-		if version.Major > 2 || (version.Major == 2 && version.Minor >= 11) {
+		if cg.version.GTE(semver.MustParse("2.11.0")) {
 			if am.APIVersion == "v1" || am.APIVersion == "v2" {
 				cfg = append(cfg, yaml.MapItem{Key: "api_version", Value: am.APIVersion})
 			}
@@ -1600,7 +1606,6 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
-	version semver.Version,
 	p *v1.Prometheus,
 	store *assets.Store,
 ) yaml.MapItem {
@@ -1617,11 +1622,11 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
-		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.26.0")) {
+		if len(spec.Headers) > 0 && cg.version.GTE(semver.MustParse("2.26.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
 		}
 
-		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {
+		if spec.Name != "" && cg.version.GTE(semver.MustParse("2.15.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
 		}
 
@@ -1652,11 +1657,11 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = addOAuth2ToYaml(cfg, version, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
-		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization, cg.logger)
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
@@ -1671,14 +1676,13 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 	}
 }
 
-func addOAuth2ToYaml(
+func (cg *ConfigGenerator) addOAuth2ToYaml(
 	cfg yaml.MapSlice,
-	version semver.Version,
 	oauth2 *v1.OAuth2,
 	tlsAssets map[string]assets.OAuth2Credentials,
 	assetKey string,
 ) yaml.MapSlice {
-	if oauth2 == nil || !version.GTE(semver.MustParse("2.27.0")) {
+	if oauth2 == nil || !cg.version.GTE(semver.MustParse("2.27.0")) {
 		return cfg
 	}
 
@@ -1706,7 +1710,6 @@ func addOAuth2ToYaml(
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
-	version semver.Version,
 	p *v1.Prometheus,
 	store *assets.Store,
 ) yaml.MapItem {
@@ -1723,15 +1726,15 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
-		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.25.0")) {
+		if len(spec.Headers) > 0 && cg.version.GTE(semver.MustParse("2.25.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
 		}
 
-		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {
+		if spec.Name != "" && cg.version.GTE(semver.MustParse("2.15.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
 		}
 
-		if spec.SendExemplars != nil && version.GTE(semver.MustParse("2.27.0")) {
+		if spec.SendExemplars != nil && cg.version.GTE(semver.MustParse("2.27.0")) {
 			cfg = append(cfg, yaml.MapItem{Key: "send_exemplars", Value: spec.SendExemplars})
 		}
 
@@ -1793,17 +1796,17 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = addOAuth2ToYaml(cfg, version, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
-		cfg = addAuthorizationToYaml(cfg, version, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization, cg.logger)
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		if spec.Sigv4 != nil && version.GTE(semver.MustParse("2.26.0")) {
+		if spec.Sigv4 != nil && cg.version.GTE(semver.MustParse("2.26.0")) {
 			sigV4 := yaml.MapSlice{}
 			if spec.Sigv4.Region != "" {
 				sigV4 = append(sigV4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
@@ -1831,7 +1834,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
 			}
 
-			if version.GTE(semver.MustParse("2.6.0")) {
+			if cg.version.GTE(semver.MustParse("2.6.0")) {
 				if spec.QueueConfig.MinShards != int(0) {
 					queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
 				}
@@ -1849,7 +1852,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
 			}
 
-			if version.LT(semver.MustParse("2.11.0")) {
+			if cg.version.LT(semver.MustParse("2.11.0")) {
 				if spec.QueueConfig.MaxRetries != int(0) {
 					queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
 				}
@@ -1863,7 +1866,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
 			}
 
-			if version.GTE(semver.MustParse("2.26.0")) {
+			if cg.version.GTE(semver.MustParse("2.26.0")) {
 				if spec.QueueConfig.RetryOnRateLimit {
 					queueConfig = append(queueConfig, yaml.MapItem{Key: "retry_on_http_429", Value: spec.QueueConfig.RetryOnRateLimit})
 				}
@@ -1872,7 +1875,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
 
-		if spec.MetadataConfig != nil && version.GTE(semver.MustParse("2.23.0")) {
+		if spec.MetadataConfig != nil && cg.version.GTE(semver.MustParse("2.23.0")) {
 			metadataConfig := yaml.MapSlice{}
 			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
 			if spec.MetadataConfig.SendInterval != "" {
@@ -1934,8 +1937,8 @@ func (l *limitEnforcer) addLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uin
 	}
 
 	if k.minVersion != "" && l.prometheusVersion.LT(semver.MustParse(k.minVersion)) {
-		level.Warn(l.logger).Log("msg", fmt.Sprintf("%q is only available starting from prometheus %s", string(k.specField), k.minVersion),
-			"version", l.prometheusVersion)
+		level.Warn(l.logger).Log("msg", fmt.Sprintf("%q is only available starting from prometheus %s", string(k.specField), k.minVersion))
+
 		return cfg
 	}
 
@@ -1974,8 +1977,7 @@ func (l *limitEnforcer) addBodySizeLimitsToYAML(cfg yaml.MapSlice, enforcedLimit
 	}
 
 	if l.prometheusVersion.LT(semver.MustParse("2.28.0")) {
-		level.Warn(l.logger).Log("msg", "body_size_limit is only available starting from prometheus 2.28.0",
-			"version", l.prometheusVersion)
+		level.Warn(l.logger).Log("msg", "body_size_limit is only available starting from prometheus 2.28.0")
 		return cfg
 	}
 	return append(cfg, yaml.MapItem{Key: "body_size_limit", Value: enforcedLimit})

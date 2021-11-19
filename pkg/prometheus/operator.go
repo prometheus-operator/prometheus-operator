@@ -24,16 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
-	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
@@ -50,6 +40,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -88,8 +87,6 @@ type Operator struct {
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
 	config                 operator.Config
-
-	configGenerator *ConfigGenerator
 }
 
 // New creates a new controller.
@@ -142,7 +139,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		configGenerator:        NewConfigGenerator(logger),
 		metrics:                operator.NewMetrics("prometheus", r),
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -1213,11 +1209,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
 	p.Kind = monitoringv1.PrometheusesKind
 
+	logger := log.With(c.logger, "key", key)
 	if p.Spec.Paused {
+		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
 		return nil
 	}
 
-	logger := log.With(c.logger, "key", key)
 	level.Info(logger).Log("msg", "sync prometheus")
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
@@ -1599,8 +1596,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
 
+	cg, err := NewConfigGenerator(c.logger, p)
+	if err != nil {
+		return err
+	}
+
 	// Update secret based on the most recent configuration.
-	conf, err := c.configGenerator.GenerateConfig(
+	conf, err := cg.Generate(
 		p,
 		smons,
 		pmons,
