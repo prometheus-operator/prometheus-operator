@@ -359,14 +359,16 @@ func (cg *ConfigGenerator) GenerateConfig(
 
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
-	ruleFilePaths := []string{}
-	for _, name := range ruleConfigMapNames {
-		ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+	if p.Spec.RuleSelector != nil {
+		ruleFilePaths := []string{}
+		for _, name := range ruleConfigMapNames {
+			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "rule_files",
+			Value: ruleFilePaths,
+		})
 	}
-	cfg = append(cfg, yaml.MapItem{
-		Key:   "rule_files",
-		Value: ruleFilePaths,
-	})
 
 	sMonIdentifiers := make([]string, len(sMons))
 	i := 0
@@ -523,19 +525,23 @@ func (cg *ConfigGenerator) GenerateConfig(
 		return nil, errors.Wrap(err, "unmarshalling additional alerting relabel configs failed")
 	}
 
-	cfg = append(cfg, yaml.MapItem{
-		Key: "alerting",
-		Value: yaml.MapSlice{
-			{
-				Key:   "alert_relabel_configs",
-				Value: append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...),
+	if p.Spec.Alerting != nil ||
+		additionalAlertRelabelConfigs != nil ||
+		additionalAlertManagerConfigs != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key: "alerting",
+			Value: yaml.MapSlice{
+				{
+					Key:   "alert_relabel_configs",
+					Value: append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...),
+				},
+				{
+					Key:   "alertmanagers",
+					Value: alertmanagerConfigs,
+				},
 			},
-			{
-				Key:   "alertmanagers",
-				Value: alertmanagerConfigs,
-			},
-		},
-	})
+		})
+	}
 
 	if len(p.Spec.RemoteWrite) > 0 {
 		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, store))
