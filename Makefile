@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=/usr/bin/env bash -o pipefail
 
 GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
