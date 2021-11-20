@@ -192,7 +192,47 @@ spec:
 
 The above configuration specifies a `Prometheus` that finds all of the Alertmanagers behind the `Service` created with `alertmanager-example-service.yaml`. The `alertmanagers` `name` and `port` fields should match those of the `Service` to allow this to occur.
 
+### Rule Selection
+
 Prometheus rule files are held in `PrometheusRule` custom resources. Use the label selector field `ruleSelector` in the Prometheus object to define the rule files that you want to be mounted into Prometheus.
+
+By default, only `PrometheusRule` custom resources in the same namespace as the `Prometheus` custom resource are discovered.
+
+This can be further controlled with the `ruleNamespaceSelector` field, which is a [`metav1.LabelSelector`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta).
+
+To discover from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
+
+To discover from all namespaces with a certain label, use the `matchLabels` field:
+
+```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example-rule-namespace-selector.yaml"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  replicas: 2
+  alerting:
+    alertmanagers:
+    - namespace: default
+      name: alertmanager-example
+      port: web
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+  ruleSelector:
+    matchLabels:
+      role: alert-rules
+      prometheus: example
+  ruleNamespaceSelector:
+    matchLabels:
+      team: frontend
+```
+
+This will discover `PrometheusRule` custom resources from all namespaces with a `team=frontend` label.
+
+In case you want to select individual namespace by their name, you can use the `kubernetes.io/metadata.name` label, which gets populated automatically with the [`NamespaceDefaultLabelName`](https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name) feature gate.
+
+### `PrometheusRule` labelling
 
 The best practice is to label the `PrometheusRule`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
