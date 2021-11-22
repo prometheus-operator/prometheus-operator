@@ -1857,6 +1857,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
 			}
 
+			if version.GTE(semver.MustParse("2.26.0")) {
+				if spec.QueueConfig.RetryOnRateLimit {
+					queueConfig = append(queueConfig, yaml.MapItem{Key: "retry_on_http_429", Value: spec.QueueConfig.RetryOnRateLimit})
+				}
+			}
+
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
 
