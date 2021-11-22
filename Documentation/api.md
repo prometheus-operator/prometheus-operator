@@ -838,6 +838,7 @@ QueueConfig allows the tuning of remote_write queue_config parameters. This obje
 | maxRetries | MaxRetries is the maximum number of times to retry a batch on recoverable errors. | int | false |
 | minBackoff | MinBackoff is the initial retry delay. Gets doubled for every retry. | string | false |
 | maxBackoff | MaxBackoff is the maximum retry delay. | string | false |
+| retryOnRateLimit | Retry upon receiving a 429 status code from the remote-write storage. This is experimental feature and might change in the future. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
