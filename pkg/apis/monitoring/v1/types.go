@@ -743,6 +743,9 @@ type QueueConfig struct {
 	MinBackoff string `json:"minBackoff,omitempty"`
 	// MaxBackoff is the maximum retry delay.
 	MaxBackoff string `json:"maxBackoff,omitempty"`
+	// Retry upon receiving a 429 status code from the remote-write storage.
+	// This is experimental feature and might change in the future.
+	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 }
 
 // Sigv4 optionally configures AWS's Signature Verification 4 signing process to
