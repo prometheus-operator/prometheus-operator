@@ -14528,6 +14528,11 @@ spec:
                           description: MinShards is the minimum number of shards,
                             i.e. amount of concurrency.
                           type: integer
+                        retryOnRateLimit:
+                          description: Retry upon receiving a 429 status code from
+                            the remote-write storage. This is experimental feature
+                            and might change in the future.
+                          type: boolean
                       type: object
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.
