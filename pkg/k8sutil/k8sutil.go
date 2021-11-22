@@ -168,7 +168,7 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 
 		mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
 		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-		mergeKubectlAnnotations(&sset.Spec.Template.ObjectMeta, existingSset.Spec.Template.ObjectMeta)
+		mergeKubectlAnnotations(&existingSset.Spec.Template.ObjectMeta, sset.Spec.Template.ObjectMeta)
 
 		_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
 		return err
@@ -253,20 +253,24 @@ func mergeMaps(new map[string]string, old map[string]string) map[string]string {
 	return mergeMapsByPrefix(new, old, "")
 }
 
-func mergeKubectlAnnotations(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
-	new.SetAnnotations(mergeMapsByPrefix(new.Annotations, old.Annotations, "kubectl.kubernetes.io/"))
+func mergeKubectlAnnotations(from *metav1.ObjectMeta, to metav1.ObjectMeta) {
+	from.SetAnnotations(mergeMapsByPrefix(from.Annotations, to.Annotations, "kubectl.kubernetes.io/"))
 }
 
-func mergeMapsByPrefix(new map[string]string, old map[string]string, prefix string) map[string]string {
-	if old == nil {
-		old = make(map[string]string, len(new))
+func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix string) map[string]string {
+	if to == nil {
+		to = make(map[string]string)
 	}
 
-	for k, v := range new {
+	if from == nil {
+		from = make(map[string]string)
+	}
+
+	for k, v := range from {
 		if strings.HasPrefix(k, prefix) {
-			old[k] = v
+			to[k] = v
 		}
 	}
 
-	return old
+	return to
 }
