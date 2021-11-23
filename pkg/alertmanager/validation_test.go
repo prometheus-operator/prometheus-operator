@@ -366,6 +366,23 @@ func TestValidateConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fail to validate routes - named mute time interval does not exist",
+			in: &monitoringv1alpha1.AlertmanagerConfig{
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver:          "same",
+						MuteTimeIntervals: []string{"awol"},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test happy path",
 			in: &monitoringv1alpha1.AlertmanagerConfig{
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -452,8 +469,22 @@ func TestValidateConfig(t *testing.T) {
 						},
 					},
 					Route: &monitoringv1alpha1.Route{
-						Receiver: "same",
-						GroupBy:  []string{"..."},
+						Receiver:          "same",
+						GroupBy:           []string{"..."},
+						MuteTimeIntervals: []string{"weekdays-only"},
+					},
+					MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+						{
+							Name: "weekdays-only",
+							TimeIntervals: []monitoringv1alpha1.TimeInterval{
+								{
+									Weekdays: []monitoringv1alpha1.WeekdayRange{
+										monitoringv1alpha1.WeekdayRange("Saturday"),
+										monitoringv1alpha1.WeekdayRange("Sunday"),
+									},
+								},
+							},
+						},
 					},
 				},
 			},

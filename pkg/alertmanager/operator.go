@@ -1048,19 +1048,24 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	if err := checkRoutes(ctx, amc.Spec.Route, receiverNames, amVersion); err != nil {
+	muteTimeIntervalNames, err := validateMuteTimeIntervals(amc.Spec.MuteTimeIntervals)
+	if err != nil {
+		return err
+	}
+
+	if err := checkRoutes(ctx, amc.Spec.Route, receiverNames, muteTimeIntervalNames, amVersion); err != nil {
 		return err
 	}
 
 	return checkInhibitRules(ctx, amc, amVersion)
 }
 
-func checkRoutes(ctx context.Context, route *monitoringv1alpha1.Route, receiverNames map[string]struct{}, amVersion semver.Version) error {
+func checkRoutes(ctx context.Context, route *monitoringv1alpha1.Route, receiverNames, muteTimeIntervalNames map[string]struct{}, amVersion semver.Version) error {
 	if route == nil {
 		return nil
 	}
 
-	if err := validateAlertManagerRoutes(route, receiverNames, true); err != nil {
+	if err := validateAlertManagerRoutes(route, receiverNames, muteTimeIntervalNames, true); err != nil {
 		return err
 	}
 

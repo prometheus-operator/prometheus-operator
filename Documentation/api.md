@@ -82,11 +82,13 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerConfig](#alertmanagerconfig)
 * [AlertmanagerConfigList](#alertmanagerconfiglist)
 * [AlertmanagerConfigSpec](#alertmanagerconfigspec)
+* [DayOfMonthRange](#dayofmonthrange)
 * [EmailConfig](#emailconfig)
 * [HTTPConfig](#httpconfig)
 * [InhibitRule](#inhibitrule)
 * [KeyValue](#keyvalue)
 * [Matcher](#matcher)
+* [MuteTimeInterval](#mutetimeinterval)
 * [OpsGenieConfig](#opsgenieconfig)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
@@ -97,6 +99,8 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [TimeInterval](#timeinterval)
+* [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
 * [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
@@ -1321,6 +1325,21 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 | route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
 | receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
+| muteTimeIntervals | List of MuteTimeInterval specifying when the routes should be muted. | [][MuteTimeInterval](#mutetimeinterval) | false |
+
+[Back to TOC](#table-of-contents)
+
+## DayOfMonthRange
+
+DayOfMonthRange is an inclusive range of days of the month beginning at 1
+
+
+<em>appears in: [TimeInterval](#timeinterval)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| start | Start of the inclusive range | int | false |
+| end | End of the inclusive range | int | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1409,6 +1428,20 @@ Matcher defines how to match on alert's labels.
 | value | Label value to match. | string | true |
 | matchType | Match operation available with AlertManager >= v0.22.0 and takes precedence over Regex (deprecated) if non-empty. | MatchType | false |
 | regex | Whether to match on equality (false) or regular-expression (true). Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead. | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## MuteTimeInterval
+
+MuteTimeInterval specifies the periods in time when notifications will be muted
+
+
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name of the time interval | string | false |
+| timeIntervals | TimeIntervals is a list of TimeInterval | [][TimeInterval](#timeinterval) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1540,6 +1573,7 @@ Route defines a node in the routing tree.
 | matchers | List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher. | [][Matcher](#matcher) | false |
 | continue | Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator. | bool | false |
 | routes | Child routes. | [][apiextensionsv1.JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#json-v1-apiextensions-k8s-io) | false |
+| muteTimeIntervals | Note: this comment applies to the field definition above but appears below otherwise it gets included in the generated manifest. CRD schema doesn't support self referential types for now (see https://github.com/kubernetes/kubernetes/issues/62872). We have to use an alternative type to circumvent the limitation. The downside is that the Kube API can't validate the data beyond the fact that it is a valid JSON representation. MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched, | []string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1624,6 +1658,37 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TimeInterval
+
+TimeInterval describes intervals of time
+
+
+<em>appears in: [MuteTimeInterval](#mutetimeinterval)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| times | Times is a list of TimeRange | [][TimeRange](#timerange) | false |
+| weekdays | Weekdays is a list of WeekdayRange | []WeekdayRange | false |
+| daysOfMonth | DaysOfMonth is a list of DayOfMonthRange | [][DayOfMonthRange](#dayofmonthrange) | false |
+| months | Months is a list of MonthRange | []MonthRange | false |
+| years | Years is a list of YearRange | []YearRange | false |
+
+[Back to TOC](#table-of-contents)
+
+## TimeRange
+
+TimeRange defines a start and end time in 24hr format
+
+
+<em>appears in: [TimeInterval](#timeinterval)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| startTime | StartTime is the start time in 24hr format. | Time | false |
+| endTime | EndTime is the end time in 24hr format. | Time | false |
 
 [Back to TOC](#table-of-contents)
 

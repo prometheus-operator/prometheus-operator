@@ -28,12 +28,12 @@ import (
 // marshalling. See the following issue for details:
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
-	Global            *globalConfig      `yaml:"global,omitempty" json:"global,omitempty"`
-	Route             *route             `yaml:"route,omitempty" json:"route,omitempty"`
-	InhibitRules      []*inhibitRule     `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
-	Receivers         []*receiver        `yaml:"receivers,omitempty" json:"receivers,omitempty"`
-	MuteTimeIntervals []muteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
-	Templates         []string           `yaml:"templates" json:"templates"`
+	Global            *globalConfig       `yaml:"global,omitempty" json:"global,omitempty"`
+	Route             *route              `yaml:"route,omitempty" json:"route,omitempty"`
+	InhibitRules      []*inhibitRule      `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
+	Receivers         []*receiver         `yaml:"receivers,omitempty" json:"receivers,omitempty"`
+	MuteTimeIntervals []*muteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
+	Templates         []string            `yaml:"templates" json:"templates"`
 }
 
 type globalConfig struct {
