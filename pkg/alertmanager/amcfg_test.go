@@ -524,6 +524,19 @@ templates: []
 									},
 									Key: "routingKey",
 								},
+								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
+									{
+										Src:  "https://some-image.com",
+										Href: "https://some-image.com",
+										Alt:  "some-image",
+									},
+								},
+								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
+									{
+										Href: "https://some-link.com",
+										Text: "some-link",
+									},
+								},
 							}},
 						}},
 					},
@@ -541,6 +554,13 @@ receivers:
 - name: mynamespace-myamc-test-pd
   pagerduty_configs:
   - routing_key: 1234abc
+    images:
+    - src: https://some-image.com
+      alt: some-image
+      href: https://some-image.com
+    links:
+    - href: https://some-link.com
+      text: some-link
 templates: []
 `,
 		},

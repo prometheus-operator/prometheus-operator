@@ -515,6 +515,31 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	}
 	out.Details = details
 
+	var linkConfigs []pagerdutyLink
+	if l := len(in.PagerDutyLinkConfigs); l > 0 {
+		linkConfigs = make([]pagerdutyLink, l)
+		for i, lc := range in.PagerDutyLinkConfigs {
+			linkConfigs[i] = pagerdutyLink{
+				Href: lc.Href,
+				Text: lc.Text,
+			}
+		}
+	}
+	out.Links = linkConfigs
+
+	var imageConfig []pagerdutyImage
+	if l := len(in.PagerDutyImageConfigs); l > 0 {
+		imageConfig = make([]pagerdutyImage, l)
+		for i, ic := range in.PagerDutyImageConfigs {
+			imageConfig[i] = pagerdutyImage{
+				Src:  ic.Src,
+				Alt:  ic.Alt,
+				Href: ic.Href,
+			}
+		}
+	}
+	out.Images = imageConfig
+
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
 		if err != nil {
