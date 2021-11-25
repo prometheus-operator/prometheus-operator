@@ -72,71 +72,118 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := []struct {
-		name                string
-		expectedAnnotations map[string]string
-		modifiedAnnotations map[string]string
+		name     string
+		existing map[string]string
+		new      map[string]string
+		expected map[string]string
 	}{
 		{
-			name:                "no change",
-			expectedAnnotations: map[string]string{},
+			name:     "no annotations",
+			expected: nil,
 		},
 		{
-			name: "added kubectl annotation",
-			expectedAnnotations: map[string]string{
-				"kubectl.kubernetes.io/restartedAt": "now",
+			name: "add owned annotation",
+			new: map[string]string{
+				"test-key": "test-value",
 			},
-			modifiedAnnotations: map[string]string{
-				"kubectl.kubernetes.io/restartedAt": "now",
-				"annotation":                        "value",
+			expected: map[string]string{
+				"test-key": "test-value",
 			},
 		},
 		{
-			name:                "added another annotation",
-			expectedAnnotations: map[string]string{},
-			modifiedAnnotations: map[string]string{
-				"app.kubernetes.io/name": "overridden-value",
+			name: "change owned annotation",
+			existing: map[string]string{
+				"test-key": "test-value",
+			},
+			new: map[string]string{
+				"test-key": "modified-test-value",
+			},
+			expected: map[string]string{
+				"test-key": "modified-test-value",
+			},
+		},
+		{
+			name: "remove owned annotation",
+			existing: map[string]string{
+				"test-key": "test-value",
+			},
+			new:      map[string]string{},
+			expected: map[string]string{},
+		},
+		{
+			name: "add kubectl annotation",
+			existing: map[string]string{
+				"test-key": "test-value",
+			},
+			new: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+			},
+			expected: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+			},
+		},
+		{
+			name: "modify kubectl annotation",
+			existing: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "yesterday",
+			},
+			new: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+			},
+			expected: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "yesterday",
+			},
+		},
+		{
+			name: "remove kubectl annotation",
+			existing: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
+			},
+			new: map[string]string{},
+			expected: map[string]string{
+				"kubectl.kubernetes.io/restartedAt": "now",
 			},
 		},
 	}
 
 	namespace := "ns-1"
 
-	t.Run("UpdateStatefulSet", func(t *testing.T) {
-		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
-				sset := &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "prometheus",
-						Namespace: namespace,
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			sset := &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "prometheus",
+					Namespace: namespace,
+				},
+				Spec: appsv1.StatefulSetSpec{
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Annotations: tc.existing,
+						},
 					},
-				}
+				},
+			}
 
-				ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+			ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
 
-				modifiedSset := sset.DeepCopy()
-				if modifiedSset.Spec.Template.Annotations == nil {
-					modifiedSset.Spec.Template.Annotations = make(map[string]string, len(tc.modifiedAnnotations))
-				}
-				for k, v := range tc.modifiedAnnotations {
-					modifiedSset.Spec.Template.Annotations[k] = v
-				}
+			modifiedSset := sset.DeepCopy()
+			modifiedSset.Spec.Template.Annotations = tc.new
 
-				err := UpdateStatefulSet(ctx, ssetClient, modifiedSset)
-				if err != nil {
-					t.Fatal(err)
-				}
+			err := UpdateStatefulSet(ctx, ssetClient, modifiedSset)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-				updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+			updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
+			if err != nil {
+				t.Fatal(err)
+			}
 
-				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSset.Spec.Template.Annotations) {
-					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSset.Spec.Template.Annotations)
-				}
-			})
-		}
-	})
+			if !reflect.DeepEqual(tc.expected, updatedSset.Spec.Template.Annotations) {
+				t.Errorf("expected annotations %q, got %q", tc.expected, updatedSset.Spec.Template.Annotations)
+			}
+		})
+	}
 }
 
 func TestMergeMetadata(t *testing.T) {
