@@ -218,9 +218,38 @@ type PagerDutyConfig struct {
 	// Arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`
+	// A list of image details to attach that provide further detail about an incident.
+	// +optional
+	PagerDutyImageConfigs []PagerDutyImageConfig `json:"pagerDutyImageConfigs,omitempty"`
+	// A list of link details to attach that provide further detail about an incident.
+	// +optional
+	PagerDutyLinkConfigs []PagerDutyLinkConfig `json:"pagerDutyLinkConfigs,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// PagerDutyImageConfig attaches images to an incident
+type PagerDutyImageConfig struct {
+	// Src of the image being attached to the incident
+	// +optional
+	Src string `json:"src,omitempty"`
+	// Optional URL; makes the image a clickable link.
+	// +optional
+	Href string `json:"href,omitempty"`
+	// Alt is the optional alternative text for the image.
+	// +optional
+	Alt string `json:"alt,omitempty"`
+}
+
+// PagerDutyLinkConfig attaches text links to an incident
+type PagerDutyLinkConfig struct {
+	// Href is the URL of the link to be attached
+	// +optional
+	Href string `json:"href,omitempty"`
+	// Text that describes the purpose of the link, and can be used as the link's text.
+	// +optional
+	Text string `json:"alt,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.
