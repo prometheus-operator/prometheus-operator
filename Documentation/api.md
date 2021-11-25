@@ -92,6 +92,8 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [OpsGenieConfig](#opsgenieconfig)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
+* [PagerDutyImageConfig](#pagerdutyimageconfig)
+* [PagerDutyLinkConfig](#pagerdutylinkconfig)
 * [PushoverConfig](#pushoverconfig)
 * [Receiver](#receiver)
 * [Route](#route)
@@ -1506,7 +1508,38 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 | group | A cluster or grouping of sources. | string | false |
 | component | The part or component of the affected system that is broken. | string | false |
 | details | Arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
+| pagerDutyImageConfigs | A list of image details to attach that provide further detail about an incident. | [][PagerDutyImageConfig](#pagerdutyimageconfig) | false |
+| pagerDutyLinkConfigs | A list of link details to attach that provide further detail about an incident. | [][PagerDutyLinkConfig](#pagerdutylinkconfig) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## PagerDutyImageConfig
+
+PagerDutyImageConfig attaches images to an incident
+
+
+<em>appears in: [PagerDutyConfig](#pagerdutyconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| src | Src of the image being attached to the incident | string | false |
+| href | Optional URL; makes the image a clickable link. | string | false |
+| alt | Alt is the optional alternative text for the image. | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## PagerDutyLinkConfig
+
+PagerDutyLinkConfig attaches text links to an incident
+
+
+<em>appears in: [PagerDutyConfig](#pagerdutyconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| href | Href is the URL of the link to be attached | string | false |
+| alt | Text that describes the purpose of the link, and can be used as the link's text. | string | false |
 
 [Back to TOC](#table-of-contents)
 
