@@ -138,7 +138,13 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, cg.convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		subRoutes = append(subRoutes,
+			cg.enforceNamespaceForRoute(
+				cg.convertRoute(
+					amConfigs[amConfigIdentifier].Spec.Route, crKey),
+				amConfigs[amConfigIdentifier].Namespace,
+			),
+		)
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -160,7 +166,7 @@ func (cg *configGenerator) generateConfig(
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
 	// to appear before the routes defined in the main configuration.
 	// Because all first-level AlertmanagerConfig routes have "continue: true",
-	// alerts will fallthrough.
+	// alerts will fall through.
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
 	generatedConf := &baseConfig
@@ -170,21 +176,30 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(generatedConf)
 }
 
-func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
-	var matchers []string
+// enforceNamespaceForRoute modifies the route configuration to match alerts
+// originating only from the given namespace.
+func (cg *configGenerator) enforceNamespaceForRoute(r *route, namespace string) *route {
 	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
-
-	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
-		Name:      "namespace",
-		Value:     crKey.Namespace,
-		MatchType: monitoringv1alpha1.MatchEqual,
-	}.String()
-
-	// Enforce "continue" to be true for the top-level route.
-	cont := in.Continue
-	if firstLevelRoute {
-		cont = true
+	// Routes created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	if matchersV2Allowed {
+		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
+			Name:      "namespace",
+			Value:     namespace,
+			MatchType: monitoringv1alpha1.MatchEqual,
+		}.String())
+	} else {
+		r.Match["namespace"] = namespace
 	}
+
+	// Alerts should still be evaluated by the following routes.
+	r.Continue = true
+
+	return r
+}
+
+func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
+	var matchers []string
 
 	// deprecated
 	match := map[string]string{}
@@ -203,13 +218,6 @@ func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey type
 			match[matcher.Name] = matcher.Value
 		}
 	}
-	if firstLevelRoute {
-		if matchersV2Allowed {
-			matchers = append(matchers, v2NamespaceMatcher)
-		} else {
-			match["namespace"] = crKey.Namespace
-		}
-	}
 
 	var routes []*route
 	if len(in.Routes) > 0 {
@@ -222,7 +230,7 @@ func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey type
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = cg.convertRoute(&children[i], crKey, false)
+			routes[i] = cg.convertRoute(&children[i], crKey)
 		}
 	}
 
@@ -241,7 +249,7 @@ func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey type
 		GroupWait:         in.GroupWait,
 		GroupInterval:     in.GroupInterval,
 		RepeatInterval:    in.RepeatInterval,
-		Continue:          cont,
+		Continue:          in.Continue,
 		Match:             match,
 		MatchRE:           matchRE,
 		Matchers:          matchers,
