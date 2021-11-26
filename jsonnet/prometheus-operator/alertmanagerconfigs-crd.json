@@ -1129,6 +1129,46 @@
                                 },
                                 "type": "object"
                               },
+                              "pagerDutyImageConfigs": {
+                                "description": "A list of image details to attach that provide further detail about an incident.",
+                                "items": {
+                                  "description": "PagerDutyImageConfig attaches images to an incident",
+                                  "properties": {
+                                    "alt": {
+                                      "description": "Alt is the optional alternative text for the image.",
+                                      "type": "string"
+                                    },
+                                    "href": {
+                                      "description": "Optional URL; makes the image a clickable link.",
+                                      "type": "string"
+                                    },
+                                    "src": {
+                                      "description": "Src of the image being attached to the incident",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "pagerDutyLinkConfigs": {
+                                "description": "A list of link details to attach that provide further detail about an incident.",
+                                "items": {
+                                  "description": "PagerDutyLinkConfig attaches text links to an incident",
+                                  "properties": {
+                                    "alt": {
+                                      "description": "Text that describes the purpose of the link, and can be used as the link's text.",
+                                      "type": "string"
+                                    },
+                                    "href": {
+                                      "description": "Href is the URL of the link to be attached",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
                               "routingKey": {
                                 "description": "The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or `serviceKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
                                 "properties": {
