@@ -42,12 +42,20 @@ func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGro
 }
 
 func (f *Framework) CreateRule(ctx context.Context, ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
-	result, err := f.MonClientV1.PrometheusRules(ns).Create(ctx, ar, metav1.CreateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("creating %v RuleFile failed: %v", ar.Name, err)
-	}
+	var (
+		rule *monitoringv1.PrometheusRule
+		err  error
+	)
 
-	return result, nil
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		rule, err = f.MonClientV1.PrometheusRules(ns).Create(ctx, ar, metav1.CreateOptions{})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	})
+
+	return rule, err
 }
 
 func (f *Framework) GetRule(ctx context.Context, ns, name string) (*monitoringv1.PrometheusRule, error) {
@@ -118,12 +126,20 @@ func (f *Framework) WaitForRule(ctx context.Context, ns, name string) error {
 }
 
 func (f *Framework) UpdateRule(ctx context.Context, ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
-	result, err := f.MonClientV1.PrometheusRules(ns).Update(ctx, ar, metav1.UpdateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
-	}
+	var (
+		rule *monitoringv1.PrometheusRule
+		err  error
+	)
 
-	return result, nil
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		rule, err = f.MonClientV1.PrometheusRules(ns).Update(ctx, ar, metav1.UpdateOptions{})
+		if err != nil {
+			return false, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
+		}
+		return true, nil
+	})
+
+	return rule, err
 }
 
 func (f *Framework) DeleteRule(ctx context.Context, ns string, r string) error {
