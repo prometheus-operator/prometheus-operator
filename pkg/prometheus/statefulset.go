@@ -98,6 +98,7 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
+	assetShards int,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -144,7 +145,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, assetShards, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -321,7 +322,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
-	version semver.Version) (*appsv1.StatefulSetSpec, error) {
+	assetShards int, version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -466,6 +467,23 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs[i] = "-" + a
 	}
 
+	assetsVolume := v1.Volume{
+		Name: "tls-assets",
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources: []v1.VolumeProjection{},
+			},
+		},
+	}
+	for i := 0; i < assetShards; i++ {
+		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
+			v1.VolumeProjection{
+				Secret: &v1.SecretProjection{
+					LocalObjectReference: v1.LocalObjectReference{Name: tlsAssetsSecretNameWithIndex(p.Name, i)},
+				},
+			})
+	}
+
 	volumes := []v1.Volume{
 		{
 			Name: "config",
@@ -475,14 +493,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			},
 		},
-		{
-			Name: "tls-assets",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsAssetsSecretName(p.Name),
-				},
-			},
-		},
+		assetsVolume,
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
@@ -925,6 +936,10 @@ func configSecretName(name string) string {
 
 func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+}
+
+func tlsAssetsSecretNameWithIndex(name string, index int) string {
+	return fmt.Sprintf("%s-%d", tlsAssetsSecretName(name), index)
 }
 
 func WebConfigSecretName(name string) string {

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -38,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -1227,7 +1229,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	if err := c.createOrUpdateTLSAssetSecret(ctx, p, assetStore); err != nil {
+	assetShards, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	if err != nil {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
@@ -1260,12 +1263,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			ss := obj.(*appsv1.StatefulSet)
 			spec = ss.Spec
 		}
-		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, assetShards, spec)
 		if err != nil {
 			return err
 		}
 
-		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard))
+		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), assetShards)
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1368,13 +1371,14 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 	}
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, as int, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		P monitoringv1.Prometheus
 		C operator.Config
 		S interface{}
 		R []string `hash:"set"`
-	}{p, c, ss, ruleConfigMapNames},
+		A int
+	}{p, c, ss, ruleConfigMapNames, as},
 		nil,
 	)
 	if err != nil {
@@ -1633,14 +1637,64 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
-	boolTrue := true
+func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (assetShards int, err error) {
+	// k8s/etcd has an object limit of 1048576 bytes
+	// We use an upper limit of 950k for the data part to leave enough room for
+	// metadata and the rest of the object.
+	const maxSecretSizeBytes = 950_000
+
+	labels := c.config.Labels.Merge(managedByOperatorLabels)
+
+	var secrets []*v1.Secret
+
+	curSecretIndex := 0
+	curSecretSize := 0
+	tlsAssetsSecret := newTLSAssetSecret(curSecretIndex, p, labels)
+
+	// we need to iterate over TLSAssets in a stable order to avoid multiple TLS
+	// asset secret updates just because the order of assets changed and would
+	// now end up in another secret shard.
+	var aKeys []assets.TLSAssetKey
+	for key := range store.TLSAssets {
+		aKeys = append(aKeys, key)
+	}
+	sort.Slice(aKeys, func(i, j int) bool { return aKeys[i].String() < aKeys[j].String() })
+
+	for _, key := range aKeys {
+		asset := store.TLSAssets[key]
+		assetSize := len(key.String()) + len(asset)
+		if curSecretSize+assetSize > maxSecretSizeBytes {
+			secrets = append(secrets, tlsAssetsSecret)
+			curSecretIndex++
+			curSecretSize = 0
+			tlsAssetsSecret = newTLSAssetSecret(curSecretIndex, p, labels)
+		}
+		curSecretSize += assetSize
+		tlsAssetsSecret.Data[key.String()] = []byte(asset)
+	}
+	secrets = append(secrets, tlsAssetsSecret)
+	lastSecretIndex := curSecretIndex
+
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	tlsAssetsSecret := &v1.Secret{
+	for _, secret := range secrets {
+		err := k8sutil.CreateOrUpdateSecret(ctx, sClient, secret)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to create TLS assets secret %q for Prometheus", secret.Name)
+		}
+		level.Debug(c.logger).Log("msg", fmt.Sprintf("tls-asset secret: stored %s/%s", secret.Namespace, secret.Name))
+	}
+
+	// cleanup old secrets
+	return len(secrets), cleanupOldSecrets(ctx, sClient, lastSecretIndex, p.Name)
+}
+
+func newTLSAssetSecret(index int, p *monitoringv1.Prometheus, labels map[string]string) *v1.Secret {
+	boolTrue := true
+	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   tlsAssetsSecretName(p.Name),
-			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			Name:   tlsAssetsSecretNameWithIndex(p.Name, index),
+			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         p.APIVersion,
@@ -1654,14 +1708,30 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		},
 		Data: map[string][]byte{},
 	}
+}
 
-	for key, asset := range store.TLSAssets {
-		tlsAssetsSecret.Data[key.String()] = []byte(asset)
+func cleanupOldSecrets(ctx context.Context, sClient corev1.SecretInterface, lastIndex int, pName string) error {
+	for i := lastIndex + 1; ; i++ {
+		secretName := tlsAssetsSecretNameWithIndex(pName, i)
+		err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})
+		if apierrors.IsNotFound(err) {
+			// we reached the end of existing secrets
+			break
+		}
+		if err != nil {
+			return errors.Wrapf(err, "failed to delete old TLS assets secret %q for Prometheus", secretName)
+		}
 	}
 
-	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
+	// cleanup possibly existing secret of older operator versions
+	// TODO: remove this in future versions to save the unnecessary API call.
+	secretName := tlsAssetsSecretName(pName)
+	err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
-		return errors.Wrap(err, "failed to create TLS assets secret for Prometheus")
+		return errors.Wrapf(err, "failed to delete old TLS assets secret %q for Prometheus", secretName)
 	}
 
 	return nil

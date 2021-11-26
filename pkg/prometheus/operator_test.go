@@ -42,11 +42,11 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	p2.Spec.Version = "v1.7.2"
 	c := operator.Config{}
 
-	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil)
+	p1Hash, err := createSSetInputHash(p1, c, []string{}, 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2Hash, err := createSSetInputHash(p2, c, []string{}, nil)
+	p2Hash, err := createSSetInputHash(p2, c, []string{}, 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
