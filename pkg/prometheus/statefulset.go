@@ -98,7 +98,7 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
-	assetShards int,
+	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -145,7 +145,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, assetShards, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -322,7 +322,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
-	assetShards int, version semver.Version) (*appsv1.StatefulSetSpec, error) {
+	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -475,11 +475,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			},
 		},
 	}
-	for i := 0; i < assetShards; i++ {
+	for _, assetShard := range tlsAssetSecrets {
 		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
 			v1.VolumeProjection{
 				Secret: &v1.SecretProjection{
-					LocalObjectReference: v1.LocalObjectReference{Name: tlsAssetsSecretNameWithIndex(p.Name, i)},
+					LocalObjectReference: v1.LocalObjectReference{Name: assetShard},
 				},
 			})
 	}
@@ -936,10 +936,6 @@ func configSecretName(name string) string {
 
 func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
-}
-
-func tlsAssetsSecretNameWithIndex(name string, index int) string {
-	return fmt.Sprintf("%s-%d", tlsAssetsSecretName(name), index)
 }
 
 func WebConfigSecretName(name string) string {
