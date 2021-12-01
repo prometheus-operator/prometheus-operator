@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -259,6 +260,52 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				t.Fatalf("unexpected error occurred: %v", err)
 			}
 			if err == nil && test.expectErr {
+				t.Fatalf("expected an error, got nil")
+			}
+		})
+	}
+}
+
+func TestRelabelConfig(t *testing.T) {
+	for _, tc := range []struct {
+		relabelConfig monitoringv1.RelabelConfig
+		expectedErr   bool
+	}{
+		{
+			relabelConfig: monitoringv1.RelabelConfig{
+				Regex:       "invalid regex)",
+				Action:      "replace",
+				TargetLabel: "test_invalid_regex",
+			},
+			expectedErr: true,
+		},
+		{
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "replace",
+				TargetLabel: "l\\${3}",
+			},
+			expectedErr: true,
+		},
+		{
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "replace",
+				TargetLabel: "",
+			},
+			expectedErr: true,
+		},
+		{
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "replace",
+				TargetLabel: "test_valid_action_with_target_label",
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("%s Action(%s)", tc.relabelConfig.Action, tc.relabelConfig.TargetLabel), func(t *testing.T) {
+			err := validateRelabelConfig(tc.relabelConfig)
+			if err != nil && !tc.expectedErr {
+				t.Fatalf("unexpected error occurred: %v", err)
+			}
+			if err == nil && tc.expectedErr {
 				t.Fatalf("expected an error, got nil")
 			}
 		})
