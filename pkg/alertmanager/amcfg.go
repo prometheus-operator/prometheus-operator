@@ -128,6 +128,51 @@ func validateConfigInputs(am *monitoringv1.Alertmanager) error {
 	return nil
 }
 
+func (cg *configGenerator) generateGlobalConfig(
+	ctx context.Context,
+	baseConfig *alertmanagerConfig,
+	am *monitoringv1.Alertmanager,
+	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
+) error {
+	if am.Spec.GlobalAlertmanagerConfig == nil {
+		return nil
+	}
+
+	// Find the global alertmanagerconfig by <namespace/name> key
+	if amConfig, ok := amConfigs[am.Namespace+"/"+am.Spec.GlobalAlertmanagerConfig.Name]; ok {
+		crKey := types.NamespacedName{
+			Name:      amConfig.Name,
+			Namespace: amConfig.Namespace,
+		}
+
+		for _, inhibitRule := range amConfig.Spec.InhibitRules {
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule, crKey))
+		}
+
+		baseConfig.Route.Routes = []*route{
+			cg.convertRoute(amConfig.Spec.Route, crKey),
+		}
+
+		for _, receiver := range amConfig.Spec.Receivers {
+			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
+			if err != nil {
+				return errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
+		}
+
+		for _, muteTimeInterval := range amConfig.Spec.MuteTimeIntervals {
+			mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+			if err != nil {
+				return errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, mti)
+		}
+	}
+
+	return baseConfig.sanitize(cg.amVersion, cg.logger)
+}
+
 func (cg *configGenerator) generateConfig(
 	ctx context.Context,
 	baseConfig alertmanagerConfig,

@@ -1637,6 +1637,13 @@ type AlertmanagerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// GlobalAlertmanagerConfig used to set the global alertmanager config.
+	GlobalAlertmanagerConfig *GlobalAlertmanagerConfig `json:"globalAlertmanagerConfig,omitempty"`
+}
+
+type GlobalAlertmanagerConfig struct {
+	// Name specify the gloal AlertmanagerConfig name which is in the same namespace with alertmanager.
+	Name string `json:"name,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

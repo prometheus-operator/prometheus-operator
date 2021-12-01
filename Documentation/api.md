@@ -30,6 +30,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [GlobalAlertmanagerConfig](#globalalertmanagerconfig)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [OAuth2](#oauth2)
@@ -237,6 +238,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
+| globalAlertmanagerConfig | GlobalAlertmanagerConfig used to set the global alertmanager config. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -357,6 +359,19 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## GlobalAlertmanagerConfig
+
+
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name specify the gloal AlertmanagerConfig name which is in the same namespace with alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

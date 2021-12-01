@@ -920,6 +920,9 @@ receivers:
 	}
 
 	generator := newConfigGenerator(namespacedLogger, version, store)
+	if err := generator.generateGlobalConfig(ctx, baseConfig, am, amConfigs); err != nil {
+		return errors.Wrap(err, "generating Global Alertmanager config failed")
+	}
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
