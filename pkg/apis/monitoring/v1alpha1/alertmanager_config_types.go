@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -35,10 +34,6 @@ const (
 	AlertmanagerConfigKind    = "AlertmanagerConfig"
 	AlertmanagerConfigName    = "alertmanagerconfigs"
 	AlertmanagerConfigKindKey = "alertmanagerconfig"
-)
-
-var (
-	opsGenieTypeRe = regexp.MustCompile("^(team|user|escalation|schedule)$")
 )
 
 // AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
@@ -96,19 +91,19 @@ type Route struct {
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
-	// How long to wait before sending the initial notification. Must match the
-	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
-	// hours).
+	// How long to wait before sending the initial notification.
+	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Example: "30s"
 	// +optional
 	GroupWait string `json:"groupWait,omitempty"`
-	// How long to wait before sending an updated notification. Must match the
-	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
-	// hours).
+	// How long to wait before sending an updated notification.
+	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Example: "5m"
 	// +optional
 	GroupInterval string `json:"groupInterval,omitempty"`
-	// How long to wait before repeating the last notification. Must match the
-	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
-	// hours).
+	// How long to wait before repeating the last notification.
+	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Example: "4h"
 	// +optional
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// List of matchers that the alert’s labels should match. For the first
@@ -126,7 +121,7 @@ type Route struct {
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears
 	// below otherwise it gets included in the generated manifest.
-	// CRD schema doesn't support self referential types for now (see
+	// CRD schema doesn't support self-referential types for now (see
 	// https://github.com/kubernetes/kubernetes/issues/62872). We have to use
 	// an alternative type to circumvent the limitation. The downside is that
 	// the Kube API can't validate the data beyond the fact that it is a valid
@@ -679,10 +674,12 @@ type PushoverConfig struct {
 	// The secret's key that contains the recipient user’s user key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +kubebuilder:validation:Required
 	UserKey *v1.SecretKeySelector `json:"userKey,omitempty"`
 	// The secret's key that contains the registered application’s API token, see https://pushover.net/apps.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +kubebuilder:validation:Required
 	Token *v1.SecretKeySelector `json:"token,omitempty"`
 	// Notification title.
 	// +optional
@@ -704,10 +701,12 @@ type PushoverConfig struct {
 	Priority string `json:"priority,omitempty"`
 	// How often the Pushover servers will send the same notification to the user.
 	// Must be at least 30 seconds.
+	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
 	Retry string `json:"retry,omitempty"`
 	// How long your notification will continue to be retried for, unless the user
 	// acknowledges the notification.
+	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
 	Expire string `json:"expire,omitempty"`
 	// Whether notification message is HTML or plain text.
