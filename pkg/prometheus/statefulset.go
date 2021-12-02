@@ -617,8 +617,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return handler
 	}
 
+	// The /-/ready handler returns OK only after the TSDB initialization has
+	// completed. The WAL replay can take a significant time for large setups
+	// hence we enable the startup probe with a generous failure threshold (15
+	// minutes) to ensure that the readiness probe only comes into effect once
+	// Prometheus is effectively ready.
+	// We don't want to use the /-/healthy handler here because it returns OK as
+	// soon as the web server is started (irrespective of the WAL replay).
 	startupProbe := &v1.Probe{
-		Handler:          probeHandler("/-/healthy"),
+		Handler:          probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,

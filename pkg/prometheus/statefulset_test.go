@@ -458,7 +458,7 @@ func TestListenLocal(t *testing.T) {
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
 	expectedStartupProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/healthy"),
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
@@ -521,7 +521,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
 	expectedStartupProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/healthy"),
+		Handler:          expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
