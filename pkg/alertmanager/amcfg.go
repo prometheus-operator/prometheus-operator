@@ -428,6 +428,9 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
 		}
 		out.APIURL = strings.TrimSpace(url)
+		if _, err := ValidateURL(out.APIURL); err != nil {
+			return nil, errors.Wrapf(err, "invalid 'apiURL' %s in slack config", out.APIURL)
+		}
 	}
 
 	var actions []slackAction

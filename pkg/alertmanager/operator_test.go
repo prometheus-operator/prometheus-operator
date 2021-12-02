@@ -51,7 +51,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string][]byte{
-				"key1": []byte("val1"),
+				"key1": []byte("https://val1.com"),
 			},
 		},
 	)

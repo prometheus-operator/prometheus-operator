@@ -903,6 +903,10 @@ receivers:
 		return errors.Wrap(err, "base config from Secret could not be parsed")
 	}
 
+	if err := checkAlertmanagerRootConfig(ctx, baseConfig); err != nil {
+		return errors.Wrap(err, "base config check failed")
+	}
+
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
@@ -1038,6 +1042,21 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	return res, nil
+}
+
+func checkAlertmanagerRootConfig(ctx context.Context, conf *alertmanagerConfig) error {
+	if conf == nil || conf.Route == nil {
+		return nil
+	}
+
+	if len(conf.Route.Matchers) > 0 {
+		return errors.Errorf("'matchers' not permitted on root route: %v", conf.Route.Matchers)
+	}
+
+	if len(conf.Route.MuteTimeIntervals) > 0 {
+		return errors.Errorf("'mute_time_intervals' not permitted on root route: %v", conf.Route.MuteTimeIntervals)
+	}
+	return nil
 }
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
@@ -1209,8 +1228,12 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
 
 		if config.URLSecret != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.URLSecret); err != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.URLSecret)
+			if err != nil {
 				return err
+			}
+			if _, err := ValidateURL(strings.TrimSpace(url)); err != nil {
+				return errors.Wrapf(err, "webhook 'url' %s invalid", url)
 			}
 		}
 
