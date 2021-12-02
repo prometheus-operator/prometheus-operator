@@ -1160,6 +1160,7 @@ spec:
                             description: How long your notification will continue
                               to be retried for, unless the user acknowledges the
                               notification.
+                            pattern: ^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$
                             type: string
                           html:
                             description: Whether notification message is HTML or plain
@@ -1412,6 +1413,7 @@ spec:
                             description: How often the Pushover servers will send
                               the same notification to the user. Must be at least
                               30 seconds.
+                            pattern: ^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$
                             type: string
                           sendResolved:
                             description: Whether or not to notify about resolved alerts.
@@ -2761,14 +2763,14 @@ spec:
                       type: string
                     type: array
                   groupInterval:
-                    description: How long to wait before sending an updated notification.
-                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
-                      seconds minutes hours).
+                    description: 'How long to wait before sending an updated notification.
+                      Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+                      Example: "5m"'
                     type: string
                   groupWait:
-                    description: How long to wait before sending the initial notification.
-                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
-                      seconds minutes hours).
+                    description: 'How long to wait before sending the initial notification.
+                      Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+                      Example: "30s"'
                     type: string
                   matchers:
                     description: 'List of matchers that the alert’s labels should
@@ -2807,7 +2809,7 @@ spec:
                   muteTimeIntervals:
                     description: 'Note: this comment applies to the field definition
                       above but appears below otherwise it gets included in the generated
-                      manifest. CRD schema doesn''t support self referential types
+                      manifest. CRD schema doesn''t support self-referential types
                       for now (see https://github.com/kubernetes/kubernetes/issues/62872).
                       We have to use an alternative type to circumvent the limitation.
                       The downside is that the Kube API can''t validate the data beyond
@@ -2822,9 +2824,9 @@ spec:
                       it should be listed in the `receivers` field.
                     type: string
                   repeatInterval:
-                    description: How long to wait before repeating the last notification.
-                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
-                      seconds minutes hours).
+                    description: 'How long to wait before repeating the last notification.
+                      Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+                      Example: "4h"'
                     type: string
                   routes:
                     description: Child routes.
