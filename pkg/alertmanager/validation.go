@@ -20,7 +20,6 @@ import (
 	"net"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -239,22 +238,6 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 		if config.Token == nil {
 			return errors.Errorf("mandatory field %q is empty", "token")
-		}
-
-		if config.Retry != "" {
-			d, err := time.ParseDuration(config.Retry)
-			if err != nil {
-				return errors.New("invalid retry duration")
-			}
-			if d < 30*time.Second {
-				return errors.New("retry duration must be greater than or equal to 30s")
-			}
-		}
-		if config.Expire != "" {
-			_, err := time.ParseDuration(config.Expire)
-			if err != nil {
-				return errors.New("invalid expire duration")
-			}
 		}
 	}
 

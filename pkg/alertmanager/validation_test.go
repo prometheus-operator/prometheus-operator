@@ -273,53 +273,6 @@ func TestValidateConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate PushoverConfigs - invalid retry duration",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
-								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "n/a",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - invalid expiry duration",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
-								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "10m",
-									Expire:  "n/a",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1alpha1.AlertmanagerConfig{
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
