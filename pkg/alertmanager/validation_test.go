@@ -19,11 +19,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/prometheus/alertmanager/config"
-
 	v1 "k8s.io/api/core/v1"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus/alertmanager/config"
 )
 
 func TestValidateConfig(t *testing.T) {

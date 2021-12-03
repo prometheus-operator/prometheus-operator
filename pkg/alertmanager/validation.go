@@ -78,7 +78,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 
 		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'slackConfig' - receiver %s", receiver.Name)
+			return nil, errors.Wrapf(err, "failed to validate 'webhookConfig' - receiver %s", receiver.Name)
 		}
 
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
@@ -102,13 +102,11 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 	return receiverNames, nil
 }
 
-// validatePagerDutyConfigs is a no-op
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
 	for _, conf := range configs {
 		if conf.URL != "" {
-			_, err := ValidateURL(conf.URL)
-			if err != nil {
-				return err
+			if _, err := ValidateURL(conf.URL); err != nil {
+				return errors.Wrap(err, "pagerduty validation failed for 'url'")
 			}
 		}
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
@@ -124,9 +122,8 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 			return err
 		}
 		if config.APIURL != "" {
-			_, err := ValidateURL(config.APIURL)
-			if err != nil {
-				return err
+			if _, err := ValidateURL(config.APIURL); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
 	}
@@ -149,7 +146,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 		}
 		if config.URL != nil {
 			if _, err := ValidateURL(*config.URL); err != nil {
-				return errors.Wrapf(err, "webhook 'url' %s invalid", *config.URL)
+				return errors.Wrapf(err, "invalid 'url'")
 			}
 		}
 	}
@@ -160,7 +157,7 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 	for _, config := range configs {
 		if config.APIURL != "" {
 			if _, err := ValidateURL(config.APIURL); err != nil {
-				return errors.Wrapf(err, "weChat 'apiURL' %s invalid", config.APIURL)
+				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
 	}
@@ -170,13 +167,13 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 	for _, config := range configs {
 		if config.To == "" {
-			return errors.New("missing 'to' address in email config")
+			return errors.New("missing 'to' address")
 		}
 
 		if config.Smarthost != "" {
 			_, _, err := net.SplitHostPort(config.Smarthost)
 			if err != nil {
-				return errors.Wrapf(err, "invalid email config field 'smarthost': %s", config.Smarthost)
+				return errors.Wrapf(err, "invalid field 'smarthost': %s", config.Smarthost)
 			}
 		}
 
@@ -186,7 +183,7 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 			for _, v := range config.Headers {
 				normalized := strings.Title(v.Key)
 				if _, ok := normalizedHeaders[normalized]; ok {
-					return fmt.Errorf("duplicate header %q in email config", normalized)
+					return fmt.Errorf("duplicate header %q", normalized)
 				}
 				normalizedHeaders[normalized] = struct{}{}
 			}
@@ -218,12 +215,12 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 		}
 
 		if config.RoutingKey == "" {
-			return errors.New("missing 'routingKey' key in VictorOps config")
+			return errors.New("missing 'routingKey' key")
 		}
 
 		if config.APIURL != "" {
 			if _, err := ValidateURL(config.APIURL); err != nil {
-				return errors.Wrapf(err, "weChat 'apiURL' %s invalid", config.APIURL)
+				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
 			}
 		}
 	}

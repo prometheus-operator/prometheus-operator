@@ -898,13 +898,9 @@ receivers:
 		return nil
 	}
 
-	baseConfig, err := loadCfg(string(rawBaseConfig))
+	baseConfig, err := alertmanagerConfigFrom(string(rawBaseConfig))
 	if err != nil {
 		return errors.Wrap(err, "base config from Secret could not be parsed")
-	}
-
-	if err := checkAlertmanagerRootConfig(ctx, baseConfig); err != nil {
-		return errors.Wrap(err, "base config check failed")
 	}
 
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
@@ -1015,7 +1011,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfig(ctx, amc, amVersion, store); err != nil {
+		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
@@ -1044,24 +1040,9 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	return res, nil
 }
 
-func checkAlertmanagerRootConfig(ctx context.Context, conf *alertmanagerConfig) error {
-	if conf == nil || conf.Route == nil {
-		return nil
-	}
-
-	if len(conf.Route.Matchers) > 0 {
-		return errors.Errorf("'matchers' not permitted on root route: %v", conf.Route.Matchers)
-	}
-
-	if len(conf.Route.MuteTimeIntervals) > 0 {
-		return errors.Errorf("'mute_time_intervals' not permitted on root route: %v", conf.Route.MuteTimeIntervals)
-	}
-	return nil
-}
-
-// checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
+// checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
+func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
 	receiverNames, err := checkReceivers(ctx, amc, store)
 	if err != nil {
 		return err
