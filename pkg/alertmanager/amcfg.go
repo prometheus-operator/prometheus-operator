@@ -34,6 +34,8 @@ import (
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"gopkg.in/yaml.v2"
+
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -196,6 +198,19 @@ func (cg *configGenerator) enforceNamespaceForRoute(r *route, namespace string) 
 	r.Continue = true
 
 	return r
+}
+
+func (cg *configGenerator) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	url, err := cg.store.GetSecretKey(ctx, namespace, selector)
+	if err != nil {
+		return "", errors.Errorf("failed to get key %q from secret %q", selector.Key, selector.Name)
+	}
+
+	url = strings.TrimSpace(url)
+	if _, err := ValidateURL(url); err != nil {
+		return url, errors.Wrapf(err, "invalid url %s in secret %s config", url, selector.Name)
+	}
+	return url, nil
 }
 
 func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
@@ -376,12 +391,15 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 	}
 
 	if in.URLSecret != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
+			return nil, errors.Wrap(err, "convertWebhookConfig failed")
 		}
-		out.URL = strings.TrimSpace(url)
+		out.URL = url
 	} else if in.URL != nil {
+		if _, err := ValidateURL(*in.URL); err != nil {
+			return nil, errors.Wrap(err, "convertWebhookConfig failed")
+		}
 		out.URL = *in.URL
 	}
 
@@ -423,14 +441,11 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 	}
 
 	if in.APIURL != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIURL)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
+			return nil, errors.Wrap(err, "convertSlackConfig failed. 'apiURL' is invalid")
 		}
-		out.APIURL = strings.TrimSpace(url)
-		if _, err := ValidateURL(out.APIURL); err != nil {
-			return nil, errors.Wrapf(err, "invalid 'apiURL' %s in slack config", out.APIURL)
-		}
+		out.APIURL = url
 	}
 
 	var actions []slackAction
