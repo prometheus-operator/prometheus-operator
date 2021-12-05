@@ -197,11 +197,11 @@ type snsConfig struct {
 }
 
 type sigV4Config struct {
-	Region    string        `yaml:"region,omitempty" json:"region,omitempty"`
-	AccessKey string        `yaml:"access_key,omitempty" json:"access_key,omitempty"`
-	SecretKey config.Secret `yaml:"secret_key,omitempty" json:"secret_key,omitempty"`
-	Profile   string        `yaml:"profile,omitempty" json:"profile,omitempty"`
-	RoleARN   string        `yaml:"role_arn,omitempty" json:"role_arn,omitempty"`
+	Region    string `yaml:"region,omitempty" json:"region,omitempty"`
+	AccessKey string `yaml:"access_key,omitempty" json:"access_key,omitempty"`
+	SecretKey string `yaml:"secret_key,omitempty" json:"secret_key,omitempty"`
+	Profile   string `yaml:"profile,omitempty" json:"profile,omitempty"`
+	RoleARN   string `yaml:"role_arn,omitempty" json:"role_arn,omitempty"`
 }
 
 type httpClientConfig struct {

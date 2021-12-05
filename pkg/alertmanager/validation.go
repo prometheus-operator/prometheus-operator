@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,7 +72,6 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 
 		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'emailConfig' - receiver %s", receiver.Name)
-
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
@@ -81,9 +81,75 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'pushOverConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateSNSConfigs(receiver.SNSConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
+}
+
+func validateSNSConfigs(configs []monitoringv1alpha1.SNSConfig) error {
+	for _, config := range configs {
+		if config.PhoneNumber == "" && config.TargetARN == "" && config.TopicARN == "" {
+			return errors.New("either 'phone_number', 'target_arn' or 'topic_arn' must be set")
+		}
+
+		if config.PhoneNumber != "" {
+			if len(config.PhoneNumber) > 16 || config.PhoneNumber[0] != '+' {
+				return errors.New("'phone_number' must start with a plus sign followed by a maximum of 15 digits")
+			}
+			if _, err := strconv.Atoi(config.PhoneNumber[1:]); err != nil {
+				return errors.New("'phone_number' must start with a plus sign followed by a maximum of 15 digits")
+			}
+		}
+
+		if config.TopicARN != "" {
+			if !strings.HasPrefix(config.TopicARN, "arn:aws:sns:") {
+				return errors.New("'topic_arn' must start with 'arn:aws:sns:'")
+			}
+			if err := isAwsArn(config.TopicARN); err != nil {
+				return err
+			}
+		}
+
+		if config.TargetARN != "" {
+			if !strings.HasPrefix(config.TopicARN, "arn:") {
+				return errors.New("'target_arn' must start with 'arn:'")
+			}
+			if err := isAwsArn(config.TopicARN); err != nil {
+				return err
+			}
+		}
+
+		if config.APIURL != "" {
+			if _, err := url.Parse(config.APIURL); err != nil {
+				return errors.Wrap(err, "sns 'api_url' not valid")
+			}
+		}
+
+		if err := validateSigV4Config(&config.Sigv4); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func isAwsArn(arn string) error {
+	// aws arn contains six sections delimited by a ':'
+	if strings.Count(arn, ":") < 5 {
+		return errors.New("aws arn does not contain enough sections")
+	}
+	return nil
+}
+
+func validateSigV4Config(config *monitoringv1alpha1.SigV4Config) error {
+	if (config.AccessKey != "" && config.SecretKey == "") || (config.AccessKey == "" && config.SecretKey != "") {
+		return errors.New("both 'access_key' and 'secret_key' must be set")
+	}
+	return nil
 }
 
 // validatePagerDutyConfigs is a no-op

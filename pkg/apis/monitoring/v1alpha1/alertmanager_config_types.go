@@ -170,6 +170,8 @@ type Receiver struct {
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// List of Pushover configurations.
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
+	// List of SNS configurations
+	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -716,6 +718,67 @@ type PushoverConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// SNSConfig configures notifications via aws sns.
+// See https://prometheus.io/docs/alerting/latest/configuration/#sns_configs
+type SNSConfig struct {
+	// Whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// The SNS API URL i.e. https://sns.us-east-2.amazonaws.com.
+	// If not specified, the SNS API URL from the SNS SDK will be used.
+	// +optional
+	APIURL string `json:"api_url,omitempty"`
+	// Configures AWS's Signature Verification 4 signing process to sign requests.
+	// +optional
+	Sigv4 SigV4Config `json:"sigv4"`
+	// SNS topic ARN, i.e. arn:aws:sns:us-east-2:698519295917:My-Topic
+	// If you don't specify this value, you must specify a value for the phone_number or target_arn.
+	// If you are using a FIFO SNS topic you should set a message group interval longer than 5 minutes
+	// to prevent messages with the same group key being deduplicated by the SNS default deduplication window
+	// +optional
+	TopicARN string `json:"topic_arn,omitempty"`
+	// Phone number if message is delivered via SMS in E.164 format.
+	// If you don't specify this value, you must specify a value for the topic_arn or target_arn.
+	// +optional
+	PhoneNumber string `json:"phone_number,omitempty"`
+	// The  mobile platform endpoint ARN if message is delivered via mobile notifications.
+	// If you don't specify this value, you must specify a value for the topic_arn or phone_number.
+	// +optional
+	TargetARN string
+	// Subject line when the message is delivered to email endpoints.
+	// +optional
+	Subject string `json:"subject,omitempty"`
+	// The message content of the SNS notification.
+	// +optional
+	Message string `json:"message,omitempty"`
+	// SNS message attributes.
+	// +optional
+	Attributes map[string]string `json:"attributes,omitempty"`
+}
+
+// SigV4Config configures AWS's Signature Verification 4 signing process to sign requests.
+// see https://prometheus.io/docs/alerting/latest/configuration/#sigv4_config
+type SigV4Config struct {
+	// The AWS region. If blank, the region from the default credentials chain is used.
+	// +optional
+	Region string `json:"region,omitempty"`
+	// The AWS API keys. Both access_key and secret_key must be supplied or both must be blank.
+	// If blank the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are used.
+	// +optional
+	AccessKey string `json:"access_key,omitempty"`
+	// +optional
+	SecretKey string `json:"secret_key,omitempty"`
+	// Named AWS profile used to authenticate.
+	// +optional
+	Profile string `json:"profile,omitempty"`
+	// AWS Role ARN, an alternative to using AWS API keys.
+	// +optional
+	RoleARN string `json:"role_arn,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
