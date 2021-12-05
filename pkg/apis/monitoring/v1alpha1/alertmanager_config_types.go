@@ -749,7 +749,7 @@ type SNSConfig struct {
 	// The  mobile platform endpoint ARN if message is delivered via mobile notifications.
 	// If you don't specify this value, you must specify a value for the topic_arn or phone_number.
 	// +optional
-	TargetARN string
+	TargetARN string `json:"target_arn"`
 	// Subject line when the message is delivered to email endpoints.
 	// +optional
 	Subject string `json:"subject,omitempty"`
