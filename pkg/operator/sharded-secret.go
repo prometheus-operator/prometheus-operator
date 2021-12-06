@@ -84,7 +84,7 @@ func (s *ShardedSecret) shard() []*v1.Secret {
 	for k := range s.data {
 		keys = append(keys, k)
 	}
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	sort.Strings(keys)
 
 	// reset s.secretShards to ensure it's empty in case shard() is called multiple times
 	s.secretShards = []*v1.Secret{}
