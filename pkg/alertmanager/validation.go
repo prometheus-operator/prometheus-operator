@@ -15,15 +15,18 @@
 package alertmanager
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
+	"regexp"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus/alertmanager/config"
 )
+
+var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
 func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	receivers, err := validateReceivers(amc.Spec.Receivers)
@@ -37,6 +40,19 @@ func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	}
 
 	return validateAlertManagerRoutes(amc.Spec.Route, receivers, muteTimeIntervals, true)
+}
+
+// ValidateURL against the config.URL
+// This could potentially become a regex and be validated via OpenAPI
+// but right now, since we know we need to unmarshal into an upstream type
+// after conversion, we validate we don't error when doing so
+func ValidateURL(url string) (*config.URL, error) {
+	var u config.URL
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%s"`, url)), &u)
+	if err != nil {
+		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
+	}
+	return &u, nil
 }
 
 func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]struct{}, error) {
@@ -62,7 +78,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 
 		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'slackConfig' - receiver %s", receiver.Name)
+			return nil, errors.Wrapf(err, "failed to validate 'webhookConfig' - receiver %s", receiver.Name)
 		}
 
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
@@ -86,8 +102,17 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 	return receiverNames, nil
 }
 
-// validatePagerDutyConfigs is a no-op
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
+	for _, conf := range configs {
+		if conf.URL != "" {
+			if _, err := ValidateURL(conf.URL); err != nil {
+				return errors.Wrap(err, "pagerduty validation failed for 'url'")
+			}
+		}
+		if conf.RoutingKey == nil && conf.ServiceKey == nil {
+			return errors.New("one of 'routingKey' or 'serviceKey' is required")
+		}
+	}
 	return nil
 }
 
@@ -95,6 +120,11 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 	for _, config := range configs {
 		if err := config.Validate(); err != nil {
 			return err
+		}
+		if config.APIURL != "" {
+			if _, err := ValidateURL(config.APIURL); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
+			}
 		}
 	}
 	return nil
@@ -114,6 +144,11 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 		if config.URL == nil && config.URLSecret == nil {
 			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
+		if config.URL != nil {
+			if _, err := ValidateURL(*config.URL); err != nil {
+				return errors.Wrapf(err, "invalid 'url'")
+			}
+		}
 	}
 	return nil
 }
@@ -121,8 +156,8 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 	for _, config := range configs {
 		if config.APIURL != "" {
-			if _, err := url.Parse(config.APIURL); err != nil {
-				return errors.Wrap(err, "weChat 'apiURL' not valid")
+			if _, err := ValidateURL(config.APIURL); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
 	}
@@ -132,13 +167,13 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 	for _, config := range configs {
 		if config.To == "" {
-			return errors.New("missing to address in email config")
+			return errors.New("missing 'to' address")
 		}
 
 		if config.Smarthost != "" {
 			_, _, err := net.SplitHostPort(config.Smarthost)
 			if err != nil {
-				return errors.New("invalid email field 'smarthost'")
+				return errors.Wrapf(err, "invalid field 'smarthost': %s", config.Smarthost)
 			}
 		}
 
@@ -148,7 +183,7 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 			for _, v := range config.Headers {
 				normalized := strings.Title(v.Key)
 				if _, ok := normalizedHeaders[normalized]; ok {
-					return fmt.Errorf("duplicate header %q in email config", normalized)
+					return fmt.Errorf("duplicate header %q", normalized)
 				}
 				normalizedHeaders[normalized] = struct{}{}
 			}
@@ -180,7 +215,13 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 		}
 
 		if config.RoutingKey == "" {
-			return errors.New("missing 'routingKey' key in VictorOps config")
+			return errors.New("missing 'routingKey' key")
+		}
+
+		if config.APIURL != "" {
+			if _, err := ValidateURL(config.APIURL); err != nil {
+				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
+			}
 		}
 	}
 	return nil
@@ -195,25 +236,14 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 		if config.Token == nil {
 			return errors.Errorf("mandatory field %q is empty", "token")
 		}
-
-		if config.Retry != "" {
-			_, err := time.ParseDuration(config.Retry)
-			if err != nil {
-				return errors.New("invalid retry duration")
-			}
-		}
-		if config.Expire != "" {
-			_, err := time.ParseDuration(config.Expire)
-			if err != nil {
-				return errors.New("invalid expire duration")
-			}
-		}
 	}
 
 	return nil
 }
 
 // validateAlertManagerRoutes verifies that the given route and all its children are semantically valid.
+// because of the self-referential issues mentioned in https://github.com/kubernetes/kubernetes/issues/62872
+// it is not currently possible to apply OpenAPI validation to a v1alpha1.Route
 func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map[string]struct{}, topLevelRoute bool) error {
 	if r == nil {
 		return nil
@@ -240,6 +270,19 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 		if _, found := muteTimeIntervals[namedMuteTimeInterval]; !found {
 			return errors.Errorf("mute time interval %q not found", namedMuteTimeInterval)
 		}
+	}
+
+	// validate that if defaults are set, they match regex
+	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
+		return errors.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+
+	}
+	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
+		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+	}
+
+	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
+		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
 	}
 
 	children, err := r.ChildRoutes()

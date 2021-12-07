@@ -15,11 +15,14 @@
 package alertmanager
 
 import (
+	"net/url"
+	"reflect"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus/alertmanager/config"
 )
 
 func TestValidateConfig(t *testing.T) {
@@ -269,53 +272,6 @@ func TestValidateConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate PushoverConfigs - invalid retry duration",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
-								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "n/a",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - invalid expiry duration",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
-								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "10m",
-									Expire:  "n/a",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1alpha1.AlertmanagerConfig{
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -409,7 +365,7 @@ func TestValidateConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "www.test.com",
+											URL:  "https://www.test.com",
 											Name: "c",
 											ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 												Text: "d",
@@ -426,7 +382,7 @@ func TestValidateConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 								{
-									URL:       strToPtr("www.test.com"),
+									URL:       strToPtr("https://www.test.com"),
 									URLSecret: &v1.SecretKeySelector{},
 								},
 							},
@@ -504,6 +460,54 @@ func TestValidateConfig(t *testing.T) {
 					return
 				}
 				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateUrl(t *testing.T) {
+	tests := []struct {
+		name         string
+		in           string
+		expectErr    bool
+		expectResult func() *config.URL
+	}{
+		{
+			name:      "Test invalid url returns error",
+			in:        "https://!^invalid.com",
+			expectErr: true,
+		},
+		{
+			name:      "Test missing scheme returns error",
+			in:        "is.normally.valid",
+			expectErr: true,
+		},
+		{
+			name: "Test happy path",
+			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
+			expectResult: func() *config.URL {
+				u, _ := url.Parse("https://u:p@is.compliant.with.upstream.unmarshal")
+				return &config.URL{URL: u}
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			u, err := ValidateURL(tc.in)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			res := tc.expectResult()
+			if !reflect.DeepEqual(u, res) {
+				t.Fatalf("wanted %v but got %v", res, u)
 			}
 		})
 	}

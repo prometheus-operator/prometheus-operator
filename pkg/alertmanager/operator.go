@@ -898,7 +898,7 @@ receivers:
 		return nil
 	}
 
-	baseConfig, err := loadCfg(string(rawBaseConfig))
+	baseConfig, err := alertmanagerConfigFrom(string(rawBaseConfig))
 	if err != nil {
 		return errors.Wrap(err, "base config from Secret could not be parsed")
 	}
@@ -1011,7 +1011,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfig(ctx, amc, amVersion, store); err != nil {
+		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
@@ -1040,9 +1040,9 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	return res, nil
 }
 
-// checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
+// checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
+func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
 	receiverNames, err := checkReceivers(ctx, amc, store)
 	if err != nil {
 		return err
@@ -1209,8 +1209,12 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
 
 		if config.URLSecret != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.URLSecret); err != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.URLSecret)
+			if err != nil {
 				return err
+			}
+			if _, err := ValidateURL(strings.TrimSpace(url)); err != nil {
+				return errors.Wrapf(err, "webhook 'url' %s invalid", url)
 			}
 		}
 

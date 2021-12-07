@@ -34,12 +34,19 @@ import (
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"gopkg.in/yaml.v2"
+
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 const inhibitRuleNamespaceKey = "namespace"
 
-func loadCfg(s string) (*alertmanagerConfig, error) {
+// alertmanagerConfigFrom returns a valid global alertmanagerConfig from s
+// or returns an error if
+// 1. s fails validation provided by upstream
+// 2. s fails to unmarshal into internal type
+// 3. the unmarshalled output is invalid
+func alertmanagerConfigFrom(s string) (*alertmanagerConfig, error) {
 	// Run upstream Load function to get any validation checks that it runs.
 	_, err := config.Load(s)
 	if err != nil {
@@ -52,6 +59,22 @@ func loadCfg(s string) (*alertmanagerConfig, error) {
 		return nil, err
 	}
 
+	rootRoute := cfg.Route
+	if rootRoute == nil {
+		return nil, errors.New("root route must exist")
+	}
+
+	if rootRoute.Receiver == "" {
+		return nil, errors.New("root route's receiver must exist")
+	}
+
+	if len(rootRoute.Matchers) > 0 || len(rootRoute.Match) > 0 || len(rootRoute.MatchRE) > 0 {
+		return nil, errors.New("'matchers' not permitted on root route")
+	}
+
+	if len(rootRoute.MuteTimeIntervals) > 0 {
+		return nil, errors.New("'mute_time_intervals' not permitted on root route")
+	}
 	return cfg, nil
 }
 
@@ -196,6 +219,19 @@ func (cg *configGenerator) enforceNamespaceForRoute(r *route, namespace string) 
 	r.Continue = true
 
 	return r
+}
+
+func (cg *configGenerator) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	url, err := cg.store.GetSecretKey(ctx, namespace, selector)
+	if err != nil {
+		return "", errors.Errorf("failed to get key %q from secret %q", selector.Key, selector.Name)
+	}
+
+	url = strings.TrimSpace(url)
+	if _, err := ValidateURL(url); err != nil {
+		return url, errors.Wrapf(err, "invalid url %s in secret %s config", url, selector.Name)
+	}
+	return url, nil
 }
 
 func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
@@ -376,13 +412,17 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 	}
 
 	if in.URLSecret != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
+			return nil, err
 		}
-		out.URL = strings.TrimSpace(url)
+		out.URL = url
 	} else if in.URL != nil {
-		out.URL = *in.URL
+		url, err := ValidateURL(*in.URL)
+		if err != nil {
+			return nil, err
+		}
+		out.URL = url.String()
 	}
 
 	if in.HTTPConfig != nil {
@@ -423,11 +463,11 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 	}
 
 	if in.APIURL != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIURL)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
+			return nil, err
 		}
-		out.APIURL = strings.TrimSpace(url)
+		out.APIURL = url
 	}
 
 	var actions []slackAction

@@ -1657,7 +1657,7 @@ templates: []
 	}
 
 	for _, tc := range testCase {
-		ac, err := loadCfg(tc.rawConf)
+		ac, err := alertmanagerConfigFrom(tc.rawConf)
 		if err != nil {
 			t.Error(err)
 		}
