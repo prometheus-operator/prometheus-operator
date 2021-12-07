@@ -1692,7 +1692,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					KubeClient.
 					CoreV1().
 					Secrets(ns).
-					Get(context.Background(), "prometheus-"+prometheusName+"-tls-assets", metav1.GetOptions{})
+					Get(context.Background(), "prometheus-"+prometheusName+"-tls-assets-0", metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 2,
 		},
