@@ -130,7 +130,14 @@ func (cg *configGenerator) generateConfig(
 
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
-			baseConfig.InhibitRules = append(baseConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule, crKey))
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules,
+				cg.enforceNamespaceForInhibitRule(
+					cg.convertInhibitRule(
+						&inhibitRule,
+					),
+					crKey.Namespace,
+				),
+			)
 		}
 
 		// Skip early if there's no route definition.
@@ -141,7 +148,9 @@ func (cg *configGenerator) generateConfig(
 		subRoutes = append(subRoutes,
 			cg.enforceNamespaceForRoute(
 				cg.convertRoute(
-					amConfigs[amConfigIdentifier].Spec.Route, crKey),
+					amConfigs[amConfigIdentifier].Spec.Route,
+					crKey,
+				),
 				amConfigs[amConfigIdentifier].Namespace,
 			),
 		)
@@ -176,10 +185,47 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(generatedConf)
 }
 
+// enforceNamespaceForInhibitRule modifies the inhibition rule to match alerts
+// originating only from the given namespace.
+func (cg *configGenerator) enforceNamespaceForInhibitRule(ir *inhibitRule, namespace string) *inhibitRule {
+	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+
+	// Inhibition rule created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
+
+	if !matchersV2Allowed {
+		ir.SourceMatch[inhibitRuleNamespaceKey] = namespace
+		ir.TargetMatch[inhibitRuleNamespaceKey] = namespace
+
+		return ir
+	}
+
+	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
+		Name:      inhibitRuleNamespaceKey,
+		Value:     namespace,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+
+	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
+		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
+	}
+	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
+		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
+	}
+
+	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
+
+	return ir
+}
+
 // enforceNamespaceForRoute modifies the route configuration to match alerts
 // originating only from the given namespace.
 func (cg *configGenerator) enforceNamespaceForRoute(r *route, namespace string) *route {
 	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+
 	// Routes created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
 	if matchersV2Allowed {
@@ -802,16 +848,10 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	return out, nil
 }
 
-func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
+func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) *inhibitRule {
 	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
 	var sourceMatchers []string
 	var targetMatchers []string
-
-	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
-		Name:      inhibitRuleNamespaceKey,
-		Value:     crKey.Namespace,
-		MatchType: monitoringv1alpha1.MatchEqual,
-	}.String()
 
 	// todo (pgough) the following config are deprecated and can be removed when
 	// support matrix has reached >= 0.22.0
@@ -843,16 +883,6 @@ func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule
 		}
 	}
 
-	delete(sourceMatchRE, inhibitRuleNamespaceKey)
-	if matchersV2Allowed {
-		if !contains(v2NamespaceMatcher, sourceMatchers) {
-			sourceMatchers = append(sourceMatchers, v2NamespaceMatcher)
-		}
-		delete(sourceMatch, inhibitRuleNamespaceKey)
-	} else {
-		sourceMatch[inhibitRuleNamespaceKey] = crKey.Namespace
-	}
-
 	for _, tm := range in.TargetMatch {
 		// prefer matchers to deprecated config
 		if tm.MatchType != "" {
@@ -874,16 +904,6 @@ func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule
 		} else {
 			targetMatch[tm.Name] = tm.Value
 		}
-	}
-
-	delete(targetMatchRE, inhibitRuleNamespaceKey)
-	if matchersV2Allowed {
-		if !contains(v2NamespaceMatcher, targetMatchers) {
-			targetMatchers = append(targetMatchers, v2NamespaceMatcher)
-		}
-		delete(targetMatch, inhibitRuleNamespaceKey)
-	} else {
-		targetMatch[inhibitRuleNamespaceKey] = crKey.Namespace
 	}
 
 	return &inhibitRule{
