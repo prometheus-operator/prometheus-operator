@@ -1,0 +1,369 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.2
+  creationTimestamp: null
+  name: probes.monitoring.coreos.com
+spec:
+  group: monitoring.coreos.com
+  names:
+    categories:
+    - prometheus-operator
+    kind: Probe
+    listKind: ProbeList
+    plural: probes
+    singular: probe
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              authorization:
+                properties:
+                  credentials:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  type:
+                    type: string
+                type: object
+              basicAuth:
+                properties:
+                  password:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  username:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                type: object
+              bearerTokenSecret:
+                properties:
+                  key:
+                    type: string
+                  name:
+                    type: string
+                  optional:
+                    type: boolean
+                required:
+                - key
+                type: object
+              interval:
+                type: string
+              jobName:
+                type: string
+              labelLimit:
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                format: int64
+                type: integer
+              metricRelabelings:
+                items:
+                  properties:
+                    action:
+                      type: string
+                    modulus:
+                      format: int64
+                      type: integer
+                    regex:
+                      type: string
+                    replacement:
+                      type: string
+                    separator:
+                      type: string
+                    sourceLabels:
+                      items:
+                        type: string
+                      type: array
+                    targetLabel:
+                      type: string
+                  type: object
+                type: array
+              module:
+                type: string
+              oauth2:
+                properties:
+                  clientId:
+                    properties:
+                      configMap:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      secret:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                    type: object
+                  clientSecret:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  endpointParams:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  scopes:
+                    items:
+                      type: string
+                    type: array
+                  tokenUrl:
+                    minLength: 1
+                    type: string
+                required:
+                - clientId
+                - clientSecret
+                - tokenUrl
+                type: object
+              prober:
+                properties:
+                  path:
+                    type: string
+                  proxyUrl:
+                    type: string
+                  scheme:
+                    type: string
+                  url:
+                    type: string
+                required:
+                - url
+                type: object
+              sampleLimit:
+                format: int64
+                type: integer
+              scrapeTimeout:
+                type: string
+              targetLimit:
+                format: int64
+                type: integer
+              targets:
+                properties:
+                  ingress:
+                    properties:
+                      namespaceSelector:
+                        properties:
+                          any:
+                            type: boolean
+                          matchNames:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      relabelingConfigs:
+                        items:
+                          properties:
+                            action:
+                              type: string
+                            modulus:
+                              format: int64
+                              type: integer
+                            regex:
+                              type: string
+                            replacement:
+                              type: string
+                            separator:
+                              type: string
+                            sourceLabels:
+                              items:
+                                type: string
+                              type: array
+                            targetLabel:
+                              type: string
+                          type: object
+                        type: array
+                      selector:
+                        properties:
+                          matchExpressions:
+                            items:
+                              properties:
+                                key:
+                                  type: string
+                                operator:
+                                  type: string
+                                values:
+                                  items:
+                                    type: string
+                                  type: array
+                              required:
+                              - key
+                              - operator
+                              type: object
+                            type: array
+                          matchLabels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                        type: object
+                    type: object
+                  staticConfig:
+                    properties:
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      relabelingConfigs:
+                        items:
+                          properties:
+                            action:
+                              type: string
+                            modulus:
+                              format: int64
+                              type: integer
+                            regex:
+                              type: string
+                            replacement:
+                              type: string
+                            separator:
+                              type: string
+                            sourceLabels:
+                              items:
+                                type: string
+                              type: array
+                            targetLabel:
+                              type: string
+                          type: object
+                        type: array
+                      static:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              tlsConfig:
+                properties:
+                  ca:
+                    properties:
+                      configMap:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      secret:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                    type: object
+                  cert:
+                    properties:
+                      configMap:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      secret:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                    type: object
+                  insecureSkipVerify:
+                    type: boolean
+                  keySecret:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                  serverName:
+                    type: string
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

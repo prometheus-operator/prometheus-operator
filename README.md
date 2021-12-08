@@ -108,7 +108,7 @@ but have already applied the `bundle.yaml`, delete the bundle first (`kubectl de
 To quickly try out *just* the Prometheus Operator inside a cluster, **choose a release** and run the following command:
 
 ```sh
-kubectl create -f bundle.yaml
+kubectl apply -f bundle.yaml
 ```
 
 > Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in a namespace other than the default namespace.

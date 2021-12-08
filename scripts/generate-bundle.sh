@@ -15,4 +15,4 @@ function generate_bundle() {
     concat $(find "$@" -maxdepth 1 -name '*.yaml' | sort | grep -v service-monitor)
 }
 
-generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd > bundle.yaml
+generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd-nodesc > bundle.yaml
