@@ -605,9 +605,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
-	probeHandler := func(probePath string) v1.Handler {
+	probeHandler := func(probePath string) v1.ProbeHandler {
 		probePath = path.Clean(webRoutePrefix + probePath)
-		handler := v1.Handler{}
+		handler := v1.ProbeHandler{}
 		if p.Spec.ListenLocal {
 			handler.Exec = &v1.ExecAction{
 				Command: []string{
@@ -636,7 +636,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	// We don't want to use the /-/healthy handler here because it returns OK as
 	// soon as the web server is started (irrespective of the WAL replay).
 	startupProbe := &v1.Probe{
-		Handler:          probeHandler("/-/ready"),
+		ProbeHandler:     probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
@@ -645,7 +645,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	// TODO(paulfantom): Re-add livenessProbe when kubernetes 1.21 is available.
 	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
 	readinessProbe := &v1.Probe{
-		Handler:          probeHandler("/-/ready"),
+		ProbeHandler:     probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
