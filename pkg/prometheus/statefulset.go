@@ -805,6 +805,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			container.Args = append(container.Args, "--log.format="+p.Spec.LogFormat)
 		}
 
+		if p.Spec.Thanos.LoggingConfig != nil {
+			container.Args = append(container.Args, "--request.logging-config=$(REQUEST_LOGGING_CONFIG)")
+			container.Env = append(container.Env, v1.EnvVar{
+				Name: "REQUEST_LOGGING_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					ConfigMapKeyRef: p.Spec.Thanos.LoggingConfig,
+				},
+			})
+		}
+
 		if p.Spec.Thanos.MinTime != "" {
 			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
 		}
