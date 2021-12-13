@@ -2196,6 +2196,11 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.LoggingConfig != nil {
+		in, out := &in.LoggingConfig, &out.LoggingConfig
+		*out = new(corev1.ConfigMapKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.VolumeMounts != nil {
 		in, out := &in.VolumeMounts, &out.VolumeMounts
 		*out = make([]corev1.VolumeMount, len(*in))
