@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/api"
@@ -50,20 +51,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	klog "k8s.io/klog/v2"
-)
-
-const (
-	logLevelAll   = "all"
-	logLevelDebug = "debug"
-	logLevelInfo  = "info"
-	logLevelWarn  = "warn"
-	logLevelError = "error"
-	logLevelNone  = "none"
-)
-
-const (
-	logFormatLogfmt = "logfmt"
-	logFormatJSON   = "json"
 )
 
 const (
@@ -130,18 +117,6 @@ func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func()
 }
 
 var (
-	availableLogLevels = []string{
-		logLevelAll,
-		logLevelDebug,
-		logLevelInfo,
-		logLevelWarn,
-		logLevelError,
-		logLevelNone,
-	}
-	availableLogFormats = []string{
-		logFormatLogfmt,
-		logFormatJSON,
-	}
 	cfg = operator.Config{}
 
 	rawTLSCipherSuites string
@@ -191,8 +166,8 @@ func init() {
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")
-	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
-	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
+	flagset.StringVar(&cfg.LogLevel, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", ")))
+	flagset.StringVar(&cfg.LogFormat, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", ")))
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus Custom Resources to watch.")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
@@ -209,29 +184,10 @@ func Main() int {
 		return 0
 	}
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	if cfg.LogFormat == logFormatJSON {
-		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	logger, err := logging.NewLogger(cfg.LogLevel, cfg.LogFormat)
+	if err != nil {
+		stdlog.Fatal(err)
 	}
-	switch cfg.LogLevel {
-	case logLevelAll:
-		logger = level.NewFilter(logger, level.AllowAll())
-	case logLevelDebug:
-		logger = level.NewFilter(logger, level.AllowDebug())
-	case logLevelInfo:
-		logger = level.NewFilter(logger, level.AllowInfo())
-	case logLevelWarn:
-		logger = level.NewFilter(logger, level.AllowWarn())
-	case logLevelError:
-		logger = level.NewFilter(logger, level.AllowError())
-	case logLevelNone:
-		logger = level.NewFilter(logger, level.AllowNone())
-	default:
-		fmt.Fprintf(os.Stderr, "log level %v unknown, %v are possible values", cfg.LogLevel, availableLogLevels)
-		return 1
-	}
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	// Check validity of reloader resource values given to flags
 	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
