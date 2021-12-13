@@ -285,14 +285,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer-timeout=%s", a.Spec.ClusterPeerTimeout))
 	}
 
-	livenessProbeHandler := v1.Handler{
+	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
 			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
-	readinessProbeHandler := v1.Handler{
+	readinessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/ready"),
 			Port: intstr.FromString(a.Spec.PortName),
@@ -303,13 +303,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var readinessProbe *v1.Probe
 	if !a.Spec.ListenLocal {
 		livenessProbe = &v1.Probe{
-			Handler:          livenessProbeHandler,
+			ProbeHandler:     livenessProbeHandler,
 			TimeoutSeconds:   probeTimeoutSeconds,
 			FailureThreshold: 10,
 		}
 
 		readinessProbe = &v1.Probe{
-			Handler:             readinessProbeHandler,
+			ProbeHandler:        readinessProbeHandler,
 			InitialDelaySeconds: 3,
 			TimeoutSeconds:      3,
 			PeriodSeconds:       5,

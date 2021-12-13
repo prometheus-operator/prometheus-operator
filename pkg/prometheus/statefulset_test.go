@@ -452,8 +452,8 @@ func TestListenLocal(t *testing.T) {
 		t.Fatal("Prometheus not listening on loopback when it should.")
 	}
 
-	expectedProbeHandler := func(probePath string) v1.Handler {
-		return v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
+		return v1.ProbeHandler{
 			Exec: &v1.ExecAction{
 				Command: []string{
 					`sh`,
@@ -466,7 +466,7 @@ func TestListenLocal(t *testing.T) {
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
 	expectedStartupProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/ready"),
+		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
@@ -477,7 +477,7 @@ func TestListenLocal(t *testing.T) {
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/ready"),
+		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
@@ -517,8 +517,8 @@ func TestListenTLS(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	expectedProbeHandler := func(probePath string) v1.Handler {
-		return v1.Handler{
+	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
+		return v1.ProbeHandler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path:   probePath,
 				Port:   intstr.FromString("web"),
@@ -529,7 +529,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
 	expectedStartupProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/ready"),
+		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
@@ -540,7 +540,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/ready"),
+		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
