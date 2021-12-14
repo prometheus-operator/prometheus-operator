@@ -1385,7 +1385,7 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monito
 	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 
 	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
-		return nil, errors.Wrapf(err, "failed to create TLS assets secret for Prometheus")
+		return nil, errors.Wrapf(err, "failed to create TLS assets secret for Alertmanager")
 	}
 
 	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
