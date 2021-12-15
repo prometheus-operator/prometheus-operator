@@ -198,7 +198,7 @@ Prometheus rule files are held in `PrometheusRule` custom resources. Use the lab
 
 By default, only `PrometheusRule` custom resources in the same namespace as the `Prometheus` custom resource are discovered.
 
-This can be further controlled with the `ruleNamespaceSelector` field, which is a [`metav1.LabelSelector`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta).
+This can be further controlled with the `ruleNamespaceSelector` field, which is a [`metav1.LabelSelector`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta).
 
 To discover from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
 
