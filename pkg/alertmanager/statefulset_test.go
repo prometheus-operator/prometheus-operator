@@ -76,7 +76,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 
@@ -108,7 +108,7 @@ func TestStatefulSetStoragePath(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 
@@ -141,7 +141,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 	require.NoError(t, err)
 	if val, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok || val != "testvalue" {
 		t.Fatal("Pod labels are not properly propagated")
@@ -162,7 +162,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 				Labels: labels,
 			},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 
@@ -201,7 +201,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -232,7 +232,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -270,7 +270,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 				Ephemeral: &ephemeral,
 			},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -285,7 +285,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ListenLocal: true,
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -331,7 +331,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -352,7 +352,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +385,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -420,7 +420,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain := defaultTestConfig
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
-	statefulSet, err := makeStatefulSetSpec(&a, configWithClusterDomain)
+	statefulSet, err := makeStatefulSetSpec(&a, configWithClusterDomain, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -446,7 +446,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -471,7 +471,7 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			Secrets: secrets,
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 	require.NoError(t, err)
 
 	secret1Found := false
@@ -531,7 +531,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, alertManagerBaseImageConfig, "")
+	}, alertManagerBaseImageConfig, "", nil)
 
 	require.NoError(t, err)
 
@@ -549,7 +549,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "")
+		}, defaultTestConfig, "", nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -567,7 +567,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "")
+		}, defaultTestConfig, "", nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -587,7 +587,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 				Image:   &image,
 			},
-		}, defaultTestConfig, "")
+		}, defaultTestConfig, "", nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -614,7 +614,7 @@ func TestRetention(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				Retention: test.specRetention,
 			},
-		}, defaultTestConfig, "")
+		}, defaultTestConfig, "", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -640,7 +640,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -679,7 +679,7 @@ func TestSidecarsNoResources(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -708,7 +708,7 @@ func TestSidecarsNoRequests(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -740,7 +740,7 @@ func TestSidecarsNoLimits(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -772,7 +772,7 @@ func TestSidecarsNoCPUResources(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -805,7 +805,7 @@ func TestSidecarsNoCPURequests(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -839,7 +839,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -873,7 +873,7 @@ func TestSidecarsNoMemoryResources(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -906,7 +906,7 @@ func TestSidecarsNoMemoryRequests(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -940,7 +940,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, testConfig, "")
+	}, testConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -964,7 +964,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 func TestTerminationPolicy(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, defaultTestConfig, "")
+	}, defaultTestConfig, "", nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -982,7 +982,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1009,7 +1009,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.Replicas = &replicas
 	a.Spec.ForceEnableClusterMode = true
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1035,7 +1035,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1062,7 +1062,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	// assert defaults to zero if nil
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1073,7 +1073,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	a.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(&a, defaultTestConfig)
+	statefulSet, err = makeStatefulSetSpec(&a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

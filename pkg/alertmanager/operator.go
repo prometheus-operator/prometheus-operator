@@ -746,8 +746,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "provision alertmanager configuration")
 	}
 
-	if err := c.createOrUpdateTLSAssetSecret(ctx, am, assetStore); err != nil {
-		return errors.Wrap(err, "creating tls asset secret failed")
+	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, am, assetStore)
+	if err != nil {
+		return errors.Wrap(err, "creating tls asset secrets failed")
 	}
 
 	// Create governing service if it doesn't exist.
@@ -768,12 +769,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		oldSpec = ss.Spec
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, oldSpec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, oldSpec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
+	sset, err := makeStatefulSet(am, c.config, newSSetInputHash, tlsAssets.ShardNames())
 	if err != nil {
 		return errors.Wrap(err, "failed to make statefulset")
 	}
@@ -826,12 +827,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(a monitoringv1.Alertmanager, c Config, s appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		A monitoringv1.Alertmanager
 		C Config
 		S appsv1.StatefulSetSpec
-	}{a, c, s},
+		T []string `hash:"set"`
+	}{a, c, s, tlsAssets.ShardNames()},
 		nil,
 	)
 	if err != nil {
@@ -1370,14 +1372,33 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	return store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig)
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
-	boolTrue := true
+func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*operator.ShardedSecret, error) {
+	labels := c.config.Labels.Merge(managedByOperatorLabels)
+	template := newTLSAssetSecret(am, labels)
+
+	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(am.Name))
+
+	for k, v := range store.TLSAssets {
+		sSecret.AppendData(k.String(), []byte(v))
+	}
+
 	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 
-	tlsAssetsSecret := &v1.Secret{
+	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
+		return nil, errors.Wrapf(err, "failed to create TLS assets secret for Alertmanager")
+	}
+
+	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
+
+	return sSecret, nil
+}
+
+func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) *v1.Secret {
+	boolTrue := true
+	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   tlsAssetsSecretName(am.Name),
-			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         am.APIVersion,
@@ -1389,19 +1410,8 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitor
 				},
 			},
 		},
-		Data: make(map[string][]byte, len(store.TLSAssets)),
+		Data: make(map[string][]byte),
 	}
-
-	for key, asset := range store.TLSAssets {
-		tlsAssetsSecret.Data[key.String()] = []byte(asset)
-	}
-
-	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
-	if err != nil {
-		return errors.Wrap(err, "failed to create TLS assets secret for Alertmanager")
-	}
-
-	return nil
 }
 
 //checkAlertmanagerSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
