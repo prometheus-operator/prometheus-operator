@@ -45,17 +45,19 @@ This Document documents the types introduced by the Prometheus Operator to be co
 > Note this document is generated from code comments. When contributing a change to this document please do so by changing the code comments.`
 )
 
+const kubeAPIVersion = "v1.23"
+
 var (
 	links = map[string]string{
-		"metav1.ObjectMeta":        "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta",
-		"metav1.ListMeta":          "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#listmeta-v1-meta",
-		"metav1.LabelSelector":     "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta",
-		"v1.ResourceRequirements":  "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core",
-		"v1.LocalObjectReference":  "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core",
-		"v1.SecretKeySelector":     "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core",
-		"v1.PersistentVolumeClaim": "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaim-v1-core",
-		"v1.EmptyDirVolumeSource":  "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#emptydirvolumesource-v1-core",
-		"apiextensionsv1.JSON":     "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#json-v1-apiextensions-k8s-io",
+		"metav1.ObjectMeta":        fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#objectmeta-v1-meta", kubeAPIVersion),
+		"metav1.ListMeta":          fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#listmeta-v1-meta", kubeAPIVersion),
+		"metav1.LabelSelector":     fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#labelselector-v1-meta", kubeAPIVersion),
+		"v1.ResourceRequirements":  fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#resourcerequirements-v1-core", kubeAPIVersion),
+		"v1.LocalObjectReference":  fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#localobjectreference-v1-core", kubeAPIVersion),
+		"v1.SecretKeySelector":     fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#secretkeyselector-v1-core", kubeAPIVersion),
+		"v1.PersistentVolumeClaim": fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#persistentvolumeclaim-v1-core", kubeAPIVersion),
+		"v1.EmptyDirVolumeSource":  fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#emptydirvolumesource-v1-core", kubeAPIVersion),
+		"apiextensionsv1.JSON":     fmt.Sprintf("https://kubernetes.io/docs/reference/generated/kubernetes-api/%s/#json-v1-apiextensions-k8s-io", kubeAPIVersion),
 	}
 
 	selfLinks = map[string]string{}
