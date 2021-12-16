@@ -1,6 +1,21 @@
+## 0.53.0 / 2021-12-16
+
+* [CHANGE] Added startup probe to Prometheus. #4433 #4369
+* [FEATURE] Added support for mute time intervals in the AlertManagerConfig CRD. #4388
+* [FEATURE] Added support for new matching syntax in the routes configuration of the AlertmanagerConfig CRD. #4332
+* [FEATURE] Added support for new matching syntax in the inhibit rules configuration of the AlertmanagerConfig CRD. #4329
+* [FEATURE] Added `headers` in the Remote Read configuration of the Prometheus CRD. #4323
+* [FEATURE] Added `retryOnRateLimit` in the Remote Write configuration of the Prometheus CRD. #4420
+* [FEATURE] Added support for PagerDuty links and images in the AlertManagerConfig CR. #4425
+* [ENHANCEMENT] Optimized the generated Prometheus configuration to make it compatible with the new Prometheus agent mode. #4417
+* [BUGFIX] Improved validation for the Alertmanager CRD to match with upstream Alertmanager. #4434
+* [BUGFIX] Fixed propagation of annotations from spec.podMetadata to the StatefulSet's pods. #4422
+* [BUGFIX] Ensured that `group_by` values are unique in the generated Alertmanager configuration. #4413
+* [BUGFIX] Fixed generated secrets being larger than the maximum size limit of 1048576 bytes. #4427 #4449
+
 ## 0.52.1 / 2021-11-16
 
-* [BUGFIX] Fixed regex in relabel_configs
+* [BUGFIX] Fixed regex in relabel_configs. #4395
 
 ## 0.52.0 / 2021-11-03
 
@@ -15,7 +30,7 @@
 * [ENHANCEMENT] Add alerts for config reloader sidecars. #4294
 * [ENHANCEMENT] Add validations for duration and size fields for Prometheus, Alertmanager, and Thanos Ruler resources #4308, #4352
 * [ENHANCEMENT] Add s390x support to docker images. #4351
-* [ENHANCEMENT] Only load alertmanager configuration when writing configration. #4333
+* [ENHANCEMENT] Only load alertmanager configuration when writing configuration. #4333
 * [BUGFIX] Fix `matchLabels` selector to have empty label values in ServiceMonitor, PodMonitor, and Probe. #4327
 * [BUGFIX] Prevent rule file name collision. #4347
 * [BUGFIX] Update native kubernetes fields used in prometheus-operator CRDs. #4221
