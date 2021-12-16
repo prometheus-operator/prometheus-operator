@@ -255,6 +255,53 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base with sns receiver, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{Receiver: "sns-test"},
+				Receivers: []*receiver{
+					{
+						Name: "sns-test",
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:      "https://sns.us-west-2.amazonaws.com",
+								TopicARN:    "arn:test",
+								PhoneNumber: "+12345",
+								TargetARN:   "arn:target",
+								Subject:     "testing",
+								Sigv4: sigV4Config{
+									Region:    "us-west-2",
+									AccessKey: "key",
+									SecretKey: "secret",
+									Profile:   "dev",
+									RoleARN:   "arn:dev",
+								},
+							},
+						},
+					},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `route:
+  receiver: sns-test
+receivers:
+- name: sns-test
+  sns_configs:
+  - api_url: https://sns.us-west-2.amazonaws.com
+    sigv4:
+      region: us-west-2
+      access_key: key
+      secret_key: secret
+      profile: dev
+      role_arn: arn:dev
+    topic_arn: arn:test
+    phone_number: "+12345"
+    target_arn: arn:target
+    subject: testing
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
