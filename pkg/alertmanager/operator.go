@@ -188,7 +188,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	}
 	c.secrInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
