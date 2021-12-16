@@ -183,7 +183,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml generate-docs
 
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
@@ -196,6 +196,9 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 generate-remote-write-certs:
 	mkdir -p test/e2e/remote_write_certs && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(ARCH) go run -v ./certs/.)
+
+.PHONY: generate-docs
+generate-docs: $(shell find Documentation -type f)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
@@ -220,8 +223,8 @@ example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.json
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
-Documentation/operator.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
-	$(PO_DOCGEN_BINARY) operator cmd/operator/main.go > $@
+Documentation/operator.md: operator
+	$(MDOX_BINARY) fmt $@
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@

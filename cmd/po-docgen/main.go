@@ -32,7 +32,5 @@ func main() {
 		printAPIDocs(os.Args[2:])
 	case "compatibility":
 		printCompatMatrixDocs()
-	case "operator":
-		printOperatorDocs(os.Args[2:])
 	}
 }
