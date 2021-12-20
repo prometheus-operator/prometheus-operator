@@ -19,8 +19,8 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.4.1-0.20211215142838-1eac0933d512
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.53.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.53.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.53.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.53.1
 	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.32.1
