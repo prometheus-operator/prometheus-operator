@@ -1,3 +1,7 @@
+## 0.53.1 / 2021-12-20
+
+* [BUGFIX] Fixed the validation pattern for the `february` month in the AlertManagerConfig CRD. #4458
+
 ## 0.53.0 / 2021-12-16
 
 * [CHANGE] Added startup probe to Prometheus. #4433 #4369
