@@ -164,7 +164,7 @@ spec:
                                 by name (e.g 'January') by numerical month (e.g '1')
                                 or as an inclusive range (e.g 'January:March', '1:3',
                                 '1:March')
-                              pattern: ^((?i)january|febuary|march|april|may|june|july|august|september|october|november|december|[1-12])(?:((:((?i)january|febuary|march|april|may|june|july|august|september|october|november|december|[1-12]))$)|$)
+                              pattern: ^((?i)january|february|march|april|may|june|july|august|september|october|november|december|[1-12])(?:((:((?i)january|february|march|april|may|june|july|august|september|october|november|december|[1-12]))$)|$)
                               type: string
                             type: array
                           times:
@@ -25322,7 +25322,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.53.0
+    app.kubernetes.io/version: 0.53.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -25339,7 +25339,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.53.0
+    app.kubernetes.io/version: 0.53.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -25419,7 +25419,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.53.0
+    app.kubernetes.io/version: 0.53.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -25435,13 +25435,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.53.0
+        app.kubernetes.io/version: 0.53.1
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.53.0
-        image: quay.io/prometheus-operator/prometheus-operator:v0.53.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.53.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.53.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -25468,7 +25468,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.53.0
+    app.kubernetes.io/version: 0.53.1
   name: prometheus-operator
   namespace: default
 ---
@@ -25478,7 +25478,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.53.0
+    app.kubernetes.io/version: 0.53.1
   name: prometheus-operator
   namespace: default
 spec:
