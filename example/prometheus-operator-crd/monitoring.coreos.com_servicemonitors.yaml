@@ -490,7 +490,8 @@ spec:
                 type: array
               jobLabel:
                 description: "Chooses the label of the Kubernetes `Endpoints`. Its
-                  value will be used for the `job`-label's value of the created metrics.
+                  value which comes from the same name service's label will be used 
+                  for the `job`-label's value of the created metrics.
                   \n Default & fallback value: the name of the respective Kubernetes
                   `Endpoint`."
                 type: string
