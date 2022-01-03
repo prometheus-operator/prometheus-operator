@@ -889,7 +889,7 @@ type ServiceMonitor struct {
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
 	// Chooses the label of the Kubernetes `Endpoints`.
-	// Its value will be used for the `job`-label's value of the created metrics.
+	// Its value which comes from the same name service's label will be used for the `job`-label's value of the created metrics.
 	//
 	// Default & fallback value: the name of the respective Kubernetes `Endpoint`.
 	JobLabel string `json:"jobLabel,omitempty"`
