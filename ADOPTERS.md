@@ -250,6 +250,26 @@ Details (optional):
 - ~15mn samples/s
 - ~200mn active series
 
+## Robusta
+
+[Robusta docs](https://docs.robusta.dev/master/)
+
+Environments: EKS, GKE, AKS, and self-hosted Kubernetes
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+We're an open source project that builds upon the awesome Prometheus Operator. We run automated playbooks in response to Prometheus alerts and other events in your cluster. For example, you can automatically fetch logs and send them to Slack when a Prometheus alert occurs. All it takes is this YAML:
+
+```yaml
+triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+actions:
+  - logs_enricher: {}
+sinks:
+  - slack
+```
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
