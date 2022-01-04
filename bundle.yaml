@@ -9085,8 +9085,17 @@ spec:
                           configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
                           action:
+                            default: replace
                             description: Action to perform based on regex matching.
                               Default is 'replace'
+                            enum:
+                            - replace
+                            - keep
+                            - drop
+                            - hashmod
+                            - labelmap
+                            - labeldrop
+                            - labelkeep
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -9235,8 +9244,17 @@ spec:
                           configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
                           action:
+                            default: replace
                             description: Action to perform based on regex matching.
                               Default is 'replace'
+                            enum:
+                            - replace
+                            - keep
+                            - drop
+                            - hashmod
+                            - labelmap
+                            - labeldrop
+                            - labelkeep
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -9638,8 +9656,17 @@ spec:
                     of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                   properties:
                     action:
+                      default: replace
                       description: Action to perform based on regex matching. Default
                         is 'replace'
+                      enum:
+                      - replace
+                      - keep
+                      - drop
+                      - hashmod
+                      - labelmap
+                      - labeldrop
+                      - labelkeep
                       type: string
                     modulus:
                       description: Modulus to take of the hash of the source label
@@ -9824,8 +9851,17 @@ spec:
                             configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                           properties:
                             action:
+                              default: replace
                               description: Action to perform based on regex matching.
                                 Default is 'replace'
+                              enum:
+                              - replace
+                              - keep
+                              - drop
+                              - hashmod
+                              - labelmap
+                              - labeldrop
+                              - labelkeep
                               type: string
                             modulus:
                               description: Modulus to take of the hash of the source
@@ -9926,8 +9962,17 @@ spec:
                             configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                           properties:
                             action:
+                              default: replace
                               description: Action to perform based on regex matching.
                                 Default is 'replace'
+                              enum:
+                              - replace
+                              - keep
+                              - drop
+                              - hashmod
+                              - labelmap
+                              - labeldrop
+                              - labelkeep
                               type: string
                             modulus:
                               description: Modulus to take of the hash of the source
@@ -15164,8 +15209,17 @@ spec:
                           configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
                           action:
+                            default: replace
                             description: Action to perform based on regex matching.
                               Default is 'replace'
+                            enum:
+                            - replace
+                            - keep
+                            - drop
+                            - hashmod
+                            - labelmap
+                            - labeldrop
+                            - labelkeep
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -18660,8 +18714,17 @@ spec:
                           configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
                           action:
+                            default: replace
                             description: Action to perform based on regex matching.
                               Default is 'replace'
+                            enum:
+                            - replace
+                            - keep
+                            - drop
+                            - hashmod
+                            - labelmap
+                            - labeldrop
+                            - labelkeep
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -18810,8 +18873,17 @@ spec:
                           configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
                           action:
+                            default: replace
                             description: Action to perform based on regex matching.
                               Default is 'replace'
+                            enum:
+                            - replace
+                            - keep
+                            - drop
+                            - hashmod
+                            - labelmap
+                            - labeldrop
+                            - labelkeep
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
