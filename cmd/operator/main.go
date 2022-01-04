@@ -89,7 +89,7 @@ func (n namespaces) String() string {
 }
 
 func (n namespaces) asSlice() []string {
-	var ns []string
+	var ns = make([]string, 0, len(n))
 	for k := range n {
 		ns = append(ns, k)
 	}
