@@ -170,7 +170,17 @@
                       "description": "RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                       "properties": {
                         "action": {
+                          "default": "replace",
                           "description": "Action to perform based on regex matching. Default is 'replace'",
+                          "enum": [
+                            "replace",
+                            "keep",
+                            "drop",
+                            "hashmod",
+                            "labelmap",
+                            "labeldrop",
+                            "labelkeep"
+                          ],
                           "type": "string"
                         },
                         "modulus": {
@@ -377,7 +387,17 @@
                               "description": "RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                               "properties": {
                                 "action": {
+                                  "default": "replace",
                                   "description": "Action to perform based on regex matching. Default is 'replace'",
+                                  "enum": [
+                                    "replace",
+                                    "keep",
+                                    "drop",
+                                    "hashmod",
+                                    "labelmap",
+                                    "labeldrop",
+                                    "labelkeep"
+                                  ],
                                   "type": "string"
                                 },
                                 "modulus": {
@@ -474,7 +494,17 @@
                               "description": "RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                               "properties": {
                                 "action": {
+                                  "default": "replace",
                                   "description": "Action to perform based on regex matching. Default is 'replace'",
+                                  "enum": [
+                                    "replace",
+                                    "keep",
+                                    "drop",
+                                    "hashmod",
+                                    "labelmap",
+                                    "labeldrop",
+                                    "labelkeep"
+                                  ],
                                   "type": "string"
                                 },
                                 "modulus": {
