@@ -97,6 +97,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PushoverConfig](#pushoverconfig)
 * [Receiver](#receiver)
 * [Route](#route)
+* [SNSConfig](#snsconfig)
 * [SlackAction](#slackaction)
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
@@ -1376,7 +1377,7 @@ EmailConfig configures notifications via Email.
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 
-<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1586,6 +1587,7 @@ Receiver defines one or more notification integrations.
 | emailConfigs | List of Email configurations. | [][EmailConfig](#emailconfig) | false |
 | victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
 | pushoverConfigs | List of Pushover configurations. | [][PushoverConfig](#pushoverconfig) | false |
+| snsConfigs | List of SNS configurations | [][SNSConfig](#snsconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1607,6 +1609,28 @@ Route defines a node in the routing tree.
 | continue | Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator. | bool | false |
 | routes | Child routes. | [][apiextensionsv1.JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#json-v1-apiextensions-k8s-io) | false |
 | muteTimeIntervals | Note: this comment applies to the field definition above but appears below otherwise it gets included in the generated manifest. CRD schema doesn't support self-referential types for now (see https://github.com/kubernetes/kubernetes/issues/62872). We have to use an alternative type to circumvent the limitation. The downside is that the Kube API can't validate the data beyond the fact that it is a valid JSON representation. MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched, | []string | false |
+
+[Back to TOC](#table-of-contents)
+
+## SNSConfig
+
+SNSConfig configures notifications via AWS SNS. See https://prometheus.io/docs/alerting/latest/configuration/#sns_configs
+
+
+<em>appears in: [Receiver](#receiver)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
+| apiURL | The SNS API URL i.e. https://sns.us-east-2.amazonaws.com. If not specified, the SNS API URL from the SNS SDK will be used. | string | false |
+| sigv4 | Configures AWS's Signature Verification 4 signing process to sign requests. | *monitoringv1.Sigv4 | false |
+| topicARN | SNS topic ARN, i.e. arn:aws:sns:us-east-2:698519295917:My-Topic If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN. | string | false |
+| subject | Subject line when the message is delivered to email endpoints. | string | false |
+| phoneNumber | Phone number if message is delivered via SMS in E.164 format. If you don't specify this value, you must specify a value for the TopicARN or TargetARN. | string | false |
+| targetARN | The  mobile platform endpoint ARN if message is delivered via mobile notifications. If you don't specify this value, you must specify a value for the topic_arn or PhoneNumber. | string | false |
+| message | The message content of the SNS notification. | string | false |
+| attributes | SNS message attributes. | map[string]string | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

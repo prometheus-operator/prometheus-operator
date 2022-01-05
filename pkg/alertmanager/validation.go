@@ -87,7 +87,6 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 
 		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'emailConfig' - receiver %s", receiver.Name)
-
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
@@ -96,6 +95,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'pushOverConfig' - receiver %s", receiver.Name)
+		}
+
+		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
 	}
 
@@ -238,6 +241,15 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 		}
 	}
 
+	return nil
+}
+
+func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
+	for _, config := range configs {
+		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
+			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+		}
+	}
 	return nil
 }
 

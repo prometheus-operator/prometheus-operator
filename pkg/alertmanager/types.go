@@ -99,8 +99,7 @@ type receiver struct {
 	EmailConfigs     []*emailConfig     `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
 	PushoverConfigs  []*pushoverConfig  `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
 	VictorOpsConfigs []*victorOpsConfig `yaml:"victorops_configs,omitempty" json:"victorops_configs,omitempty"`
-	// TODO(pgough): support the following receivers with AlertmanagerConfig.
-	SNSConfigs []*snsConfig `yaml:"sns_configs,omitempty" json:"sns_configs,omitempty"`
+	SNSConfigs       []*snsConfig       `yaml:"sns_configs,omitempty" json:"sns_configs,omitempty"`
 }
 
 type webhookConfig struct {

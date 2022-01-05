@@ -1141,6 +1141,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1315,6 +1320,20 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 		}
 	}
 
+	return nil
+}
+
+func checkSnsConfigs(ctx context.Context, configs []monitoringv1alpha1.SNSConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		snsConfigKey := fmt.Sprintf("%s/sns/%d", key, i)
+		if err := store.AddSigV4(ctx, namespace, config.Sigv4, key); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, snsConfigKey, store); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

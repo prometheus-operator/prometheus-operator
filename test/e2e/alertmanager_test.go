@@ -735,7 +735,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// reuse the secret for pagerduty and wechat
+	// reuse the secret for pagerduty, wechat and sns
 	testingSecret := "testing-secret"
 	testingSecretKey := "testing-secret-key"
 	testingKeySecret := &v1.Secret{
@@ -886,6 +886,26 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: testingSecretKey,
 					},
 				}},
+				SNSConfigs: []monitoringv1alpha1.SNSConfig{
+					{
+						ApiURL: "https://sns.us-east-2.amazonaws.com",
+						Sigv4: &monitoringv1.Sigv4{
+							Region: "us-east-2",
+							AccessKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testingSecret,
+								},
+								Key: testingSecretKey,
+							},
+							SecretKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testingSecret,
+								},
+								Key: testingSecretKey,
+							},
+						},
+						TopicARN: "test-topicARN",
+					}},
 			}},
 		},
 	}
@@ -1171,6 +1191,13 @@ receivers:
   victorops_configs:
   - api_key: 1234abc
     routing_key: abc
+  sns_configs:
+  - api_url: https://sns.us-east-2.amazonaws.com
+    sigv4:
+      region: us-east-2
+      access_key: 1234abc
+      secret_key: 1234abc
+    topic_arn: test-topicARN
 - name: %s-e2e-test-amconfig-sub-routes-e2e
   webhook_configs:
   - url: http://test.url

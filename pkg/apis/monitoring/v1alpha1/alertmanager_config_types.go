@@ -165,6 +165,8 @@ type Receiver struct {
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// List of Pushover configurations.
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
+	// List of SNS configurations
+	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -712,6 +714,45 @@ type PushoverConfig struct {
 	// Whether notification message is HTML or plain text.
 	// +optional
 	HTML bool `json:"html,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// SNSConfig configures notifications via AWS SNS.
+// See https://prometheus.io/docs/alerting/latest/configuration/#sns_configs
+type SNSConfig struct {
+	// Whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The SNS API URL i.e. https://sns.us-east-2.amazonaws.com.
+	// If not specified, the SNS API URL from the SNS SDK will be used.
+	// +optional
+	ApiURL string `json:"apiURL,omitempty"`
+	// Configures AWS's Signature Verification 4 signing process to sign requests.
+	// +optional
+	Sigv4 *monitoringv1.Sigv4 `json:"sigv4,omitempty"`
+	// SNS topic ARN, i.e. arn:aws:sns:us-east-2:698519295917:My-Topic
+	// If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
+	// +optional
+	TopicARN string `json:"topicARN,omitempty"`
+	// Subject line when the message is delivered to email endpoints.
+	// +optional
+	Subject string `json:"subject,omitempty"`
+	// Phone number if message is delivered via SMS in E.164 format.
+	// If you don't specify this value, you must specify a value for the TopicARN or TargetARN.
+	// +optional
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	// The  mobile platform endpoint ARN if message is delivered via mobile notifications.
+	// If you don't specify this value, you must specify a value for the topic_arn or PhoneNumber.
+	// +optional
+	TargetARN string `json:"targetARN,omitempty"`
+	// The message content of the SNS notification.
+	// +optional
+	Message string `json:"message,omitempty"`
+	// SNS message attributes.
+	// +optional
+	Attributes map[string]string `json:"attributes,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

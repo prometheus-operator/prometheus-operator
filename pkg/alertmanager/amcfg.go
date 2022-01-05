@@ -439,6 +439,18 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var snsConfigs []*snsConfig
+	if l := len(in.SNSConfigs); l > 0 {
+		snsConfigs = make([]*snsConfig, l)
+		for i := range in.SNSConfigs {
+			receiver, err := cg.convertSnsConfig(ctx, in.SNSConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "SNSConfig[%d]", i)
+			}
+			snsConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -449,6 +461,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		EmailConfigs:     emailConfigs,
 		VictorOpsConfigs: victorOpsConfigs,
 		PushoverConfigs:  pushoverConfigs,
+		SNSConfigs:       snsConfigs,
 	}, nil
 }
 
@@ -888,6 +901,49 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	return out, nil
 }
 
+func (cg *configGenerator) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
+	out := &snsConfig{
+		VSendResolved: in.SendResolved,
+		APIUrl:        in.ApiURL,
+		TopicARN:      in.TopicARN,
+		PhoneNumber:   in.PhoneNumber,
+		TargetARN:     in.TargetARN,
+		Subject:       in.Subject,
+		Message:       in.Message,
+		Attributes:    in.Attributes,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.Sigv4 != nil {
+		accessKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get access key")
+		}
+
+		secretKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get AWS secret key")
+
+		}
+
+		out.Sigv4 = sigV4Config{
+			Region:    in.Sigv4.Region,
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+			Profile:   in.Sigv4.Profile,
+			RoleARN:   in.Sigv4.RoleArn,
+		}
+	}
+
+	return out, nil
+}
 func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) *inhibitRule {
 	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
 	var sourceMatchers []string
