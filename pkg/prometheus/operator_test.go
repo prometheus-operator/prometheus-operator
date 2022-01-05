@@ -266,44 +266,127 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 	}
 }
 
-func TestRelabelConfig(t *testing.T) {
+func TestValidateRelabelConfig(t *testing.T) {
 	for _, tc := range []struct {
+		scenario      string
 		relabelConfig monitoringv1.RelabelConfig
 		expectedErr   bool
 	}{
+		// Test invalid regex expression
 		{
+			scenario: "Invalid regex",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Regex:       "invalid regex)",
-				Action:      "replace",
-				TargetLabel: "test_invalid_regex",
+				Regex: "invalid regex)",
 			},
 			expectedErr: true,
 		},
+		// Test invalid target label
 		{
+			scenario: "invalid target label",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "replace",
 				TargetLabel: "l\\${3}",
 			},
 			expectedErr: true,
 		},
+		// Test empty target label for action replace
 		{
+			scenario: "empty target label for replace action",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "replace",
 				TargetLabel: "",
 			},
 			expectedErr: true,
 		},
+		// Test empty target label for action hashmod
 		{
+			scenario: "empty target label for hashmod action",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Action:      "replace",
-				TargetLabel: "test_valid_action_with_target_label",
+				Action:      "hashmod",
+				TargetLabel: "",
+			},
+			expectedErr: true,
+		},
+		// Test invalid hashmod relabel config
+		{
+			scenario: "invalid hashmod config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []string{"instance"},
+				Action:       "hashmod",
+				Modulus:      0,
+				TargetLabel:  "__tmp_hashmod",
+			},
+			expectedErr: true,
+		},
+		// Test invalid labelmap relabel config
+		{
+			scenario: "invalid labelmap config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labelmap",
+				Regex:  "__meta_kubernetes_service_label_(.+)",
+			},
+			expectedErr: true,
+		},
+		// Test valid labelmap relabel config
+		{
+			scenario: "valid labelmap config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "labelmap",
+				Regex:       "__meta_kubernetes_service_label_(.+)",
+				Replacement: "k8s_$1",
+			},
+		},
+		// Test invalid labelkeep relabel config
+		{
+			scenario: "invalid labelkeep config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []string{"instance"},
+				Action:       "labelkeep",
+				TargetLabel:  "__tmp_labelkeep",
+			},
+			expectedErr: true,
+		},
+		// Test valid labelkeep relabel config
+		{
+			scenario: "valid labelkeep config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labelkeep",
+			},
+		},
+		// Test valid labeldrop relabel config
+		{
+			scenario: "valid labeldrop config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labeldrop",
+				Regex:  "replica",
+			},
+		},
+		// Test valid relabel config
+		{
+			scenario: "valid hashmod config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []string{"instance"},
+				Action:       "hashmod",
+				Modulus:      10,
+				TargetLabel:  "__tmp_hashmod",
+			},
+		},
+		// Test valid relabel config
+		{
+			scenario: "valid replace config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []string{"__address__"},
+				Action:       "replace",
+				Regex:        "([^:]+)(?::\\d+)?",
+				Replacement:  "$1:80",
+				TargetLabel:  "__address__",
 			},
 		},
 	} {
-		t.Run(fmt.Sprintf("%s Action(%s)", tc.relabelConfig.Action, tc.relabelConfig.TargetLabel), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
 			err := validateRelabelConfig(tc.relabelConfig)
 			if err != nil && !tc.expectedErr {
-				t.Fatalf("unexpected error occurred: %v", err)
+				t.Fatalf("expected no error, got: %v", err)
 			}
 			if err == nil && tc.expectedErr {
 				t.Fatalf("expected an error, got nil")

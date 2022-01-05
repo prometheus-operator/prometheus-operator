@@ -2128,7 +2128,7 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
 
 	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
-		return errors.Errorf("regex for relabel configuration %s doesn't compile", rc.Regex)
+		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
 	}
 	if rc.Modulus == 0 && rc.Action == string(relabel.HashMod) {
 		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
