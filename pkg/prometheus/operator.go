@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
@@ -2052,6 +2053,11 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 				}
 			}
 		}
+		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
+			err := errors.Wrapf(err, "%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`", probe.Spec.ProberSpec.URL)
+			rejectFn(probe, err)
+			continue
+		}
 		res[probeName] = probe
 	}
 
@@ -2153,6 +2159,22 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 			rc.Separator != "" ||
 			rc.Replacement != "" {
 			return errors.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
+		}
+	}
+	return nil
+}
+
+func validateProberURL(url string) error {
+	hostPort := strings.Split(url, ":")
+
+	if !govalidator.IsHost(hostPort[0]) {
+		return errors.Errorf("invalid host: %q", hostPort[0])
+	}
+
+	// handling cases with url specified as host:port
+	if len(hostPort) > 1 {
+		if !govalidator.IsPort(hostPort[1]) {
+			return errors.Errorf("invalid port: %q", hostPort[1])
 		}
 	}
 	return nil
