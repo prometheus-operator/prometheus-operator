@@ -308,6 +308,7 @@ func makeStatefulSetSpec(
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
+	prometheusAgentMode := false
 
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
 	pImagePath, err := operator.BuildImagePath(
@@ -353,9 +354,14 @@ func makeStatefulSetSpec(
 
 	promArgs = append(promArgs,
 		monitoringv1.Argument{Name: "config.file", Value: path.Join(confOutDir, configEnvsubstFilename)},
-		monitoringv1.Argument{Name: "storage.tsdb.path", Value: storageDir},
 		monitoringv1.Argument{Name: "web.enable-lifecycle"},
 	)
+
+	if prometheusAgentMode {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.agent.path", Value: storageDir})
+	} else {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.path", Value: storageDir})
+	}
 
 	if p.Spec.Rules.Alert.ForOutageTolerance != "" {
 		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: p.Spec.Rules.Alert.ForOutageTolerance})

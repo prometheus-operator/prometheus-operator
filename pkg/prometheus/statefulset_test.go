@@ -1386,6 +1386,31 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 	}
 }
 
+func TestAgentModeStorageArgs(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			EnableFeatures: []string{"agent"},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if strings.HasPrefix(flag, "--storage.agent.path=") {
+			found = true
+		} else if strings.HasPrefix(flag, "-storage.tsdb") {
+			t.Fatal("Prometheus --storage.tsdb.* params are not compatible with Agent mode.")
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus storage flag is not set when Agent feature enabled.")
+	}
+}
+
 func TestReplicasConfigurationWithSharding(t *testing.T) {
 	testConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
