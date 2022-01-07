@@ -80,7 +80,8 @@ func TestConfigGeneration(t *testing.T) {
 }
 
 func TestGlobalSettings(t *testing.T) {
-	type testCase struct {
+	for _, tc := range []struct {
+		Scenario           string
 		EvaluationInterval string
 		ScrapeInterval     string
 		ScrapeTimeout      string
@@ -88,12 +89,11 @@ func TestGlobalSettings(t *testing.T) {
 		QueryLogFile       string
 		Version            string
 		Expected           string
-		ExpectedErr        error
-	}
-
-	testcases := []testCase{
+		ExpectError        bool
+	}{
 		{
-			Version: "v2.15.2",
+			Scenario: "valid config",
+			Version:  "v2.15.2",
 			Expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -104,6 +104,7 @@ scrape_configs: []
 `,
 		},
 		{
+			Scenario:           "valid evaluation interval specified",
 			Version:            "v2.15.2",
 			EvaluationInterval: "60s",
 			Expected: `global:
@@ -116,16 +117,19 @@ scrape_configs: []
 `,
 		},
 		{
+			Scenario:           "invalid evaluation interval specified #1",
 			Version:            "v2.15.2",
 			EvaluationInterval: "60 s",
-			ExpectedErr:        errors.New("invalid evaluationInterval value specified: not a valid duration string: \"60 s\""),
+			ExpectError:        true,
 		},
 		{
+			Scenario:           "invalid evaluation interval specified #2",
 			Version:            "v2.28.0",
 			EvaluationInterval: "randomvalue",
-			ExpectedErr:        errors.New("invalid evaluationInterval value specified: not a valid duration string: \"randomvalue\""),
+			ExpectError:        true,
 		},
 		{
+			Scenario:       "valid scrape interval",
 			Version:        "v2.15.2",
 			ScrapeInterval: "60s",
 			Expected: `global:
@@ -138,30 +142,48 @@ scrape_configs: []
 `,
 		},
 		{
+			Scenario:       "invalid scrape interval",
 			Version:        "v2.28.0",
 			ScrapeInterval: "30 k",
-			ExpectedErr:    errors.New("invalid scrapeInterval value specified: not a valid duration string: \"30 k\""),
+			ExpectError:    true,
 		},
 		{
-			Version:       "v2.15.2",
-			ScrapeTimeout: "30s",
+			Scenario:      "invalid scrape timeout",
+			Version:       "v2.29.0",
+			ScrapeTimeout: "some value",
+			ExpectError:   true,
+		},
+		{
+			Scenario:      "invalid scrape timeout specified when scrape interval not specified to compare with default value",
+			Version:       "v2.30.0",
+			ScrapeTimeout: "120s",
+			ExpectError:   true,
+		},
+		{
+			Scenario:       "invalid scrape timeout specified when scrape interval specified",
+			Version:        "v2.30.0",
+			ScrapeInterval: "30s",
+			ScrapeTimeout:  "60s",
+			ExpectError:    true,
+		},
+		{
+			Scenario:       "valid scrape timeout along with valid scrape interval specified",
+			Version:        "v2.15.2",
+			ScrapeInterval: "60s",
+			ScrapeTimeout:  "10s",
 			Expected: `global:
   evaluation_interval: 30s
-  scrape_interval: 30s
+  scrape_interval: 60s
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
-  scrape_timeout: 30s
+  scrape_timeout: 10s
 scrape_configs: []
 `,
 		},
 		{
-			Version:       "v2.29.0",
-			ScrapeTimeout: "some value",
-			ExpectedErr:   errors.New("invalid scrapeTimeout value specified: not a valid duration string: \"some value\""),
-		},
-		{
-			Version: "v2.15.2",
+			Scenario: "external label specified",
+			Version:  "v2.15.2",
 			ExternalLabels: map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -178,6 +200,7 @@ scrape_configs: []
 `,
 		},
 		{
+			Scenario:     "query log file",
 			Version:      "v2.16.0",
 			QueryLogFile: "test.log",
 			Expected: `global:
@@ -190,9 +213,8 @@ scrape_configs: []
 scrape_configs: []
 `,
 		},
-	}
+	} {
 
-	for _, tc := range testcases {
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
@@ -206,32 +228,35 @@ scrape_configs: []
 		}
 
 		cg := mustNewConfigGenerator(t, p)
+		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
+			cfg, err := cg.Generate(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{},
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
 
-		cfg, err := cg.Generate(
-			p,
-			map[string]*monitoringv1.ServiceMonitor{},
-			nil,
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-		if tc.ExpectedErr != nil {
-			if tc.ExpectedErr.Error() != err.Error() {
-				t.Logf("\n%s", pretty.Compare(tc.ExpectedErr.Error(), err.Error()))
-				t.Fatal("expected error and actual error do not match")
+			if err != nil && !tc.ExpectError {
+				t.Fatalf("expected no error, got: %v", err)
 			}
-			return
-		}
+			if tc.ExpectError {
+				if err == nil {
+					t.Fatalf("expected an error, got nil")
+				}
+				return
+			}
+			result := string(cfg)
+			if tc.Expected != string(cfg) {
+				t.Log(pretty.Compare(tc.Expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
 
-		result := string(cfg)
-		if tc.Expected != string(cfg) {
-			fmt.Println(pretty.Compare(tc.Expected, result))
-			t.Fatal("expected Prometheus configuration and actual configuration do not match")
-		}
-
+		})
 	}
 }
 
