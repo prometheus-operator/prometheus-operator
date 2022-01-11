@@ -394,3 +394,79 @@ func TestValidateRelabelConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateProberUrl(t *testing.T) {
+	for _, tc := range []struct {
+		scenario    string
+		proberSpec  monitoringv1.ProberSpec
+		expectedErr bool
+	}{
+		{
+			scenario: "url starting with http",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "http://blackbox-exporter.example.com",
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "url starting with https",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "https://blackbox-exporter.example.com",
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "url starting with ftp",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "ftp://fileserver.com",
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "ip address as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "192.168.178.3",
+			},
+		},
+		{
+			scenario: "ip address:port as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "192.168.178.3:9090",
+			},
+		},
+		{
+			scenario: "dnsname as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "blackbox-exporter.example.com",
+			},
+		},
+		{
+			scenario: "dnsname:port as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "blackbox-exporter.example.com:8080",
+			},
+		},
+		{
+			scenario: "hostname as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "localhost",
+			},
+		},
+		{
+			scenario: "hostname starting with a digit as prober url",
+			proberSpec: monitoringv1.ProberSpec{
+				URL: "12-exporter.example.com",
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s %s", tc.scenario, tc.proberSpec.URL), func(t *testing.T) {
+			err := validateProberURL(tc.proberSpec.URL)
+			if err != nil && !tc.expectedErr {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+			if err == nil && tc.expectedErr {
+				t.Fatalf("expected an error, got nil")
+			}
+		})
+	}
+}
