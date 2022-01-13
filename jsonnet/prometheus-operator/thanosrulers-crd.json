@@ -22,6 +22,19 @@
     "scope": "Namespaced",
     "versions": [
       {
+        "additionalPrinterColumns": [
+          {
+            "description": "The desired replicas number of Thanos Rulers",
+            "jsonPath": ".spec.replicas",
+            "name": "Replicas",
+            "type": "integer"
+          },
+          {
+            "jsonPath": ".metadata.creationTimestamp",
+            "name": "Age",
+            "type": "date"
+          }
+        ],
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
@@ -5508,7 +5521,8 @@
           }
         },
         "served": true,
-        "storage": true
+        "storage": true,
+        "subresources": {}
       }
     ]
   },
