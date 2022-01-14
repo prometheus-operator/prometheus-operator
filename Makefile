@@ -189,8 +189,8 @@ generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yam
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	cd pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
 	cd pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
+	find example/prometheus-operator-crd/ -name '*.yaml' -exec sed -i '/^    controller-gen.kubebuilder.io.version.*/a \    prometheus-operator.dev\/version: $(VERSION)' {} +
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
-
 
 .PHONY: generate-remote-write-certs
 generate-remote-write-certs:
