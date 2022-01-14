@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: prometheusagents.monitoring.coreos.com
 spec:

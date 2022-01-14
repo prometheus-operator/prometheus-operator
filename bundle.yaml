@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
@@ -5672,6 +5673,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: alertmanagers.monitoring.coreos.com
 spec:
@@ -13083,6 +13085,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: podmonitors.monitoring.coreos.com
 spec:
@@ -13774,6 +13777,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: probes.monitoring.coreos.com
 spec:
@@ -14507,6 +14511,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: prometheusagents.monitoring.coreos.com
 spec:
@@ -22939,6 +22944,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: prometheuses.monitoring.coreos.com
 spec:
@@ -32707,6 +32713,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: prometheusrules.monitoring.coreos.com
 spec:
@@ -32838,6 +32845,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: scrapeconfigs.monitoring.coreos.com
 spec:
@@ -34107,6 +34115,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: servicemonitors.monitoring.coreos.com
 spec:
@@ -34828,6 +34837,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    prometheus-operator.dev/version: 0.68.0
   creationTimestamp: null
   name: thanosrulers.monitoring.coreos.com
 spec:
