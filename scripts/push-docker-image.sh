@@ -22,7 +22,7 @@ REGISTRIES="${REGISTRIES:-"quay.io ghcr.io"}"
 # IMAGE_OPERATOR and IMAGER_RELOADER need to be exported to be used by `make`
 export IMAGE_OPERATOR="${IMAGE_OPERATOR:-"prometheus-operator/prometheus-operator"}"
 export IMAGE_RELOADER="${IMAGE_RELOADER:-"prometheus-operator/prometheus-config-reloader"}"
-
+export IMAGE_WEBHOOK="${IMAGE_WEBHOOK:="prometheus-operator/admission-webhook"}"
 # Figure out if current commit is tagged
 export TAG="${GITHUB_REF##*/}"
 
@@ -42,12 +42,14 @@ fi
 # Compose full image names for retagging and publishing to remote container registries
 OPERATORS=""
 RELOADERS=""
+WEBHOOKS=""
 for i in ${REGISTRIES}; do
 	OPERATORS="$i/${IMAGE_OPERATOR}${IMAGE_SUFFIX} ${OPERATORS}"
 	RELOADERS="$i/${IMAGE_RELOADER}${IMAGE_SUFFIX} ${RELOADERS}"
+	WEBHOOKS="$i/${IMAGE_WEBHOOK}${IMAGE_SUFFIX} ${WEBHOOKS}"
 done
 
-for img in ${OPERATORS} ${RELOADERS}; do
+for img in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	echo "Building multi-arch image: $img:$TAG"
 done
 
@@ -62,11 +64,15 @@ for arch in ${CPU_ARCHS}; do
 	for i in ${RELOADERS}; do
 		docker tag "${IMAGE_RELOADER}:${TAG}-$arch" "${i}:${TAG}-$arch"
 	done
+	# Retag webhook image
+	for i in ${WEBHOOKS}; do
+		docker tag "${IMAGE_WEBHOOK}:${TAG}-$arch" "${i}:${TAG}-$arch"
+	done
 done
 
 # Compose multi-arch images and push them to remote repositories
 export DOCKER_CLI_EXPERIMENTAL=enabled
-for r in ${OPERATORS} ${RELOADERS}; do
+for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	# Images need to be on remote registry before creating manifests
 	for arch in $CPU_ARCHS; do
 		docker push "${r}:${TAG}-$arch"
