@@ -11,6 +11,7 @@ endif
 GO_PKG=github.com/prometheus-operator/prometheus-operator
 IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
 IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
+IMAGE_WEBHOOK?=quay.io/prometheus-operator/prometheus-admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
@@ -90,7 +91,7 @@ clean:
 ############
 
 .PHONY: build
-build: operator prometheus-config-reloader k8s-gen po-lint
+build: operator prometheus-config-reloader admission-webhook k8s-gen po-lint
 
 .PHONY: operator
 operator:
@@ -98,6 +99,10 @@ operator:
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
+	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+
+.PHONY: admission-webhook
+admission-webhook:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
 .PHONY: po-lint
@@ -146,7 +151,7 @@ k8s-gen: \
 
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
-image: .hack-operator-image .hack-prometheus-config-reloader-image
+image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
 .hack-operator-image: Dockerfile operator
 # Create empty target file, for the sole purpose of recording when this target
@@ -160,6 +165,13 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	touch $@
+
+.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
+# Create empty target file, for the sole purpose of recording when this target
+# was last executed via the last-modification timestamp on the file. See
+# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 	touch $@
 
 .PHONY: update-go-deps
