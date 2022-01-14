@@ -3,7 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.6.2"
+      "controller-gen.kubebuilder.io/version": "v0.6.2",
+      "prometheus-operator.dev/version": "0.53.1"
     },
     "creationTimestamp": null,
     "name": "podmonitors.monitoring.coreos.com"
