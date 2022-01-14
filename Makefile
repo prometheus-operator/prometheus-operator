@@ -224,6 +224,7 @@ generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/th
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=./v1/. paths=./v1alpha1/. output:crd:dir=$(PWD)/example/prometheus-operator-crd/
+	find example/prometheus-operator-crd/ -name '*.yaml' -exec sed -i '/^    controller-gen.kubebuilder.io.version.*/a \    prometheus-operator.dev\/version: $(VERSION)' {} +
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=./... output:crd:dir=$(PWD)/example/prometheus-operator-crd-full
 	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
