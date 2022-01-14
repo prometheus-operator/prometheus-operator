@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: prometheus-operator-admission-webhook
+  name: prometheus-operator-admission-webhook
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-operator-admission-webhook
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: admission-webhook
+      labels:
+        app.kubernetes.io/name: prometheus-operator-admission-webhook
+    spec:
+      containers:
+        - ## TODO - update prior to merge
+          image: quay.io/prometheus-operator/admission-webhook:main
+          name: admission-webhook
+          ports:
+            - containerPort: 8443
+              name: https
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: ""
