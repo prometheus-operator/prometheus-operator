@@ -145,10 +145,12 @@ func (cg *configGenerator) generateGlobalConfig(
 			Namespace: amConfig.Namespace,
 		}
 
+		// Add inhibitRules to baseConfig.InhibitRules without enforce namespace
 		for _, inhibitRule := range amConfig.Spec.InhibitRules {
-			baseConfig.InhibitRules = append(baseConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule, crKey))
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule))
 		}
 
+		// Add routes to baseConfig.Route.Routes without enforce namespace
 		baseConfig.Route.Routes = []*route{
 			cg.convertRoute(amConfig.Spec.Route, crKey),
 		}
