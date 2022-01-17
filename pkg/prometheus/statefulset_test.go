@@ -55,6 +55,9 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"testannotation": "testannotationvalue",
 		"kubectl.kubernetes.io/last-applied-configuration": "something",
 		"kubectl.kubernetes.io/something":                  "something",
+		"kustomize.toolkit.fluxcd.io/checksum":             "something",
+		"kustomize.toolkit.fluxcd.io/name":                 "something",
+		"kustomize.toolkit.fluxcd.io/namespace":            "something",
 	}
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object

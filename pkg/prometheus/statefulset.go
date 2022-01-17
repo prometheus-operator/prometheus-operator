@@ -155,7 +155,7 @@ func makeStatefulSet(
 	// pruned by kubectl
 	annotations := make(map[string]string)
 	for key, value := range p.ObjectMeta.Annotations {
-		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
+		if !(strings.HasPrefix(key, "kubectl.kubernetes.io/") || strings.HasPrefix(key, "kustomize.toolkit.fluxcd.io")) {
 			annotations[key] = value
 		}
 	}
