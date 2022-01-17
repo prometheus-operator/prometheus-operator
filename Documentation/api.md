@@ -1383,9 +1383,11 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 | ----- | ----------- | ------ | -------- |
 | authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+. | *monitoringv1.SafeAuthorization | false |
 | basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence. | *monitoringv1.BasicAuth | false |
+| oauth2 | OAuth2 client credentials used to fetch a token for the targets. | *monitoringv1.OAuth2 | false |
 | bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
 | proxyURL | Optional proxy URL. | string | false |
+| followRedirects | FollowRedirects specifies whether the client should follow HTTP 3xx redirects. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 
