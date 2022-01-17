@@ -238,7 +238,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| globalAlertmanagerConfig | GlobalAlertmanagerConfig used to set the global alertmanager config. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
+| globalAlertmanagerConfig | GlobalAlertmanagerConfig used to set the global alertmanager config. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -364,14 +364,14 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 ## GlobalAlertmanagerConfig
 
-
+GlobalAlertmanagerConfig used to set the global alertmanager config.
 
 
 <em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| name | Name specify the gloal AlertmanagerConfig name which is in the same namespace with alertmanager. | string | false |
+| name | Name specify the global AlertmanagerConfig name which is in the same namespace as alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

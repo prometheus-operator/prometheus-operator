@@ -1638,11 +1638,14 @@ type AlertmanagerSpec struct {
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
 	// GlobalAlertmanagerConfig used to set the global alertmanager config.
+	// The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.
 	GlobalAlertmanagerConfig *GlobalAlertmanagerConfig `json:"globalAlertmanagerConfig,omitempty"`
 }
 
+// GlobalAlertmanagerConfig used to set the global alertmanager config.
+// +k8s:openapi-gen=true
 type GlobalAlertmanagerConfig struct {
-	// Name specify the gloal AlertmanagerConfig name which is in the same namespace with alertmanager.
+	// Name specify the global AlertmanagerConfig name which is in the same namespace as alertmanager.
 	Name string `json:"name,omitempty"`
 }
 

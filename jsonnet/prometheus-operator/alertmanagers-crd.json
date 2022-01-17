@@ -1961,10 +1961,10 @@
                     "type": "boolean"
                   },
                   "globalAlertmanagerConfig": {
-                    "description": "GlobalAlertmanagerConfig used to set the global alertmanager config.",
+                    "description": "GlobalAlertmanagerConfig used to set the global alertmanager config. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.",
                     "properties": {
                       "name": {
-                        "description": "Name specify the gloal AlertmanagerConfig name which is in the same namespace with alertmanager.",
+                        "description": "Name specify the global AlertmanagerConfig name which is in the same namespace as alertmanager.",
                         "type": "string"
                       }
                     },
