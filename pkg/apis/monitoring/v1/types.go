@@ -1780,6 +1780,10 @@ type SafeAuthorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *SafeAuthorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{`Authorization type cannot be set to "basic", use "basic_auth" instead`}
 	}
