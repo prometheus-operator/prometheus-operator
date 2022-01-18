@@ -216,7 +216,7 @@ type basicAuth struct {
 type oauth2 struct {
 	ClientID         string            `yaml:"client_id"`
 	ClientSecret     string            `yaml:"client_secret"`
-	ClientSecretFile string            `yaml:"client_secret_file"`
+	ClientSecretFile string            `yaml:"client_secret_file,omitempty"`
 	Scopes           []string          `yaml:"scopes,omitempty"`
 	TokenURL         string            `yaml:"token_url"`
 	EndpointParams   map[string]string `yaml:"endpoint_params,omitempty"`

@@ -1140,6 +1140,25 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		out.BearerToken = bearerToken
 	}
 
+	if in.OAuth2 != nil {
+		clientID, err := cg.store.GetKey(ctx, crKey.Namespace, in.OAuth2.ClientID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get clientID")
+		}
+
+		clientSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.OAuth2.ClientSecret)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get client secret")
+		}
+		out.OAuth2 = &oauth2{
+			ClientID:       clientID,
+			ClientSecret:   clientSecret,
+			Scopes:         in.OAuth2.Scopes,
+			TokenURL:       in.OAuth2.TokenURL,
+			EndpointParams: in.OAuth2.EndpointParams,
+		}
+	}
+
 	return out, nil
 }
 
