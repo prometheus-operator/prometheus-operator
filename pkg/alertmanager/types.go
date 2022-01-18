@@ -185,10 +185,12 @@ type slackConfig struct {
 type httpClientConfig struct {
 	Authorization   *authorization `yaml:"authorization,omitempty"`
 	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
+	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
 	BearerToken     string         `yaml:"bearer_token,omitempty"`
 	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
 	ProxyURL        string         `yaml:"proxy_url,omitempty"`
 	TLSConfig       tlsConfig      `yaml:"tls_config,omitempty"`
+	FollowRedirects bool           `yaml:"follow_redirects"`
 }
 
 type tlsConfig struct {
@@ -209,6 +211,17 @@ type basicAuth struct {
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password,omitempty"`
 	PasswordFile string `yaml:"password_file,omitempty"`
+}
+
+type oauth2 struct {
+	ClientID         string            `yaml:"client_id"`
+	ClientSecret     string            `yaml:"client_secret"`
+	ClientSecretFile string            `yaml:"client_secret_file"`
+	Scopes           []string          `yaml:"scopes,omitempty"`
+	TokenURL         string            `yaml:"token_url"`
+	EndpointParams   map[string]string `yaml:"endpoint_params,omitempty"`
+
+	TLSConfig *tlsConfig `yaml:"tls_config,omitempty"`
 }
 
 type pagerdutyLink struct {
