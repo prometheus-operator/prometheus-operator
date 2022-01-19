@@ -138,13 +138,13 @@ func (cg *configGenerator) generateGlobalConfig(
 		return nil
 	}
 
+	// CrKey is the global alertmanager config's crkey
+	crKey := types.NamespacedName{
+		Name:      am.Spec.GlobalAlertmanagerConfig.Name,
+		Namespace: am.Namespace,
+	}
 	// Find the global alertmanagerconfig by <namespace/name> key
-	if amConfig, ok := amConfigs[am.Namespace+"/"+am.Spec.GlobalAlertmanagerConfig.Name]; ok {
-		crKey := types.NamespacedName{
-			Name:      amConfig.Name,
-			Namespace: amConfig.Namespace,
-		}
-
+	if amConfig, ok := amConfigs[crKey.String()]; ok {
 		// Add inhibitRules to baseConfig.InhibitRules without enforce namespace
 		for _, inhibitRule := range amConfig.Spec.InhibitRules {
 			baseConfig.InhibitRules = append(baseConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule))
@@ -170,6 +170,9 @@ func (cg *configGenerator) generateGlobalConfig(
 			}
 			baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, mti)
 		}
+
+		// Remove the global alertmanager config to avoid generating again
+		delete(amConfigs, crKey.String())
 	}
 
 	return baseConfig.sanitize(cg.amVersion, cg.logger)
