@@ -171,7 +171,7 @@ Opstrace installations use the Prometheus Operator internally to collect metrics
 
 ## Polar Signals
 
-[polarsignals.com](https://polarsignals.com/)
+[polarsignals.com](https://www.polarsignals.com/)
 
 Environment: Google Cloud
 
