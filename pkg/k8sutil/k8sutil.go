@@ -23,9 +23,9 @@ import (
 	"regexp"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1"
-
 	"github.com/hashicorp/go-version"
+	promversion "github.com/prometheus/common/version"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -95,6 +95,8 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 
 	cfg.QPS = 100
 	cfg.Burst = 100
+
+	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
 
 	return cfg, nil
 }

@@ -20,9 +20,8 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/alecthomas/kingpin.v2"
-
 	"github.com/prometheus/common/version"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
