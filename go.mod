@@ -13,7 +13,7 @@ require (
 	github.com/go-kit/log v0.2.0
 	github.com/go-openapi/swag v0.19.15
 	github.com/gogo/protobuf v1.3.2
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
