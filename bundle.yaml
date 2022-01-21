@@ -25860,6 +25860,7 @@ spec:
         app.kubernetes.io/name: prometheus-operator
         app.kubernetes.io/version: 0.53.1
     spec:
+      automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
@@ -25886,6 +25887,7 @@ spec:
       serviceAccountName: prometheus-operator
 ---
 apiVersion: v1
+automountServiceAccountToken: false
 kind: ServiceAccount
 metadata:
   labels:
