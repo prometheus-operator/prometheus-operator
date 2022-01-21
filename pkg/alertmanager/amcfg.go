@@ -1094,7 +1094,8 @@ func makeNamespacedString(in string, crKey types.NamespacedName) string {
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
 	out := &httpClientConfig{
-		ProxyURL: in.ProxyURL,
+		ProxyURL:        in.ProxyURL,
+		FollowRedirects: in.FollowRedirects,
 	}
 
 	if in.BasicAuth != nil {

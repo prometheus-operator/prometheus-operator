@@ -678,7 +678,7 @@ templates: []
 											"some": "value",
 										},
 									},
-									FollowRedirects: true,
+									FollowRedirects: toBoolPtr(true),
 								},
 							}},
 						}},
@@ -706,7 +706,7 @@ receivers:
         token_url: https://test.com
         endpoint_params:
           some: value
-      follow_redirects: false
+      follow_redirects: true
 templates: []
 `,
 		},
@@ -1843,4 +1843,8 @@ templates: []
 			t.Errorf("got %v but wanted %v", ac, tc.expected)
 		}
 	}
+}
+
+func toBoolPtr(in bool) *bool {
+	return &in
 }

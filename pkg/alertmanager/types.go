@@ -190,7 +190,7 @@ type httpClientConfig struct {
 	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
 	ProxyURL        string         `yaml:"proxy_url,omitempty"`
 	TLSConfig       tlsConfig      `yaml:"tls_config,omitempty"`
-	FollowRedirects bool           `yaml:"follow_redirects"`
+	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
 }
 
 type tlsConfig struct {
