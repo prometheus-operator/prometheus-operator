@@ -169,6 +169,7 @@ Say the Prometheus Operator shall be deployed in the `default` namespace. First 
 
 ```yaml mdox-exec="cat example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"
 apiVersion: v1
+automountServiceAccountToken: false
 kind: ServiceAccount
 metadata:
   labels:
