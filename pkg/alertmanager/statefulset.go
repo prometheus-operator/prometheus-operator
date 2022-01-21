@@ -321,6 +321,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": version.String(),
 	}
+	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible since doing
+	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := map[string]string{
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/managed-by": "prometheus-operator",

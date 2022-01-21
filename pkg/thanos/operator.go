@@ -675,13 +675,20 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	spec := appsv1.StatefulSetSpec{}
+	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		spec = ss.Spec
+		existingStatefulSet = obj.(*appsv1.StatefulSet)
+		if existingStatefulSet.DeletionTimestamp != nil {
+			level.Info(logger).Log(
+				"msg", "halting update of StatefulSet",
+				"reason", "resource has been marked for deletion",
+				"resource_name", existingStatefulSet.GetName(),
+			)
+			return nil
+		}
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
@@ -693,8 +700,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
-	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	if newSSetInputHash == oldSSetInputHash {
+	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
 		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}

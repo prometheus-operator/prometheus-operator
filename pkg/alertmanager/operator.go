@@ -763,13 +763,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to retrieve statefulset")
 	}
 
-	oldSpec := appsv1.StatefulSetSpec{}
+	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		oldSpec = ss.Spec
+		existingStatefulSet = obj.(*appsv1.StatefulSet)
+		if existingStatefulSet.DeletionTimestamp != nil {
+			level.Info(logger).Log(
+				"msg", "halting update of StatefulSet",
+				"reason", "resource has been marked for deletion",
+				"resource_name", existingStatefulSet.GetName(),
+			)
+			return nil
+		}
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, oldSpec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
@@ -782,11 +789,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 
-	var oldSSetInputHash string
-	if obj != nil {
-		oldSSetInputHash = obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	}
-	if newSSetInputHash == oldSSetInputHash {
+	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
 		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
