@@ -168,6 +168,7 @@ function(params) {
               runAsUser: 65534,
             },
             serviceAccountName: po.config.name,
+            automountServiceAccountToken: true,
           },
         },
       },
@@ -181,6 +182,7 @@ function(params) {
       namespace: po.config.namespace,
       labels: po.config.commonLabels,
     },
+    automountServiceAccountToken: false,
   },
 
   service: {
