@@ -1430,6 +1430,29 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
+			name:           "Test oauth2 is dropped in global http config for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						OAuth2: &oauth2{
+							ClientID:         "a",
+							ClientSecret:     "b",
+							ClientSecretFile: "c",
+							TokenURL:         "d",
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						OAuth2: nil,
+					},
+				},
+			},
+		},
+		{
 			name:           "Test slack config happy path",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{

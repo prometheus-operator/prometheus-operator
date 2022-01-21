@@ -1246,21 +1246,30 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger
 	if hc == nil {
 		return
 	}
-	// we don't need to do any sanitization in this case and return early
-	if hc.Authorization == nil {
-		return
-	}
 
-	if hc.BasicAuth != nil {
-		msg := "'basicAuth' and 'authorization' are mutually exclusive, 'basicAuth' has taken precedence"
-		level.Warn(logger).Log("msg", msg)
-		hc.Authorization = nil
-	}
-	// we could have returned here but useful to grab the log and bubble up the warning
-	if httpAuthzAllowed := amVersion.GTE(semver.MustParse("0.22.0")); !httpAuthzAllowed {
-		msg := "'authorization' set in 'http_config' but  supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		msg := "'authorization' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		hc.Authorization = nil
+	}
+
+	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		msg := "'oauth2' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		hc.OAuth2 = nil
+	}
+
+	if hc.FollowRedirects != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		msg := "'follow_redirects' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		hc.FollowRedirects = nil
+	}
+
+	if hc.BasicAuth != nil && (hc.OAuth2 != nil || hc.Authorization != nil) {
+		msg := "'basicAuth', 'authorization' and 'oauth2' are mutually exclusive, 'basicAuth' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		hc.Authorization = nil
+		hc.OAuth2 = nil
 	}
 }
 
