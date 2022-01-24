@@ -31,7 +31,6 @@ metadata:
 spec:
   serviceAccountName: prometheus
   replicas: 2
-  shards: 2
   serviceMonitorSelector:
     matchLabels:
       team: frontend
