@@ -1046,38 +1046,28 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 }
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
-// and has no missing references to other objects.
+// for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
-	receiverNames, err := checkReceivers(ctx, amc, store)
-	if err != nil {
+	if err := ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
-	muteTimeIntervalNames, err := validateMuteTimeIntervals(amc.Spec.MuteTimeIntervals)
-	if err != nil {
+	if err := checkReceivers(ctx, amc, store); err != nil {
 		return err
 	}
 
-	if err := checkRoutes(ctx, amc.Spec.Route, receiverNames, muteTimeIntervalNames, amVersion); err != nil {
+	if err := checkRoute(ctx, amc.Spec.Route, amVersion); err != nil {
 		return err
 	}
 
 	return checkInhibitRules(ctx, amc, amVersion)
 }
 
-func checkRoutes(ctx context.Context, route *monitoringv1alpha1.Route, receiverNames, muteTimeIntervalNames map[string]struct{}, amVersion semver.Version) error {
+func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
 	if route == nil {
 		return nil
 	}
 
-	if err := validateAlertManagerRoutes(route, receiverNames, muteTimeIntervalNames, true); err != nil {
-		return err
-	}
-
-	return checkRoute(ctx, *route, amVersion)
-}
-
-func checkRoute(ctx context.Context, route monitoringv1alpha1.Route, amVersion semver.Version) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	if !matchersV2Allowed && checkIsV2Matcher(route.Matchers) {
 		return fmt.Errorf(
@@ -1089,69 +1079,65 @@ func checkRoute(ctx context.Context, route monitoringv1alpha1.Route, amVersion s
 	if err != nil {
 		return err
 	}
+
 	for _, route := range childRoutes {
-		if err := checkRoute(ctx, route, amVersion); err != nil {
+		if err := checkRoute(ctx, &route, amVersion); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
-	receiverNames, err := validateReceivers(amc.Spec.Receivers)
-	if err != nil {
-		return nil, errors.Wrap(err, "checkReceivers: failed to validateReceivers")
-	}
-
+func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
 	for i, receiver := range amc.Spec.Receivers {
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
-		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
+		err := checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return receiverNames, nil
+	return nil
 }
 
 func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, namespace string, key string, store *assets.Store) error {
@@ -1367,6 +1353,7 @@ func checkInhibitRules(ctx context.Context, amc *monitoringv1alpha1.Alertmanager
 			}
 		}
 	}
+
 	return nil
 }
 

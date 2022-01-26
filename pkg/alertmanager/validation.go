@@ -28,7 +28,11 @@ import (
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
-func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
+// ValidateAlertmanagerConfig checks that the given resource complies with the
+// semantics of the Alertmanager configuration.
+// In particular, it verifies things that can't be modelized with the OpenAPI
+// specification such as routes should refer to an existing receiver..
+func ValidateAlertmanagerConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	receivers, err := validateReceivers(amc.Spec.Receivers)
 	if err != nil {
 		return err
@@ -261,8 +265,14 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 		return nil
 	}
 
-	if _, found := receivers[r.Receiver]; !found && (r.Receiver != "" || topLevelRoute) {
-		return errors.Errorf("receiver %q not found", r.Receiver)
+	if r.Receiver == "" {
+		if topLevelRoute {
+			return errors.Errorf("root route must define a receiver")
+		}
+	} else {
+		if _, found := receivers[r.Receiver]; !found {
+			return errors.Errorf("receiver %q not found", r.Receiver)
+		}
 	}
 
 	if groupLen := len(r.GroupBy); groupLen > 0 {

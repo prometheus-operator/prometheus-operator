@@ -266,7 +266,7 @@ func (a *Admission) validateAlertManagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []error{err})
 	}
 
-	if err := alertmanager.ValidateConfig(amConf); err != nil {
+	if err := alertmanager.ValidateAlertmanagerConfig(amConf); err != nil {
 		msg := "invalid config"
 		level.Debug(a.logger).Log("msg", msg, "content", amConf.Spec)
 		level.Info(a.logger).Log("msg", msg, "err", err)
