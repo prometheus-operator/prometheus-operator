@@ -1,3 +1,15 @@
+## 0.54.0 / 2021-01-26
+
+* [FEATURE] Support SNS Receiver in AlertmanagerConfig CR. #4468
+* [ENHANCEMENT] Specify SA token automounting on pod-level for operator and prometheus operand. #4514
+* [ENHANCEMENT] Support following redirects and Oauth2 in HTTP Client config in raw alertmanager config secret. #4499
+* [ENHANCEMENT] Add Replicas column for Thanos Ruler. #4496
+* [ENHANCEMENT] Set User-Agent for the kubernetes client. #4506
+* [BUGFIX] Avoid race during recreation of StatefulSet(s). #4504
+* [BUGFIX] Add validation for proberSpec `url` field in `ProbeSpec`. #4483
+* [BUGFIX] Add validation for relabel configs. #4429
+* [BUGFIX] Add validation for scrapeTimeout validation. #4491
+
 ## 0.53.1 / 2021-12-20
 
 * [BUGFIX] Fixed the validation pattern for the `february` month in the AlertManagerConfig CRD. #4458
