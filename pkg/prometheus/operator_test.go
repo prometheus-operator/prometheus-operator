@@ -470,3 +470,88 @@ func TestValidateProberUrl(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
+	for _, tc := range []struct {
+		scenario    string
+		prometheus  monitoringv1.Prometheus
+		smSpec      monitoringv1.ServiceMonitorSpec
+		expectedErr bool
+	}{
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec but invalid #1",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "30s",
+						ScrapeTimeout: "45s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec but invalid #2",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "30 s",
+						ScrapeTimeout: "10s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec are valid",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "15s",
+						ScrapeTimeout: "10s",
+					},
+				},
+			},
+		},
+		{
+			scenario: "only scrape timeout specified at service monitor spec but invalid compared to global scrapeInterval",
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					ScrapeInterval: "15s",
+				},
+			},
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						ScrapeTimeout: "20s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "only scrape timeout specified at service monitor spec but invalid compared to default global scrapeInterval",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						ScrapeTimeout: "60s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+			for _, endpoint := range tc.smSpec.Endpoints {
+				err := validateScrapeIntervalAndTimeout(&tc.prometheus, endpoint.Interval, endpoint.ScrapeTimeout)
+				t.Logf("err %v", err)
+				if err != nil && !tc.expectedErr {
+					t.Fatalf("expected no error, got: %v", err)
+				}
+				if err == nil && tc.expectedErr {
+					t.Fatalf("expected an error, got nil")
+				}
+			}
+		})
+	}
+}

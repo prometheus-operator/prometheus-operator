@@ -1811,6 +1811,10 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 				break
 			}
 
+			if err = validateScrapeIntervalAndTimeout(p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				break
+			}
+
 			for _, rl := range endpoint.RelabelConfigs {
 				if rl.Action != "" {
 					if err = validateRelabelConfig(*rl); err != nil {
@@ -1924,6 +1928,10 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 
 			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 			if err = store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+				break
+			}
+
+			if err = validateScrapeIntervalAndTimeout(p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 				break
 			}
 
@@ -2053,6 +2061,11 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		}
 
 		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
+			rejectFn(probe, err)
+			continue
+		}
+
+		if err = validateScrapeIntervalAndTimeout(p, probe.Spec.Interval, probe.Spec.ScrapeTimeout); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
@@ -2190,4 +2203,14 @@ func validateProberURL(url string) error {
 		}
 	}
 	return nil
+}
+
+func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval, scrapeTimeout string) error {
+	if scrapeTimeout == "" {
+		return nil
+	}
+	if scrapeInterval == "" {
+		scrapeInterval = p.Spec.ScrapeInterval
+	}
+	return operator.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
