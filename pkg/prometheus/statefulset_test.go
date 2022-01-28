@@ -475,6 +475,17 @@ func TestListenLocal(t *testing.T) {
 		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
 	}
 
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/ready"),
@@ -536,6 +547,17 @@ func TestListenTLS(t *testing.T) {
 	}
 	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
 		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		Handler:          expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
 	}
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe

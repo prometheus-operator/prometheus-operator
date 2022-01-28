@@ -111,7 +111,7 @@ Details:
 
 ## Lunar
 
-[lunar.app](https://lunar.app/)
+[lunar.app](https://www.lunar.app/)
 
 Environments: AWS
 

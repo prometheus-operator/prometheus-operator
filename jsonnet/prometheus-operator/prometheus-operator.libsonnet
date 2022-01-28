@@ -137,6 +137,7 @@ function(params) {
       resources: po.config.resources,
       securityContext: {
         allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
       },
     };
     {
