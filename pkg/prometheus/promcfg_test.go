@@ -239,6 +239,7 @@ scrape_configs: []
 				nil,
 				nil,
 				nil,
+				false,
 			)
 
 			if err != nil && !tc.ExpectError {
@@ -480,6 +481,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -593,6 +595,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -698,6 +701,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -797,6 +801,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -904,6 +909,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -1029,6 +1035,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 
 	if err != nil {
@@ -1210,6 +1217,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1288,6 +1296,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1367,6 +1376,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1453,6 +1463,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			nil,
+			false,
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -1612,6 +1623,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 `),
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1719,6 +1731,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1871,6 +1884,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2018,6 +2032,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2152,6 +2167,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
     - localhost
 `),
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2244,6 +2260,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2381,6 +2398,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2500,6 +2518,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2635,6 +2654,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2770,6 +2790,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2904,6 +2925,7 @@ func TestTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -3191,6 +3213,7 @@ oauth2:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -3248,6 +3271,7 @@ func TestPodTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -3381,6 +3405,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -3487,6 +3512,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -3628,6 +3654,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 }
 
@@ -4245,6 +4272,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4504,6 +4532,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4657,6 +4686,7 @@ remote_read:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if tc.expectedErr != nil {
 				if tc.expectedErr.Error() != err.Error() {
@@ -5116,7 +5146,8 @@ remote_write:
 				nil,
 				nil,
 				nil,
-				nil)
+				nil,
+				false)
 			if tc.expectedErr != nil {
 				if tc.expectedErr.Error() != err.Error() {
 					t.Logf("\n%s", pretty.Compare(tc.expectedErr.Error(), err.Error()))
@@ -5381,6 +5412,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -5603,6 +5635,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -5814,6 +5847,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -6057,6 +6091,7 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				false,
 			)
 
 			if tc.expectedErr != nil {
@@ -6116,6 +6151,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		false,
 	)
 	if err != nil {
 		t.Fatal(err)

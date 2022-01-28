@@ -33,9 +33,10 @@ import (
 )
 
 const (
-	kubernetesSDRoleEndpoint = "endpoints"
-	kubernetesSDRolePod      = "pod"
-	kubernetesSDRoleIngress  = "ingress"
+	kubernetesSDRoleEndpoint      = "endpoints"
+	kubernetesSDRoleEndpointSlice = "endpointslice"
+	kubernetesSDRolePod           = "pod"
+	kubernetesSDRoleIngress       = "ingress"
 )
 
 var (
@@ -320,6 +321,7 @@ func (cg *ConfigGenerator) Generate(
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
+	isSupportEndpointSliceResource bool,
 ) ([]byte, error) {
 	// Validate Prometheus Config Inputs at Prometheus CRD level
 	if err := validateConfigInputs(p); err != nil {
@@ -435,6 +437,7 @@ func (cg *ConfigGenerator) Generate(
 					p.Spec.EnforcedLabelValueLengthLimit,
 					p.Spec.EnforcedBodySizeLimit,
 					shards,
+					isSupportEndpointSliceResource,
 				),
 			)
 		}
@@ -1112,6 +1115,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedLabelValueLengthLimit *uint64,
 	enforcedBodySizeLimit string,
 	shards int32,
+	isSupportEndpointSliceResource bool,
 ) yaml.MapSlice {
 	logger := log.With(cg.logger, "serviceMonitor", m.Name, "namespace", m.Namespace)
 
@@ -1131,7 +1135,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))
+
+	role := kubernetesSDRoleEndpoint
+	if cg.version.GTE(semver.MustParse("2.21.0")) {
+		if isSupportEndpointSliceResource {
+			cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpointSlice))
+		}
+	}
+	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, role))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})

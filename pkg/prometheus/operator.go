@@ -1540,7 +1540,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
-
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -1618,6 +1617,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
+	isSupportEndpointSliceResource := false
+	_, err = c.kclient.DiscoveryV1beta1().EndpointSlices(p.Namespace).List(context.TODO(), metav1.ListOptions{})
+	if !k8sutil.IsResourceNotFoundError(err) {
+		isSupportEndpointSliceResource = true
+	}
 	// Update secret based on the most recent configuration.
 	conf, err := cg.Generate(
 		p,
@@ -1629,6 +1633,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
+		isSupportEndpointSliceResource,
 	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
@@ -1647,6 +1652,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	s.Data[configFilename] = buf.Bytes()
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
