@@ -477,7 +477,7 @@ func TestListenLocal(t *testing.T) {
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
 	expectedLivenessProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/healthy"),
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 6,
@@ -551,7 +551,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
 	expectedLivenessProbe := &v1.Probe{
-		Handler:          expectedProbeHandler("/-/healthy"),
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 6,
