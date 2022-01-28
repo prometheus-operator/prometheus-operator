@@ -218,12 +218,14 @@ scrape_configs: []
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
-				EvaluationInterval: tc.EvaluationInterval,
-				ScrapeInterval:     tc.ScrapeInterval,
-				ScrapeTimeout:      tc.ScrapeTimeout,
-				ExternalLabels:     tc.ExternalLabels,
-				QueryLogFile:       tc.QueryLogFile,
-				Version:            tc.Version,
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EvaluationInterval: tc.EvaluationInterval,
+					ScrapeInterval:     tc.ScrapeInterval,
+					ScrapeTimeout:      tc.ScrapeTimeout,
+					ExternalLabels:     tc.ExternalLabels,
+					Version:            tc.Version,
+				},
+				QueryLogFile: tc.QueryLogFile,
 			},
 		}
 
@@ -428,9 +430,11 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -541,10 +545,12 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "namespace",
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnforcedNamespaceLabel: "namespace",
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -656,9 +662,11 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -756,9 +764,11 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -852,9 +862,11 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -976,10 +988,12 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "namespace",
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnforcedNamespaceLabel: "namespace",
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -1264,7 +1278,9 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.11.0",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.11.0",
+			},
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1342,7 +1358,9 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.11.0",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.11.0",
+			},
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1428,7 +1446,9 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Shards: shards,
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Shards: shards,
+					},
 				},
 			},
 			nil,
@@ -1825,7 +1845,9 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 				Namespace: "ns-value",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnforcedNamespaceLabel: "ns-key",
+				},
 			},
 		},
 		nil,
@@ -1964,7 +1986,9 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				Namespace: "ns-value",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnforcedNamespaceLabel: "ns-key",
+				},
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
@@ -2205,10 +2229,12 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.9.0",
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.9.0",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2342,10 +2368,12 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.9.0",
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.9.0",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2460,11 +2488,13 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version:                 "v2.9.0",
-			OverrideHonorTimestamps: true,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:                 "v2.9.0",
+				OverrideHonorTimestamps: true,
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2600,9 +2630,11 @@ func TestSettingHonorLabels(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -2734,10 +2766,12 @@ func TestHonorLabelsOverriding(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				OverrideHonorLabels: true,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					OverrideHonorLabels: true,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -2869,10 +2903,12 @@ func TestTargetLabels(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				OverrideHonorLabels: false,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					OverrideHonorLabels: false,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -3047,13 +3083,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			sMons: map[string]*monitoringv1.ServiceMonitor{
@@ -3091,13 +3129,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			pMons: map[string]*monitoringv1.PodMonitor{
@@ -3135,13 +3175,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			probes: map[string]*monitoringv1.Probe{
@@ -3214,9 +3256,11 @@ func TestPodTargetLabels(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -3347,9 +3391,11 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 			},
@@ -3577,6 +3623,37 @@ func generateTestConfig(version string) ([]byte, error) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ExternalLabels: map[string]string{
+						"label1": "value1",
+						"label2": "value2",
+					},
+					Version:  version,
+					Replicas: &replicas,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					PodMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{{
+						URL: "https://example.com/remote_write",
+					}},
+				},
+				RuleSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"role": "rulefile",
+					},
+				},
 				Alerting: &monitoringv1.AlertingSpec{
 					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
@@ -3586,37 +3663,8 @@ func generateTestConfig(version string) ([]byte, error) {
 						},
 					},
 				},
-				ExternalLabels: map[string]string{
-					"label1": "value1",
-					"label2": "value2",
-				},
-				Version:  version,
-				Replicas: &replicas,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
-				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
-				},
-				RuleSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"role": "rulefile",
-					},
-				},
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("400Mi"),
-					},
-				},
 				RemoteRead: []monitoringv1.RemoteReadSpec{{
 					URL: "https://example.com/remote_read",
-				}},
-				RemoteWrite: []monitoringv1.RemoteWriteSpec{{
-					URL: "https://example.com/remote_write",
 				}},
 			},
 		},
@@ -4199,10 +4247,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: "v2.20.0",
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.20.0",
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -4457,10 +4507,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -4626,10 +4678,12 @@ remote_read:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 					RemoteRead: []monitoringv1.RemoteReadSpec{tc.remoteRead},
@@ -5075,14 +5129,16 @@ remote_write:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+						Secrets:     []string{"sigv4-secret"},
 					},
-					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
-					Secrets:     []string{"sigv4-secret"},
 				},
 			}
 
@@ -5332,10 +5388,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -5555,10 +5613,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -5755,10 +5815,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -6013,10 +6075,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
