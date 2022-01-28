@@ -1139,7 +1139,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	role := kubernetesSDRoleEndpoint
 	if cg.version.GTE(semver.MustParse("2.21.0")) {
 		if isSupportEndpointSliceResource {
-			cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpointSlice))
+			role = kubernetesSDRoleEndpointSlice
 		}
 	}
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, role))
