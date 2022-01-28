@@ -517,7 +517,9 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 			scenario: "only scrape timeout specified at service monitor spec but invalid compared to global scrapeInterval",
 			prometheus: monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
-					ScrapeInterval: "15s",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval: "15s",
+					},
 				},
 			},
 			smSpec: monitoringv1.ServiceMonitorSpec{
