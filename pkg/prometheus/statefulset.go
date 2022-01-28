@@ -643,7 +643,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 
 	livenessProbe := &v1.Probe{
-		Handler:          probeHandler("/-/healthy"),
+		ProbeHandler:     probeHandler("/-/healthy"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
 		FailureThreshold: 6,
