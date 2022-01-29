@@ -265,7 +265,7 @@ check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
-MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(shell ls *.md)
+MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))
 
 .PHONY: docs
 docs: $(MDOX_BINARY)
