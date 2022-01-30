@@ -1929,7 +1929,7 @@ scrape_configs:
     - __meta_kubernetes_service_labelpresent_alpha
     regex: (beta|gamma);true
   - action: keep
-	source_labels:
+    source_labels:
     - __meta_kubernetes_endpointslice_port_name
     regex: web
   - source_labels:
