@@ -646,7 +646,7 @@
                     "type": "object"
                   },
                   "targetLabels": {
-                    "description": "TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred.",
+                    "description": "TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.",
                     "items": {
                       "type": "string"
                     },
