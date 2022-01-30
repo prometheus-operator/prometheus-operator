@@ -1287,7 +1287,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "node"},
 		},
-		yaml.MapSlice{
+		{
 			sourceLabelItem,
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Pod;(.*)"},
