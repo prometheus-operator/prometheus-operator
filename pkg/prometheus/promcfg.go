@@ -1242,16 +1242,17 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
-		portNameMapSlice := yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "regex", Value: ep.Port},
-		}
+		var sourceLabelItem yaml.MapItem
 		if isSupportEndpointSliceResource {
-			portNameMapSlice = append(portNameMapSlice, yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_port_name"}})
+			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_port_name"}}
 		} else {
-			portNameMapSlice = append(portNameMapSlice, yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}})
+			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}}
 		}
-		relabelings = append(relabelings, portNameMapSlice)
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			sourceLabelItem,
+			{Key: "regex", Value: ep.Port},
+		})
 	} else if ep.TargetPort != nil {
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -1268,32 +1269,31 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	nodeMapSlice := yaml.MapSlice{
-		{Key: "separator", Value: ";"},
-		{Key: "regex", Value: "Node;(.*)"},
-		{Key: "replacement", Value: "${1}"},
-		{Key: "target_label", Value: "node"},
-	}
-	podMapSlice := yaml.MapSlice{
-		{Key: "separator", Value: ";"},
-		{Key: "regex", Value: "Pod;(.*)"},
-		{Key: "replacement", Value: "${1}"},
-		{Key: "target_label", Value: "pod"},
-	}
+	var sourceLabelItem yaml.MapItem
 	if isSupportEndpointSliceResource {
-		item := yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}}
-		nodeMapSlice = append(nodeMapSlice, item)
-		podMapSlice = append(podMapSlice, item)
+		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}}
+
 	} else {
-		item := yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}}
-		nodeMapSlice = append(nodeMapSlice, item)
-		podMapSlice = append(podMapSlice, item)
+		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}}
+
 	}
 
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		nodeMapSlice,
-		podMapSlice,
+		{
+			sourceLabelItem,
+			{Key: "separator", Value: ";"},
+			{Key: "regex", Value: "Node;(.*)"},
+			{Key: "replacement", Value: "${1}"},
+			{Key: "target_label", Value: "node"},
+		},
+		yaml.MapSlice{
+			sourceLabelItem,
+			{Key: "separator", Value: ";"},
+			{Key: "regex", Value: "Pod;(.*)"},
+			{Key: "replacement", Value: "${1}"},
+			{Key: "target_label", Value: "pod"},
+		},
 		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
 			{Key: "target_label", Value: "namespace"},
