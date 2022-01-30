@@ -1269,7 +1269,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	nodeMapSlice := yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
 		{Key: "separator", Value: ";"},
 		{Key: "regex", Value: "Node;(.*)"},
 		{Key: "replacement", Value: "${1}"},
