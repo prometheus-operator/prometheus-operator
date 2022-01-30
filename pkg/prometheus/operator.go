@@ -1620,7 +1620,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	isSupportEndpointSliceResource := false
 	_, err = c.kclient.DiscoveryV1beta1().EndpointSlices(p.Namespace).List(context.TODO(), metav1.ListOptions{})
 	if !k8sutil.IsResourceNotFoundError(err) {
-		isSupportEndpointSliceResource = true
+		isSupportEndpointSliceResource = false
 	}
 	// Update secret based on the most recent configuration.
 	conf, err := cg.Generate(
