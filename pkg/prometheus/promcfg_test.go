@@ -2236,23 +2236,23 @@ scrape_configs:
     - __meta_kubernetes_service_labelpresent_alpha
     regex: (beta|gamma);true
   - action: keep
+    regex: web
     source_labels:
     - __meta_kubernetes_endpoint_port_name
-    regex: web
-  - source_labels:
-    - __meta_kubernetes_endpoint_address_target_kind
-    - __meta_kubernetes_endpoint_address_target_name
-    separator: ;
+  - separator: ;
     regex: Node;(.*)
     replacement: ${1}
     target_label: node
-  - source_labels:
+    source_labels:
     - __meta_kubernetes_endpoint_address_target_kind
     - __meta_kubernetes_endpoint_address_target_name
-    separator: ;
+  - separator: ;
     regex: Pod;(.*)
     replacement: ${1}
     target_label: pod
+    source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
   - source_labels:
     - __meta_kubernetes_namespace
     target_label: namespace
