@@ -24,7 +24,7 @@ For example, the PrometheusAgent CRD could have a `strategy` field indicating th
 
 In addition, dedicated APIs with mode-specific fields are self documenting since they remove the need to explicitly document which fields and field values are allowed or required for each individual mode. Users will also be able to get an easier overview of the different parameters they could set for each mode, which leads to a better user experience when using the operator.
 
-Finally, the advantage of using a separate CRD is the possibility of using an alpha API version, which would clearly indicate that the CRD is still under development. The Prometheus CRD, on the other hand, has already been declared as v1 and adding experimental fields to it will be challenging from both documentation and implementation aspects.  
+Finally, the advantage of using a separate CRD is the possibility of using an alpha API version, which would clearly indicate that the CRD is still under development. The Prometheus CRD, on the other hand, has already been declared as v1 and adding experimental fields to it will be challenging from both documentation and implementation aspects.
 
 ### Prometheus Agent CRD
 
@@ -139,7 +139,7 @@ This strategy has a built-in auto-scaling mechanism since each agent will scrape
 
 Another advantage is that persistent storage can now be handled by mounting a host volume, a strategy commonly used by log collectors. The need for persistent storage is described in the StatefulSet strategy section.
 
-The Grafana Agent config exposes a `host_filter` boolean flag which, when enabled, instructs the agent to only filter targets from the same node, in addition to the scrape config already provided. With this option, the same config can be used for agents running on multiple nodes, and the agents will automatically scrape targets from their own nodes. Such a config option is not yet available in Prometheus. An issue has already been raised [[3]](https://github.com/prometheus/prometheus/issues/9637) and there is an open PR for addressing it [[4]](https://github.com/prometheus/prometheus/pull/10004). 
+The Grafana Agent config exposes a `host_filter` boolean flag which, when enabled, instructs the agent to only filter targets from the same node, in addition to the scrape config already provided. With this option, the same config can be used for agents running on multiple nodes, and the agents will automatically scrape targets from their own nodes. Such a config option is not yet available in Prometheus. An issue has already been raised [[3]](https://github.com/prometheus/prometheus/issues/9637) and there is an open PR for addressing it [[4]](https://github.com/prometheus/prometheus/pull/10004).
 
 Until the upstream work has been completed, it could be possible to implement this strategy with a few tweaks:
 * the operator could use the [downward API](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api) to inject the node name in the pods.
