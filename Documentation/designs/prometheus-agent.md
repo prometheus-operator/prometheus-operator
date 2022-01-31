@@ -65,7 +65,7 @@ Since the Prometheus agent has slightly different storage requirements, this pro
 
 Even though the Prometheus agent has very little need for storage, there are still scenarios where sample data can be lost if persistent storage is not used. If a remote write target is unavailable and an agent pod is evicted at the same time, the samples collected during the unavailability window of the remote write target will be completely lost.
 
-For this reason, the cluster-wide strategy would be implemented by deploying a StatefulSet, similarly how `Prometheus` CRs are currently reconciled. This also allows for reusing existing code from the operator and delivering a working solution faster and with fewer changes. Familiarity with how StatefulSets work, together with the possibility to reuse existing code, were the primary reasons for choosing StatefulSets for this strategy over Deployments.
+For this reason, the cluster-wide strategy would be implemented by deploying a StatefulSet, similarly to how `Prometheus` CRs are currently reconciled. This also allows for reusing existing code from the operator and delivering a working solution faster and with fewer changes. Familiarity with how StatefulSets work, together with the possibility to reuse existing code, were the primary reasons for choosing StatefulSets for this strategy over Deployments.
 
 The following table documents the problems that could occur with a Deployment and StatefulSet strategy in different situations.
 
