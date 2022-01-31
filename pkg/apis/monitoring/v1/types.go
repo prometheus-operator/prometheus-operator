@@ -896,7 +896,6 @@ type ServiceMonitorSpec struct {
 	// Default & fallback value: the name of the respective Kubernetes `Endpoint`.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
-	// All labels set in `selector.matchLabels` are automatically transferred.
 	TargetLabels []string `json:"targetLabels,omitempty"`
 	// PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
