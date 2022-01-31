@@ -1136,7 +1136,7 @@ func (it *ProbeTargets) Validate() error {
 	return nil
 }
 
-// ProbeTargetsValidationError is returned by SecretOrConfigMap.Validate()
+// ProbeTargetsValidationError is returned by ProbeTargets.Validate()
 // on semantically invalid configurations.
 // +k8s:openapi-gen=false
 type ProbeTargetsValidationError struct {
