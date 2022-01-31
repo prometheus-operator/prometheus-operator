@@ -16,7 +16,6 @@ A lot of the fields supported by the current PrometheusSpec are not applicable t
 
 Finally, the Prometheus agent is significantly different from the Prometheus server in the way that it fits in a monitoring stack. Therefore, running it as a StatefulSet might not be the only possible deployment strategy, users might want to run it as a DaemonSet or a Deployment instead.
 
-
 ## Proposal
 
 This document proposes introducing a PrometheusAgent CRD to allow users to run Prometheus in agent mode. Having a separate CRD allows the Prometheus and PrometheusAgent CRDs to evolve independently and expose parameters specific to each Prometheus mode.
@@ -147,6 +146,7 @@ Until the upstream work has been completed, it could be possible to implement th
 * the operator's config reloader already supports expansion of environment variables.
 
 With this setup, the unexpanded Prometheus configuration would look as follows
+
 ```yaml
 relabel_configs:
 - source_labels: [__meta_kubernetes_pod_node_name]
