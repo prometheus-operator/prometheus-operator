@@ -1127,6 +1127,26 @@ type ProbeTargets struct {
 	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
 }
 
+// Validate semantically validates the given ProbeTargets.
+func (it *ProbeTargets) Validate() error {
+	if it.StaticConfig == nil && it.Ingress == nil {
+		return &ProbeTargetsValidationError{"at least one of .spec.target.staticConfig and .spec.target.ingress is required"}
+	}
+
+	return nil
+}
+
+// ProbeTargetsValidationError is returned by SecretOrConfigMap.Validate()
+// on semantically invalid configurations.
+// +k8s:openapi-gen=false
+type ProbeTargetsValidationError struct {
+	err string
+}
+
+func (e *ProbeTargetsValidationError) Error() string {
+	return e.err
+}
+
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
 // +k8s:openapi-gen=true
 type ProbeTargetStaticConfig struct {

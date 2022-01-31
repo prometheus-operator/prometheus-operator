@@ -2034,7 +2034,7 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 			)
 		}
 
-		if err = validateProbe(probe); err != nil {
+		if err = probe.Spec.Targets.Validate(); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
@@ -2100,14 +2100,6 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	}
 
 	return res, nil
-}
-
-func validateProbe(probe *monitoringv1.Probe) error {
-	if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
-		return errors.New("at least one of .spec.target.staticConfig and .spec.target.ingress is required")
-	}
-
-	return nil
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
