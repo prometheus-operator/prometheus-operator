@@ -2034,7 +2034,7 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 			)
 		}
 		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
-			rejectFn(probe, err)
+			rejectFn(probe, errors.New("at least one of .spec.target.staticConfig and .spec.target.ingress is required"))
 			continue
 		}
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
