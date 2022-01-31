@@ -2033,10 +2033,12 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 				"prometheus", p.Name,
 			)
 		}
-		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
-			rejectFn(probe, errors.New("at least one of .spec.target.staticConfig and .spec.target.ingress is required"))
+
+		if err = validateProbe(probe); err != nil {
+			rejectFn(probe, err)
 			continue
 		}
+
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
 			rejectFn(probe, err)
@@ -2098,6 +2100,14 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	}
 
 	return res, nil
+}
+
+func validateProbe(probe *monitoringv1.Probe) error {
+	if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+		return errors.New("at least one of .spec.target.staticConfig and .spec.target.ingress is required")
+	}
+
+	return nil
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {

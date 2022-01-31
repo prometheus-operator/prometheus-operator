@@ -555,3 +555,71 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateProbe(t *testing.T) {
+	type args struct {
+		probe *monitoringv1.Probe
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "probe with static config target",
+			args: args{
+				probe: &monitoringv1.Probe{
+					Spec: monitoringv1.ProbeSpec{
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"/probe"},
+								Labels:  map[string]string{"app": "foo"},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "probe with ingress target",
+			args: args{
+				probe: &monitoringv1.Probe{
+					Spec: monitoringv1.ProbeSpec{
+						Targets: monitoringv1.ProbeTargets{
+							Ingress: &monitoringv1.ProbeTargetIngress{
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "foo",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "one of staticConfig and ingress is required",
+			args: args{
+				probe: &monitoringv1.Probe{
+					Spec: monitoringv1.ProbeSpec{
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: nil,
+							Ingress:      nil,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validateProbe(tt.args.probe); (err != nil) != tt.wantErr {
+				t.Errorf("validateProbe() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
