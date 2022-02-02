@@ -45,8 +45,11 @@ import (
 
 const (
 	admissionHookSecretName                 = "prometheus-operator-admission"
+	standaloneAdmissionHookSecretName       = "prometheus-operator-admission-standalone"
 	prometheusOperatorServiceDeploymentName = "prometheus-operator"
 	operatorTLSDir                          = "/etc/tls/private"
+
+	admissionWebhookServiceName = "prometheus-operator-admission-webhook"
 )
 
 type Framework struct {
@@ -286,6 +289,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 
+	var webhookServerImage string
 	if opImage != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = opImage
@@ -305,6 +309,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 					repoAndTag[1]
 			}
 		}
+		webhookServerImage = "quay.io/prometheus-operator/prometheus-admission-webhook:" + repoAndTag[1]
 	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
@@ -382,19 +387,24 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 	}
 
 	if createResourceAdmissionHooks {
-		finalizer, err := f.createMutatingHook(ctx, certBytes, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml")
+		b, err := f.CreateAdmissionWebhookServer(ctx, ns, webhookServerImage)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create webhook server")
+		}
+
+		finalizer, err := f.createMutatingHook(ctx, b, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create mutating webhook")
 		}
 		finalizers = append(finalizers, finalizer)
 
-		finalizer, err = f.createValidatingHook(ctx, certBytes, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml")
+		finalizer, err = f.createValidatingHook(ctx, b, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook")
 		}
 		finalizers = append(finalizers, finalizer)
 
-		finalizer, err = f.createValidatingHook(ctx, certBytes, ns, "../../test/framework/resources/alertmanager-config-validating-webhook.yaml")
+		finalizer, err = f.createValidatingHook(ctx, b, ns, "../../test/framework/resources/alertmanager-config-validating-webhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook for AlertManagerConfigs")
 		}
@@ -436,4 +446,87 @@ func (f *Framework) SetupPrometheusRBACGlobal(ctx context.Context, t *testing.T,
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
 	}
+}
+
+// CreateAdmissionWebhookServer deploys an HTTPS server
+// Acts as a validating and mutating webhook server for PrometheusRule and AlertManagerConfig
+// Returns the CA, which can be used to access the server over TLS
+func (f *Framework) CreateAdmissionWebhookServer(
+	ctx context.Context,
+	namespace string,
+	image string,
+) ([]byte, error) {
+
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
+		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate certificate and key")
+	}
+
+	if err := f.CreateSecretWithCert(ctx, certBytes, keyBytes, namespace, standaloneAdmissionHookSecretName); err != nil {
+		return nil, errors.Wrap(err, "failed to create admission webhook secret")
+	}
+
+	deploy, err := MakeDeployment("../../example/admission-webhook/deployment.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
+
+	if image != "" {
+		// Override operator image used, if specified when running tests.
+		deploy.Spec.Template.Spec.Containers[0].Image = image
+		repoAndTag := strings.Split(image, ":")
+		if len(repoAndTag) != 2 {
+			return nil, errors.Errorf(
+				"expected image '%v' split by colon to result in two substrings but got '%v'",
+				image,
+				repoAndTag,
+			)
+		}
+	}
+
+	// Load the certificate and key from the created secret into the server
+	deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes,
+		v1.Volume{
+			Name:         "cert",
+			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: standaloneAdmissionHookSecretName}}})
+
+	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
+		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
+
+	_, err = f.createServiceAccount(ctx, namespace, "../../example/admission-webhook/service-account.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.CreateDeployment(ctx, namespace, deploy)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
+	err = f.WaitForPodsReady(ctx, namespace, f.DefaultTimeout, 2, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for admission webhook server to become ready")
+	}
+
+	service, err := MakeService("../../example/admission-webhook/service.yaml")
+	if err != nil {
+		return certBytes, errors.Wrap(err, "cannot parse service file")
+	}
+
+	service.Namespace = namespace
+	service.Spec.ClusterIP = ""
+	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
+
+	if _, err := f.CreateServiceAndWaitUntilReady(ctx, namespace, service); err != nil {
+		return certBytes, errors.Wrap(err, "failed to create admission webhook server service")
+	}
+
+	return certBytes, nil
 }
