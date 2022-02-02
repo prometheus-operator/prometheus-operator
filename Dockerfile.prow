@@ -1,0 +1,16 @@
+# Copyright Contributors to the Open Cluster Management project
+
+FROM registry.ci.openshift.org/stolostron/builder:go1.17-linux AS builder
+
+WORKDIR /workspace
+COPY . .
+
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o operator cmd/operator/main.go
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+
+COPY --from=builder /workspace/operator /bin/operator
+
+USER nobody
+
+ENTRYPOINT ["/bin/operator"]

@@ -1,0 +1,16 @@
+# Copyright Contributors to the Open Cluster Management project
+
+FROM registry.ci.openshift.org/stolostron/builder:go1.17-linux AS builder
+
+WORKDIR /workspace
+COPY . .
+
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o prometheus-config-reloader cmd/prometheus-config-reloader/main.go
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+
+COPY --from=builder /workspace/prometheus-config-reloader
+
+USER nobody
+
+ENTRYPOINT ["/bin/prometheus-config-reloader"]
