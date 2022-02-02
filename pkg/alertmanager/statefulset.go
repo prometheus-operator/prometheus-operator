@@ -538,6 +538,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	var watchedDirectories []string
 	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
+	boolFalse := false
+	boolTrue := true
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -548,6 +550,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			LivenessProbe:  livenessProbe,
 			ReadinessProbe: readinessProbe,
 			Resources:      a.Spec.Resources,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 			Env: []v1.EnvVar{
 				{
 					// Necessary for '--cluster.listen-address' flag
