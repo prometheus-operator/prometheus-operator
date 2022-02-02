@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
+    app.kubernetes.io/version: 0.54.0
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
@@ -13,37 +14,30 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: admission-webhook
+        kubectl.kubernetes.io/default-container: prometheus-operator-admission-webhook
       labels:
         app.kubernetes.io/name: prometheus-operator-admission-webhook
+        app.kubernetes.io/version: 0.54.0
     spec:
+      automountServiceAccountToken: false
       containers:
-        - ## TODO - update prior to merge
-          image: quay.io/prometheus-operator/admission-webhook:main
-          name: admission-webhook
-          ports:
-            - containerPort: 8443
-              name: https
-          resources:
-            limits:
-              cpu: 200m
-              memory: 200Mi
-            requests:
-              cpu: 50m
-              memory: 50Mi
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8443
-              scheme: HTTPS
-            failureThreshold: 2
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          securityContext:
-            allowPrivilegeEscalation: false
-      nodeSelector:
-        kubernetes.io/os: linux
+      - image: quay.io/prometheus-operator/prometheus-admission-webhook:v0.54.0
+        name: prometheus-operator-admission-webhook
+        ports:
+        - containerPort: 8443
+          name: https
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
-      serviceAccountName: ""
+      serviceAccountName: prometheus-operator-admission-webhook
