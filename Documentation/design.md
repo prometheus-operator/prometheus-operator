@@ -107,4 +107,4 @@ Alerts and recording rules can be saved and applied as YAML files, and dynamical
 
 ## AlertmanagerConfig
 
-The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibit rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated config to Alertmanager. An example on how to use it is provided [here](../example/user-guides/alerting/alertmanager-config-example.yaml). Please be aware that this CRD is not stable yet.
+The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibit rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated config to Alertmanager. An example on how to use it is provided [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/example/user-guides/alerting/alertmanager-config-example.yaml). Please be aware that this CRD is not stable yet.
