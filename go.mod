@@ -11,7 +11,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/log v0.2.0
-	github.com/go-openapi/swag v0.20.0
+	github.com/go-openapi/swag v0.21.1
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/go-version v1.4.0
