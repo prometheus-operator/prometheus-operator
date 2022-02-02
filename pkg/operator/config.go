@@ -95,5 +95,5 @@ type Namespaces struct {
 	// Allow list/deny list for common custom resources.
 	AllowList, DenyList map[string]struct{}
 	// Allow list for prometheus/alertmanager custom resources.
-	PrometheusAllowList, AlertmanagerAllowList, ThanosRulerAllowList map[string]struct{}
+	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
 }

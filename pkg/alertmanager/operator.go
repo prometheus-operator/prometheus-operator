@@ -170,7 +170,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
 			c.mclient,
 			resyncPeriod,
@@ -188,7 +188,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	}
 	c.secrInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
@@ -237,8 +237,8 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 		return nsInf
 	}
-	c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
-	if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.AlertmanagerAllowList) {
+	c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+	if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
 		c.nsAlrtInf = c.nsAlrtCfgInf
 	} else {
 		c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
