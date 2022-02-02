@@ -195,7 +195,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml generate-docs
+generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook generate-docs
 
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
@@ -231,6 +231,9 @@ $(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
+
+example/admission-webhook: scripts/generate/vendor scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-admission-webhook-example.sh
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
