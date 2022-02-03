@@ -248,9 +248,9 @@ type PrometheusSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// If specified, the pod's topology spread constraints.
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
-	// If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// remoteWrite is the list of remote write configurations.
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
-	// If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// remoteRead is the list of remote read configurations.
 	RemoteRead []RemoteReadSpec `json:"remoteRead,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
@@ -682,16 +682,20 @@ type ThanosSpec struct {
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
-// RemoteWriteSpec defines the remote_write configuration for prometheus.
+// RemoteWriteSpec defines the configuration to write samples from Prometheus
+// to a remote endpoint.
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// The URL of the endpoint to send samples to.
 	URL string `json:"url"`
-	// The name of the remote write queue, must be unique if specified. The
+	// The name of the remote write queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate queues.
 	// Only valid in Prometheus versions 2.15.0 and newer.
 	Name string `json:"name,omitempty"`
-	// Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer.
+	// Enables sending of exemplars over remote write. Note that
+	// exemplar-storage itself must be enabled using the enableFeature option
+	// for exemplars to be scraped in the first place.  Only valid in
+	// Prometheus versions 2.27.0 and newer.
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
 	// Timeout for requests to the remote write endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
@@ -715,16 +719,16 @@ type RemoteWriteSpec struct {
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// Optional ProxyURL
+	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
 	// QueueConfig allows tuning of the remote write queue parameters.
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
-	// MetadataConfig configures the sending of series metadata to remote storage.
+	// MetadataConfig configures the sending of series metadata to the remote storage.
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 }
 
-// QueueConfig allows the tuning of remote_write queue_config parameters. This object
-// is referenced in the RemoteWriteSpec object.
+// QueueConfig allows the tuning of remote write's queue_config parameters.
+// This object is referenced in the RemoteWriteSpec object.
 // +k8s:openapi-gen=true
 type QueueConfig struct {
 	// Capacity is the number of samples to buffer per shard before we start dropping them.
@@ -764,12 +768,13 @@ type Sigv4 struct {
 	RoleArn string `json:"roleArn,omitempty"`
 }
 
-// RemoteReadSpec defines the remote_read configuration for prometheus.
+// RemoteReadSpec defines the configuration for Prometheus to read back samples
+// from a remote endpoint.
 // +k8s:openapi-gen=true
 type RemoteReadSpec struct {
-	// The URL of the endpoint to send samples to.
+	// The URL of the endpoint to query from.
 	URL string `json:"url"`
-	// The name of the remote read queue, must be unique if specified. The name
+	// The name of the remote read queue, it must be unique if specified. The name
 	// is used in metrics and logging in order to differentiate read
 	// configurations.  Only valid in Prometheus versions 2.15.0 and newer.
 	Name string `json:"name,omitempty"`
@@ -797,7 +802,7 @@ type RemoteReadSpec struct {
 	Authorization *Authorization `json:"authorization,omitempty"`
 	// TLS Config to use for remote read.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// Optional ProxyURL
+	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
@@ -1637,12 +1642,12 @@ type AlertmanagerList struct {
 	Items []Alertmanager `json:"items"`
 }
 
-// Configures the sending of series metadata to remote storage.
+// MetadataConfig configures the sending of series metadata to the remote storage.
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
-	// Whether metric metadata is sent to remote storage or not.
+	// Whether metric metadata is sent to the remote storage or not.
 	Send bool `json:"send,omitempty"`
-	// How frequently metric metadata is sent to remote storage.
+	// How frequently metric metadata is sent to the remote storage.
 	SendInterval string `json:"sendInterval,omitempty"`
 }
 

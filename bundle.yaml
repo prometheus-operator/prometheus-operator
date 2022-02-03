@@ -14776,11 +14776,10 @@ spec:
                   docs (https://prometheus.io/docs/guides/query-log/)
                 type: string
               remoteRead:
-                description: If specified, the remote_read spec. This is an experimental
-                  feature, it may change in any upcoming release in a breaking way.
+                description: remoteRead is the list of remote read configurations.
                 items:
-                  description: RemoteReadSpec defines the remote_read configuration
-                    for prometheus.
+                  description: RemoteReadSpec defines the configuration for Prometheus
+                    to read back samples from a remote endpoint.
                   properties:
                     authorization:
                       description: Authorization section for remote read
@@ -14870,7 +14869,7 @@ spec:
                         versions 2.26.0 and newer.
                       type: object
                     name:
-                      description: The name of the remote read queue, must be unique
+                      description: The name of the remote read queue, it must be unique
                         if specified. The name is used in metrics and logging in order
                         to differentiate read configurations.  Only valid in Prometheus
                         versions 2.15.0 and newer.
@@ -14960,7 +14959,7 @@ spec:
                       - tokenUrl
                       type: object
                     proxyUrl:
-                      description: Optional ProxyURL
+                      description: Optional ProxyURL.
                       type: string
                     readRecent:
                       description: Whether reads should be made for queries for time
@@ -15103,18 +15102,17 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: The URL of the endpoint to send samples to.
+                      description: The URL of the endpoint to query from.
                       type: string
                   required:
                   - url
                   type: object
                 type: array
               remoteWrite:
-                description: If specified, the remote_write spec. This is an experimental
-                  feature, it may change in any upcoming release in a breaking way.
+                description: remoteWrite is the list of remote write configurations.
                 items:
-                  description: RemoteWriteSpec defines the remote_write configuration
-                    for prometheus.
+                  description: RemoteWriteSpec defines the configuration to write
+                    samples from Prometheus to a remote endpoint.
                   properties:
                     authorization:
                       description: Authorization section for remote write
@@ -15205,22 +15203,22 @@ spec:
                       type: object
                     metadataConfig:
                       description: MetadataConfig configures the sending of series
-                        metadata to remote storage.
+                        metadata to the remote storage.
                       properties:
                         send:
-                          description: Whether metric metadata is sent to remote storage
-                            or not.
+                          description: Whether metric metadata is sent to the remote
+                            storage or not.
                           type: boolean
                         sendInterval:
-                          description: How frequently metric metadata is sent to remote
-                            storage.
+                          description: How frequently metric metadata is sent to the
+                            remote storage.
                           type: string
                       type: object
                     name:
-                      description: The name of the remote write queue, must be unique
-                        if specified. The name is used in metrics and logging in order
-                        to differentiate queues. Only valid in Prometheus versions
-                        2.15.0 and newer.
+                      description: The name of the remote write queue, it must be
+                        unique if specified. The name is used in metrics and logging
+                        in order to differentiate queues. Only valid in Prometheus
+                        versions 2.15.0 and newer.
                       type: string
                     oauth2:
                       description: OAuth2 for the URL. Only valid in Prometheus versions
@@ -15307,7 +15305,7 @@ spec:
                       - tokenUrl
                       type: object
                     proxyUrl:
-                      description: Optional ProxyURL
+                      description: Optional ProxyURL.
                       type: string
                     queueConfig:
                       description: QueueConfig allows tuning of the remote write queue
