@@ -1328,6 +1328,16 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AdditionalRelabelConfigs != nil {
+		in, out := &in.AdditionalRelabelConfigs, &out.AdditionalRelabelConfigs
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.AdditionalMetricRelabelConfigs != nil {
+		in, out := &in.AdditionalMetricRelabelConfigs, &out.AdditionalMetricRelabelConfigs
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.AdditionalAlertRelabelConfigs != nil {
 		in, out := &in.AdditionalAlertRelabelConfigs, &out.AdditionalAlertRelabelConfigs
 		*out = new(corev1.SecretKeySelector)

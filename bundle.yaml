@@ -10583,6 +10583,58 @@ spec:
                 required:
                 - key
                 type: object
+              additionalMetricRelabelConfigs:
+                description: 'AdditionalMetricRelabelConfigs allows specifying a key
+                  of a Secret containing additional Prometheus metric relabel configs
+                  that get appended to the metric relabel config of every scrape target.
+                  Relabel configurations specified must have the form as specified
+                  in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config.
+                  As relabel configs are appended, the user is responsible to make
+                  sure it is valid. Note that using this feature may expose the possibility
+                  to break upgrades of Prometheus. It is advised to review Prometheus
+                  release notes to ensure that no incompatible scrape configs are
+                  going to break Prometheus after the upgrade.'
+                properties:
+                  key:
+                    description: The key of the secret to select from.  Must be a
+                      valid secret key.
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                  optional:
+                    description: Specify whether the Secret or its key must be defined
+                    type: boolean
+                required:
+                - key
+                type: object
+              additionalRelabelConfigs:
+                description: 'AdditionalRelabelConfigs allows specifying a key of
+                  a Secret containing additional Prometheus relabel configs that get
+                  appended to the relabel config of every scrape target. Relabel configurations
+                  specified must have the form as specified in the official Prometheus
+                  documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config.
+                  As relabel configs are appended, the user is responsible to make
+                  sure it is valid. Note that using this feature may expose the possibility
+                  to break upgrades of Prometheus. It is advised to review Prometheus
+                  release notes to ensure that no incompatible scrape configs are
+                  going to break Prometheus after the upgrade.'
+                properties:
+                  key:
+                    description: The key of the secret to select from.  Must be a
+                      valid secret key.
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                  optional:
+                    description: Specify whether the Secret or its key must be defined
+                    type: boolean
+                required:
+                - key
+                type: object
               additionalScrapeConfigs:
                 description: 'AdditionalScrapeConfigs allows specifying a key of a
                   Secret containing additional Prometheus scrape configurations. Scrape

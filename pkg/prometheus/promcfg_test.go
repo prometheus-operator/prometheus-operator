@@ -239,6 +239,8 @@ scrape_configs: []
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 
 			if err != nil && !tc.ExpectError {
@@ -255,7 +257,6 @@ scrape_configs: []
 				t.Log(pretty.Compare(tc.Expected, result))
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -480,8 +481,9 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -593,8 +595,9 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -698,8 +701,9 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -797,8 +801,9 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -904,8 +909,9 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1029,8 +1035,9 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1210,6 +1217,8 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1284,6 +1293,8 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1363,6 +1374,8 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1450,6 +1463,8 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
       - __meta_gce_label_app
       regex: my_app
 `),
+			nil,
+			nil,
 			nil,
 			nil,
 			nil,
@@ -1580,6 +1595,170 @@ scrape_configs:
 	}
 }
 
+func TestAdditionalRelabelConfigs(t *testing.T) {
+	cg := &ConfigGenerator{}
+	cfg, err := cg.Generate(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		[]byte(`- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['localhost:9090']
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+    - project: foo
+      zone: us-central1
+  relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_gce_label_app
+      regex: my_app
+`),
+		[]byte(`- action: drop
+  source_labels: [__meta_kubernetes_node_name]
+  regex: spot-(.+)
+
+`),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - localhost:9090
+  relabel_configs:
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_node_name
+    regex: spot-(.+)
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+  - project: foo
+    zone: us-central1
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_gce_label_app
+    regex: my_app
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_node_name
+    regex: spot-(.+)
+`
+	result := string(cfg)
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func TestAdditionalMetricRelabelConfigs(t *testing.T) {
+	cg := &ConfigGenerator{}
+	cfg, err := cg.Generate(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		[]byte(`- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['localhost:9090']
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+    - project: foo
+      zone: us-central1
+  metric_relabel_configs:
+    - action: keep
+      source_labels:
+      - app_name
+      regex: my_app
+`),
+		nil,
+		[]byte(`- action: drop
+  source_labels: [pod_name]
+  regex: spot-(.+)
+
+`),
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - localhost:9090
+  metric_relabel_configs:
+  - action: drop
+    source_labels:
+    - pod_name
+    regex: spot-(.+)
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+  - project: foo
+    zone: us-central1
+  metric_relabel_configs:
+  - action: keep
+    source_labels:
+    - app_name
+    regex: my_app
+  - action: drop
+    source_labels:
+    - pod_name
+    regex: spot-(.+)
+`
+	result := string(cfg)
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.Generate(
@@ -1604,6 +1783,8 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -1715,6 +1896,8 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1871,6 +2054,8 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2018,6 +2203,8 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2147,6 +2334,8 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		&assets.Store{},
 		nil,
 		nil,
+		nil,
+		nil,
 		[]byte(`- static_configs:
   - targets:
     - localhost
@@ -2240,6 +2429,8 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -2381,6 +2572,8 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2496,6 +2689,8 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -2635,6 +2830,8 @@ func TestSettingHonorLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2770,6 +2967,8 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -2900,6 +3099,8 @@ func TestTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -3191,6 +3392,8 @@ oauth2:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -3244,6 +3447,8 @@ func TestPodTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -3381,6 +3586,8 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -3483,6 +3690,8 @@ func TestEmptyEndointPorts(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -3624,6 +3833,8 @@ func generateTestConfig(version string) ([]byte, error) {
 		makePodMonitors(),
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -4245,6 +4456,8 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4504,6 +4717,8 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -4585,7 +4800,8 @@ remote_read:
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key"},
+								Name: "key",
+							},
 						},
 					},
 				},
@@ -4652,7 +4868,10 @@ remote_read:
 					},
 					TokenAssets: map[string]assets.Token{
 						"remoteRead/auth/0": assets.Token("secret"),
-					}},
+					},
+				},
+				nil,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -4671,7 +4890,6 @@ remote_read:
 				t.Logf("\n%s", pretty.Compare(tc.expected, result))
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -4883,7 +5101,8 @@ remote_write:
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key"},
+								Name: "key",
+							},
 						},
 					},
 				},
@@ -4967,7 +5186,8 @@ remote_write:
     send: false
     send_interval: 1m
 `,
-		}, {
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
@@ -5096,7 +5316,8 @@ remote_write:
 				},
 				TokenAssets: map[string]assets.Token{
 					"remoteWrite/auth/0": assets.Token("secret"),
-				}}
+				},
+			}
 			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
 				store.SigV4Assets = map[string]assets.SigV4Credentials{
 					"remoteWrite/0": {
@@ -5116,6 +5337,8 @@ remote_write:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 				nil)
 			if tc.expectedErr != nil {
 				if tc.expectedErr.Error() != err.Error() {
@@ -5129,7 +5352,6 @@ remote_write:
 				t.Logf("\n%s", pretty.Compare(tc.expected, result))
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -5381,6 +5603,8 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -5603,6 +5827,8 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -5810,6 +6036,8 @@ scrape_configs:
 					"testprobe1": &probe,
 				},
 				&assets.Store{},
+				nil,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -6057,6 +6285,8 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
 			)
 
 			if tc.expectedErr != nil {
@@ -6112,6 +6342,8 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		&assets.Store{},
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
