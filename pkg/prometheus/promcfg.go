@@ -662,8 +662,12 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	// Defaults to true, so only add when value is set to false
-	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) && cg.version.GTE(semver.MustParse("2.26.0")) {
-		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
+	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) {
+		if cg.version.GTE(semver.MustParse("2.26.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
+		} else {
+			level.Warn(cg.logger).Log("msg", "found follow_redirects field, but prometheus version is < 2.26.0, ignoring", "Current Version", cg.version)
+		}
 	}
 
 	if ep.TLSConfig != nil {
