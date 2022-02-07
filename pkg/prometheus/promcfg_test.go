@@ -6201,6 +6201,73 @@ scrape_configs:
 }
 
 func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
+	expectedWithRedirectsUnsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
 	expectedWithRedirectsDisabled := `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -6283,6 +6350,7 @@ scrape_configs:
       names:
       - default
   scrape_interval: 30s
+  follow_redirects: true
   relabel_configs:
   - source_labels:
     - job
@@ -6343,12 +6411,12 @@ scrape_configs:
 		{
 			version:         "v2.25.0",
 			followRedirects: false,
-			expected:        expectedWithRedirectsEnabled,
+			expected:        expectedWithRedirectsUnsupported,
 		},
 		{
 			version:         "v2.25.0",
 			followRedirects: true,
-			expected:        expectedWithRedirectsEnabled,
+			expected:        expectedWithRedirectsUnsupported,
 		},
 		{
 			version:         "v2.28.0",
@@ -6388,8 +6456,9 @@ scrape_configs:
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
-							Interval: "30s",
+							Port:            "web",
+							Interval:        "30s",
+							FollowRedirects: swag.Bool(true),
 						},
 					},
 				},
@@ -6446,6 +6515,54 @@ scrape_configs:
 }
 
 func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
+	expectedWithRedirectsUnsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - pod-monitor-ns
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: pod-monitor-ns/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
 	expectedWithRedirectsDisabled := `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -6509,6 +6626,7 @@ scrape_configs:
       names:
       - pod-monitor-ns
   scrape_interval: 30s
+  follow_redirects: true
   relabel_configs:
   - source_labels:
     - job
@@ -6550,12 +6668,12 @@ scrape_configs:
 		{
 			version:         "v2.25.0",
 			followRedirects: false,
-			expected:        expectedWithRedirectsEnabled,
+			expected:        expectedWithRedirectsUnsupported,
 		},
 		{
 			version:         "v2.25.0",
 			followRedirects: true,
-			expected:        expectedWithRedirectsEnabled,
+			expected:        expectedWithRedirectsUnsupported,
 		},
 		{
 			version:         "v2.28.0",
@@ -6595,8 +6713,9 @@ scrape_configs:
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
-							Interval: "30s",
+							Port:            "web",
+							Interval:        "30s",
+							FollowRedirects: swag.Bool(true),
 						},
 					},
 				},
