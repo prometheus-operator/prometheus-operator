@@ -662,7 +662,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	// Defaults to true, so only add when value is set to false
-	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) {
+	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) && cg.version.GTE(semver.MustParse("2.26.0")) {
 		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
 	}
 
@@ -1160,7 +1160,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	// Defaults to true, so only add when value is set to false
-	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) {
+	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) && cg.version.GTE(semver.MustParse("2.26.0")) {
 		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
 	}
 
