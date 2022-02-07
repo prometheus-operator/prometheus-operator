@@ -657,6 +657,10 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
+	// Defaults to true, so only add when value is set to false
+	if !ep.FollowRedirects {
+		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ep.FollowRedirects})
+	}
 
 	if ep.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
@@ -1150,6 +1154,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+	// Defaults to true, so only add when value is set to false
+	if !ep.FollowRedirects {
+		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ep.FollowRedirects})
 	}
 
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
