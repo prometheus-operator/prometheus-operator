@@ -151,7 +151,7 @@
                           "type": "object"
                         },
                         "followRedirects": {
-                          "description": "FollowRedirects Configure whether scrape requests follow HTTP 3xx redirects.",
+                          "description": "FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.",
                           "type": "boolean"
                         },
                         "honorLabels": {
