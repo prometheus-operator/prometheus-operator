@@ -34,7 +34,9 @@ SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY)
+API_DOC_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_BINARY)
+
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -247,7 +249,7 @@ example/admission-webhook: scripts/generate/vendor scripts/generate/admission-we
 example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
+FULLY_GENERATED_DOCS = Documentation/api.md Documentation/apis/v1/api.md Documentation/apis/v1alpha1/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
 Documentation/operator.md: operator
@@ -257,6 +259,8 @@ Documentation/operator.md: operator
 # require to deploy/run the conversion webhook. As a consequence, they are not
 # yet included in the API documentation.
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1/api.md"
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1alpha1/api.md"
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
