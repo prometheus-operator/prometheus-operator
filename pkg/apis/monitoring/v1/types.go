@@ -52,13 +52,14 @@ const (
 	ProbeKindKey = "probe"
 )
 
-// Prometheus defines a Prometheus deployment.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Prometheus"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Prometheuses"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// Prometheus defines a Prometheus deployment.
 type Prometheus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -875,10 +876,11 @@ type AlertmanagerEndpoints struct {
 	Timeout *string `json:"timeout,omitempty"`
 }
 
-// ServiceMonitor defines monitoring for a set of services.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
+
+// ServiceMonitor defines monitoring for a set of services.
 type ServiceMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -967,10 +969,11 @@ type Endpoint struct {
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 }
 
-// PodMonitor defines monitoring for a set of pods.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
+
+// PodMonitor defines monitoring for a set of pods.
 type PodMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -1057,10 +1060,11 @@ type PodMetricsEndpointTLSConfig struct {
 	SafeTLSConfig `json:",inline"`
 }
 
-// Probe defines monitoring for a set of static targets or ingresses.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
+
+// Probe defines monitoring for a set of static targets or ingresses.
 type Probe struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -1414,10 +1418,11 @@ type PrometheusRuleList struct {
 	Items []*PrometheusRule `json:"items"`
 }
 
-// PrometheusRule defines recording and alerting rules for a Prometheus instance
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
+
+// PrometheusRule defines recording and alerting rules for a Prometheus instance
 type PrometheusRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -1459,13 +1464,14 @@ type Rule struct {
 	Annotations map[string]string  `json:"annotations,omitempty"`
 }
 
-// Alertmanager describes an Alertmanager cluster.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Alertmanager"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Alertmanagers"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// Alertmanager describes an Alertmanager cluster.
 type Alertmanager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
