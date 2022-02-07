@@ -602,6 +602,10 @@ func initRelabelings() []yaml.MapSlice {
 	}
 }
 
+func ptrToBool(in *bool) bool {
+	return *in
+}
+
 func (cg *ConfigGenerator) generatePodMonitorConfig(
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
@@ -658,8 +662,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	// Defaults to true, so only add when value is set to false
-	if !ep.FollowRedirects {
-		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ep.FollowRedirects})
+	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) {
+		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
 	}
 
 	if ep.TLSConfig != nil {
@@ -1156,8 +1160,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	// Defaults to true, so only add when value is set to false
-	if !ep.FollowRedirects {
-		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ep.FollowRedirects})
+	if ep.FollowRedirects != nil && !ptrToBool(ep.FollowRedirects) {
+		cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: false})
 	}
 
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)

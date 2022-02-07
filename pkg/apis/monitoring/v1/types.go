@@ -966,7 +966,7 @@ type Endpoint struct {
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 	// FollowRedirects Configure whether scrape requests follow HTTP 3xx redirects.
-	FollowRedirects bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
 // PodMonitor defines monitoring for a set of pods.
@@ -1052,7 +1052,7 @@ type PodMetricsEndpoint struct {
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 	// FollowRedirects Configure whether scrape requests follow HTTP 3xx redirects.
-	FollowRedirects bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
 // PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
