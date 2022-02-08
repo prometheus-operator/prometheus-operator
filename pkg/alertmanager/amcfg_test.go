@@ -1376,39 +1376,7 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test basicAuth takes precedence over authorization in http config",
-			againstVersion: versionFileURLNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/drop",
-						},
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-		},
-		{
-			name:           "Test authorization is dropped in global http config for unsupported versions",
+			name:           "Test authorization causes error for unsupported versions",
 			againstVersion: versionAuthzNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1421,16 +1389,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
-					},
-				},
-			},
+			expectErr: true,
 		},
 		{
-			name:           "Test oauth2 is dropped in global http config for unsupported versions",
+			name:           "Test oauth2 causes error for unsupported versions",
 			againstVersion: versionAuthzNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1444,13 +1406,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						OAuth2: nil,
-					},
-				},
-			},
+			expectErr: true,
 		},
 		{
 			name:           "Test slack config happy path",
@@ -1595,41 +1551,6 @@ func TestSanitizeConfig(t *testing.T) {
 		in             *httpClientConfig
 		expect         httpClientConfig
 	}{
-		{
-			name: "Test authorization is dropped in http config for unsupported versions",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect:         httpClientConfig{},
-		},
-		{
-			name: "Test authorization is dropped in favour of basicAuth for http config",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect: httpClientConfig{
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-		},
 		{
 			name: "Test happy path",
 			in: &httpClientConfig{

@@ -1191,10 +1191,14 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		return nil
 	}
 
-	c.Global.sanitize(amVersion, logger)
+	if err := c.Global.sanitize(amVersion, logger); err != nil {
+		return err
+	}
 
 	for _, receiver := range c.Receivers {
-		receiver.sanitize(amVersion, logger)
+		if err := receiver.sanitize(amVersion, logger); err != nil {
+			return err
+		}
 	}
 
 	for i, rule := range c.InhibitRules {
@@ -1213,13 +1217,15 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 }
 
 // sanitize globalConfig
-func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if gc == nil {
-		return
+		return nil
 	}
 
 	if gc.HTTPConfig != nil {
-		gc.HTTPConfig.sanitize(amVersion, logger)
+		if err := gc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+			return err
+		}
 	}
 
 	// We need to sanitize the config for slack globally
@@ -1239,24 +1245,21 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) {
 			gc.SlackAPIURLFile = ""
 		}
 	}
+	return nil
 }
 
 // sanitize httpClientConfig
-func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger) {
+func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if hc == nil {
-		return
+		return nil
 	}
 
 	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
-		msg := "'authorization' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
-		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		hc.Authorization = nil
+		return fmt.Errorf("'authorization' set in 'http_config' but supported in AlertManager >= 0.22.0 only")
 	}
 
 	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
-		msg := "'oauth2' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
-		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		hc.OAuth2 = nil
+		return fmt.Errorf("'oauth2' set in 'http_config' but supported in AlertManager >= 0.22.0 only")
 	}
 
 	if hc.FollowRedirects != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
@@ -1264,72 +1267,87 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		hc.FollowRedirects = nil
 	}
-
-	if hc.BasicAuth != nil && (hc.OAuth2 != nil || hc.Authorization != nil) {
-		msg := "'basicAuth', 'authorization' and 'oauth2' are mutually exclusive, 'basicAuth' has taken precedence"
-		level.Warn(logger).Log("msg", msg)
-		hc.Authorization = nil
-		hc.OAuth2 = nil
-	}
+	return nil
 }
 
 // sanitize the receiver
-func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) {
+func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if r == nil {
-		return
+		return nil
 	}
 	withLogger := log.With(logger, "receiver", r.Name)
 
 	for _, conf := range r.OpsgenieConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.PagerdutyConfigs {
-		conf.sanitize(amVersion, withLogger)
-	}
-
-	for _, conf := range r.PagerdutyConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.PushoverConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.SlackConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.VictorOpsConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.WebhookConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
 
 	for _, conf := range r.WeChatConfigs {
-		conf.sanitize(amVersion, withLogger)
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
 	}
+
+	for _, conf := range r.SNSConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	ogc.HTTPConfig.sanitize(amVersion, logger)
+func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return ogc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	pdc.HTTPConfig.sanitize(amVersion, logger)
+func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return pdc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	poc.HTTPConfig.sanitize(amVersion, logger)
+func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return poc.HTTPConfig.sanitize(amVersion, logger)
+
 }
 
-func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	sc.HTTPConfig.sanitize(amVersion, logger)
+func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
 
 	if sc.APIURLFile == "" {
-		return
+		return nil
 	}
 	// We need to sanitize the config for slack receivers
 	// As of v0.22.0 AlertManager config supports passing URL via file name
@@ -1345,18 +1363,23 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) {
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		sc.APIURLFile = ""
 	}
+	return nil
 }
 
-func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	voc.HTTPConfig.sanitize(amVersion, logger)
+func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return voc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	whc.HTTPConfig.sanitize(amVersion, logger)
+func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return whc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) {
-	wcc.HTTPConfig.sanitize(amVersion, logger)
+func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return wcc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return sc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) error {
