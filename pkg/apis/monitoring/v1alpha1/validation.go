@@ -27,29 +27,40 @@ func (hc *HTTPConfig) Validate() error {
 		return nil
 	}
 
-	if (hc.OAuth2 != nil || hc.BasicAuth != nil) && hc.BearerTokenSecret != nil {
-		return fmt.Errorf("only one of basic auth, oauth2 or bearer token can be specified")
+	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
+		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
 	}
 
-	if (hc.OAuth2 != nil || hc.BasicAuth != nil) && hc.Authorization != nil {
-		return fmt.Errorf("only one of basic auth, oauth2 or authorization can be specified")
+	if hc.Authorization != nil {
+		if hc.BearerTokenSecret != nil {
+			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+		}
+
+		if hc.BasicAuth != nil || hc.OAuth2 != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.Authorization.Validate(); err != nil {
+			return err
+		}
 	}
 
-	if hc.Authorization != nil && hc.BearerTokenSecret != nil {
-		return fmt.Errorf("authorization is not compatible with bearer token")
+	if hc.OAuth2 != nil {
+		if hc.BasicAuth != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.OAuth2.Validate(); err != nil {
+			return err
+		}
 	}
 
-	if err := hc.Authorization.Validate(); err != nil {
-		return err
+	if hc.TLSConfig != nil {
+		if err := hc.TLSConfig.Validate(); err != nil {
+			return err
+		}
 	}
 
-	if err := hc.TLSConfig.Validate(); err != nil {
-		return err
-	}
-
-	if err := hc.OAuth2.Validate(); err != nil {
-		return err
-	}
 	return nil
 }
 
