@@ -1272,7 +1272,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	var sourceLabelItem yaml.MapItem
 	if isSupportEndpointSliceResource {
 		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}}
-
 	} else {
 		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}}
 	}
