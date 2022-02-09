@@ -90,7 +90,7 @@ type Operator struct {
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
 	config                 operator.Config
-	endpointsliceEnabled   bool
+	endpointSliceSupported bool
 }
 
 // New creates a new controller.
@@ -311,16 +311,16 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	isSupportEndpointSliceResource := false
+	endpointSliceSupported := false
 	_, err = c.kclient.DiscoveryV1beta1().EndpointSlices(kubeletObjectNamespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		if !k8sutil.IsResourceNotFoundError(err) {
-			isSupportEndpointSliceResource = true
+			endpointSliceSupported = true
 		}
 		level.Error(c.logger).Log("msg", "query ednpointslice resource error", err)
 	}
 
-	c.endpointsliceEnabled = isSupportEndpointSliceResource
+	c.endpointSliceSupported = endpointSliceSupported
 	return c, nil
 }
 
@@ -1639,7 +1639,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
-		c.endpointsliceEnabled,
+		c.endpointSliceSupported,
 	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")

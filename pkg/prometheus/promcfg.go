@@ -321,7 +321,7 @@ func (cg *ConfigGenerator) Generate(
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
-	isSupportEndpointSliceResource bool,
+	endpointSliceSupported bool,
 ) ([]byte, error) {
 	// Validate Prometheus Config Inputs at Prometheus CRD level
 	if err := validateConfigInputs(p); err != nil {
@@ -437,7 +437,7 @@ func (cg *ConfigGenerator) Generate(
 					p.Spec.EnforcedLabelValueLengthLimit,
 					p.Spec.EnforcedBodySizeLimit,
 					shards,
-					isSupportEndpointSliceResource,
+					endpointSliceSupported,
 				),
 			)
 		}
@@ -1115,7 +1115,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedLabelValueLengthLimit *uint64,
 	enforcedBodySizeLimit string,
 	shards int32,
-	isSupportEndpointSliceResource bool,
+	endpointSliceSupported bool,
 ) yaml.MapSlice {
 	logger := log.With(cg.logger, "serviceMonitor", m.Name, "namespace", m.Namespace)
 
@@ -1137,10 +1137,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
 
 	role := kubernetesSDRoleEndpoint
-	if cg.version.GTE(semver.MustParse("2.21.0")) {
-		if isSupportEndpointSliceResource {
-			role = kubernetesSDRoleEndpointSlice
-		}
+	if cg.version.GTE(semver.MustParse("2.21.0")) && endpointSliceSupported {
+		role = kubernetesSDRoleEndpointSlice
 	}
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, role))
 
@@ -1243,7 +1241,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
 		var sourceLabelItem yaml.MapItem
-		if isSupportEndpointSliceResource {
+		if endpointSliceSupported {
 			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_port_name"}}
 		} else {
 			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}}
@@ -1270,7 +1268,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	var sourceLabelItem yaml.MapItem
-	if isSupportEndpointSliceResource {
+	if endpointSliceSupported {
 		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}}
 	} else {
 		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}}
