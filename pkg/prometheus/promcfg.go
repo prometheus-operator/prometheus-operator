@@ -1275,7 +1275,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	} else {
 		sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}}
-
 	}
 
 	// Relabel namespace and pod and service labels into proper labels.
