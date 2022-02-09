@@ -311,7 +311,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid hashmod config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "hashmod",
 				Modulus:      0,
 				TargetLabel:  "__tmp_hashmod",
@@ -340,7 +340,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid labelkeep config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "labelkeep",
 				TargetLabel:  "__tmp_labelkeep",
 			},
@@ -365,7 +365,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "valid hashmod config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "hashmod",
 				Modulus:      10,
 				TargetLabel:  "__tmp_hashmod",
@@ -375,7 +375,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "valid replace config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"__address__"},
+				SourceLabels: []monitoringv1.LabelName{"__address__"},
 				Action:       "replace",
 				Regex:        "([^:]+)(?::\\d+)?",
 				Replacement:  "$1:80",
