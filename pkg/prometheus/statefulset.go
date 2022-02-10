@@ -989,10 +989,13 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if s == nil || s.DisableMountSubPath {
-		return ""
+	subPath := ""
+	if s != nil && s.MountSubPath != "" {
+		subPath = s.MountSubPath
+	} else if s == nil || s.DisableMountSubPath { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		subPath = ""
+	} else {
+		subPath = "prometheus-db"
 	}
-
-	return "prometheus-db"
+	return subPath
 }

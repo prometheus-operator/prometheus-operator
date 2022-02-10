@@ -400,6 +400,152 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	}
 }
 
+func TestStatefulSetVolumeMountSubPath(t *testing.T) {
+	expected := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "config-out",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/config_out",
+									SubPath:   "",
+								},
+								{
+									Name:             "tls-assets",
+									ReadOnly:         true,
+									MountPath:        "/etc/prometheus/certs",
+									SubPath:          "",
+									MountPropagation: nil,
+									SubPathExpr:      "",
+								},
+								{
+									Name:      "prometheus-volume-init-test-db",
+									ReadOnly:  false,
+									MountPath: "/prometheus",
+									SubPath:   "/asdf",
+								},
+								{
+									Name:      "rules-configmap-one",
+									ReadOnly:  false,
+									MountPath: "/etc/prometheus/rules/rules-configmap-one",
+									SubPath:   "",
+								},
+								{
+									Name:      "web-config",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/web_config/web-config.yaml",
+									SubPath:   "web-config.yaml",
+								},
+								{
+									Name:      "secret-test-secret1",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/secrets/test-secret1",
+									SubPath:   "",
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: configSecretName("volume-init-test"),
+								},
+							},
+						},
+						{
+							Name: "tls-assets",
+							VolumeSource: v1.VolumeSource{
+								Projected: &v1.ProjectedVolumeSource{
+									Sources: []v1.VolumeProjection{
+										{
+											Secret: &v1.SecretProjection{
+												LocalObjectReference: v1.LocalObjectReference{
+													Name: tlsAssetsSecretName("volume-init-test") + "-0",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						{
+							Name: "config-out",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: "rules-configmap-one",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "rules-configmap-one",
+									},
+								},
+							},
+						},
+						{
+							Name: "web-config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "prometheus-volume-init-test-web-config",
+								},
+							},
+						},
+						{
+							Name: "secret-test-secret1",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "test-secret1",
+								},
+							},
+						},
+						{
+							Name: "prometheus-volume-init-test-db",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sset, err := makeStatefulSet("volume-init-test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "volume-init-test",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Secrets: []string{
+				"test-secret1",
+			},
+			Storage: &monitoringv1.StorageSpec{
+				EmptyDir:     &v1.EmptyDirVolumeSource{},
+				MountSubPath: "/asdf",
+			},
+		},
+	}, defaultTestConfig, []string{"rules-configmap-one"}, "", 0, []string{tlsAssetsSecretName("volume-init-test") + "-0"})
+
+	require.NoError(t, err)
+
+	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
+		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes))
+		t.Fatal("expected volumes to match")
+	}
+
+	if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
+		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts))
+		t.Fatal("expected volume mounts to match")
+	}
+}
+
 func TestAdditionalConfigMap(t *testing.T) {
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{

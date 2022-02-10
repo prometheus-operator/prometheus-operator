@@ -484,6 +484,8 @@ type StorageSpec struct {
 	Ephemeral *v1.EphemeralVolumeSource `json:"ephemeral,omitempty"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	// Subpath for /prometheus volume mount
+	MountSubPath string `json:"name,omitempty" protobuf:"bytes,1,opt,name=mountSubPath"`
 }
 
 // EmbeddedPersistentVolumeClaim is an embedded version of k8s.io/api/core/v1.PersistentVolumeClaim.

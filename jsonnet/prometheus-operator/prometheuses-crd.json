@@ -5419,6 +5419,10 @@
                         },
                         "type": "object"
                       },
+                      "name": {
+                        "description": "Subpath for /prometheus volume mount",
+                        "type": "string"
+                      },
                       "volumeClaimTemplate": {
                         "description": "A PVC spec to be used by the Prometheus StatefulSets.",
                         "properties": {
