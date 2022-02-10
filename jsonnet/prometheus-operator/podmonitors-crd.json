@@ -182,6 +182,10 @@
                           ],
                           "type": "object"
                         },
+                        "followRedirects": {
+                          "description": "FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.",
+                          "type": "boolean"
+                        },
                         "honorLabels": {
                           "description": "HonorLabels chooses the metric's labels on collisions with target labels.",
                           "type": "boolean"

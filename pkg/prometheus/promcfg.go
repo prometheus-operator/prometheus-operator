@@ -602,6 +602,10 @@ func initRelabelings() []yaml.MapSlice {
 	}
 }
 
+func ptrToBool(in *bool) bool {
+	return *in
+}
+
 func (cg *ConfigGenerator) generatePodMonitorConfig(
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
@@ -656,6 +660,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+	if ep.FollowRedirects != nil {
+		if cg.version.GTE(semver.MustParse("2.26.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ptrToBool(ep.FollowRedirects)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "found follow_redirects field, but prometheus version is < 2.26.0, ignoring", "Current Version", cg.version)
+		}
 	}
 
 	if ep.TLSConfig != nil {
@@ -1150,6 +1161,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+	if ep.FollowRedirects != nil {
+		if cg.version.GTE(semver.MustParse("2.26.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "follow_redirects", Value: ptrToBool(ep.FollowRedirects)})
+		} else {
+			level.Warn(cg.logger).Log("msg", "found follow_redirects field, but prometheus version is < 2.26.0, ignoring", "Current Version", cg.version)
+		}
 	}
 
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
