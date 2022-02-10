@@ -613,8 +613,27 @@ templates: []
 `,
 		},
 		{
-			name:    "CR with Webhook Receiver",
-			kclient: fake.NewSimpleClientset(),
+			name: "CR with Webhook Receiver and custom http config (oauth2)",
+			kclient: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-id",
+						Namespace: "mynamespace",
+					},
+					Data: map[string]string{
+						"test": "clientID",
+					},
+				},
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"test": []byte("clientSecret"),
+					},
+				},
+			),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -637,6 +656,30 @@ templates: []
 								URL: func(s string) *string {
 									return &s
 								}("http://test.url"),
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									OAuth2: &monitoringingv1.OAuth2{
+										ClientID: monitoringingv1.SecretOrConfigMap{
+											ConfigMap: &corev1.ConfigMapKeySelector{
+												LocalObjectReference: corev1.LocalObjectReference{
+													Name: "webhook-client-id",
+												},
+												Key: "test",
+											},
+										},
+										ClientSecret: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "webhook-client-secret",
+											},
+											Key: "test",
+										},
+										TokenURL: "https://test.com",
+										Scopes:   []string{"any"},
+										EndpointParams: map[string]string{
+											"some": "value",
+										},
+									},
+									FollowRedirects: toBoolPtr(true),
+								},
 							}},
 						}},
 					},
@@ -654,6 +697,16 @@ receivers:
 - name: mynamespace-myamc-test
   webhook_configs:
   - url: http://test.url
+    http_config:
+      oauth2:
+        client_id: clientID
+        client_secret: clientSecret
+        scopes:
+        - any
+        token_url: https://test.com
+        endpoint_params:
+          some: value
+      follow_redirects: true
 templates: []
 `,
 		},
@@ -1323,39 +1376,7 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test basicAuth takes precedence over authorization in http config",
-			againstVersion: versionFileURLNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/drop",
-						},
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-		},
-		{
-			name:           "Test authorization is dropped in global http config for unsupported versions",
+			name:           "Test authorization causes error for unsupported versions",
 			againstVersion: versionAuthzNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1368,13 +1389,24 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
+			expectErr: true,
+		},
+		{
+			name:           "Test oauth2 causes error for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
+						OAuth2: &oauth2{
+							ClientID:         "a",
+							ClientSecret:     "b",
+							ClientSecretFile: "c",
+							TokenURL:         "d",
+						},
 					},
 				},
 			},
+			expectErr: true,
 		},
 		{
 			name:           "Test slack config happy path",
@@ -1519,41 +1551,6 @@ func TestSanitizeConfig(t *testing.T) {
 		in             *httpClientConfig
 		expect         httpClientConfig
 	}{
-		{
-			name: "Test authorization is dropped in http config for unsupported versions",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect:         httpClientConfig{},
-		},
-		{
-			name: "Test authorization is dropped in favour of basicAuth for http config",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect: httpClientConfig{
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-		},
 		{
 			name: "Test happy path",
 			in: &httpClientConfig{
@@ -1790,4 +1787,8 @@ templates: []
 			t.Errorf("got %v but wanted %v", ac, tc.expected)
 		}
 	}
+}
+
+func toBoolPtr(in bool) *bool {
+	return &in
 }

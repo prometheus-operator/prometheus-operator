@@ -119,6 +119,10 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
 		}
+
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -133,6 +137,10 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -140,6 +148,10 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
 	for _, config := range configs {
 		if err := config.Validate(); err != nil {
+			return err
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
 	}
@@ -156,6 +168,10 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 				return errors.Wrapf(err, "invalid 'url'")
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -166,6 +182,10 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 			if _, err := ValidateURL(config.APIURL); err != nil {
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -230,6 +250,10 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -243,6 +267,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 		if config.Token == nil {
 			return errors.Errorf("mandatory field %q is empty", "token")
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -252,6 +280,10 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 	for _, config := range configs {
 		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
 			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
