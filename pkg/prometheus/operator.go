@@ -313,13 +313,9 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	endpointSliceSupported := false
 	_, err = c.kclient.DiscoveryV1beta1().EndpointSlices(kubeletObjectNamespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		if !k8sutil.IsResourceNotFoundError(err) {
-			endpointSliceSupported = true
-		}
-		level.Error(c.logger).Log("msg", "query ednpointslice resource error", err)
+	if err == nil {
+		endpointSliceSupported = true
 	}
-
 	c.endpointSliceSupported = endpointSliceSupported
 	return c, nil
 }
