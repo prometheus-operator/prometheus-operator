@@ -9463,6 +9463,10 @@ spec:
                               separator and matched against the configured regular
                               expression for the replace, keep, and drop actions.
                             items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                               type: string
                             type: array
                           targetLabel:
@@ -9622,6 +9626,10 @@ spec:
                               separator and matched against the configured regular
                               expression for the replace, keep, and drop actions.
                             items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                               type: string
                             type: array
                           targetLabel:
@@ -10034,6 +10042,9 @@ spec:
                         and matched against the configured regular expression for
                         the replace, keep, and drop actions.
                       items:
+                        description: LabelName is a valid Prometheus label name which
+                          may only contain ASCII letters, numbers, as well as underscores.
+                        pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                         type: string
                       type: array
                     targetLabel:
@@ -10229,6 +10240,10 @@ spec:
                                 separator and matched against the configured regular
                                 expression for the replace, keep, and drop actions.
                               items:
+                                description: LabelName is a valid Prometheus label
+                                  name which may only contain ASCII letters, numbers,
+                                  as well as underscores.
+                                pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                                 type: string
                               type: array
                             targetLabel:
@@ -10340,6 +10355,10 @@ spec:
                                 separator and matched against the configured regular
                                 expression for the replace, keep, and drop actions.
                               items:
+                                description: LabelName is a valid Prometheus label
+                                  name which may only contain ASCII letters, numbers,
+                                  as well as underscores.
+                                pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                                 type: string
                               type: array
                             targetLabel:
@@ -15587,6 +15606,10 @@ spec:
                               separator and matched against the configured regular
                               expression for the replace, keep, and drop actions.
                             items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                               type: string
                             type: array
                           targetLabel:
@@ -19092,6 +19115,10 @@ spec:
                               separator and matched against the configured regular
                               expression for the replace, keep, and drop actions.
                             items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                               type: string
                             type: array
                           targetLabel:
@@ -19251,6 +19278,10 @@ spec:
                               separator and matched against the configured regular
                               expression for the replace, keep, and drop actions.
                             items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
                               type: string
                             type: array
                           targetLabel:

@@ -1466,7 +1466,7 @@ func (in *RelabelConfig) DeepCopyInto(out *RelabelConfig) {
 	*out = *in
 	if in.SourceLabels != nil {
 		in, out := &in.SourceLabels, &out.SourceLabels
-		*out = make([]string, len(*in))
+		*out = make([]LabelName, len(*in))
 		copy(*out, *in)
 	}
 }
