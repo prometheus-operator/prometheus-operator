@@ -150,6 +150,10 @@
                           ],
                           "type": "object"
                         },
+                        "followRedirects": {
+                          "description": "FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.",
+                          "type": "boolean"
+                        },
                         "honorLabels": {
                           "description": "HonorLabels chooses the metric's labels on collisions with target labels.",
                           "type": "boolean"
@@ -646,7 +650,7 @@
                     "type": "object"
                   },
                   "targetLabels": {
-                    "description": "TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred.",
+                    "description": "TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.",
                     "items": {
                       "type": "string"
                     },

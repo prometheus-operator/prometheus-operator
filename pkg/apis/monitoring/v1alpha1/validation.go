@@ -22,6 +22,48 @@ import (
 	"strings"
 )
 
+func (hc *HTTPConfig) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
+		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
+	}
+
+	if hc.Authorization != nil {
+		if hc.BearerTokenSecret != nil {
+			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+		}
+
+		if hc.BasicAuth != nil || hc.OAuth2 != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.Authorization.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if hc.OAuth2 != nil {
+		if hc.BasicAuth != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.OAuth2.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if hc.TLSConfig != nil {
+		if err := hc.TLSConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Validate the MuteTimeInterval
 func (mti MuteTimeInterval) Validate() error {
 	if mti.Name == "" {

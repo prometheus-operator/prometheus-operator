@@ -7,11 +7,11 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.11.0
-	github.com/docker/distribution v2.7.1+incompatible
+	github.com/docker/distribution v2.8.0+incompatible
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/log v0.2.0
-	github.com/go-openapi/swag v0.19.15
+	github.com/go-openapi/swag v0.21.1
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/go-version v1.4.0
@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.54.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.54.0
 	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a
-	github.com/prometheus/client_golang v1.12.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.32.1
 	github.com/prometheus/prometheus v1.8.2-0.20211214150951-52c693a63be1
 	github.com/stretchr/testify v1.7.0

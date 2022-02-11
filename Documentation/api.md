@@ -356,6 +356,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+| followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -430,6 +431,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+| followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1063,7 +1065,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jobLabel | Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics.\n\nDefault & fallback value: the name of the respective Kubernetes `Endpoint`. | string | false |
-| targetLabels | TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred. | []string | false |
+| targetLabels | TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. | []string | false |
 | podTargetLabels | PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics. | []string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | true |
@@ -1383,9 +1385,11 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 | ----- | ----------- | ------ | -------- |
 | authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+. | *monitoringv1.SafeAuthorization | false |
 | basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence. | *monitoringv1.BasicAuth | false |
+| oauth2 | OAuth2 client credentials used to fetch a token for the targets. | *monitoringv1.OAuth2 | false |
 | bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
 | proxyURL | Optional proxy URL. | string | false |
+| followRedirects | FollowRedirects specifies whether the client should follow HTTP 3xx redirects. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 

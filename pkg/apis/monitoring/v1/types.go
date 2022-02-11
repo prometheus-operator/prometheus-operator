@@ -896,7 +896,6 @@ type ServiceMonitorSpec struct {
 	// Default & fallback value: the name of the respective Kubernetes `Endpoint`.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
-	// All labels set in `selector.matchLabels` are automatically transferred.
 	TargetLabels []string `json:"targetLabels,omitempty"`
 	// PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
@@ -966,6 +965,8 @@ type Endpoint struct {
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
+	// FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
 // PodMonitor defines monitoring for a set of pods.
@@ -1050,6 +1051,8 @@ type PodMetricsEndpoint struct {
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
+	// FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
 // PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
@@ -1126,6 +1129,26 @@ type ProbeTargets struct {
 	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
 	// Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing.
 	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
+}
+
+// Validate semantically validates the given ProbeTargets.
+func (it *ProbeTargets) Validate() error {
+	if it.StaticConfig == nil && it.Ingress == nil {
+		return &ProbeTargetsValidationError{"at least one of .spec.target.staticConfig and .spec.target.ingress is required"}
+	}
+
+	return nil
+}
+
+// ProbeTargetsValidationError is returned by ProbeTargets.Validate()
+// on semantically invalid configurations.
+// +k8s:openapi-gen=false
+type ProbeTargetsValidationError struct {
+	err string
+}
+
+func (e *ProbeTargetsValidationError) Error() string {
+	return e.err
 }
 
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
@@ -1761,6 +1784,10 @@ type SafeAuthorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *SafeAuthorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{`Authorization type cannot be set to "basic", use "basic_auth" instead`}
 	}

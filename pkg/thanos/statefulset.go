@@ -423,6 +423,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	boolFalse := false
+	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "thanos-ruler",
@@ -433,6 +435,13 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Resources:                tr.Spec.Resources,
 			Ports:                    ports,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 		},
 	}, additionalContainers...)
 

@@ -2039,10 +2039,12 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 				"prometheus", p.Name,
 			)
 		}
-		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+
+		if err = probe.Spec.Targets.Validate(); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
+
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
 			rejectFn(probe, err)

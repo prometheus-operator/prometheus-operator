@@ -737,11 +737,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 
+		boolFalse := false
+		boolTrue := true
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args:                     thanosArgs,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",
@@ -876,6 +885,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
+	boolFalse := false
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -888,6 +898,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				// Although we want to include ReadOnlyRootFilesystem, it will break users of QueryLog
+				// See also: https://github.com/prometheus-operator/prometheus-operator/issues/4562
+				AllowPrivilegeEscalation: &boolFalse,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
