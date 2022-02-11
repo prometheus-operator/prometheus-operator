@@ -368,11 +368,9 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		selectedNamespaces := getNamespacesFromNamespaceSelector(&tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, tc.IgnoreNamespaceSelectors)
+		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: tc.IgnoreNamespaceSelectors}})
 
-		cg := mustNewConfigGenerator(t, nil)
-
-		c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -400,10 +398,9 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		},
 	}
 
-	selectedNamespaces := getNamespacesFromNamespaceSelector(&pm.Spec.NamespaceSelector, pm.Namespace, false)
+	cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: false}})
 
-	cg := mustNewConfigGenerator(t, nil)
-	c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRolePod)
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
@@ -1189,10 +1186,11 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		cg := mustNewConfigGenerator(t, nil)
+		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: false}})
 
 		c := cg.generateK8SSDConfig(
-			getNamespacesFromNamespaceSelector(&sm.Spec.NamespaceSelector, sm.Namespace, false),
+			sm.Spec.NamespaceSelector,
+			sm.Namespace,
 			tc.apiserverConfig,
 			tc.store,
 			kubernetesSDRoleEndpoint,

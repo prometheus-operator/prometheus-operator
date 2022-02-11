@@ -541,7 +541,6 @@ func (cg *ConfigGenerator) Generate(
 					ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
@@ -561,7 +560,6 @@ func (cg *ConfigGenerator) Generate(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
@@ -690,7 +688,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
@@ -709,8 +706,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
-	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRolePod))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1084,8 +1080,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleIngress))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleIngress))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1168,7 +1163,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	i int,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
@@ -1187,8 +1181,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
-	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1478,10 +1471,10 @@ func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {
 	return relabeling
 }
 
-// getNamespacesFromNamespaceSelector gets a list of namespaces to select based on
+// GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors
-func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace string, ignoreNamespaceSelectors bool) []string {
-	if ignoreNamespaceSelectors {
+func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceSelector, namespace string) []string {
+	if cg.spec.IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
 		return []string{}
@@ -1491,7 +1484,14 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, store *assets.Store, role string) yaml.MapItem {
+// generateK8SSDConfig generates a kubernetes_sd_configs entry.
+func (cg *ConfigGenerator) generateK8SSDConfig(
+	namespaceSelector v1.NamespaceSelector,
+	namespace string,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	role string,
+) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1499,6 +1499,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 		},
 	}
 
+	namespaces := cg.getNamespacesFromNamespaceSelector(namespaceSelector, namespace)
 	if len(namespaces) != 0 {
 		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 			Key: "namespaces",
@@ -1578,7 +1579,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig([]string{am.Namespace}, apiserverConfig, store, kubernetesSDRoleEndpoint))
+		cfg = append(cfg, cg.generateK8SSDConfig(v1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint))
 
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
