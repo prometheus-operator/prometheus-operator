@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
-	"github.com/pkg/errors"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -217,19 +216,22 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	return ver.Segments()[1], nil
 }
 
-// IsSupportEndpointSlicesResource return whether support endpointSlices resource
-func IsSupportEndpointSlicesResource(dclient discovery.DiscoveryInterface) (bool, error) {
-	serverInfo, err := dclient.ServerVersion()
+// IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
+//
+// you can exec `kubectl api-resources` to find groupVersion and resource.
+func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupversion string, resource string) (bool, error) {
+	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupversion)
 	if err != nil {
-		return false, errors.Wrap(err, "discovery server version err")
+		if IsResourceNotFoundError(err) {
+			return false, nil
+		}
+		return false, err
 	}
-	ver, err := version.NewVersion(serverInfo.String())
-	endpointSliceStableVersion, err := version.NewVersion("1.21.1")
-	if err != nil {
-		return false, errors.Wrap(err, "init endpointSlice version error")
-	}
-	if ver.GreaterThanOrEqual(endpointSliceStableVersion) {
-		return true, nil
+
+	for _, apiResource := range apiResourceList.APIResources {
+		if resource == apiResource.Name {
+			return true, nil
+		}
 	}
 	return false, nil
 }
