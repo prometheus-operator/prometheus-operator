@@ -313,7 +313,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
 	if err != nil {
-		return nil, err
+		level.Error(c.logger).Log("msg", "query server whether support endpointslices resource err ", err)
 	}
 	c.endpointSliceSupported = endpointSliceSupported
 	return c, nil
