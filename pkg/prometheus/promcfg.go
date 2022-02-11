@@ -1240,11 +1240,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
-		var sourceLabelItem yaml.MapItem
+		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
 		if endpointSliceSupported {
-			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpointslice_port_name"}}
-		} else {
-			sourceLabelItem = yaml.MapItem{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}}
+		        sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
 		}
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
