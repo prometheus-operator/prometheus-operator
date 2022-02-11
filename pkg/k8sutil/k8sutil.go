@@ -217,8 +217,8 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	return ver.Segments()[1], nil
 }
 
-// IsSupportEndpointSlices return whether support endpointSlices resource
-func IsSupportEndpointSlices(dclient discovery.DiscoveryInterface) (bool, error) {
+// IsSupportEndpointSlicesResource return whether support endpointSlices resource
+func IsSupportEndpointSlicesResource(dclient discovery.DiscoveryInterface) (bool, error) {
 	serverInfo, err := dclient.ServerVersion()
 	if err != nil {
 		return false, errors.Wrap(err, "discovery server version err")

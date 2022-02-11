@@ -311,7 +311,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	endpointSliceSupported, err := k8sutil.IsSupportEndpointSlices(c.kclient.Discovery())
+	endpointSliceSupported, err := k8sutil.IsSupportEndpointSlicesResource(c.kclient.Discovery())
 	if err != nil {
 		return nil, err
 	}
