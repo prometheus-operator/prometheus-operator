@@ -4050,9 +4050,14 @@ func TestHonorLabels(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		hl := honorLabels(tc.UserHonorLabels, tc.OverrideHonorLabels)
-		if tc.Expected != hl {
-			t.Fatalf("\nGot: %t, \nExpected: %t\nFor values UserHonorLabels %t, OverrideHonorLabels %t\n", hl, tc.Expected, tc.UserHonorLabels, tc.OverrideHonorLabels)
+		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{OverrideHonorLabels: tc.OverrideHonorLabels}})
+		cfg := cg.AddHonorLabels(yaml.MapSlice{}, tc.UserHonorLabels)
+		k, v := cfg[0].Key.(string), cfg[0].Value.(bool)
+		if k != "honor_labels" {
+			t.Fatalf("expected key 'honor_labels', got %q", k)
+		}
+		if tc.Expected != v {
+			t.Fatalf("\nGot: %t, \nExpected: %t\nFor values UserHonorLabels %t, OverrideHonorLabels %t\n", v, tc.Expected, tc.UserHonorLabels, tc.OverrideHonorLabels)
 		}
 	}
 }

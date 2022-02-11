@@ -204,6 +204,16 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cg.spec.OverrideHonorTimestamps)
 }
 
+// AddHonorLabels adds the honor_labels field into scrape configurations.
+// if OverrideHonorLabels is true then honor_labels is always false.
+func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
+	if cg.spec.OverrideHonorLabels {
+		honorLabels = false
+	}
+
+	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
+}
+
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0)
@@ -531,7 +541,6 @@ func (cg *ConfigGenerator) Generate(
 					ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.OverrideHonorLabels,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
@@ -552,7 +561,6 @@ func (cg *ConfigGenerator) Generate(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.OverrideHonorLabels,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
@@ -573,7 +581,6 @@ func (cg *ConfigGenerator) Generate(
 				probes[identifier],
 				apiserverConfig,
 				store,
-				p.Spec.OverrideHonorLabels,
 				p.Spec.IgnoreNamespaceSelectors,
 				p.Spec.EnforcedNamespaceLabel,
 				p.Spec.EnforcedSampleLimit,
@@ -668,16 +675,6 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	}), nil
 }
 
-// honorLabels determines the value of honor_labels.
-// if overrideHonorLabels is true and user tries to set the
-// value to true, we want to set honor_labels to false.
-func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
-	if userHonorLabels && overrideHonorLabels {
-		return false
-	}
-	return userHonorLabels
-}
-
 func initRelabelings() []yaml.MapSlice {
 	// Relabel prometheus job name into a meta label
 	return []yaml.MapSlice{
@@ -693,7 +690,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreHonorLabels bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -704,17 +700,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
 			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
-		{
-			Key:   "honor_labels",
-			Value: hl,
-		},
 	}
+	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
@@ -926,7 +918,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreHonorLabels bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -1177,7 +1168,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	i int,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	overrideHonorLabels bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -1188,17 +1178,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
 			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
-		{
-			Key:   "honor_labels",
-			Value: hl,
-		},
 	}
+	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
