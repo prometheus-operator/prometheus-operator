@@ -541,13 +541,6 @@ func (cg *ConfigGenerator) Generate(
 					ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit,
-					p.Spec.EnforcedLabelLimit,
-					p.Spec.EnforcedLabelNameLengthLimit,
-					p.Spec.EnforcedLabelValueLengthLimit,
-					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -560,13 +553,6 @@ func (cg *ConfigGenerator) Generate(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit,
-					p.Spec.EnforcedLabelLimit,
-					p.Spec.EnforcedLabelNameLengthLimit,
-					p.Spec.EnforcedLabelValueLengthLimit,
-					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -579,14 +565,6 @@ func (cg *ConfigGenerator) Generate(
 				probes[identifier],
 				apiserverConfig,
 				store,
-				p.Spec.IgnoreNamespaceSelectors,
-				p.Spec.EnforcedNamespaceLabel,
-				p.Spec.EnforcedSampleLimit,
-				p.Spec.EnforcedTargetLimit,
-				p.Spec.EnforcedLabelLimit,
-				p.Spec.EnforcedLabelNameLengthLimit,
-				p.Spec.EnforcedLabelValueLengthLimit,
-				p.Spec.EnforcedBodySizeLimit,
 			),
 		)
 	}
@@ -688,13 +666,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
 	cfg := yaml.MapSlice{
@@ -888,21 +859,21 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	rcg := relabelConfigGenerator{
 		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
+		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 	}
 	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
-	if enforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", enforcedBodySizeLimit)
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
@@ -914,14 +885,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string) yaml.MapSlice {
+) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
@@ -959,14 +923,14 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}})
 	}
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
-	if enforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", enforcedBodySizeLimit)
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
 
 	relabelings := initRelabelings()
@@ -982,7 +946,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	rcg := &relabelConfigGenerator{
 		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
+		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 	}
 
 	// Generate static_config section.
@@ -1117,7 +1081,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Add configured relabelings.
 		rcg := &relabelConfigGenerator{
 			obj:                    m,
-			enforcedNamespaceLabel: enforcedNamespaceLabel,
+			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 		}
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
 
@@ -1163,13 +1127,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	i int,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
 	cfg := yaml.MapSlice{
@@ -1392,21 +1349,21 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	rcg := &relabelConfigGenerator{
 		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
+		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 	}
 	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
-	if enforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", enforcedBodySizeLimit)
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
