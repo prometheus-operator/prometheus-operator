@@ -19,7 +19,6 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"reflect"
 	"regexp"
 	"strings"
@@ -312,18 +311,9 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	endpointSliceSupported := false
-	serverInfo, err := c.kclient.Discovery().ServerVersion()
+	endpointSliceSupported, err := k8sutil.IsSupportEndpointSlices(c.kclient.Discovery())
 	if err != nil {
-		return nil, errors.Wrap(err, "discovery server version err")
-	}
-	ver, err := version.NewVersion(serverInfo.String())
-	endpointSliceStableVersion, err := version.NewVersion("1.21.1")
-	if err != nil {
-		return nil, errors.Wrap(err, "init endpointSlice version error")
-	}
-	if ver.GreaterThanOrEqual(endpointSliceStableVersion) {
-		endpointSliceSupported = true
+		return nil, err
 	}
 	c.endpointSliceSupported = endpointSliceSupported
 	return c, nil

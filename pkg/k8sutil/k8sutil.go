@@ -17,6 +17,7 @@ package k8sutil
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -214,6 +215,23 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	}
 
 	return ver.Segments()[1], nil
+}
+
+// IsSupportEndpointSlices return whether support endpointSlices resource
+func IsSupportEndpointSlices(dclient discovery.DiscoveryInterface) (bool, error) {
+	serverInfo, err := dclient.ServerVersion()
+	if err != nil {
+		return false, errors.Wrap(err, "discovery server version err")
+	}
+	ver, err := version.NewVersion(serverInfo.String())
+	endpointSliceStableVersion, err := version.NewVersion("1.21.1")
+	if err != nil {
+		return false, errors.Wrap(err, "init endpointSlice version error")
+	}
+	if ver.GreaterThanOrEqual(endpointSliceStableVersion) {
+		return true, nil
+	}
+	return false, nil
 }
 
 // SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
