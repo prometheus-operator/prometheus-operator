@@ -65,9 +65,12 @@ func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, 
 	}, nil
 }
 
-func (cg *ConfigGenerator) WithLogger(logger log.Logger) *ConfigGenerator {
+// WithKeyVals returns a new ConfigGenerator with the same characteristics as
+// the current object, expect that the keyvals are appended to the existing
+// logger.
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:  logger,
+		logger:  log.WithSuffix(cg.logger, keyvals),
 		version: cg.version,
 	}
 }
@@ -419,7 +422,7 @@ func (cg *ConfigGenerator) Generate(
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
 			scrapeConfigs = append(scrapeConfigs,
-				cg.generateServiceMonitorConfig(
+				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
 					sMons[identifier],
 					ep, i,
 					apiserverConfig,
@@ -442,7 +445,7 @@ func (cg *ConfigGenerator) Generate(
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
 			scrapeConfigs = append(scrapeConfigs,
-				cg.generatePodMonitorConfig(
+				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
@@ -464,7 +467,7 @@ func (cg *ConfigGenerator) Generate(
 
 	for _, identifier := range probeIdentifiers {
 		scrapeConfigs = append(scrapeConfigs,
-			cg.generateProbeConfig(
+			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
 				apiserverConfig,
 				store,
@@ -623,8 +626,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	logger := log.With(cg.logger, "podMonitor", m.Name, "namespace", m.Namespace)
-
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -751,7 +752,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
+		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -835,7 +836,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	enforcer := limitEnforcer{
-		logger:            logger,
+		logger:            cg.logger,
 		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
@@ -866,7 +867,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	enforcedLabelNameLengthLimit *uint64,
 	enforcedLabelValueLengthLimit *uint64,
 	enforcedBodySizeLimit string) yaml.MapSlice {
-	logger := log.With(cg.logger, "probe", m.Name, "namespace", m.Namespace)
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
@@ -905,7 +905,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	enforcer := limitEnforcer{
-		logger:            logger,
+		logger:            cg.logger,
 		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
@@ -1099,7 +1099,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(m.Spec.MetricRelabelConfigs)})
 
@@ -1124,8 +1124,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	logger := log.With(cg.logger, "serviceMonitor", m.Name, "namespace", m.Namespace)
-
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -1196,7 +1194,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1365,7 +1363,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	enforcer := limitEnforcer{
-		logger:            logger,
+		logger:            cg.logger,
 		prometheusVersion: cg.version,
 	}
 	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
