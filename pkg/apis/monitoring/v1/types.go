@@ -338,10 +338,14 @@ type PrometheusSpec struct {
 	// based on a service monitor can access arbitrary files on the file system
 	// of the Prometheus container e.g. bearer token files.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
-	// OverrideHonorLabels if set to true overrides all user configured honor_labels.
-	// If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.
+	// When true, Prometheus resolves label conflicts by renaming the labels in
+	// the scraped data to "exported_<label value>" for all targets created
+	// from service and pod monitors.
+	// Otherwise the HonorLabels field of the service or pod monitor applies.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
-	// OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs.
+	// When true, Prometheus ignores the timestamps for all the targets created
+	// from service and pod monitors.
+	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from
 	// the podmonitor and servicemonitor configs, and they will only discover endpoints
