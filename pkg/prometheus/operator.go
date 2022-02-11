@@ -19,6 +19,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"reflect"
 	"regexp"
 	"strings"
@@ -312,8 +313,16 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	}
 
 	endpointSliceSupported := false
-	_, err = c.kclient.DiscoveryV1beta1().EndpointSlices(kubeletObjectNamespace).List(ctx, metav1.ListOptions{})
-	if err == nil {
+	serverInfo, err := c.kclient.Discovery().ServerVersion()
+	if err != nil {
+		return nil, errors.Wrap(err, "discovery server version err")
+	}
+	ver, err := version.NewVersion(serverInfo.String())
+	endpointSliceStableVersion, err := version.NewVersion("1.21.1")
+	if err != nil {
+		return nil, errors.Wrap(err, "init endpointSlice version error")
+	}
+	if ver.GreaterThanOrEqual(endpointSliceStableVersion) {
 		endpointSliceSupported = true
 	}
 	c.endpointSliceSupported = endpointSliceSupported
@@ -1619,7 +1628,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
 
-	cg, err := NewConfigGenerator(c.logger, p)
+	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
@@ -1635,7 +1644,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
-		c.endpointSliceSupported,
 	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
