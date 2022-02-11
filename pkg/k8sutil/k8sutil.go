@@ -17,7 +17,6 @@ package k8sutil
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"github.com/pkg/errors"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
