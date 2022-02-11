@@ -53,6 +53,7 @@ type ConfigGenerator struct {
 	logger        log.Logger
 	version       semver.Version
 	notCompatible bool
+	spec          *v1.PrometheusSpec
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
@@ -72,6 +73,7 @@ func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, 
 	return &ConfigGenerator{
 		logger:  logger,
 		version: version,
+		spec:    p.Spec.DeepCopy(),
 	}, nil
 }
 
@@ -83,6 +85,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		logger:        log.WithSuffix(cg.logger, keyvals),
 		version:       cg.version,
 		notCompatible: cg.notCompatible,
+		spec:          cg.spec,
 	}
 }
 
@@ -98,6 +101,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			logger:        log.WithSuffix(cg.logger, "minimum_version", version),
 			version:       cg.version,
 			notCompatible: true,
+			spec:          cg.spec,
 		}
 	}
 
@@ -116,6 +120,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			logger:        log.WithSuffix(cg.logger, "maximum_version", version),
 			version:       cg.version,
 			notCompatible: true,
+			spec:          cg.spec,
 		}
 	}
 
@@ -178,6 +183,25 @@ func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit 
 	}
 
 	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+}
+
+// AddHonorTimestamps adds the honor_timestamps field into scrape configurations.
+// honor_timestamps is false only when the user specified it or when the global
+// override applies.
+// For backwards compatibility with Prometheus <2.9.0 we don't set
+// honor_timestamps.
+func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool) yaml.MapSlice {
+	// Fast path.
+	if userHonorTimestamps == nil && !cg.spec.OverrideHonorTimestamps {
+		return cfg
+	}
+
+	honor := false
+	if userHonorTimestamps != nil {
+		honor = *userHonorTimestamps
+	}
+
+	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cg.spec.OverrideHonorTimestamps)
 }
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
@@ -508,7 +532,6 @@ func (cg *ConfigGenerator) Generate(
 					apiserverConfig,
 					store,
 					p.Spec.OverrideHonorLabels,
-					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
@@ -530,7 +553,6 @@ func (cg *ConfigGenerator) Generate(
 					apiserverConfig,
 					store,
 					p.Spec.OverrideHonorLabels,
-					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
@@ -552,7 +574,6 @@ func (cg *ConfigGenerator) Generate(
 				apiserverConfig,
 				store,
 				p.Spec.OverrideHonorLabels,
-				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
 				p.Spec.EnforcedNamespaceLabel,
 				p.Spec.EnforcedSampleLimit,
@@ -657,24 +678,6 @@ func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
 	return userHonorLabels
 }
 
-// honorTimestamps adds option to enforce honor_timestamps option in scrape_config.
-// We want to disable honoring timestamps when user specified it or when global
-// override is set. For backwards compatibility with prometheus <2.9.0 we don't
-// set honor_timestamps when that option wasn't specified anywhere
-func (cg *ConfigGenerator) honorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool, overrideHonorTimestamps bool) yaml.MapSlice {
-	// Ensuring backwards compatibility by checking if user set any option
-	if userHonorTimestamps == nil && !overrideHonorTimestamps {
-		return cfg
-	}
-
-	honor := false
-	if userHonorTimestamps != nil {
-		honor = *userHonorTimestamps
-	}
-
-	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !overrideHonorTimestamps)
-}
-
 func initRelabelings() []yaml.MapSlice {
 	// Relabel prometheus job name into a meta label
 	return []yaml.MapSlice{
@@ -691,7 +694,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	i int, apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
 	ignoreHonorLabels bool,
-	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -713,7 +715,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			Value: hl,
 		},
 	}
-	cfg = cg.honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
+	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRolePod))
@@ -925,7 +927,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
 	ignoreHonorLabels bool,
-	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -944,7 +945,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	hTs := true
-	cfg = cg.honorTimestamps(cfg, &hTs, overrideHonorTimestamps)
+	cfg = cg.AddHonorTimestamps(cfg, &hTs)
 
 	path := "/probe"
 	if m.Spec.ProberSpec.Path != "" {
@@ -1177,7 +1178,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
 	overrideHonorLabels bool,
-	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
@@ -1199,7 +1199,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			Value: hl,
 		},
 	}
-	cfg = cg.honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
+	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))

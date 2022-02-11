@@ -41,6 +41,10 @@ import (
 func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
 	t.Helper()
 
+	if p == nil {
+		p = &monitoringv1.Prometheus{}
+	}
+
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
 
 	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p)
@@ -366,7 +370,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	for _, tc := range testcases {
 		selectedNamespaces := getNamespacesFromNamespaceSelector(&tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, tc.IgnoreNamespaceSelectors)
 
-		cg := ConfigGenerator{}
+		cg := mustNewConfigGenerator(t, nil)
 
 		c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -398,7 +402,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&pm.Spec.NamespaceSelector, pm.Namespace, false)
 
-	cg := &ConfigGenerator{}
+	cg := mustNewConfigGenerator(t, nil)
 	c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRolePod)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -1185,7 +1189,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		cg := &ConfigGenerator{}
+		cg := mustNewConfigGenerator(t, nil)
 
 		c := cg.generateK8SSDConfig(
 			getNamespacesFromNamespaceSelector(&sm.Spec.NamespaceSelector, sm.Namespace, false),
@@ -1206,26 +1210,29 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 }
 
 func TestAlertmanagerBearerToken(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				Alerting: &monitoringv1.AlertingSpec{
-					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
-						{
-							Name:            "alertmanager-main",
-							Namespace:       "default",
-							Port:            intstr.FromString("web"),
-							BearerTokenFile: "/some/file/on/disk",
-						},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:            "alertmanager-main",
+						Namespace:       "default",
+						Port:            intstr.FromString("web"),
+						BearerTokenFile: "/some/file/on/disk",
 					},
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		nil,
 		nil,
 		nil,
@@ -1444,7 +1451,18 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 		return &i
 	}
 	getCfg := func(shards *int32) string {
-		cg := &ConfigGenerator{}
+		p := &monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Shards: shards,
+			},
+		}
+
+		cg := mustNewConfigGenerator(t, p)
+
 		cfg, err := cg.Generate(
 			&monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1605,25 +1623,28 @@ scrape_configs:
 }
 
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				Alerting: &monitoringv1.AlertingSpec{
-					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
-						{
-							Name:      "alertmanager-main",
-							Namespace: "default",
-							Port:      intstr.FromString("web"),
-						},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "alertmanager-main",
+						Namespace: "default",
+						Port:      intstr.FromString("web"),
 					},
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		nil,
 		nil,
 		nil,
@@ -1684,15 +1705,18 @@ alerting:
 }
 
 func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "ns-value",
-			},
-			Spec: monitoringv1.PrometheusSpec{},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
 		},
+		Spec: monitoringv1.PrometheusSpec{},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1841,17 +1865,20 @@ scrape_configs:
 }
 
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "ns-value",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
-			},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
 		},
+		Spec: monitoringv1.PrometheusSpec{
+			EnforcedNamespaceLabel: "ns-key",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -1980,17 +2007,20 @@ scrape_configs:
 }
 
 func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "ns-value",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
-			},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
 		},
+		Spec: monitoringv1.PrometheusSpec{
+			EnforcedNamespaceLabel: "ns-key",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2146,25 +2176,28 @@ scrape_configs:
 }
 
 func TestAdditionalAlertmanagers(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				Alerting: &monitoringv1.AlertingSpec{
-					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
-						{
-							Name:      "alertmanager-main",
-							Namespace: "default",
-							Port:      intstr.FromString("web"),
-						},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "alertmanager-main",
+						Namespace: "default",
+						Port:      intstr.FromString("web"),
 					},
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		nil,
 		nil,
 		nil,
@@ -2493,6 +2526,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			},
 		},
 	}
+
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.Generate(
 		p,
@@ -2616,21 +2650,24 @@ scrape_configs:
 }
 
 func TestSettingHonorLabels(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2750,22 +2787,24 @@ scrape_configs:
 }
 
 func TestHonorLabelsOverriding(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				OverrideHonorLabels: true,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			OverrideHonorLabels: true,
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
 				},
 			},
 		},
+	}
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2885,22 +2924,25 @@ scrape_configs:
 }
 
 func TestTargetLabels(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				OverrideHonorLabels: false,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			OverrideHonorLabels: false,
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3230,21 +3272,24 @@ oauth2:
 }
 
 func TestPodTargetLabels(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3363,21 +3408,24 @@ scrape_configs:
 }
 
 func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
 				},
 			},
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -3477,14 +3525,17 @@ scrape_configs:
 }
 
 func TestEmptyEndointPorts(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -4048,9 +4099,14 @@ func TestHonorTimestamps(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{Version: "2.9.0"}})
+			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					Version:                 "2.9.0",
+					OverrideHonorTimestamps: tc.OverrideHonorTimestamps,
+				},
+			})
 
-			hl, _ := yaml.Marshal(cg.honorTimestamps(yaml.MapSlice{}, tc.UserHonorTimestamps, tc.OverrideHonorTimestamps))
+			hl, _ := yaml.Marshal(cg.AddHonorTimestamps(yaml.MapSlice{}, tc.UserHonorTimestamps))
 			cfg := string(hl)
 			if tc.Expected != cfg {
 				t.Fatalf("\nGot: %s, \nExpected: %s\nFor values UserHonorTimestamps %+v, OverrideHonorTimestamps %t\n", cfg, tc.Expected, tc.UserHonorTimestamps, tc.OverrideHonorTimestamps)
@@ -4222,8 +4278,6 @@ scrape_configs:
 		},
 	} {
 		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
-			cg := &ConfigGenerator{}
-
 			prometheus := monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -4263,6 +4317,8 @@ scrape_configs:
 			if tc.limit >= 0 {
 				serviceMonitor.Spec.SampleLimit = uint64(tc.limit)
 			}
+
+			cg := mustNewConfigGenerator(t, &prometheus)
 
 			cfg, err := cg.Generate(
 				&prometheus,
@@ -6107,14 +6163,17 @@ scrape_configs:
 }
 
 func TestMatchExpressionsServiceMonitor(t *testing.T) {
-	cg := &ConfigGenerator{}
-	cfg, err := cg.Generate(
-		&monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
-				Namespace: "ns-value",
-			},
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
 		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
