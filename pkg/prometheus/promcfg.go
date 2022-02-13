@@ -75,6 +75,10 @@ func (cg *ConfigGenerator) WithLogger(logger log.Logger) *ConfigGenerator {
 	}
 }
 
+func (cg *ConfigGenerator) EndpointSliceSupported() bool {
+	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
+}
+
 func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
@@ -1147,7 +1151,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
 
 	role := kubernetesSDRoleEndpoint
-	if cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported {
+	if cg.EndpointSliceSupported(){
 		role = kubernetesSDRoleEndpointSlice
 	}
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, role))
@@ -1258,7 +1262,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
 		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
-		if cg.endpointSliceSupported {
+		if cg.EndpointSliceSupported() {
 			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
 		}
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1283,7 +1287,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	sourceLabels := []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}
-	if cg.endpointSliceSupported {
+	if cg.EndpointSliceSupported() {
 		sourceLabels = []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}
 	}
 
