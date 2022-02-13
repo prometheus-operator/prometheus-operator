@@ -1151,7 +1151,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
 
 	role := kubernetesSDRoleEndpoint
-	if cg.EndpointSliceSupported(){
+	if cg.EndpointSliceSupported() {
 		role = kubernetesSDRoleEndpointSlice
 	}
 	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, role))
