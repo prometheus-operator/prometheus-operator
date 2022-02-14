@@ -801,6 +801,10 @@ type RemoteReadSpec struct {
 	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
+// LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.
+// +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
+type LabelName string
+
 // RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
 // It defines `<metric_relabel_configs>`-section of Prometheus configuration.
 // More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
@@ -809,7 +813,7 @@ type RelabelConfig struct {
 	//The source labels select values from existing labels. Their content is concatenated
 	//using the configured separator and matched against the configured regular expression
 	//for the replace, keep, and drop actions.
-	SourceLabels []string `json:"sourceLabels,omitempty"`
+	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 	//Separator placed between concatenated source label values. default is ';'.
 	Separator string `json:"separator,omitempty"`
 	//Label to which the resulting value is written in a replace action.
