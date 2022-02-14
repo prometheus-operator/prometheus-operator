@@ -49,7 +49,8 @@ import (
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+
+	// "github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -65,8 +66,8 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	nsPromInf cache.SharedIndexInformer
-	nsMonInf  cache.SharedIndexInformer
+	// nsPromInf cache.SharedIndexInformer
+	// nsMonInf  cache.SharedIndexInformer
 
 	promInfs  *informers.ForResource
 	smonInfs  *informers.ForResource
@@ -282,33 +283,33 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
-		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
+	// newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+	// 	// nsResyncPeriod is used to control how often the namespace informer
+	// 	// should resync. If the unprivileged ListerWatcher is used, then the
+	// 	// informer must resync more often because it cannot watch for
+	// 	// namespace changes.
+	// 	nsResyncPeriod := 15 * time.Second
+	// 	// If the only namespace is v1.NamespaceAll, then the client must be
+	// 	// privileged and a regular cache.ListWatch will be used. In this case
+	// 	// watching works and we do not need to resync so frequently.
+	// 	if listwatch.IsAllNamespaces(allowList) {
+	// 		nsResyncPeriod = resyncPeriod
+	// 	}
+	// 	nsInf := cache.NewSharedIndexInformer(
+	// 		o.metrics.NewInstrumentedListerWatcher(
+	// 			listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+	// 		),
+	// 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+	// 	)
 
-		return nsInf
-	}
-	c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
-	if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
-		c.nsPromInf = c.nsMonInf
-	} else {
-		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
-	}
+	// 	return nsInf
+	// }
+	// c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
+	// if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
+	// 	c.nsPromInf = c.nsMonInf
+	// } else {
+	// 	c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
+	// }
 
 	return c, nil
 }
@@ -334,19 +335,19 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
-
-	for _, inf := range []struct {
-		name     string
-		informer cache.SharedIndexInformer
-	}{
-		{"PromNamespace", c.nsPromInf},
-		{"MonNamespace", c.nsMonInf},
-	} {
-		if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
-			return errors.Errorf("failed to sync cache for %s informer", inf.name)
+	/*
+		for _, inf := range []struct {
+			name     string
+			informer cache.SharedIndexInformer
+		}{
+			{"PromNamespace", c.nsPromInf},
+			{"MonNamespace", c.nsMonInf},
+		} {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
+				return errors.Errorf("failed to sync cache for %s informer", inf.name)
+			}
 		}
-	}
-
+	*/
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
 	return nil
 }
@@ -401,9 +402,9 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: c.handleMonitorNamespaceUpdate,
-	})
+	// c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	// 	UpdateFunc: c.handleMonitorNamespaceUpdate,
+	// })
 }
 
 // Run the controller.
@@ -441,10 +442,10 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	go c.nsMonInf.Run(ctx.Done())
-	if c.nsPromInf != c.nsMonInf {
-		go c.nsPromInf.Run(ctx.Done())
-	}
+	// go c.nsMonInf.Run(ctx.Done())
+	// if c.nsPromInf != c.nsMonInf {
+	// 	go c.nsPromInf.Run(ctx.Done())
+	// }
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
@@ -913,33 +914,35 @@ func (c *Operator) enqueue(obj interface{}) {
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
+	// c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
+	c.enqueueForNamespace(nil, nsName)
 }
 
 func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+	// c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+	c.enqueueForNamespace(nil, nsName)
 }
 
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, exists, err := store.GetByKey(nsName)
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Prometheus instances failed",
-			"err", err,
-		)
-		return
-	}
-	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-		)
-		return
-	}
-	ns := nsObject.(*v1.Namespace)
+	// nsObject, exists, err := store.GetByKey(nsName)
+	// if err != nil {
+	// 	level.Error(c.logger).Log(
+	// 		"msg", "get namespace to enqueue Prometheus instances failed",
+	// 		"err", err,
+	// 	)
+	// 	return
+	// }
+	// if !exists {
+	// 	level.Error(c.logger).Log(
+	// 		"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+	// 	)
+	// 	return
+	// }
+	// ns := nsObject.(*v1.Namespace)
 
-	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -949,65 +952,65 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for Prometheus instances selecting ServiceMonitors in
 		// the namespace.
-		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+		// smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+		// if err != nil {
+		// 	level.Error(c.logger).Log(
+		// 		"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+		// 		"err", err,
+		// 	)
+		// 	return
+		// }
 
-		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
-			return
-		}
+		// if smNSSelector.Matches(labels.Set(ns.Labels)) {
+		// 	c.enqueue(p)
+		// 	return
+		// }
 
 		// Check for Prometheus instances selecting PodMonitors in the NS.
-		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+		// pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+		// if err != nil {
+		// 	level.Error(c.logger).Log(
+		// 		"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+		// 		"err", err,
+		// 	)
+		// 	return
+		// }
 
-		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
-			return
-		}
+		// if pmNSSelector.Matches(labels.Set(ns.Labels)) {
+		// 	c.enqueue(p)
+		// 	return
+		// }
 
 		// Check for Prometheus instances selecting Probes in the NS.
-		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+		// bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+		// if err != nil {
+		// 	level.Error(c.logger).Log(
+		// 		"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
+		// 		"err", err,
+		// 	)
+		// 	return
+		// }
 
-		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
-			return
-		}
+		// if bmNSSelector.Matches(labels.Set(ns.Labels)) {
+		// 	c.enqueue(p)
+		// 	return
+		// }
 
 		// Check for Prometheus instances selecting PrometheusRules in
 		// the NS.
-		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+		// ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+		// if err != nil {
+		// 	level.Error(c.logger).Log(
+		// 		"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
+		// 		"err", err,
+		// 	)
+		// 	return
+		// }
 
-		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
-			return
-		}
+		// if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
+		// 	c.enqueue(p)
+		// 	return
+		// }
 	})
 	if err != nil {
 		level.Error(c.logger).Log(
@@ -1230,14 +1233,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
-	if err != nil {
-		return errors.Wrap(err, "creating tls asset secret failed")
-	}
+	// tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	// if err != nil {
+	// 	return errors.Wrap(err, "creating tls asset secret failed")
+	// }
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-		return errors.Wrap(err, "synchronizing web config secret failed")
-	}
+	// if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+	// 	return errors.Wrap(err, "synchronizing web config secret failed")
+	// }
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
@@ -1722,7 +1725,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
-	namespaces := []string{}
+	namespaces := []string{"rio"}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
 
@@ -1732,19 +1735,19 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	}
 
 	// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
-	if p.Spec.ServiceMonitorNamespaceSelector == nil {
-		namespaces = append(namespaces, p.Namespace)
-	} else {
-		servMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
+	// if p.Spec.ServiceMonitorNamespaceSelector == nil {
+	// 	namespaces = append(namespaces, p.Namespace)
+	// } else {
+	// 	servMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		namespaces, err = c.listMatchingNamespaces(servMonNSSelector)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// 	namespaces, err = c.listMatchingNamespaces(servMonNSSelector)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
@@ -2095,13 +2098,14 @@ func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
 // listMatchingNamespaces lists all the namespaces that match the provided
 // selector.
 func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(c.nsMonInf.GetStore(), selector, func(obj interface{}) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list namespaces")
-	}
+	// var ns []string
+	// err := cache.ListAll(c.nsMonInf.GetStore(), selector, func(obj interface{}) {
+	// 	ns = append(ns, obj.(*v1.Namespace).Name)
+	// })
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "failed to list namespaces")
+	// }
+	ns := []string{"rio"}
 	return ns, nil
 }
 
