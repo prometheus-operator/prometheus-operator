@@ -1233,14 +1233,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	// tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
-	// if err != nil {
-	// 	return errors.Wrap(err, "creating tls asset secret failed")
-	// }
+	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	if err != nil {
+		return errors.Wrap(err, "creating tls asset secret failed")
+	}
 
-	// if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-	// 	return errors.Wrap(err, "synchronizing web config secret failed")
-	// }
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
+	}
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
