@@ -317,6 +317,8 @@ func (cg *ConfigGenerator) Generate(
 	probes map[string]*v1.Probe,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
+	additionalRelabelConfigs []byte,
+	additionalMetricRelabelConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
@@ -488,11 +490,20 @@ func (cg *ConfigGenerator) Generate(
 		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
 
+	allScrapeConfigs := append(scrapeConfigs, addlScrapeConfigs...)
+	err = cg.appendAdditionalRelabelConfigs(allScrapeConfigs, additionalRelabelConfigs, "relabel_configs")
+	if err != nil {
+		return nil, err
+	}
+	err = cg.appendAdditionalRelabelConfigs(allScrapeConfigs, additionalMetricRelabelConfigs, "metric_relabel_configs")
+	if err != nil {
+		return nil, err
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
-		Value: append(scrapeConfigs, addlScrapeConfigs...),
+		Value: allScrapeConfigs,
 	})
-
 	cfg, err = cg.appendAlertingConfig(cfg, p, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating alerting configuration failed")
@@ -1580,6 +1591,70 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 	}
 
 	return alertmanagerConfigs
+}
+
+func (cg *ConfigGenerator) appendAdditionalRelabelConfigs(
+	scrapeConfigs []yaml.MapSlice,
+	additionalConfigs []byte,
+	configKey string,
+) error {
+	if additionalConfigs == nil {
+		return nil
+	}
+	var additionalConfigsYaml []yaml.MapSlice
+	err := yaml.Unmarshal(additionalConfigs, &additionalConfigsYaml)
+	if err != nil {
+		return errors.Wrapf(err, "unmarshalling additional %s failed", configKey)
+	}
+
+	for i, conf := range scrapeConfigs {
+		relabelConfigsIndex := -1
+		for i, item := range conf {
+			if item.Key == configKey {
+				relabelConfigsIndex = i
+				break
+			}
+		}
+		if relabelConfigsIndex == -1 {
+			scrapeConfigs[i] = append(scrapeConfigs[i], yaml.MapItem{
+				Key:   configKey,
+				Value: []yaml.MapSlice{},
+			})
+			relabelConfigsIndex = len(scrapeConfigs[i]) - 1
+		}
+
+		// relabelings can be either []yaml.MapSlice or []interface{}, but contains only yaml.MapSlice instances.
+		var relabelings []yaml.MapSlice
+		relablingsError := fmt.Errorf(
+			"error parsing additional %s. Actual type: %T, content: %#v",
+			configKey,
+			scrapeConfigs[i][relabelConfigsIndex].Value,
+			scrapeConfigs[i][relabelConfigsIndex])
+		switch v := scrapeConfigs[i][relabelConfigsIndex].Value.(type) {
+		case []yaml.MapSlice:
+			relabelings = v
+		case []interface{}:
+			relabelings = make([]yaml.MapSlice, len(v))
+			for i, r := range v {
+				var ok bool
+				relabelings[i], ok = r.(yaml.MapSlice)
+				if !ok {
+					return relablingsError
+				}
+			}
+		default:
+			return relablingsError
+		}
+
+		// Append additional configs to existing configs.
+		// Use indices to modify the scrapeconfigs in place.
+		scrapeConfigs[i][relabelConfigsIndex].Value = append(
+			relabelings,
+			additionalConfigsYaml...,
+		)
+	}
+
+	return nil
 }
 
 func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
