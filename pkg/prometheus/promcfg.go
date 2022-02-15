@@ -1293,16 +1293,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		{
-			// Relabel node labels for pre v2.3 meta labels
+		{ // Relabel node labels for pre v2.3 meta labels
 			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Node;(.*)"},
 			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "node"},
 		},
-		{
-			// Relabel pod labels for >=v2.3 meta labels
+		{ // Relabel pod labels for >=v2.3 meta labels
 			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Pod;(.*)"},
