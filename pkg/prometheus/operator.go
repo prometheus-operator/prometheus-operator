@@ -2170,8 +2170,10 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 	if rc.Action == string(relabel.Replace) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
-	if rc.Action == string(relabel.LabelMap) && !relabelTarget.MatchString(rc.Replacement) {
-		return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+	if rc.Action == string(relabel.LabelMap) {
+		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
+			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+		}
 	}
 	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
