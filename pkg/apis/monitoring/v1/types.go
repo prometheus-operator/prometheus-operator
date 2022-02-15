@@ -1645,7 +1645,7 @@ type AlertmanagerSpec struct {
 // GlobalAlertmanagerConfig used to set the global alertmanager config.
 // +k8s:openapi-gen=true
 type GlobalAlertmanagerConfig struct {
-	// Name specify the global AlertmanagerConfig name which is in the same namespace as alertmanager.
+	// Name specifies the global AlertmanagerConfig name which must be in the same namespace as Alertmanager.
 	Name string `json:"name,omitempty"`
 }
 

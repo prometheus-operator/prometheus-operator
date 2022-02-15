@@ -371,7 +371,7 @@ GlobalAlertmanagerConfig used to set the global alertmanager config.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| name | Name specify the global AlertmanagerConfig name which is in the same namespace as alertmanager. | string | false |
+| name | Name specifies the global AlertmanagerConfig name which must be in the same namespace as Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

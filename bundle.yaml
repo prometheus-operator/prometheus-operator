@@ -6211,8 +6211,8 @@ spec:
                   add a namespace label in routes and inhibitRules.
                 properties:
                   name:
-                    description: Name specify the global AlertmanagerConfig name which
-                      is in the same namespace as alertmanager.
+                    description: Name specifies the global AlertmanagerConfig name
+                      which must be in the same namespace as Alertmanager.
                     type: string
                 type: object
               image:

@@ -173,6 +173,8 @@ func (cg *configGenerator) generateGlobalConfig(
 
 		// Remove the global alertmanager config to avoid generating again
 		delete(amConfigs, crKey.String())
+	} else {
+		return fmt.Errorf("global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
 	}
 
 	return baseConfig.sanitize(cg.amVersion, cg.logger)
