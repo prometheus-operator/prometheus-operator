@@ -322,18 +322,27 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Action: "labelmap",
-				Regex:  "__meta_kubernetes_service_label_(.+)",
+				Action:      "labelmap",
+				Regex:       "__meta_kubernetes_service_label_(.+)",
+				Replacement: "some-name-value",
 			},
 			expectedErr: true,
 		},
-		// Test valid labelmap relabel config
+		// Test valid labelmap relabel config when replacement not specified
+		{
+			scenario: "valid labelmap config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labelmap",
+				Regex:  "__meta_kubernetes_service_label_(.+)",
+			},
+		},
+		// Test valid labelmap relabel config with replacement specified
 		{
 			scenario: "valid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: "k8s_$1",
+				Replacement: "${2}",
 			},
 		},
 		// Test invalid labelkeep relabel config
