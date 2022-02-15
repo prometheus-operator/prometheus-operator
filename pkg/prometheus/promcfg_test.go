@@ -1856,7 +1856,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
-									SourceLabels: []string{"pod_name"},
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
 									TargetLabel:  "ns-key",
 								},
 							},
@@ -1865,7 +1865,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 									Action:       "replace",
 									Regex:        "(.*)",
 									Replacement:  "$1",
-									SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
 						},
