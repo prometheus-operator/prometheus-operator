@@ -2190,10 +2190,14 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 
 	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
 		if len(rc.SourceLabels) != 0 ||
-			rc.TargetLabel != "" ||
-			rc.Modulus != uint64(0) ||
-			rc.Separator != "" ||
-			rc.Replacement != "" {
+			!(rc.TargetLabel == "" ||
+				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
+			!(rc.Modulus == uint64(0) ||
+				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
+			!(rc.Separator == "" ||
+				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
+				rc.Replacement == "") {
 			return errors.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}
