@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -33,12 +34,26 @@ import (
 	"github.com/prometheus/common/model"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestGenerateGlobalConfig(t *testing.T) {
+	myroute := monitoringv1alpha1.Route{
+		Receiver: "myreceiver",
+		Matchers: []monitoringv1alpha1.Matcher{
+			{
+				Name:  "mykey",
+				Value: "myvalue",
+				Regex: false,
+			},
+		},
+	}
+
+	myrouteJSON, _ := json.Marshal(myroute)
+
 	tests := []struct {
 		name     string
 		amConfig *monitoringv1alpha1.AlertmanagerConfig
@@ -60,11 +75,9 @@ func TestGenerateGlobalConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Matchers: []monitoringv1alpha1.Matcher{
+						Routes: []v1.JSON{
 							{
-								Name:  "mykey",
-								Value: "myvalue",
-								Regex: false,
+								Raw: myrouteJSON,
 							},
 						},
 					},
@@ -73,17 +86,14 @@ func TestGenerateGlobalConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						Name: "null",
-					},
-					{
 						Name: "mynamespace-global-config-null",
 					},
 				},
 				Route: &route{
-					Receiver: "null",
+					Receiver: "mynamespace-global-config-null",
 					Routes: []*route{
 						{
-							Receiver: "mynamespace-global-config-null",
+							Receiver: "mynamespace-global-config-myreceiver",
 							Match: map[string]string{
 								"mykey": "myvalue",
 							},

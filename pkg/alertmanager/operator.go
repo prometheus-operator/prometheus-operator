@@ -924,13 +924,16 @@ receivers:
 	// If defined global AlertmanagerConfig, find the global AlertmanagerConfig object from amConfigs.
 	// Otherwise work with the raw configuration secret.
 	if am.Spec.GlobalAlertmanagerConfig != nil {
-		globalAmConfig, err := findAndDeleteGlobalAlertmanagerConfig(am, amConfigs)
+		globalAmConfig, err := c.getGlobalAlertmanagerConfig(am, amConfigs)
 		if err != nil {
 			return errors.Wrap(err, "failed to find and delete global AlertmanagerConfig")
 		}
 		baseConfig, err = generator.generateGlobalConfig(ctx, globalAmConfig)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate global AlertmangerConfig")
+		}
+		if err := checkAlertmanagerConfigRootRoute(baseConfig.Route); err != nil {
+			return errors.Wrap(err, "check AlertmanagerConfig root route failed")
 		}
 	}
 
@@ -947,8 +950,9 @@ receivers:
 	return nil
 }
 
-// find and delete global AlertmanagerConfig from amConfigs to avoid generating configuration twice
-func findAndDeleteGlobalAlertmanagerConfig(
+// getGlobalAlertmanagerConfig find global AlertmanagerConfig from k8s,
+// then delete it from amConfigs to avoid generating configuration twice.
+func (c *Operator) getGlobalAlertmanagerConfig(
 	am *monitoringv1.Alertmanager,
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) (*monitoringv1alpha1.AlertmanagerConfig, error) {
@@ -956,32 +960,15 @@ func findAndDeleteGlobalAlertmanagerConfig(
 		Namespace: am.Namespace,
 		Name:      am.Spec.GlobalAlertmanagerConfig.Name,
 	}
-	amConfig, ok := amConfigs[crKey.String()]
-	if !ok {
-		return nil, fmt.Errorf("global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
+	obj, err := c.alrtCfgInfs.Get(crKey.String())
+	if err != nil {
+		return nil, errors.Wrapf(err, "global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
 	}
 
-	// check global AlertmanagerConfig
-	rootRoute := amConfig.Spec.Route
-	if rootRoute == nil {
-		return nil, errors.New("root route must exist")
-	}
-
-	if rootRoute.Receiver == "" {
-		return nil, errors.New("root route's receiver must exist")
-	}
-
-	if len(rootRoute.Matchers) > 0 {
-		return nil, errors.New("'matchers' not permitted on root route")
-	}
-
-	if len(rootRoute.MuteTimeIntervals) > 0 {
-		return nil, errors.New("'mute_time_intervals' not permitted on root route")
-	}
-
+	ret := obj.(*monitoringv1alpha1.AlertmanagerConfig)
 	// delete it from all AlertmanagerConfig
 	delete(amConfigs, crKey.String())
-	return amConfig, nil
+	return ret, nil
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {

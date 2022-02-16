@@ -59,23 +59,33 @@ func alertmanagerConfigFrom(s string) (*alertmanagerConfig, error) {
 		return nil, err
 	}
 
-	rootRoute := cfg.Route
+	if err := checkAlertmanagerConfigRootRoute(cfg.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
+	return cfg, nil
+}
+
+func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
 	if rootRoute == nil {
-		return nil, errors.New("root route must exist")
+		return errors.New("root route must exist")
+	}
+
+	if rootRoute.Continue {
+		return errors.New("cannot have continue in root route")
 	}
 
 	if rootRoute.Receiver == "" {
-		return nil, errors.New("root route's receiver must exist")
+		return errors.New("root route's receiver must exist")
 	}
 
 	if len(rootRoute.Matchers) > 0 || len(rootRoute.Match) > 0 || len(rootRoute.MatchRE) > 0 {
-		return nil, errors.New("'matchers' not permitted on root route")
+		return errors.New("'matchers' not permitted on root route")
 	}
 
 	if len(rootRoute.MuteTimeIntervals) > 0 {
-		return nil, errors.New("'mute_time_intervals' not permitted on root route")
+		return errors.New("'mute_time_intervals' not permitted on root route")
 	}
-	return cfg, nil
+	return nil
 }
 
 func (c alertmanagerConfig) String() string {
@@ -132,16 +142,7 @@ func (cg *configGenerator) generateGlobalConfig(
 	ctx context.Context,
 	amConfig *monitoringv1alpha1.AlertmanagerConfig,
 ) (*alertmanagerConfig, error) {
-	globalAlertmanagerConfig := &alertmanagerConfig{
-		Receivers: []*receiver{
-			{
-				Name: "null",
-			},
-		},
-		Route: &route{
-			Receiver: "null",
-		},
-	}
+	globalAlertmanagerConfig := &alertmanagerConfig{}
 	crKey := types.NamespacedName{
 		Namespace: amConfig.Namespace,
 		Name:      amConfig.Name,
@@ -152,9 +153,7 @@ func (cg *configGenerator) generateGlobalConfig(
 	}
 
 	// Add routes to baseConfig.Route.Routes without enforce namespace
-	globalAlertmanagerConfig.Route.Routes = []*route{
-		cg.convertRoute(amConfig.Spec.Route, crKey),
-	}
+	globalAlertmanagerConfig.Route = cg.convertRoute(amConfig.Spec.Route, crKey)
 
 	for _, receiver := range amConfig.Spec.Receivers {
 		receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
