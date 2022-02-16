@@ -1,5 +1,10 @@
-# Prometheus Agent support
-
+---
+id: 0002
+title: Prometheus Agent support
+status: published
+authors: Filip Petkovski <filip.petkovsky@gmail.com>
+---
+**Note: This proposal was created prior to the standardization of the proposal process and as such may not conform to the [format standard](../0001/README.md) that is requested in this repository.**
 ## Summary
 
 The Prometheus 2.32.0 release introduces the Prometheus Agent, a mode optimized for remote-write dominant scenarios. This document proposes extending the Prometheus Operator to allow running a Prometheus Agent with different deployment strategies.
