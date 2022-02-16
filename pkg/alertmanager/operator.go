@@ -957,31 +957,31 @@ func findAndDeleteGlobalAlertmanagerConfig(
 		Name:      am.Spec.GlobalAlertmanagerConfig.Name,
 	}
 	amConfig, ok := amConfigs[crKey.String()]
-	if ok {
-		// check global AlertmanagerConfig
-		rootRoute := amConfig.Spec.Route
-		if rootRoute == nil {
-			return nil, errors.New("root route must exist")
-		}
-
-		if rootRoute.Receiver == "" {
-			return nil, errors.New("root route's receiver must exist")
-		}
-
-		if len(rootRoute.Matchers) > 0 {
-			return nil, errors.New("'matchers' not permitted on root route")
-		}
-
-		if len(rootRoute.MuteTimeIntervals) > 0 {
-			return nil, errors.New("'mute_time_intervals' not permitted on root route")
-		}
-
-		// delete it from all AlertmanagerConfig
-		delete(amConfigs, crKey.String())
-		return amConfig, nil
-	} else {
+	if !ok {
 		return nil, fmt.Errorf("global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
 	}
+
+	// check global AlertmanagerConfig
+	rootRoute := amConfig.Spec.Route
+	if rootRoute == nil {
+		return nil, errors.New("root route must exist")
+	}
+
+	if rootRoute.Receiver == "" {
+		return nil, errors.New("root route's receiver must exist")
+	}
+
+	if len(rootRoute.Matchers) > 0 {
+		return nil, errors.New("'matchers' not permitted on root route")
+	}
+
+	if len(rootRoute.MuteTimeIntervals) > 0 {
+		return nil, errors.New("'mute_time_intervals' not permitted on root route")
+	}
+
+	// delete it from all AlertmanagerConfig
+	delete(amConfigs, crKey.String())
+	return amConfig, nil
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
