@@ -43,7 +43,7 @@ The Prometheus CRD has a `Status` subresource that exposes the following fields:
 
 We propose to add new fields:
 * `Conditions` as recommended by the document describing the [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
-* `ShardStatuses` which is a drilled-down version for each Prometheus shard.
+* `ShardStatuses` which is a drilled-down status for each Prometheus shard.
 * [TBD] Number of resources (service monitors, pod monitors, probes and Prometheus rules) selected/rejected by the operator.
 
 ```golang
@@ -66,7 +66,7 @@ type PrometheusStatus struct {
 	// +patchMergeKey=type
 	// +patchMergeStrategy=merge
 	// +optional
-	Conditions []PrometheusStatusCondition `json:"conditions,omitempty"`
+	Conditions []PrometheusCondition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
 	// +patchMergeKey=shardID
 	// +patchMergeStrategy=merge
@@ -74,9 +74,9 @@ type PrometheusStatus struct {
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
 
-// PrometheusStatusCondition represents the state of the resources associated with the Prometheus resource.
+// PrometheusCondition represents the state of the resources associated with the Prometheus resource.
 // +k8s:deepcopy-gen=true
-type PrometheusStatusCondition struct {
+type PrometheusCondition struct {
 	// Type of the condition being reported.
 	// +required
 	Type PrometheusConditionType `json:"type"`
@@ -247,7 +247,7 @@ type ServiceMonitorStatus struct {
 	// +patchMergeKey=type
 	// +patchMergeStrategy=merge
 	// +optional
-	Conditions []ServiceMonitorStatusCondition `json:"conditions,omitempty"`
+	Conditions []ServiceMonitorCondition `json:"conditions,omitempty"`
 
 	// The list of resources that the service monitor is bound to.
 	// +patchMergeKey=name
@@ -256,7 +256,7 @@ type ServiceMonitorStatus struct {
 	Bindings []ServiceMonitorBindings `json:"bindings,omitempty"`
 }
 
-type ServiceMonitorStatusCondition struct {
+type ServiceMonitorCondition struct {
 	// Type of the condition being reported.
 	// +required
 	Type ServiceMonitorConditionType `json:"type"`
@@ -302,7 +302,7 @@ type ServiceMonitorBinding struct {
 	// +patchMergeKey=type
 	// +patchMergeStrategy=merge
 	// +optional
-	Conditions []ServiceMonitorStatusCondition `json:"conditions,omitempty"`
+	Conditions []ServiceMonitorCondition `json:"conditions,omitempty"`
 }
 
 type PrometheusReference struct {
