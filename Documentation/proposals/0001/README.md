@@ -4,7 +4,7 @@ title: How to write a Proposal
 status: published
 authors: Michael Deffenbaugh <mike@zeroent.net>
 ---
-
+This proposal workflow was taken directly from the [tinkerbell project](https://github.com/tinkerbell/proposals) and full credit goes to them.  Visit the linked repo for more details.
 ## Summary
 
 _(**These notes in parenthesis describe the purpose of each section.** The
