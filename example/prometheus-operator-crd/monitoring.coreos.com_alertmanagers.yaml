@@ -2239,13 +2239,17 @@ spec:
                   clusters with a single replica in each.
                 type: boolean
               globalAlertmanagerConfig:
-                description: GlobalAlertmanagerConfig used to set the global alertmanager
-                  config. The specified global alertmanager config will not force
-                  add a namespace label in routes and inhibitRules.
+                description: 'EXPERIMENTAL: globalAlertmanagerConfig specifies the
+                  global Alertmanager configuration. If defined, it takes precedence
+                  over the `configSecret` field. This field may change in future releases.
+                  The specified global alertmanager config will not force add a namespace
+                  label in routes and inhibitRules.'
                 properties:
                   name:
-                    description: Name specifies the global AlertmanagerConfig name
-                      which must be in the same namespace as Alertmanager.
+                    description: The name of the AlertmanagerConfig resource which
+                      holds the global configuration. It must be in the same namespace
+                      as the Alertmanager.
+                    minLength: 1
                     type: string
                 type: object
               image:

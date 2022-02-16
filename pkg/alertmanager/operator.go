@@ -44,6 +44,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -920,9 +921,19 @@ receivers:
 	}
 
 	generator := newConfigGenerator(namespacedLogger, version, store)
-	if err := generator.generateGlobalConfig(ctx, baseConfig, am, amConfigs); err != nil {
-		return errors.Wrap(err, "generating Global Alertmanager config failed")
+	// If defined global AlertmanagerConfig, find the global AlertmanagerConfig object from amConfigs.
+	// Otherwise work with the raw configuration secret.
+	if am.Spec.GlobalAlertmanagerConfig != nil {
+		globalAmConfig, err := findAndDeleteGlobalAlertmanagerConfig(am, amConfigs)
+		if err != nil {
+			return errors.Wrap(err, "failed to find and delete global AlertmanagerConfig")
+		}
+		baseConfig, err = generator.generateGlobalConfig(ctx, globalAmConfig)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate global AlertmangerConfig")
+		}
 	}
+
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
@@ -934,6 +945,43 @@ receivers:
 	}
 
 	return nil
+}
+
+// find and delete global AlertmanagerConfig from amConfigs to avoid generating configuration twice
+func findAndDeleteGlobalAlertmanagerConfig(
+	am *monitoringv1.Alertmanager,
+	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
+) (*monitoringv1alpha1.AlertmanagerConfig, error) {
+	crKey := types.NamespacedName{
+		Namespace: am.Namespace,
+		Name:      am.Spec.GlobalAlertmanagerConfig.Name,
+	}
+	amConfig, ok := amConfigs[crKey.String()]
+	if ok {
+		// check global AlertmanagerConfig
+		rootRoute := amConfig.Spec.Route
+		if rootRoute == nil {
+			return nil, errors.New("root route must exist")
+		}
+
+		if rootRoute.Receiver == "" {
+			return nil, errors.New("root route's receiver must exist")
+		}
+
+		if len(rootRoute.Matchers) > 0 {
+			return nil, errors.New("'matchers' not permitted on root route")
+		}
+
+		if len(rootRoute.MuteTimeIntervals) > 0 {
+			return nil, errors.New("'mute_time_intervals' not permitted on root route")
+		}
+
+		// delete it from all AlertmanagerConfig
+		delete(amConfigs, crKey.String())
+		return amConfig, nil
+	} else {
+		return nil, fmt.Errorf("global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
+	}
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {

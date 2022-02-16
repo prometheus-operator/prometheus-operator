@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/blang/semver/v4"
@@ -25,6 +26,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/fake"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -1124,6 +1126,139 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				if _, found := secret.Data[k]; !found {
 					t.Fatalf("expecting key %q to be present in the generated secret but got nothing", k)
 				}
+			}
+		})
+	}
+}
+
+func TestFindAndDeleteGlobalAlertmanagerConfig(t *testing.T) {
+	type args struct {
+		am        *monitoringv1.Alertmanager
+		amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig
+	}
+	normalConfig := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "normal-config",
+			Namespace: "mynamespace",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "null",
+			},
+		},
+	}
+	validGlobalConfig := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "global-config",
+			Namespace: "mynamespace",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "null",
+			},
+		},
+	}
+	notValidGlobalConfig := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "global-config",
+			Namespace: "mynamespace",
+		},
+	}
+	tests := []struct {
+		name               string
+		args               args
+		want               *monitoringv1alpha1.AlertmanagerConfig
+		wantErr            bool
+		wantAmConfigLength int
+	}{
+		{
+			name: "global AlertmanagerConfig not found error",
+			args: args{
+				am: &monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1.AlertmanagerSpec{
+						GlobalAlertmanagerConfig: &monitoringv1.GlobalAlertmanagerConfig{
+							Name: "global-config",
+						},
+					},
+				},
+				amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+					(types.NamespacedName{
+						Name:      normalConfig.Name,
+						Namespace: normalConfig.Namespace,
+					}).String(): normalConfig,
+				},
+			},
+			want:               nil,
+			wantErr:            true,
+			wantAmConfigLength: 1,
+		},
+		{
+			name: "global AlertmanagerConfig found",
+			args: args{
+				am: &monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1.AlertmanagerSpec{
+						GlobalAlertmanagerConfig: &monitoringv1.GlobalAlertmanagerConfig{
+							Name: "global-config",
+						},
+					},
+				},
+				amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+					(types.NamespacedName{
+						Name:      validGlobalConfig.Name,
+						Namespace: validGlobalConfig.Namespace,
+					}).String(): validGlobalConfig,
+				},
+			},
+			want:               validGlobalConfig,
+			wantErr:            false,
+			wantAmConfigLength: 0,
+		},
+		{
+			name: "global AlertmanagerConfig not valid",
+			args: args{
+				am: &monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1.AlertmanagerSpec{
+						GlobalAlertmanagerConfig: &monitoringv1.GlobalAlertmanagerConfig{
+							Name: "global-config",
+						},
+					},
+				},
+				amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+					(types.NamespacedName{
+						Name:      notValidGlobalConfig.Name,
+						Namespace: notValidGlobalConfig.Namespace,
+					}).String(): notValidGlobalConfig,
+				},
+			},
+			want:               nil,
+			wantErr:            true,
+			wantAmConfigLength: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := findAndDeleteGlobalAlertmanagerConfig(tt.args.am, tt.args.amConfigs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("findAndDeleteGlobalAlertmanagerConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("findAndDeleteGlobalAlertmanagerConfig() = %v, want %v", got, tt.want)
+			}
+			if len(tt.args.amConfigs) != tt.wantAmConfigLength {
+				t.Errorf("after findAndDeleteGlobalAlertmanagerConfig, len(amConfigs) = %v, want %v", len(tt.args.amConfigs), tt.wantAmConfigLength)
 			}
 		})
 	}

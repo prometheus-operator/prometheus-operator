@@ -238,7 +238,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| globalAlertmanagerConfig | GlobalAlertmanagerConfig used to set the global alertmanager config. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
+| globalAlertmanagerConfig | EXPERIMENTAL: globalAlertmanagerConfig specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -371,7 +371,7 @@ GlobalAlertmanagerConfig used to set the global alertmanager config.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| name | Name specifies the global AlertmanagerConfig name which must be in the same namespace as Alertmanager. | string | false |
+| name | The name of the AlertmanagerConfig resource which holds the global configuration. It must be in the same namespace as the Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

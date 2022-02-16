@@ -38,6 +38,86 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
+func TestGenerateGlobalConfig(t *testing.T) {
+	tests := []struct {
+		name     string
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		want     *alertmanagerConfig
+		wantErr  bool
+	}{
+		{
+			name: "generateGlobalConfig succeed",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Matchers: []monitoringv1alpha1.Matcher{
+							{
+								Name:  "mykey",
+								Value: "myvalue",
+								Regex: false,
+							},
+						},
+					},
+				},
+			},
+			want: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "null",
+					},
+					{
+						Name: "mynamespace-global-config-null",
+					},
+				},
+				Route: &route{
+					Receiver: "null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace-global-config-null",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		version, err := semver.ParseTolerant("v0.22.2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		kclient := fake.NewSimpleClientset()
+		cg := newConfigGenerator(
+			log.NewNopLogger(),
+			version,
+			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+		)
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cg.generateGlobalConfig(context.TODO(), tt.amConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
 		name       string
