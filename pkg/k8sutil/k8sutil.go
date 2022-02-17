@@ -216,6 +216,26 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	return ver.Segments()[1], nil
 }
 
+// IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
+//
+// you can exec `kubectl api-resources` to find groupVersion and resource.
+func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupversion string, resource string) (bool, error) {
+	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupversion)
+	if err != nil {
+		if IsResourceNotFoundError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	for _, apiResource := range apiResourceList.APIResources {
+		if resource == apiResource.Name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
 // accepted by Kubernetes.
 func SanitizeVolumeName(name string) string {
