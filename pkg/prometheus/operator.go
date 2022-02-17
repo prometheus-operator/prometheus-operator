@@ -1511,9 +1511,11 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		}
 	}
 
-	for _, condition := range p.Status.Conditions {
-		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-			availableCondition.LastTransitionTime = condition.LastTransitionTime
+	if p.Status != nil {
+		for _, condition := range p.Status.Conditions {
+			if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
+				availableCondition.LastTransitionTime = condition.LastTransitionTime
+			}
 		}
 	}
 
