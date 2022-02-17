@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1431,12 +1432,23 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
 	p.Kind = monitoringv1.PrometheusesKind
 
-	pStatus := monitoringv1.PrometheusStatus{}
+	pStatus := monitoringv1.PrometheusStatus{
+		Paused: p.Spec.Paused,
+	}
 
 	logger := log.With(c.logger, "key", key)
 	level.Info(logger).Log("msg", "update prometheus status")
 
-	pStatus.Paused = p.Spec.Paused
+	var (
+		availableCondition = monitoringv1.PrometheusCondition{
+			Type:   monitoringv1.PrometheusAvailable,
+			Status: monitoringv1.PrometheusConditionTrue,
+			LastTransitionTime: metav1.Time{
+				Time: time.Now().UTC(),
+			},
+		}
+		messages []string
+	)
 
 	for shard := range expectedStatefulSetShardNames(p) {
 		ssetName := prometheusKeyToStatefulSetKey(key, shard)
@@ -1467,7 +1479,47 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		pStatus.UpdatedReplicas += int32(len(pods.Updated()))
 		pStatus.AvailableReplicas += int32(len(pods.Ready()))
 		pStatus.UnavailableReplicas += int32(len(pods) - len(pods.Ready()))
+
+		pStatus.ShardStatuses = append(
+			pStatus.ShardStatuses,
+			monitoringv1.ShardStatus{
+				ShardID:             strconv.Itoa(shard),
+				Replicas:            int32(len(pods)),
+				UpdatedReplicas:     int32(len(pods.Updated())),
+				AvailableReplicas:   int32(len(pods.Ready())),
+				UnavailableReplicas: int32(len(pods) - len(pods.Ready())),
+			},
+		)
+
+		if len(pods.Ready()) == len(pods) {
+			// All pods are ready (or the desired number of replicas is zero).
+			continue
+		}
+
+		if len(pods.Ready()) == 0 {
+			availableCondition.Reason = "NoPodReady"
+			availableCondition.Status = monitoringv1.PrometheusConditionFalse
+		} else if availableCondition.Status != monitoringv1.PrometheusConditionFalse {
+			availableCondition.Reason = "SomePodsNotReady"
+			availableCondition.Status = monitoringv1.PrometheusConditionDegraded
+		}
+
+		for _, ps := range pods {
+			if m := ps.Message(); m != "" {
+				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, ps.Pod.Name, m))
+			}
+		}
 	}
+
+	for _, condition := range p.Status.Conditions {
+		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
+			availableCondition.LastTransitionTime = condition.LastTransitionTime
+		}
+	}
+
+	availableCondition.Message = strings.Join(messages, "\n")
+
+	pStatus.Conditions = append(pStatus.Conditions, availableCondition)
 
 	b, err := json.Marshal(&monitoringv1.Prometheus{
 		TypeMeta: p.TypeMeta,
@@ -1479,6 +1531,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal object")
 	}
+
 	_, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(
 		ctx,
 		p.Name,
@@ -1581,6 +1634,45 @@ func (p *podState) Ready() bool {
 	return false
 }
 
+func (p *podState) Message() string {
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == v1.PodScheduled && cond.Status == v1.ConditionFalse {
+			return cond.Message
+		}
+	}
+
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == v1.PodInitialized && cond.Status == v1.ConditionFalse {
+			return cond.Message
+		}
+	}
+
+	var messages []string
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == v1.PodReady {
+			if cond.Status == v1.ConditionTrue {
+				return cond.Message
+			}
+			messages = append(messages, cond.Message)
+		}
+
+	}
+
+	for _, container := range p.Status.ContainerStatuses {
+		if container.State.Terminated != nil && container.State.Terminated.Message != "" {
+			messages = append(messages, fmt.Sprintf("\t%s", container.State.Terminated.Message))
+			continue
+		}
+
+		if container.State.Waiting != nil && container.State.Waiting.Message != "" {
+			messages = append(messages, fmt.Sprintf("\t%s", container.State.Waiting.Message))
+			continue
+		}
+	}
+
+	return strings.Join(messages, "\n")
+}
+
 type podStateList []podState
 
 func (p podStateList) Updated() []*v1.Pod {
@@ -1614,6 +1706,7 @@ func getPodsState(ctx context.Context, kclient kubernetes.Interface, sset *appsv
 		// Something is really broken if the statefulset's selector isn't valid.
 		panic(err)
 	}
+
 	pods, err := kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{LabelSelector: ls.String()})
 	if err != nil {
 		return nil, err
@@ -1646,6 +1739,7 @@ func getPodsState(ctx context.Context, kclient kubernetes.Interface, sset *appsv
 // Status evaluates the current status of a Prometheus deployment with
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
+// TODO(simonpasquier): remove once the status subresource is considered stable.
 func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
@@ -1674,22 +1768,6 @@ func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.P
 	}
 
 	return res, oldPods, nil
-}
-
-// needsUpdate checks whether the given pod conforms with the pod template spec
-// for various attributes that are influenced by the Prometheus CRD settings.
-func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
-	c1 := pod.Spec.Containers[0]
-	c2 := tmpl.Spec.Containers[0]
-
-	if c1.Image != c2.Image {
-		return true
-	}
-	if !reflect.DeepEqual(c1.Args, c2.Args) {
-		return true
-	}
-
-	return false
 }
 
 func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {

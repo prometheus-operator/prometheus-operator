@@ -49,6 +49,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ProbeTargets](#probetargets)
 * [ProberSpec](#proberspec)
 * [Prometheus](#prometheus)
+* [PrometheusCondition](#prometheuscondition)
 * [PrometheusList](#prometheuslist)
 * [PrometheusRule](#prometheusrule)
 * [PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig)
@@ -70,6 +71,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
+* [ShardStatus](#shardstatus)
 * [Sigv4](#sigv4)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
@@ -676,6 +678,23 @@ Prometheus defines a Prometheus deployment.
 
 [Back to TOC](#table-of-contents)
 
+## PrometheusCondition
+
+PrometheusCondition represents the state of the resources associated with the Prometheus resource.
+
+
+<em>appears in: [PrometheusStatus](#prometheusstatus)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| type | Type of the condition being reported. | PrometheusConditionType | true |
+| status | status of the condition. | PrometheusConditionStatus | true |
+| lastTransitionTime | lastTransitionTime is the time of the last update to the current status property. | metav1.Time | true |
+| reason | Reason for the condition's last transition. | string | false |
+| message | Human-readable message indicating details for the condition's last transition. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## PrometheusList
 
 PrometheusList is a list of Prometheuses.
@@ -844,6 +863,8 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. M
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
+| conditions | The current state of the Prometheus deployment. | [][PrometheusCondition](#prometheuscondition) | false |
+| shardStatuses | The list has one entry per shard. Each entry provides a summary of the shard status. | [][ShardStatus](#shardstatus) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1091,6 +1112,23 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+
+[Back to TOC](#table-of-contents)
+
+## ShardStatus
+
+
+
+
+<em>appears in: [PrometheusStatus](#prometheusstatus)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| shardID | Identifier of the shard. | string | true |
+| replicas | Total number of pods targeted by this shard. | int32 | true |
+| updatedReplicas | Total number of non-terminated pods targeted by this shard that have the desired spec. | int32 | true |
+| availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this shard. | int32 | true |
+| unavailableReplicas | Total number of unavailable pods targeted by this shard. | int32 | true |
 
 [Back to TOC](#table-of-contents)
 
