@@ -362,15 +362,15 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 ## MetadataConfig
 
-Configures the sending of series metadata to remote storage.
+MetadataConfig configures the sending of series metadata to the remote storage.
 
 
 <em>appears in: [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| send | Whether metric metadata is sent to remote storage or not. | bool | false |
-| sendInterval | How frequently metric metadata is sent to remote storage. | string | false |
+| send | Whether metric metadata is sent to the remote storage or not. | bool | false |
+| sendInterval | How frequently metric metadata is sent to the remote storage. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -766,8 +766,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | topologySpreadConstraints | If specified, the pod's topology spread constraints. | []v1.TopologySpreadConstraint | false |
-| remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
-| remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
+| remoteWrite | remoteWrite is the list of remote write configurations. | [][RemoteWriteSpec](#remotewritespec) | false |
+| remoteRead | remoteRead is the list of remote read configurations. | [][RemoteReadSpec](#remotereadspec) | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
 | listenLocal | ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP. | bool | false |
 | containers | Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to a Prometheus pod or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. The current container names are: `prometheus`, `config-reloader`, and `thanos-sidecar`. Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
@@ -832,7 +832,7 @@ QuerySpec defines the query command line flags when starting Prometheus.
 
 ## QueueConfig
 
-QueueConfig allows the tuning of remote_write queue_config parameters. This object is referenced in the RemoteWriteSpec object.
+QueueConfig allows the tuning of remote write's queue_config parameters. This object is referenced in the RemoteWriteSpec object.
 
 
 <em>appears in: [RemoteWriteSpec](#remotewritespec)</em>
@@ -872,15 +872,15 @@ RelabelConfig allows dynamic rewriting of the label set, being applied to sample
 
 ## RemoteReadSpec
 
-RemoteReadSpec defines the remote_read configuration for prometheus.
+RemoteReadSpec defines the configuration for Prometheus to read back samples from a remote endpoint.
 
 
 <em>appears in: [PrometheusSpec](#prometheusspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| url | The URL of the endpoint to send samples to. | string | true |
-| name | The name of the remote read queue, must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer. | string | false |
+| url | The URL of the endpoint to query from. | string | true |
+| name | The name of the remote read queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
 | headers | Custom HTTP headers to be sent along with each remote read request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.26.0 and newer. | map[string]string | false |
@@ -891,13 +891,13 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
 | authorization | Authorization section for remote read | *[Authorization](#authorization) | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
-| proxyUrl | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL. | string | false |
 
 [Back to TOC](#table-of-contents)
 
 ## RemoteWriteSpec
 
-RemoteWriteSpec defines the remote_write configuration for prometheus.
+RemoteWriteSpec defines the configuration to write samples from Prometheus to a remote endpoint.
 
 
 <em>appears in: [PrometheusSpec](#prometheusspec)</em>
@@ -905,7 +905,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | url | The URL of the endpoint to send samples to. | string | true |
-| name | The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer. | string | false |
+| name | The name of the remote write queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | sendExemplars | Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer. | *bool | false |
 | remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
@@ -917,9 +917,9 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | authorization | Authorization section for remote write | *[Authorization](#authorization) | false |
 | sigv4 | Sigv4 allows to configures AWS's Signature Verification 4 | *[Sigv4](#sigv4) | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
-| proxyUrl | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL. | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
-| metadataConfig | MetadataConfig configures the sending of series metadata to remote storage. | *[MetadataConfig](#metadataconfig) | false |
+| metadataConfig | MetadataConfig configures the sending of series metadata to the remote storage. | *[MetadataConfig](#metadataconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
