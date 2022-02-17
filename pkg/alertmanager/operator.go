@@ -890,9 +890,9 @@ receivers:
 		}
 	}
 
-	// If no AlertmanagerConfig selectors are configured, the user wants to
+	// If no AlertmanagerConfig selectors and GlobalAlertmanagerConfig are configured, the user wants to
 	// manage configuration themselves.
-	if am.Spec.AlertmanagerConfigSelector == nil {
+	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.GlobalAlertmanagerConfig == nil {
 		level.Debug(namespacedLogger).
 			Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
 				"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name))
@@ -926,7 +926,7 @@ receivers:
 	if am.Spec.GlobalAlertmanagerConfig != nil {
 		globalAmConfig, err := c.getGlobalAlertmanagerConfig(am, amConfigs)
 		if err != nil {
-			return errors.Wrap(err, "failed to find and delete global AlertmanagerConfig")
+			return errors.Wrap(err, "get global AlertmanagerConfig failed")
 		}
 		baseConfig, err = generator.generateGlobalConfig(ctx, globalAmConfig)
 		if err != nil {
