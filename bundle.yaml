@@ -19667,8 +19667,7 @@ spec:
             type: object
           status:
             description: 'Most recent observed status of the Prometheus cluster. Read-only.
-              Not included when requesting from the apiserver, only from the Prometheus
-              Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+              More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
             properties:
               availableReplicas:
                 description: Total number of available pods (ready for at least minReadySeconds)
@@ -19706,7 +19705,8 @@ spec:
         type: object
     served: true
     storage: true
-    subresources: {}
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

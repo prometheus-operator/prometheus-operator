@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -39,6 +40,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -77,7 +79,10 @@ type Operator struct {
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
 
-	queue workqueue.RateLimitingInterface
+	// Queue to trigger reconciliations of Prometheus objects.
+	reconcileQueue workqueue.RateLimitingInterface
+	// Queue to trigger status updates of Prometheus objects.
+	statusQueue workqueue.RateLimitingInterface
 
 	metrics *operator.Metrics
 
@@ -137,7 +142,8 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:                client,
 		mclient:                mclient,
 		logger:                 logger,
-		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
+		reconcileQueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
+		statusQueue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus_status"),
 		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
@@ -415,7 +421,8 @@ func (c *Operator) addHandlers() {
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	defer c.queue.ShutDown()
+	defer c.reconcileQueue.ShutDown()
+	defer c.statusQueue.ShutDown()
 
 	errChan := make(chan error)
 	go func() {
@@ -438,7 +445,17 @@ func (c *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	go c.worker(ctx)
+	// Start the goroutine that reconciles the desired state of Prometheus objects.
+	go func(ctx context.Context) {
+		for c.processNextReconcileItem(ctx) {
+		}
+	}(ctx)
+
+	// Start the goroutine that reconciles the status of Prometheus objects.
+	go func(ctx context.Context) {
+		for c.processNextStatusItem(ctx) {
+		}
+	}(ctx)
 
 	go c.promInfs.Start(ctx.Done())
 	go c.smonInfs.Start(ctx.Done())
@@ -455,6 +472,12 @@ func (c *Operator) Run(ctx context.Context) error {
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
+
+	// Refresh the status of the existing Prometheus objects.
+	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		c.addToStatusQueue(obj)
+	})
+
 	c.addHandlers()
 
 	if c.kubeletSyncEnabled {
@@ -484,7 +507,7 @@ func (c *Operator) handlePrometheusAdd(obj interface{}) {
 	level.Debug(c.logger).Log("msg", "Prometheus added", "key", key)
 	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "add").Inc()
 	checkPrometheusSpecDeprecation(key, obj.(*monitoringv1.Prometheus), c.logger)
-	c.enqueue(key)
+	c.addToReconcileQueue(key)
 }
 
 func (c *Operator) handlePrometheusDelete(obj interface{}) {
@@ -495,7 +518,7 @@ func (c *Operator) handlePrometheusDelete(obj interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Prometheus deleted", "key", key)
 	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "delete").Inc()
-	c.enqueue(key)
+	c.addToReconcileQueue(key)
 }
 
 func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
@@ -511,7 +534,8 @@ func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
 	level.Debug(c.logger).Log("msg", "Prometheus updated", "key", key)
 	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "update").Inc()
 	checkPrometheusSpecDeprecation(key, cur.(*monitoringv1.Prometheus), c.logger)
-	c.enqueue(key)
+	c.addToReconcileQueue(key)
+	c.addToStatusQueue(key)
 }
 
 func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
@@ -901,9 +925,20 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	return o, true
 }
 
-// enqueue adds a key to the queue. If obj is a key already it gets added
-// directly. Otherwise, the key is extracted via keyFunc.
-func (c *Operator) enqueue(obj interface{}) {
+// addToReconcileQueue adds the object to the reconciliation queue.
+func (c *Operator) addToReconcileQueue(obj interface{}) {
+	c.addToQueue(obj, c.reconcileQueue)
+}
+
+// addToStatusQueue adds the object to the status queue.
+func (c *Operator) addToStatusQueue(obj interface{}) {
+	c.addToQueue(obj, c.statusQueue)
+}
+
+// addToQueue adds the object to the given queue. If the
+// object is a string, it gets added directly. Otherwise, the object's key is
+// extracted via keyFunc.
+func (c *Operator) addToQueue(obj interface{}, q workqueue.Interface) {
 	if obj == nil {
 		return
 	}
@@ -916,7 +951,7 @@ func (c *Operator) enqueue(obj interface{}) {
 		}
 	}
 
-	c.queue.Add(key)
+	q.Add(key)
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
@@ -950,7 +985,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
-			c.enqueue(p)
+			c.addToReconcileQueue(p)
 			return
 		}
 
@@ -966,7 +1001,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
+			c.addToReconcileQueue(p)
 			return
 		}
 
@@ -981,7 +1016,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
+			c.addToReconcileQueue(p)
 			return
 		}
 
@@ -996,7 +1031,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
+			c.addToReconcileQueue(p)
 			return
 		}
 
@@ -1012,7 +1047,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(p)
+			c.addToReconcileQueue(p)
 			return
 		}
 	})
@@ -1025,20 +1060,15 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-// worker runs a worker thread that just dequeues items, processes them, and
-// marks them done. It enforces that the syncHandler is never invoked
-// concurrently with the same key.
-func (c *Operator) worker(ctx context.Context) {
-	for c.processNextWorkItem(ctx) {
-	}
-}
-
-func (c *Operator) processNextWorkItem(ctx context.Context) bool {
-	key, quit := c.queue.Get()
+// processNextReconcileItem dequeues items, processes them, and marks them done.
+// It is guaranteed that the sync() method is never invoked concurrently with
+// the same key.
+func (c *Operator) processNextReconcileItem(ctx context.Context) bool {
+	key, quit := c.reconcileQueue.Get()
 	if quit {
 		return false
 	}
-	defer c.queue.Done(key)
+	defer c.reconcileQueue.Done(key)
 
 	c.metrics.ReconcileCounter().Inc()
 	startTime := time.Now()
@@ -1046,13 +1076,32 @@ func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
 	c.metrics.SetSyncStatus(key.(string), err == nil)
 	if err == nil {
-		c.queue.Forget(key)
+		c.reconcileQueue.Forget(key)
 		return true
 	}
 
 	c.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
-	c.queue.AddRateLimited(key)
+	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("sync %q failed", key)))
+	c.reconcileQueue.AddRateLimited(key)
+
+	return true
+}
+
+func (c *Operator) processNextStatusItem(ctx context.Context) bool {
+	key, quit := c.statusQueue.Get()
+	if quit {
+		return false
+	}
+	defer c.statusQueue.Done(key)
+
+	err := c.status(ctx, key.(string))
+	if err == nil {
+		c.statusQueue.Forget(key)
+		return true
+	}
+
+	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("status %q failed", key)))
+	c.statusQueue.AddRateLimited(key)
 
 	return true
 }
@@ -1118,7 +1167,7 @@ func (c *Operator) handleStatefulSetDelete(obj interface{}) {
 		level.Debug(c.logger).Log("msg", "StatefulSet delete")
 		c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
 
-		c.enqueue(ps)
+		c.addToReconcileQueue(ps)
 	}
 }
 
@@ -1127,7 +1176,7 @@ func (c *Operator) handleStatefulSetAdd(obj interface{}) {
 		level.Debug(c.logger).Log("msg", "StatefulSet added")
 		c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
 
-		c.enqueue(ps)
+		c.addToReconcileQueue(ps)
 	}
 }
 
@@ -1148,7 +1197,8 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 		level.Debug(c.logger).Log("msg", "StatefulSet updated")
 		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
 
-		c.enqueue(ps)
+		c.addToReconcileQueue(ps)
+		c.addToStatusQueue(ps)
 	}
 }
 
@@ -1191,7 +1241,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			}
 
 			if sync {
-				c.enqueue(p)
+				c.addToReconcileQueue(p)
 				return
 			}
 		}
@@ -1364,6 +1414,89 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
+// status updates the status subresource of the object identified by the given
+// key.
+func (c *Operator) status(ctx context.Context, key string) error {
+	pobj, err := c.promInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	p := pobj.(*monitoringv1.Prometheus)
+	p = p.DeepCopy()
+	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
+	p.Kind = monitoringv1.PrometheusesKind
+
+	pStatus := monitoringv1.PrometheusStatus{}
+
+	logger := log.With(c.logger, "key", key)
+	level.Info(logger).Log("msg", "update prometheus status")
+
+	pStatus.Paused = p.Spec.Paused
+
+	for shard := range expectedStatefulSetShardNames(p) {
+		ssetName := prometheusKeyToStatefulSetKey(key, shard)
+		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
+
+		obj, err := c.ssetInfs.Get(ssetName)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				// Object not yet in the store or already deleted.
+				level.Info(logger).Log("msg", "not found")
+				continue
+			}
+			return errors.Wrap(err, "failed to retrieve statefulset")
+		}
+
+		sset := obj.(*appsv1.StatefulSet)
+		if sset.DeletionTimestamp != nil {
+			level.Debug(logger).Log("msg", "deletion in progress")
+			continue
+		}
+
+		pods, err := getPodsState(ctx, c.kclient, sset)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve pods state")
+		}
+
+		pStatus.Replicas += int32(len(pods))
+		pStatus.UpdatedReplicas += int32(len(pods.Updated()))
+		pStatus.AvailableReplicas += int32(len(pods.Ready()))
+		pStatus.UnavailableReplicas += int32(len(pods) - len(pods.Ready()))
+	}
+
+	b, err := json.Marshal(&monitoringv1.Prometheus{
+		TypeMeta: p.TypeMeta,
+		ObjectMeta: metav1.ObjectMeta{
+			Name: p.Name,
+		},
+		Status: &pStatus,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal object")
+	}
+	_, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(
+		ctx,
+		p.Name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        func(b bool) *bool { return &b }(true),
+			FieldManager: "doo",
+		},
+		"status",
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to update status subresource")
+	}
+
+	return nil
+}
+
 //checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
 func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logger log.Logger) {
 	deprecationWarningf := "prometheus key=%v, field %v is deprecated, '%v' field should be used instead"
@@ -1423,42 +1556,120 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
+type podState struct {
+	v1.Pod
+	shardName string
+	revision  string
+}
+
+func (p *podState) Updated() bool {
+	return p.revision == p.Labels["controller-revision-hash"]
+}
+
+func (p *podState) Ready() bool {
+	if p.Status.Phase != v1.PodRunning {
+		return false
+	}
+
+	for _, cond := range p.Status.Conditions {
+		if cond.Type != v1.PodReady {
+			continue
+		}
+		return cond.Status == v1.ConditionTrue
+	}
+
+	return false
+}
+
+type podStateList []podState
+
+func (p podStateList) Updated() []*v1.Pod {
+	return p.filter(func(ps podState) bool {
+		return ps.Updated()
+	})
+}
+
+func (p podStateList) Ready() []*v1.Pod {
+	return p.filter(func(ps podState) bool {
+		return ps.Ready()
+	})
+}
+
+func (p podStateList) filter(f func(podState) bool) []*v1.Pod {
+	pods := make([]*v1.Pod, 0, len(p))
+
+	for _, ps := range p {
+		if f(ps) {
+			pods = append(pods, &ps.Pod)
+		}
+	}
+
+	return pods
+}
+
+// getPodsState returns the state of pods which are targeted by the given StatefulSet.
+func getPodsState(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (podStateList, error) {
+	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
+	if err != nil {
+		// Something is really broken if the statefulset's selector isn't valid.
+		panic(err)
+	}
+	pods, err := kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{LabelSelector: ls.String()})
+	if err != nil {
+		return nil, err
+	}
+
+	podStates := make(podStateList, 0, len(pods.Items))
+	for _, pod := range pods.Items {
+		var found bool
+		for _, owner := range pod.ObjectMeta.OwnerReferences {
+			if owner.Kind == "StatefulSet" && owner.Name == sset.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			continue
+		}
+
+		podStates = append(podStates, podState{
+			Pod:       pod,
+			revision:  sset.Status.UpdateRevision,
+			shardName: sset.Name,
+		})
+	}
+
+	return podStates, nil
+}
+
 // Status evaluates the current status of a Prometheus deployment with
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
 func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
-	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ctx, ListOptions(p.Name))
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
-	}
-
 	var oldPods []v1.Pod
-	expected := expectedStatefulSetShardNames(p)
-	for _, ssetName := range expected {
+	for _, ssetName := range expectedStatefulSetShardNames(p) {
 		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
+			return nil, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
 		}
 
-		res.Replicas = int32(len(pods.Items))
+		ps, err := getPodsState(ctx, kclient, sset)
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "failed to retrieve pods state for statefulset %s/%s", p.Namespace, ssetName)
+		}
 
-		for _, pod := range pods.Items {
-			ready, err := k8sutil.PodRunningAndReady(pod)
-			if err != nil {
-				return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
+		res.Replicas += int32(len(ps))
+		res.UpdatedReplicas += int32(len(ps.Updated()))
+		res.AvailableReplicas += int32(len(ps.Ready()))
+		res.UnavailableReplicas += int32(len(ps) - len(ps.Ready()))
+
+		for _, podState := range ps {
+			if podState.Ready() && !podState.Updated() {
+				oldPods = append(oldPods, podState.Pod)
 			}
-			if ready {
-				res.AvailableReplicas++
-				if needsUpdate(&pod, sset.Spec.Template) {
-					oldPods = append(oldPods, pod)
-				} else {
-					res.UpdatedReplicas++
-				}
-				continue
-			}
-			res.UnavailableReplicas++
 		}
 	}
 
