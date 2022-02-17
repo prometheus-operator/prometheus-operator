@@ -71,27 +71,29 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 			Annotations: map[string]string{},
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Replicas: &replicas,
-			Version:  operator.DefaultPrometheusVersion,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": group,
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Replicas: &replicas,
+				Version:  operator.DefaultPrometheusVersion,
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": group,
+					},
+				},
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": group,
+					},
+				},
+				ServiceAccountName: "prometheus",
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("400Mi"),
+					},
 				},
 			},
-			PodMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": group,
-				},
-			},
-			ServiceAccountName: "prometheus",
 			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
-				},
-			},
-			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("400Mi"),
 				},
 			},
 		},
