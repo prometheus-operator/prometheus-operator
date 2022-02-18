@@ -1641,6 +1641,34 @@ type AMClusterTLSConfig struct {
 	TLSClientConfig *ClientTLSConfig `json:"clientTLSConfig"`
 }
 
+type AMClusterTLSConfigError struct {
+	err string
+}
+
+func (e *AMClusterTLSConfigError) Error() string {
+	return e.err
+}
+
+func (c *AMClusterTLSConfig) Validate() error {
+	if c.TLSServerConfig != nil {
+		if err := c.TLSServerConfig.Validate(); err != nil {
+			return &AMClusterTLSConfigError{err: err.Error()}
+		}
+	} else {
+		return &AMClusterTLSConfigError{err: "server TLS config is required"}
+	}
+	if c.TLSClientConfig != nil {
+		if err := c.TLSClientConfig.Validate(); err != nil {
+			return &AMClusterTLSConfigError{err: err.Error()}
+		}
+	} else {
+		return &AMClusterTLSConfigError{err: "client TLS config is required"}
+	}
+
+	return nil
+
+}
+
 // ServerTLSConfig is Alertmanager's server side mutual TLS config.
 type ServerTLSConfig struct {
 	// Certificate for server to use to authenticate to client.
@@ -1673,6 +1701,40 @@ type ServerTLSConfig struct {
 	PreferServerCipherSuites bool `json:"preferServerCipherSuites,omitempty"`
 }
 
+type ServerTLSConfigError struct {
+	err string
+}
+
+func (e *ServerTLSConfigError) Error() string {
+	return e.err
+}
+
+func (c *ServerTLSConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if c.ClientCA != (SecretOrConfigMap{}) {
+		if err := c.ClientCA.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid server TLS config - clientCA: %s", err.Error())
+			return &ServerTLSConfigError{msg}
+		}
+	}
+
+	if c.TLSCert == (SecretOrConfigMap{}) {
+		return &ServerTLSConfigError{"invalid server TLS config: cert must be defined"}
+	} else if err := c.TLSCert.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid server TLS config - cert: %s", err.Error())
+		return &ServerTLSConfigError{msg}
+	}
+
+	if c.TLSKeySecret == (v1.SecretKeySelector{}) {
+		return &ServerTLSConfigError{"invalid server TLS config - keySecret: key must be defined"}
+	}
+
+	return nil
+}
+
 type ClientTLSConfig struct {
 	// Certificate for client cert authentication to the server.
 	TLSCert SecretOrConfigMap `json:"cert"`
@@ -1685,6 +1747,40 @@ type ClientTLSConfig struct {
 	ServerName string `json:"serverName,omitempty"`
 	// Disable validation of the server certificate.
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
+}
+
+type ClientTLSConfigError struct {
+	err string
+}
+
+func (e *ClientTLSConfigError) Error() string {
+	return e.err
+}
+
+func (c *ClientTLSConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if c.ServerCA != (SecretOrConfigMap{}) {
+		if err := c.ServerCA.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid client TLS config - serverCA: %s", err.Error())
+			return &ClientTLSConfigError{msg}
+		}
+	}
+
+	if c.TLSCert == (SecretOrConfigMap{}) {
+		return &ClientTLSConfigError{"invalid client TLS config: cert must be defined"}
+	} else if err := c.TLSCert.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid client TLS config - cert: %s", err.Error())
+		return &ClientTLSConfigError{msg}
+	}
+
+	if c.TLSKeySecret == (v1.SecretKeySelector{}) {
+		return &ClientTLSConfigError{"invalid client TLS config - keySecret: key must be defined"}
+	}
+
+	return nil
 }
 
 // AlertmanagerList is a list of Alertmanagers.
