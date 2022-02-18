@@ -1611,6 +1611,8 @@ type AlertmanagerSpec struct {
 	ClusterPushpullInterval string `json:"clusterPushpullInterval,omitempty"`
 	// Timeout for cluster peering.
 	ClusterPeerTimeout string `json:"clusterPeerTimeout,omitempty"`
+	// Mutual TLS for gossip
+	ClusterTLSConfig *AMClusterTLSConfig `json:"clusterTLSConfig,omitempty"`
 	// Port name used for the pods and governing service.
 	// This defaults to web
 	PortName string `json:"portName,omitempty"`
@@ -1628,6 +1630,32 @@ type AlertmanagerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+}
+
+// This structure shadows the TLSTransportConfig in https://github.com/prometheus/alertmanager/blob/main/cluster/tls_config.go#L25
+type AMClusterTLSConfig struct {
+	TLSServerConfig *ServerTLSConfig `json:"serverTLSConfig"`
+	TLSClientConfig *ClientTLSConfig `json:"clientTLSConfig"`
+}
+
+type ServerTLSConfig struct {
+	TLSCert                  SecretOrConfigMap    `json:"cert"`
+	TLSKeySecret             v1.SecretKeySelector `json:"keySecret"`
+	ClientAuthType           string               `json:"clientAuthType,omitempty"`
+	ClientCA                 SecretOrConfigMap    `json:"clientCA"`
+	CipherSuites             []string             `json:"cipherSuites,omitempty"`
+	CurvePreferences         []string             `json:"curvePreferences,omitempty"`
+	MinVersion               string               `json:"minVersion,omitempty"`
+	MaxVersion               string               `json:"maxVersion,omitempty"`
+	PreferServerCipherSuites bool                 `json:"preferServerCipherSuites,omitempty"`
+}
+
+type ClientTLSConfig struct {
+	TLSCert            SecretOrConfigMap    `json:"cert"`
+	TLSKeySecret       v1.SecretKeySelector `json:"keySecret"`
+	ServerCA           SecretOrConfigMap    `json:"serverCA"`
+	ServerName         string               `json:"serverName,omitempty"`
+	InsecureSkipVerify bool                 `json:"insecureSkipVerify,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

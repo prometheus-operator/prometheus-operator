@@ -1105,8 +1105,8 @@ spec:
                         type: string
                     required:
                     - cert
-                    - insecureSkipVerify
                     - keySecret
+                    - serverCA
                     type: object
                   serverTLSConfig:
                     properties:
@@ -1232,6 +1232,7 @@ spec:
                         type: boolean
                     required:
                     - cert
+                    - clientCA
                     - keySecret
                     type: object
                 required:

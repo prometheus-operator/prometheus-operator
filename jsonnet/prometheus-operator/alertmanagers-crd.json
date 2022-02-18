@@ -948,8 +948,8 @@
                         },
                         "required": [
                           "cert",
-                          "insecureSkipVerify",
-                          "keySecret"
+                          "keySecret",
+                          "serverCA"
                         ],
                         "type": "object"
                       },
@@ -1099,6 +1099,7 @@
                         },
                         "required": [
                           "cert",
+                          "clientCA",
                           "keySecret"
                         ],
                         "type": "object"
