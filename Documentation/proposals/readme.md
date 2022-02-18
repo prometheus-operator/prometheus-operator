@@ -10,7 +10,7 @@ This section is used to document proposals that the prometheus-operator team fee
    ```
 3. Fill out the information block at the top of the readme, with 'reserved' as the status.
 4. Commit/push and make a pull request to this repository
-5. Create a PR merging your forked repo (with the branch) into `prometheus-operator:main`
+5. Create a pull request merging your forked repository (with the branch) into `prometheus-operator:main`
    - Set the title of the pull request to "Reserving Proposal 0001" (replacing 0001 with your proposal number)
 6. Now that you have a reserved proposal number, see [How to write a proposal](#how-to-write-a-proposal) below
 
