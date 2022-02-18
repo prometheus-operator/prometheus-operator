@@ -378,8 +378,7 @@ quickly identify those open for discussion.
 
 Proposals are not necessary when small fixes are made or minor features are
 introduced.  A Proposal is not necessary in when the community is satisfied with the
-discussions happening in other channels like Slack, voice, or in pull requests
-and issues.
+discussions happening in other channels like GitHub issues, pull requests, meetings such as contributors office hours or Slack.
 
 ## System-context-diagram
 
