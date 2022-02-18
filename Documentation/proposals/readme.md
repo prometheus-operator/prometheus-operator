@@ -1,6 +1,6 @@
 # Prometheus-Operator proposals
 
-This section is used to document proposals that the prom-operator team feels go beyond the scope of a simple GitHub issue.
+This section is used to document proposals that the prometheus-operator team feels go beyond the scope of a simple GitHub issue.
 
 ## Quickstart
 1. Fork this repository and clone your forked repository
