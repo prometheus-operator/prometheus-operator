@@ -53,7 +53,7 @@ implemented.)_
 Discussing and deciding how and why a feature or a piece of code should or
 should not be written is an important part of the engineering process.
 
-As an open source project, Tinkerbell needs to have a public place where
+As an open source project, the Prometheus Operator needs to have a public place where
 community members, contributors can share their ideas in detail, asking for
 help, feedback and more in general to spot problems addressable as early as
 possible.
