@@ -15289,13 +15289,15 @@ spec:
                 description: Define which Nodes the Pods are scheduled on.
                 type: object
               overrideHonorLabels:
-                description: OverrideHonorLabels if set to true overrides all user
-                  configured honor_labels. If HonorLabels is set in ServiceMonitor
-                  or PodMonitor to true, this overrides honor_labels to false.
+                description: When true, Prometheus resolves label conflicts by renaming
+                  the labels in the scraped data to "exported_<label value>" for all
+                  targets created from service and pod monitors. Otherwise the HonorLabels
+                  field of the service or pod monitor applies.
                 type: boolean
               overrideHonorTimestamps:
-                description: OverrideHonorTimestamps allows to globally enforce honoring
-                  timestamps in all scrape configs.
+                description: When true, Prometheus ignores the timestamps for all
+                  the targets created from service and pod monitors. Otherwise the
+                  HonorTimestamps field of the service or pod monitor applies.
                 type: boolean
               paused:
                 description: When a Prometheus deployment is paused, no actions except
