@@ -17,6 +17,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 > Note this document is generated from code comments. When contributing a change to this document please do so by changing the code comments.
 
 ## Table of Contents
+* [AMClusterTLSConfig](#amclustertlsconfig)
 * [APIServerConfig](#apiserverconfig)
 * [AlertingSpec](#alertingspec)
 * [Alertmanager](#alertmanager)
@@ -27,6 +28,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
 * [Authorization](#authorization)
 * [BasicAuth](#basicauth)
+* [ClientTLSConfig](#clienttlsconfig)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
@@ -66,6 +68,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SafeAuthorization](#safeauthorization)
 * [SafeTLSConfig](#safetlsconfig)
 * [SecretOrConfigMap](#secretorconfigmap)
+* [ServerTLSConfig](#servertlsconfig)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
@@ -107,6 +110,20 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [VictorOpsConfig](#victoropsconfig)
 * [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
+
+## AMClusterTLSConfig
+
+AMClusterTLSConfig is the mutual TLS config for Alertmanager cluster This structure shadows the TLSTransportConfig in https://github.com/prometheus/alertmanager/blob/main/cluster/tls_config.go#L25
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| serverTLSConfig | Server side mutual TLS config. | *[ServerTLSConfig](#servertlsconfig) | true |
+| clientTLSConfig | Client side mutual TLS config. | *[ClientTLSConfig](#clienttlsconfig) | true |
+
+[Back to TOC](#table-of-contents)
 
 ## APIServerConfig
 
@@ -232,6 +249,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | clusterGossipInterval | Interval between gossip attempts. | string | false |
 | clusterPushpullInterval | Interval between pushpull attempts. | string | false |
 | clusterPeerTimeout | Timeout for cluster peering. | string | false |
+| clusterTLSConfig | Mutual TLS for gossip | *[AMClusterTLSConfig](#amclustertlsconfig) | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
 | forceEnableClusterMode | ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica. Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each. | bool | false |
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
@@ -296,6 +314,23 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 | ----- | ----------- | ------ | -------- |
 | username | The secret in the service monitor namespace that contains the username for authentication. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | password | The secret in the service monitor namespace that contains the password for authentication. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ClientTLSConfig
+
+
+
+
+<em>appears in: [AMClusterTLSConfig](#amclustertlsconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| cert | Certificate for client cert authentication to the server. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| keySecret | Key files for client cert authentication to the server. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | true |
+| serverCA | CA certificate with which to validate the server certificate. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| serverName | Server name extension to indicate the name of the server. http://tools.ietf.org/html/rfc4366#section-3.1 | string | false |
+| insecureSkipVerify | Disable validation of the server certificate. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1021,12 +1056,33 @@ SafeTLSConfig specifies safe TLS configuration parameters.
 SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
 
 
-<em>appears in: [OAuth2](#oauth2), [SafeTLSConfig](#safetlsconfig), [WebTLSConfig](#webtlsconfig)</em>
+<em>appears in: [ClientTLSConfig](#clienttlsconfig), [OAuth2](#oauth2), [SafeTLSConfig](#safetlsconfig), [ServerTLSConfig](#servertlsconfig), [WebTLSConfig](#webtlsconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | secret | Secret containing data to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | configMap | ConfigMap containing data to use for the targets. | *v1.ConfigMapKeySelector | false |
+
+[Back to TOC](#table-of-contents)
+
+## ServerTLSConfig
+
+ServerTLSConfig is Alertmanager's server side mutual TLS config.
+
+
+<em>appears in: [AMClusterTLSConfig](#amclustertlsconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| cert | Certificate for server to use to authenticate to client. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| keySecret | Key file for server to use to authenticate to client. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | true |
+| clientAuthType | Server policy for client authentication. Maps to ClientAuth Policies. For more detail on clientAuth options: https://golang.org/pkg/crypto/tls/#ClientAuthType | string | false |
+| clientCA | CA certificate for client certificate authentication to the server. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| cipherSuites | List of supported cipher suites for TLS versions up to TLS 1.2. If empty, Go default cipher suites are used. Available cipher suites are documented in the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants | []string | false |
+| curvePreferences | Elliptic curves that will be used in an ECDHE handshake, in preference order. Available curves are documented in the go documentation: https://golang.org/pkg/crypto/tls/#CurveID | []string | false |
+| minVersion | Minimum TLS version that is acceptable. | string | false |
+| maxVersion | Maximum TLS version that is acceptable. | string | false |
+| preferServerCipherSuites | prefer_server_cipher_suites controls whether the server selects the client's most preferred ciphersuite, or the server's most preferred ciphersuite. If true then the server's preference, as expressed in the order of elements in cipher_suites, is used. | bool | false |
 
 [Back to TOC](#table-of-contents)
 

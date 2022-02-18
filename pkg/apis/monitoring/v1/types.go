@@ -1632,30 +1632,59 @@ type AlertmanagerSpec struct {
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
 }
 
+// AMClusterTLSConfig is the mutual TLS config for Alertmanager cluster
 // This structure shadows the TLSTransportConfig in https://github.com/prometheus/alertmanager/blob/main/cluster/tls_config.go#L25
 type AMClusterTLSConfig struct {
+	// Server side mutual TLS config.
 	TLSServerConfig *ServerTLSConfig `json:"serverTLSConfig"`
+	// Client side mutual TLS config.
 	TLSClientConfig *ClientTLSConfig `json:"clientTLSConfig"`
 }
 
+// ServerTLSConfig is Alertmanager's server side mutual TLS config.
 type ServerTLSConfig struct {
-	TLSCert                  SecretOrConfigMap    `json:"cert"`
-	TLSKeySecret             v1.SecretKeySelector `json:"keySecret"`
-	ClientAuthType           string               `json:"clientAuthType,omitempty"`
-	ClientCA                 SecretOrConfigMap    `json:"clientCA"`
-	CipherSuites             []string             `json:"cipherSuites,omitempty"`
-	CurvePreferences         []string             `json:"curvePreferences,omitempty"`
-	MinVersion               string               `json:"minVersion,omitempty"`
-	MaxVersion               string               `json:"maxVersion,omitempty"`
-	PreferServerCipherSuites bool                 `json:"preferServerCipherSuites,omitempty"`
+	// Certificate for server to use to authenticate to client.
+	TLSCert SecretOrConfigMap `json:"cert"`
+	// Key file for server to use to authenticate to client.
+	TLSKeySecret v1.SecretKeySelector `json:"keySecret"`
+	// Server policy for client authentication. Maps to ClientAuth Policies.
+	// For more detail on clientAuth options:
+	// https://golang.org/pkg/crypto/tls/#ClientAuthType
+	ClientAuthType string `json:"clientAuthType,omitempty"`
+	// CA certificate for client certificate authentication to the server.
+	ClientCA SecretOrConfigMap `json:"clientCA"`
+	// List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
+	// Go default cipher suites are used. Available cipher suites are documented
+	// in the go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	CipherSuites []string `json:"cipherSuites,omitempty"`
+	// Elliptic curves that will be used in an ECDHE handshake, in preference
+	// order. Available curves are documented in the go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	CurvePreferences []string `json:"curvePreferences,omitempty"`
+	// Minimum TLS version that is acceptable.
+	MinVersion string `json:"minVersion,omitempty"`
+	// Maximum TLS version that is acceptable.
+	MaxVersion string `json:"maxVersion,omitempty"`
+	// prefer_server_cipher_suites controls whether the server selects the
+	// client's most preferred ciphersuite, or the server's most preferred
+	// ciphersuite. If true then the server's preference, as expressed in
+	// the order of elements in cipher_suites, is used.
+	PreferServerCipherSuites bool `json:"preferServerCipherSuites,omitempty"`
 }
 
 type ClientTLSConfig struct {
-	TLSCert            SecretOrConfigMap    `json:"cert"`
-	TLSKeySecret       v1.SecretKeySelector `json:"keySecret"`
-	ServerCA           SecretOrConfigMap    `json:"serverCA"`
-	ServerName         string               `json:"serverName,omitempty"`
-	InsecureSkipVerify bool                 `json:"insecureSkipVerify,omitempty"`
+	// Certificate for client cert authentication to the server.
+	TLSCert SecretOrConfigMap `json:"cert"`
+	// Key files for client cert authentication to the server.
+	TLSKeySecret v1.SecretKeySelector `json:"keySecret"`
+	// CA certificate with which to validate the server certificate.
+	ServerCA SecretOrConfigMap `json:"serverCA"`
+	// Server name extension to indicate the name of the server.
+	// http://tools.ietf.org/html/rfc4366#section-3.1
+	ServerName string `json:"serverName,omitempty"`
+	// Disable validation of the server certificate.
+	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
