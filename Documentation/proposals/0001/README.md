@@ -382,7 +382,7 @@ discussions happening in other channels like GitHub issues, pull requests, meeti
 
 ## System-context-diagram
 
-_(How does this feature or discussion fit into the big picture? Tinkerbell, like
+_(How does this feature or discussion fit into the big picture? The Prometheus Operator, like
 many other modern software stacks, have a high level of interaction between
 component, including external components. A system context diagram helps the
 reader visually understand how this Proposal plays a role.)_
