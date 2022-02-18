@@ -38,8 +38,8 @@ Non-Goals
 
 * Offering all of the automation, scripts and bots described as part of the Proposal
   lifecycle
-* Converting the already open PR against the
-    [proposal](https://github.com/tinkerbell/proposals) repo to this new format
+* Converting the existing
+    [design proposals](../designs) to this new format.
 
 ## Content
 
