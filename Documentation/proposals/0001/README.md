@@ -389,8 +389,7 @@ reader visually understand how this Proposal plays a role.)_
 
 ## APIs
 
-_(Describe any API changes, including new APIs, here with JSON, YAML, `curl`, or
-GRPC Interface examples.)_
+_(Describe any API changes, including new or updated CRDs.)_
 
 ## Alternatives
 
