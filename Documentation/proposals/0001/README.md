@@ -377,7 +377,7 @@ quickly identify those open for discussion.
 ### When you can avoid a Proposal
 
 Proposals are not necessary when small fixes are made or minor features are
-introduced.  An Proposal is not necessary in when the community is satisfied with the
+introduced.  A Proposal is not necessary in when the community is satisfied with the
 discussions happening in other channels like Slack, voice, or in pull requests
 and issues.
 
