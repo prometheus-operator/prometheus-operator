@@ -34,9 +34,10 @@ import (
 )
 
 const (
-	kubernetesSDRoleEndpoint = "endpoints"
-	kubernetesSDRolePod      = "pod"
-	kubernetesSDRoleIngress  = "ingress"
+	kubernetesSDRoleEndpoint      = "endpoints"
+	kubernetesSDRoleEndpointSlice = "endpointslice"
+	kubernetesSDRolePod           = "pod"
+	kubernetesSDRoleIngress       = "ingress"
 )
 
 var (
@@ -50,14 +51,15 @@ func sanitizeLabelName(name string) string {
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger        log.Logger
-	version       semver.Version
-	notCompatible bool
-	spec          *v1.PrometheusSpec
+	logger                 log.Logger
+	version                semver.Version
+	notCompatible          bool
+	spec                   *v1.PrometheusSpec
+	endpointSliceSupported bool
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p *v1.Prometheus, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -71,9 +73,10 @@ func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
 	return &ConfigGenerator{
-		logger:  logger,
-		version: version,
-		spec:    p.Spec.DeepCopy(),
+		logger:                 logger,
+		version:                version,
+		spec:                   p.Spec.DeepCopy(),
+		endpointSliceSupported: endpointSliceSupported,
 	}, nil
 }
 
@@ -82,10 +85,11 @@ func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, 
 // logger.
 func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:        log.WithSuffix(cg.logger, keyvals),
-		version:       cg.version,
-		notCompatible: cg.notCompatible,
-		spec:          cg.spec,
+		logger:                 log.WithSuffix(cg.logger, keyvals),
+		version:                cg.version,
+		notCompatible:          cg.notCompatible,
+		spec:                   cg.spec,
+		endpointSliceSupported: cg.endpointSliceSupported,
 	}
 }
 
@@ -98,10 +102,11 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(minVersion) {
 		return &ConfigGenerator{
-			logger:        log.WithSuffix(cg.logger, "minimum_version", version),
-			version:       cg.version,
-			notCompatible: true,
-			spec:          cg.spec,
+			logger:                 log.WithSuffix(cg.logger, "minimum_version", version),
+			version:                cg.version,
+			notCompatible:          true,
+			spec:                   cg.spec,
+			endpointSliceSupported: cg.endpointSliceSupported,
 		}
 	}
 
@@ -117,10 +122,11 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 	if cg.version.GTE(minVersion) {
 		return &ConfigGenerator{
-			logger:        log.WithSuffix(cg.logger, "maximum_version", version),
-			version:       cg.version,
-			notCompatible: true,
-			spec:          cg.spec,
+			logger:                 log.WithSuffix(cg.logger, "maximum_version", version),
+			version:                cg.version,
+			notCompatible:          true,
+			spec:                   cg.spec,
+			endpointSliceSupported: cg.endpointSliceSupported,
 		}
 	}
 
@@ -212,6 +218,10 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	}
 
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
+}
+
+func (cg *ConfigGenerator) EndpointSliceSupported() bool {
+	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
 }
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
@@ -1138,7 +1148,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint))
+	role := kubernetesSDRoleEndpoint
+	if cg.EndpointSliceSupported() {
+		role = kubernetesSDRoleEndpointSlice
+	}
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1241,9 +1256,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
+		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
+		if cg.EndpointSliceSupported() {
+			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+		}
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil {
@@ -1262,17 +1281,22 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
+	sourceLabels := []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}
+	if cg.EndpointSliceSupported() {
+		sourceLabels = []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}
+	}
+
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		{ // Relabel node labels for pre v2.3 meta labels
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+		{ // Relabel node labels with meta labels available with Prometheus >= v2.3.
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Node;(.*)"},
 			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "node"},
 		},
 		{ // Relabel pod labels for >=v2.3 meta labels
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Pod;(.*)"},
 			{Key: "replacement", Value: "${1}"},

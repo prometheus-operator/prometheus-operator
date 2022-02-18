@@ -47,7 +47,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p)
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	if err != nil {
 		t.Fatalf("failed to create config generator: %v", err)
 	}
@@ -222,12 +222,14 @@ scrape_configs: []
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
-				EvaluationInterval: tc.EvaluationInterval,
-				ScrapeInterval:     tc.ScrapeInterval,
-				ScrapeTimeout:      tc.ScrapeTimeout,
-				ExternalLabels:     tc.ExternalLabels,
-				QueryLogFile:       tc.QueryLogFile,
-				Version:            tc.Version,
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EvaluationInterval: tc.EvaluationInterval,
+					ScrapeInterval:     tc.ScrapeInterval,
+					ScrapeTimeout:      tc.ScrapeTimeout,
+					ExternalLabels:     tc.ExternalLabels,
+					Version:            tc.Version,
+				},
+				QueryLogFile: tc.QueryLogFile,
 			},
 		}
 
@@ -368,7 +370,16 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: tc.IgnoreNamespaceSelectors}})
+		cg := mustNewConfigGenerator(
+			t,
+			&monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						IgnoreNamespaceSelectors: tc.IgnoreNamespaceSelectors,
+					},
+				},
+			},
+		)
 
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -398,7 +409,16 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		},
 	}
 
-	cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: false}})
+	cg := mustNewConfigGenerator(
+		t,
+		&monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					IgnoreNamespaceSelectors: false,
+				},
+			},
+		},
+	)
 
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod)
 
@@ -427,12 +447,14 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -544,13 +566,15 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			EnforcedNamespaceLabel: "namespace",
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "namespace",
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -663,12 +687,14 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -767,12 +793,14 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -867,12 +895,14 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -995,13 +1025,15 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			EnforcedNamespaceLabel: "namespace",
-			ProbeSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "namespace",
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				Version: operator.DefaultPrometheusVersion,
 			},
-			Version: operator.DefaultPrometheusVersion,
 		},
 	}
 
@@ -1186,7 +1218,16 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{IgnoreNamespaceSelectors: false}})
+		cg := mustNewConfigGenerator(
+			t,
+			&monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						IgnoreNamespaceSelectors: false,
+					},
+				},
+			},
+		)
 
 		c := cg.generateK8SSDConfig(
 			sm.Spec.NamespaceSelector,
@@ -1293,7 +1334,9 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.11.0",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.11.0",
+			},
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1371,7 +1414,9 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.11.0",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.11.0",
+			},
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1455,7 +1500,9 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				Shards: shards,
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Shards: shards,
+				},
 			},
 		}
 
@@ -1468,7 +1515,9 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Shards: shards,
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Shards: shards,
+					},
 				},
 			},
 			nil,
@@ -1736,7 +1785,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "drop",
 									Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
-									SourceLabels: []string{"__name__"},
+									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
@@ -1744,7 +1793,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
 									Replacement:  "$1:9537",
-									SourceLabels: []string{"__address__"},
+									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
@@ -1862,6 +1911,178 @@ scrape_configs:
 	}
 }
 
+func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "ns-key",
+			},
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cg.endpointSliceSupported = true
+
+	cfg, err := cg.Generate(
+		p,
+		map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "alpha",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"beta", "gamma"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "drop",
+									Regex:        "my-job-pod-.+",
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
+									TargetLabel:  "ns-key",
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "replace",
+									Regex:        "(.*)",
+									Replacement:  "$1",
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: ns-value/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/test/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpointslice
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_foo
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: (bar);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_alpha
+    - __meta_kubernetes_service_labelpresent_alpha
+    regex: (beta|gamma);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpointslice_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpointslice_address_target_kind
+    - __meta_kubernetes_endpointslice_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpointslice_address_target_kind
+    - __meta_kubernetes_endpointslice_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __meta_kubernetes_pod_ready
+    regex: (.*)
+    replacement: $1
+    action: replace
+  - target_label: ns-key
+    replacement: default
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs:
+  - source_labels:
+    - pod_name
+    target_label: ns-key
+    regex: my-job-pod-.+
+    action: drop
+  - target_label: ns-key
+    replacement: default
+`
+
+	result := string(cfg)
+	if expected != result {
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match for enforced namespace label test:\n%s", diff)
+	}
+}
+
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1869,7 +2090,9 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 			Namespace: "ns-value",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			EnforcedNamespaceLabel: "ns-key",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "ns-key",
+			},
 		},
 	}
 
@@ -1897,7 +2120,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
-									SourceLabels: []string{"pod_name"},
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
 									TargetLabel:  "my-ns",
 								},
 							},
@@ -1906,7 +2129,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 									Action:       "replace",
 									Regex:        "(.*)",
 									Replacement:  "$1",
-									SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
 						},
@@ -2011,7 +2234,9 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			Namespace: "ns-value",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			EnforcedNamespaceLabel: "ns-key",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "ns-key",
+			},
 		},
 	}
 
@@ -2046,7 +2271,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
-									SourceLabels: []string{"pod_name"},
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
 									TargetLabel:  "ns-key",
 								},
 							},
@@ -2055,7 +2280,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Action:       "replace",
 									Regex:        "(.*)",
 									Replacement:  "$1",
-									SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
 						},
@@ -2260,10 +2485,12 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.9.0",
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.9.0",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2397,10 +2624,12 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version: "v2.9.0",
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.9.0",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2515,11 +2744,13 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			Version:                 "v2.9.0",
-			OverrideHonorTimestamps: true,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:                 "v2.9.0",
+				OverrideHonorTimestamps: true,
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2654,9 +2885,11 @@ func TestSettingHonorLabels(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2791,10 +3024,12 @@ func TestHonorLabelsOverriding(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			OverrideHonorLabels: true,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				OverrideHonorLabels: true,
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -2928,10 +3163,12 @@ func TestTargetLabels(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			OverrideHonorLabels: false,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				OverrideHonorLabels: false,
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -3111,13 +3348,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			sMons: map[string]*monitoringv1.ServiceMonitor{
@@ -3155,13 +3394,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			pMons: map[string]*monitoringv1.PodMonitor{
@@ -3199,13 +3440,15 @@ oauth2:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					OverrideHonorLabels: false,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: false,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						Version: "v2.27.0",
 					},
-					Version: "v2.27.0",
 				},
 			},
 			probes: map[string]*monitoringv1.Probe{
@@ -3276,9 +3519,11 @@ func TestPodTargetLabels(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -3412,9 +3657,11 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 		},
@@ -3658,37 +3905,39 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 					},
 				},
 			},
-			ExternalLabels: map[string]string{
-				"label1": "value1",
-				"label2": "value2",
-			},
-			Version:  version,
-			Replicas: func(i int32) *int32 { return &i }(1),
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ExternalLabels: map[string]string{
+					"label1": "value1",
+					"label2": "value2",
 				},
-			},
-			PodMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+				Version:  version,
+				Replicas: func(i int32) *int32 { return &i }(1),
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("400Mi"),
+					},
+				},
+				RemoteWrite: []monitoringv1.RemoteWriteSpec{{
+					URL: "https://example.com/remote_write",
+				}},
 			},
 			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
 				},
 			},
-			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("400Mi"),
-				},
-			},
 			RemoteRead: []monitoringv1.RemoteReadSpec{{
 				URL: "https://example.com/remote_read",
-			}},
-			RemoteWrite: []monitoringv1.RemoteWriteSpec{{
-				URL: "https://example.com/remote_write",
 			}},
 		},
 	}
@@ -3806,12 +4055,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
-							SourceLabels: []string{"pod_name"},
+							SourceLabels: []monitoringv1.LabelName{"pod_name"},
 						},
 						{
 							Action:       "drop",
 							Regex:        "test",
-							SourceLabels: []string{"namespace"},
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
 						},
 					},
 				},
@@ -3843,14 +4092,14 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 							Action:       "replace",
 							Regex:        "(.*)",
 							Replacement:  "$1",
-							SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
 							Replacement:  "$1",
-							SourceLabels: []string{"__meta_kubernetes_pod_node_name"},
+							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
 					},
@@ -3961,12 +4210,12 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
-							SourceLabels: []string{"pod_name"},
+							SourceLabels: []monitoringv1.LabelName{"pod_name"},
 						},
 						{
 							Action:       "drop",
 							Regex:        "test",
-							SourceLabels: []string{"namespace"},
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
 						},
 					},
 				},
@@ -3998,14 +4247,14 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 							Action:       "replace",
 							Regex:        "(.*)",
 							Replacement:  "$1",
-							SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
 							Replacement:  "$1",
-							SourceLabels: []string{"__meta_kubernetes_pod_node_name"},
+							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
 					},
@@ -4048,7 +4297,16 @@ func TestHonorLabels(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{OverrideHonorLabels: tc.OverrideHonorLabels}})
+		cg := mustNewConfigGenerator(
+			t,
+			&monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						OverrideHonorLabels: tc.OverrideHonorLabels,
+					},
+				},
+			},
+		)
 		cfg := cg.AddHonorLabels(yaml.MapSlice{}, tc.UserHonorLabels)
 		k, v := cfg[0].Key.(string), cfg[0].Value.(bool)
 		if k != "honor_labels" {
@@ -4104,8 +4362,10 @@ func TestHonorTimestamps(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
-					Version:                 "2.9.0",
-					OverrideHonorTimestamps: tc.OverrideHonorTimestamps,
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:                 "2.9.0",
+						OverrideHonorTimestamps: tc.OverrideHonorTimestamps,
+					},
 				},
 			})
 
@@ -4287,10 +4547,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: "v2.20.0",
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.20.0",
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -4547,10 +4809,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -4716,10 +4980,12 @@ remote_read:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 					RemoteRead: []monitoringv1.RemoteReadSpec{tc.remoteRead},
@@ -5165,14 +5431,16 @@ remote_write:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
+						RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+						Secrets:     []string{"sigv4-secret"},
 					},
-					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
-					Secrets:     []string{"sigv4-secret"},
 				},
 			}
 
@@ -5422,10 +5690,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -5645,10 +5915,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -5845,10 +6117,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -6103,10 +6377,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -6529,10 +6805,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
@@ -6786,10 +7064,12 @@ scrape_configs:
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Version: tc.version,
-					ServiceMonitorSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"group": "group1",
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
 						},
 					},
 				},
