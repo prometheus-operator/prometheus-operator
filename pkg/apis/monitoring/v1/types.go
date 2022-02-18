@@ -1637,16 +1637,16 @@ type AlertmanagerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
-	// EXPERIMENTAL: globalAlertmanagerConfig specifies the global Alertmanager configuration.
+	// EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
 	// The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.
-	GlobalAlertmanagerConfig *GlobalAlertmanagerConfig `json:"globalAlertmanagerConfig,omitempty"`
+	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
 }
 
-// GlobalAlertmanagerConfig used to set the global alertmanager config.
+// AlertmanagerConfiguration used to set the global alertmanager config.
 // +k8s:openapi-gen=true
-type GlobalAlertmanagerConfig struct {
+type AlertmanagerConfiguration struct {
 	// The name of the AlertmanagerConfig resource which holds the global configuration.
 	// It must be in the same namespace as the Alertmanager.
 	// +kubebuilder:validation:MinLength=1

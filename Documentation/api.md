@@ -20,6 +20,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [APIServerConfig](#apiserverconfig)
 * [AlertingSpec](#alertingspec)
 * [Alertmanager](#alertmanager)
+* [AlertmanagerConfiguration](#alertmanagerconfiguration)
 * [AlertmanagerEndpoints](#alertmanagerendpoints)
 * [AlertmanagerList](#alertmanagerlist)
 * [AlertmanagerSpec](#alertmanagerspec)
@@ -30,7 +31,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
-* [GlobalAlertmanagerConfig](#globalalertmanagerconfig)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [OAuth2](#oauth2)
@@ -155,6 +155,19 @@ Alertmanager describes an Alertmanager cluster.
 
 [Back to TOC](#table-of-contents)
 
+## AlertmanagerConfiguration
+
+AlertmanagerConfiguration used to set the global alertmanager config.
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | The name of the AlertmanagerConfig resource which holds the global configuration. It must be in the same namespace as the Alertmanager. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## AlertmanagerEndpoints
 
 AlertmanagerEndpoints defines a selection of a single Endpoints object containing alertmanager IPs to fire alerts against.
@@ -238,7 +251,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| globalAlertmanagerConfig | EXPERIMENTAL: globalAlertmanagerConfig specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[GlobalAlertmanagerConfig](#globalalertmanagerconfig) | false |
+| alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -359,19 +372,6 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
-
-[Back to TOC](#table-of-contents)
-
-## GlobalAlertmanagerConfig
-
-GlobalAlertmanagerConfig used to set the global alertmanager config.
-
-
-<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| name | The name of the AlertmanagerConfig resource which holds the global configuration. It must be in the same namespace as the Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

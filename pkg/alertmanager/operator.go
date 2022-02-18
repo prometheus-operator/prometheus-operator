@@ -44,7 +44,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -890,9 +889,9 @@ receivers:
 		}
 	}
 
-	// If no AlertmanagerConfig selectors and GlobalAlertmanagerConfig are configured, the user wants to
+	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are configured, the user wants to
 	// manage configuration themselves.
-	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.GlobalAlertmanagerConfig == nil {
+	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
 		level.Debug(namespacedLogger).
 			Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
 				"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name))
@@ -921,12 +920,13 @@ receivers:
 	}
 
 	generator := newConfigGenerator(namespacedLogger, version, store)
-	// If defined global AlertmanagerConfig, find the global AlertmanagerConfig object from amConfigs.
+	// If defined AlertmanagerConfiguration, find the global AlertmanagerConfig and generate.
 	// Otherwise work with the raw configuration secret.
-	if am.Spec.GlobalAlertmanagerConfig != nil {
-		globalAmConfig, err := c.getGlobalAlertmanagerConfig(am, amConfigs)
+	if am.Spec.AlertmanagerConfiguration != nil {
+		globalAmConfig, err := c.mclient.MonitoringV1alpha1().AlertmanagerConfigs(am.Namespace).
+			Get(ctx, am.Spec.AlertmanagerConfiguration.Name, metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrap(err, "get global AlertmanagerConfig failed")
+			return errors.Wrap(err, "get AlertmanagerConfig failed")
 		}
 		baseConfig, err = generator.generateGlobalConfig(ctx, globalAmConfig)
 		if err != nil {
@@ -948,27 +948,6 @@ receivers:
 	}
 
 	return nil
-}
-
-// getGlobalAlertmanagerConfig find global AlertmanagerConfig from k8s,
-// then delete it from amConfigs to avoid generating configuration twice.
-func (c *Operator) getGlobalAlertmanagerConfig(
-	am *monitoringv1.Alertmanager,
-	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
-) (*monitoringv1alpha1.AlertmanagerConfig, error) {
-	crKey := types.NamespacedName{
-		Namespace: am.Namespace,
-		Name:      am.Spec.GlobalAlertmanagerConfig.Name,
-	}
-	obj, err := c.alrtCfgInfs.Get(crKey.String())
-	if err != nil {
-		return nil, errors.Wrapf(err, "global AlertmanagerConfig %s in namespace %s not found", crKey.Name, crKey.Namespace)
-	}
-
-	ret := obj.(*monitoringv1alpha1.AlertmanagerConfig)
-	// delete it from all AlertmanagerConfig
-	delete(amConfigs, crKey.String())
-	return ret, nil
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
@@ -1042,7 +1021,12 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				// Add when it is not specified as the global AlertmanagerConfig
+				if am.Spec.AlertmanagerConfiguration == nil ||
+					(amConfig.Namespace != am.Namespace || amConfig.Name != am.Spec.AlertmanagerConfiguration.Name) {
+					amConfigs[k] = amConfig
+				}
 			}
 		})
 		if err != nil {

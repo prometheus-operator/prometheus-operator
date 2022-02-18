@@ -95,7 +95,7 @@ spec:
 
 The following example configuration creates an Alertmanager resource that specify an AlertmanagerConfig resource to be global(won't force add a `namespace` label in routes and inhibitRules):
 
-```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-global-alertmanager-config.yaml"
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-alertmanager-configuration.yaml"
 apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
 metadata:
@@ -103,11 +103,11 @@ metadata:
   namespace: default
 spec:
   replicas: 3
-  globalAlertmanagerConfig:
+  alertmanagerConfiguration:
     name: example-config
 ```
 
-The AlertmanagerConfig resource named `example-config` in namespace `default` will be a global AlertmanagerConfig. When generating configs in alertmanager, routes and inhibitRules in the global AlertmanagerConfig will not be force add a namespace label.
+The AlertmanagerConfig resource named `example-config` in namespace `default` will be an global AlertmanagerConfig. When generating configs in alertmanager, routes and inhibitRules in the AlertmanagerConfig will not be force add a namespace label.
 
 ## Manually Managed Secret
 
