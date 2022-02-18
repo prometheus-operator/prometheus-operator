@@ -1511,11 +1511,10 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		}
 	}
 
-	if p.Status != nil {
-		for _, condition := range p.Status.Conditions {
-			if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-				availableCondition.LastTransitionTime = condition.LastTransitionTime
-			}
+	// Update last transition only if the status of the available condition has changed.
+	for _, condition := range p.Status.Conditions {
+		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
+			availableCondition.LastTransitionTime = condition.LastTransitionTime
 		}
 	}
 
@@ -1528,7 +1527,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: p.Name,
 		},
-		Status: &pStatus,
+		Status: pStatus,
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal object")
@@ -1541,7 +1540,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		b,
 		metav1.PatchOptions{
 			Force:        func(b bool) *bool { return &b }(true),
-			FieldManager: "doo",
+			FieldManager: "prometheus-operator",
 		},
 		"status",
 	)
@@ -1742,19 +1741,19 @@ func getPodsState(ctx context.Context, kclient kubernetes.Interface, sset *appsv
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
 // TODO(simonpasquier): remove once the status subresource is considered stable.
-func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
-	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
+func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (monitoringv1.PrometheusStatus, []v1.Pod, error) {
+	res := monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	var oldPods []v1.Pod
 	for _, ssetName := range expectedStatefulSetShardNames(p) {
 		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
+			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
 		}
 
 		ps, err := getPodsState(ctx, kclient, sset)
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "failed to retrieve pods state for statefulset %s/%s", p.Namespace, ssetName)
+			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve pods state for statefulset %s/%s", p.Namespace, ssetName)
 		}
 
 		res.Replicas += int32(len(ps))

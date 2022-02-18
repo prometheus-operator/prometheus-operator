@@ -97,6 +97,7 @@ func parsePrometheusStatusURL(path string) objectReference {
 	}
 }
 
+// TODO(simonpasquier): remove this once the Prometheus status subresource is supported.
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusURL(req.URL.Path)
 

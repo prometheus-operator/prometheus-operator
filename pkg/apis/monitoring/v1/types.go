@@ -354,7 +354,7 @@ type Prometheus struct {
 	// Most recent observed status of the Prometheus cluster. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-	Status *PrometheusStatus `json:"status,omitempty"`
+	Status PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
