@@ -1846,7 +1846,9 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 				Namespace: "ns-value",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnforcedNamespaceLabel: "ns-key",
+				},
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
