@@ -174,6 +174,9 @@ func (cg *configGenerator) generateGlobalConfig(
 	if err := globalAlertmanagerConfig.sanitize(cg.amVersion, cg.logger); err != nil {
 		return nil, err
 	}
+	if err := checkAlertmanagerConfigRootRoute(globalAlertmanagerConfig.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
 	return globalAlertmanagerConfig, nil
 }
 

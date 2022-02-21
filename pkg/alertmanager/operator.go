@@ -932,9 +932,6 @@ receivers:
 		if err != nil {
 			return errors.Wrap(err, "failed to generate global AlertmangerConfig")
 		}
-		if err := checkAlertmanagerConfigRootRoute(baseConfig.Route); err != nil {
-			return errors.Wrap(err, "check AlertmanagerConfig root route failed")
-		}
 	}
 
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
