@@ -147,12 +147,12 @@ func (cg *configGenerator) generateGlobalConfig(
 		Namespace: amConfig.Namespace,
 		Name:      amConfig.Name,
 	}
-	// Add inhibitRules to baseConfig.InhibitRules without enforce namespace
+	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
 		globalAlertmanagerConfig.InhibitRules = append(globalAlertmanagerConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule))
 	}
 
-	// Add routes to baseConfig.Route.Routes without enforce namespace
+	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
 	globalAlertmanagerConfig.Route = cg.convertRoute(amConfig.Spec.Route, crKey)
 
 	for _, receiver := range amConfig.Spec.Receivers {
