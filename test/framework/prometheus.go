@@ -420,22 +420,24 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 // WaitForHealthyTargets waits for a number of targets to be configured and
 // healthy.
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
-	var targets []*Target
+	var loopErr error
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		var err error
-		targets, err = f.GetHealthyTargets(ctx, ns, svcName)
-		if err != nil {
-			return false, err
+	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+		var targets []*Target
+		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
+		if loopErr != nil {
+			return false, nil
 		}
 
 		if len(targets) == amount {
 			return true, nil
 		}
 
+		loopErr = errors.Errorf("expected %d, found %d healthy targets", amount, len(targets))
 		return false, nil
-	}); err != nil {
-		return fmt.Errorf("waiting for healthy targets timed out. %v of %v healthy targets found. %v", len(targets), amount, err)
+	})
+	if err != nil {
+		return fmt.Errorf("waiting for healthy targets failed: %v: %v", err, loopErr)
 	}
 
 	return nil
