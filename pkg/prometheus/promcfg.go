@@ -575,6 +575,7 @@ func (cg *ConfigGenerator) Generate(
 				probes[identifier],
 				apiserverConfig,
 				store,
+				shards,
 			),
 		)
 	}
@@ -895,6 +896,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
+	shards int32,
 ) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
@@ -1094,6 +1096,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 		}
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
+		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
