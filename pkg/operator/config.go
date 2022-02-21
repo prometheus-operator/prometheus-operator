@@ -18,6 +18,8 @@ import (
 	"strings"
 
 	"k8s.io/client-go/rest"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 )
 
 // Config defines configuration parameters for the Operator.
@@ -28,7 +30,7 @@ type Config struct {
 	ListenAddress                string
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig
-	ServerTLSConfig              TLSServerConfig
+	ServerTLSConfig              server.TLSServerConfig
 	ReloaderConfig               ReloaderConfig
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string

@@ -37,6 +37,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
@@ -301,7 +302,7 @@ func Main() int {
 		if rawTLSCipherSuites != "" {
 			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
 		}
-		tlsConfig, err = operator.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
+		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
 			fmt.Fprint(os.Stderr, "invalid TLS config", err)
@@ -310,26 +311,24 @@ func Main() int {
 		}
 	}
 
-	// todo - I wonder can these go away because of
-	// https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhook-metrics
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
-		Help: "Number of times a prometheusRule object triggered validation",
+		Help: "DEPRECATED, removed in v0.57.0: Number of times a prometheusRule object triggered validation",
 	})
 
 	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_errors_total",
-		Help: "Number of errors that occurred while validating a prometheusRules object",
+		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a prometheusRules object",
 	})
 
 	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
-		Help: "Number of times an alertmanagerconfig object triggered validation",
+		Help: "DEPRECATED, removed in v0.57.0: Number of times an alertmanagerconfig object triggered validation",
 	})
 
 	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
-		Help: "Number of errors that occurred while validating a alertmanagerconfig object",
+		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a alertmanagerconfig object",
 	})
 
 	r.MustRegister(
