@@ -1334,25 +1334,33 @@ func TestThanosSideCarVolumes(t *testing.T) {
 	}
 }
 
-func TestRetentionSize(t *testing.T) {
+func TestRetentionAndRetentionSize(t *testing.T) {
 	tests := []struct {
-		version              string
-		specRetentionSize    string
-		expectedRetentionArg string
-		shouldContain        bool
+		version                    string
+		specRetention              string
+		specRetentionSize          string
+		expectedRetentionArg       string
+		expectedRetentionSizeArg   string
+		shouldContainRetention     bool
+		shouldContainRetentionSize bool
 	}{
-		{"v2.5.0", "2M", "--storage.tsdb.retention.size=2M", false},
-		{"v2.5.0", "1Gi", "--storage.tsdb.retention.size=1Gi", false},
-		{"v2.7.0", "2M", "--storage.tsdb.retention.size=2M", true},
-		{"v2.7.0", "1Gi", "--storage.tsdb.retention.size=1Gi", true},
+		{"v2.5.0", "", "", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "1d", "", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "", "512MB", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "1d", "512MB", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.7.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					Version: test.version,
 				},
+				Retention:     test.specRetention,
 				RetentionSize: test.specRetentionSize,
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
@@ -1361,60 +1369,30 @@ func TestRetentionSize(t *testing.T) {
 		}
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
+		foundRetention := false
+		foundRetentionSize := false
 		for _, flag := range promArgs {
 			if flag == test.expectedRetentionArg {
-				found = true
-				break
+				foundRetention = true
+			} else if flag == test.expectedRetentionSizeArg {
+				foundRetentionSize = true
 			}
 		}
 
-		if found != test.shouldContain {
-			if test.shouldContain {
-				t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedRetentionArg, promArgs)
+		if foundRetention != test.shouldContainRetention {
+			if test.shouldContainRetention {
+				t.Fatalf("test %d, expected Prometheus args to contain %v, but got %v", i, test.expectedRetentionArg, promArgs)
 			} else {
-				t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", test.expectedRetentionArg, promArgs)
-			}
-		}
-	}
-}
-
-func TestRetention(t *testing.T) {
-	tests := []struct {
-		version              string
-		specRetention        string
-		expectedRetentionArg string
-	}{
-		{"v2.5.0", "", "--storage.tsdb.retention=24h"},
-		{"v2.5.0", "1d", "--storage.tsdb.retention=1d"},
-		{"v2.7.0", "", "--storage.tsdb.retention.time=24h"},
-		{"v2.7.0", "1d", "--storage.tsdb.retention.time=1d"},
-	}
-
-	for _, test := range tests {
-		sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: test.version,
-				},
-				Retention: test.specRetention,
-			},
-		}, defaultTestConfig, nil, "", 0, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == test.expectedRetentionArg {
-				found = true
-				break
+				t.Fatalf("test %d, expected Prometheus args to NOT contain %v, but got %v", i, test.expectedRetentionArg, promArgs)
 			}
 		}
 
-		if !found {
-			t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedRetentionArg, promArgs)
+		if foundRetentionSize != test.shouldContainRetentionSize {
+			if test.shouldContainRetentionSize {
+				t.Fatalf("test %d, expected Prometheus args to contain %v, but got %v", i, test.expectedRetentionSizeArg, promArgs)
+			} else {
+				t.Fatalf("test %d, expected Prometheus args to NOT contain %v, but got %v", i, test.expectedRetentionSizeArg, promArgs)
+			}
 		}
 	}
 }
