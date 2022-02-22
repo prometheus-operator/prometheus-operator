@@ -1650,6 +1650,10 @@ func (e *AMClusterTLSConfigError) Error() string {
 }
 
 func (c *AMClusterTLSConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.TLSServerConfig != nil {
 		if err := c.TLSServerConfig.Validate(); err != nil {
 			return &AMClusterTLSConfigError{err: err.Error()}
@@ -1698,7 +1702,7 @@ type ServerTLSConfig struct {
 	// client's most preferred ciphersuite, or the server's most preferred
 	// ciphersuite. If true then the server's preference, as expressed in
 	// the order of elements in cipher_suites, is used.
-	PreferServerCipherSuites bool `json:"preferServerCipherSuites,omitempty"`
+	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
 }
 
 type ServerTLSConfigError struct {
@@ -1746,7 +1750,7 @@ type ClientTLSConfig struct {
 	// http://tools.ietf.org/html/rfc4366#section-3.1
 	ServerName string `json:"serverName,omitempty"`
 	// Disable validation of the server certificate.
-	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 }
 
 type ClientTLSConfigError struct {
