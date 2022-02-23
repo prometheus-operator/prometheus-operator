@@ -132,6 +132,10 @@ func main() {
 			},
 		)
 
+		transport := &http.Transport{}
+		client := http.Client{Transport: transport}
+		rel.SetHttpClient(client)
+
 		g.Add(func() error {
 			return rel.Watch(ctx)
 		}, func(error) {
