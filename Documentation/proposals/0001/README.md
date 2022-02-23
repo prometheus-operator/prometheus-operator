@@ -20,8 +20,6 @@ This is the first Proposal and it covers:
 * When to avoid a Proposal
 * Lifecycle of an Proposal
 
-Rename the [proposal](https://github.com/tinkerbell/proposals) repository to Proposal.
-
 ## Goals and non-Goals
 
 _(Goals and non-Goals contains two bullet point sections that briefly describe
