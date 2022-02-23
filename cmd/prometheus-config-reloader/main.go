@@ -47,10 +47,6 @@ const (
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
 )
 
-type tlsOptions struct {
-	skipTlsVerify bool
-}
-
 func main() {
 	app := kingpin.New("prometheus-config-reloader", "")
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
@@ -137,9 +133,7 @@ func main() {
 			},
 		)
 
-		client := createHttpClient(tlsOptions{
-			skipTlsVerify: true,
-		})
+		client := createHttpClient()
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -165,9 +159,10 @@ func main() {
 	}
 }
 
-func createHttpClient(tlsOptions tlsOptions) http.Client {
+func createHttpClient() http.Client {
 	config := &tls.Config{
-		InsecureSkipVerify: tlsOptions.skipTlsVerify,
+		// TLS certificate verification is disabled by default
+		InsecureSkipVerify: true,
 	}
 
 	transport := &http.Transport{
