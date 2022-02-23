@@ -1,6 +1,9 @@
 package webconfig
 
 import (
+	"fmt"
+	"path"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -8,8 +11,9 @@ import (
 )
 
 var (
-	mTLSVolumeName = "mtls-config"
-	mTLSConfigFile = "mtls-config.yaml"
+	mTLSVolumeName         = "mtls-config"
+	mTLSConfigFile         = "mtls-config.yaml"
+	volumePrefixMTLSConfig = "mtls-config-"
 )
 
 type MTLSConfig struct {
@@ -165,4 +169,70 @@ func (c MTLSConfig) generateConfigFileContents() ([]byte, error) {
 	}
 
 	return yaml.Marshal(cfg)
+}
+
+func (c MTLSConfig) makeArg(filePath string) string {
+	return fmt.Sprintf("--cluster.tls-config=%s", filePath)
+}
+
+func (c MTLSConfig) makeVolume() v1.Volume {
+	return v1.Volume{
+		Name: mTLSVolumeName,
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: c.secretName,
+			},
+		},
+	}
+}
+
+func (c MTLSConfig) makeVolumeMount(filePath string) v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      mTLSVolumeName,
+		SubPath:   mTLSConfigFile,
+		ReadOnly:  true,
+		MountPath: filePath,
+	}
+}
+
+// GetMountParameters returns volumes and volume mounts referencing the config file
+// and the associated TLS credentials.
+// In addition, GetMountParameters returns a "--cluster.tls-config" command line option pointing
+// to the file in the volume mount.
+func (c MTLSConfig) GetMountParameters() (string, []v1.Volume, []v1.VolumeMount) {
+	destinationPath := path.Join(c.mountingDir, mTLSConfigFile)
+
+	var volumes []v1.Volume
+	var mounts []v1.VolumeMount
+
+	arg := c.makeArg(destinationPath)
+	cfgVolume := c.makeVolume()
+	volumes = append(volumes, cfgVolume)
+
+	cfgMount := c.makeVolumeMount(destinationPath)
+	mounts = append(mounts, cfgMount)
+
+	if c.tlsConfig != nil {
+		tlsVolumes, tlsMounts := c.tlsCredentialsClient.getMountParameters(volumePrefixMTLSConfig)
+		volumes = append(volumes, tlsVolumes...)
+		mounts = append(mounts, tlsMounts...)
+		tlsVolumes, tlsMounts = c.tlsCredentialsServer.getMountParameters(volumePrefixMTLSConfig)
+		// deduplicate volume by names
+		for idx, volumeToAppend := range tlsVolumes {
+			duplicated := false
+			for _, volumeAppended := range volumes {
+				if volumeToAppend.Name == volumeAppended.Name {
+					duplicated = true
+					break
+				}
+			}
+			if duplicated {
+				continue
+			}
+			volumes = append(volumes, volumeToAppend)
+			mounts = append(mounts, tlsMounts[idx])
+		}
+	}
+
+	return arg, volumes, mounts
 }

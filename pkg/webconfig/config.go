@@ -16,16 +16,18 @@ package webconfig
 
 import (
 	"fmt"
+	"path"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path"
 )
 
 var (
-	volumeName = "web-config"
-	configFile = "web-config.yaml"
+	volumeName            = "web-config"
+	configFile            = "web-config.yaml"
+	volumePrefixWebConfig = "web-config-tls-"
 )
 
 // Config is the web configuration for a prometheus instance.
@@ -77,7 +79,7 @@ func (c Config) GetMountParameters() (string, []v1.Volume, []v1.VolumeMount) {
 	mounts = append(mounts, cfgMount)
 
 	if c.tlsCredentials != nil {
-		tlsVolumes, tlsMounts := c.tlsCredentials.getMountParameters()
+		tlsVolumes, tlsMounts := c.tlsCredentials.getMountParameters(volumePrefixWebConfig)
 		volumes = append(volumes, tlsVolumes...)
 		mounts = append(mounts, tlsMounts...)
 	}

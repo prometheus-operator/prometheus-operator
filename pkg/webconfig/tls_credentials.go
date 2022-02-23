@@ -16,13 +16,10 @@ package webconfig
 
 import (
 	"fmt"
+	"path"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
-	"path"
-)
-
-var (
-	volumePrefix = "web-config-tls-"
 )
 
 // tlsCredentials are the credentials used for web TLS.
@@ -54,7 +51,7 @@ func newTLSCredentials(
 }
 
 // getMountParameters creates volumes and volume mounts referencing the TLS credentials.
-func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMount) {
+func (a tlsCredentials) getMountParameters(volumePrefix string) ([]corev1.Volume, []corev1.VolumeMount) {
 	var volumes []corev1.Volume
 	var mounts []corev1.VolumeMount
 
