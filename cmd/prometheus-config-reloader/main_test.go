@@ -15,7 +15,11 @@
 package main
 
 import (
+	"crypto/tls"
+	"fmt"
+	"net/http"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -31,6 +35,21 @@ var cases = []struct {
 	{"pro-10-metheus", ""},
 }
 
+var tlsOptionCases = []struct {
+	tlsOptions tlsOptions
+	client     http.Client
+}{
+	{
+		tlsOptions: tlsOptions{true},
+		client: http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}},
+}
+
 func TestCreateOrdinalEnvVar(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.in, func(t *testing.T) {
@@ -38,6 +57,17 @@ func TestCreateOrdinalEnvVar(t *testing.T) {
 			s := createOrdinalEnvvar(statefulsetOrdinalFromEnvvarDefault)
 			if os.Getenv(statefulsetOrdinalEnvvar) != tt.out {
 				t.Errorf("got %v, want %s", s, tt.out)
+			}
+		})
+	}
+}
+
+func TestCreateHttpClient(t *testing.T) {
+	for index, tt := range tlsOptionCases {
+		t.Run(fmt.Sprintf("http-client-is-created-correctly-%v", index), func(t *testing.T) {
+			client := createHttpClient(tt.tlsOptions)
+			if !reflect.DeepEqual(client, tt.client) {
+				t.Errorf("got %#v\n want %#v", client, tt.client)
 			}
 		})
 	}
