@@ -63,13 +63,9 @@ about a feature that looks trivial, helping contributors to sit down and think
 about the design of the request or the code they will build. It is a way to
 translate Slack discussions to something that won’t get lost for example.
 
-Currently, we have a repo called
-[proposal](https://github.com/tinkerbell/proposals) that I would like to rename
-to Proposal. Every Proposal will have its own directory with a markdown file inside.
-
 ### Metadata
 
-The Proposal is written in markdown and includes metadata in the header of the file:
+The Proposal is written in markdown and includes Hugo static site generator style metadata in the header of the file:
 
 * `ID`: identifies the Proposal
 * `Title`: title of the Proposal
@@ -82,7 +78,6 @@ Here is a complete example:
 ---
 id: 0001
 title: Request for discussion HOWTO
-pr: 2
 status: ideation
 authors: Gianluca Arbezzano <gianarb92@gmail.com>
 ---
@@ -90,10 +85,9 @@ authors: Gianluca Arbezzano <gianarb92@gmail.com>
 
 ### Lifecycle
 
-I don’t want to rewrite the lifecycle here because the one in use by [Oxide
-Computer](https://oxide.computer/blog/rfd-1-requests-for-discussion/#rfd-life-cycle)
-looks familiar and is functional for our purpose. They wrote the lifecycle in
-detail and, for now, we will follow it as it is.
+Much like the [Tinkerbell project](https://github.com/tinkerbell/proposals), we will borrow the proposal framework from the [Oxide
+Computer project](https://oxide.computer/blog/rfd-1-requests-for-discussion/#rfd-life-cycle).  Understanding that we may make deviations from their process as otherwise documented here and in the [readme.md of this section](../readme.md)
+
 
 What follows here is copy/pasted from ["RFD 1 Requests for
 Discussion"](https://oxide.computer/blog/rfd-1-requests-for-discussion/) and all
