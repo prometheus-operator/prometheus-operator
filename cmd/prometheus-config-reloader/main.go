@@ -88,9 +88,6 @@ func main() {
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
 
-	insecureSkipTlsVerify := app.Flag("insecure-skip-tls-verify", "skip TLS verify when communicating with the Prometheus server").
-		Default("false").Bool()
-
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -141,7 +138,7 @@ func main() {
 		)
 
 		client := createHttpClient(TlsOptions{
-			skipTlsVerify: *insecureSkipTlsVerify,
+			skipTlsVerify: true,
 		})
 		rel.SetHttpClient(client)
 
