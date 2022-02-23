@@ -1274,7 +1274,7 @@ templates: []
 	}
 }
 
-func testUserDefinedAlertmanagerConfig(t *testing.T) {
+func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
@@ -1330,6 +1330,75 @@ inhibit_rules:
 		if cfgSecret.Data["template1.tmpl"] == nil {
 			lastErr = errors.New("'template1.yaml' key is missing")
 			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			lastErr = errors.New("'alertmanager.yaml' key is missing")
+			return false, nil
+		}
+
+		if string(cfgSecret.Data["alertmanager.yaml"]) != yamlConfig {
+			lastErr = errors.Errorf("expected Alertmanager configuration %q, got %q", yamlConfig, cfgSecret.Data["alertmanager.yaml"])
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("%v: %v", err, lastErr)
+	}
+}
+
+func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager("user-amconfig", 1)
+	alertmanagerConfig, err := framework.CreateAlertmanagerConfig(context.Background(), ns, "user-amconfig")
+	if err != nil {
+		t.Fatal(err)
+	}
+	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
+		Name: alertmanagerConfig.Name,
+	}
+
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	recever := fmt.Sprintf("%s-%s-null", ns, "user-amconfig")
+	yamlConfig := strings.ReplaceAll(`route:
+  receiver: __receiver_name__
+  routes:
+  - receiver: __receiver_name__
+    match:
+      mykey: myvalue-1
+inhibit_rules:
+- target_matchers:
+  - mykey="myvalue-2"
+  source_matchers:
+  - mykey="myvalue-1"
+  equal:
+  - equalkey
+receivers:
+- name: __receiver_name__
+templates: []
+`, "__receiver_name__", recever)
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			lastErr = err
+			return false, nil
+		}
+		if err != nil {
+			return false, err
 		}
 
 		if cfgSecret.Data["alertmanager.yaml"] == nil {
