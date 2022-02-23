@@ -47,7 +47,7 @@ const (
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
 )
 
-type TlsOptions struct {
+type tlsOptions struct {
 	skipTlsVerify bool
 }
 
@@ -137,7 +137,7 @@ func main() {
 			},
 		)
 
-		client := createHttpClient(TlsOptions{
+		client := createHttpClient(tlsOptions{
 			skipTlsVerify: true,
 		})
 		rel.SetHttpClient(client)
@@ -165,7 +165,7 @@ func main() {
 	}
 }
 
-func createHttpClient(tlsOptions TlsOptions) http.Client {
+func createHttpClient(tlsOptions tlsOptions) http.Client {
 	config := &tls.Config{
 		InsecureSkipVerify: tlsOptions.skipTlsVerify,
 	}
