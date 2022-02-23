@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	stdlog "log"
 	"net/http"
@@ -45,6 +46,10 @@ const (
 	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
 )
+
+type TlsOptions struct {
+	skipTlsVerify bool
+}
 
 func main() {
 	app := kingpin.New("prometheus-config-reloader", "")
@@ -82,6 +87,9 @@ func main() {
 
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
+
+	insecureSkipTlsVerify := app.Flag("insecure-skip-tls-verify", "skip TLS verify when communicating with the Prometheus server").
+		Default("false").Bool()
 
 	versionutil.RegisterIntoKingpinFlags(app)
 
@@ -132,8 +140,9 @@ func main() {
 			},
 		)
 
-		transport := &http.Transport{}
-		client := http.Client{Transport: transport}
+		client := createHttpClient(TlsOptions{
+			skipTlsVerify: *insecureSkipTlsVerify,
+		})
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -157,6 +166,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func createHttpClient(tlsOptions TlsOptions) http.Client {
+	config := &tls.Config{
+		InsecureSkipVerify: tlsOptions.skipTlsVerify,
+	}
+
+	transport := &http.Transport{
+		TLSClientConfig: config,
+	}
+
+	return http.Client{Transport: transport}
 }
 
 func createOrdinalEnvvar(fromName string) error {
