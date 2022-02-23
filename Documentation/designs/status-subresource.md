@@ -41,10 +41,10 @@ The Prometheus CRD has a `Status` subresource that exposes the following fields:
 * `AvailableReplicas`
 * `UnavailableReplicas`
 
-We propose to add new fields:
+We propose to add the following new fields:
 * `Conditions` as recommended by the document describing the [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
 * `ShardStatuses` which is a drilled-down status for each Prometheus shard.
-* [TBD] Number of resources (service monitors, pod monitors, probes and Prometheus rules) selected/rejected by the operator.
+* `BoundObjects`, the list of objects (service monitors, pod monitors, probes and Prometheus rules) which have been selected by the controller and their status (selected vs. rejected).
 
 ```golang
 type PrometheusStatus struct {
@@ -72,6 +72,14 @@ type PrometheusStatus struct {
 	// +patchMergeStrategy=merge
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
+	// The list has one entry per object that has been bound to the Prometheus deployment.
+	// Each entry provides a reference to the object and its condition.
+	// +patchMergeKey=resource
+	// +patchMergeKey=namespace
+	// +patchMergeKey=name
+	// +patchMergeStrategy=merge
+	// +optional
+	BoundObjects []BoundObject `json:"boundObjects,omitempty"`
 }
 
 // PrometheusCondition represents the state of the resources associated with the Prometheus resource.
@@ -97,10 +105,8 @@ type PrometheusCondition struct {
 type PrometheusConditionType string
 
 const (
-	// Available indicates that enough Prometheus pods are ready to provide the service.
+	// Available indicates the availability of the Prometheus pods providing the service.
 	PrometheusAvailable PrometheusConditionType = "Available"
-	// Degraded indicates that some Prometheus pods don't run as expected.
-	PrometheusDegraded PrometheusConditionType = "Degraded"
 	// Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.
 	PrometheusReconciled PrometheusConditionType = "Reconciled"
 )
@@ -108,9 +114,10 @@ const (
 type PrometheusConditionStatus string
 
 const (
-	PrometheusConditionTrue    PrometheusConditionStatus = "True"
-	PrometheusConditionFalse   PrometheusConditionStatus = "False"
-	PrometheusConditionUnknown PrometheusConditionStatus = "Unknown"
+	PrometheusConditionTrue     PrometheusConditionStatus = "True"
+	PrometheusConditionDegraded PrometheusConditionStatus = "Degraded"
+	PrometheusConditionFalse    PrometheusConditionStatus = "False"
+	PrometheusConditionUnknown  PrometheusConditionStatus = "Unknown"
 )
 
 type ShardStatus struct {
@@ -128,6 +135,35 @@ type ShardStatus struct {
 	// Total number of unavailable pods targeted by this shard.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
+
+type BoundObject struct {
+	// Resource of the object.
+	// +required
+	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes
+	Resource string `json:"resource"`
+	// Resource of the object.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	Namespace string `json:"namespace"`
+	// Name of the object.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+	// status of the binding.
+	// +required
+	Status ObjectBindingStatus `json:"status"`
+	// Human-readable message indicating details for the status.
+	// +optional
+	Message string `json:"reason,omitempty"`
+}
+
+type ObjectBindingStatus string
+
+const (
+	ObjectBindingSelected ObjectBindingStatus = "Selected"
+	ObjectBindingRejected ObjectBindingStatus = "Rejected"
+	ObjectBindingUnknown  ObjectBindingStatus = "Unknown"
+)
 ```
 
 Example of a Prometheus resource's status for which all pods are up and running:
