@@ -133,7 +133,7 @@ func main() {
 			},
 		)
 
-		client := createHttpClient()
+		client := createHTTPClient()
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -159,7 +159,7 @@ func main() {
 	}
 }
 
-func createHttpClient() http.Client {
+func createHTTPClient() http.Client {
 	config := &tls.Config{
 		// TLS certificate verification is disabled by default
 		InsecureSkipVerify: true,

@@ -46,7 +46,7 @@ func TestCreateOrdinalEnvVar(t *testing.T) {
 	}
 }
 
-func TestCreateHttpClient(t *testing.T) {
+func TestCreateHTTPClient(t *testing.T) {
 	t.Run("http-client-is-created-correctly", func(t *testing.T) {
 		expectedClient := http.Client{
 			Transport: &http.Transport{
@@ -56,7 +56,7 @@ func TestCreateHttpClient(t *testing.T) {
 			},
 		}
 
-		client := createHttpClient()
+		client := createHTTPClient()
 		if !reflect.DeepEqual(client, expectedClient) {
 			t.Errorf("got %#v\n want %#v", client, expectedClient)
 		}
