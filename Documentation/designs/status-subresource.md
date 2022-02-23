@@ -279,17 +279,13 @@ type ServiceMonitor struct {
 }
 
 type ServiceMonitorStatus struct {
-	// The current state of the service monitor.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
-	// +optional
-	Conditions []ServiceMonitorCondition `json:"conditions,omitempty"`
-
 	// The list of resources that the service monitor is bound to.
+	// +patchMergeKey=resource
+	// +patchMergeKey=namespace
 	// +patchMergeKey=name
 	// +patchMergeStrategy=merge
 	// +optional
-	Bindings []ServiceMonitorBindings `json:"bindings,omitempty"`
+	Bindings []ServiceMonitorBinding `json:"bindings,omitempty"`
 }
 
 type ServiceMonitorCondition struct {
@@ -313,8 +309,6 @@ type ServiceMonitorCondition struct {
 type ServiceMonitorConditionType string
 
 const (
-	// Valid indicates if the operator considers the service monitor to be valid.
-	ServiceMonitorValid ServiceMonitorConditionType = "Valid"
 	// Selected indicates if the service monitor is reconciled by the referenced Prometheus object.
 	ServiceMonitorReconciled ServiceMonitorConditionType = "Reconciled"
 )
@@ -328,20 +322,6 @@ const (
 )
 
 type ServiceMonitorBinding struct {
-	// Name of the binding.
-	// +required
-	Name string `json:"name"`
-	// Reference to the Prometheus object that binds the service monitoring (e.g. Prometheus or PrometheusAgent).
-	// +required
-	PrometheusRef PrometheusReference `json:"prometheusRef"`
-	// The current state of the service monitor when bound to the referenced Prometheus object.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
-	// +optional
-	Conditions []ServiceMonitorCondition `json:"conditions,omitempty"`
-}
-
-type PrometheusReference struct {
 	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
 	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
 	// +required
@@ -352,6 +332,11 @@ type PrometheusReference struct {
 	// The namespace of the referenced object.
 	// +required
 	Namespace string
+	// The current state of the service monitor when bound to the referenced Prometheus object.
+	// +patchMergeKey=type
+	// +patchMergeStrategy=merge
+	// +optional
+	Conditions []ServiceMonitorCondition `json:"conditions,omitempty"`
 }
 ```
 
@@ -369,16 +354,10 @@ spec:
   endpoints:
   - port: web
 status:
-  conditions:
-  - type: Valid
-    status: "True"
-    lastTransitionTime: "2022-02-08T23:54:22Z"
   bindings:
-  - name: default/prometheus-agent-monitoring
-    prometheusRef:
-      resource: prometheusagents
-      name: monitoring
-      namespace: default
+  - resource: prometheusagents
+    name: monitoring
+    namespace: default
     conditions:
     - type: Reconciled
       status: "True"
@@ -402,15 +381,19 @@ spec:
       name: metric-credentials
       key: bearer-token
 status:
-  conditions:
-  - type: Valid
-    status: "False"
-    lastTransitionTime: "2022-02-08T23:54:22Z"
-    reason: InvalidSecretReference
-    message: "failed to get bearer token: failed to get token from secret: key 'bearer-token' in secret 'metric-credentials' not found"
+  - resource: prometheusagents
+    name: monitoring
+    namespace: default
+    conditions:
+    conditions:
+    - type: Reconciled
+      status: "False"
+      lastTransitionTime: "2022-02-08T23:54:22Z"
+      reason: InvalidSecretReference
+      message: "failed to get bearer token: failed to get token from secret: key 'bearer-token' in secret 'metric-credentials' not found"
 ```
 
-Example for a ServiceMonitor that can't be bound to a Prometheus object:
+Example for a ServiceMonitor that is valid but can't be bound to a Prometheus object:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -425,22 +408,23 @@ spec:
   - port: web
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
 status:
-  conditions:
-  - type: Valid
-    status: "True"
-    lastTransitionTime: "2022-02-08T23:54:22Z"
   bindings:
-  - name: default/prometheus-agent-monitoring
-    prometheusRef:
-      resource: prometheusagents
-      name: monitoring
-      namespace: default
+  - resource: prometheusagents
+    name: monitoring
+    namespace: default
     conditions:
     - type: Reconciled
       status: "False"
       lastTransitionTime: "2022-02-08T23:54:22Z"
       reason: DirectFileSystemAccessForbidden
       message: "it accesses file system via bearer token file which Prometheus specification prohibits"
+  - resource: prometheuses
+    name: monitoring
+    namespace: default
+    conditions:
+    - type: Reconciled
+      status: "True"
+      lastTransitionTime: "2022-02-08T23:54:22Z"
 ```
 
 A given ServiceMonitor object may be selected by more than one
