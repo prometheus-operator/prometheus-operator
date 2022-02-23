@@ -36,8 +36,8 @@ Non-Goals
 
 * Offering all of the automation, scripts and bots described as part of the Proposal
   lifecycle
-* Converting the already open PR against the
-    [proposal](https://github.com/tinkerbell/proposals) repo to this new format
+* Converting the existing
+    [design proposals](../designs) to this new format.
 
 ## Content
 
@@ -51,7 +51,7 @@ implemented.)_
 Discussing and deciding how and why a feature or a piece of code should or
 should not be written is an important part of the engineering process.
 
-As an open source project, Tinkerbell needs to have a public place where
+As an open source project, the Prometheus Operator needs to have a public place where
 community members, contributors can share their ideas in detail, asking for
 help, feedback and more in general to spot problems addressable as early as
 possible.
@@ -369,21 +369,19 @@ quickly identify those open for discussion.
 ### When you can avoid a Proposal
 
 Proposals are not necessary when small fixes are made or minor features are
-introduced.  An Proposal is not necessary in when the community is satisfied with the
-discussions happening in other channels like Slack, voice, or in pull requests
-and issues.
+introduced.  A Proposal is not necessary in when the community is satisfied with the
+discussions happening in other channels like GitHub issues, pull requests, meetings such as contributors office hours or Slack.
 
 ## System-context-diagram
 
-_(How does this feature or discussion fit into the big picture? Tinkerbell, like
+_(How does this feature or discussion fit into the big picture? The Prometheus Operator, like
 many other modern software stacks, have a high level of interaction between
 component, including external components. A system context diagram helps the
 reader visually understand how this Proposal plays a role.)_
 
 ## APIs
 
-_(Describe any API changes, including new APIs, here with JSON, YAML, `curl`, or
-GRPC Interface examples.)_
+_(Describe any API changes, including new or updated CRDs.)_
 
 ## Alternatives
 
