@@ -351,8 +351,8 @@ type PrometheusList struct {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
-	// Time duration Prometheus shall retain data for. Default
-	// is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
+	// Time duration Prometheus shall retain data for. Default is '24h' if
+	// retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
 	// (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`.

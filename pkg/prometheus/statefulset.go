@@ -123,9 +123,6 @@ func makeStatefulSet(
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
 	}
-	if p.Spec.Retention == "" {
-		p.Spec.Retention = defaultRetention
-	}
 
 	if p.Spec.Resources.Requests == nil {
 		p.Spec.Resources.Requests = v1.ResourceList{}
@@ -348,18 +345,32 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 
 	retentionTimeFlag := "-storage.tsdb.retention="
-	if version.Minor >= 7 {
+	if version.GTE(semver.MustParse("2.7.0")) {
 		retentionTimeFlag = "-storage.tsdb.retention.time="
-		if p.Spec.RetentionSize != "" {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-			)
+		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			if p.Spec.Retention != "" {
+				promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
+			}
+
+			if p.Spec.RetentionSize != "" {
+				promArgs = append(promArgs,
+					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+				)
+			}
+		}
+	} else {
+		if p.Spec.Retention == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
 		}
 	}
+
 	promArgs = append(promArgs,
 		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
 	)
 
