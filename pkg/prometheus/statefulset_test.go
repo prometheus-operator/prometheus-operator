@@ -2103,3 +2103,79 @@ func TestThanosReadyTimeout(t *testing.T) {
 		t.Fatal("Sidecar ready timeout not set when it should.")
 	}
 }
+
+func TestQueryLogFileVolumeMountPresent(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			QueryLogFile: "test.log",
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == "query-log-file" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Volume for query log file not found.")
+	}
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == "query-log-file" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Query log file not mounted.")
+	}
+}
+
+func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
+	// An emptyDir is only mounted by the Operator if the given
+	// path is only a base filename.
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			QueryLogFile: "/tmp/test.log",
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == "query-log-file" {
+			found = true
+		}
+	}
+
+	if found {
+		t.Fatal("Volume for query log file found, when it shouldn't be.")
+	}
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == "query-log-file" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if found {
+		t.Fatal("Query log file mounted, when it shouldn't be.")
+	}
+}
