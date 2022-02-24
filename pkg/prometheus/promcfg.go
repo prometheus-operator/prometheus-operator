@@ -874,7 +874,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, false)
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
@@ -1096,8 +1096,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 		}
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards, true)
-
+		if shards > 1 {
+			relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+		}
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	}
@@ -1380,7 +1381,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, false)
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
@@ -1409,20 +1410,16 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-   return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
 }
 
 func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-   return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
 }
 
 func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
-	sourceLabel := "__address__"
-	if isProbe {
-		sourceLabel = "__param_target"
-	}
 	return append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{sourceLabel}},
+		{Key: "source_labels", Value: []string{shardLabel}},
 		{Key: "target_label", Value: "__tmp_hash"},
 		{Key: "modulus", Value: shards},
 		{Key: "action", Value: "hashmod"},
@@ -1651,7 +1648,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards, false)
+		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
