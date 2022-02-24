@@ -1408,7 +1408,15 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 	return user
 }
 
-func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32, isProbe bool) []yaml.MapSlice {
+func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+   return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+}
+
+func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+   return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
+}
+
+func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
 	sourceLabel := "__address__"
 	if isProbe {
 		sourceLabel = "__param_target"
