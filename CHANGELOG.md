@@ -1,3 +1,8 @@
+## 0.54.1 / 2021-02-24
+
+* [BUGFIX] Updated relabelConfig validation to accept Prometheus default config on labeldrop relabelConfig. #4579
+* [BUGFIX] Fixed relabelConfigs for labelmap action. #4574
+
 ## 0.54.0 / 2021-01-26
 
 * [FEATURE] Support SNS Receiver in AlertmanagerConfig CR. #4468
