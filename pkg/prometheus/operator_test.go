@@ -277,9 +277,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 		t.Errorf("Could not assert marshaled defaultRegexp as string: %v", defaultRegexp)
 	}
 
-	defaultSourceLabels := []string{}
+	defaultSourceLabels := []monitoringv1.LabelName{}
 	for _, label := range relabel.DefaultRelabelConfig.SourceLabels {
-		defaultSourceLabels = append(defaultSourceLabels, string(label))
+		defaultSourceLabels = append(defaultSourceLabels, monitoringv1.LabelName(label))
 	}
 
 	for _, tc := range []struct {
