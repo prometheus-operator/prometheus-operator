@@ -342,7 +342,7 @@
                           "type": "string"
                         },
                         "relabelings": {
-                          "description": "RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                          "description": "RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                             "properties": {
@@ -590,7 +590,7 @@
                         "type": "boolean"
                       },
                       "matchNames": {
-                        "description": "List of namespace names.",
+                        "description": "List of namespace names to select from.",
                         "items": {
                           "type": "string"
                         },
