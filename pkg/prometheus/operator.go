@@ -2179,8 +2179,10 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 	if rc.Action == string(relabel.Replace) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
-	if rc.Action == string(relabel.LabelMap) && !relabelTarget.MatchString(rc.Replacement) {
-		return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+	if rc.Action == string(relabel.LabelMap) {
+		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
+			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+		}
 	}
 	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
@@ -2188,10 +2190,14 @@ func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
 
 	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
 		if len(rc.SourceLabels) != 0 ||
-			rc.TargetLabel != "" ||
-			rc.Modulus != uint64(0) ||
-			rc.Separator != "" ||
-			rc.Replacement != "" {
+			!(rc.TargetLabel == "" ||
+				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
+			!(rc.Modulus == uint64(0) ||
+				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
+			!(rc.Separator == "" ||
+				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
+				rc.Replacement == "") {
 			return errors.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}

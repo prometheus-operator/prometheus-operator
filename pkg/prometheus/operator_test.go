@@ -21,6 +21,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus/prometheus/model/relabel"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -267,6 +268,20 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 }
 
 func TestValidateRelabelConfig(t *testing.T) {
+	defaultRegexp, err := relabel.DefaultRelabelConfig.Regex.MarshalYAML()
+	if err != nil {
+		t.Errorf("Could not marshal relabel.DefaultRelabelConfig.Regex: %v", err)
+	}
+	defaultRegex, ok := defaultRegexp.(string)
+	if !ok {
+		t.Errorf("Could not assert marshaled defaultRegexp as string: %v", defaultRegexp)
+	}
+
+	defaultSourceLabels := []monitoringv1.LabelName{}
+	for _, label := range relabel.DefaultRelabelConfig.SourceLabels {
+		defaultSourceLabels = append(defaultSourceLabels, monitoringv1.LabelName(label))
+	}
+
 	for _, tc := range []struct {
 		scenario      string
 		relabelConfig monitoringv1.RelabelConfig
@@ -322,18 +337,27 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Action: "labelmap",
-				Regex:  "__meta_kubernetes_service_label_(.+)",
+				Action:      "labelmap",
+				Regex:       "__meta_kubernetes_service_label_(.+)",
+				Replacement: "some-name-value",
 			},
 			expectedErr: true,
 		},
-		// Test valid labelmap relabel config
+		// Test valid labelmap relabel config when replacement not specified
+		{
+			scenario: "valid labelmap config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labelmap",
+				Regex:  "__meta_kubernetes_service_label_(.+)",
+			},
+		},
+		// Test valid labelmap relabel config with replacement specified
 		{
 			scenario: "valid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: "k8s_$1",
+				Replacement: "${2}",
 			},
 		},
 		// Test invalid labelkeep relabel config
@@ -359,6 +383,18 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action: "labeldrop",
 				Regex:  "replica",
+			},
+		},
+		{
+			scenario: "valid labeldrop config with default values",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: defaultSourceLabels,
+				Separator:    relabel.DefaultRelabelConfig.Separator,
+				TargetLabel:  relabel.DefaultRelabelConfig.TargetLabel,
+				Regex:        defaultRegex,
+				Modulus:      relabel.DefaultRelabelConfig.Modulus,
+				Replacement:  relabel.DefaultRelabelConfig.Replacement,
+				Action:       "labeldrop",
 			},
 		},
 		// Test valid relabel config
