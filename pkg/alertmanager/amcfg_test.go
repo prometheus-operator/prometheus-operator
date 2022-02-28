@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -33,10 +34,99 @@ import (
 	"github.com/prometheus/common/model"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+func TestGenerateGlobalConfig(t *testing.T) {
+	myroute := monitoringv1alpha1.Route{
+		Receiver: "myreceiver",
+		Matchers: []monitoringv1alpha1.Matcher{
+			{
+				Name:  "mykey",
+				Value: "myvalue",
+				Regex: false,
+			},
+		},
+	}
+
+	myrouteJSON, _ := json.Marshal(myroute)
+
+	tests := []struct {
+		name     string
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		want     *alertmanagerConfig
+		wantErr  bool
+	}{
+		{
+			name: "generateGlobalConfig succeed",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			want: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace-global-config-null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace-global-config-null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace-global-config-myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		version, err := semver.ParseTolerant("v0.22.2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		kclient := fake.NewSimpleClientset()
+		cg := newConfigGenerator(
+			log.NewNopLogger(),
+			version,
+			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+		)
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cg.generateGlobalConfig(context.TODO(), tt.amConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {

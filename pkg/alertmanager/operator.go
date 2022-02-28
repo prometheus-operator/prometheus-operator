@@ -889,9 +889,9 @@ receivers:
 		}
 	}
 
-	// If no AlertmanagerConfig selectors are configured, the user wants to
+	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are configured, the user wants to
 	// manage configuration themselves.
-	if am.Spec.AlertmanagerConfigSelector == nil {
+	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
 		level.Debug(namespacedLogger).
 			Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
 				"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name))
@@ -920,6 +920,20 @@ receivers:
 	}
 
 	generator := newConfigGenerator(namespacedLogger, version, store)
+	// If defined AlertmanagerConfiguration, find the global AlertmanagerConfig and generate.
+	// Otherwise work with the raw configuration secret.
+	if am.Spec.AlertmanagerConfiguration != nil {
+		globalAmConfig, err := c.mclient.MonitoringV1alpha1().AlertmanagerConfigs(am.Namespace).
+			Get(ctx, am.Spec.AlertmanagerConfiguration.Name, metav1.GetOptions{})
+		if err != nil {
+			return errors.Wrap(err, "get AlertmanagerConfig failed")
+		}
+		baseConfig, err = generator.generateGlobalConfig(ctx, globalAmConfig)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate global AlertmangerConfig")
+		}
+	}
+
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
@@ -1004,7 +1018,12 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				// Add when it is not specified as the global AlertmanagerConfig
+				if am.Spec.AlertmanagerConfiguration == nil ||
+					(amConfig.Namespace != am.Namespace || amConfig.Name != am.Spec.AlertmanagerConfiguration.Name) {
+					amConfigs[k] = amConfig
+				}
 			}
 		})
 		if err != nil {

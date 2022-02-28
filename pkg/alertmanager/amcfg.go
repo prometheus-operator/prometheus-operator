@@ -59,23 +59,33 @@ func alertmanagerConfigFrom(s string) (*alertmanagerConfig, error) {
 		return nil, err
 	}
 
-	rootRoute := cfg.Route
+	if err := checkAlertmanagerConfigRootRoute(cfg.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
+	return cfg, nil
+}
+
+func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
 	if rootRoute == nil {
-		return nil, errors.New("root route must exist")
+		return errors.New("root route must exist")
+	}
+
+	if rootRoute.Continue {
+		return errors.New("cannot have continue in root route")
 	}
 
 	if rootRoute.Receiver == "" {
-		return nil, errors.New("root route's receiver must exist")
+		return errors.New("root route's receiver must exist")
 	}
 
 	if len(rootRoute.Matchers) > 0 || len(rootRoute.Match) > 0 || len(rootRoute.MatchRE) > 0 {
-		return nil, errors.New("'matchers' not permitted on root route")
+		return errors.New("'matchers' not permitted on root route")
 	}
 
 	if len(rootRoute.MuteTimeIntervals) > 0 {
-		return nil, errors.New("'mute_time_intervals' not permitted on root route")
+		return errors.New("'mute_time_intervals' not permitted on root route")
 	}
-	return cfg, nil
+	return nil
 }
 
 func (c alertmanagerConfig) String() string {
@@ -126,6 +136,48 @@ func validateConfigInputs(am *monitoringv1.Alertmanager) error {
 		}
 	}
 	return nil
+}
+
+func (cg *configGenerator) generateGlobalConfig(
+	ctx context.Context,
+	amConfig *monitoringv1alpha1.AlertmanagerConfig,
+) (*alertmanagerConfig, error) {
+	globalAlertmanagerConfig := &alertmanagerConfig{}
+	crKey := types.NamespacedName{
+		Namespace: amConfig.Namespace,
+		Name:      amConfig.Name,
+	}
+	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
+	for _, inhibitRule := range amConfig.Spec.InhibitRules {
+		globalAlertmanagerConfig.InhibitRules = append(globalAlertmanagerConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule))
+	}
+
+	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
+	globalAlertmanagerConfig.Route = cg.convertRoute(amConfig.Spec.Route, crKey)
+
+	for _, receiver := range amConfig.Spec.Receivers {
+		receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
+		if err != nil {
+			return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+		}
+		globalAlertmanagerConfig.Receivers = append(globalAlertmanagerConfig.Receivers, receivers)
+	}
+
+	for _, muteTimeInterval := range amConfig.Spec.MuteTimeIntervals {
+		mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+		if err != nil {
+			return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+		}
+		globalAlertmanagerConfig.MuteTimeIntervals = append(globalAlertmanagerConfig.MuteTimeIntervals, mti)
+	}
+
+	if err := globalAlertmanagerConfig.sanitize(cg.amVersion, cg.logger); err != nil {
+		return nil, err
+	}
+	if err := checkAlertmanagerConfigRootRoute(globalAlertmanagerConfig.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
+	return globalAlertmanagerConfig, nil
 }
 
 func (cg *configGenerator) generateConfig(
