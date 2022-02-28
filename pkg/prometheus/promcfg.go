@@ -1079,6 +1079,14 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
+				{Key: "source_labels", Value: []string{"__tmp_prometheus_address"}},
+				{Key: "separator", Value: ";"},
+				{Key: "regex", Value: "(.*)"},
+				{Key: "target_label", Value: "__tmp_prometheus_address"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+			{
 				{Key: "source_labels", Value: []string{"__param_target"}},
 				{Key: "target_label", Value: "instance"},
 			},

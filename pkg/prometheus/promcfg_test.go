@@ -1002,6 +1002,13 @@ scrape_configs:
     - __meta_kubernetes_ingress_name
     target_label: ingress
   - source_labels:
+    - __tmp_prometheus_address
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_prometheus_address
+    replacement: $1
+    action: replace
+  - source_labels:
     - __param_target
     target_label: instance
   - target_label: __address__
@@ -1132,6 +1139,13 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
+  - source_labels:
+    - __tmp_prometheus_address
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_prometheus_address
+    replacement: $1
+    action: replace
   - source_labels:
     - __param_target
     target_label: instance
