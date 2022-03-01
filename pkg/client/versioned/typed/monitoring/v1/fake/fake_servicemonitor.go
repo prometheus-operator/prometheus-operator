@@ -103,7 +103,7 @@ func (c *FakeServiceMonitors) Update(ctx context.Context, serviceMonitor *monito
 // Delete takes name of the serviceMonitor and deletes it. Returns an error if one occurs.
 func (c *FakeServiceMonitors) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(servicemonitorsResource, c.ns, name), &monitoringv1.ServiceMonitor{})
+		Invokes(testing.NewDeleteActionWithOptions(servicemonitorsResource, c.ns, name, opts), &monitoringv1.ServiceMonitor{})
 
 	return err
 }
