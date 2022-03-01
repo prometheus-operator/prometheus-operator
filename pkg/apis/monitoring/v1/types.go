@@ -255,13 +255,14 @@ type CommonPrometheusFields struct {
 	// from service and pod monitors.
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
-	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from
-	// the podmonitor and servicemonitor configs, and they will only discover endpoints
-	// within their current namespace.  Defaults to false.
+	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
+	// settings from all PodMonitor, ServiceMonitor and Probe objects. They
+	// will only discover endpoints within their current namespace.
+	// Defaults to false.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 	// EnforcedNamespaceLabel If set, a label will be added to
 	//
-	// 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and
+	// 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `Probe` objects) and
 	// 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to
 	//    * alerting & recording rules and
 	//    * the metrics used in their expressions (`expr`).
@@ -351,8 +352,8 @@ type PrometheusList struct {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
-	// Time duration Prometheus shall retain data for. Default
-	// is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
+	// Time duration Prometheus shall retain data for. Default is '24h' if
+	// retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
 	// (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`.
@@ -986,8 +987,8 @@ type Endpoint struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
-	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields
-	// and replaces original scrape job name with __tmp_prometheus_job_name.
+	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
@@ -1072,8 +1073,8 @@ type PodMetricsEndpoint struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
-	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields
-	// and replaces original scrape job name with __tmp_prometheus_job_name.
+	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
@@ -1111,7 +1112,7 @@ type ProbeSpec struct {
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
 	Module string `json:"module,omitempty"`
-	// Targets defines a set of static and/or dynamically discovered targets to be probed using the prober.
+	// Targets defines a set of static or dynamically discovered targets to probe.
 	Targets ProbeTargets `json:"targets,omitempty"`
 	// Interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
@@ -1148,20 +1149,26 @@ type ProbeSpec struct {
 	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
 }
 
-// ProbeTargets defines a set of static and dynamically discovered targets for the prober.
+// ProbeTargets defines how to discover the probed targets.
+// One of the `staticConfig` or `ingress` must be defined.
+// If both are defined, `staticConfig` takes precedence.
 // +k8s:openapi-gen=true
 type ProbeTargets struct {
-	// StaticConfig defines static targets which are considers for probing.
+	// staticConfig defines the static list of targets to probe and the
+	// relabeling configuration.
+	// If `ingress` is also defined, `staticConfig` takes precedence.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
 	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
-	// Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing.
+	// ingress defines the Ingress objects to probe and the relabeling
+	// configuration.
+	// If `staticConfig` is also defined, `staticConfig` takes precedence.
 	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
 }
 
 // Validate semantically validates the given ProbeTargets.
 func (it *ProbeTargets) Validate() error {
 	if it.StaticConfig == nil && it.Ingress == nil {
-		return &ProbeTargetsValidationError{"at least one of .spec.target.staticConfig and .spec.target.ingress is required"}
+		return &ProbeTargetsValidationError{"at least one of .spec.targets.staticConfig and .spec.targets.ingress is required"}
 	}
 
 	return nil
@@ -1181,23 +1188,30 @@ func (e *ProbeTargetsValidationError) Error() string {
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
 // +k8s:openapi-gen=true
 type ProbeTargetStaticConfig struct {
-	// Targets is a list of URLs to probe using the configured prober.
+	// The list of hosts to probe.
 	Targets []string `json:"static,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
 	Labels map[string]string `json:"labels,omitempty"`
-	// RelabelConfigs to apply to samples before ingestion.
+	// RelabelConfigs to apply to the label set of the targets before it gets
+	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngress defines the set of Ingress objects considered for probing.
+// The operator configures a target for each host/path combination of each ingress object.
 // +k8s:openapi-gen=true
 type ProbeTargetIngress struct {
-	// Select Ingress objects by labels.
+	// Selector to select the Ingress objects.
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
-	// Select Ingress objects by namespace.
+	// From which namespaces to select Ingress objects.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
-	// RelabelConfigs to apply to samples before ingestion.
+	// RelabelConfigs to apply to the label set of the target before it gets
+	// scraped.
+	// The original ingress address is available via the
+	// `__tmp_prometheus_ingress_address` label. It can be used to customize the
+	// probed URL.
+	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
@@ -1655,6 +1669,20 @@ type AlertmanagerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
+	// If defined, it takes precedence over the `configSecret` field.
+	// This field may change in future releases.
+	// The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.
+	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
+}
+
+// AlertmanagerConfiguration used to set the global alertmanager config.
+// +k8s:openapi-gen=true
+type AlertmanagerConfiguration struct {
+	// The name of the AlertmanagerConfig resource which holds the global configuration.
+	// It must be in the same namespace as the Alertmanager.
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
@@ -1701,12 +1729,15 @@ type AlertmanagerStatus struct {
 
 // NamespaceSelector is a selector for selecting either all namespaces or a
 // list of namespaces.
+// If `any` is true, it takes precedence over `matchNames`.
+// If `matchNames` is empty and `any` is false, it means that the objects are
+// selected from the current namespace.
 // +k8s:openapi-gen=true
 type NamespaceSelector struct {
 	// Boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	Any bool `json:"any,omitempty"`
-	// List of namespace names.
+	// List of namespace names to select from.
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.

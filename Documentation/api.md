@@ -20,6 +20,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [APIServerConfig](#apiserverconfig)
 * [AlertingSpec](#alertingspec)
 * [Alertmanager](#alertmanager)
+* [AlertmanagerConfiguration](#alertmanagerconfiguration)
 * [AlertmanagerEndpoints](#alertmanagerendpoints)
 * [AlertmanagerList](#alertmanagerlist)
 * [AlertmanagerSpec](#alertmanagerspec)
@@ -153,6 +154,19 @@ Alertmanager describes an Alertmanager cluster.
 
 [Back to TOC](#table-of-contents)
 
+## AlertmanagerConfiguration
+
+AlertmanagerConfiguration used to set the global alertmanager config.
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | The name of the AlertmanagerConfig resource which holds the global configuration. It must be in the same namespace as the Alertmanager. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## AlertmanagerEndpoints
 
 AlertmanagerEndpoints defines a selection of a single Endpoints object containing alertmanager IPs to fire alerts against.
@@ -236,6 +250,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
+| alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -353,7 +368,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
 
@@ -375,7 +390,7 @@ MetadataConfig configures the sending of series metadata to the remote storage.
 
 ## NamespaceSelector
 
-NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.
+NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces. If `any` is true, it takes precedence over `matchNames`. If `matchNames` is empty and `any` is false, it means that the objects are selected from the current namespace.
 
 
 <em>appears in: [PodMonitorSpec](#podmonitorspec), [ProbeTargetIngress](#probetargetingress), [ServiceMonitorSpec](#servicemonitorspec)</em>
@@ -383,7 +398,7 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | any | Boolean describing whether all namespaces are selected in contrast to a list restricting them. | bool | false |
-| matchNames | List of namespace names. | []string | false |
+| matchNames | List of namespace names to select from. | []string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -428,7 +443,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | authorization | Authorization section for this endpoint | *[SafeAuthorization](#safeauthorization) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
 
@@ -535,7 +550,7 @@ ProbeSpec contains specification parameters for a Probe.
 | jobName | The job name assigned to scraped metrics by default. | string | false |
 | prober | Specification for the prober to use for probing targets. The prober.URL parameter is required. Targets cannot be probed if left empty. | [ProberSpec](#proberspec) | false |
 | module | The module to use for probing specifying how to probe the target. Example module configuring in the blackbox exporter: https://github.com/prometheus/blackbox_exporter/blob/master/example.yml | string | false |
-| targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the prober. | [ProbeTargets](#probetargets) | false |
+| targets | Targets defines a set of static or dynamically discovered targets to probe. | [ProbeTargets](#probetargets) | false |
 | interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
 | scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
@@ -571,16 +586,16 @@ ProbeTLSConfig specifies TLS configuration parameters.
 
 ## ProbeTargetIngress
 
-ProbeTargetIngress defines the set of Ingress objects considered for probing.
+ProbeTargetIngress defines the set of Ingress objects considered for probing. The operator configures a target for each host/path combination of each ingress object.
 
 
 <em>appears in: [ProbeTargets](#probetargets)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| selector | Select Ingress objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
-| namespaceSelector | Select Ingress objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
-| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| selector | Selector to select the Ingress objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
+| namespaceSelector | From which namespaces to select Ingress objects. | [NamespaceSelector](#namespaceselector) | false |
+| relabelingConfigs | RelabelConfigs to apply to the label set of the target before it gets scraped. The original ingress address is available via the `__tmp_prometheus_ingress_address` label. It can be used to customize the probed URL. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -593,23 +608,23 @@ ProbeTargetStaticConfig defines the set of static targets considered for probing
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| static | Targets is a list of URLs to probe using the configured prober. | []string | false |
+| static | The list of hosts to probe. | []string | false |
 | labels | Labels assigned to all metrics scraped from the targets. | map[string]string | false |
-| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelingConfigs | RelabelConfigs to apply to the label set of the targets before it gets scraped. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
 ## ProbeTargets
 
-ProbeTargets defines a set of static and dynamically discovered targets for the prober.
+ProbeTargets defines how to discover the probed targets. One of the `staticConfig` or `ingress` must be defined. If both are defined, `staticConfig` takes precedence.
 
 
 <em>appears in: [ProbeSpec](#probespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| staticConfig | StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[ProbeTargetStaticConfig](#probetargetstaticconfig) | false |
-| ingress | Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing. | *[ProbeTargetIngress](#probetargetingress) | false |
+| staticConfig | staticConfig defines the static list of targets to probe and the relabeling configuration. If `ingress` is also defined, `staticConfig` takes precedence. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[ProbeTargetStaticConfig](#probetargetstaticconfig) | false |
+| ingress | ingress defines the Ingress objects to probe and the relabeling configuration. If `staticConfig` is also defined, `staticConfig` takes precedence. | *[ProbeTargetIngress](#probetargetingress) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -768,8 +783,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | arbitraryFSAccessThroughSMs | ArbitraryFSAccessThroughSMs configures whether configuration based on a service monitor can access arbitrary files on the file system of the Prometheus container e.g. bearer token files. | [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig) | false |
 | overrideHonorLabels | When true, Prometheus resolves label conflicts by renaming the labels in the scraped data to \"exported_<label value>\" for all targets created from service and pod monitors. Otherwise the HonorLabels field of the service or pod monitor applies. | bool | false |
 | overrideHonorTimestamps | When true, Prometheus ignores the timestamps for all the targets created from service and pod monitors. Otherwise the HonorTimestamps field of the service or pod monitor applies. | bool | false |
-| ignoreNamespaceSelectors | IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from the podmonitor and servicemonitor configs, and they will only discover endpoints within their current namespace.  Defaults to false. | bool | false |
-| enforcedNamespaceLabel | EnforcedNamespaceLabel If set, a label will be added to\n\n1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to\n   * alerting & recording rules and\n   * the metrics used in their expressions (`expr`).\n\nLabel name is this field's value. Label value is the namespace of the created object (mentioned above). | string | false |
+| ignoreNamespaceSelectors | IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from all PodMonitor, ServiceMonitor and Probe objects. They will only discover endpoints within their current namespace. Defaults to false. | bool | false |
+| enforcedNamespaceLabel | EnforcedNamespaceLabel If set, a label will be added to\n\n1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `Probe` objects) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to\n   * alerting & recording rules and\n   * the metrics used in their expressions (`expr`).\n\nLabel name is this field's value. Label value is the namespace of the created object (mentioned above). | string | false |
 | enforcedSampleLimit | EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead. | *uint64 | false |
 | enforcedTargetLimit | EnforcedTargetLimit defines a global limit on the number of scraped targets.  This overrides any TargetLimit set per ServiceMonitor or/and PodMonitor.  It is meant to be used by admins to enforce the TargetLimit to keep the overall number of targets under the desired limit. Note that if TargetLimit is lower, that value will be taken instead, except if either value is zero, in which case the non-zero value will be used.  If both values are zero, no limit is enforced. | *uint64 | false |
 | enforcedLabelLimit | Per-scrape limit on number of labels that will be accepted for a sample. If more than this number of labels are present post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
@@ -777,7 +792,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedLabelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 | enforcedBodySizeLimit | EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer. | string | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| retention | Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
+| retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
 | retentionSize | Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`. | string | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |

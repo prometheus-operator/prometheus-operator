@@ -1002,6 +1002,13 @@ scrape_configs:
     - __meta_kubernetes_ingress_name
     target_label: ingress
   - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
+  - source_labels:
     - __param_target
     target_label: instance
   - target_label: __address__
@@ -1022,8 +1029,8 @@ scrape_configs:
 `
 
 	result := string(cfg)
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
 	}
 }
 
@@ -1280,6 +1287,13 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
+  - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
   - source_labels:
     - __param_target
     target_label: instance

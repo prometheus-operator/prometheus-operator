@@ -4939,6 +4939,20 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+              alertmanagerConfiguration:
+                description: 'EXPERIMENTAL: alertmanagerConfiguration specifies the
+                  global Alertmanager configuration. If defined, it takes precedence
+                  over the `configSecret` field. This field may change in future releases.
+                  The specified global alertmanager config will not force add a namespace
+                  label in routes and inhibitRules.'
+                properties:
+                  name:
+                    description: The name of the AlertmanagerConfig resource which
+                      holds the global configuration. It must be in the same namespace
+                      as the Alertmanager.
+                    minLength: 1
+                    type: string
+                type: object
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.
                   Deprecated: use ''image'' instead'
@@ -10081,7 +10095,7 @@ spec:
                       in contrast to a list restricting them.
                     type: boolean
                   matchNames:
-                    description: List of namespace names.
+                    description: List of namespace names to select from.
                     items:
                       type: string
                     type: array
@@ -10361,8 +10375,9 @@ spec:
                     relabelings:
                       description: 'RelabelConfigs to apply to samples before scraping.
                         Prometheus Operator automatically adds relabelings for a few
-                        standard Kubernetes fields and replaces original scrape job
-                        name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                        standard Kubernetes fields. The original scrape job''s name
+                        is available via the `__tmp_prometheus_job_name` label. More
+                        info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                       items:
                         description: 'RelabelConfig allows dynamic rewriting of the
                           label set, being applied to samples before ingestion. It
@@ -10954,29 +10969,34 @@ spec:
                 format: int64
                 type: integer
               targets:
-                description: Targets defines a set of static and/or dynamically discovered
-                  targets to be probed using the prober.
+                description: Targets defines a set of static or dynamically discovered
+                  targets to probe.
                 properties:
                   ingress:
-                    description: Ingress defines the set of dynamically discovered
-                      ingress objects which hosts are considered for probing.
+                    description: ingress defines the Ingress objects to probe and
+                      the relabeling configuration. If `staticConfig` is also defined,
+                      `staticConfig` takes precedence.
                     properties:
                       namespaceSelector:
-                        description: Select Ingress objects by namespace.
+                        description: From which namespaces to select Ingress objects.
                         properties:
                           any:
                             description: Boolean describing whether all namespaces
                               are selected in contrast to a list restricting them.
                             type: boolean
                           matchNames:
-                            description: List of namespace names.
+                            description: List of namespace names to select from.
                             items:
                               type: string
                             type: array
                         type: object
                       relabelingConfigs:
-                        description: 'RelabelConfigs to apply to samples before ingestion.
-                          More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                        description: 'RelabelConfigs to apply to the label set of
+                          the target before it gets scraped. The original ingress
+                          address is available via the `__tmp_prometheus_ingress_address`
+                          label. It can be used to customize the probed URL. The original
+                          scrape job''s name is available via the `__tmp_prometheus_job_name`
+                          label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                         items:
                           description: 'RelabelConfig allows dynamic rewriting of
                             the label set, being applied to samples before ingestion.
@@ -11034,7 +11054,7 @@ spec:
                           type: object
                         type: array
                       selector:
-                        description: Select Ingress objects by labels.
+                        description: Selector to select the Ingress objects.
                         properties:
                           matchExpressions:
                             description: matchExpressions is a list of label selector
@@ -11080,8 +11100,9 @@ spec:
                         type: object
                     type: object
                   staticConfig:
-                    description: 'StaticConfig defines static targets which are considers
-                      for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.'
+                    description: 'staticConfig defines the static list of targets
+                      to probe and the relabeling configuration. If `ingress` is also
+                      defined, `staticConfig` takes precedence. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.'
                     properties:
                       labels:
                         additionalProperties:
@@ -11090,8 +11111,8 @@ spec:
                           targets.
                         type: object
                       relabelingConfigs:
-                        description: 'RelabelConfigs to apply to samples before ingestion.
-                          More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                        description: 'RelabelConfigs to apply to the label set of
+                          the targets before it gets scraped. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                         items:
                           description: 'RelabelConfig allows dynamic rewriting of
                             the label set, being applied to samples before ingestion.
@@ -11149,8 +11170,7 @@ spec:
                           type: object
                         type: array
                       static:
-                        description: Targets is a list of URLs to probe using the
-                          configured prober.
+                        description: The list of hosts to probe.
                         items:
                           type: string
                         type: array
@@ -13972,11 +13992,11 @@ spec:
               enforcedNamespaceLabel:
                 description: "EnforcedNamespaceLabel If set, a label will be added
                   to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor`
-                  and `ProbeConfig` object) and 2. in all `PrometheusRule` objects
-                  (except the ones excluded in `prometheusRulesExcludedFromEnforce`)
-                  to    * alerting & recording rules and    * the metrics used in
-                  their expressions (`expr`). \n Label name is this field's value.
-                  Label value is the namespace of the created object (mentioned above)."
+                  and `Probe` objects) and 2. in all `PrometheusRule` objects (except
+                  the ones excluded in `prometheusRulesExcludedFromEnforce`) to    *
+                  alerting & recording rules and    * the metrics used in their expressions
+                  (`expr`). \n Label name is this field's value. Label value is the
+                  namespace of the created object (mentioned above)."
                 type: string
               enforcedSampleLimit:
                 description: EnforcedSampleLimit defines global limit on number of
@@ -14014,9 +14034,9 @@ spec:
                 type: string
               ignoreNamespaceSelectors:
                 description: IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-                  settings from the podmonitor and servicemonitor configs, and they
-                  will only discover endpoints within their current namespace.  Defaults
-                  to false.
+                  settings from all PodMonitor, ServiceMonitor and Probe objects.
+                  They will only discover endpoints within their current namespace.
+                  Defaults to false.
                 type: boolean
               image:
                 description: Image if specified has precedence over baseImage, tag
@@ -16442,8 +16462,9 @@ spec:
                 type: object
               retention:
                 description: Time duration Prometheus shall retain data for. Default
-                  is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
-                  (milliseconds seconds minutes hours days weeks years).
+                  is '24h' if retentionSize is not set, and must match the regular
+                  expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes
+                  hours days weeks years).
                 type: string
               retentionSize:
                 description: 'Maximum amount of disk space used by blocks. Supported
@@ -20017,8 +20038,9 @@ spec:
                     relabelings:
                       description: 'RelabelConfigs to apply to samples before scraping.
                         Prometheus Operator automatically adds relabelings for a few
-                        standard Kubernetes fields and replaces original scrape job
-                        name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                        standard Kubernetes fields. The original scrape job''s name
+                        is available via the `__tmp_prometheus_job_name` label. More
+                        info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                       items:
                         description: 'RelabelConfig allows dynamic rewriting of the
                           label set, being applied to samples before ingestion. It
@@ -20250,7 +20272,7 @@ spec:
                       in contrast to a list restricting them.
                     type: boolean
                   matchNames:
-                    description: List of namespace names.
+                    description: List of namespace names to select from.
                     items:
                       type: string
                     type: array
@@ -26559,7 +26581,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.54.0
+    app.kubernetes.io/version: 0.54.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -26576,7 +26598,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.54.0
+    app.kubernetes.io/version: 0.54.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -26656,7 +26678,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.54.0
+    app.kubernetes.io/version: 0.54.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -26672,14 +26694,14 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.54.0
+        app.kubernetes.io/version: 0.54.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.54.0
-        image: quay.io/prometheus-operator/prometheus-operator:v0.54.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.54.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.54.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -26711,7 +26733,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.54.0
+    app.kubernetes.io/version: 0.54.1
   name: prometheus-operator
   namespace: default
 ---
@@ -26721,7 +26743,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.54.0
+    app.kubernetes.io/version: 0.54.1
   name: prometheus-operator
   namespace: default
 spec:

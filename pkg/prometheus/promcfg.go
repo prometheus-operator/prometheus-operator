@@ -961,8 +961,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 	}
 
-	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
+		// Generate static_config section.
 		staticConfig := yaml.MapSlice{
 			{Key: "targets", Value: m.Spec.Targets.StaticConfig.Targets},
 		}
@@ -1004,14 +1004,12 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.StaticConfig.RelabelConfigs)...)
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	}
-
-	// Generate kubernetes_sd_config section for ingress resources.
-	if m.Spec.Targets.StaticConfig == nil {
-		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
+	} else {
+		// Generate kubernetes_sd_config section for the ingress resources.
 
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
+		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
 		for k := range m.Spec.Targets.Ingress.Selector.MatchLabels {
 			labelKeys = append(labelKeys, k)
 		}
@@ -1080,6 +1078,14 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "source_labels", Value: []string{"__address__"}},
+				{Key: "separator", Value: ";"},
+				{Key: "regex", Value: "(.*)"},
+				{Key: "target_label", Value: "__tmp_ingress_address"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
 			{
 				{Key: "source_labels", Value: []string{"__param_target"}},
 				{Key: "target_label", Value: "instance"},
