@@ -2103,3 +2103,55 @@ func TestThanosReadyTimeout(t *testing.T) {
 		t.Fatal("Sidecar ready timeout not set when it should.")
 	}
 }
+
+func TestThanosRequestLogging(t *testing.T) {
+	testKey := "thanos-config-logging-test"
+
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				LoggingConfig: &v1.ConfigMapKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
+		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
+		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[2].Env {
+		if env.Name == "REQUEST_LOGGING_CONFIG" {
+			if env.ValueFrom.ConfigMapKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos sidecar is missing expected REQUEST_LOGGING_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--request.logging-config=$(REQUEST_LOGGING_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
+		}
+	}
+}

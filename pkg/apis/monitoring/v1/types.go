@@ -691,6 +691,8 @@ type ThanosSpec struct {
 	LogLevel string `json:"logLevel,omitempty"`
 	// LogFormat for Thanos sidecar to be configured with.
 	LogFormat string `json:"logFormat,omitempty"`
+	// LoggingConfig configures request logging in Thanos.
+	LoggingConfig *v1.ConfigMapKeySelector `json:"loggingConfig,omitempty"`
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
 	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
