@@ -50,6 +50,10 @@ const (
 	ProbesKind   = "Probe"
 	ProbeName    = "probes"
 	ProbeKindKey = "probe"
+
+	AlertRelabelConfigKind    = "AlertRelabelConfig"
+	AlertRelabelConfigName    = "alertrelabelconfigs"
+	AlertRelabelConfigKindKey = "alertrelabelconfig"
 )
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
@@ -1825,6 +1829,16 @@ func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
+func (l *AlertRelabelConfig) DeepCopyObject() runtime.Object {
+	return l.DeepCopy()
+}
+
+// DeepCopyObject implements the runtime.Object interface.
+func (l *AlertRelabelConfigList) DeepCopyObject() runtime.Object {
+	return l.DeepCopy()
+}
+
 // ProbeTLSConfig specifies TLS configuration parameters.
 // +k8s:openapi-gen=true
 type ProbeTLSConfig struct {
@@ -1885,4 +1899,32 @@ type AuthorizationValidationError struct {
 
 func (e *AuthorizationValidationError) Error() string {
 	return e.err
+}
+
+// AlertRelabelConfig defines a set of relabel configs for alerts.
+// +genclient
+// +k8s:openapi-gen=true
+// +kubebuilder:resource:categories="prometheus-operator"
+type AlertRelabelConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Specification of additional alert relabel configs for Prometheus.
+	Spec AlertRelabelConfigSpec `json:"spec"`
+}
+
+// AlertRelabelConfigsSpec is the specification for a set of relabel configs for alerts.
+// +k8s:openapi-gen=true
+type AlertRelabelConfigSpec struct {
+	Configs []RelabelConfig `json:"configs"`
+}
+
+// AlertRelabelConfigList is a list of AlertRelabelConfigs.
+// +k8s:openapi-gen=true
+type AlertRelabelConfigList struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	metav1.ListMeta `json:"metadata,omitempty"`
+	// List of AlertRelabelConfigs
+	Items []*AlertRelabelConfig `json:"items"`
 }

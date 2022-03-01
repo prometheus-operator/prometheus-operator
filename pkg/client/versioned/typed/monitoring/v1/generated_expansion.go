@@ -16,6 +16,8 @@
 
 package v1
 
+type AlertRelabelConfigExpansion interface{}
+
 type AlertmanagerExpansion interface{}
 
 type PodMonitorExpansion interface{}

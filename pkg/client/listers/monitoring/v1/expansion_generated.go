@@ -16,6 +16,14 @@
 
 package v1
 
+// AlertRelabelConfigListerExpansion allows custom methods to be added to
+// AlertRelabelConfigLister.
+type AlertRelabelConfigListerExpansion interface{}
+
+// AlertRelabelConfigNamespaceListerExpansion allows custom methods to be added to
+// AlertRelabelConfigNamespaceLister.
+type AlertRelabelConfigNamespaceListerExpansion interface{}
+
 // AlertmanagerListerExpansion allows custom methods to be added to
 // AlertmanagerLister.
 type AlertmanagerListerExpansion interface{}

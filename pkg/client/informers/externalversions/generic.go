@@ -52,6 +52,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=monitoring.coreos.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("alertrelabelconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().AlertRelabelConfigs().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("alertmanagers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().Alertmanagers().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("podmonitors"):

@@ -18,6 +18,9 @@ This Document documents the types introduced by the Prometheus Operator to be co
 
 ## Table of Contents
 * [APIServerConfig](#apiserverconfig)
+* [AlertRelabelConfig](#alertrelabelconfig)
+* [AlertRelabelConfigList](#alertrelabelconfiglist)
+* [AlertRelabelConfigSpec](#alertrelabelconfigspec)
 * [AlertingSpec](#alertingspec)
 * [Alertmanager](#alertmanager)
 * [AlertmanagerConfiguration](#alertmanagerconfiguration)
@@ -123,6 +126,44 @@ APIServerConfig defines a host and auth methods to access apiserver. More info: 
 | bearerTokenFile | File to read bearer token for accessing apiserver. | string | false |
 | tlsConfig | TLS Config to use for accessing apiserver. | *[TLSConfig](#tlsconfig) | false |
 | authorization | Authorization section for accessing apiserver | *[Authorization](#authorization) | false |
+
+[Back to TOC](#table-of-contents)
+
+## AlertRelabelConfig
+
+AlertRelabelConfig defines a set of relabel configs for alerts.
+
+
+<em>appears in: [AlertRelabelConfigList](#alertrelabelconfiglist)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta) | false |
+| spec | Specification of additional alert relabel configs for Prometheus. | [AlertRelabelConfigSpec](#alertrelabelconfigspec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertRelabelConfigList
+
+AlertRelabelConfigList is a list of AlertRelabelConfigs.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta) | false |
+| items | List of AlertRelabelConfigs | []*[AlertRelabelConfig](#alertrelabelconfig) | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertRelabelConfigSpec
+
+AlertRelabelConfigsSpec is the specification for a set of relabel configs for alerts.
+
+
+<em>appears in: [AlertRelabelConfig](#alertrelabelconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| configs |  | [][RelabelConfig](#relabelconfig) | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -870,7 +911,7 @@ QueueConfig allows the tuning of remote write's queue_config parameters. This ob
 RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 
 
-<em>appears in: [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [ProbeTargetIngress](#probetargetingress), [ProbeTargetStaticConfig](#probetargetstaticconfig), [RemoteWriteSpec](#remotewritespec)</em>
+<em>appears in: [AlertRelabelConfigSpec](#alertrelabelconfigspec), [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [ProbeTargetIngress](#probetargetingress), [ProbeTargetStaticConfig](#probetargetstaticconfig), [RemoteWriteSpec](#remotewritespec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

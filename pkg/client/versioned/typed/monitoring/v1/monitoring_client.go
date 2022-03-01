@@ -26,6 +26,7 @@ import (
 
 type MonitoringV1Interface interface {
 	RESTClient() rest.Interface
+	AlertRelabelConfigsGetter
 	AlertmanagersGetter
 	PodMonitorsGetter
 	ProbesGetter
@@ -38,6 +39,10 @@ type MonitoringV1Interface interface {
 // MonitoringV1Client is used to interact with features provided by the monitoring.coreos.com group.
 type MonitoringV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *MonitoringV1Client) AlertRelabelConfigs(namespace string) AlertRelabelConfigInterface {
+	return newAlertRelabelConfigs(c, namespace)
 }
 
 func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterface {
