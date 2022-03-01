@@ -418,9 +418,11 @@ type PrometheusSpec struct {
 	// compatibility in any release.
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// QueryLogFile specifies the file to which PromQL queries are logged.
-	// Note that this location must be writable, and can be persisted using an attached volume.
+	// If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an
+	// emptyDir volume at `/var/log/prometheus`. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
+	// in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
 	// Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log
-	// querie information to the default Prometheus log stream.
+	// query information to the default Prometheus log stream.
 	// This is only available in versions of Prometheus >= 2.16.0.
 	// For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
 	QueryLogFile string `json:"queryLogFile,omitempty"`
