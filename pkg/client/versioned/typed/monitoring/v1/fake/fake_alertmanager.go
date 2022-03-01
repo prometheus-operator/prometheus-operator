@@ -115,7 +115,7 @@ func (c *FakeAlertmanagers) UpdateStatus(ctx context.Context, alertmanager *moni
 // Delete takes name of the alertmanager and deletes it. Returns an error if one occurs.
 func (c *FakeAlertmanagers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(alertmanagersResource, c.ns, name), &monitoringv1.Alertmanager{})
+		Invokes(testing.NewDeleteActionWithOptions(alertmanagersResource, c.ns, name, opts), &monitoringv1.Alertmanager{})
 
 	return err
 }

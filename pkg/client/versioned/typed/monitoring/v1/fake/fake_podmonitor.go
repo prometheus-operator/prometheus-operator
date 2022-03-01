@@ -103,7 +103,7 @@ func (c *FakePodMonitors) Update(ctx context.Context, podMonitor *monitoringv1.P
 // Delete takes name of the podMonitor and deletes it. Returns an error if one occurs.
 func (c *FakePodMonitors) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(podmonitorsResource, c.ns, name), &monitoringv1.PodMonitor{})
+		Invokes(testing.NewDeleteActionWithOptions(podmonitorsResource, c.ns, name, opts), &monitoringv1.PodMonitor{})
 
 	return err
 }

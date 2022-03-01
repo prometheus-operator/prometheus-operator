@@ -103,7 +103,7 @@ func (c *FakeProbes) Update(ctx context.Context, probe *monitoringv1.Probe, opts
 // Delete takes name of the probe and deletes it. Returns an error if one occurs.
 func (c *FakeProbes) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(probesResource, c.ns, name), &monitoringv1.Probe{})
+		Invokes(testing.NewDeleteActionWithOptions(probesResource, c.ns, name, opts), &monitoringv1.Probe{})
 
 	return err
 }
