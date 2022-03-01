@@ -575,6 +575,7 @@ func (cg *ConfigGenerator) Generate(
 				probes[identifier],
 				apiserverConfig,
 				store,
+				shards,
 			),
 		)
 	}
@@ -895,6 +896,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
+	shards int32,
 ) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
@@ -1100,7 +1102,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 		}
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
-
+		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	}
@@ -1412,8 +1414,16 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+}
+
+func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
+}
+
+func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
 	return append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__address__"}},
+		{Key: "source_labels", Value: []string{shardLabel}},
 		{Key: "target_label", Value: "__tmp_hash"},
 		{Key: "modulus", Value: shards},
 		{Key: "action", Value: "hashmod"},
