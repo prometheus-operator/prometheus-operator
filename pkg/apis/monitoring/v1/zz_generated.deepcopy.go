@@ -489,6 +489,16 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AlertRelabelConfigSelector != nil {
+		in, out := &in.AlertRelabelConfigSelector, &out.AlertRelabelConfigSelector
+		*out = new(metav1.LabelSelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.AlertRelabelConfigNamespaceSelector != nil {
+		in, out := &in.AlertRelabelConfigNamespaceSelector, &out.AlertRelabelConfigNamespaceSelector
+		*out = new(metav1.LabelSelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(string)

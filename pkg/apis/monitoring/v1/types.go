@@ -79,6 +79,11 @@ type CommonPrometheusFields struct {
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
+	// *Experimental* AlertRelabelConfigs to be selected for this Prometheus.
+	AlertRelabelConfigSelector *metav1.LabelSelector `json:"alertRelabelConfigSelector,omitempty"`
+	// *Experimental* Namespaces to be selected for AlertRelabelConfig discovery. If nil,
+	// only check own namespace.
+	AlertRelabelConfigNamespaceSelector *metav1.LabelSelector `json:"alertRelabelConfigNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
