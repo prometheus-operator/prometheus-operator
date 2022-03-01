@@ -1096,9 +1096,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
 		}
 		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
-		if shards > 1 {
-			relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
-		}
+		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	}
