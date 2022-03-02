@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -76,6 +78,7 @@ type Operator struct {
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
+	arcInfs   *informers.ForResource
 
 	queue workqueue.RateLimitingInterface
 
@@ -283,6 +286,20 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
+	c.arcInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertRelabelConfigName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating alertrelabelconfig informers")
+	}
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 		// nsResyncPeriod is used to control how often the namespace informer
 		// should resync. If the unprivileged ListerWatcher is used, then the
@@ -334,6 +351,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
+		{"AlertRelabelConfig", c.arcInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", infs.name), inf.Informer()) {
@@ -402,6 +420,11 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
+	c.arcInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleArcAdd,
+		DeleteFunc: c.handleArcDelete,
+		UpdateFunc: c.handleArcUpdate,
+	})
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
@@ -448,6 +471,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
+	go c.arcInfs.Start(ctx.Done())
 	go c.nsMonInf.Run(ctx.Done())
 	if c.nsPromInf != c.nsMonInf {
 		go c.nsPromInf.Run(ctx.Done())
@@ -674,6 +698,43 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleArcAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertRelabelConfig added")
+		c.metrics.TriggerByCounter(monitoringv1.AlertRelabelConfigKind, "add").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleArcUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.AlertRelabelConfig).ResourceVersion == cur.(*monitoringv1.AlertRelabelConfig).ResourceVersion {
+		return
+	}
+
+	o, ok := c.getObject(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertRelabelConfig updated")
+		c.metrics.TriggerByCounter(monitoringv1.AlertRelabelConfigKind, "update").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleArcDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertRelabelConfig delete")
+		c.metrics.TriggerByCounter(monitoringv1.AlertRelabelConfigKind, "delete").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
 }
 
 // TODO: Don't enqueue just for the namespace
@@ -1533,6 +1594,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
+	alertRelabelConfigs, err := c.selectAlertRelabelConfigs(ctx, p)
+	if err != nil {
+		return errors.Wrap(err, "selecting AlertRelabelConfigs failed")
+	}
+
 	smons, err := c.selectServiceMonitors(ctx, p, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
@@ -1619,6 +1685,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
 
+	allAlertRelabelConfigs, err := c.generateAlertRelabelConfigs(alertRelabelConfigs, additionalAlertRelabelConfigs)
+	if err != nil {
+		return errors.Wrap(err, "generating alert relabel configs failed")
+	}
+
+	level.Debug(c.logger).Log("msg", "combined alert relabel configs", "configs", string(allAlertRelabelConfigs))
+
 	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
@@ -1632,7 +1705,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		bmons,
 		store,
 		additionalScrapeConfigs,
-		additionalAlertRelabelConfigs,
+		allAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
 	)
@@ -1738,6 +1811,119 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return err
+}
+
+// generateAlertRelabelConfigs takes a map of namespace + name pairs to AlertRelabelConfig
+// objects that have been selected, and the additional alert relabel configs loaded from the
+// secret referenced in the Prometheus object.  It then marshals what was loaded from the
+// CRDs (sorted by name) into YAML, appends them to what was loaded from the secret, and
+// returns the combined set of relabel configs as marshaled YAML bytes.
+func (c *Operator) generateAlertRelabelConfigs(configs map[string]*monitoringv1.AlertRelabelConfig, additionalConfigBytes []byte) ([]byte, error) {
+	var relabelConfigsYaml []yaml.MapSlice
+	var configKeys []string
+
+	for key := range configs {
+		configKeys = append(configKeys, key)
+	}
+
+	// TODO(bison): This is a simple sort by namespace and name.  Should these actually be
+	// sorted by name irrespective of namespace?
+	sort.Strings(configKeys)
+
+	for _, key := range configKeys {
+		for _, cfg := range configs[key].Spec.Configs {
+			relabelConfigsYaml = append(relabelConfigsYaml, generateRelabelConfig(&cfg))
+		}
+	}
+
+	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
+	if err := yaml.Unmarshal([]byte(additionalConfigBytes), &additionalAlertRelabelConfigsYaml); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling additional alerting relabel configs failed")
+	}
+
+	// TODO(bison): Should the `additionalAlertRelabelConfigs` from the Prometheus object,
+	// or the configs from individual `AlertRelabelConfig` objects come first?
+	outBytes, err := yaml.Marshal(append(additionalAlertRelabelConfigsYaml, relabelConfigsYaml...))
+	if err != nil {
+		return nil, errors.Wrap(err, "marshalling alerting relabel configs failed")
+	}
+
+	return outBytes, nil
+}
+
+func (c *Operator) selectAlertRelabelConfigs(ctx context.Context, p *monitoringv1.Prometheus) (map[string]*monitoringv1.AlertRelabelConfig, error) {
+	namespaces := []string{}
+	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	alertRelabelConfigs := make(map[string]*monitoringv1.AlertRelabelConfig)
+
+	arcSelector, err := metav1.LabelSelectorAsSelector(p.Spec.AlertRelabelConfigSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	// If 'AlertRelabelConfigNamespaceSelector' is nil only check own namespace.
+	if p.Spec.AlertRelabelConfigNamespaceSelector == nil {
+		namespaces = append(namespaces, p.Namespace)
+	} else {
+		arcNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.AlertRelabelConfigNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces, err = c.listMatchingNamespaces(arcNSSelector)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertRelabelConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	for _, ns := range namespaces {
+		err := c.arcInfs.ListAllByNamespace(ns, arcSelector, func(obj interface{}) {
+			k, ok := c.keyFunc(obj)
+			if ok {
+				alertRelabelConfigs[k] = obj.(*monitoringv1.AlertRelabelConfig)
+			}
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list alert relabel configs in namespace %s", ns)
+		}
+	}
+
+	var rejected int
+	res := make(map[string]*monitoringv1.AlertRelabelConfig, len(alertRelabelConfigs))
+
+	for namespaceAndName, arc := range alertRelabelConfigs {
+		for _, config := range arc.Spec.Configs {
+			if err := validateRelabelConfig(config); err != nil {
+				rejected++
+				level.Warn(c.logger).Log(
+					"msg", "skipping alert relabel config",
+					"error", err.Error(),
+					"alertrelabelconfig", arc,
+					"namespace", p.Namespace,
+					"prometheus", p.Name,
+				)
+
+				continue
+			}
+		}
+
+		res[namespaceAndName] = arc
+	}
+
+	arcKeys := []string{}
+	for k := range res {
+		arcKeys = append(arcKeys, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected AlertRelabelConfigs", "alertrelabelconfigs", strings.Join(arcKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.AlertRelabelConfigKind, len(res))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.AlertRelabelConfigKind, rejected)
+	}
+
+	return res, nil
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
