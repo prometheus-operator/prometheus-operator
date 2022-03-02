@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	stdlog "log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -133,7 +134,7 @@ func main() {
 			},
 		)
 
-		client := createHTTPClient()
+		client := createHTTPClient(watchInterval)
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -159,17 +160,30 @@ func main() {
 	}
 }
 
-func createHTTPClient() http.Client {
+func createHTTPClient(watchInterval *time.Duration) http.Client {
 	config := &tls.Config{
-		// TLS certificate verification is disabled by default
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
-	transport := &http.Transport{
-		TLSClientConfig: config,
-	}
+	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
-	return http.Client{Transport: transport}
+	transport.DialContext = (&net.Dialer{
+		Timeout:   30 * time.Millisecond, // Timeout for Dial should never be 30 seconds, a bit of fine tuning to prevent (long) waiting time.
+		KeepAlive: 30 * time.Second,
+	}).DialContext
+
+	transport.TLSHandshakeTimeout = 300 * time.Millisecond    // TLS should never take too long.
+	transport.ExpectContinueTimeout = 0                       // We don't send any body, so setting this is unecessary.
+	transport.IdleConnTimeout = *watchInterval                // Maximum time before another request is sent.
+	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong.
+	transport.MaxIdleConns = transport.MaxIdleConnsPerHost    // There is no need for a pool larger than the maximum amount of iddle connections per host. Defaults to 2.
+
+	transport.TLSClientConfig = config // Apply the TLS configuration.
+
+	return http.Client{
+		Timeout:   400 * time.Millisecond, // Construct with a 400 millisecond timeout. This timeout is sufficient and calculated with Dial + TLS + TTFB + Response in mind.
+		Transport: transport,
+	}
 }
 
 func createOrdinalEnvvar(fromName string) error {
