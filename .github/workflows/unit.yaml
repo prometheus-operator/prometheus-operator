@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Unit tests
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Import environment variables from file
       run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Extended tests
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Import environment variables from file
       run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
