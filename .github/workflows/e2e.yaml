@@ -41,7 +41,7 @@ jobs:
             thanosruler: ""
             featureGated: "include"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Import environment variables from file
       run: cat ".github/env" >> $GITHUB_ENV
     - name: Install Go
