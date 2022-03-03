@@ -27,6 +27,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -2405,6 +2406,157 @@ scrape_configs:
 	}
 }
 
+func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "ns-key",
+			},
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "pod-monitor-ns",
+					Group:     monitoring.GroupName,
+					Resource:  monitoringv1.PodMonitorName,
+					Name:      "testpodmonitor1",
+				},
+			},
+		},
+	}
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "pod-monitor-ns",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+					Kind:       monitoringv1.PodMonitorsKind,
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodTargetLabels: []string{"example", "env"},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "drop",
+									Regex:        "my-job-pod-.+",
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
+									TargetLabel:  "my-ns",
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "replace",
+									Regex:        "(.*)",
+									Replacement:  "$1",
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: ns-value/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - pod-monitor-ns
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_label_example
+    target_label: example
+    regex: (.+)
+    replacement: ${1}
+  - source_labels:
+    - __meta_kubernetes_pod_label_env
+    target_label: env
+    regex: (.+)
+    replacement: ${1}
+  - target_label: job
+    replacement: pod-monitor-ns/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __meta_kubernetes_pod_ready
+    regex: (.*)
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs:
+  - source_labels:
+    - pod_name
+    target_label: my-ns
+    regex: my-job-pod-.+
+    action: drop
+`
+
+	result := string(cfg)
+	if expected != result {
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match\n%s", diff)
+	}
+}
+
 func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -2567,6 +2719,175 @@ scrape_configs:
     action: drop
   - target_label: ns-key
     replacement: default
+`
+
+	result := string(cfg)
+	if expected != result {
+		diff := cmp.Diff(expected, result)
+		t.Fatalf("expected Prometheus configuration and actual configuration do not match for enforced namespace label test:\n%s", diff)
+	}
+}
+
+func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "ns-value",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnforcedNamespaceLabel: "ns-key",
+			},
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "service-monitor-ns",
+					Group:     monitoring.GroupName,
+					Resource:  monitoringv1.ServiceMonitorName,
+					Name:      "", // exclude all servicemonitors in this namespace
+				},
+			},
+		},
+	}
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
+		map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "servicemonitor1",
+					Namespace: "service-monitor-ns",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+					Kind:       monitoringv1.ServiceMonitorsKind,
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "drop",
+									Regex:        "my-job-pod-.+",
+									SourceLabels: []monitoringv1.LabelName{"pod_name"},
+									TargetLabel:  "ns-key",
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "replace",
+									Regex:        "(.*)",
+									Replacement:  "$1",
+									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: ns-value/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/service-monitor-ns/servicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - service-monitor-ns
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_foo
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: (bar);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __meta_kubernetes_pod_ready
+    regex: (.*)
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs:
+  - source_labels:
+    - pod_name
+    target_label: ns-key
+    regex: my-job-pod-.+
+    action: drop
 `
 
 	result := string(cfg)

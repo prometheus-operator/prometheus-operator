@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -51,6 +53,15 @@ const (
 	ProbeName    = "probes"
 	ProbeKindKey = "probe"
 )
+
+var resourceToKind = map[string]string{
+	PrometheusName:     PrometheusesKind,
+	AlertmanagerName:   AlertmanagersKind,
+	ServiceMonitorName: ServiceMonitorsKind,
+	PodMonitorName:     PodMonitorsKind,
+	PrometheusRuleName: PrometheusRuleKind,
+	ProbeName:          ProbesKind,
+}
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
@@ -365,9 +376,14 @@ type PrometheusSpec struct {
 	WALCompression *bool `json:"walCompression,omitempty"`
 	// /--rules.*/ command-line arguments.
 	Rules Rules `json:"rules,omitempty"`
+	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+	// to be excluded from enforcing a namespace label of origin.
+	// Applies only if enforcedNamespaceLabel set to true.
+	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 	// PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
 	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-	// Make sure both ruleNamespace and ruleName are set for each pair
+	// Make sure both ruleNamespace and ruleName are set for each pair.
+	// Deprecated: use enforcedNamespaceLabel instead.
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// QuerySpec defines the query command line flags when starting Prometheus.
 	Query *QuerySpec `json:"query,omitempty"`
@@ -445,6 +461,54 @@ type PrometheusRuleExcludeConfig struct {
 	RuleNamespace string `json:"ruleNamespace"`
 	// RuleNamespace - name of excluded rule
 	RuleName string `json:"ruleName"`
+}
+
+// ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
+type ObjectReference struct {
+	// Group of the referent. When not specified, it defaults to `monitoring.coreos.com`
+	// +optional
+	// +kubebuilder:default:="monitoring.coreos.com"
+	// +kubebuilder:validation:Enum=monitoring.coreos.com
+	Group string `json:"group"`
+	// Resource of the referent.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes
+	Resource string `json:"resource"`
+	// Namespace of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Namespace string `json:"namespace"`
+	// Name of the referent. When not set, all resources are matched.
+	// +optional
+	Name string `json:"name,omitempty"`
+}
+
+func (obj *ObjectReference) GroupResource() schema.GroupResource {
+	return schema.GroupResource{
+		Resource: obj.Resource,
+		Group:    obj.getGroup(),
+	}
+}
+
+func (obj *ObjectReference) GroupKind() schema.GroupKind {
+	_, found := resourceToKind[obj.Resource]
+	if !found {
+		panic(fmt.Sprintf("failed to map resource %q to a kind", obj.Resource))
+	}
+	return schema.GroupKind{
+		Kind:  resourceToKind[obj.Resource],
+		Group: obj.getGroup(),
+	}
+}
+
+// getGroup returns the group of the object.
+// It is mostly needed for tests which don't create objects through the API and don't benefit from the default value.
+func (obj *ObjectReference) getGroup() string {
+	if obj.Group == "" {
+		return monitoring.GroupName
+	}
+	return obj.Group
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
