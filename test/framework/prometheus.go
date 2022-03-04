@@ -328,27 +328,53 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 }
 
 func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.Prometheus, timeout time.Duration) error {
+	expected := *p.Spec.Replicas
+	if p.Spec.Shards != nil && *p.Spec.Shards > 0 {
+		expected = expected * *p.Spec.Shards
+	}
+
 	var pollErr error
-
-	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.Status(ctx, f.KubeClient, p)
-
+	err := wait.Poll(time.Second, timeout, func() (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 		if pollErr != nil {
 			return false, nil
 		}
 
-		shards := p.Spec.Shards
-		defaultShards := int32(1)
-		if shards == nil {
-			shards = &defaultShards
-		}
-		if st.UpdatedReplicas == (*p.Spec.Replicas * *shards) {
-			return true, nil
+		status := current.Status
+
+		if status.UpdatedReplicas != expected {
+			pollErr = errors.Errorf("expected %d updated replicas, got %d", expected, status.UpdatedReplicas)
+			return false, nil
 		}
 
+		for _, cond := range current.Status.Conditions {
+			if cond.Type != monitoringv1.PrometheusAvailable {
+				continue
+			}
+
+			if cond.Status == monitoringv1.PrometheusConditionTrue {
+				return true, nil
+			}
+
+			pollErr = errors.Errorf(
+				"expected Available condition to be 'True', got %q (reason %s, %q)",
+				cond.Status,
+				cond.Reason,
+				cond.Message,
+			)
+			return false, nil
+		}
+
+		pollErr = errors.Errorf("failed to find Available condition in status subresource")
 		return false, nil
 	})
-	return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+
+	if err != nil {
+		return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+	}
+
+	return nil
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, name string) error {
