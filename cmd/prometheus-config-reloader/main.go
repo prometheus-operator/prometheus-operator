@@ -134,7 +134,7 @@ func main() {
 			},
 		)
 
-		client := createHTTPClient(watchInterval)
+		client := createHTTPClient()
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -160,7 +160,7 @@ func main() {
 	}
 }
 
-func createHTTPClient(watchInterval *time.Duration) http.Client {
+func createHTTPClient() http.Client {
 	config := &tls.Config{
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
