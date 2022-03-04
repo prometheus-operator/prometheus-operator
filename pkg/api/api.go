@@ -65,7 +65,12 @@ var (
 )
 
 func (api *API) Register(mux *http.ServeMux) {
+	// TODO(simonpasquier): always use HTTP (and not HTTPS) for the /healthz endpoint.
 	mux.HandleFunc("/healthz", ok)
+	// TODO(simonpasquier): deprecate this handler once the Prometheus CRD's
+	// status subresource provides equivalent functionality.
+	// TODO(simonpasquier): remove this handler 2 releases after the
+	// deprecation has been announced.
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		if prometheusRoute.MatchString(req.URL.Path) {
 			api.prometheusStatus(w, req)
@@ -97,7 +102,6 @@ func parsePrometheusStatusURL(path string) objectReference {
 	}
 }
 
-// TODO(simonpasquier): remove this once the Prometheus status subresource is supported.
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusURL(req.URL.Path)
 
