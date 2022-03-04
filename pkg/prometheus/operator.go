@@ -936,9 +936,9 @@ func (c *Operator) addToStatusQueue(obj interface{}) {
 	c.addToQueue(obj, c.statusQueue)
 }
 
-// addToQueue adds the object to the given queue. If the
-// object is a string, it gets added directly. Otherwise, the object's key is
-// extracted via keyFunc.
+// addToQueue adds the object to the given queue.
+// If the object is a string, it gets added directly. Otherwise, the object's
+// key is extracted via keyFunc.
 func (c *Operator) addToQueue(obj interface{}, q workqueue.Interface) {
 	if obj == nil {
 		return
