@@ -37,9 +37,7 @@ flags need to be added to the Prometheus Operator deployment:
 
 ## Deploying the admission webhook
 
-Two variants of the admission webhook are available: a validating webhook and a
-mutating webhook. Both reject invalid `PrometheusRule` resources. The mutating
-variant also adds annotations to validated `PrometheusRule`s
+Two webhook endpoints are available for `PrometheusRule` resources, `/admission-prometheusrules/validate` and `/admission-prometheusrules/mutate`.  The endpoint `/admission-prometheusrules/validate` rejects rules that are not valid prometheus config. The endpoint `/admission-prometheusrules/mutate` ensures that integers and boolean yaml data elements are cooerced into strings (https://github.com/prometheus-operator/prometheus-operator/pull/3230).
 
 The following example deploys the validating admission webhook:
 
@@ -55,6 +53,35 @@ webhooks:
         name: prometheus-operator
         namespace: default
         path: /admission-prometheusrules/validate
+    failurePolicy: Fail
+    name: prometheusrulemutate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - '*'
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - prometheusrules
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+```
+The following example deploys the mutating admission webhook:
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-rulesmutation
+webhooks:
+  - clientConfig:
+      caBundle: SOMECABASE64ENCODED==
+      service:
+        name: prometheus-operator
+        namespace: default
+        path: /admission-prometheusrules/mutate
     failurePolicy: Fail
     name: prometheusrulemutate.monitoring.coreos.com
     namespaceSelector: {}
