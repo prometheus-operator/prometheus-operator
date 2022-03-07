@@ -161,10 +161,6 @@ func main() {
 }
 
 func createHTTPClient() http.Client {
-	config := &tls.Config{
-		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
-	}
-
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
@@ -177,7 +173,9 @@ func createHTTPClient() http.Client {
 	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
 	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
 
-	transport.TLSClientConfig = config // Apply the TLS configuration.
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
+	}
 
 	return http.Client{
 		Timeout:   400 * time.Millisecond, // Construct with a 400 millisecond timeout. This timeout is sufficient and calculated with Dial + TLS + TTFB + Response in mind.
