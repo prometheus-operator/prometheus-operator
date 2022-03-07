@@ -164,12 +164,10 @@ func createHTTPClient() http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
-		Timeout:   30 * time.Millisecond, // Timeout for Dial should never be 30 seconds, a bit of fine tuning to prevent (long) waiting time.
-		KeepAlive: -1,                    // Keep alive probe is unnecessary
+		Timeout:   30 * time.Second, // Default Timeout as of http.DefaultTransport
+		KeepAlive: -1,               // Keep alive probe is unnecessary
 	}).DialContext
 
-	transport.TLSHandshakeTimeout = 300 * time.Millisecond    // TLS should never take too long.
-	transport.ExpectContinueTimeout = 0                       // We don't send any body, so setting this is unnecessary.
 	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
 	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
 

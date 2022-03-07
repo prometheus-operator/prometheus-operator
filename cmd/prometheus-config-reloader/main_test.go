@@ -58,8 +58,6 @@ func TestCreateHTTPClient(t *testing.T) {
 			KeepAlive: -1,
 		}).DialContext
 
-		transport.TLSHandshakeTimeout = 300 * time.Millisecond
-		transport.ExpectContinueTimeout = 0
 		transport.DisableKeepAlives = true
 		transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost
 
