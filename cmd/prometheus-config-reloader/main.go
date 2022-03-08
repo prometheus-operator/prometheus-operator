@@ -176,7 +176,7 @@ func createHTTPClient() http.Client {
 	}
 
 	return http.Client{
-		Timeout:   400 * time.Millisecond, // Construct with a 400 millisecond timeout. This timeout is sufficient and calculated with Dial + TLS + TTFB + Response in mind.
+		Timeout:   30 * time.Second, // Construct with a 30 second timeout. This timeout is unchanged related to the Dialer Timeout and is subject for change. Other timeouts are neglected.
 		Transport: transport,
 	}
 }

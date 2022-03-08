@@ -67,7 +67,7 @@ func TestCreateHTTPClient(t *testing.T) {
 
 		expectedClient := http.Client{
 			Transport: transport,
-			Timeout:   400 * time.Millisecond,
+			Timeout:   30 * time.Second,
 		}
 
 		client := createHTTPClient()
