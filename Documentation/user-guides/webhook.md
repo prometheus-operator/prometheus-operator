@@ -115,10 +115,9 @@ webhooks:
 
 The endpoint `/admission-alertmanagerconfigs/validate` rejects alertmanagerconfigs that are not valid alertmanager config.
 
-The following example deploys the mutating admission webhook:
+The following example deploys the validating admission webhook:
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
 kind: ValidatingWebhookConfiguration
 metadata:
   name: prometheus-operator-alertmanager-config-validation
