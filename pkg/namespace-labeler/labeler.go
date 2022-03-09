@@ -79,7 +79,7 @@ func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjec
 	if l.enforcedNsLabel == "" {
 		return true
 	}
-	if l.excludeNamespaceGroupKindToNames == nil {
+	if len(l.excludeNamespaceGroupKindToNames) == 0 {
 		return false
 	}
 	namespaceGroupKind := namespaceGroupKind{
