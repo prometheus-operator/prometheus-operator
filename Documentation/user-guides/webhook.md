@@ -35,11 +35,16 @@ flags need to be added to the Prometheus Operator deployment:
 
 * `--web.key-file` to load the associate key.
 
-## Deploying the admission webhook
 
-Two variants of the admission webhook are available: a validating webhook and a
-mutating webhook. Both reject invalid `PrometheusRule` resources. The mutating
-variant also adds annotations to validated `PrometheusRule`s
+## Webhook endpoints
+### caBundle note
+
+The `caBundle` contains the base64-encoded CA certificate used to sign the
+webhook's certificate.
+
+### `/admission-prometheusrules/validate`
+
+The endpoint `/admission-prometheusrules/validate` rejects rules that are not valid prometheus config.
 
 The following example deploys the validating admission webhook:
 
@@ -72,5 +77,70 @@ webhooks:
     sideEffects: None
 ```
 
-The `caBundle` contains the base64-encoded CA certificate used to sign the
-webhook's certificate.
+### `/admission-prometheusrules/mutate`
+
+The endpoint `/admission-prometheusrules/mutate` ensures that integers and boolean yaml data elements are cooerced into strings.
+
+The following example deploys the mutating admission webhook:
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-rulesmutation
+webhooks:
+  - clientConfig:
+      caBundle: SOMECABASE64ENCODED==
+      service:
+        name: prometheus-operator
+        namespace: default
+        path: /admission-prometheusrules/mutate
+    failurePolicy: Fail
+    name: prometheusrulemutate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - '*'
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - prometheusrules
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+```
+
+### `/admission-alertmanagerconfigs/validate`
+
+The endpoint `/admission-alertmanagerconfigs/validate` rejects alertmanagerconfigs that are not valid alertmanager config.
+
+The following example deploys the validating admission webhook:
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-alertmanager-config-validation
+webhooks:
+  - clientConfig:
+      caBundle: SOMECABASE64ENCODED==
+      service:
+        name: prometheus-operator
+        namespace: default
+        path: /admission-alertmanagerconfigs/validate
+    failurePolicy: Fail
+    name: alertmanagerconfigsvalidate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - alertmanagerconfigs
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+```
