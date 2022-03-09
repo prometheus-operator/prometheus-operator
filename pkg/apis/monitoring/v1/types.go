@@ -383,7 +383,7 @@ type PrometheusSpec struct {
 	// PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
 	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
 	// Make sure both ruleNamespace and ruleName are set for each pair.
-	// Deprecated: use enforcedNamespaceLabel instead.
+	// Deprecated: use excludedFromEnforcement instead.
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// QuerySpec defines the query command line flags when starting Prometheus.
 	Query *QuerySpec `json:"query,omitempty"`
