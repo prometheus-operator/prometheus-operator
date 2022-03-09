@@ -1141,7 +1141,7 @@ func makeNamespacedString(in string, crKey types.NamespacedName) string {
 	if in == "" {
 		return ""
 	}
-	return crKey.Namespace + "-" + crKey.Name + "-" + in
+	return crKey.Namespace + "/" + crKey.Name + "/" + in
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
