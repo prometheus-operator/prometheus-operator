@@ -358,15 +358,9 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Name,
 			func(t *testing.T) {
-
 				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, tc.ExcludedFromEnforcement, true)
-				namespaceRelabelConfig := nsLabeler.getNamespaceRelabelingRule(tc.ServiceMonitor.TypeMeta, tc.ServiceMonitor.ObjectMeta)
-				if namespaceRelabelConfig != nil {
-					tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs =
-						append(tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs, namespaceRelabelConfig)
-					tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs =
-						append(tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs, namespaceRelabelConfig)
-				}
+				tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs = nsLabeler.GetRelabelingConfigs(tc.ServiceMonitor.TypeMeta, tc.ServiceMonitor.ObjectMeta, tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs)
+				tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs = nsLabeler.GetRelabelingConfigs(tc.ServiceMonitor.TypeMeta, tc.ServiceMonitor.ObjectMeta, tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs)
 				if diff := cmp.Diff(tc.Expected, tc.ServiceMonitor); diff != "" {
 					t.Errorf("Unexpected result (-want +got):\n%s", diff)
 				}
