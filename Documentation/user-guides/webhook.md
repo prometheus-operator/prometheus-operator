@@ -111,7 +111,7 @@ webhooks:
     sideEffects: None
 ```
 
-### `/admission-prometheusrules/mutate`
+### `/admission-alertmanagerconfigs/validate`
 
 The endpoint `/admission-alertmanagerconfigs/validate` rejects alertmanagerconfigs that are not valid alertmanager config.
 
