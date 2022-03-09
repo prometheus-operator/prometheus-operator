@@ -1122,32 +1122,32 @@ route:
   group_by:
   - job
   routes:
-  - receiver: %s-e2e-test-amconfig-many-receivers-e2e
+  - receiver: %s/e2e-test-amconfig-many-receivers/e2e
     matchers:
     - namespace="%s"
     continue: true
-  - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+  - receiver: %s/e2e-test-amconfig-sub-routes/e2e
     match:
       service: webapp
     matchers:
     - namespace="%s"
     continue: true
     routes:
-    - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+    - receiver: %s/e2e-test-amconfig-sub-routes/e2e
       group_by:
       - env
       - instance
       match:
         job: db
       routes:
-      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+      - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match:
           alertname: TargetDown
-      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+      - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match_re:
           severity: critical|warning
         mute_time_intervals:
-        - %s-e2e-test-amconfig-sub-routes-test
+        - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
     match:
       alertname: DeadMansSwitch
@@ -1156,7 +1156,7 @@ route:
   repeat_interval: 12h
 receivers:
 - name: "null"
-- name: %v-e2e-test-amconfig-many-receivers-e2e
+- name: %v/e2e-test-amconfig-many-receivers/e2e
   opsgenie_configs:
   - api_key: 1234abc
   pagerduty_configs:
@@ -1198,11 +1198,11 @@ receivers:
       access_key: 1234abc
       secret_key: 1234abc
     topic_arn: test-topicARN
-- name: %s-e2e-test-amconfig-sub-routes-e2e
+- name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
 mute_time_intervals:
-- name: %s-e2e-test-amconfig-sub-routes-test
+- name: %s/e2e-test-amconfig-sub-routes/test
   time_intervals:
   - times:
     - start_time: "08:00"
@@ -1370,11 +1370,10 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	recever := fmt.Sprintf("%s-%s-null", ns, "user-amconfig")
-	yamlConfig := strings.ReplaceAll(`route:
-  receiver: __receiver_name__
+	yamlConfig := fmt.Sprintf(`route:
+  receiver: %[1]s
   routes:
-  - receiver: __receiver_name__
+  - receiver: %[1]s
     match:
       mykey: myvalue-1
 inhibit_rules:
@@ -1385,9 +1384,9 @@ inhibit_rules:
   equal:
   - equalkey
 receivers:
-- name: __receiver_name__
+- name: %[1]s
 templates: []
-`, "__receiver_name__", recever)
+`, fmt.Sprintf("%s/%s/null", ns, "user-amconfig"))
 
 	// Wait for the change above to take effect.
 	var lastErr error
@@ -1406,8 +1405,8 @@ templates: []
 			return false, nil
 		}
 
-		if string(cfgSecret.Data["alertmanager.yaml"]) != yamlConfig {
-			lastErr = errors.Errorf("expected Alertmanager configuration %q, got %q", yamlConfig, cfgSecret.Data["alertmanager.yaml"])
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 

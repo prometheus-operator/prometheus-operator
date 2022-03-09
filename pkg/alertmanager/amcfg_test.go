@@ -86,14 +86,14 @@ func TestGenerateGlobalConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						Name: "mynamespace-global-config-null",
+						Name: "mynamespace/global-config/null",
 					},
 				},
 				Route: &route{
-					Receiver: "mynamespace-global-config-null",
+					Receiver: "mynamespace/global-config/null",
 					Routes: []*route{
 						{
-							Receiver: "mynamespace-global-config-myreceiver",
+							Receiver: "mynamespace/global-config/myreceiver",
 							Match: map[string]string{
 								"mykey": "myvalue",
 							},
@@ -417,7 +417,7 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     group_by:
     - job
     matchers:
@@ -425,7 +425,7 @@ templates: []
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
 templates: []
 `,
 		},
@@ -613,14 +613,14 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
   - receiver: "null"
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
 templates: []
 `,
 		},
@@ -683,13 +683,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test-pd
+  - receiver: mynamespace/myamc/test-pd
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test-pd
+- name: mynamespace/myamc/test-pd
   pagerduty_configs:
   - routing_key: 1234abc
     images:
@@ -778,13 +778,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   webhook_configs:
   - url: http://test.url
     http_config:
@@ -846,13 +846,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   opsgenie_configs:
   - api_key: 1234abc
 templates: []
@@ -908,13 +908,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   opsgenie_configs:
   - api_key: 1234abc
     responders:
@@ -970,13 +970,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   wechat_configs:
   - api_secret: wechatsecret
     corp_id: wechatcorpid
@@ -1035,13 +1035,13 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -1107,13 +1107,13 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -1187,13 +1187,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   sns_configs:
   - api_url: https://sns.us-east-2.amazonaws.com
     sigv4:
@@ -1288,15 +1288,15 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
     mute_time_intervals:
-    - mynamespace-myamc-test
+    - mynamespace/myamc/test
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -1308,7 +1308,7 @@ receivers:
       confirm:
         text: text
 mute_time_intervals:
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   time_intervals:
   - times:
     - start_time: "08:00"
