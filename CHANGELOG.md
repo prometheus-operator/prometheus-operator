@@ -1,3 +1,26 @@
+## 0.55.0 / 2022-03-09
+
+* [CHANGE] Enabled read-only root filesystem for containers generated from the Prometheus, Alertmanager and ThanosRuler objects. #4552
+* [CHANGE] Disabled privilege escalation for the containers generated from Prometheus, Alertmanager and ThanosRuler objects. #4552
+* [CHANGE] Dropped all capabilities for the containers generated from Prometheus, Alertmanager and ThanosRuler objects. #4552
+* [CHANGE] Added `emptyDir` volume to the Prometheus statefulset when `spec.queryLogFile` is only a base filename (e.g. `query.log` as opposed to `/tmp/query.log`). When the path contains a full path, a volume + volume mount should be explicitly given in the Prometheus spec since the root file system is now read-only. #4566
+* [CHANGE/BUGFIX] Added skip TLS verify for the config-reloader HTTP client when informing Prometheus/Alertmanager on a config reload (partial fix for #4273). #4592
+* [CHANGE] Switched using the `endpointslice` role for Prometheus by default if it is supported by the Kubernetes API. #4535
+* [FEATURE] Added standalone admission webhook. #4494
+* [FEATURE] Support the definition of Alertmanager configuration via AlertManagerConfig instead of Kubernetes secret (EXPERIMENTAL). #4220
+* [FEATURE] Support sharding for Probe objects. #4587
+* [ENHANCEMENT] Restore Prometheus StatefulSet liveness probe so that deadlocks are detected and recovered from. #4387, #4534
+* [ENHANCEMENT] Added `-alertmanager-config-namespaces` CLI flag to the operator. #4455, #4619
+* [ENHANCEMENT] `remoteWrite` and `remoteRead` fields of the Prometheus CRD not considered experimental anymore. #4555
+* [ENHANCEMENT] Added support for follow_redirects in endpoint scrape configuration. #4563
+* [ENHANCEMENT] Added support for Oauth2 in AlertmanagerConfig CRD. #4501
+* [ENHANCEMENT] Improved logging when the given Prometheus version doesn't support some CR fields. #4571
+* [ENHANCEMENT] Added `__tmp_ingress_address` label to preserve the initial host address of the ingress object. #4603
+* [ENHANCEMENT] Fixed potential name collisions in Alertmanager configuration when merging AlertmanagerConfig objects. #4626
+* [BUGFIX] Fixed panic when validating `Probe`. #4541
+* [BUGFIX] Added validation for sourceLabels in relabel configuration. #4568
+* [BUGFIX] Allow retention to be set only by size. #4590
+
 ## 0.54.1 / 2022-02-24
 
 * [BUGFIX] Updated relabelConfig validation to accept Prometheus default config on labeldrop relabelConfig. #4579

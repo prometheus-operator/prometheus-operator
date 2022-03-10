@@ -35,8 +35,8 @@ flags need to be added to the Prometheus Operator deployment:
 
 * `--web.key-file` to load the associate key.
 
-
 ## Webhook endpoints
+
 ### caBundle note
 
 The `caBundle` contains the base64-encoded CA certificate used to sign the
@@ -82,6 +82,7 @@ webhooks:
 The endpoint `/admission-prometheusrules/mutate` ensures that integers and boolean yaml data elements are cooerced into strings.
 
 The following example deploys the mutating admission webhook:
+
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -116,6 +117,7 @@ webhooks:
 The endpoint `/admission-alertmanagerconfigs/validate` rejects alertmanagerconfigs that are not valid alertmanager config.
 
 The following example deploys the validating admission webhook:
+
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
