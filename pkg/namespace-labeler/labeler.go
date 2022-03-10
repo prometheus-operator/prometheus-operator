@@ -86,11 +86,7 @@ func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjec
 		namespace: prometheusObjectMeta.Namespace,
 		groupKind: prometheusTypeMeta.GroupVersionKind().GroupKind().String(),
 	}
-	excludeNames, ok := l.excludeNamespaceGroupKindToNames[namespaceGroupKind]
-	if !ok {
-		return false
-	}
-	for _, name := range excludeNames {
+	for _, name := range l.excludeNamespaceGroupKindToNames[namespaceGroupKind] {
 		if name == "" || prometheusObjectMeta.Name == name {
 			return true
 		}
