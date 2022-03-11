@@ -144,6 +144,14 @@ type CommonPrometheusFields struct {
 	// ensure only clients authorized to perform these actions can do so.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+	// Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`.
+	// WARNING: This is not considered an efficient way of ingesting samples.
+	// Use it with caution for specific low-volume use cases.
+	// It is not suitable for replacing the ingestion via scraping and turning
+	// Prometheus into a push-based metrics collection system.
+	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
+	// Only valid in Prometheus versions 2.33.0 and newer.
+	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
 	// Enable access to Prometheus disabled features. By default, no features are enabled.
 	// Enabling disabled features is entirely outside the scope of what the maintainers will
 	// support and by doing so, you accept that this behaviour may break at any

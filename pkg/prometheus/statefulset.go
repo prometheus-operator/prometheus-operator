@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -30,7 +31,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -340,6 +344,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
+	// TODO(slashpai): Refactor the code to cover logging for all components
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
@@ -425,6 +432,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, "-web.enable-admin-api")
+	}
+
+	if p.Spec.EnableRemoteWriteReceiver {
+		if version.GTE(semver.MustParse("2.33.0")) {
+			promArgs = append(promArgs, "-web.enable-remote-write-receiver")
+		} else {
+			level.Warn(logger).Log("msg", fmt.Sprintf("ignoring \"enableRemoteWriteReceiver\" not supported by Prometheus version=%s minimum_version=2.33.0", version))
+		}
 	}
 
 	if len(p.Spec.EnableFeatures) > 0 {
