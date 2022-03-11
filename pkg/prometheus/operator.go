@@ -311,12 +311,27 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
-	if err != nil {
-		level.Warn(c.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
+	var (
+		endpointSliceSupported bool
+		groupVersion           string
+	)
+	for _, v := range []string{"v1", "v1beta1"} {
+		groupVersion = fmt.Sprintf("discovery.k8s.io/%s", v)
+		endpointSliceSupported, err = k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), groupVersion, "endpointslices")
+		if err != nil {
+			level.Warn(c.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
+		}
+		if endpointSliceSupported {
+			break
+		}
 	}
-	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
+	if !endpointSliceSupported {
+		groupVersion = ""
+	}
+
+	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices_supported", endpointSliceSupported, "group_version", groupVersion)
 	c.endpointSliceSupported = endpointSliceSupported
+
 	return c, nil
 }
 
