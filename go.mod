@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/common v0.32.1
 	github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
 	github.com/stretchr/testify v1.7.0
-	github.com/thanos-io/thanos v0.25.0
+	github.com/thanos-io/thanos v0.25.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
