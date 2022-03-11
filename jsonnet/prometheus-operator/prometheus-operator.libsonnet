@@ -119,6 +119,11 @@ function(params) {
         resources: ['ingresses'],
         verbs: ['get', 'list', 'watch'],
       },
+      {
+        apiGroups: ['discovery.k8s.io'],
+        resources: ['endpointslices'],
+        verbs: ['get', 'list', 'watch'],
+      },
     ],
   },
 
