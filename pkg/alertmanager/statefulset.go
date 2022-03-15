@@ -155,6 +155,13 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, am.Spec.Volumes...)
 
+	if am.Spec.PatchStatefulSet != nil {
+		*statefulset, err = k8sutil.MergePatchStatefulSet(*statefulset, *am.Spec.PatchStatefulSet)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to patch StatefulSet")
+		}
+	}
+
 	return statefulset, nil
 }
 

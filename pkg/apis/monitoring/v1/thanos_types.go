@@ -15,6 +15,7 @@
 package v1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -201,6 +202,10 @@ type ThanosRulerSpec struct {
 	// AlertRelabelConfigFile specifies the path of the alert relabeling configuration file.
 	// When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence.
 	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
+	// PatchStatefulSet allows injecting arbitrary field to ThanosRuler StatefulSet.
+	// User is advised to use this field carefully as this field will do overwriting
+	// when there is conflict between PatchStatefulSet and the original StatefulSet.
+	PatchStatefulSet *appsv1.StatefulSet `json:"patchStatefulSet,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

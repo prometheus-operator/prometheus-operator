@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -322,6 +323,10 @@ type CommonPrometheusFields struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// PatchStatefulSet allows injecting arbitrary field to Prometheus StatefulSet.
+	// User is advised to use this field carefully as this field will do overwriting
+	// when there is conflict between PatchStatefulSet and the original StatefulSet.
+	PatchStatefulSet *appsv1.StatefulSet `json:"patchStatefulSet,omitempty"`
 }
 
 // Prometheus defines a Prometheus deployment.
@@ -1684,6 +1689,10 @@ type AlertmanagerSpec struct {
 	// This field may change in future releases.
 	// The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
+	// PatchStatefulSet allows injecting arbitrary field to Alertmanager StatefulSet.
+	// User is advised to use this field carefully as this field will do overwriting
+	// when there is conflict between PatchStatefulSet and the original StatefulSet.
+	PatchStatefulSet *appsv1.StatefulSet `json:"patchStatefulSet,omitempty"`
 }
 
 // AlertmanagerConfiguration used to set the global alertmanager config.

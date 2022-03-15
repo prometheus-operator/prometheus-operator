@@ -2237,3 +2237,65 @@ func TestEnableRemoteWriteReceiver(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchStatefulSet(t *testing.T) {
+	noConflictPsset := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					HostAliases: []v1.HostAlias{
+						{
+							IP:        "10.10.10.10",
+							Hostnames: []string{"test.local"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	noConflictSset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PatchStatefulSet: noConflictPsset,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	require.NoError(t, err)
+
+	found := false
+	for _, hostAlias := range noConflictSset.Spec.Template.Spec.HostAliases {
+		if hostAlias.IP == "10.10.10.10" && hostAlias.Hostnames[0] == "test.local" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Fatal("HostAliases patch not found")
+	}
+
+	conflictPsset := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					PriorityClassName: "low-priority",
+				},
+			},
+		},
+	}
+
+	conflictSset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PriorityClassName: "high-priority",
+				PatchStatefulSet:  conflictPsset,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	require.NoError(t, err)
+
+	if conflictSset.Spec.Template.Spec.PriorityClassName != "low-priority" {
+		t.Fatal("Patch StatefulSet failed")
+	}
+}

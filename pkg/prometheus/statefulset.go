@@ -239,6 +239,13 @@ func makeStatefulSet(
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, p.Spec.Volumes...)
 
+	if p.Spec.PatchStatefulSet != nil {
+		*statefulset, err = k8sutil.MergePatchStatefulSet(*statefulset, *p.Spec.PatchStatefulSet)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to patch StatefulSet")
+		}
+	}
+
 	return statefulset, nil
 }
 

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
@@ -73,4 +74,27 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 	}
 
 	return out, nil
+}
+
+// MergePatchStatefulSet adds patches to base StatefulSet using a strategic merge patch
+func MergePatchStatefulSet(base, patches appsv1.StatefulSet) (appsv1.StatefulSet, error) {
+	baseBytes, err := json.Marshal(base)
+	if err != nil {
+		return appsv1.StatefulSet{}, errors.Wrap(err, "failed to marshal json for base")
+	}
+	patchBytes, err := json.Marshal(patches)
+	if err != nil {
+		return appsv1.StatefulSet{}, errors.Wrap(err, "failed to marshal json for patches")
+	}
+
+	jsonResult, err := strategicpatch.StrategicMergePatch(baseBytes, patchBytes, appsv1.StatefulSet{})
+	if err != nil {
+		return appsv1.StatefulSet{}, errors.Wrap(err, "failed to generate merge patch")
+	}
+	var patchResult appsv1.StatefulSet
+	if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
+		return appsv1.StatefulSet{}, errors.Wrap(err, "failed to unmarshal merged statefulset")
+	}
+
+	return patchResult, nil
 }

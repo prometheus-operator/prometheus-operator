@@ -146,6 +146,13 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, tr.Spec.Volumes...)
 
+	if tr.Spec.PatchStatefulSet != nil {
+		*statefulset, err = k8sutil.MergePatchStatefulSet(*statefulset, *tr.Spec.PatchStatefulSet)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to patch StatefulSet")
+		}
+	}
+
 	return statefulset, nil
 }
 

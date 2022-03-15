@@ -24,6 +24,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1079,5 +1080,63 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	}
 	if statefulSet.MinReadySeconds != int32(expect) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	}
+}
+
+func TestPatchStatefulSet(t *testing.T) {
+	noConflictPsset := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					HostAliases: []v1.HostAlias{
+						{
+							IP:        "10.10.10.10",
+							Hostnames: []string{"test.local"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	noConflictSset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			PatchStatefulSet: noConflictPsset,
+		},
+	}, defaultTestConfig, "", nil)
+	require.NoError(t, err)
+
+	found := false
+	for _, hostAlias := range noConflictSset.Spec.Template.Spec.HostAliases {
+		if hostAlias.IP == "10.10.10.10" && hostAlias.Hostnames[0] == "test.local" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Fatal("HostAliases patch not found")
+	}
+
+	conflictPsset := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					PriorityClassName: "low-priority",
+				},
+			},
+		},
+	}
+
+	conflictSset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			PriorityClassName: "high-priority",
+			PatchStatefulSet:  conflictPsset,
+		},
+	}, defaultTestConfig, "", nil)
+	require.NoError(t, err)
+
+	if conflictSset.Spec.Template.Spec.PriorityClassName != "low-priority" {
+		t.Fatal("Patch StatefulSet failed")
 	}
 }
