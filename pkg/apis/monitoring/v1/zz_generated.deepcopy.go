@@ -20,6 +20,7 @@
 package v1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -292,6 +293,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		in, out := &in.AlertmanagerConfiguration, &out.AlertmanagerConfiguration
 		*out = new(AlertmanagerConfiguration)
 		**out = **in
+	}
+	if in.PatchStatefulSet != nil {
+		in, out := &in.PatchStatefulSet, &out.PatchStatefulSet
+		*out = new(appsv1.StatefulSet)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -590,6 +596,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
 		*out = new(uint32)
 		**out = **in
+	}
+	if in.PatchStatefulSet != nil {
+		in, out := &in.PatchStatefulSet, &out.PatchStatefulSet
+		*out = new(appsv1.StatefulSet)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -2180,6 +2191,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		in, out := &in.AlertRelabelConfigFile, &out.AlertRelabelConfigFile
 		*out = new(string)
 		**out = **in
+	}
+	if in.PatchStatefulSet != nil {
+		in, out := &in.PatchStatefulSet, &out.PatchStatefulSet
+		*out = new(appsv1.StatefulSet)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
