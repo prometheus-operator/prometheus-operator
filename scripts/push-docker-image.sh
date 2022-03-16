@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# Script is meant to build multi-arch container images and publish them to multiple container registries
-# 
-# Script is:
-# - figuring out if an image is a development one (by default suffixed with `-dev` in image name)
-# - figuring out the image tag (aka version) based on GITHUB_REF value
+# This script builds multi-arch container images and publish them to multiple container registries.
 #
-# Script is not:
-# - directly executing `docker build`. This is done in Makefile
-# - logging to registries 
+# The script figures out:
+# - if an image is a development one (by default suffixed with `-dev` in image name)
+# - the image tag (aka version) based on GITHUB_REF value
+#
+# The script does not:
+# - directly execute `docker build`. This is done via the Makefile.
+# - Authenticate to the container registries
 #
 
 # exit immediately when a command fails
@@ -19,7 +19,7 @@ set -o pipefail
 CPU_ARCHS="amd64 arm64 arm ppc64le s390x"
 REGISTRIES="${REGISTRIES:-"quay.io ghcr.io"}"
 
-# IMAGE_OPERATOR and IMAGER_RELOADER need to be exported to be used by `make`
+# IMAGE_OPERATOR, IMAGER_RELOADER and IMAGE_WEBHOOK need to be exported to be used by `make`
 export IMAGE_OPERATOR="${IMAGE_OPERATOR:-"prometheus-operator/prometheus-operator"}"
 export IMAGE_RELOADER="${IMAGE_RELOADER:-"prometheus-operator/prometheus-config-reloader"}"
 export IMAGE_WEBHOOK="${IMAGE_WEBHOOK:="prometheus-operator/admission-webhook"}"
