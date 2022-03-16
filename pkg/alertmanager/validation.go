@@ -332,11 +332,11 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 
 	}
 	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
 	}
 
 	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
 	children, err := r.ChildRoutes()
