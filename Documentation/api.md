@@ -304,7 +304,7 @@ Authorization contains optional `Authorization` header configuration. This secti
 BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints
 
 
-<em>appears in: [APIServerConfig](#apiserverconfig), [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec)</em>
+<em>appears in: [APIServerConfig](#apiserverconfig), [Endpoint](#endpoint), [PodMetricsEndpoint](#podmetricsendpoint), [ProbeSpec](#probespec), [RemoteReadSpec](#remotereadspec), [RemoteWriteSpec](#remotewritespec), [WebSpec](#webspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1168,6 +1168,7 @@ WebSpec defines the query command line flags when starting Prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | pageTitle | The prometheus web page title | *string | false |
+| basicAuthUsers | Defines the basic auth users to access the Prometheus API/UI. See https://prometheus.io/docs/guides/basic-auth/ | [][BasicAuth](#basicauth) | false |
 | tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
 
 [Back to TOC](#table-of-contents)

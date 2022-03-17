@@ -2284,6 +2284,13 @@ func (in *WebSpec) DeepCopyInto(out *WebSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.BasicAuthUsers != nil {
+		in, out := &in.BasicAuthUsers, &out.BasicAuthUsers
+		*out = make([]BasicAuth, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(WebTLSConfig)

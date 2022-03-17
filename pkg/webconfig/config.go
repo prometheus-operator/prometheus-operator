@@ -38,10 +38,11 @@ type Config struct {
 	tlsCredentials *tlsCredentials
 	mountingDir    string
 	secretName     string
+	basicAuthUsers map[string]string
 }
 
 // New creates a new Config.
-func New(mountingDir string, secretName string, tlsConfig *monitoringv1.WebTLSConfig) (*Config, error) {
+func New(mountingDir string, secretName string, tlsConfig *monitoringv1.WebTLSConfig, basicAuthUsers map[string]string) (*Config, error) {
 	if err := tlsConfig.Validate(); err != nil {
 		return nil, err
 	}
@@ -56,6 +57,7 @@ func New(mountingDir string, secretName string, tlsConfig *monitoringv1.WebTLSCo
 		tlsCredentials: tlsCreds,
 		mountingDir:    mountingDir,
 		secretName:     secretName,
+		basicAuthUsers: basicAuthUsers,
 	}, nil
 }
 
@@ -108,70 +110,79 @@ func (c *Config) MakeConfigFileSecret(labels map[string]string, ownerReference m
 
 func (c Config) generateConfigFileContents() ([]byte, error) {
 	tls := c.tlsConfig
-	if tls == nil {
-		return []byte{}, nil
-	}
+	cfg := yaml.MapSlice{}
 
-	tlsServerConfig := yaml.MapSlice{}
-	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
-	}
+	if tls != nil {
+		tlsServerConfig := yaml.MapSlice{}
+		if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
+		}
 
-	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
-	}
+		if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
+		}
 
-	if tls.ClientAuthType != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "client_auth_type",
-			Value: tls.ClientAuthType,
-		})
-	}
+		if tls.ClientAuthType != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "client_auth_type",
+				Value: tls.ClientAuthType,
+			})
+		}
 
-	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caPath})
-	}
+		if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caPath})
+		}
 
-	if tls.MinVersion != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "min_version",
-			Value: tls.MinVersion,
-		})
-	}
+		if tls.MinVersion != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "min_version",
+				Value: tls.MinVersion,
+			})
+		}
 
-	if tls.MaxVersion != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "max_version",
-			Value: tls.MaxVersion,
-		})
-	}
+		if tls.MaxVersion != "" {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "max_version",
+				Value: tls.MaxVersion,
+			})
+		}
 
-	if len(tls.CipherSuites) != 0 {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "cipher_suites",
-			Value: tls.CipherSuites,
-		})
-	}
+		if len(tls.CipherSuites) != 0 {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "cipher_suites",
+				Value: tls.CipherSuites,
+			})
+		}
 
-	if tls.PreferServerCipherSuites != nil {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "prefer_server_cipher_suites",
-			Value: tls.PreferServerCipherSuites,
-		})
-	}
+		if tls.PreferServerCipherSuites != nil {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "prefer_server_cipher_suites",
+				Value: tls.PreferServerCipherSuites,
+			})
+		}
 
-	if len(tls.CurvePreferences) != 0 {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
-			Key:   "curve_preferences",
-			Value: tls.CurvePreferences,
-		})
-	}
+		if len(tls.CurvePreferences) != 0 {
+			tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
+				Key:   "curve_preferences",
+				Value: tls.CurvePreferences,
+			})
+		}
 
-	cfg := yaml.MapSlice{
-		{
+		cfg = append(cfg, yaml.MapItem{
 			Key:   "tls_server_config",
 			Value: tlsServerConfig,
-		},
+		})
+	}
+
+	if len(c.basicAuthUsers) > 0 {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "basic_auth_users",
+			Value: c.basicAuthUsers,
+		})
+	}
+
+	if len(cfg) == 0 {
+		return []byte{}, nil
 	}
 
 	return yaml.Marshal(cfg)

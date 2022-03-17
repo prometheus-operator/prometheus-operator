@@ -27,14 +27,25 @@ var falseVal = false
 
 func TestMakeSecret(t *testing.T) {
 	tc := []struct {
-		name         string
-		webTLSConfig *monitoringv1.WebTLSConfig
-		expectedData string
+		name           string
+		webTLSConfig   *monitoringv1.WebTLSConfig
+		expectedData   string
+		basicAuthUsers map[string]string
 	}{
 		{
 			name:         "tls config not defined",
 			webTLSConfig: nil,
 			expectedData: "",
+		},
+		{
+			name:         "basic auth",
+			webTLSConfig: nil,
+			basicAuthUsers: map[string]string{
+				"admin": "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay",
+			},
+			expectedData: `basic_auth_users:
+  admin: $2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay
+`,
 		},
 		{
 			name: "minimal TLS config with certificate from secret",
@@ -165,7 +176,7 @@ func TestMakeSecret(t *testing.T) {
 	}
 
 	for _, tt := range tc {
-		config, err := webconfig.New("/web_certs_path_prefix", "test-secret", tt.webTLSConfig)
+		config, err := webconfig.New("/web_certs_path_prefix", "test-secret", tt.webTLSConfig, tt.basicAuthUsers)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -307,7 +318,7 @@ func TestGetMountParameters(t *testing.T) {
 	}
 
 	for _, tt := range ts {
-		tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.tlsConfig)
+		tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.tlsConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

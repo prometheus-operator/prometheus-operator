@@ -104,6 +104,7 @@ func makeStatefulSet(
 	inputHash string,
 	shard int32,
 	tlsAssetSecrets []string,
+	basicAuthUsers map[string]string,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -147,7 +148,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion, basicAuthUsers)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -324,7 +325,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
-	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
+	tlsAssetSecrets []string, version semver.Version, basicAuthUsers map[string]string) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -602,7 +603,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			webTLSConfig = p.Spec.Web.TLSConfig
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, WebConfigSecretName(p.Name), webTLSConfig)
+		webConfig, err := webconfig.New(webConfigDir, WebConfigSecretName(p.Name), webTLSConfig, basicAuthUsers)
 		if err != nil {
 			return nil, err
 		}

@@ -579,8 +579,10 @@ type QuerySpec struct {
 // +k8s:openapi-gen=true
 type WebSpec struct {
 	// The prometheus web page title
-	PageTitle *string       `json:"pageTitle,omitempty"`
-	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+	PageTitle *string `json:"pageTitle,omitempty"`
+	// Defines the basic auth users to access the Prometheus API/UI. See https://prometheus.io/docs/guides/basic-auth/
+	BasicAuthUsers []BasicAuth   `json:"basicAuthUsers,omitempty"`
+	TLSConfig      *WebTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // WebTLSConfig defines the TLS parameters for HTTPS.

@@ -1288,7 +1288,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return err
 		}
 
-		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		basicAuthUsers, err := c.createBasicAuthUsers(ctx, p)
+		if err != nil {
+			return err
+		}
+
+		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames(), basicAuthUsers)
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1703,19 +1708,46 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 	}
 }
 
+func (c *Operator) createBasicAuthUsers(ctx context.Context, p *monitoringv1.Prometheus) (map[string]string, error) {
+	users := map[string]string{}
+	client := c.kclient.CoreV1().Secrets(p.Namespace)
+	if p.Spec.Web == nil {
+		return users, nil
+	}
+	for _, bauSpec := range p.Spec.Web.BasicAuthUsers {
+		user, err := client.Get(ctx, bauSpec.Username.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		pass, err := client.Get(ctx, bauSpec.Password.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		users[string(user.Data[bauSpec.Username.Key])] = string(pass.Data[bauSpec.Password.Key])
+	}
+	return users, nil
+}
+
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
 	boolTrue := true
 	client := c.kclient.CoreV1().Secrets(p.Namespace)
 
 	var tlsConfig *monitoringv1.WebTLSConfig
+	var basicAuthUsers map[string]string
+	var err error
 	if p.Spec.Web != nil {
 		tlsConfig = p.Spec.Web.TLSConfig
+		basicAuthUsers, err = c.createBasicAuthUsers(ctx, p)
+		if err != nil {
+			return err
+		}
 	}
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		WebConfigSecretName(p.Name),
 		tlsConfig,
+		basicAuthUsers,
 	)
 	if err != nil {
 		return err
