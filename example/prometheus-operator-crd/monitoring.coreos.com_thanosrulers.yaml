@@ -3551,9 +3551,19 @@ spec:
                 type: boolean
               logFormat:
                 description: Log format for ThanosRuler to be configured with.
+                enum:
+                - ""
+                - logfmt
+                - json
                 type: string
               logLevel:
                 description: Log level for ThanosRuler to be configured with.
+                enum:
+                - ""
+                - debug
+                - info
+                - warn
+                - error
                 type: string
               minReadySeconds:
                 description: Minimum number of seconds for which a newly created pod
