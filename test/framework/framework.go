@@ -309,7 +309,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 					repoAndTag[1]
 			}
 		}
-		webhookServerImage = "quay.io/prometheus-operator/prometheus-admission-webhook:" + repoAndTag[1]
+		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + repoAndTag[1]
 	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
