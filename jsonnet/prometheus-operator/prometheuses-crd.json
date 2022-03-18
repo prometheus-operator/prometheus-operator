@@ -3621,10 +3621,22 @@
                   },
                   "logFormat": {
                     "description": "Log format for Prometheus to be configured with.",
+                    "enum": [
+                      "",
+                      "logfmt",
+                      "json"
+                    ],
                     "type": "string"
                   },
                   "logLevel": {
                     "description": "Log level for Prometheus to be configured with.",
+                    "enum": [
+                      "",
+                      "debug",
+                      "info",
+                      "warn",
+                      "error"
+                    ],
                     "type": "string"
                   },
                   "minReadySeconds": {
@@ -5871,10 +5883,22 @@
                       },
                       "logFormat": {
                         "description": "LogFormat for Thanos sidecar to be configured with.",
+                        "enum": [
+                          "",
+                          "logfmt",
+                          "json"
+                        ],
                         "type": "string"
                       },
                       "logLevel": {
                         "description": "LogLevel for Thanos sidecar to be configured with.",
+                        "enum": [
+                          "",
+                          "debug",
+                          "info",
+                          "warn",
+                          "error"
+                        ],
                         "type": "string"
                       },
                       "minTime": {

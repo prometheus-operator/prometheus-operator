@@ -137,8 +137,10 @@ type ThanosRulerSpec struct {
 	// Make sure both ruleNamespace and ruleName are set for each pair
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// Log level for ThanosRuler to be configured with.
+	//+kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for ThanosRuler to be configured with.
+	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Port name used for the pods and governing service.
 	// This defaults to web

@@ -125,8 +125,10 @@ type CommonPrometheusFields struct {
 	// _not_ be added when value is set to empty string (`""`).
 	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
 	// Log level for Prometheus to be configured with.
+	//+kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Prometheus to be configured with.
+	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Interval between consecutive scrapes. Default: `1m`
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
@@ -699,8 +701,10 @@ type ThanosSpec struct {
 	// Maps to the '--grpc-server-tls-*' CLI args.
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
 	// LogLevel for Thanos sidecar to be configured with.
+	//+kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// LogFormat for Thanos sidecar to be configured with.
+	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
@@ -1579,8 +1583,10 @@ type AlertmanagerSpec struct {
 	// The secret is mounted into /etc/alertmanager/config.
 	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
+	//+kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Alertmanager to be configured with.
+	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected

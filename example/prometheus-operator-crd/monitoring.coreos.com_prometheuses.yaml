@@ -4004,9 +4004,19 @@ spec:
                 type: boolean
               logFormat:
                 description: Log format for Prometheus to be configured with.
+                enum:
+                - ""
+                - logfmt
+                - json
                 type: string
               logLevel:
                 description: Log level for Prometheus to be configured with.
+                enum:
+                - ""
+                - debug
+                - info
+                - warn
+                - error
                 type: string
               minReadySeconds:
                 description: Minimum number of seconds for which a newly created pod
@@ -6313,9 +6323,19 @@ spec:
                     type: boolean
                   logFormat:
                     description: LogFormat for Thanos sidecar to be configured with.
+                    enum:
+                    - ""
+                    - logfmt
+                    - json
                     type: string
                   logLevel:
                     description: LogLevel for Thanos sidecar to be configured with.
+                    enum:
+                    - ""
+                    - debug
+                    - info
+                    - warn
+                    - error
                     type: string
                   minTime:
                     description: MinTime for Thanos sidecar to be configured with.
