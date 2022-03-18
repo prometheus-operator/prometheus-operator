@@ -1338,7 +1338,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 	tests := []struct {
 		version                    string
 		specRetention              string
-		specRetentionSize          string
+		specRetentionSize          monitoringv1.ByteSize
 		expectedRetentionArg       string
 		expectedRetentionSizeArg   string
 		shouldContainRetention     bool

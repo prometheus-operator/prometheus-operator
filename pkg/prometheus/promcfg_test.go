@@ -6508,7 +6508,7 @@ scrape_configs:
 
 	for _, tc := range []struct {
 		version               string
-		enforcedBodySizeLimit string
+		enforcedBodySizeLimit monitoringv1.ByteSize
 		expected              string
 		expectedErr           error
 	}{
