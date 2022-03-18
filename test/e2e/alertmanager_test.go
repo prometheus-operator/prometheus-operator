@@ -1284,8 +1284,6 @@ func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
 
 	yamlConfig := `route:
   receiver: "void"
-  matchers:
-  - namespace=test
 receivers:
 - name: "void"
 inhibit_rules:
@@ -1337,13 +1335,14 @@ inhibit_rules:
 			return false, nil
 		}
 
-		if string(cfgSecret.Data["alertmanager.yaml"]) != yamlConfig {
-			lastErr = errors.Errorf("expected Alertmanager configuration %q, got %q", yamlConfig, cfgSecret.Data["alertmanager.yaml"])
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
 		return true, nil
 	})
+
 	if err != nil {
 		t.Fatalf("%v: %v", err, lastErr)
 	}
@@ -1354,6 +1353,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
+
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
@@ -1362,6 +1362,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
 	}
@@ -1412,6 +1413,7 @@ templates: []
 
 		return true, nil
 	})
+
 	if err != nil {
 		t.Fatalf("%v: %v", err, lastErr)
 	}
