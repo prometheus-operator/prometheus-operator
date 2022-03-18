@@ -2871,8 +2871,8 @@ k8s.io/component-base v0.20.6/go.mod h1:6f1MPBAeI+mvuts3sIdtpjljHWBQ2cIy38oBIWMY
 k8s.io/component-base v0.22.5/go.mod h1:VK3I+TjuF9eaa+Ln67dKxhGar5ynVbwnGrUiNF4MqCI=
 k8s.io/component-base v0.23.0/go.mod h1:DHH5uiFvLC1edCpvcTDV++NKULdYYU6pR9Tt3HIKMKI=
 k8s.io/component-base v0.23.3/go.mod h1:1Smc4C60rWG7d3HjSYpIwEbySQ3YWg0uzH5a2AtaTLg=
-k8s.io/component-base v0.23.4 h1:SziYh48+QKxK+ykJ3Ejqd98XdZIseVBG7sBaNLPqy6M=
-k8s.io/component-base v0.23.4/go.mod h1:8o3Gg8i2vnUXGPOwciiYlkSaZT+p+7gA9Scoz8y4W4E=
+k8s.io/component-base v0.23.5 h1:8qgP5R6jG1BBSXmRYW+dsmitIrpk8F/fPEvgDenMCCE=
+k8s.io/component-base v0.23.5/go.mod h1:c5Nq44KZyt1aLl0IpHX82fhsn84Sb0jjzwjpcA42bY0=
 k8s.io/cri-api v0.17.3/go.mod h1:X1sbHmuXhwaHs9xxYffLqJogVsnI+f6cPRcgPel7ywM=
 k8s.io/cri-api v0.20.1/go.mod h1:2JRbKt+BFLTjtrILYVqQK5jqhI+XNdF6UiGMgczeBCI=
 k8s.io/cri-api v0.20.4/go.mod h1:2JRbKt+BFLTjtrILYVqQK5jqhI+XNdF6UiGMgczeBCI=
