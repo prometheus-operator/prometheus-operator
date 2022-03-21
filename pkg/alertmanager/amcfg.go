@@ -1297,6 +1297,12 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) er
 			gc.SlackAPIURLFile = ""
 		}
 	}
+
+	if len(gc.OpsGenieAPIKeyFile) > 0 && !amVersion.GTE(semver.MustParse("0.24.0")) {
+		msg := "'opsgenie_api_key_file' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		gc.OpsGenieAPIKeyFile = ""
+	}
 	return nil
 }
 
