@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/pkg/errors"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -58,7 +59,6 @@ type PromRemoteWriteTestConfig struct {
 	ClientKey          Key
 	ClientCert         Cert
 	CA                 Cert
-	ExpectedInLogs     string
 	InsecureSkipVerify bool
 	ShouldSuccess      bool
 }
@@ -161,6 +161,37 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 		} else if prwtc.InsecureSkipVerify {
 			p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
 		}
+	}
+}
+
+func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus, prwtc PromRemoteWriteTestConfig) {
+	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
+
+	p.Spec.Web = &monitoringv1.WebSpec{}
+	p.Spec.Web.TLSConfig = &monitoringv1.WebTLSConfig{
+		ClientCA: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "server-tls-ca",
+				},
+				Key: "ca.pem",
+			},
+		},
+		Cert: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "server-tls",
+				},
+				Key: "cert.pem",
+			},
+		},
+		KeySecret: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "server-tls",
+			},
+			Key: "key.pem",
+		},
+		ClientAuthType: "VerifyClientCertIfGiven",
 	}
 
 }
@@ -452,7 +483,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 }
 
 func (f *Framework) basicQueryWorking(ctx context.Context, ns, svcName string) (bool, error) {
-	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
+	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/query", map[string]string{"query": "up"})
 	if err != nil {
 		return false, err
 	}
@@ -490,14 +521,14 @@ func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
 	return nil
 }
 
-func (f *Framework) PrometheusSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+func (f *Framework) PrometheusSVCGetRequest(ctx context.Context, ns, svcName, scheme, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
-	request := ProxyGet("", svcName, "web", endpoint, query)
+	request := ProxyGet(scheme, svcName, "web", endpoint, query)
 	return request.DoRaw(ctx)
 }
 
 func (f *Framework) GetActiveTargets(ctx context.Context, ns, svcName string) ([]*Target, error) {
-	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "/api/v1/targets", map[string]string{})
+	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/targets", map[string]string{})
 	if err != nil {
 		return nil, err
 	}
@@ -530,13 +561,7 @@ func (f *Framework) GetHealthyTargets(ctx context.Context, ns, svcName string) (
 }
 
 func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) (bool, error) {
-	response, err := f.PrometheusSVCGetRequest(
-		ctx,
-		ns,
-		svcName,
-		"/api/v1/query",
-		map[string]string{"query": fmt.Sprintf(`ALERTS{alertname="%v",alertstate="firing"}`, alertName)},
-	)
+	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/query", map[string]string{"query": fmt.Sprintf(`ALERTS{alertname="%v",alertstate="firing"}`, alertName)})
 	if err != nil {
 		return false, err
 	}
@@ -553,14 +578,8 @@ func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName,
 	return true, nil
 }
 
-func (f *Framework) PrometheusQuery(ns, svcName, query string) ([]PrometheusQueryResult, error) {
-	response, err := f.PrometheusSVCGetRequest(
-		context.Background(),
-		ns,
-		svcName,
-		"/api/v1/query",
-		map[string]string{"query": query},
-	)
+func (f *Framework) PrometheusQuery(ns, svcName, scheme, query string) ([]PrometheusQueryResult, error) {
+	response, err := f.PrometheusSVCGetRequest(context.Background(), ns, svcName, scheme, "/api/v1/query", map[string]string{"query": query})
 	if err != nil {
 		return nil, err
 	}
