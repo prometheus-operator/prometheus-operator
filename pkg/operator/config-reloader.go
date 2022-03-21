@@ -148,6 +148,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 				},
 			},
 		}
+		ports []v1.ContainerPort
 	)
 
 	if configReloader.runOnce {
@@ -158,6 +159,14 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		args = append(args, fmt.Sprintf("--listen-address=%s:%d", configReloader.localHost, configReloaderPort))
 	} else {
 		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
+		ports = append(
+			ports,
+			v1.ContainerPort{
+				Name:          "reloader-web",
+				ContainerPort: configReloaderPort,
+				Protocol:      v1.ProtocolTCP,
+			},
+		)
 	}
 
 	if len(configReloader.reloadURL.String()) > 0 {
@@ -211,6 +220,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		})
 	}
 
+	boolFalse := false
+	boolTrue := true
 	return v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
@@ -218,7 +229,15 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Env:                      envVars,
 		Command:                  []string{"/bin/prometheus-config-reloader"},
 		Args:                     args,
+		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                resources,
+		SecurityContext: &v1.SecurityContext{
+			AllowPrivilegeEscalation: &boolFalse,
+			ReadOnlyRootFilesystem:   &boolTrue,
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		},
 	}
 }

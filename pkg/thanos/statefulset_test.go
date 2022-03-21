@@ -297,11 +297,16 @@ func TestObjectStorage(t *testing.T) {
 
 func TestObjectStorageFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-objstore-config-secret"
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:          emptyQueryEndpoints,
 			ObjectStorageConfigFile: &testPath,
+			ObjectStorageConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -309,20 +314,117 @@ func TestObjectStorageFile(t *testing.T) {
 	}
 
 	{
-		var containsArg bool
-		expectedArg := "--objstore.config-file=" + testPath
+		var containsArgConfigFile, containsArgConfig bool
+		expectedArgConfigFile := "--objstore.config-file=" + testPath
+		expectedArgConfig := "--objstore.config=$(OBJSTORE_CONFIG)"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
-					if arg == expectedArg {
-						containsArg = true
-						break
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfig {
+						containsArgConfig = true
 					}
 				}
 			}
 		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfig {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfig)
+		}
+	}
+}
+
+func TestAlertRelabel(t *testing.T) {
+	testKey := "thanos-alertrelabel-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			AlertRelabelConfigs: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
+		if env.Name == "ALERT_RELABEL_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos ruler is missing expected ALERT_RELABEL_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
 		if !containsArg {
 			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
+func TestAlertRelabelFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-alertrelabel-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:         emptyQueryEndpoints,
+			AlertRelabelConfigFile: &testPath,
+			AlertRelabelConfigs: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArgConfigFile, containsArgConfigs bool
+		expectedArgConfigFile := "--alert.relabel-config-file=" + testPath
+		expectedArgConfigs := "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfigs {
+						containsArgConfigs = true
+					}
+				}
+			}
+		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfigs {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfigs)
 		}
 	}
 }
@@ -354,16 +456,16 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				"test": "test",
 			},
 			AlertDropLabels:         nil,
-			ExpectedLabels:          []string{`test="test"`},
-			ExpectedAlertDropLabels: []string{},
+			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica"},
 		},
 		{
 			Labels: map[string]string{
 				"test": "test",
 			},
 			AlertDropLabels:         []string{"test"},
-			ExpectedLabels:          []string{`test="test"`},
-			ExpectedAlertDropLabels: []string{"test"},
+			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test"},
 		},
 		{
 			Labels: map[string]string{
@@ -371,8 +473,8 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				"test":                 "test",
 			},
 			AlertDropLabels:         []string{"test", "aaa"},
-			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
-			ExpectedAlertDropLabels: []string{"test", "aaa"},
+			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test", "aaa"},
 		},
 	}
 	for _, tc := range tests {
@@ -468,38 +570,49 @@ func TestAdditionalContainers(t *testing.T) {
 }
 
 func TestRetention(t *testing.T) {
-	tests := []struct {
+	for _, tc := range []struct {
 		specRetention     string
 		expectedRetention string
+		ok                bool
 	}{
-		{"", "24h"},
-		{"1d", "1d"},
-	}
+		{"", "24h", true},
+		{"1d", "1d", true},
+		{"1k", "", false},
+		{"somevalue", "", false},
+	} {
+		t.Run(tc.specRetention, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Retention:      tc.specRetention,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "")
 
-	for _, test := range tests {
-		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-			Spec: monitoringv1.ThanosRulerSpec{
-				Retention:      test.specRetention,
-				QueryEndpoints: emptyQueryEndpoints,
-			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		trArgs := sset.Spec.Template.Spec.Containers[0].Args
-		expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", test.expectedRetention)
-		found := false
-		for _, flag := range trArgs {
-			if flag == expectedRetentionArg {
-				found = true
-				break
+			if !tc.ok {
+				if err == nil {
+					t.Fatal("expecting error but got none")
+				}
+				return
 			}
-		}
 
-		if !found {
-			t.Fatalf("expected ThanosRuler args to contain %v, but got %v", expectedRetentionArg, trArgs)
-		}
+			if err != nil {
+				t.Fatalf("expecting no error but got %q", err)
+			}
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+			expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)
+			found := false
+			for _, flag := range trArgs {
+				if flag == expectedRetentionArg {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Fatalf("expected ThanosRuler args to contain %v, but got %v", expectedRetentionArg, trArgs)
+			}
+		})
 	}
 }
 
@@ -887,5 +1000,145 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
 			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
 		}
+	}
+}
+
+func TestStatefulSetMinReadySeconds(t *testing.T) {
+	tr := monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			MinReadySeconds: nil,
+			QueryEndpoints:  emptyQueryEndpoints,
+		},
+	}
+
+	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if statefulSet.MinReadySeconds != 0 {
+		t.Fatalf("expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
+	}
+
+	// assert set correctly if not nil
+	var expect uint32 = 5
+	tr.Spec.MinReadySeconds = &expect
+	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if statefulSet.MinReadySeconds != int32(expect) {
+		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	}
+}
+
+func TestStatefulSetPVC(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Annotations: annotations,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				VolumeClaimTemplate: pvc,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
+	if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
+		t.Fatal("Error adding PVC Spec to StatefulSetSpec")
+	}
+}
+
+func TestStatefulEmptyDir(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	emptyDir := v1.EmptyDirVolumeSource{
+		Medium: v1.StorageMediumMemory,
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				EmptyDir: &emptyDir,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir == nil || !reflect.DeepEqual(emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium) {
+		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
+	}
+}
+
+func TestStatefulSetEphemeral(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	ephemeral := v1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				StorageClassName: &storageClass,
+			},
+		},
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Storage: &monitoringv1.StorageSpec{
+				Ephemeral: &ephemeral,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
+		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
+		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
 	}
 }

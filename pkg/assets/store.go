@@ -42,22 +42,24 @@ type Store struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets         map[TLSAssetKey]TLSAsset
-	BearerTokenAssets map[string]BearerToken
-	BasicAuthAssets   map[string]BasicAuthCredentials
-	OAuth2Assets      map[string]OAuth2Credentials
+	TLSAssets       map[TLSAssetKey]TLSAsset
+	TokenAssets     map[string]Token
+	BasicAuthAssets map[string]BasicAuthCredentials
+	OAuth2Assets    map[string]OAuth2Credentials
+	SigV4Assets     map[string]SigV4Credentials
 }
 
 // NewStore returns an empty assetStore.
 func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *Store {
 	return &Store{
-		cmClient:          cmClient,
-		sClient:           sClient,
-		TLSAssets:         make(map[TLSAssetKey]TLSAsset),
-		BearerTokenAssets: make(map[string]BearerToken),
-		BasicAuthAssets:   make(map[string]BasicAuthCredentials),
-		OAuth2Assets:      make(map[string]OAuth2Credentials),
-		objStore:          cache.NewStore(assetKeyFunc),
+		cmClient:        cmClient,
+		sClient:         sClient,
+		TLSAssets:       make(map[TLSAssetKey]TLSAsset),
+		TokenAssets:     make(map[string]Token),
+		BasicAuthAssets: make(map[string]BasicAuthCredentials),
+		OAuth2Assets:    make(map[string]OAuth2Credentials),
+		SigV4Assets:     make(map[string]SigV4Credentials),
+		objStore:        cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -201,18 +203,87 @@ func (s *Store) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.O
 	return nil
 }
 
-// AddBearerToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *Store) AddBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
+// AddToken processes the given SecretKeySelector and adds the referenced data to the store.
+func (s *Store) addToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
 	if sel.Name == "" {
 		return nil
 	}
 
-	bearerToken, err := s.GetSecretKey(ctx, ns, sel)
+	token, err := s.GetSecretKey(ctx, ns, sel)
+	if err != nil {
+		return errors.Wrap(err, "failed to get token from secret")
+	}
+
+	s.TokenAssets[key] = Token(token)
+
+	return nil
+}
+
+func (s *Store) AddBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
+	err := s.addToken(ctx, ns, sel, key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bearer token")
 	}
+	return nil
+}
 
-	s.BearerTokenAssets[key] = BearerToken(bearerToken)
+func (s *Store) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
+	if auth == nil || auth.Credentials == nil {
+		return nil
+	}
+
+	if err := auth.Validate(); err != nil {
+		return err
+	}
+
+	err := s.addToken(ctx, namespace, *auth.Credentials, key)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
+	}
+	return nil
+}
+
+func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
+	if auth == nil || auth.Credentials == nil {
+		return nil
+	}
+
+	if err := auth.Validate(); err != nil {
+		return err
+	}
+
+	err := s.addToken(ctx, namespace, *auth.Credentials, key)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
+	}
+	return nil
+}
+
+// AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
+func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
+		return nil
+	}
+
+	if sigv4.AccessKey == nil || sigv4.SecretKey == nil {
+		return errors.New("both accessKey and secretKey should be provided")
+	}
+
+	sigV4Credentials := SigV4Credentials{}
+
+	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to read SigV4 access-key")
+	}
+	sigV4Credentials.AccessKeyID = accessKey
+
+	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to read SigV4 secret-key")
+	}
+	sigV4Credentials.SecretKeyID = secretKey
+
+	s.SigV4Assets[key] = sigV4Credentials
 
 	return nil
 }

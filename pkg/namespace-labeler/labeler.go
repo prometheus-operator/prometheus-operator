@@ -21,7 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus-community/prom-label-proxy/injectproxy"
-	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 )
 
@@ -99,7 +99,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			if err != nil {
 				return errors.Wrap(err, "failed to parse promql expression")
 			}
-			enforcer := injectproxy.NewEnforcer(&labels.Matcher{
+			enforcer := injectproxy.NewEnforcer(false, &labels.Matcher{
 				Name:  l.enforcedNsLabel,
 				Type:  labels.MatchEqual,
 				Value: rule.Namespace,

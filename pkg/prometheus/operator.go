@@ -24,21 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
-	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/asaskevich/govalidator"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/relabel"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,6 +43,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -88,8 +90,7 @@ type Operator struct {
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
 	config                 operator.Config
-
-	configGenerator *ConfigGenerator
+	endpointSliceSupported bool
 }
 
 // New creates a new controller.
@@ -142,7 +143,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		configGenerator:        NewConfigGenerator(logger),
 		metrics:                operator.NewMetrics("prometheus", r),
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -311,6 +311,12 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
+	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
+	}
+	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
+	c.endpointSliceSupported = endpointSliceSupported
 	return c, nil
 }
 
@@ -1213,11 +1219,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
 	p.Kind = monitoringv1.PrometheusesKind
 
+	logger := log.With(c.logger, "key", key)
 	if p.Spec.Paused {
+		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
 		return nil
 	}
 
-	logger := log.With(c.logger, "key", key)
 	level.Info(logger).Log("msg", "sync prometheus")
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
@@ -1230,7 +1237,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	if err := c.createOrUpdateTLSAssetSecret(ctx, p, assetStore); err != nil {
+	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	if err != nil {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
@@ -1258,17 +1266,29 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return errors.Wrap(err, "retrieving statefulset failed")
 		}
 
-		spec := appsv1.StatefulSetSpec{}
+		existingStatefulSet := &appsv1.StatefulSet{}
 		if obj != nil {
-			ss := obj.(*appsv1.StatefulSet)
-			spec = ss.Spec
+			existingStatefulSet = obj.(*appsv1.StatefulSet)
+			if existingStatefulSet.DeletionTimestamp != nil {
+				// We want to avoid entering a hot-loop of update/delete cycles here since the sts was
+				// marked for deletion in foreground, which means it may take some time before the finalizers complete and
+				// the resource disappears from the API. The deletion timestamp will have been set when the initial
+				// delete request was issued. In that case, we avoid further processing.
+				level.Info(logger).Log(
+					"msg", "halting update of StatefulSet",
+					"reason", "resource has been marked for deletion",
+					"resource_name", existingStatefulSet.GetName(),
+				)
+				return nil
+			}
 		}
-		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
+
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, tlsAssets, existingStatefulSet.Spec)
 		if err != nil {
 			return err
 		}
 
-		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard))
+		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1283,8 +1303,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return nil
 		}
 
-		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-		if newSSetInputHash == oldSSetInputHash {
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
 			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -1304,6 +1323,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			}
 
 			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
@@ -1371,13 +1391,14 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 	}
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		P monitoringv1.Prometheus
 		C operator.Config
 		S interface{}
 		R []string `hash:"set"`
-	}{p, c, ss, ruleConfigMapNames},
+		A []string `hash:"set"`
+	}{p, c, ss, ruleConfigMapNames, tlsAssets.ShardNames()},
 		nil,
 	)
 	if err != nil {
@@ -1458,22 +1479,26 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
-	if additionalScrapeConfigs != nil {
-		for _, secret := range s.Items {
-			if secret.Name == additionalScrapeConfigs.Name {
-				if c, ok := secret.Data[additionalScrapeConfigs.Key]; ok {
-					return c, nil
-				}
-
-				return nil, fmt.Errorf("key %v could not be found in Secret %v", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
-			}
-		}
-		if additionalScrapeConfigs.Optional == nil || !*additionalScrapeConfigs.Optional {
-			return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
-		}
-		level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", additionalScrapeConfigs.Name))
+func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+	if sks == nil {
+		return nil, nil
 	}
+
+	for _, secret := range s.Items {
+		if secret.Name == sks.Name {
+			if c, ok := secret.Data[sks.Key]; ok {
+				return c, nil
+			}
+
+			return nil, fmt.Errorf("key %v could not be found in secret %v", sks.Key, sks.Name)
+		}
+	}
+
+	if sks.Optional == nil || !*sks.Optional {
+		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
+	}
+
+	level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
 	return nil, nil
 }
 
@@ -1526,7 +1551,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
-
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -1543,16 +1567,29 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote read %d", i)
+		}
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		if err := validateRemoteWriteSpec(remote); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
-		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		key := fmt.Sprintf("remoteWrite/%d", i)
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 	}
@@ -1561,30 +1598,43 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
 			return errors.Wrap(err, "apiserver config")
 		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
+			return errors.Wrapf(err, "apiserver config")
+		}
+	}
+	if p.Spec.Alerting != nil {
+		for i, am := range p.Spec.Alerting.Alertmanagers {
+			if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+				return errors.Wrapf(err, "apiserver config")
+			}
+		}
 	}
 
-	additionalScrapeConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
-	additionalAlertRelabelConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	additionalAlertRelabelConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
 	}
-	additionalAlertManagerConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
+	additionalAlertManagerConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
 
+	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	if err != nil {
+		return err
+	}
+
 	// Update secret based on the most recent configuration.
-	conf, err := c.configGenerator.GenerateConfig(
+	conf, err := cg.Generate(
 		p,
 		smons,
 		pmons,
 		bmons,
-		store.BasicAuthAssets,
-		store.OAuth2Assets,
-		store.BearerTokenAssets,
+		store,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1607,17 +1657,37 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	s.Data[configFilename] = buf.Bytes()
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
-	boolTrue := true
+func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (*operator.ShardedSecret, error) {
+	labels := c.config.Labels.Merge(managedByOperatorLabels)
+	template := newTLSAssetSecret(p, labels)
+
+	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(p.Name))
+
+	for k, v := range store.TLSAssets {
+		sSecret.AppendData(k.String(), []byte(v))
+	}
+
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	tlsAssetsSecret := &v1.Secret{
+	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
+		return nil, errors.Wrapf(err, "failed to create TLS assets secret for Prometheus")
+	}
+
+	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
+
+	return sSecret, nil
+}
+
+func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1.Secret {
+	boolTrue := true
+	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   tlsAssetsSecretName(p.Name),
-			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         p.APIVersion,
@@ -1631,17 +1701,6 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		},
 		Data: map[string][]byte{},
 	}
-
-	for key, asset := range store.TLSAssets {
-		tlsAssetsSecret.Data[key.String()] = []byte(asset)
-	}
-
-	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
-	if err != nil {
-		return errors.Wrap(err, "failed to create TLS assets secret for Prometheus")
-	}
-
-	return nil
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
@@ -1757,6 +1816,31 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 			if err = store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
 				break
 			}
+
+			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+			if err = store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
+				break
+			}
+
+			if err = validateScrapeIntervalAndTimeout(p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				break
+			}
+
+			for _, rl := range endpoint.RelabelConfigs {
+				if rl.Action != "" {
+					if err = validateRelabelConfig(*rl); err != nil {
+						break
+					}
+				}
+			}
+
+			for _, rl := range endpoint.MetricRelabelConfigs {
+				if rl.Action != "" {
+					if err = validateRelabelConfig(*rl); err != nil {
+						break
+					}
+				}
+			}
 		}
 
 		if err != nil {
@@ -1852,6 +1936,31 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 			if err = store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
 				break
 			}
+
+			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+			if err = store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+				break
+			}
+
+			if err = validateScrapeIntervalAndTimeout(p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				break
+			}
+
+			for _, rl := range endpoint.RelabelConfigs {
+				if rl.Action != "" {
+					if err = validateRelabelConfig(*rl); err != nil {
+						break
+					}
+				}
+			}
+
+			for _, rl := range endpoint.MetricRelabelConfigs {
+				if rl.Action != "" {
+					if err = validateRelabelConfig(*rl); err != nil {
+						break
+					}
+				}
+			}
 		}
 
 		if err != nil {
@@ -1923,37 +2032,70 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 
 	var rejected int
 	res := make(map[string]*monitoringv1.Probe, len(probes))
+
 	for probeName, probe := range probes {
-		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+		rejectFn := func(probe *monitoringv1.Probe, err error) {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping probe",
-				"error", "Probe needs at least one target of type staticConfig or ingress",
-				"probe", probeName,
+				"error", err.Error(),
+				"probe", probe,
 				"namespace", p.Namespace,
 				"prometheus", p.Name,
 			)
+		}
+
+		if err = probe.Spec.Targets.Validate(); err != nil {
+			rejectFn(probe, err)
 			continue
 		}
+
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
-			break
+			rejectFn(probe, err)
+			continue
 		}
 
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
-			break
+			rejectFn(probe, err)
+			continue
 		}
 
 		if probe.Spec.TLSConfig != nil {
 			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
-				break
+				rejectFn(probe, err)
+				continue
 			}
+		}
+		pnAuthKey := fmt.Sprintf("probe/auth/%s/%s", probe.GetNamespace(), probe.GetName())
+		if err = store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization, pnAuthKey); err != nil {
+			rejectFn(probe, err)
+			continue
 		}
 
 		if err = store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
-			break
+			rejectFn(probe, err)
+			continue
 		}
 
+		if err = validateScrapeIntervalAndTimeout(p, probe.Spec.Interval, probe.Spec.ScrapeTimeout); err != nil {
+			rejectFn(probe, err)
+			continue
+		}
+
+		for _, rl := range probe.Spec.MetricRelabelConfigs {
+			if rl.Action != "" {
+				if err = validateRelabelConfig(*rl); err != nil {
+					rejectFn(probe, err)
+					continue
+				}
+			}
+		}
+		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
+			err := errors.Wrapf(err, "%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`", probe.Spec.ProberSpec.URL)
+			rejectFn(probe, err)
+			continue
+		}
 		res[probeName] = probe
 	}
 
@@ -1999,4 +2141,95 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 		return nil, errors.Wrap(err, "failed to list namespaces")
 	}
 	return ns, nil
+}
+
+// validateRemoteWriteSpec checks that mutually exclusive configurations are not
+// included in the Prometheus remoteWrite configuration section.
+// Reference:
+// https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+	var nonNilFields []string
+	for k, v := range map[string]interface{}{
+		"basicAuth":     spec.BasicAuth,
+		"oauth2":        spec.OAuth2,
+		"authorization": spec.Authorization,
+		"sigv4":         spec.Sigv4,
+	} {
+		if reflect.ValueOf(v).IsNil() {
+			continue
+		}
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
+	}
+
+	if len(nonNilFields) > 1 {
+		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	return nil
+}
+
+func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
+	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+
+	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
+		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
+	}
+	if rc.Modulus == 0 && rc.Action == string(relabel.HashMod) {
+		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
+	}
+	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod)) && rc.TargetLabel == "" {
+		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
+	}
+	if rc.Action == string(relabel.Replace) && !relabelTarget.MatchString(rc.TargetLabel) {
+		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+	if rc.Action == string(relabel.LabelMap) {
+		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
+			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+		}
+	}
+	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
+		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
+		if len(rc.SourceLabels) != 0 ||
+			!(rc.TargetLabel == "" ||
+				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
+			!(rc.Modulus == uint64(0) ||
+				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
+			!(rc.Separator == "" ||
+				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
+				rc.Replacement == "") {
+			return errors.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
+		}
+	}
+	return nil
+}
+
+func validateProberURL(url string) error {
+	hostPort := strings.Split(url, ":")
+
+	if !govalidator.IsHost(hostPort[0]) {
+		return errors.Errorf("invalid host: %q", hostPort[0])
+	}
+
+	// handling cases with url specified as host:port
+	if len(hostPort) > 1 {
+		if !govalidator.IsPort(hostPort[1]) {
+			return errors.Errorf("invalid port: %q", hostPort[1])
+		}
+	}
+	return nil
+}
+
+func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval, scrapeTimeout string) error {
+	if scrapeTimeout == "" {
+		return nil
+	}
+	if scrapeInterval == "" {
+		scrapeInterval = p.Spec.ScrapeInterval
+	}
+	return operator.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }

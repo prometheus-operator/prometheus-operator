@@ -18,7 +18,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-kit/kit/log"
+	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -38,6 +39,11 @@ func strPtr(str string) *string {
 }
 
 func TestCheckAlertmanagerConfig(t *testing.T) {
+	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -45,7 +51,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string][]byte{
-				"key1": []byte("val1"),
+				"key1": []byte("https://val1.com"),
 			},
 		},
 	)
@@ -801,7 +807,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			err := checkAlertmanagerConfig(context.Background(), tc.amConfig, store)
+			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
 				if err != nil {
 					t.Fatalf("expecting no error but got %q", err)
@@ -857,11 +863,38 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 		{
 			am: &monitoringv1.Alertmanager{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "invalid-user-config",
+					Name:      "invalid-user-config-in-secret-with-no-config-selector",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret:               "amconfig",
+					AlertmanagerConfigSelector: nil,
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`invalid`),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "invalid-user-config-provided-to-operator",
 					Namespace: "test",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
 					ConfigSecret: "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"test": "test"},
+					},
 				},
 			},
 			objects: []runtime.Object{
@@ -1023,6 +1056,30 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			},
 			ok:           true,
 			expectedKeys: []string{"key1"},
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "invalid cluster gossip interval",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ClusterGossipInterval: "30k",
+				},
+			},
+			ok: false,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "correct cluster gossip interval",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ClusterGossipInterval: "30s",
+				},
+			},
+			ok: true,
 		},
 	} {
 		t.Run(tc.am.Name, func(t *testing.T) {

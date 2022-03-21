@@ -1,7 +1,7 @@
 ---
-title: "Adopters"
-date: 2021-03-08T23:50:39+01:00
+title: Adopters
 draft: false
+date: "2021-03-08T23:50:39+01:00"
 ---
 
 <!--
@@ -25,7 +25,36 @@ Details (optional):
 
 This document tracks people and use cases for the Prometheus Operator in production. By creating a list of production use cases we hope to build a community of advisors that we can reach out to with experience using various the Prometheus Operator applications, operation environments, and cluster sizes. The Prometheus Operator development team may reach out periodically to check-in on how the Prometheus Operator is working in the field and update this list.
 
-Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/master/ADOPTERS.md) to the list.
+Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/main/ADOPTERS.md) to the list.
+
+## Clyso
+
+[clyso.com](https://www.clyso.com/en)
+
+Environments: Bare Metal, Opennebula
+
+Uses kube-prometheus: Yes
+
+Details:
+- multiple K8s cluster with prometheus deployed through prom-operator
+- several own ceph cluster providing metrics via ceph mgr prometheus module
+- several customer ceph clusters pushing metrics via external pushgateway to our our central monitoring instances
+- thanos receiver connected to own S3 storage
+
+## Coralogix
+
+[coralogix.com](https://coralogix.com)
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- Operator installed on each Kubernetes cluster, with Thanos aggregating metrics from a central query endpoint
+- Two Prometheus instances per cluster
+- Loose coupling between Kubernetes cluster administrators who manage alerting sinks and service owners who define alerts for their services
+- 800K samples/s
+- 30M active series
 
 ## Giant Swarm
 
@@ -54,7 +83,7 @@ Details:
 - 20000 samples/s
 - 1M active series
 
-## Innovaccer ##
+## Innovaccer
 
 https://innovaccer.com/
 
@@ -82,7 +111,7 @@ Details:
 
 ## Lunar
 
-[lunar.app](https://lunar.app/)
+[lunar.app](https://www.lunar.app/)
 
 Environments: AWS
 
@@ -142,7 +171,7 @@ Opstrace installations use the Prometheus Operator internally to collect metrics
 
 ## Polar Signals
 
-[polarsignals.com](https://polarsignals.com/)
+[polarsignals.com](https://www.polarsignals.com/)
 
 Environment: Google Cloud
 
@@ -152,6 +181,26 @@ Details:
 - HA Pair of Prometheus
 - 4000 samples/s
 - 100k active series
+
+## Robusta
+
+[Robusta docs](https://docs.robusta.dev/master/)
+
+Environments: EKS, GKE, AKS, and self-hosted Kubernetes
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+We're an open source project that builds upon the awesome Prometheus Operator. We run automated playbooks in response to Prometheus alerts and other events in your cluster. For example, you can automatically fetch logs and send them to Slack when a Prometheus alert occurs. All it takes is this YAML:
+
+```yaml
+triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+actions:
+  - logs_enricher: {}
+sinks:
+  - slack
+```
 
 ## Skyscanner
 
@@ -165,6 +214,22 @@ Details (optional):
 - HA Pairs of Prometheus
 - 25000 samples/s
 - 1.2M active series
+
+## SUSE Rancher
+
+[suse.com/products/suse-rancher](https://www.suse.com/products/suse-rancher/)
+
+Environments: RKE, RKE2, K3s, Windows, AWS, Azure, Google Cloud, Bare Metal, etc.
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Rancher Monitoring supports use cases for Prometheus Operator across various different
+cluster types and setups that are managed via the Rancher product. All Rancher users that
+install Monitoring V2 deploy this chart.
+
+For more information, please see [how Rancher monitoring works](https://rancher.com/docs/rancher/v2.6/en/monitoring-alerting/how-monitoring-works/).
+
+The open-source rancher-monitoring Helm chart (based on [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)) can be found at [rancher/charts](https://github.com/rancher/charts).
 
 ## Veepee
 

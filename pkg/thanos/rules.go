@@ -24,12 +24,12 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/ghodss/yaml"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 )
 
@@ -186,7 +186,7 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 				return
 			}
 
-			content, err := generateContent(promRule.Spec)
+			content, err := prometheus.GenerateContent(promRule.Spec, o.logger)
 			if err != nil {
 				marshalErr = err
 				return
@@ -218,15 +218,6 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, 0)
 	}
 	return rules, nil
-}
-
-func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
-
-	content, err := yaml.Marshal(promRule)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal content")
-	}
-	return string(content), nil
 }
 
 // makeRulesConfigMaps takes a ThanosRuler configuration and rule files and

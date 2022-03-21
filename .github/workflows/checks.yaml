@@ -8,8 +8,6 @@ on:
       - 'main'
     tags:
       - 'v*'
-env:
-  golang-version: '1.16'
 jobs:
   generate:
     runs-on: ${{ matrix.os }}
@@ -20,39 +18,49 @@ jobs:
           - ubuntu-latest
     name: Generate and format
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
       with:
-        go-version: ${{ env.golang-version }}
+        go-version: '${{ env.golang-version }}'
     - run: make --always-make format generate && git diff --exit-code
-  check-links:
+  check-docs:
     runs-on: ubuntu-latest
-    name: Check markdown links
+    name: Check Documentation formatting and links
     steps:
-    - uses: actions/checkout@v2
-    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
       with:
-        use-quiet-mode: 'yes'
-        config-file: '.github/workflows/.mlc_config.json'
-      continue-on-error: true
+        go-version: '${{ env.golang-version }}'
+    - run: make check-docs
   check-golang:
     runs-on: ubuntu-latest
     name: Golang linter
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v3
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+      - uses: actions/setup-go@v2
         with:
-          version: v1.40.1
+          go-version: '${{ env.golang-version }}'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3.1.0
+        with:
+          version: v1.44.2
           args: --timeout 10m0s
   check-metrics:
     runs-on: ubuntu-latest
     name: Check prometheus metrics
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
       with:
-        go-version: ${{ env.golang-version }}
+        go-version: '${{ env.golang-version }}'
     - run: make check-metrics
   build:
     runs-on: ${{ matrix.os }}
@@ -63,18 +71,22 @@ jobs:
           - ubuntu-latest
     name: Build operator binary
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
       with:
-        go-version: ${{ env.golang-version }}
+        go-version: '${{ env.golang-version }}'
     - run: make operator
   po-rule-migration:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
       with:
-        go-version: ${{ env.golang-version }}
+        go-version: '${{ env.golang-version }}'
     - run: cd cmd/po-rule-migration && go install
 

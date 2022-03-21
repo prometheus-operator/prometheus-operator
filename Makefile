@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=/usr/bin/env bash -o pipefail
 
 GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
@@ -11,6 +11,7 @@ endif
 GO_PKG=github.com/prometheus-operator/prometheus-operator
 IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
 IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
+IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
@@ -24,7 +25,6 @@ export PATH := $(TOOLS_BIN_DIR):$(PATH)
 
 PO_DOCGEN_BINARY:=$(TOOLS_BIN_DIR)/po-docgen
 CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)/controller-gen
-EMBEDMD_BINARY=$(TOOLS_BIN_DIR)/embedmd
 JB_BINARY=$(TOOLS_BIN_DIR)/jb
 GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
 JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
@@ -32,7 +32,8 @@ JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
 SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY)
+MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY)
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -90,7 +91,7 @@ clean:
 ############
 
 .PHONY: build
-build: operator prometheus-config-reloader k8s-gen po-lint
+build: operator prometheus-config-reloader admission-webhook k8s-gen po-lint
 
 .PHONY: operator
 operator:
@@ -98,6 +99,10 @@ operator:
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
+	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+
+.PHONY: admission-webhook
+admission-webhook:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
 .PHONY: po-lint
@@ -146,7 +151,7 @@ k8s-gen: \
 
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
-image: .hack-operator-image .hack-prometheus-config-reloader-image
+image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
 .hack-operator-image: Dockerfile operator
 # Create empty target file, for the sole purpose of recording when this target
@@ -162,11 +167,20 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
+.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
+# Create empty target file, for the sole purpose of recording when this target
+# was last executed via the last-modification timestamp on the file. See
+# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+	touch $@
+
 .PHONY: update-go-deps
 update-go-deps:
 	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
 		go get $$m; \
 	done
+	(cd pkg/client && go get -u ./...)
+	(cd pkg/apis/monitoring && go get -u ./...)
 	@echo "Don't forget to run 'make tidy'"
 
 ##############
@@ -181,16 +195,22 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook generate-docs
 
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
-	GOOS=$(OS) GOARCH=$(ARCH) go run -v ./scripts/generate-crds.go --controller-gen=$(CONTROLLER_GEN_BINARY) --gojsontoyaml=$(GOJSONTOYAML_BINARY)
+	cd pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
+	cd pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1,preserveUnknownFields=false paths=. output:crd:dir=$(PWD)/example/prometheus-operator-crd
+	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
+
 
 .PHONY: generate-remote-write-certs
 generate-remote-write-certs:
 	mkdir -p test/e2e/remote_write_certs && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(ARCH) go run -v ./certs/.)
+
+.PHONY: generate-docs
+generate-docs: $(shell find Documentation -type f)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
@@ -212,21 +232,20 @@ $(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
 
+example/admission-webhook: scripts/generate/vendor scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-admission-webhook-example.sh
+
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
-Documentation/operator.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
-	$(PO_DOCGEN_BINARY) operator cmd/operator/main.go > $@
+Documentation/operator.md: operator
+	$(MDOX_BINARY) fmt $@
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
-
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md"`
-
 
 ##############
 # Formatting #
@@ -260,6 +279,19 @@ check-metrics: $(PROMLINTER_BINARY)
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run
 
+MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
+MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))
+
+.PHONY: docs
+docs: $(MDOX_BINARY)
+	@echo ">> formatting and local/remote link check"
+	$(MDOX_BINARY) fmt --soft-wraps -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
+
+.PHONY: check-docs
+check-docs: $(MDOX_BINARY)
+	@echo ">> checking formatting and local/remote links"
+	$(MDOX_BINARY) fmt --soft-wraps --check -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
+
 ###########
 # Testing #
 ###########
@@ -284,7 +316,7 @@ test/e2e/remote_write_certs/ca.key test/e2e/remote_write_certs/ca.crt test/e2e/r
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e: test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem
-	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(IMAGE_OPERATOR):$(TAG) -count=1
+	go test -timeout 120m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(IMAGE_OPERATOR):$(TAG) -count=1
 
 ############
 # Binaries #

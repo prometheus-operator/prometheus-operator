@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -38,22 +39,22 @@ func MakeService(pathToYaml string) (*v1.Service, error) {
 	return &resource, nil
 }
 
-func (f *Framework) CreateServiceAndWaitUntilReady(namespace string, service *v1.Service) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(namespace, service.Name) }
+func (f *Framework) CreateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
 
-	if _, err := f.KubeClient.CoreV1().Services(namespace).Create(f.Ctx, service, metav1.CreateOptions{}); err != nil {
+	if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
 		return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
 	}
 
-	if err := f.WaitForServiceReady(namespace, service.Name); err != nil {
+	if err := f.WaitForServiceReady(ctx, namespace, service.Name); err != nil {
 		return finalizerFn, errors.Wrap(err, fmt.Sprintf("waiting for service %v to become ready timed out", service.Name))
 	}
 	return finalizerFn, nil
 }
 
-func (f *Framework) WaitForServiceReady(namespace string, serviceName string) error {
+func (f *Framework) WaitForServiceReady(ctx context.Context, namespace string, serviceName string) error {
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		endpoints, err := f.getEndpoints(namespace, serviceName)
+		endpoints, err := f.getEndpoints(ctx, namespace, serviceName)
 		if err != nil {
 			return false, err
 		}
@@ -65,13 +66,13 @@ func (f *Framework) WaitForServiceReady(namespace string, serviceName string) er
 	return err
 }
 
-func (f *Framework) DeleteServiceAndWaitUntilGone(namespace string, serviceName string) error {
-	if err := f.KubeClient.CoreV1().Services(namespace).Delete(f.Ctx, serviceName, metav1.DeleteOptions{}); err != nil {
+func (f *Framework) DeleteServiceAndWaitUntilGone(ctx context.Context, namespace string, serviceName string) error {
+	if err := f.KubeClient.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting service %v failed", serviceName))
 	}
 
 	err := wait.Poll(5*time.Second, time.Minute, func() (bool, error) {
-		_, err := f.getEndpoints(namespace, serviceName)
+		_, err := f.getEndpoints(ctx, namespace, serviceName)
 		if err != nil {
 			return true, nil
 		}
@@ -84,8 +85,8 @@ func (f *Framework) DeleteServiceAndWaitUntilGone(namespace string, serviceName 
 	return nil
 }
 
-func (f *Framework) getEndpoints(namespace, serviceName string) (*v1.Endpoints, error) {
-	endpoints, err := f.KubeClient.CoreV1().Endpoints(namespace).Get(f.Ctx, serviceName, metav1.GetOptions{})
+func (f *Framework) getEndpoints(ctx context.Context, namespace, serviceName string) (*v1.Endpoints, error) {
+	endpoints, err := f.KubeClient.CoreV1().Endpoints(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("requesting endpoints for service %v failed", serviceName))
 	}

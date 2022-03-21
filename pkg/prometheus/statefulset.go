@@ -17,7 +17,9 @@ package prometheus
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -29,7 +31,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -98,6 +103,7 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
+	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -122,9 +128,6 @@ func makeStatefulSet(
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
 	}
-	if p.Spec.Retention == "" {
-		p.Spec.Retention = defaultRetention
-	}
 
 	if p.Spec.Resources.Requests == nil {
 		p.Spec.Resources.Requests = v1.ResourceList{}
@@ -144,7 +147,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -209,6 +212,14 @@ func makeStatefulSet(
 			Name: volumeName(p.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: emptyDir,
+			},
+		})
+	} else if storageSpec.Ephemeral != nil {
+		ephemeral := storageSpec.Ephemeral
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(p.Name),
+			VolumeSource: v1.VolumeSource{
+				Ephemeral: ephemeral,
 			},
 		})
 	} else {
@@ -313,7 +324,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
-	version semver.Version) (*appsv1.StatefulSetSpec, error) {
+	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -333,24 +344,41 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
+	// TODO(slashpai): Refactor the code to cover logging for all components
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
 	retentionTimeFlag := "-storage.tsdb.retention="
-	if version.Minor >= 7 {
+	if version.GTE(semver.MustParse("2.7.0")) {
 		retentionTimeFlag = "-storage.tsdb.retention.time="
-		if p.Spec.RetentionSize != "" {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-			)
+		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			if p.Spec.Retention != "" {
+				promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
+			}
+
+			if p.Spec.RetentionSize != "" {
+				promArgs = append(promArgs,
+					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+				)
+			}
+		}
+	} else {
+		if p.Spec.Retention == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
 		}
 	}
+
 	promArgs = append(promArgs,
 		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
 	)
 
@@ -406,6 +434,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "-web.enable-admin-api")
 	}
 
+	if p.Spec.EnableRemoteWriteReceiver {
+		if version.GTE(semver.MustParse("2.33.0")) {
+			promArgs = append(promArgs, "-web.enable-remote-write-receiver")
+		} else {
+			level.Warn(logger).Log("msg", fmt.Sprintf("ignoring \"enableRemoteWriteReceiver\" not supported by Prometheus version=%s minimum_version=2.33.0", version))
+		}
+	}
+
 	if len(p.Spec.EnableFeatures) > 0 {
 		promArgs = append(promArgs, "-enable-feature="+strings.Join(p.Spec.EnableFeatures[:], ","))
 	}
@@ -458,6 +494,23 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs[i] = "-" + a
 	}
 
+	assetsVolume := v1.Volume{
+		Name: "tls-assets",
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources: []v1.VolumeProjection{},
+			},
+		},
+	}
+	for _, assetShard := range tlsAssetSecrets {
+		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
+			v1.VolumeProjection{
+				Secret: &v1.SecretProjection{
+					LocalObjectReference: v1.LocalObjectReference{Name: assetShard},
+				},
+			})
+	}
+
 	volumes := []v1.Volume{
 		{
 			Name: "config",
@@ -467,20 +520,22 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			},
 		},
-		{
-			Name: "tls-assets",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsAssetsSecretName(p.Name),
-				},
-			},
-		},
+		assetsVolume,
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		},
+	}
+
+	if p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "." {
+		volumes = append(volumes, v1.Volume{
+			Name: "query-log-file",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
 	}
 
 	for _, name := range ruleConfigMapNames {
@@ -526,6 +581,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
 			Name:      name,
 			MountPath: rulesDir + "/" + name,
+		})
+	}
+
+	if p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "." {
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      "query-log-file",
+			ReadOnly:  false,
+			MountPath: "/var/log/prometheus",
 		})
 	}
 
@@ -586,47 +649,66 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
-	const localProbe = `if [ -x "$(command -v curl)" ]; then exec curl %s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %s; else exit 1; fi`
-
-	var readinessProbeHandler v1.Handler
-	{
-		readyPath := path.Clean(webRoutePrefix + "/-/ready")
+	probeHandler := func(probePath string) v1.ProbeHandler {
+		probePath = path.Clean(webRoutePrefix + probePath)
+		handler := v1.ProbeHandler{}
 		if p.Spec.ListenLocal {
-			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
+			handler.Exec = &v1.ExecAction{
 				Command: []string{
 					"sh",
 					"-c",
-					fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
 				},
 			}
 		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: readyPath,
+			handler.HTTPGet = &v1.HTTPGetAction{
+				Path: probePath,
 				Port: intstr.FromString(p.Spec.PortName),
 			}
 			if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
-				readinessProbeHandler.HTTPGet.Scheme = v1.URISchemeHTTPS
+				handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 			}
 		}
+		return handler
 	}
 
-	// TODO(paulfantom): Re-add livenessProbe and add startupProbe when kubernetes 1.21 is available.
-	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
-	readinessProbe := &v1.Probe{
-		Handler:          readinessProbeHandler,
+	// The /-/ready handler returns OK only after the TSDB initialization has
+	// completed. The WAL replay can take a significant time for large setups
+	// hence we enable the startup probe with a generous failure threshold (15
+	// minutes) to ensure that the readiness probe only comes into effect once
+	// Prometheus is effectively ready.
+	// We don't want to use the /-/healthy handler here because it returns OK as
+	// soon as the web server is started (irrespective of the WAL replay).
+	startupProbe := &v1.Probe{
+		ProbeHandler:     probeHandler("/-/ready"),
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+
+	livenessProbe := &v1.Probe{
+		ProbeHandler:     probeHandler("/-/healthy"),
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
-		FailureThreshold: 120, // Allow up to 10m on startup for data recovery
+		FailureThreshold: 6,
+	}
+
+	readinessProbe := &v1.Probe{
+		ProbeHandler:     probeHandler("/-/ready"),
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 3,
 	}
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": version.String(),
 	}
+	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible since doing
+	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := map[string]string{
-		// TODO(fpetkovski): remove `app` label after 0.50 release
-		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/instance":   p.Name,
@@ -659,6 +741,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	var additionalContainers, operatorInitContainers []v1.Container
 
 	disableCompaction := p.Spec.DisableCompaction
+	prometheusURIScheme := "http"
+	if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil {
+		prometheusURIScheme = "https"
+	}
 	if p.Spec.Thanos != nil {
 		thanosImage, err := operator.BuildImagePath(
 			operator.StringPtrValOrDefault(p.Spec.Thanos.Image, ""),
@@ -671,13 +757,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			return nil, errors.Wrap(err, "failed to build image path")
 		}
 
-		bindAddress := "[$(POD_IP)]"
+		bindAddress := "" // Listen to all available IP addresses by default
 		if p.Spec.Thanos.ListenLocal {
 			bindAddress = "127.0.0.1"
 		}
 
 		thanosArgs := []string{"sidecar",
-			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
+			fmt.Sprintf("--prometheus.url=%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix)),
 			fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
 			fmt.Sprintf("--http-address=%s:10902", bindAddress),
 		}
@@ -695,19 +781,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 
+		boolFalse := false
+		boolTrue := true
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args:                     thanosArgs,
-			Env: []v1.EnvVar{
-				{
-					Name: "POD_IP",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
-					},
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
 				},
 			},
 			Ports: []v1.ContainerPort{
@@ -721,6 +806,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			},
 			Resources: p.Spec.Thanos.Resources,
+		}
+
+		for _, thanosSideCarVM := range p.Spec.Thanos.VolumeMounts {
+			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+				Name:      thanosSideCarVM.Name,
+				MountPath: thanosSideCarVM.MountPath,
+			})
 		}
 
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
@@ -812,6 +904,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
+	var minReadySeconds int32
+	if p.Spec.MinReadySeconds != nil {
+		minReadySeconds = int32(*p.Spec.MinReadySeconds)
+	}
+
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
@@ -832,6 +929,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
+	boolFalse := false
+	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -839,15 +938,24 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Ports:                    ports,
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
+			StartupProbe:             startupProbe,
+			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				ReadOnlyRootFilesystem:   &boolTrue,
+				AllowPrivilegeEscalation: &boolFalse,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
 			operator.ReloaderResources(c.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
-				Scheme: "http",
+				Scheme: prometheusURIScheme,
 				Host:   c.LocalHost + ":9090",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
@@ -866,6 +974,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to merge containers spec")
 	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -875,6 +984,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
+		MinReadySeconds: minReadySeconds,
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
@@ -888,6 +998,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				InitContainers:                initContainers,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
+				AutomountServiceAccountToken:  &boolTrue,
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,

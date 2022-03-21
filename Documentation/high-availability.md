@@ -1,15 +1,15 @@
 ---
-title: "High Availability"
-description: "High Availability is a must for the monitoring infrastructure."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
 weight: 300
 toc: true
+title: High Availability
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: High Availability is a must for the monitoring infrastructure.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
 High availability is not only important for customer facing software, but if the monitoring infrastructure is not highly available, then there is a risk that operations people are not notified for alerts of the customer facing software. Therefore high availability must be just as thought through for the monitoring stack, as for anything else.
@@ -26,7 +26,7 @@ One of the goals with the Prometheus Operator is that we want to completely auto
 
 The final step of the high availability scheme between Prometheus and Alertmanager is that Prometheus, when an alert triggers, actually fires alerts against *all* instances of an Alertmanager cluster. Prometheus can discover all Alertmanagers through the Kubernetes API.
 
-The Alertmanager, starting with the `v0.5.0` release, ships with a high availability mode. It implements a gossip protocol to synchronize instances of an Alertmanager cluster regarding notifications that have been sent out, to prevent duplicate notifications. It is an AP (available and partition tolerant) system. Being an AP system, means that notifications are guaranteed to be sent at least once. 
+The Alertmanager, starting with the `v0.5.0` release, ships with a high availability mode. It implements a gossip protocol to synchronize instances of an Alertmanager cluster regarding notifications that have been sent out, to prevent duplicate notifications. It is an AP (available and partition tolerant) system. Being an AP system, means that notifications are guaranteed to be sent at least once.
 
 The Prometheus Operator ensures that Alertmanager clusters are properly configured to run highly available on Kubernetes, and allows easy configuration of Alertmanagers discovery for Prometheus.
 

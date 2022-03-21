@@ -1,15 +1,15 @@
 ---
-title: "Troubleshooting"
-description: "Guide on troubleshooting the Prometheus Operator."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
 weight: 600
 toc: true
+title: Troubleshooting
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: Guide on troubleshooting the Prometheus Operator.
+date: "2021-03-08T08:49:31+00:00"
 ---
 
 ### RBAC on Google Container Engine (GKE)
@@ -22,7 +22,7 @@ Error from server (Forbidden): error when creating
 "manifests/prometheus-operator/prometheus-operator-cluster-role.yaml":
 clusterroles.rbac.authorization.k8s.io "prometheus-operator" is forbidden: attempt to grant extra privileges:
 <....>
-````
+```
 
 This is due to the way Container Engine checks permissions. From [Google Kubernetes Engine docs](https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control):
 
@@ -50,10 +50,9 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 
 A common problem related to `ServiceMonitor` identification by Prometheus is related to an incorrect tagging, that does not match the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
 
-![flow diagram](./custom-metrics-elements.png)
+![flow diagram](custom-metrics-elements.png)
 
 Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod`), by labels *and* by the port name in the `Service`. This *port name* is optional in Kubernetes, but must be specified for the `ServiceMonitor` to work. It is not the same as the port name on the `Pod` or container, although it can be.
-
 
 #### Has my `ServiceMonitor` been picked up by Prometheus?
 
@@ -69,9 +68,10 @@ Prometheus is installed, all looks good, however the `Targets` are all showing a
 
 #### Did you check the webhooks?
 
-Issue has been resolved by amending the webhooks to use `0.0.0.0` instead of `127.0.0.1`. Follow the below commands and it will update the webhooks which allows connections to all `clusterIP's`  in all `namespaces` and not just `127.0.0.1`.
+Issue has been resolved by amending the webhooks to use `0.0.0.0` instead of `127.0.0.1`. Follow the below commands and it will update the webhooks which allows connections to all `clusterIP's` in all `namespaces` and not just `127.0.0.1`.
 
 **Update the kubelet service to include webhook and restart:**
+
 ```sh
 KUBEADM_SYSTEMD_CONF=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -e "/cadvisor-port=0/d" -i "$KUBEADM_SYSTEMD_CONF"
@@ -83,6 +83,7 @@ systemctl restart kubelet
 ```
 
 **Modify the kube controller and kube scheduler to allow for reading data:**
+
 ```sh
 sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
 sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
@@ -111,6 +112,7 @@ metadata:
 We would then define the service monitor using `metrics` as the port not `"8080"`. E.g.
 
 **CORRECT**
+
 ```yaml
 kind: ServiceMonitor
 metadata:
@@ -122,6 +124,7 @@ spec:
 ```
 
 **INCORRECT**
+
 ```yaml
 kind: ServiceMonitor
 metadata:
@@ -132,5 +135,4 @@ spec:
     - port: "8080"
 ```
 
-The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string:
-"integer"`
+The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string: "integer"`

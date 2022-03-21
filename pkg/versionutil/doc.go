@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Extends the https://github.com/prometheus/common/blob/master/version/info.go package by
+// Extends the https://github.com/prometheus/common/blob/main/version/info.go package by
 // adding common CLI support and test coverage.
 package versionutil

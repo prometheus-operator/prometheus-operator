@@ -22,17 +22,18 @@ import (
 )
 
 // Customization of Config type from alertmanager repo:
-// https://github.com/prometheus/alertmanager/blob/master/config/config.go
+// https://github.com/prometheus/alertmanager/blob/main/config/config.go
 //
 // Custom global type to get around obfuscation of secret values when
 // marshalling. See the following issue for details:
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
-	Global       *globalConfig  `yaml:"global,omitempty" json:"global,omitempty"`
-	Route        *route         `yaml:"route,omitempty" json:"route,omitempty"`
-	InhibitRules []*inhibitRule `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
-	Receivers    []*receiver    `yaml:"receivers,omitempty" json:"receivers,omitempty"`
-	Templates    []string       `yaml:"templates" json:"templates"`
+	Global            *globalConfig       `yaml:"global,omitempty" json:"global,omitempty"`
+	Route             *route              `yaml:"route,omitempty" json:"route,omitempty"`
+	InhibitRules      []*inhibitRule      `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
+	Receivers         []*receiver         `yaml:"receivers,omitempty" json:"receivers,omitempty"`
+	MuteTimeIntervals []*muteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
+	Templates         []string            `yaml:"templates" json:"templates"`
 }
 
 type globalConfig struct {
@@ -51,6 +52,7 @@ type globalConfig struct {
 	SMTPAuthIdentity string          `yaml:"smtp_auth_identity,omitempty" json:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS   *bool           `yaml:"smtp_require_tls,omitempty" json:"smtp_require_tls,omitempty"`
 	SlackAPIURL      *config.URL     `yaml:"slack_api_url,omitempty" json:"slack_api_url,omitempty"`
+	SlackAPIURLFile  string          `yaml:"slack_api_url_file,omitempty" json:"slack_api_url_file,omitempty"`
 	PagerdutyURL     *config.URL     `yaml:"pagerduty_url,omitempty" json:"pagerduty_url,omitempty"`
 	HipchatAPIURL    *config.URL     `yaml:"hipchat_api_url,omitempty" json:"hipchat_api_url,omitempty"`
 	HipchatAuthToken string          `yaml:"hipchat_auth_token,omitempty" json:"hipchat_auth_token,omitempty"`
@@ -65,23 +67,27 @@ type globalConfig struct {
 }
 
 type route struct {
-	Receiver       string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
-	GroupByStr     []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
-	Match          map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
-	MatchRE        map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
-	Continue       bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
-	Routes         []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
-	GroupWait      string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
-	GroupInterval  string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
-	RepeatInterval string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
+	Receiver          string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
+	GroupByStr        []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
+	Match             map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
+	MatchRE           map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
+	Matchers          []string          `yaml:"matchers,omitempty" json:"matchers,omitempty"`
+	Continue          bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
+	Routes            []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
+	GroupWait         string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
+	GroupInterval     string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
+	RepeatInterval    string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
+	MuteTimeIntervals []string          `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
 }
 
 type inhibitRule struct {
-	TargetMatch   map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
-	TargetMatchRE map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
-	SourceMatch   map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
-	SourceMatchRE map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
-	Equal         []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
+	TargetMatch    map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
+	TargetMatchRE  map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
+	TargetMatchers []string          `yaml:"target_matchers,omitempty" json:"target_matchers,omitempty"`
+	SourceMatch    map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
+	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
+	SourceMatchers []string          `yaml:"source_matchers,omitempty" json:"source_matchers,omitempty"`
+	Equal          []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
 }
 
 type receiver struct {
@@ -91,10 +97,10 @@ type receiver struct {
 	SlackConfigs     []*slackConfig     `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
 	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
 	WeChatConfigs    []*weChatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
-	// TODO(simonpasquier): support the following receivers with AlertmanagerConfig.
 	EmailConfigs     []*emailConfig     `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
 	PushoverConfigs  []*pushoverConfig  `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
 	VictorOpsConfigs []*victorOpsConfig `yaml:"victorops_configs,omitempty" json:"victorops_configs,omitempty"`
+	SNSConfigs       []*snsConfig       `yaml:"sns_configs,omitempty" json:"sns_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -155,6 +161,7 @@ type slackConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	APIURLFile    string            `yaml:"api_url_file,omitempty" json:"api_url_file,omitempty"`
 	Channel       string            `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username      string            `yaml:"username,omitempty" json:"username,omitempty"`
 	Color         string            `yaml:"color,omitempty" json:"color,omitempty"`
@@ -177,11 +184,14 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	BasicAuth       *basicAuth `yaml:"basic_auth,omitempty"`
-	BearerToken     string     `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string     `yaml:"bearer_token_file,omitempty"`
-	ProxyURL        string     `yaml:"proxy_url,omitempty"`
-	TLSConfig       tlsConfig  `yaml:"tls_config,omitempty"`
+	Authorization   *authorization `yaml:"authorization,omitempty"`
+	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
+	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
+	BearerToken     string         `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
+	ProxyURL        string         `yaml:"proxy_url,omitempty"`
+	TLSConfig       tlsConfig      `yaml:"tls_config,omitempty"`
+	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
 }
 
 type tlsConfig struct {
@@ -192,10 +202,27 @@ type tlsConfig struct {
 	InsecureSkipVerify bool   `yaml:"insecure_skip_verify"`
 }
 
+type authorization struct {
+	Type            string `yaml:"type,omitempty"`
+	Credentials     string `yaml:"credentials,omitempty"`
+	CredentialsFile string `yaml:"credentials_file,omitempty"`
+}
+
 type basicAuth struct {
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password,omitempty"`
 	PasswordFile string `yaml:"password_file,omitempty"`
+}
+
+type oauth2 struct {
+	ClientID         string            `yaml:"client_id"`
+	ClientSecret     string            `yaml:"client_secret"`
+	ClientSecretFile string            `yaml:"client_secret_file,omitempty"`
+	Scopes           []string          `yaml:"scopes,omitempty"`
+	TokenURL         string            `yaml:"token_url"`
+	EndpointParams   map[string]string `yaml:"endpoint_params,omitempty"`
+
+	TLSConfig *tlsConfig `yaml:"tls_config,omitempty"`
 }
 
 type pagerdutyLink struct {
@@ -272,6 +299,27 @@ type pushoverConfig struct {
 	HTML          bool              `yaml:"html,omitempty" json:"html,omitempty"`
 }
 
+type snsConfig struct {
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIUrl        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	Sigv4         sigV4Config       `yaml:"sigv4,omitempty" json:"sigv4,omitempty"`
+	TopicARN      string            `yaml:"topic_arn,omitempty" json:"topic_arn,omitempty"`
+	PhoneNumber   string            `yaml:"phone_number,omitempty" json:"phone_number,omitempty"`
+	TargetARN     string            `yaml:"target_arn,omitempty" json:"target_arn,omitempty"`
+	Subject       string            `yaml:"subject,omitempty" json:"subject,omitempty"`
+	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
+	Attributes    map[string]string `yaml:"attributes,omitempty" json:"attributes,omitempty"`
+}
+
+type sigV4Config struct {
+	Region    string `yaml:"region,omitempty" json:"region,omitempty"`
+	AccessKey string `yaml:"access_key,omitempty" json:"access_key,omitempty"`
+	SecretKey string `yaml:"secret_key,omitempty" json:"secret_key,omitempty"`
+	Profile   string `yaml:"profile,omitempty" json:"profile,omitempty"`
+	RoleARN   string `yaml:"role_arn,omitempty" json:"role_arn,omitempty"`
+}
+
 type duration time.Duration
 
 func (d *duration) UnmarshalText(text []byte) error {
@@ -298,3 +346,5 @@ type victorOpsConfig struct {
 	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
 }
+
+type muteTimeInterval config.MuteTimeInterval

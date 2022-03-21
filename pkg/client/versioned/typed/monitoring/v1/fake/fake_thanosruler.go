@@ -115,7 +115,7 @@ func (c *FakeThanosRulers) UpdateStatus(ctx context.Context, thanosRuler *monito
 // Delete takes name of the thanosRuler and deletes it. Returns an error if one occurs.
 func (c *FakeThanosRulers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(thanosrulersResource, c.ns, name), &monitoringv1.ThanosRuler{})
+		Invokes(testing.NewDeleteActionWithOptions(thanosrulersResource, c.ns, name, opts), &monitoringv1.ThanosRuler{})
 
 	return err
 }

@@ -45,8 +45,11 @@ import (
 
 const (
 	admissionHookSecretName                 = "prometheus-operator-admission"
+	standaloneAdmissionHookSecretName       = "prometheus-operator-admission-standalone"
 	prometheusOperatorServiceDeploymentName = "prometheus-operator"
 	operatorTLSDir                          = "/etc/tls/private"
+
+	admissionWebhookServiceName = "prometheus-operator-admission-webhook"
 )
 
 type Framework struct {
@@ -58,7 +61,6 @@ type Framework struct {
 	MasterHost        string
 	DefaultTimeout    time.Duration
 	RestConfig        *rest.Config
-	Ctx               context.Context
 }
 
 // New setups a test framework and returns it.
@@ -102,7 +104,6 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		APIServerClient:   apiCli,
 		HTTPClient:        httpc,
 		DefaultTimeout:    time.Minute,
-		Ctx:               context.Background(),
 	}
 
 	return f, nil
@@ -174,13 +175,14 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist,
+func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createRuleAdmissionHooks, createClusterRoleBindings bool) ([]FinalizerFn, error) {
+	createResourceAdmissionHooks, createClusterRoleBindings bool) ([]FinalizerFn, error) {
 
 	var finalizers []FinalizerFn
 
 	_, err := f.createServiceAccount(
+		ctx,
 		ns,
 		"../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml",
 	)
@@ -188,19 +190,19 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
-	clusterRole, err := f.CreateClusterRole("../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
+	clusterRole, err := f.CreateClusterRole(ctx, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
 	// Add CRD rbac rules
 	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
-	if err := f.UpdateClusterRole(clusterRole); err != nil {
+	if err := f.UpdateClusterRole(ctx, clusterRole); err != nil {
 		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
 	if createClusterRoleBindings {
-		if _, err := f.createClusterRoleBinding(ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+		if _, err := f.createClusterRoleBinding(ctx, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 			return nil, errors.Wrap(err, "failed to create prometheus cluster role binding")
 		}
 	} else {
@@ -209,7 +211,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		namespaces = append(namespaces, alertmanagerInstanceNamespaces...)
 
 		for _, n := range namespaces {
-			if _, err := f.CreateRoleBindingForSubjectNamespace(n, ns, "../framework/resources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+			if _, err := f.CreateRoleBindingForSubjectNamespace(ctx, n, ns, "../framework/resources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 				return nil, errors.Wrap(err, "failed to create prometheus operator role binding")
 			}
 		}
@@ -220,61 +222,61 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to generate certificate and key")
 	}
 
-	if err := f.CreateSecretWithCert(certBytes, keyBytes, ns, admissionHookSecretName); err != nil {
+	if err := f.CreateSecretWithCert(ctx, certBytes, keyBytes, ns, admissionHookSecretName); err != nil {
 		return nil, errors.Wrap(err, "failed to create admission webhook secret")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Alertmanager CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PodMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.PodMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize PodMonitor CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ProbeName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
-		return f.MonClientV1.Probes(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.ProbeName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
+		return f.MonClientV1.Probes(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Probe CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Prometheus CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize PrometheusRule CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ServiceMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.ServiceMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize ServiceMonitor CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ThanosRulerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1.ThanosRulerName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize ThanosRuler CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1alpha1.AlertmanagerConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(f.Ctx, opts)
+	err = f.CreateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.AlertmanagerConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize AlertmanagerConfig CRD")
@@ -287,6 +289,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 
+	var webhookServerImage string
 	if opImage != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = opImage
@@ -306,6 +309,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 					repoAndTag[1]
 			}
 		}
+		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + repoAndTag[1]
 	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
@@ -350,7 +354,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 
 	// The addition of rule admission webhooks requires TLS, so enable it and
 	// switch to a more common https port
-	if createRuleAdmissionHooks {
+	if createResourceAdmissionHooks {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			"--web.enable-tls=true",
@@ -358,13 +362,13 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		)
 	}
 
-	err = f.CreateDeployment(ns, deploy)
+	err = f.CreateDeployment(ctx, ns, deploy)
 	if err != nil {
 		return nil, err
 	}
 
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = f.WaitForPodsReady(ns, f.DefaultTimeout, 1, opts)
+	err = f.WaitForPodsReady(ctx, ns, f.DefaultTimeout, 1, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to wait for prometheus operator to become ready")
 	}
@@ -378,20 +382,31 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	service.Spec.ClusterIP = ""
 	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
-	if _, err := f.CreateServiceAndWaitUntilReady(ns, service); err != nil {
+	if _, err := f.CreateServiceAndWaitUntilReady(ctx, ns, service); err != nil {
 		return finalizers, errors.Wrap(err, "failed to create prometheus operator service")
 	}
 
-	if createRuleAdmissionHooks {
-		finalizer, err := f.createMutatingHook(certBytes, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml")
+	if createResourceAdmissionHooks {
+		b, err := f.CreateAdmissionWebhookServer(ctx, ns, webhookServerImage)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create webhook server")
+		}
+
+		finalizer, err := f.createMutatingHook(ctx, b, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create mutating webhook")
 		}
 		finalizers = append(finalizers, finalizer)
 
-		finalizer, err = f.createValidatingHook(certBytes, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml")
+		finalizer, err = f.createValidatingHook(ctx, b, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook")
+		}
+		finalizers = append(finalizers, finalizer)
+
+		finalizer, err = f.createValidatingHook(ctx, b, ns, "../../test/framework/resources/alertmanager-config-validating-webhook.yaml")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create validating webhook for AlertManagerConfigs")
 		}
 		finalizers = append(finalizers, finalizer)
 	}
@@ -399,36 +414,119 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	return finalizers, nil
 }
 
-func (f *Framework) SetupPrometheusRBAC(t *testing.T, ctx *TestCtx, ns string) {
-	if _, err := f.CreateClusterRole("../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+func (f *Framework) SetupPrometheusRBAC(ctx context.Context, t *testing.T, testCtx *TestCtx, ns string) {
+	if _, err := f.CreateClusterRole(ctx, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
-	if finalizerFn, err := f.createServiceAccount(ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+	if finalizerFn, err := f.createServiceAccount(ctx, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
 	} else {
-		ctx.AddFinalizerFn(finalizerFn)
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := f.CreateRoleBinding(ns, "../framework/resources/prometheus-role-binding.yml"); err != nil {
+	if finalizerFn, err := f.CreateRoleBinding(ctx, ns, "../framework/resources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
-		ctx.AddFinalizerFn(finalizerFn)
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 }
 
-func (f *Framework) SetupPrometheusRBACGlobal(t *testing.T, ctx *TestCtx, ns string) {
-	if _, err := f.CreateClusterRole("../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+func (f *Framework) SetupPrometheusRBACGlobal(ctx context.Context, t *testing.T, testCtx *TestCtx, ns string) {
+	if _, err := f.CreateClusterRole(ctx, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
-	if finalizerFn, err := f.createServiceAccount(ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+	if finalizerFn, err := f.createServiceAccount(ctx, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
 	} else {
-		ctx.AddFinalizerFn(finalizerFn)
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := f.createClusterRoleBinding(ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if finalizerFn, err := f.createClusterRoleBinding(ctx, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
 	} else {
-		ctx.AddFinalizerFn(finalizerFn)
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
+}
+
+// CreateAdmissionWebhookServer deploys an HTTPS server
+// Acts as a validating and mutating webhook server for PrometheusRule and AlertManagerConfig
+// Returns the CA, which can be used to access the server over TLS
+func (f *Framework) CreateAdmissionWebhookServer(
+	ctx context.Context,
+	namespace string,
+	image string,
+) ([]byte, error) {
+
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
+		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate certificate and key")
+	}
+
+	if err := f.CreateSecretWithCert(ctx, certBytes, keyBytes, namespace, standaloneAdmissionHookSecretName); err != nil {
+		return nil, errors.Wrap(err, "failed to create admission webhook secret")
+	}
+
+	deploy, err := MakeDeployment("../../example/admission-webhook/deployment.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
+
+	if image != "" {
+		// Override operator image used, if specified when running tests.
+		deploy.Spec.Template.Spec.Containers[0].Image = image
+		repoAndTag := strings.Split(image, ":")
+		if len(repoAndTag) != 2 {
+			return nil, errors.Errorf(
+				"expected image '%v' split by colon to result in two substrings but got '%v'",
+				image,
+				repoAndTag,
+			)
+		}
+	}
+
+	// Load the certificate and key from the created secret into the server
+	deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes,
+		v1.Volume{
+			Name:         "cert",
+			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: standaloneAdmissionHookSecretName}}})
+
+	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
+		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
+
+	_, err = f.createServiceAccount(ctx, namespace, "../../example/admission-webhook/service-account.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.CreateDeployment(ctx, namespace, deploy)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
+	err = f.WaitForPodsReady(ctx, namespace, f.DefaultTimeout, 2, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for admission webhook server to become ready")
+	}
+
+	service, err := MakeService("../../example/admission-webhook/service.yaml")
+	if err != nil {
+		return certBytes, errors.Wrap(err, "cannot parse service file")
+	}
+
+	service.Namespace = namespace
+	service.Spec.ClusterIP = ""
+	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
+
+	if _, err := f.CreateServiceAndWaitUntilReady(ctx, namespace, service); err != nil {
+		return certBytes, errors.Wrap(err, "failed to create admission webhook server service")
+	}
+
+	return certBytes, nil
 }

@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: prometheus-operator-admission-webhook
+    app.kubernetes.io/version: 0.55.0
+  name: prometheus-operator-admission-webhook
+  namespace: default
+spec:
+  endpoints:
+  - honorLabels: true
+    port: https
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-operator-admission-webhook
+      app.kubernetes.io/version: 0.55.0

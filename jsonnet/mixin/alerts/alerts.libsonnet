@@ -104,6 +104,26 @@
           },
         ],
       },
+      {
+        name: 'config-reloaders',
+        rules: [
+          {
+            alert: 'ConfigReloaderSidecarErrors',
+            expr: |||
+              max_over_time(reloader_last_reload_successful{%(configReloaderSelector)s}[5m]) == 0
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: 'Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to sync config in {{$labels.namespace}} namespace.
+As a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.',
+              summary: 'config-reloader sidecar has not had a successful reload for 10m',
+            },
+            'for': '10m',
+          },
+        ],
+      },
     ],
   },
 }

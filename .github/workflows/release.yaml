@@ -1,0 +1,21 @@
+name: release
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  upload-assets:
+    runs-on: ubuntu-latest
+    name: Upload release assets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: bundle.yaml
+          asset_name: bundle.yaml
+          tag: ${{ github.ref }}
+          overwrite: true

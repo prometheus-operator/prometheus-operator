@@ -16,17 +16,20 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	stdlog "log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -37,35 +40,12 @@ import (
 )
 
 const (
-	logFormatLogfmt = "logfmt"
-	logFormatJSON   = "json"
-
-	logLevelDebug = "debug"
-	logLevelInfo  = "info"
-	logLevelWarn  = "warn"
-	logLevelError = "error"
-	logLevelNone  = "none"
-
 	defaultWatchInterval = 3 * time.Minute // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultDelayInterval = 1 * time.Second // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
 	defaultRetryInterval = 5 * time.Second // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 
 	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
-)
-
-var (
-	availableLogFormats = []string{
-		logFormatLogfmt,
-		logFormatJSON,
-	}
-	availableLogLevels = []string{
-		logLevelDebug,
-		logLevelInfo,
-		logLevelWarn,
-		logLevelError,
-		logLevelNone,
-	}
 )
 
 func main() {
@@ -94,13 +74,13 @@ func main() {
 
 	logFormat := app.Flag(
 		"log-format",
-		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).
-		Default(logFormatLogfmt).String()
+		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", "))).
+		Default(logging.FormatLogFmt).String()
 
 	logLevel := app.Flag(
 		"log-level",
-		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(availableLogLevels, ", "))).
-		Default(logLevelInfo).String()
+		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", "))).
+		Default(logging.LevelInfo).String()
 
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
@@ -117,27 +97,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-
-	if *logFormat == logFormatJSON {
-		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	logger, err := logging.NewLogger(*logLevel, *logFormat)
+	if err != nil {
+		stdlog.Fatal(err)
 	}
-
-	switch *logLevel {
-	case logLevelDebug:
-		logger = level.NewFilter(logger, level.AllowDebug())
-	case logLevelWarn:
-		logger = level.NewFilter(logger, level.AllowWarn())
-	case logLevelError:
-		logger = level.NewFilter(logger, level.AllowError())
-	case logLevelNone:
-		logger = level.NewFilter(logger, level.AllowNone())
-	default:
-		logger = level.NewFilter(logger, level.AllowInfo())
-	}
-
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	if createStatefulsetOrdinalFrom != nil {
 		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
@@ -171,6 +134,9 @@ func main() {
 			},
 		)
 
+		client := createHTTPClient()
+		rel.SetHttpClient(client)
+
 		g.Add(func() error {
 			return rel.Watch(ctx)
 		}, func(error) {
@@ -191,6 +157,27 @@ func main() {
 	if err := g.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func createHTTPClient() http.Client {
+	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
+
+	transport.DialContext = (&net.Dialer{
+		Timeout:   30 * time.Second, // Default Timeout as of http.DefaultTransport
+		KeepAlive: -1,               // Keep alive probe is unnecessary
+	}).DialContext
+
+	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
+	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
+
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
+	}
+
+	return http.Client{
+		Timeout:   30 * time.Second, // Construct with a 30 second timeout. This timeout is unchanged related to the Dialer Timeout and is subject for change. Other timeouts are neglected.
+		Transport: transport,
 	}
 }
 

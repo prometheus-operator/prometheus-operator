@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -47,7 +48,7 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 	}
 }
 
-func (f *Framework) createBlackBoxExporterConfigMapAndWaitExists(ns, name string) error {
+func (f *Framework) createBlackBoxExporterConfigMapAndWaitExists(ctx context.Context, ns, name string) error {
 	cm := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -66,17 +67,17 @@ func (f *Framework) createBlackBoxExporterConfigMapAndWaitExists(ns, name string
 `,
 		},
 	}
-	if _, err := f.KubeClient.CoreV1().ConfigMaps(ns).Create(f.Ctx, cm, metav1.CreateOptions{}); err != nil {
+	if _, err := f.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, cm, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
-	if _, err := f.WaitForConfigMapExist(ns, name); err != nil {
+	if _, err := f.WaitForConfigMapExist(ctx, ns, name); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string, replicas int32) error {
+func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Context, ns, name string, replicas int32) error {
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -134,12 +135,12 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string
 		},
 	}
 	deploymentInterface := f.KubeClient.AppsV1().Deployments(ns)
-	if _, err := deploymentInterface.Create(f.Ctx, deploy, metav1.CreateOptions{}); err != nil {
+	if _, err := deploymentInterface.Create(ctx, deploy, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
 	return wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
-		blackbox, err := deploymentInterface.Get(f.Ctx, name, metav1.GetOptions{})
+		blackbox, err := deploymentInterface.Get(ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
@@ -155,12 +156,12 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string
 	})
 }
 
-func (f *Framework) CreateBlackBoxExporterAndWaitUntilReady(ns, name string) error {
-	if err := f.createBlackBoxExporterConfigMapAndWaitExists(ns, name); err != nil {
+func (f *Framework) CreateBlackBoxExporterAndWaitUntilReady(ctx context.Context, ns, name string) error {
+	if err := f.createBlackBoxExporterConfigMapAndWaitExists(ctx, ns, name); err != nil {
 		return err
 	}
 
-	return f.createBlackBoxExporterDeploymentAndWaitReady(ns, name, 1)
+	return f.createBlackBoxExporterDeploymentAndWaitReady(ctx, ns, name, 1)
 }
 
 func (f *Framework) MakeBasicStaticProbe(name, url string, targets []string) *monitoringv1.Probe {

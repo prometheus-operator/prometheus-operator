@@ -51,7 +51,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash string, tlsAssetSecrets []string) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -76,7 +76,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(am, config)
+	spec, err := makeStatefulSetSpec(am, config, tlsAssetSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +128,14 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: emptyDir,
+			},
+		})
+	} else if storageSpec.Ephemeral != nil {
+		ephemeral := storageSpec.Ephemeral
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(am.Name),
+			VolumeSource: v1.VolumeSource{
+				Ephemeral: ephemeral,
 			},
 		})
 	} else {
@@ -201,7 +209,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
 	// Before editing 'a' create deep copy, to prevent side effects. For more
 	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	a = a.DeepCopy()
@@ -277,14 +285,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer-timeout=%s", a.Spec.ClusterPeerTimeout))
 	}
 
-	livenessProbeHandler := v1.Handler{
+	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
 			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
-	readinessProbeHandler := v1.Handler{
+	readinessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/ready"),
 			Port: intstr.FromString(a.Spec.PortName),
@@ -295,13 +303,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var readinessProbe *v1.Probe
 	if !a.Spec.ListenLocal {
 		livenessProbe = &v1.Probe{
-			Handler:          livenessProbeHandler,
+			ProbeHandler:     livenessProbeHandler,
 			TimeoutSeconds:   probeTimeoutSeconds,
 			FailureThreshold: 10,
 		}
 
 		readinessProbe = &v1.Probe{
-			Handler:             readinessProbeHandler,
+			ProbeHandler:        readinessProbeHandler,
 			InitialDelaySeconds: 3,
 			TimeoutSeconds:      3,
 			PeriodSeconds:       5,
@@ -313,9 +321,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": version.String(),
 	}
+	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible since doing
+	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := map[string]string{
-		// TODO(paulfantom): remove `app` label after 0.50 release
-		"app":                          "alertmanager",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/instance":   a.Name,
@@ -415,6 +425,23 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
+	assetsVolume := v1.Volume{
+		Name: "tls-assets",
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources: []v1.VolumeProjection{},
+			},
+		},
+	}
+	for _, assetShard := range tlsAssetSecrets {
+		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
+			v1.VolumeProjection{
+				Secret: &v1.SecretProjection{
+					LocalObjectReference: v1.LocalObjectReference{Name: assetShard},
+				},
+			})
+	}
+
 	volumes := []v1.Volume{
 		{
 			Name: "config-volume",
@@ -424,14 +451,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				},
 			},
 		},
-		{
-			Name: "tls-assets",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsAssetsSecretName(a.Name),
-				},
-			},
-		},
+		assetsVolume,
 	}
 
 	volName := volumeName(a.Name)
@@ -518,6 +538,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var watchedDirectories []string
 	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
+	boolFalse := false
+	boolTrue := true
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -528,6 +550,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			LivenessProbe:  livenessProbe,
 			ReadinessProbe: readinessProbe,
 			Resources:      a.Spec.Resources,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 			Env: []v1.EnvVar{
 				{
 					// Necessary for '--cluster.listen-address' flag
@@ -564,11 +593,17 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		return nil, errors.Wrap(err, "failed to merge containers spec")
 	}
 
+	var minReadySeconds int32
+	if a.Spec.MinReadySeconds != nil {
+		minReadySeconds = int32(*a.Spec.MinReadySeconds)
+	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            a.Spec.Replicas,
+		MinReadySeconds:     minReadySeconds,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,

@@ -23,17 +23,30 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/alertmanager/timeinterval"
 	"gopkg.in/yaml.v2"
+
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func loadCfg(s string) (*alertmanagerConfig, error) {
+const inhibitRuleNamespaceKey = "namespace"
+
+// alertmanagerConfigFrom returns a valid global alertmanagerConfig from s
+// or returns an error if
+// 1. s fails validation provided by upstream
+// 2. s fails to unmarshal into internal type
+// 3. the unmarshalled output is invalid
+func alertmanagerConfigFrom(s string) (*alertmanagerConfig, error) {
 	// Run upstream Load function to get any validation checks that it runs.
 	_, err := config.Load(s)
 	if err != nil {
@@ -46,7 +59,33 @@ func loadCfg(s string) (*alertmanagerConfig, error) {
 		return nil, err
 	}
 
+	if err := checkAlertmanagerConfigRootRoute(cfg.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
 	return cfg, nil
+}
+
+func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
+	if rootRoute == nil {
+		return errors.New("root route must exist")
+	}
+
+	if rootRoute.Continue {
+		return errors.New("cannot have continue in root route")
+	}
+
+	if rootRoute.Receiver == "" {
+		return errors.New("root route's receiver must exist")
+	}
+
+	if len(rootRoute.Matchers) > 0 || len(rootRoute.Match) > 0 || len(rootRoute.MatchRE) > 0 {
+		return errors.New("'matchers' not permitted on root route")
+	}
+
+	if len(rootRoute.MuteTimeIntervals) > 0 {
+		return errors.New("'mute_time_intervals' not permitted on root route")
+	}
+	return nil
 }
 
 func (c alertmanagerConfig) String() string {
@@ -58,16 +97,87 @@ func (c alertmanagerConfig) String() string {
 }
 
 type configGenerator struct {
-	logger log.Logger
-	store  *assets.Store
+	logger    log.Logger
+	amVersion semver.Version
+	store     *assets.Store
 }
 
-func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator {
+func newConfigGenerator(logger log.Logger, amVersion semver.Version, store *assets.Store) *configGenerator {
 	cg := &configGenerator{
-		logger: logger,
-		store:  store,
+		logger:    logger,
+		amVersion: amVersion,
+		store:     store,
 	}
 	return cg
+}
+
+// validateConfigInputs runs extra validation on the AlertManager fields which can't be done at the CRD schema validation level.
+func validateConfigInputs(am *monitoringv1.Alertmanager) error {
+	if am.Spec.Retention != "" {
+		if err := operator.ValidateDurationField(am.Spec.Retention); err != nil {
+			return errors.Wrap(err, "invalid retention value specified")
+		}
+	}
+	if am.Spec.ClusterGossipInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPushpullInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPeerTimeout != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
+			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
+		}
+	}
+	return nil
+}
+
+func (cg *configGenerator) generateGlobalConfig(
+	ctx context.Context,
+	amConfig *monitoringv1alpha1.AlertmanagerConfig,
+) (*alertmanagerConfig, error) {
+	globalAlertmanagerConfig := &alertmanagerConfig{}
+	crKey := types.NamespacedName{
+		Namespace: amConfig.Namespace,
+		Name:      amConfig.Name,
+	}
+	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
+	for _, inhibitRule := range amConfig.Spec.InhibitRules {
+		globalAlertmanagerConfig.InhibitRules = append(globalAlertmanagerConfig.InhibitRules, cg.convertInhibitRule(&inhibitRule))
+	}
+
+	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
+	globalAlertmanagerConfig.Route = cg.convertRoute(amConfig.Spec.Route, crKey)
+
+	for _, receiver := range amConfig.Spec.Receivers {
+		receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
+		if err != nil {
+			return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+		}
+		globalAlertmanagerConfig.Receivers = append(globalAlertmanagerConfig.Receivers, receivers)
+	}
+
+	for _, muteTimeInterval := range amConfig.Spec.MuteTimeIntervals {
+		mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+		if err != nil {
+			return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+		}
+		globalAlertmanagerConfig.MuteTimeIntervals = append(globalAlertmanagerConfig.MuteTimeIntervals, mti)
+	}
+
+	if err := globalAlertmanagerConfig.sanitize(cg.amVersion, cg.logger); err != nil {
+		return nil, err
+	}
+	if err := checkAlertmanagerConfigRootRoute(globalAlertmanagerConfig.Route); err != nil {
+		return nil, errors.Wrap(err, "check AlertmanagerConfig root route failed")
+	}
+	return globalAlertmanagerConfig, nil
 }
 
 func (cg *configGenerator) generateConfig(
@@ -95,7 +205,14 @@ func (cg *configGenerator) generateConfig(
 
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
-			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules,
+				cg.enforceNamespaceForInhibitRule(
+					cg.convertInhibitRule(
+						&inhibitRule,
+					),
+					crKey.Namespace,
+				),
+			)
 		}
 
 		// Skip early if there's no route definition.
@@ -103,7 +220,15 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		subRoutes = append(subRoutes,
+			cg.enforceNamespaceForRoute(
+				cg.convertRoute(
+					amConfigs[amConfigIdentifier].Spec.Route,
+					crKey,
+				),
+				amConfigs[amConfigIdentifier].Namespace,
+			),
+		)
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -112,46 +237,120 @@ func (cg *configGenerator) generateConfig(
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
+
+		for _, muteTimeInterval := range amConfigs[amConfigIdentifier].Spec.MuteTimeIntervals {
+			mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, mti)
+		}
 	}
 
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
 	// to appear before the routes defined in the main configuration.
 	// Because all first-level AlertmanagerConfig routes have "continue: true",
-	// alerts will fallthrough.
+	// alerts will fall through.
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
-	return yaml.Marshal(baseConfig)
+	generatedConf := &baseConfig
+	if err := generatedConf.sanitize(cg.amVersion, cg.logger); err != nil {
+		return nil, err
+	}
+	return yaml.Marshal(generatedConf)
 }
 
-func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
-	// Enforce "continue" to be true for the top-level route.
-	cont := in.Continue
-	if firstLevelRoute {
-		cont = true
+// enforceNamespaceForInhibitRule modifies the inhibition rule to match alerts
+// originating only from the given namespace.
+func (cg *configGenerator) enforceNamespaceForInhibitRule(ir *inhibitRule, namespace string) *inhibitRule {
+	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+
+	// Inhibition rule created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
+
+	if !matchersV2Allowed {
+		ir.SourceMatch[inhibitRuleNamespaceKey] = namespace
+		ir.TargetMatch[inhibitRuleNamespaceKey] = namespace
+
+		return ir
 	}
 
+	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
+		Name:      inhibitRuleNamespaceKey,
+		Value:     namespace,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+
+	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
+		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
+	}
+	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
+		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
+	}
+
+	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
+
+	return ir
+}
+
+// enforceNamespaceForRoute modifies the route configuration to match alerts
+// originating only from the given namespace.
+func (cg *configGenerator) enforceNamespaceForRoute(r *route, namespace string) *route {
+	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+
+	// Routes created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	if matchersV2Allowed {
+		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
+			Name:      "namespace",
+			Value:     namespace,
+			MatchType: monitoringv1alpha1.MatchEqual,
+		}.String())
+	} else {
+		r.Match["namespace"] = namespace
+	}
+
+	// Alerts should still be evaluated by the following routes.
+	r.Continue = true
+
+	return r
+}
+
+func (cg *configGenerator) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	url, err := cg.store.GetSecretKey(ctx, namespace, selector)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get URL")
+	}
+
+	url = strings.TrimSpace(url)
+	if _, err := ValidateURL(url); err != nil {
+		return url, errors.Wrapf(err, "invalid URL %q in key %q from secret %q", url, selector.Key, selector.Name)
+	}
+	return url, nil
+}
+
+func (cg *configGenerator) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
+	var matchers []string
+
+	// deprecated
 	match := map[string]string{}
 	matchRE := map[string]string{}
 
 	for _, matcher := range in.Matchers {
+		// prefer matchers to deprecated config
+		if matcher.MatchType != "" {
+			matchers = append(matchers, matcher.String())
+			continue
+		}
+
 		if matcher.Regex {
 			matchRE[matcher.Name] = matcher.Value
 		} else {
 			match[matcher.Name] = matcher.Value
 		}
-	}
-	if firstLevelRoute {
-		match["namespace"] = crKey.Namespace
-		delete(matchRE, "namespace")
-	}
-
-	// Set to nil if empty so that it doesn't show up in the resulting yaml.
-	if len(match) == 0 {
-		match = nil
-	}
-	// Set to nil if empty so that it doesn't show up in the resulting yaml.
-	if len(matchRE) == 0 {
-		matchRE = nil
 	}
 
 	var routes []*route
@@ -165,25 +364,35 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = convertRoute(&children[i], crKey, false)
+			routes[i] = cg.convertRoute(&children[i], crKey)
 		}
 	}
 
-	receiver := prefixReceiverName(in.Receiver, crKey)
+	receiver := makeNamespacedString(in.Receiver, crKey)
+
+	var prefixedMuteTimeIntervals []string
+	if len(in.MuteTimeIntervals) > 0 {
+		for _, mti := range in.MuteTimeIntervals {
+			prefixedMuteTimeIntervals = append(prefixedMuteTimeIntervals, makeNamespacedString(mti, crKey))
+		}
+	}
 
 	return &route{
-		Receiver:       receiver,
-		GroupByStr:     in.GroupBy,
-		GroupWait:      in.GroupWait,
-		GroupInterval:  in.GroupInterval,
-		RepeatInterval: in.RepeatInterval,
-		Continue:       cont,
-		Match:          match,
-		MatchRE:        matchRE,
-		Routes:         routes,
+		Receiver:          receiver,
+		GroupByStr:        in.GroupBy,
+		GroupWait:         in.GroupWait,
+		GroupInterval:     in.GroupInterval,
+		RepeatInterval:    in.RepeatInterval,
+		Continue:          in.Continue,
+		Match:             match,
+		MatchRE:           matchRE,
+		Matchers:          matchers,
+		Routes:            routes,
+		MuteTimeIntervals: prefixedMuteTimeIntervals,
 	}
 }
 
+// convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver
 func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
 
@@ -282,8 +491,20 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var snsConfigs []*snsConfig
+	if l := len(in.SNSConfigs); l > 0 {
+		snsConfigs = make([]*snsConfig, l)
+		for i := range in.SNSConfigs {
+			receiver, err := cg.convertSnsConfig(ctx, in.SNSConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "SNSConfig[%d]", i)
+			}
+			snsConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
-		Name:             prefixReceiverName(in.Name, crKey),
+		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
 		SlackConfigs:     slackConfigs,
@@ -292,6 +513,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		EmailConfigs:     emailConfigs,
 		VictorOpsConfigs: victorOpsConfigs,
 		PushoverConfigs:  pushoverConfigs,
+		SNSConfigs:       snsConfigs,
 	}, nil
 }
 
@@ -301,13 +523,17 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 	}
 
 	if in.URLSecret != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
+			return nil, err
 		}
-		out.URL = strings.TrimSpace(url)
+		out.URL = url
 	} else if in.URL != nil {
-		out.URL = *in.URL
+		url, err := ValidateURL(*in.URL)
+		if err != nil {
+			return nil, err
+		}
+		out.URL = url.String()
 	}
 
 	if in.HTTPConfig != nil {
@@ -348,11 +574,11 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 	}
 
 	if in.APIURL != nil {
-		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIURL)
+		url, err := cg.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
+			return nil, err
 		}
-		out.APIURL = strings.TrimSpace(url)
+		out.APIURL = url
 	}
 
 	var actions []slackAction
@@ -426,7 +652,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	if in.RoutingKey != nil {
 		routingKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
 		if err != nil {
-			return nil, errors.Errorf("failed to get routing key %q from secret %q", in.RoutingKey.Key, in.RoutingKey.Name)
+			return nil, errors.Wrap(err, "failed to get routing key")
 		}
 		out.RoutingKey = routingKey
 	}
@@ -434,7 +660,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	if in.ServiceKey != nil {
 		serviceKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.ServiceKey)
 		if err != nil {
-			return nil, errors.Errorf("failed to get service key %q from secret %q", in.ServiceKey.Key, in.ServiceKey.Name)
+			return nil, errors.Wrap(err, "failed to get service key")
 		}
 		out.ServiceKey = serviceKey
 	}
@@ -447,6 +673,31 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 		}
 	}
 	out.Details = details
+
+	var linkConfigs []pagerdutyLink
+	if l := len(in.PagerDutyLinkConfigs); l > 0 {
+		linkConfigs = make([]pagerdutyLink, l)
+		for i, lc := range in.PagerDutyLinkConfigs {
+			linkConfigs[i] = pagerdutyLink{
+				Href: lc.Href,
+				Text: lc.Text,
+			}
+		}
+	}
+	out.Links = linkConfigs
+
+	var imageConfig []pagerdutyImage
+	if l := len(in.PagerDutyImageConfigs); l > 0 {
+		imageConfig = make([]pagerdutyImage, l)
+		for i, ic := range in.PagerDutyImageConfigs {
+			imageConfig[i] = pagerdutyImage{
+				Src:  ic.Src,
+				Alt:  ic.Alt,
+				Href: ic.Href,
+			}
+		}
+	}
+	out.Images = imageConfig
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
@@ -474,7 +725,7 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 	if in.APIKey != nil {
 		apiKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
 		if err != nil {
-			return nil, errors.Errorf("failed to get api key %q from secret %q", in.APIKey.Key, in.APIKey.Name)
+			return nil, errors.Wrap(err, "failed to get API key")
 		}
 		out.APIKey = apiKey
 	}
@@ -531,7 +782,7 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 	if in.APISecret != nil {
 		apiSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.APISecret)
+			return nil, errors.Wrap(err, "failed to get API secret")
 		}
 		out.APISecret = apiSecret
 	}
@@ -560,23 +811,14 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.To == "" {
-		return nil, errors.New("missing to address in email config")
-	}
-
 	if in.Smarthost != "" {
-		host, port, err := net.SplitHostPort(in.Smarthost)
-		if err != nil {
-			return nil, errors.New("failed to extract host and port from Smarthost")
-		}
-		out.Smarthost.Host = host
-		out.Smarthost.Port = port
+		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
 	}
 
 	if in.AuthPassword != nil {
 		authPassword, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthPassword)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.AuthPassword)
+			return nil, errors.Wrap(err, "failed to get auth password")
 		}
 		out.AuthPassword = authPassword
 	}
@@ -584,25 +826,18 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 	if in.AuthSecret != nil {
 		authSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthSecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.AuthSecret)
+			return nil, errors.Wrap(err, "failed to get auth secret")
 		}
 		out.AuthSecret = authSecret
 	}
 
-	var headers map[string]string
 	if l := len(in.Headers); l > 0 {
-		headers = make(map[string]string, l)
-
-		var key string
+		headers := make(map[string]string, l)
 		for _, d := range in.Headers {
-			key = strings.Title(d.Key)
-			if _, ok := headers[key]; ok {
-				return nil, errors.Errorf("duplicate header %q in email config", key)
-			}
-			headers[key] = d.Value
+			headers[strings.Title(d.Key)] = d.Value
 		}
+		out.Headers = headers
 	}
-	out.Headers = headers
 
 	if in.TLSConfig != nil {
 		out.TLSConfig = cg.convertTLSConfig(ctx, in.TLSConfig, crKey)
@@ -625,12 +860,9 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 	if in.APIKey != nil {
 		apiKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.APIKey)
+			return nil, errors.Wrap(err, "failed to get API key")
 		}
 		out.APIKey = apiKey
-	}
-	if in.RoutingKey == "" {
-		return nil, errors.New("missing Routing key in VictorOps config")
 	}
 
 	var customFields map[string]string
@@ -677,12 +909,9 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	}
 
 	{
-		if in.UserKey == nil {
-			return nil, errors.Errorf("mandatory field %q is empty", "userKey")
-		}
 		userKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.UserKey)
+			return nil, errors.Wrap(err, "failed to get user key")
 		}
 		if userKey == "" {
 			return nil, errors.Errorf("mandatory field %q is empty", "userKey")
@@ -691,12 +920,9 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	}
 
 	{
-		if in.Token == nil {
-			return nil, errors.Errorf("mandatory field %q is empty", "token")
-		}
 		token, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
 		if err != nil {
-			return nil, errors.Errorf("failed to get secret %q", in.Token)
+			return nil, errors.Wrap(err, "failed to get token")
 		}
 		if token == "" {
 			return nil, errors.Errorf("mandatory field %q is empty", "token")
@@ -704,20 +930,16 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 		out.Token = token
 	}
 
-	if in.Retry != "" {
-		retry, err := time.ParseDuration(in.Retry)
-		if err != nil {
-			return nil, errors.Errorf("failed to parse Retry duration: %s", err)
+	{
+		if in.Retry != "" {
+			retry, _ := time.ParseDuration(in.Retry)
+			out.Retry = duration(retry)
 		}
-		out.Retry = duration(retry)
-	}
 
-	if in.Expire != "" {
-		expire, err := time.ParseDuration(in.Expire)
-		if err != nil {
-			return nil, errors.Errorf("failed to parse Expire duration: %s", err)
+		if in.Expire != "" {
+			expire, _ := time.ParseDuration(in.Expire)
+			out.Expire = duration(expire)
 		}
-		out.Expire = duration(expire)
 	}
 
 	if in.HTTPConfig != nil {
@@ -731,10 +953,77 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	return out, nil
 }
 
-func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
+func (cg *configGenerator) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
+	out := &snsConfig{
+		VSendResolved: in.SendResolved,
+		APIUrl:        in.ApiURL,
+		TopicARN:      in.TopicARN,
+		PhoneNumber:   in.PhoneNumber,
+		TargetARN:     in.TargetARN,
+		Subject:       in.Subject,
+		Message:       in.Message,
+		Attributes:    in.Attributes,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.Sigv4 != nil {
+		accessKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get access key")
+		}
+
+		secretKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get AWS secret key")
+
+		}
+
+		out.Sigv4 = sigV4Config{
+			Region:    in.Sigv4.Region,
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+			Profile:   in.Sigv4.Profile,
+			RoleARN:   in.Sigv4.RoleArn,
+		}
+	}
+
+	return out, nil
+}
+func (cg *configGenerator) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) *inhibitRule {
+	matchersV2Allowed := cg.amVersion.GTE(semver.MustParse("0.22.0"))
+	var sourceMatchers []string
+	var targetMatchers []string
+
+	// todo (pgough) the following config are deprecated and can be removed when
+	// support matrix has reached >= 0.22.0
 	sourceMatch := map[string]string{}
 	sourceMatchRE := map[string]string{}
+	targetMatch := map[string]string{}
+	targetMatchRE := map[string]string{}
+
 	for _, sm := range in.SourceMatch {
+		// prefer matchers to deprecated syntax
+		if sm.MatchType != "" {
+			sourceMatchers = append(sourceMatchers, sm.String())
+			continue
+		}
+
+		if matchersV2Allowed {
+			if sm.Regex {
+				sourceMatchers = append(sourceMatchers, inhibitRuleRegexToV2(sm.Name, sm.Value))
+			} else {
+				sourceMatchers = append(sourceMatchers, inhibitRuleToV2(sm.Name, sm.Value))
+			}
+			continue
+		}
+
 		if sm.Regex {
 			sourceMatchRE[sm.Name] = sm.Value
 		} else {
@@ -742,17 +1031,22 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	sourceMatch["namespace"] = crKey.Namespace
-	delete(sourceMatchRE, "namespace")
-
-	// Set to nil if empty so that it doesn't show up in resulting yaml
-	if len(sourceMatchRE) == 0 {
-		sourceMatchRE = nil
-	}
-
-	targetMatch := map[string]string{}
-	targetMatchRE := map[string]string{}
 	for _, tm := range in.TargetMatch {
+		// prefer matchers to deprecated config
+		if tm.MatchType != "" {
+			targetMatchers = append(targetMatchers, tm.String())
+			continue
+		}
+
+		if matchersV2Allowed {
+			if tm.Regex {
+				targetMatchers = append(targetMatchers, inhibitRuleRegexToV2(tm.Name, tm.Value))
+			} else {
+				targetMatchers = append(targetMatchers, inhibitRuleToV2(tm.Name, tm.Value))
+			}
+			continue
+		}
+
 		if tm.Regex {
 			targetMatchRE[tm.Name] = tm.Value
 		} else {
@@ -760,53 +1054,130 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	targetMatch["namespace"] = crKey.Namespace
-	delete(targetMatchRE, "namespace")
-
-	// Set to nil if empty so that it doesn't show up in resulting yaml
-	if len(targetMatchRE) == 0 {
-		targetMatchRE = nil
-	}
-
-	equal := in.Equal
-	if len(equal) == 0 {
-		equal = nil
-	}
-
 	return &inhibitRule{
-		SourceMatch:   sourceMatch,
-		SourceMatchRE: sourceMatchRE,
-		TargetMatch:   targetMatch,
-		TargetMatchRE: targetMatchRE,
-		Equal:         equal,
+		SourceMatch:    sourceMatch,
+		SourceMatchRE:  sourceMatchRE,
+		SourceMatchers: sourceMatchers,
+		TargetMatch:    targetMatch,
+		TargetMatchRE:  targetMatchRE,
+		TargetMatchers: targetMatchers,
+		Equal:          in.Equal,
 	}
 }
 
-func prefixReceiverName(receiverName string, crKey types.NamespacedName) string {
-	if receiverName == "" {
+func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey types.NamespacedName) (*muteTimeInterval, error) {
+	muteTimeInterval := &muteTimeInterval{}
+
+	for _, timeInterval := range in.TimeIntervals {
+		ti := timeinterval.TimeInterval{}
+
+		for _, time := range timeInterval.Times {
+			parsedTime, err := time.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Times = append(ti.Times, timeinterval.TimeRange{
+				StartMinute: parsedTime.Start,
+				EndMinute:   parsedTime.End,
+			})
+		}
+
+		for _, wd := range timeInterval.Weekdays {
+			parsedWeekday, err := wd.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Weekdays = append(ti.Weekdays, timeinterval.WeekdayRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedWeekday.Start,
+					End:   parsedWeekday.End,
+				},
+			})
+		}
+
+		for _, dom := range timeInterval.DaysOfMonth {
+			ti.DaysOfMonth = append(ti.DaysOfMonth, timeinterval.DayOfMonthRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: dom.Start,
+					End:   dom.End,
+				},
+			})
+		}
+
+		for _, month := range timeInterval.Months {
+			parsedMonth, err := month.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Months = append(ti.Months, timeinterval.MonthRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedMonth.Start,
+					End:   parsedMonth.End,
+				},
+			})
+		}
+
+		for _, year := range timeInterval.Years {
+			parsedYear, err := year.Parse()
+			if err != nil {
+				return nil, err
+			}
+			ti.Years = append(ti.Years, timeinterval.YearRange{
+				InclusiveRange: timeinterval.InclusiveRange{
+					Begin: parsedYear.Start,
+					End:   parsedYear.End,
+				},
+			})
+		}
+
+		muteTimeInterval.Name = makeNamespacedString(in.Name, crKey)
+		muteTimeInterval.TimeIntervals = append(muteTimeInterval.TimeIntervals, ti)
+	}
+
+	return muteTimeInterval, nil
+}
+
+func makeNamespacedString(in string, crKey types.NamespacedName) string {
+	if in == "" {
 		return ""
 	}
-	return crKey.Namespace + "-" + crKey.Name + "-" + receiverName
+	return crKey.Namespace + "/" + crKey.Name + "/" + in
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
 	out := &httpClientConfig{
-		ProxyURL: in.ProxyURL,
+		ProxyURL:        in.ProxyURL,
+		FollowRedirects: in.FollowRedirects,
 	}
 
 	if in.BasicAuth != nil {
 		username, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.BasicAuth.Username)
 		if err != nil {
-			return nil, errors.Errorf("failed to get BasicAuth username key %q from secret %q", in.BasicAuth.Username.Key, in.BasicAuth.Username.Name)
+			return nil, errors.Wrap(err, "failed to get BasicAuth username")
 		}
 
 		password, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.BasicAuth.Password)
 		if err != nil {
-			return nil, errors.Errorf("failed to get BasicAuth password key %q from secret %q", in.BasicAuth.Password.Key, in.BasicAuth.Password.Name)
+			return nil, errors.Wrap(err, "failed to get BasicAuth password")
 		}
 
-		if username != "" && password != "" {
+		if username != "" || password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
+		}
+	}
+
+	if in.Authorization != nil {
+		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get Authorization credentials")
+		}
+
+		if credentials != "" {
+			authorizationType := in.Authorization.Type
+			if authorizationType == "" {
+				authorizationType = "Bearer"
+			}
+			out.Authorization = &authorization{Type: authorizationType, Credentials: credentials}
 		}
 	}
 
@@ -817,9 +1188,28 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 	if in.BearerTokenSecret != nil {
 		bearerToken, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.BearerTokenSecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get bearer token key %q from secret %q", in.BearerTokenSecret.Key, in.BearerTokenSecret.Name)
+			return nil, errors.Wrap(err, "failed to get bearer token")
 		}
 		out.BearerToken = bearerToken
+	}
+
+	if in.OAuth2 != nil {
+		clientID, err := cg.store.GetKey(ctx, crKey.Namespace, in.OAuth2.ClientID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get clientID")
+		}
+
+		clientSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.OAuth2.ClientSecret)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get client secret")
+		}
+		out.OAuth2 = &oauth2{
+			ClientID:       clientID,
+			ClientSecret:   clientSecret,
+			Scopes:         in.OAuth2.Scopes,
+			TokenURL:       in.OAuth2.TokenURL,
+			EndpointParams: in.OAuth2.EndpointParams,
+		}
 	}
 
 	return out, nil
@@ -842,4 +1232,344 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	}
 
 	return out
+}
+
+// sanitize the config against a specific AlertManager version
+// types may be sanitized in one of two ways:
+// 1. stripping the unsupported config and log a warning
+// 2. error which ensures that config will not be reconciled - this will be logged by a calling function
+func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if c == nil {
+		return nil
+	}
+
+	if err := c.Global.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	for _, receiver := range c.Receivers {
+		if err := receiver.sanitize(amVersion, logger); err != nil {
+			return err
+		}
+	}
+
+	for i, rule := range c.InhibitRules {
+		if err := rule.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "inhibit_rules[%d]", i)
+		}
+	}
+
+	if len(c.MuteTimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		// mute time intervals are unsupported < 0.22.0, and we already log the situation
+		// when handling the routes so just set to nil
+		c.MuteTimeIntervals = nil
+	}
+
+	return c.Route.sanitize(amVersion, logger)
+}
+
+// sanitize globalConfig
+func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if gc == nil {
+		return nil
+	}
+
+	if gc.HTTPConfig != nil {
+		if err := gc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+			return err
+		}
+	}
+
+	// We need to sanitize the config for slack globally
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if gc.SlackAPIURLFile != "" {
+
+		if gc.SlackAPIURL != nil {
+			msg := "'slack_api_url' and 'slack_api_url_file' are mutually exclusive - 'slack_api_url' has taken precedence"
+			level.Warn(logger).Log("msg", msg)
+			gc.SlackAPIURLFile = ""
+		}
+
+		if !fileURLAllowed {
+			msg := "'slack_api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+			level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+			gc.SlackAPIURLFile = ""
+		}
+	}
+	return nil
+}
+
+// sanitize httpClientConfig
+func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if hc == nil {
+		return nil
+	}
+
+	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		return fmt.Errorf("'authorization' set in 'http_config' but supported in AlertManager >= 0.22.0 only")
+	}
+
+	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		return fmt.Errorf("'oauth2' set in 'http_config' but supported in AlertManager >= 0.22.0 only")
+	}
+
+	if hc.FollowRedirects != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		msg := "'follow_redirects' set in 'http_config' but supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		hc.FollowRedirects = nil
+	}
+	return nil
+}
+
+// sanitize the receiver
+func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if r == nil {
+		return nil
+	}
+	withLogger := log.With(logger, "receiver", r.Name)
+
+	for _, conf := range r.OpsgenieConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.PagerdutyConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.PushoverConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.SlackConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.VictorOpsConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.WebhookConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.WeChatConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.SNSConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return ogc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return pdc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return poc.HTTPConfig.sanitize(amVersion, logger)
+
+}
+
+func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	if sc.APIURLFile == "" {
+		return nil
+	}
+	// We need to sanitize the config for slack receivers
+	// As of v0.22.0 AlertManager config supports passing URL via file name
+	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	if sc.APIURL != "" {
+		msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		sc.APIURLFile = ""
+	}
+
+	if !fileURLAllowed {
+		msg := "'api_url_file' supported in AlertManager >= 0.22.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		sc.APIURLFile = ""
+	}
+	return nil
+}
+
+func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return voc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return whc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return wcc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return sc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) error {
+	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+
+	if !matchersV2Allowed {
+		// check if rule has provided invalid syntax and error if true
+		if checkNotEmptyStrSlice(ir.SourceMatchers, ir.TargetMatchers) {
+			msg := fmt.Sprintf(`target_matchers and source_matchers matching is supported in Alertmanager >= 0.22.0 only (target_matchers=%v, source_matchers=%v)`, ir.TargetMatchers, ir.SourceMatchers)
+			return errors.New(msg)
+		}
+		return nil
+	}
+
+	// we log a warning if the rule continues to use deprecated values in addition
+	// to the namespace label we have injected - but we won't convert these
+	if checkNotEmptyMap(ir.SourceMatch, ir.TargetMatch, ir.SourceMatchRE, ir.TargetMatchRE) {
+		msg := "inhibit rule is using a deprecated match syntax which will be removed in future versions"
+		level.Warn(logger).Log("msg", msg, "source_match", ir.SourceMatch, "target_match", ir.TargetMatch, "source_match_re", ir.SourceMatchRE, "target_match_re", ir.TargetMatchRE)
+	}
+
+	// ensure empty data structures are assigned nil so their yaml output is sanitized
+	ir.TargetMatch = convertMapToNilIfEmpty(ir.TargetMatch)
+	ir.TargetMatchRE = convertMapToNilIfEmpty(ir.TargetMatchRE)
+	ir.SourceMatch = convertMapToNilIfEmpty(ir.SourceMatch)
+	ir.SourceMatchRE = convertMapToNilIfEmpty(ir.SourceMatchRE)
+	ir.TargetMatchers = convertSliceToNilIfEmpty(ir.TargetMatchers)
+	ir.SourceMatchers = convertSliceToNilIfEmpty(ir.SourceMatchers)
+	ir.Equal = convertSliceToNilIfEmpty(ir.Equal)
+
+	return nil
+}
+
+// sanitize a route and all its child routes.
+// Warns if the config is using deprecated syntax against a later version.
+// Returns an error if the config could potentially break routing logic
+func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if r == nil {
+		return nil
+	}
+
+	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	muteTimeIntervalsAllowed := matchersV2Allowed
+	withLogger := log.With(logger, "receiver", r.Receiver)
+
+	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
+		return fmt.Errorf(`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v)`, r.Matchers)
+	}
+
+	if matchersV2Allowed && checkNotEmptyMap(r.Match, r.MatchRE) {
+		msg := "'matchers' field is using a deprecated syntax which will be removed in future versions"
+		level.Warn(withLogger).Log("msg", msg, "match", r.Match, "match_re", r.MatchRE)
+	}
+
+	if !muteTimeIntervalsAllowed {
+		msg := "named mute time intervals in route is supported in Alertmanager >= 0.22.0 only - dropping config"
+		level.Warn(withLogger).Log("msg", msg, "mute_time_intervals", r.MuteTimeIntervals)
+		r.MuteTimeIntervals = nil
+	}
+
+	for i, child := range r.Routes {
+		if err := child.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "route[%d]", i)
+		}
+	}
+	// Set to nil if empty so that it doesn't show up in the resulting yaml.
+	r.Match = convertMapToNilIfEmpty(r.Match)
+	r.MatchRE = convertMapToNilIfEmpty(r.MatchRE)
+	r.Matchers = convertSliceToNilIfEmpty(r.Matchers)
+	return nil
+}
+
+func checkNotEmptyMap(in ...map[string]string) bool {
+	for _, input := range in {
+		if len(input) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func checkNotEmptyStrSlice(in ...[]string) bool {
+	for _, input := range in {
+		if len(input) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func convertMapToNilIfEmpty(in map[string]string) map[string]string {
+	if len(in) > 0 {
+		return in
+	}
+	return nil
+}
+
+func convertSliceToNilIfEmpty(in []string) []string {
+	if len(in) > 0 {
+		return in
+	}
+	return nil
+}
+
+// contains will return true if any slice value with all whitespace removed
+// is equal to the provided value with all whitespace removed
+func contains(value string, in []string) bool {
+	for _, str := range in {
+		if strings.ReplaceAll(value, " ", "") == strings.ReplaceAll(str, " ", "") {
+			return true
+		}
+	}
+	return false
+}
+
+func inhibitRuleToV2(name, value string) string {
+	return monitoringv1alpha1.Matcher{
+		Name:      name,
+		Value:     value,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+}
+
+func inhibitRuleRegexToV2(name, value string) string {
+	return monitoringv1alpha1.Matcher{
+		Name:      name,
+		Value:     value,
+		MatchType: monitoringv1alpha1.MatchRegexp,
+	}.String()
+}
+
+func checkIsV2Matcher(in ...[]monitoringv1alpha1.Matcher) bool {
+	for _, input := range in {
+		for _, matcher := range input {
+			if matcher.MatchType != "" {
+				return true
+			}
+		}
+	}
+	return false
 }

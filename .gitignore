@@ -1,4 +1,5 @@
 /operator
+/admission-webhook
 /po-lint
 /prometheus-config-reloader
 .build/

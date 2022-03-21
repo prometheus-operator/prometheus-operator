@@ -235,3 +235,123 @@ func TestValidateTLSConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAuthorization(t *testing.T) {
+	creds := &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "key"},
+	}
+	for _, tc := range []struct {
+		name   string
+		config *Authorization
+		err    bool
+	}{
+		{
+			name: "minimal example",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "explicit Bearer type",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "Bearer",
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "custom type",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "token",
+					Credentials: creds,
+				},
+			},
+			err: false,
+		},
+		{
+			name: "type Basic not allowed",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Type:        "Basic",
+					Credentials: creds,
+				},
+			},
+			err: true,
+		},
+		{
+			name: "conflict between credentials and credentials_file",
+			config: &Authorization{
+				SafeAuthorization: SafeAuthorization{
+					Credentials: creds,
+				},
+				CredentialsFile: "/some/file",
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.err && err == nil {
+				t.Fatalf("expected validation of %+v to fail, but got no error", tc.config)
+			}
+			if !tc.err && err != nil {
+				t.Fatalf("expected validation of %+v not to fail, err: %s", tc.config, err)
+			}
+		})
+	}
+}
+
+func TestValidateProbeTargets(t *testing.T) {
+	tests := []struct {
+		name         string
+		probeTargets ProbeTargets
+		wantErr      bool
+	}{
+
+		{
+			name: "probe with static config target",
+			probeTargets: ProbeTargets{
+				StaticConfig: &ProbeTargetStaticConfig{
+					Targets: []string{"/probe"},
+					Labels:  map[string]string{"app": "foo"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "probe with ingress target",
+			probeTargets: ProbeTargets{
+				Ingress: &ProbeTargetIngress{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "one of staticConfig and ingress is required",
+			probeTargets: ProbeTargets{
+				StaticConfig: nil,
+				Ingress:      nil,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.probeTargets.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

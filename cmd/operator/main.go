@@ -30,18 +30,20 @@ import (
 	"syscall"
 	"time"
 
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/api"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -49,22 +51,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	klog "k8s.io/klog"
-	klogv2 "k8s.io/klog/v2"
-)
-
-const (
-	logLevelAll   = "all"
-	logLevelDebug = "debug"
-	logLevelInfo  = "info"
-	logLevelWarn  = "warn"
-	logLevelError = "error"
-	logLevelNone  = "none"
-)
-
-const (
-	logFormatLogfmt = "logfmt"
-	logFormatJSON   = "json"
+	klog "k8s.io/klog/v2"
 )
 
 const (
@@ -77,11 +64,12 @@ const (
 )
 
 var (
-	ns             = namespaces{}
-	deniedNs       = namespaces{}
-	prometheusNs   = namespaces{}
-	alertmanagerNs = namespaces{}
-	thanosRulerNs  = namespaces{}
+	ns                   = namespaces{}
+	deniedNs             = namespaces{}
+	prometheusNs         = namespaces{}
+	alertmanagerNs       = namespaces{}
+	alertmanagerConfigNs = namespaces{}
+	thanosRulerNs        = namespaces{}
 )
 
 type namespaces map[string]struct{}
@@ -103,7 +91,7 @@ func (n namespaces) String() string {
 }
 
 func (n namespaces) asSlice() []string {
-	var ns []string
+	var ns = make([]string, 0, len(n))
 	for k := range n {
 		ns = append(ns, k)
 	}
@@ -131,18 +119,6 @@ func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func()
 }
 
 var (
-	availableLogLevels = []string{
-		logLevelAll,
-		logLevelDebug,
-		logLevelInfo,
-		logLevelWarn,
-		logLevelError,
-		logLevelNone,
-	}
-	availableLogFormats = []string{
-		logFormatLogfmt,
-		logFormatJSON,
-	}
 	cfg = operator.Config{}
 
 	rawTLSCipherSuites string
@@ -188,12 +164,13 @@ func init() {
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
 	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
+	flagset.Var(alertmanagerConfigNs, "alertmanager-config-namespaces", "Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.")
 	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")
-	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
-	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
+	flagset.StringVar(&cfg.LogLevel, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", ")))
+	flagset.StringVar(&cfg.LogFormat, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", ")))
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus Custom Resources to watch.")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
@@ -210,29 +187,10 @@ func Main() int {
 		return 0
 	}
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	if cfg.LogFormat == logFormatJSON {
-		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	logger, err := logging.NewLogger(cfg.LogLevel, cfg.LogFormat)
+	if err != nil {
+		stdlog.Fatal(err)
 	}
-	switch cfg.LogLevel {
-	case logLevelAll:
-		logger = level.NewFilter(logger, level.AllowAll())
-	case logLevelDebug:
-		logger = level.NewFilter(logger, level.AllowDebug())
-	case logLevelInfo:
-		logger = level.NewFilter(logger, level.AllowInfo())
-	case logLevelWarn:
-		logger = level.NewFilter(logger, level.AllowWarn())
-	case logLevelError:
-		logger = level.NewFilter(logger, level.AllowError())
-	case logLevelNone:
-		logger = level.NewFilter(logger, level.AllowNone())
-	default:
-		fmt.Fprintf(os.Stderr, "log level %v unknown, %v are possible values", cfg.LogLevel, availableLogLevels)
-		return 1
-	}
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	// Check validity of reloader resource values given to flags
 	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
@@ -258,8 +216,6 @@ func Main() int {
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
 	klog.ClampLevel(6)
 	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
-	klogv2.ClampLevel(6)
-	klogv2.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
@@ -277,6 +233,7 @@ func Main() int {
 	cfg.Namespaces.DenyList = deniedNs
 	cfg.Namespaces.PrometheusAllowList = prometheusNs
 	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs
+	cfg.Namespaces.AlertmanagerConfigAllowList = alertmanagerConfigNs
 	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs
 
 	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
@@ -285,6 +242,10 @@ func Main() int {
 
 	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
 		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.AlertmanagerConfigAllowList) == 0 {
+		cfg.Namespaces.AlertmanagerConfigAllowList = cfg.Namespaces.AllowList
 	}
 
 	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
@@ -341,7 +302,7 @@ func Main() int {
 		if rawTLSCipherSuites != "" {
 			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
 		}
-		tlsConfig, err = operator.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
+		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
 			fmt.Fprint(os.Stderr, "invalid TLS config", err)
@@ -352,12 +313,22 @@ func Main() int {
 
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
-		Help: "Number of times a prometheusRule object triggered validation",
+		Help: "DEPRECATED, removed in v0.57.0: Number of times a prometheusRule object triggered validation",
 	})
 
 	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_errors_total",
-		Help: "Number of errors that occurred while validating a prometheusRules object",
+		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a prometheusRules object",
+	})
+
+	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
+		Help: "DEPRECATED, removed in v0.57.0: Number of times an alertmanagerconfig object triggered validation",
+	})
+
+	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
+		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a alertmanagerconfig object",
 	})
 
 	r.MustRegister(
@@ -365,12 +336,16 @@ func Main() int {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		validationTriggeredCounter,
 		validationErrorsCounter,
+		alertManagerConfigValidationTriggered,
+		alertManagerConfigValidationError,
 		version.NewCollector("prometheus_operator"),
 	)
 
 	admit.RegisterMetrics(
 		validationTriggeredCounter,
 		validationErrorsCounter,
+		alertManagerConfigValidationTriggered,
+		alertManagerConfigValidationError,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))

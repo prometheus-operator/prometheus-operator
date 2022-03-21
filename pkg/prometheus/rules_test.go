@@ -15,8 +15,12 @@
 package prometheus
 
 import (
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/go-kit/log"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
@@ -26,6 +30,113 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldReturnAtLeastOneConfigMap", shouldReturnAtLeastOneConfigMap)
 	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
+	t.Run("ShouldAcceptValidRule", shouldAcceptValidRule)
+	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
+	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
+	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
+	t.Run("shouldRejectRuleWithInvalidPartialResponseStrategyValue", shouldRejectRuleWithInvalidPartialResponseStrategyValue)
+
+}
+
+func shouldAcceptValidRule(t *testing.T) {
+	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+		{
+			Name: "group",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert",
+					Expr:  intstr.FromString("vector(1)"),
+					Labels: map[string]string{
+						"valid_label": "valid_value",
+					},
+				},
+			},
+		},
+	}}
+	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if err != nil {
+		t.Fatalf("expected no errors when parsing valid rule")
+	}
+}
+
+func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
+	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+		{
+			Name:                    "group",
+			PartialResponseStrategy: "abort",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert",
+					Expr:  intstr.FromString("vector(1)"),
+					Labels: map[string]string{
+						"valid_label": "valid_value",
+					},
+				},
+			},
+		},
+	}}
+	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if err != nil {
+		t.Fatalf("expected no errors when parsing rule with valid thanos partial_response_strategy value")
+	}
+}
+
+func shouldRejectRuleWithInvalidLabels(t *testing.T) {
+	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+		{
+			Name: "group2",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert",
+					Expr:  intstr.FromString("vector(1)"),
+					Labels: map[string]string{
+						"invalid/label": "value",
+					},
+				},
+			},
+		},
+	}}
+	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if err == nil {
+		t.Fatalf("expected errors when parsing rule with invalid labels")
+	}
+}
+
+func shouldRejectRuleWithInvalidExpression(t *testing.T) {
+	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+		{
+			Name: "group2",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert",
+					Expr:  intstr.FromString("invalidfn(1)"),
+				},
+			},
+		},
+	}}
+	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if err == nil {
+		t.Fatalf("expected errors when parsing rule with invalid expression")
+	}
+}
+
+func shouldRejectRuleWithInvalidPartialResponseStrategyValue(t *testing.T) {
+	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+		{
+			Name:                    "group2",
+			PartialResponseStrategy: "invalid",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	}}
+	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if err == nil {
+		t.Fatalf("expected errors when parsing rule with invalid partial_response_strategy value")
+	}
 }
 
 // makeRulesConfigMaps should return at least one ConfigMap even if it is empty

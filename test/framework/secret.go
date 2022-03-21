@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,10 +36,10 @@ func MakeSecretWithCert(ns, name string, keyList []string,
 	return secret
 }
 
-func (f *Framework) CreateSecretWithCert(certBytes, keyBytes []byte, ns, name string) error {
+func (f *Framework) CreateSecretWithCert(ctx context.Context, certBytes, keyBytes []byte, ns, name string) error {
 
 	secret := MakeSecretWithCert(ns, name, []string{"tls.key", "tls.crt"}, [][]byte{keyBytes, certBytes})
-	_, err := f.KubeClient.CoreV1().Secrets(ns).Create(f.Ctx, secret, metav1.CreateOptions{})
+	_, err := f.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
 
 	return err
 }

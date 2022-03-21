@@ -121,6 +121,14 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 				EmptyDir: emptyDir,
 			},
 		})
+	} else if storageSpec.Ephemeral != nil {
+		ephemeral := storageSpec.Ephemeral
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(tr.Name),
+			VolumeSource: v1.VolumeSource{
+				Ephemeral: ephemeral,
+			},
+		})
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
@@ -164,8 +172,21 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.EvaluationInterval == "" {
 		tr.Spec.EvaluationInterval = defaultEvaluationInterval
 	}
+
+	if tr.Spec.EvaluationInterval != "" {
+		if err := operator.ValidateDurationField(tr.Spec.EvaluationInterval); err != nil {
+			return nil, errors.Wrap(err, "invalid evaluationInterval value specified")
+		}
+	}
+
 	if tr.Spec.Retention == "" {
 		tr.Spec.Retention = defaultRetention
+	}
+
+	if tr.Spec.Retention != "" {
+		if err := operator.ValidateDurationField(tr.Spec.Retention); err != nil {
+			return nil, errors.Wrap(err, "invalid retention value specified")
+		}
 	}
 
 	trCLIArgs := []string{
@@ -183,15 +204,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}
 
-	if len(tr.Spec.Labels) == 0 {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
-	} else {
-		for k, v := range tr.Spec.Labels {
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
-		}
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
+	for k, v := range tr.Spec.Labels {
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
 	}
 
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
 	for _, lb := range tr.Spec.AlertDropLabels {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", lb))
 	}
@@ -252,7 +270,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		}
 	}
 
-	if tr.Spec.ObjectStorageConfig != nil {
+	if tr.Spec.ObjectStorageConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
+	} else if tr.Spec.ObjectStorageConfig != nil {
 		trCLIArgs = append(trCLIArgs, "--objstore.config=$(OBJSTORE_CONFIG)")
 		trEnvVars = append(trEnvVars, v1.EnvVar{
 			Name: "OBJSTORE_CONFIG",
@@ -260,10 +280,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecretKeyRef: tr.Spec.ObjectStorageConfig,
 			},
 		})
-	}
-
-	if tr.Spec.ObjectStorageConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
 	}
 
 	if tr.Spec.TracingConfig != nil {
@@ -299,6 +315,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if tr.Spec.AlertQueryURL != "" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
+	}
+
+	if tr.Spec.AlertRelabelConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+*tr.Spec.AlertRelabelConfigFile)
+	} else if tr.Spec.AlertRelabelConfigs != nil {
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)")
+		trEnvVars = append(trEnvVars, v1.EnvVar{
+			Name: "ALERT_RELABEL_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: tr.Spec.AlertRelabelConfigs,
+			},
+		})
 	}
 
 	var additionalContainers []v1.Container
@@ -352,8 +380,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			}
 		}
 	}
-	// TODO(paulfantom): remove `app` label after 0.50 release
-	podLabels["app"] = thanosRulerLabel
+	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible since doing
+	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// The requirement to make a change here should be carefully evaluated.
 	podLabels["app.kubernetes.io/name"] = thanosRulerLabel
 	podLabels["app.kubernetes.io/managed-by"] = "prometheus-operator"
 	podLabels["app.kubernetes.io/instance"] = tr.Name
@@ -393,6 +423,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	boolFalse := false
+	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "thanos-ruler",
@@ -403,6 +435,13 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Resources:                tr.Spec.Resources,
 			Ports:                    ports,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 		},
 	}, additionalContainers...)
 
@@ -413,10 +452,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	terminationGracePeriod := int64(120)
 
+	var minReadySeconds int32
+	if tr.Spec.MinReadySeconds != nil {
+		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
+	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
 		Replicas:            tr.Spec.Replicas,
+		MinReadySeconds:     minReadySeconds,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,

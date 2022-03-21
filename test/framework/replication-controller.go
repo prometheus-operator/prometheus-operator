@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -24,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) createReplicationControllerViaYml(namespace string, filepath string) error {
+func (f *Framework) createReplicationControllerViaYml(ctx context.Context, namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -36,7 +37,7 @@ func (f *Framework) createReplicationControllerViaYml(namespace string, filepath
 		return err
 	}
 
-	_, err = f.KubeClient.CoreV1().ReplicationControllers(namespace).Create(f.Ctx, &rC, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().ReplicationControllers(namespace).Create(ctx, &rC, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func (f *Framework) createReplicationControllerViaYml(namespace string, filepath
 	return nil
 }
 
-func (f *Framework) deleteReplicationControllerViaYml(namespace string, filepath string) error {
+func (f *Framework) deleteReplicationControllerViaYml(ctx context.Context, namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -56,24 +57,24 @@ func (f *Framework) deleteReplicationControllerViaYml(namespace string, filepath
 		return err
 	}
 
-	if err := f.scaleDownReplicationController(namespace, rC); err != nil {
+	if err := f.scaleDownReplicationController(ctx, namespace, rC); err != nil {
 		return err
 	}
 
-	return f.KubeClient.CoreV1().ReplicationControllers(namespace).Delete(f.Ctx, rC.Name, metav1.DeleteOptions{})
+	return f.KubeClient.CoreV1().ReplicationControllers(namespace).Delete(ctx, rC.Name, metav1.DeleteOptions{})
 }
 
-func (f *Framework) scaleDownReplicationController(namespace string, rC v1.ReplicationController) error {
+func (f *Framework) scaleDownReplicationController(ctx context.Context, namespace string, rC v1.ReplicationController) error {
 	*rC.Spec.Replicas = 0
 	rCAPI := f.KubeClient.CoreV1().ReplicationControllers(namespace)
 
-	_, err := f.KubeClient.CoreV1().ReplicationControllers(namespace).Update(f.Ctx, &rC, metav1.UpdateOptions{})
+	_, err := f.KubeClient.CoreV1().ReplicationControllers(namespace).Update(ctx, &rC, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
 
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		currentRC, err := rCAPI.Get(f.Ctx, rC.Name, metav1.GetOptions{})
+		currentRC, err := rCAPI.Get(ctx, rC.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

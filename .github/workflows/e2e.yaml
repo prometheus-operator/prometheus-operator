@@ -8,52 +8,88 @@ on:
       - 'main'
     tags:
       - 'v*'
-env:
-  kind-version: 'v0.11.0'
-  kind-image: 'kindest/node:v1.21.2'  # Image defines which k8s version is used
 jobs:
   e2e-tests:
     name: E2E tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        suite: [alertmanager, prometheus, thanosruler]
+        suite: [alertmanager, prometheus, prometheusAllNS, thanosruler]
         include:
           - suite: alertmanager
             prometheus: "exclude"
+            prometheusAllNS: "exclude"
             alertmanager: ""
             thanosruler: "exclude"
+            featureGated: "include"
           - suite: prometheus
             prometheus: ""
+            prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
+            featureGated: "include"
+          - suite: prometheusAllNS
+            prometheus: "exclude"
+            prometheusAllNS: ""
+            alertmanager: "exclude"
+            thanosruler: "exclude"
+            featureGated: "include"
           - suite: thanosruler
             prometheus: "exclude"
+            prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: ""
+            featureGated: "include"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '${{ env.golang-version }}'
+    - name: Build images
+      run: |
+        export SHELL=/bin/bash
+        make build image
     - name: Start KinD
       uses: engineerd/setup-kind@v0.5.0
       with:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
         wait: 300s
+        config: /test/e2e/kind-conf.yaml
     - name: Wait for cluster to finish bootstraping
       run: |
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
-    - name: Build and load images
+    - name: Load images
       run: |
-        export SHELL=/bin/bash
-        make build image
         kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
         kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
       run: >
         EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
+        EXCLUDE_PROMETHEUS_ALL_NS_TESTS=${{ matrix.prometheusAllNS }}
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
+        FEATURE_GATED_TESTS=${{ matrix.featureGated }}
         make test-e2e
+
+  # Added to summarize the matrix and allow easy branch protection rules setup
+  e2e-tests-result:
+    name: End-to-End Test Results
+    if: always()
+    needs:
+      - e2e-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a success
+        if: needs.e2e-tests.result == 'success'
+        run: exit 0
+      - name: Mark the job as a failure
+        if: needs.e2e-tests.result != 'success'
+        run: exit 1
