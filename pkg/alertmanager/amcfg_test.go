@@ -1636,7 +1636,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "Test slack_api_url_file is dropped for unsupported versions",
-			againstVersion: versionAuthzNotAllowed,
+			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "/test",
