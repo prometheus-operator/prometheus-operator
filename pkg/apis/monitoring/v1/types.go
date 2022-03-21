@@ -1578,9 +1578,16 @@ type AlertmanagerSpec struct {
 	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
-	// Alertmanager object, which contains configuration for this Alertmanager
-	// instance. Defaults to 'alertmanager-<alertmanager-name>'
-	// The secret is mounted into /etc/alertmanager/config.
+	// Alertmanager object, which contains the configuration for this Alertmanager
+	// instance. If empty, it defaults to 'alertmanager-<alertmanager-name>'.
+	//
+	// The Alertmanager configuration should be available under the
+	// `alertmanager.yaml` key. Additional keys from the original secret are
+	// copied to the generated secret.
+	//
+	// If either the secret or the `alertmanager.yaml` key is missing, the
+	// operator provisions an Alertmanager configuration with one empty
+	// receiver (effectively dropping alert notifications).
 	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	//+kubebuilder:validation:Enum="";debug;info;warn;error
@@ -1688,15 +1695,15 @@ type AlertmanagerSpec struct {
 	// EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
-	// The specified global alertmanager config will not force add a namespace label in routes and inhibitRules.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
 }
 
-// AlertmanagerConfiguration used to set the global alertmanager config.
+// AlertmanagerConfiguration defines the global Alertmanager configuration.
 // +k8s:openapi-gen=true
 type AlertmanagerConfiguration struct {
-	// The name of the AlertmanagerConfig resource which holds the global configuration.
-	// It must be in the same namespace as the Alertmanager.
+	// The name of the AlertmanagerConfig resource which is used to generate the global configuration.
+	// It must be defined in the same namespace as the Alertmanager object.
+	// The operator will not enforce a `namespace` label for routes and inhibition rules.
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 }

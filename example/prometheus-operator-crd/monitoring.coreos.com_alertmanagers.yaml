@@ -975,14 +975,14 @@ spec:
               alertmanagerConfiguration:
                 description: 'EXPERIMENTAL: alertmanagerConfiguration specifies the
                   global Alertmanager configuration. If defined, it takes precedence
-                  over the `configSecret` field. This field may change in future releases.
-                  The specified global alertmanager config will not force add a namespace
-                  label in routes and inhibitRules.'
+                  over the `configSecret` field. This field may change in future releases.'
                 properties:
                   name:
                     description: The name of the AlertmanagerConfig resource which
-                      holds the global configuration. It must be in the same namespace
-                      as the Alertmanager.
+                      is used to generate the global configuration. It must be defined
+                      in the same namespace as the Alertmanager object. The operator
+                      will not enforce a `namespace` label for routes and inhibition
+                      rules.
                     minLength: 1
                     type: string
                 type: object
@@ -1012,10 +1012,15 @@ spec:
                   type: string
                 type: array
               configSecret:
-                description: ConfigSecret is the name of a Kubernetes Secret in the
-                  same namespace as the Alertmanager object, which contains configuration
-                  for this Alertmanager instance. Defaults to 'alertmanager-<alertmanager-name>'
-                  The secret is mounted into /etc/alertmanager/config.
+                description: "ConfigSecret is the name of a Kubernetes Secret in the
+                  same namespace as the Alertmanager object, which contains the configuration
+                  for this Alertmanager instance. If empty, it defaults to 'alertmanager-<alertmanager-name>'.
+                  \n The Alertmanager configuration should be available under the
+                  `alertmanager.yaml` key. Additional keys from the original secret
+                  are copied to the generated secret. \n If either the secret or the
+                  `alertmanager.yaml` key is missing, the operator provisions an Alertmanager
+                  configuration with one empty receiver (effectively dropping alert
+                  notifications)."
                 type: string
               containers:
                 description: 'Containers allows injecting additional containers. This
