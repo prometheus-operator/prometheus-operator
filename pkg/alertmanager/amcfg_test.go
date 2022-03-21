@@ -110,19 +110,20 @@ func TestGenerateGlobalConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 		kclient := fake.NewSimpleClientset()
-		cg := newConfigGenerator(
+		cb := newConfigBuilder(
 			log.NewNopLogger(),
 			version,
 			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
 		)
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cg.generateGlobalConfig(context.TODO(), tt.amConfig)
+			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.amConfig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", got, tt.want)
+
+			if !reflect.DeepEqual(cb.cfg, tt.want) {
+				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", cb.cfg, tt.want)
 			}
 		})
 	}
@@ -253,7 +254,6 @@ templates: []
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
-					Matchers: []string{"namespace=test"},
 					Routes: []*route{{
 						Matchers: []string{"namespace=custom-test"},
 						Receiver: "custom",
@@ -267,8 +267,6 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
-  matchers:
-  - namespace=test
   routes:
   - receiver: custom
     matchers:
@@ -1335,21 +1333,25 @@ templates: []
 				tc.amVersion = &version
 			}
 
-			cg := newConfigGenerator(logger, *tc.amVersion, store)
-			cfgBytes, err := cg.generateConfig(context.Background(), tc.baseConfig, tc.amConfigs)
+			cb := newConfigBuilder(logger, *tc.amVersion, store)
+			cb.cfg = &tc.baseConfig
+
+			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {
+				t.Fatal(err)
+			}
+
+			cfgBytes, err := cb.marshalJSON()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			result := string(cfgBytes)
-
 			// Verify the generated yaml is as expected
-			if diff := cmp.Diff(tc.expected, result); diff != "" {
+			if diff := cmp.Diff(tc.expected, string(cfgBytes)); diff != "" {
 				t.Errorf("Unexpected result (-want +got):\n%s", diff)
 			}
 
 			// Verify the generated config is something that Alertmanager will be happy with
-			_, err = config.Load(result)
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1791,12 +1793,12 @@ func TestSanitizeRoute(t *testing.T) {
 func TestLoadConfig(t *testing.T) {
 	testCase := []struct {
 		name     string
-		rawConf  string
+		rawConf  []byte
 		expected *alertmanagerConfig
 	}{
 		{
 			name: "Test mute_time_intervals",
-			rawConf: `route:
+			rawConf: []byte(`route:
   receiver: "null"
 receivers:
 - name: "null"
@@ -1809,7 +1811,7 @@ mute_time_intervals:
     days_of_month: ["7", "18", "28"]
     months: ["january"]
 templates: []
-`,
+`),
 			expected: &alertmanagerConfig{
 				Global: nil,
 				Route: &route{
@@ -1869,7 +1871,7 @@ templates: []
 	}
 
 	for _, tc := range testCase {
-		ac, err := alertmanagerConfigFrom(tc.rawConf)
+		ac, err := alertmanagerConfigFromBytes(tc.rawConf)
 		if err != nil {
 			t.Error(err)
 		}
