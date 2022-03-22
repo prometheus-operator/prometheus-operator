@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1beta1
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	Version = "v1alpha1"
+	Version = "v1beta1"
 
 	AlertmanagerConfigKind    = "AlertmanagerConfig"
 	AlertmanagerConfigName    = "alertmanagerconfigs"
@@ -40,8 +40,7 @@ const (
 // across multiple namespaces configuring one Alertmanager cluster.
 // +genclient
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
-// +kubebuilder:storageversion
+// +kubebuilder:resource:categories="prometheus-operator"
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -168,8 +167,6 @@ type Receiver struct {
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 	// List of SNS configurations
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
-	// List of Telegram configurations.
-	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -478,10 +475,6 @@ type OpsGenieConfig struct {
 	// Priority level of alert. Possible values are P1, P2, P3, P4, and P5.
 	// +optional
 	Priority string `json:"priority,omitempty"`
-	// Whether to update message and description of the alert in OpsGenie if it already exists
-	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
-	// +optional
-	UpdateAlerts *bool `json:"updateAlerts,omitempty"`
 	// A set of arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`
@@ -523,7 +516,6 @@ type OpsGenieConfigResponder struct {
 	Username string `json:"username,omitempty"`
 	// Type of responder.
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Enum=team;teams;user;escalation;schedule
 	Type string `json:"type"`
 }
 
@@ -773,37 +765,6 @@ type SNSConfig struct {
 	// SNS message attributes.
 	// +optional
 	Attributes map[string]string `json:"attributes,omitempty"`
-	// HTTP client configuration.
-	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
-}
-
-// TelegramConfig configures notifications via Telegram.
-// See https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
-type TelegramConfig struct {
-	// Whether to notify about resolved alerts.
-	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
-	// The Telegram API URL i.e. https://api.telegram.org.
-	// If not specified, default API URL will be used.
-	// +optional
-	APIURL string `json:"apiURL,omitempty"`
-	// Telegram bot token
-	// The secret needs to be in the same namespace as the AlertmanagerConfig
-	// object and accessible by the Prometheus Operator.
-	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
-	// The Telegram chat ID.
-	ChatID int64 `json:"chatID,omitempty"`
-	// Message template
-	// +optional
-	Message string `json:"message,omitempty"`
-	// Disable telegram notifications
-	// +optional
-	DisableNotifications *bool `json:"disableNotifications,omitempty"`
-	// Parse mode for telegram message
-	//+kubebuilder:validation:Enum=MarkdownV2;Markdown;HTML
-	// +optional
-	ParseMode string `json:"parseMode,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

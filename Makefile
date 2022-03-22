@@ -19,6 +19,7 @@ TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
 TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
@@ -42,6 +43,7 @@ K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
+K8S_GEN_DEPS+=$(TYPES_V1BETA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
 BUILD_DATE=$(shell date +"%Y%m%d-%T")
@@ -109,11 +111,13 @@ admission-webhook:
 po-lint:
 	$(GO_BUILD_RECIPE) -o po-lint cmd/po-lint/main.go
 
-DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go
+DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go pkg/apis/monitoring/v1beta1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 	cd ./pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
 		paths=.
 	cd ./pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
+		paths=.
+	cd ./pkg/apis/monitoring/v1beta1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
 		paths=.
 
 CLIENT_TARGET := pkg/client/versioned/clientset.go
@@ -122,23 +126,23 @@ $(CLIENT_TARGET): $(K8S_GEN_DEPS)
 	$(K8S_GEN_ARGS) \
 	--input-base     "" \
 	--clientset-name "versioned" \
-	--input	         "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
+	--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
 	--output-package "$(GO_PKG)/pkg/client"
 
-LISTER_TARGETS := pkg/client/listers/monitoring/v1/prometheus.go pkg/client/listers/monitoring/v1alpha1/prometheus.go
+LISTER_TARGETS := pkg/client/listers/monitoring/v1/interface.go pkg/client/listers/monitoring/v1alpha1/interface.go pkg/client/listers/monitoring/v1beta1/interface.go
 $(LISTER_TARGETS): $(K8S_GEN_DEPS)
 	$(LISTER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
-	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
+	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
 	--output-package "$(GO_PKG)/pkg/client/listers"
 
-INFORMER_TARGETS := pkg/client/informers/externalversions/monitoring/v1/prometheus.go pkg/client/informers/externalversions/monitoring/v1alpha1/prometheus.go
+INFORMER_TARGETS := pkg/client/informers/externalversions/monitoring/v1/interface.go pkg/client/informers/externalversions/monitoring/v1alpha1/interface.go pkg/client/informers/externalversions/monitoring/v1beta1/interface.go
 $(INFORMER_TARGETS): $(K8S_GEN_DEPS) $(LISTER_TARGETS) $(CLIENT_TARGET)
 	$(INFORMER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
 	--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
 	--listers-package "$(GO_PKG)/pkg/client/listers" \
-	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
+	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
 	--output-package  "$(GO_PKG)/pkg/client/informers"
 
 .PHONY: k8s-gen
@@ -198,7 +202,7 @@ tidy:
 generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook generate-docs
 
 .PHONY: generate-crds
-generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=./... output:crd:dir=$(PWD)/example/prometheus-operator-crd
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
 
@@ -240,8 +244,8 @@ TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documen
 Documentation/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
-Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
-	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
+Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
+	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
