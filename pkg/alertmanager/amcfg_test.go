@@ -1370,6 +1370,8 @@ func TestSanitizeConfig(t *testing.T) {
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
+	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
+	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -1618,6 +1620,32 @@ func TestSanitizeConfig(t *testing.T) {
 						SourceMatchers: []string{"keep=me"},
 					},
 				},
+			},
+		},
+		{
+			name:           "Test slack_api_url_file config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+		},
+		{
+			name:           "Test slack_api_url_file is dropped for unsupported versions",
+			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{},
 			},
 		},
 	} {
