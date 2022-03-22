@@ -22,16 +22,49 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
+// ValidateAlertmanager runs extra validation on the AlertManager fields which
+// can't be done at the CRD schema validation level.
+func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
+	if am.Spec.Retention != "" {
+		if err := operator.ValidateDurationField(am.Spec.Retention); err != nil {
+			return errors.Wrap(err, "invalid retention value specified")
+		}
+	}
+
+	if am.Spec.ClusterGossipInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPushpullInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPeerTimeout != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
+			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
+		}
+	}
+
+	return nil
+}
+
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
 // In particular, it verifies things that can't be modelized with the OpenAPI
-// specification such as routes should refer to an existing receiver..
+// specification such as routes should refer to an existing receiver.
 func ValidateAlertmanagerConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	receivers, err := validateReceivers(amc.Spec.Receivers)
 	if err != nil {

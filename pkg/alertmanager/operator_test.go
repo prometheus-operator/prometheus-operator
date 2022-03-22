@@ -16,10 +16,12 @@ package alertmanager
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -867,8 +869,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 					Namespace: "test",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					ConfigSecret:               "amconfig",
-					AlertmanagerConfigSelector: nil,
+					ConfigSecret: "amconfig",
 				},
 			},
 			objects: []runtime.Object{
@@ -1088,7 +1089,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			o := &Operator{
 				kclient: c,
 				mclient: monitoringfake.NewSimpleClientset(),
-				logger:  log.NewNopLogger(),
+				logger:  level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
 				metrics: operator.NewMetrics("alertmanager", prometheus.NewRegistry()),
 			}
 
