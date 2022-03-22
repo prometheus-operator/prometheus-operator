@@ -793,21 +793,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				ReadOnlyRootFilesystem:   &boolTrue,
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
-					Add: []v1.Capability{
-						"DAC_OVERRIDE",
-						"FOWNER",
-						"FSETID",
-						"KILL",
-						"SETGID",
-						"SETUID",
-						"SETPCAP",
-						"NET_BIND_SERVICE",
-						"NET_RAW",
-						"SYS_CHROOT",
-						"MKNOD",
-						"AUDIT_WRITE",
-						"SETFCAP",
-					},
+					Add: []v1.Capability{"DAC_OVERRIDE"},
 				},
 			},
 			Ports: []v1.ContainerPort{
