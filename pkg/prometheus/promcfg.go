@@ -30,6 +30,7 @@ import (
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -870,11 +871,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	rcg := relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
-	}
-	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -889,7 +887,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -957,11 +955,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 	}
-
-	rcg := &relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
-	}
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
 
 	if m.Spec.Targets.StaticConfig != nil {
 		// Generate static_config section.
@@ -1003,8 +997,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add configured relabelings.
-		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.StaticConfig.RelabelConfigs)...)
-
+		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
+		relabelings = append(relabelings, generateRelabelConfig(xc)...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	} else {
 		// Generate kubernetes_sd_config section for the ingress resources.
@@ -1099,12 +1093,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add configured relabelings.
-		rcg := &relabelConfigGenerator{
-			obj:                    m,
-			enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
-		}
-		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
+		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
 		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	}
@@ -1136,7 +1127,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(m.Spec.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -1381,11 +1372,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	rcg := &relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: cg.spec.EnforcedNamespaceLabel,
-	}
-	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -1400,7 +1388,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -1436,38 +1424,43 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 	})
 }
 
-func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {
-	relabeling := yaml.MapSlice{}
+func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
+	var cfg []yaml.MapSlice
 
-	if len(c.SourceLabels) > 0 {
-		relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+	for _, c := range rc {
+		relabeling := yaml.MapSlice{}
+
+		if len(c.SourceLabels) > 0 {
+			relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+		}
+
+		if c.Separator != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+		}
+
+		if c.TargetLabel != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+		}
+
+		if c.Regex != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+		}
+
+		if c.Modulus != uint64(0) {
+			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+		}
+
+		if c.Replacement != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+		}
+
+		if c.Action != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
+		}
+
+		cfg = append(cfg, relabeling)
 	}
-
-	if c.Separator != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
-	}
-
-	if c.TargetLabel != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
-	}
-
-	if c.Regex != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
-	}
-
-	if c.Modulus != uint64(0) {
-		relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
-	}
-
-	if c.Replacement != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
-	}
-
-	if c.Action != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
-	}
-
-	return relabeling
+	return cfg
 }
 
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
@@ -1943,30 +1936,4 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 		Key:   "remote_write",
 		Value: cfgs,
 	}
-}
-
-type relabelConfigGenerator struct {
-	obj                    metav1.Object
-	enforcedNamespaceLabel string
-}
-
-func (rcg relabelConfigGenerator) generate(c []*v1.RelabelConfig) []yaml.MapSlice {
-	var cfg []yaml.MapSlice
-
-	for _, c := range c {
-		cfg = append(cfg, generateRelabelConfig(c))
-	}
-
-	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
-	// relabel configurations as the last relabeling, to ensure it overrides any other relabelings.
-	if rcg.enforcedNamespaceLabel != "" {
-		cfg = append(cfg,
-			yaml.MapSlice{
-				{Key: "target_label", Value: rcg.enforcedNamespaceLabel},
-				{Key: "replacement", Value: rcg.obj.GetNamespace()},
-			},
-		)
-	}
-
-	return cfg
 }

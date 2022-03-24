@@ -14041,6 +14041,42 @@ spec:
               evaluationInterval:
                 description: 'Interval between consecutive evaluations. Default: `1m`'
                 type: string
+              excludedFromEnforcement:
+                description: List of references to PodMonitor, ServiceMonitor, Probe
+                  and PrometheusRule objects to be excluded from enforcing a namespace
+                  label of origin. Applies only if enforcedNamespaceLabel set to true.
+                items:
+                  description: ObjectReference references a PodMonitor, ServiceMonitor,
+                    Probe or PrometheusRule object.
+                  properties:
+                    group:
+                      default: monitoring.coreos.com
+                      description: Group of the referent. When not specified, it defaults
+                        to `monitoring.coreos.com`
+                      enum:
+                      - monitoring.coreos.com
+                      type: string
+                    name:
+                      description: Name of the referent. When not set, all resources
+                        are matched.
+                      type: string
+                    namespace:
+                      description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                      minLength: 1
+                      type: string
+                    resource:
+                      description: Resource of the referent.
+                      enum:
+                      - prometheusrules
+                      - servicemonitors
+                      - podmonitors
+                      - probes
+                      type: string
+                  required:
+                  - namespace
+                  - resource
+                  type: object
+                type: array
               externalLabels:
                 additionalProperties:
                   type: string
@@ -15574,10 +15610,11 @@ spec:
                   will _not_ be added when value is set to empty string (`""`).
                 type: string
               prometheusRulesExcludedFromEnforce:
-                description: PrometheusRulesExcludedFromEnforce - list of prometheus
+                description: 'PrometheusRulesExcludedFromEnforce - list of prometheus
                   rules to be excluded from enforcing of adding namespace labels.
                   Works only if enforcedNamespaceLabel set to true. Make sure both
-                  ruleNamespace and ruleName are set for each pair
+                  ruleNamespace and ruleName are set for each pair. Deprecated: use
+                  excludedFromEnforcement instead.'
                 items:
                   description: PrometheusRuleExcludeConfig enables users to configure
                     excluded PrometheusRule names and their namespaces to be ignored
@@ -22571,6 +22608,42 @@ spec:
               evaluationInterval:
                 description: Interval between consecutive evaluations.
                 type: string
+              excludedFromEnforcement:
+                description: List of references to PrometheusRule objects to be excluded
+                  from enforcing a namespace label of origin. Applies only if enforcedNamespaceLabel
+                  set to true.
+                items:
+                  description: ObjectReference references a PodMonitor, ServiceMonitor,
+                    Probe or PrometheusRule object.
+                  properties:
+                    group:
+                      default: monitoring.coreos.com
+                      description: Group of the referent. When not specified, it defaults
+                        to `monitoring.coreos.com`
+                      enum:
+                      - monitoring.coreos.com
+                      type: string
+                    name:
+                      description: Name of the referent. When not set, all resources
+                        are matched.
+                      type: string
+                    namespace:
+                      description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                      minLength: 1
+                      type: string
+                    resource:
+                      description: Resource of the referent.
+                      enum:
+                      - prometheusrules
+                      - servicemonitors
+                      - podmonitors
+                      - probes
+                      type: string
+                  required:
+                  - namespace
+                  - resource
+                  type: object
+                type: array
               externalPrefix:
                 description: The external URL the Thanos Ruler instances will be available
                   under. This is necessary to generate correct URLs. This is necessary
@@ -24042,10 +24115,11 @@ spec:
                 description: Priority class assigned to the Pods
                 type: string
               prometheusRulesExcludedFromEnforce:
-                description: PrometheusRulesExcludedFromEnforce - list of Prometheus
+                description: 'PrometheusRulesExcludedFromEnforce - list of Prometheus
                   rules to be excluded from enforcing of adding namespace labels.
                   Works only if enforcedNamespaceLabel set to true. Make sure both
-                  ruleNamespace and ruleName are set for each pair
+                  ruleNamespace and ruleName are set for each pair Deprecated: use
+                  excludedFromEnforcement instead.'
                 items:
                   description: PrometheusRuleExcludeConfig enables users to configure
                     excluded PrometheusRule names and their namespaces to be ignored

@@ -16,7 +16,7 @@ package namespacelabeler
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/pkg/errors"
@@ -27,15 +27,21 @@ import (
 
 // Labeler enables to enforce adding namespace labels to PrometheusRules and to metrics used in them
 type Labeler struct {
-	enforcedNsLabel       string
-	prometheusRuleLabeler bool
-	excludeList           map[string]map[string]struct{}
+	enforcedNsLabel                  string
+	prometheusRuleLabeler            bool
+	excludeNamespaceGroupKindToNames map[namespaceGroupKind][]string
+}
+
+type namespaceGroupKind struct {
+	namespace string
+	groupKind string
 }
 
 // New - creates new Labeler
 // enforcedNsLabel - label name to be enforced for namespace
-// excludeConfig - list of namespace + PrometheusRule names to be excluded while enforcing adding namespace label
-func New(enforcedNsLabel string, excludeConfig []monitoringv1.PrometheusRuleExcludeConfig, prometheusRuleLabeler bool) *Labeler {
+// excludeConfig - list of ObjectReference to be excluded while enforcing adding namespace label
+// prometheusRuleLabeler - whether this should apply for Prometheus or Thanos rules
+func New(enforcedNsLabel string, excludeConfig []monitoringv1.ObjectReference, prometheusRuleLabeler bool) *Labeler {
 
 	if enforcedNsLabel == "" {
 		return &Labeler{} // no-op labeler
@@ -45,42 +51,54 @@ func New(enforcedNsLabel string, excludeConfig []monitoringv1.PrometheusRuleExcl
 		return &Labeler{enforcedNsLabel: enforcedNsLabel}
 	}
 
-	ruleExcludeList := make(map[string]map[string]struct{})
-
+	objectsExcludeList := make(map[namespaceGroupKind][]string)
 	for _, r := range excludeConfig {
-		if r.RuleNamespace == "" || r.RuleName == "" {
+		if r.Namespace == "" || r.GroupKind().Empty() || r.GroupKind().Kind == "" {
 			continue
 		}
-		if _, ok := ruleExcludeList[r.RuleNamespace]; !ok {
-			ruleExcludeList[r.RuleNamespace] = make(map[string]struct{})
-		}
-		ruleExcludeList[r.RuleNamespace][r.RuleName] = struct{}{}
+		namespaceGroupKind := namespaceGroupKind{
+			namespace: r.Namespace,
+			groupKind: r.GroupKind().String()}
+		objectsExcludeList[namespaceGroupKind] = append(objectsExcludeList[namespaceGroupKind], r.Name)
 	}
 
 	return &Labeler{
-		excludeList:           ruleExcludeList,
-		enforcedNsLabel:       enforcedNsLabel,
-		prometheusRuleLabeler: prometheusRuleLabeler,
+		excludeNamespaceGroupKindToNames: objectsExcludeList,
+		enforcedNsLabel:                  enforcedNsLabel,
+		prometheusRuleLabeler:            prometheusRuleLabeler,
 	}
 }
 
-func (l *Labeler) isExcludedRule(namespace, name string) bool {
-	if l.excludeList == nil {
+func (l *Labeler) GetEnforcedNamespaceLabel() string {
+	return l.enforcedNsLabel
+}
+
+// IsExcluded returns true if the specified object is excluded from namespace enforcement,
+// false otherwise
+func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjectMeta metav1.ObjectMeta) bool {
+	if l.enforcedNsLabel == "" {
+		return true
+	}
+	if len(l.excludeNamespaceGroupKindToNames) == 0 {
 		return false
 	}
-	nsRules, ok := l.excludeList[namespace]
-	if !ok {
-		return false
+	namespaceGroupKind := namespaceGroupKind{
+		namespace: prometheusObjectMeta.Namespace,
+		groupKind: prometheusTypeMeta.GroupVersionKind().GroupKind().String(),
 	}
-	_, ok = nsRules[name]
-	return ok
+	for _, name := range l.excludeNamespaceGroupKindToNames[namespaceGroupKind] {
+		if name == "" || prometheusObjectMeta.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // EnforceNamespaceLabel - adds(or modifies) namespace label to promRule labels with specified namespace
 // and also adds namespace label to all the metrics used in promRule
 func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error {
 
-	if l.enforcedNsLabel == "" || l.isExcludedRule(rule.Namespace, rule.Name) {
+	if l.enforcedNsLabel == "" || l.IsExcluded(rule.TypeMeta, rule.ObjectMeta) {
 		return nil
 	}
 
@@ -113,4 +131,21 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 		}
 	}
 	return nil
+}
+
+// GetRelabelingConfigs - append the namespace enforcement relabeling rule
+func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []*monitoringv1.RelabelConfig) []*monitoringv1.RelabelConfig {
+
+	if l.IsExcluded(monitorTypeMeta, monitorObjectMeta) {
+		return rc
+	}
+
+	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
+	// relabel configurations as the last relabeling, to ensure it overrides any other relabelings.
+	return append(rc,
+		&monitoringv1.RelabelConfig{
+			TargetLabel: l.GetEnforcedNamespaceLabel(),
+			Replacement: monitorObjectMeta.GetNamespace(),
+		},
+	)
 }
