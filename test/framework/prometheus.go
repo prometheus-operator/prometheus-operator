@@ -28,11 +28,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/pkg/errors"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -315,16 +318,53 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 	return result, nil
 }
 
-func (f *Framework) UpdatePrometheusAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Update(ctx, p, metav1.UpdateOptions{})
+func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Prometheus, error) {
+	return f.PatchPrometheusAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Replicas: func(i int32) *int32 { return &i }(replicas),
+			},
+		},
+	)
+}
+
+func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
+	b, err := json.Marshal(
+		&monitoringv1.Prometheus{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.PrometheusesKind,
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
+			},
+			Spec: spec,
+		},
+	)
 	if err != nil {
-		return nil, err
-	}
-	if err := f.WaitForPrometheusReady(ctx, result, 5*time.Minute); err != nil {
-		return nil, fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
+		return nil, errors.Wrap(err, "failed to marshal Prometheus spec")
 	}
 
-	return result, nil
+	p, err := f.MonClientV1.Prometheuses(ns).Patch(
+		ctx,
+		name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        func(b bool) *bool { return &b }(true),
+			FieldManager: "e2e-test",
+		},
+	)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to patch Prometheus %q", name)
+	}
+
+	if err := f.WaitForPrometheusReady(ctx, p, 5*time.Minute); err != nil {
+		return nil, errors.Wrapf(err, "failed to patch Prometheus %q (data=%q)", p.Name, string(b))
+	}
+
+	return p, nil
 }
 
 func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.Prometheus, timeout time.Duration) error {
