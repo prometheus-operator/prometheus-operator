@@ -17,6 +17,9 @@
       "kind": "PodMonitor",
       "listKind": "PodMonitorList",
       "plural": "podmonitors",
+      "shortNames": [
+        "pmon"
+      ],
       "singular": "podmonitor"
     },
     "scope": "Namespaced",

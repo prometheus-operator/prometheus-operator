@@ -17,6 +17,9 @@
       "kind": "AlertmanagerConfig",
       "listKind": "AlertmanagerConfigList",
       "plural": "alertmanagerconfigs",
+      "shortNames": [
+        "amcfg"
+      ],
       "singular": "alertmanagerconfig"
     },
     "scope": "Namespaced",
