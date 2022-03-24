@@ -362,14 +362,16 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 
 // validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(p *v1.Prometheus) error {
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.EnforcedBodySizeLimit != "" {
-		if err := operator.ValidateSizeField(p.Spec.EnforcedBodySizeLimit); err != nil {
+		if err := operator.ValidateSizeField(string(p.Spec.EnforcedBodySizeLimit)); err != nil {
 			return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.RetentionSize != "" {
-		if err := operator.ValidateSizeField(p.Spec.RetentionSize); err != nil {
+		if err := operator.ValidateSizeField(string(p.Spec.RetentionSize)); err != nil {
 			return errors.Wrap(err, "invalid retentionSize value specified")
 		}
 	}

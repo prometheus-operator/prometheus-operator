@@ -317,7 +317,7 @@ type CommonPrometheusFields struct {
 	// This is an experimental feature, this behaviour could
 	// change or be removed in the future.
 	// Only valid in Prometheus versions 2.28.0 and newer.
-	EnforcedBodySizeLimit string `json:"enforcedBodySizeLimit,omitempty"`
+	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
@@ -357,6 +357,11 @@ type PrometheusList struct {
 	Items []*Prometheus `json:"items"`
 }
 
+// ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
+// Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
+// +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
+type ByteSize string
+
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
@@ -366,8 +371,8 @@ type PrometheusSpec struct {
 	// retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
 	// (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
-	// Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`.
-	RetentionSize string `json:"retentionSize,omitempty"`
+	// Maximum amount of disk space used by blocks.
+	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 	// Disable prometheus compaction.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 	// Enable compression of the write-ahead log using Snappy. This flag is

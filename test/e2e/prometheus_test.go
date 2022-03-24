@@ -3874,6 +3874,113 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 	}
 }
 
+func testPrometheusCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	replicas := int32(1)
+	commonFields := monitoringv1.CommonPrometheusFields{
+		Replicas:           &replicas,
+		Version:            operator.DefaultPrometheusVersion,
+		ServiceAccountName: "prometheus",
+		Resources: v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				v1.ResourceMemory: resource.MustParse("400Mi"),
+			},
+		},
+	}
+
+	tests := []struct {
+		name           string
+		prometheusSpec monitoringv1.PrometheusSpec
+		expectedError  bool
+	}{
+		//
+		// RetentionSize Validation:
+		//
+		{
+			name: "zero-size-without-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "0",
+			},
+		},
+		{
+			name: "legacy-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "1.5GB",
+			},
+		},
+		{
+			name: "iec-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "100MiB",
+			},
+		},
+		{
+			name: "legacy-missing-symbol",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "10M",
+			},
+			expectedError: true,
+		},
+		{
+			name: "legacy-missing-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "1000",
+			},
+			expectedError: true,
+		},
+		{
+			name: "iec-missing-symbol",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: commonFields,
+				RetentionSize:          "15Gi",
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+			prom := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        name,
+					Namespace:   ns,
+					Annotations: map[string]string{},
+				},
+				Spec: test.prometheusSpec,
+			}
+
+			if test.expectedError {
+				_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), prom, metav1.CreateOptions{})
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(alertmanagerName))
