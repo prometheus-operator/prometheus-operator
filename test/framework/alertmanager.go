@@ -198,7 +198,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name strin
 	if err := f.WaitForPodsReady(
 		ctx,
 		ns,
-		5*time.Minute,
+		10*time.Minute,
 		replicas,
 		alertmanager.ListOptions(name),
 	); err != nil {
