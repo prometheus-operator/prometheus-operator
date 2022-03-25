@@ -1,3 +1,7 @@
+## 0.55.1 / 2022-03-26
+
+* [BUGFIX] Fixed Prometheus configuration when `spec.queryLogFile` has no path ("query.log" for instance). #4683
+
 ## 0.55.0 / 2022-03-09
 
 * [CHANGE] Enabled read-only root filesystem for containers generated from the Prometheus, Alertmanager and ThanosRuler objects. #4552
