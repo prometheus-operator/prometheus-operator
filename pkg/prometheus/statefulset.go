@@ -326,8 +326,11 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
 	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
-	// Allow up to 10 minutes for clean termination.
-	terminationGracePeriod := int64(600)
+	// Allow up to 10 minutes for clean termination if not specified.
+	if p.Spec.TerminationGracePeriodSeconds == nil {
+		terminationGracePeriod := int64(600)
+		p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriod
+	}
 
 	prometheusImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(p.Spec.Image, ""),
@@ -1001,7 +1004,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				AutomountServiceAccountToken:  &boolTrue,
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
-				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				TerminationGracePeriodSeconds: p.Spec.TerminationGracePeriodSeconds,
 				Volumes:                       volumes,
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
