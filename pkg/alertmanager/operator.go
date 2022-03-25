@@ -79,7 +79,8 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
-	metrics *operator.Metrics
+	metrics         *operator.Metrics
+	reconciliations *operator.ReconciliationTracker
 
 	config Config
 }
@@ -114,11 +115,12 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 	}
 
 	o := &Operator{
-		kclient: client,
-		mclient: mclient,
-		logger:  logger,
-		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		metrics: operator.NewMetrics("alertmanager", r),
+		kclient:         client,
+		mclient:         mclient,
+		logger:          logger,
+		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
+		metrics:         operator.NewMetrics("alertmanager", r),
+		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
 			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
@@ -145,6 +147,8 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	if _, err := labels.Parse(c.config.AlertManagerSelector); err != nil {
 		return errors.Wrap(err, "can not parse alertmanager selector value")
 	}
+
+	c.metrics.MustRegister(c.reconciliations)
 
 	c.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -539,7 +543,8 @@ func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 	startTime := time.Now()
 	err := c.sync(ctx, key.(string))
 	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.metrics.SetSyncStatus(key.(string), err == nil)
+	c.reconciliations.SetStatus(key.(string), err)
+
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -722,7 +727,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	aobj, err := c.alrtInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
-		c.metrics.ForgetObject(key)
+		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}

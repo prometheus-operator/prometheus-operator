@@ -85,7 +85,8 @@ type Operator struct {
 	// Queue to trigger status updates of Prometheus objects.
 	statusQueue workqueue.RateLimitingInterface
 
-	metrics *operator.Metrics
+	metrics         *operator.Metrics
+	reconciliations *operator.ReconciliationTracker
 
 	nodeAddressLookupErrors prometheus.Counter
 	nodeEndpointSyncs       prometheus.Counter
@@ -151,6 +152,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
 		metrics:                operator.NewMetrics("prometheus", r),
+		reconciliations:        &operator.ReconciliationTracker{},
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
 			Help: "Number of times a node IP address could not be determined",
@@ -164,7 +166,12 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			Help: "Number of node endpoints synchronisation failures",
 		}),
 	}
-	c.metrics.MustRegister(c.nodeAddressLookupErrors, c.nodeEndpointSyncs, c.nodeEndpointSyncErrors)
+	c.metrics.MustRegister(
+		c.nodeAddressLookupErrors,
+		c.nodeEndpointSyncs,
+		c.nodeEndpointSyncErrors,
+		c.reconciliations,
+	)
 
 	c.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -1075,7 +1082,8 @@ func (c *Operator) processNextReconcileItem(ctx context.Context) bool {
 	startTime := time.Now()
 	err := c.sync(ctx, key.(string))
 	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.metrics.SetSyncStatus(key.(string), err == nil)
+	c.reconciliations.SetStatus(key.(string), err)
+
 	if err == nil {
 		c.reconcileQueue.Forget(key)
 		return true
@@ -1194,12 +1202,12 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 		return
 	}
 
-	if ps := c.prometheusForStatefulSet(cur); ps != nil {
+	if p := c.prometheusForStatefulSet(cur); p != nil {
 		level.Debug(c.logger).Log("msg", "StatefulSet updated")
 		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
 
-		c.addToReconcileQueue(ps)
-		c.addToStatusQueue(ps)
+		c.addToReconcileQueue(p)
+		c.addToStatusQueue(p)
 	}
 }
 
@@ -1259,7 +1267,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
-		c.metrics.ForgetObject(key)
+		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
@@ -1511,16 +1519,38 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		}
 	}
 
-	// Update last transition only if the status of the available condition has changed.
+	availableCondition.Message = strings.Join(messages, "\n")
+
+	// Compute the Reconciled ConditionType.
+	reconciledCondition := monitoringv1.PrometheusCondition{
+		Type:   monitoringv1.PrometheusReconciled,
+		Status: monitoringv1.PrometheusConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+	}
+	reconciliationStatus, found := c.reconciliations.GetStatus(key)
+	if !found {
+		reconciledCondition.Status = monitoringv1.PrometheusConditionUnknown
+	} else if !reconciliationStatus.Ok() {
+		reconciledCondition.Status = monitoringv1.PrometheusConditionFalse
+		reconciledCondition.Reason = reconciliationStatus.Reason()
+		reconciledCondition.Message = reconciliationStatus.Message()
+	}
+
+	// Update the last transition times only if the status of the available condition has changed.
 	for _, condition := range p.Status.Conditions {
 		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
 			availableCondition.LastTransitionTime = condition.LastTransitionTime
+			continue
+		}
+
+		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
+			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
 		}
 	}
 
-	availableCondition.Message = strings.Join(messages, "\n")
-
-	pStatus.Conditions = append(pStatus.Conditions, availableCondition)
+	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
 
 	b, err := json.Marshal(&monitoringv1.Prometheus{
 		TypeMeta: p.TypeMeta,

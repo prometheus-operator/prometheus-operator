@@ -389,6 +389,7 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 		}
 
 		for _, cond := range current.Status.Conditions {
+			// TODO: check all conditions
 			if cond.Type != monitoringv1.PrometheusAvailable {
 				continue
 			}
