@@ -492,6 +492,36 @@ func (c *Operator) Run(ctx context.Context) error {
 		go c.reconcileNodeEndpoints(ctx)
 	}
 
+	// Run a goroutine that refreshes regularly the Prometheus objects that
+	// aren't available.
+	// This is a brute-force approach to ensure that the Prometheu status
+	// conditions reflect the current state of the world.
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
+					p := o.(*monitoringv1.Prometheus)
+					for _, cond := range p.Status.Conditions {
+						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
+							key, found := c.keyFunc(p)
+							if found {
+								c.addToStatusQueue(key)
+							}
+						}
+					}
+				})
+				if err != nil {
+					level.Error(c.logger).Log("msg", "failed to list Prometheus objects", "err", err)
+				}
+			}
+		}
+	}()
+
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
