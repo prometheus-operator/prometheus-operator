@@ -198,7 +198,8 @@
                           "type": "boolean"
                         },
                         "interval": {
-                          "description": "Interval at which metrics should be scraped",
+                          "description": "Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "metricRelabelings": {
@@ -435,7 +436,8 @@
                           "type": "string"
                         },
                         "scrapeTimeout": {
-                          "description": "Timeout after which the scrape is ended",
+                          "description": "Timeout after which the scrape is ended If not specified, the Prometheus global scrape interval is used.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "targetPort": {

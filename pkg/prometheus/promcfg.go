@@ -377,20 +377,23 @@ func validateConfigInputs(p *v1.Prometheus) error {
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(p.Spec.Retention); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.Retention)); err != nil {
 			return errors.Wrap(err, "invalid retention value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.ScrapeInterval != "" {
-		if err := operator.ValidateDurationField(p.Spec.ScrapeInterval); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.ScrapeInterval)); err != nil {
 			return errors.Wrap(err, "invalid scrapeInterval value specified")
 		}
 	}
 
 	if p.Spec.ScrapeTimeout != "" {
-		if err := operator.ValidateDurationField(p.Spec.ScrapeTimeout); err != nil {
+		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
+		if err := operator.ValidateDurationField(string(p.Spec.ScrapeTimeout)); err != nil {
 			return errors.Wrap(err, "invalid scrapeTimeout value specified")
 		}
 		if err := operator.CompareScrapeTimeoutToScrapeInterval(p.Spec.ScrapeTimeout, p.Spec.ScrapeInterval); err != nil {
@@ -398,41 +401,47 @@ func validateConfigInputs(p *v1.Prometheus) error {
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.EvaluationInterval != "" {
-		if err := operator.ValidateDurationField(p.Spec.EvaluationInterval); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.EvaluationInterval)); err != nil {
 			return errors.Wrap(err, "invalid evaluationInterval value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
-		if err := operator.ValidateDurationField(p.Spec.Thanos.ReadyTimeout); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.Thanos.ReadyTimeout)); err != nil {
 			return errors.Wrap(err, "invalid thanos.readyTimeout value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Query != nil && p.Spec.Query.Timeout != nil && *p.Spec.Query.Timeout != "" {
-		if err := operator.ValidateDurationField(*p.Spec.Query.Timeout); err != nil {
+		if err := operator.ValidateDurationField(string(*p.Spec.Query.Timeout)); err != nil {
 			return errors.Wrap(err, "invalid query.timeout value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	for i, rr := range p.Spec.RemoteRead {
 		if rr.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(rr.RemoteTimeout); err != nil {
+			if err := operator.ValidateDurationField(string(rr.RemoteTimeout)); err != nil {
 				return errors.Wrapf(err, "invalid remoteRead[%d].remoteTimeout value specified", i)
 			}
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	for i, rw := range p.Spec.RemoteWrite {
 		if rw.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(rw.RemoteTimeout); err != nil {
+			if err := operator.ValidateDurationField(string(rw.RemoteTimeout)); err != nil {
 				return errors.Wrapf(err, "invalid remoteWrite[%d].remoteTimeout value specified", i)
 			}
 		}
 
+		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
-			if err := operator.ValidateDurationField(rw.MetadataConfig.SendInterval); err != nil {
+			if err := operator.ValidateDurationField(string(rw.MetadataConfig.SendInterval)); err != nil {
 				return errors.Wrapf(err, "invalid remoteWrite[%d].metadataConfig.sendInterval value specified", i)
 			}
 		}
@@ -441,7 +450,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	if p.Spec.Alerting != nil {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {
-				if err := operator.ValidateDurationField(*ap.Timeout); err != nil {
+				if err := operator.ValidateDurationField(string(*ap.Timeout)); err != nil {
 					return errors.Wrapf(err, "invalid alertmanagers[%d].timeout value specified", i)
 				}
 			}
@@ -470,14 +479,18 @@ func (cg *ConfigGenerator) Generate(
 
 	cfg := yaml.MapSlice{}
 
+	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
 	scrapeInterval := "30s"
+	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
 	if p.Spec.ScrapeInterval != "" {
-		scrapeInterval = p.Spec.ScrapeInterval
+		scrapeInterval = string(p.Spec.ScrapeInterval)
 	}
 
+	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
 	evaluationInterval := "30s"
+	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
 	if p.Spec.EvaluationInterval != "" {
-		evaluationInterval = p.Spec.EvaluationInterval
+		evaluationInterval = string(p.Spec.EvaluationInterval)
 	}
 
 	globalItems := yaml.MapSlice{

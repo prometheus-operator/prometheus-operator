@@ -1497,7 +1497,7 @@ func (in *QuerySpec) DeepCopyInto(out *QuerySpec) {
 	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
-		*out = new(string)
+		*out = new(Duration)
 		**out = **in
 	}
 }

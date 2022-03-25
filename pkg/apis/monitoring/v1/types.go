@@ -141,12 +141,14 @@ type CommonPrometheusFields struct {
 	// Log format for Prometheus to be configured with.
 	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
-	// Interval between consecutive scrapes. Default: `1m`
-	ScrapeInterval string `json:"scrapeInterval,omitempty"`
+	// Interval between consecutive scrapes. Default: `30s`
+	// +kubebuilder:default:="30s"
+	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait for target to respond before erroring.
-	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
-	// Interval between consecutive evaluations. Default: `1m`
-	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
+	// Interval between consecutive evaluations. Default: `30s`
+	// +kubebuilder:default:="30s"
+	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
@@ -373,6 +375,11 @@ type PrometheusList struct {
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
 type ByteSize string
 
+// Duration is a valid time unit
+// Supported units: y, w, d, h, m, s, ms Examples: `30s`, `1m`, `1h20m15s`
+// +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
+type Duration string
+
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
@@ -381,7 +388,7 @@ type PrometheusSpec struct {
 	// Time duration Prometheus shall retain data for. Default is '24h' if
 	// retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
 	// (milliseconds seconds minutes hours days weeks years).
-	Retention string `json:"retention,omitempty"`
+	Retention Duration `json:"retention,omitempty"`
 	// Maximum amount of disk space used by blocks.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 	// Disable prometheus compaction.
@@ -643,7 +650,7 @@ type QuerySpec struct {
 	// Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.
 	MaxSamples *int32 `json:"maxSamples,omitempty"`
 	// Maximum time a query may take before being aborted.
-	Timeout *string `json:"timeout,omitempty"`
+	Timeout *Duration `json:"timeout,omitempty"`
 }
 
 // WebSpec defines the query command line flags when starting Prometheus.
@@ -778,7 +785,7 @@ type ThanosSpec struct {
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
 	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
-	ReadyTimeout string `json:"readyTimeout,omitempty"`
+	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
@@ -800,7 +807,7 @@ type RemoteWriteSpec struct {
 	// Prometheus versions 2.27.0 and newer.
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
 	// Timeout for requests to the remote write endpoint.
-	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote write request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.25.0 and newer.
@@ -884,7 +891,7 @@ type RemoteReadSpec struct {
 	// in a selector to query the remote read endpoint.
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 	// Timeout for requests to the remote read endpoint.
-	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote read request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.26.0 and newer.
@@ -1045,9 +1052,11 @@ type Endpoint struct {
 	// Optional HTTP URL parameters
 	Params map[string][]string `json:"params,omitempty"`
 	// Interval at which metrics should be scraped
-	Interval string `json:"interval,omitempty"`
+	// If not specified Prometheus' global scrape interval is used.
+	Interval Duration `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
-	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// If not specified, the Prometheus global scrape timeout is used unless it is less than `Interval` in which the latter is used.
+	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// File to read bearer token for scraping targets.
@@ -1133,9 +1142,11 @@ type PodMetricsEndpoint struct {
 	// Optional HTTP URL parameters
 	Params map[string][]string `json:"params,omitempty"`
 	// Interval at which metrics should be scraped
-	Interval string `json:"interval,omitempty"`
+	// If not specified Prometheus' global scrape interval is used.
+	Interval Duration `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
-	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// If not specified, the Prometheus global scrape interval is used.
+	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
@@ -1199,9 +1210,10 @@ type ProbeSpec struct {
 	Targets ProbeTargets `json:"targets,omitempty"`
 	// Interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
-	Interval string `json:"interval,omitempty"`
+	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
-	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// If not specified, the Prometheus global scrape interval is used.
+	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
@@ -1794,7 +1806,7 @@ type MetadataConfig struct {
 	// Whether metric metadata is sent to the remote storage or not.
 	Send bool `json:"send,omitempty"`
 	// How frequently metric metadata is sent to the remote storage.
-	SendInterval string `json:"sendInterval,omitempty"`
+	SendInterval Duration `json:"sendInterval,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not

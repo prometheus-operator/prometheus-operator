@@ -358,8 +358,8 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
-| interval | Interval at which metrics should be scraped | string | false |
-| scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout after which the scrape is ended If not specified, the Prometheus global scrape timeout is used unless it is less than `Interval` in which the latter is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
@@ -385,7 +385,7 @@ MetadataConfig configures the sending of series metadata to the remote storage.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | send | Whether metric metadata is sent to the remote storage or not. | bool | false |
-| sendInterval | How frequently metric metadata is sent to the remote storage. | string | false |
+| sendInterval | How frequently metric metadata is sent to the remote storage. | Duration | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -450,8 +450,8 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
-| interval | Interval at which metrics should be scraped | string | false |
-| scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout after which the scrape is ended If not specified, the Prometheus global scrape interval is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig) | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
@@ -568,8 +568,8 @@ ProbeSpec contains specification parameters for a Probe.
 | prober | Specification for the prober to use for probing targets. The prober.URL parameter is required. Targets cannot be probed if left empty. | [ProberSpec](#proberspec) | false |
 | module | The module to use for probing specifying how to probe the target. Example module configuring in the blackbox exporter: https://github.com/prometheus/blackbox_exporter/blob/master/example.yml | string | false |
 | targets | Targets defines a set of static or dynamically discovered targets to probe. | [ProbeTargets](#probetargets) | false |
-| interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
-| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+| interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. If not specified, the Prometheus global scrape interval is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
@@ -768,9 +768,9 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | prometheusExternalLabelName | Name of Prometheus external label used to denote Prometheus instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`\"\"`). | *string | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
-| scrapeInterval | Interval between consecutive scrapes. Default: `1m` | string | false |
-| scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
-| evaluationInterval | Interval between consecutive evaluations. Default: `1m` | string | false |
+| scrapeInterval | Interval between consecutive scrapes. Default: `30s` | Duration | false |
+| scrapeTimeout | Number of seconds to wait for target to respond before erroring. | Duration | false |
+| evaluationInterval | Interval between consecutive evaluations. Default: `30s` | Duration | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
 | enableRemoteWriteReceiver | Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`. WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver Only valid in Prometheus versions 2.33.0 and newer. | bool | false |
@@ -810,7 +810,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedLabelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 | enforcedBodySizeLimit | EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer. | ByteSize | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
+| retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | Duration | false |
 | retentionSize | Maximum amount of disk space used by blocks. | ByteSize | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
@@ -859,7 +859,7 @@ QuerySpec defines the query command line flags when starting Prometheus.
 | lookbackDelta | The delta difference allowed for retrieving metrics during expression evaluations. | *string | false |
 | maxConcurrency | Number of concurrent queries that can be run at once. | *int32 | false |
 | maxSamples | Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return. | *int32 | false |
-| timeout | Maximum time a query may take before being aborted. | *string | false |
+| timeout | Maximum time a query may take before being aborted. | *Duration | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -915,7 +915,7 @@ RemoteReadSpec defines the configuration for Prometheus to read back samples fro
 | url | The URL of the endpoint to query from. | string | true |
 | name | The name of the remote read queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
-| remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
+| remoteTimeout | Timeout for requests to the remote read endpoint. | Duration | false |
 | headers | Custom HTTP headers to be sent along with each remote read request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.26.0 and newer. | map[string]string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
@@ -940,7 +940,7 @@ RemoteWriteSpec defines the configuration to write samples from Prometheus to a 
 | url | The URL of the endpoint to send samples to. | string | true |
 | name | The name of the remote write queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | sendExemplars | Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer. | *bool | false |
-| remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| remoteTimeout | Timeout for requests to the remote write endpoint. | Duration | false |
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
@@ -1171,7 +1171,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
 | minTime | MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y. | string | false |
-| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | string | false |
+| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | Duration | false |
 | volumeMounts | VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container. | []v1.VolumeMount | false |
 
 [Back to TOC](#table-of-contents)

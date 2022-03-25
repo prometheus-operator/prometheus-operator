@@ -3877,16 +3877,6 @@ func testPrometheusCRDValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
 	replicas := int32(1)
-	commonFields := monitoringv1.CommonPrometheusFields{
-		Replicas:           &replicas,
-		Version:            operator.DefaultPrometheusVersion,
-		ServiceAccountName: "prometheus",
-		Resources: v1.ResourceRequirements{
-			Requests: v1.ResourceList{
-				v1.ResourceMemory: resource.MustParse("400Mi"),
-			},
-		},
-	}
 
 	tests := []struct {
 		name           string
@@ -3899,45 +3889,183 @@ func testPrometheusCRDValidation(t *testing.T) {
 		{
 			name: "zero-size-without-unit",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "0",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "0",
 			},
 		},
 		{
 			name: "legacy-unit",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "1.5GB",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "1.5GB",
 			},
 		},
 		{
 			name: "iec-unit",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "100MiB",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "100MiB",
 			},
 		},
 		{
 			name: "legacy-missing-symbol",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "10M",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "10M",
 			},
 			expectedError: true,
 		},
 		{
 			name: "legacy-missing-unit",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "1000",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "1000",
 			},
 			expectedError: true,
 		},
 		{
 			name: "iec-missing-symbol",
 			prometheusSpec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: commonFields,
-				RetentionSize:          "15Gi",
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				RetentionSize: "15Gi",
+			},
+			expectedError: true,
+		},
+		//
+		// ScrapeInterval validation
+		{
+			name: "zero-time-without-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeInterval: "0",
+				},
+			},
+		},
+		{
+			name: "time-in-seconds-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeInterval: "30s",
+				},
+			},
+		},
+		{
+			name: "complex-time-unit",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeInterval: "1h30m15s",
+				},
+			},
+		},
+		{
+			name: "time-missing-symbols",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeInterval: "600",
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "time-unit-misspelled",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeInterval: "60ss",
+				},
 			},
 			expectedError: true,
 		},

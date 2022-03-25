@@ -2226,7 +2226,7 @@ func validateProberURL(url string) error {
 	return nil
 }
 
-func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval, scrapeTimeout string) error {
+func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval, scrapeTimeout monitoringv1.Duration) error {
 	if scrapeTimeout == "" {
 		return nil
 	}

@@ -10234,7 +10234,9 @@ spec:
                         the timestamps present in scraped data.
                       type: boolean
                     interval:
-                      description: Interval at which metrics should be scraped
+                      description: Interval at which metrics should be scraped If
+                        not specified Prometheus' global scrape interval is used.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     metricRelabelings:
                       description: MetricRelabelConfigs to apply to samples before
@@ -10463,7 +10465,9 @@ spec:
                       description: HTTP scheme to use for scraping.
                       type: string
                     scrapeTimeout:
-                      description: Timeout after which the scrape is ended
+                      description: Timeout after which the scrape is ended If not
+                        specified, the Prometheus global scrape interval is used.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     targetPort:
                       anyOf:
@@ -10798,6 +10802,7 @@ spec:
               interval:
                 description: Interval at which targets are probed using the configured
                   prober. If not specified Prometheus' global scrape interval is used.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               jobName:
                 description: The job name assigned to scraped metrics by default.
@@ -10988,6 +10993,8 @@ spec:
                 type: integer
               scrapeTimeout:
                 description: Timeout for scraping metrics from the Prometheus exporter.
+                  If not specified, the Prometheus global scrape interval is used.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               targetLimit:
                 description: TargetLimit defines a limit on the number of scraped
@@ -14057,7 +14064,9 @@ spec:
                 format: int64
                 type: integer
               evaluationInterval:
-                description: 'Interval between consecutive evaluations. Default: `1m`'
+                default: 30s
+                description: 'Interval between consecutive evaluations. Default: `30s`'
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               excludedFromEnforcement:
                 description: List of references to PodMonitor, ServiceMonitor, Probe
@@ -15670,6 +15679,7 @@ spec:
                     type: integer
                   timeout:
                     description: Maximum time a query may take before being aborted.
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                 type: object
               queryLogFile:
@@ -15877,6 +15887,7 @@ spec:
                       type: boolean
                     remoteTimeout:
                       description: Timeout for requests to the remote read endpoint.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     requiredMatchers:
                       additionalProperties:
@@ -16122,6 +16133,7 @@ spec:
                         sendInterval:
                           description: How frequently metric metadata is sent to the
                             remote storage.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                       type: object
                     name:
@@ -16260,6 +16272,7 @@ spec:
                       type: object
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     sendExemplars:
                       description: Enables sending of exemplars over remote write.
@@ -16554,6 +16567,7 @@ spec:
                   is '24h' if retentionSize is not set, and must match the regular
                   expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes
                   hours days weeks years).
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               retentionSize:
                 description: Maximum amount of disk space used by blocks.
@@ -16683,11 +16697,14 @@ spec:
                     type: object
                 type: object
               scrapeInterval:
-                description: 'Interval between consecutive scrapes. Default: `1m`'
+                default: 30s
+                description: 'Interval between consecutive scrapes. Default: `30s`'
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               scrapeTimeout:
                 description: Number of seconds to wait for target to respond before
                   erroring.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               secrets:
                 description: Secrets is a list of Secrets in the same namespace as
@@ -17733,6 +17750,7 @@ spec:
                   readyTimeout:
                     description: ReadyTimeout is the maximum time Thanos sidecar will
                       wait for Prometheus to start. Eg 10m
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   resources:
                     description: Resources defines the resource requirements for the
@@ -19972,7 +19990,9 @@ spec:
                         the timestamps present in scraped data.
                       type: boolean
                     interval:
-                      description: Interval at which metrics should be scraped
+                      description: Interval at which metrics should be scraped If
+                        not specified Prometheus' global scrape interval is used.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     metricRelabelings:
                       description: MetricRelabelConfigs to apply to samples before
@@ -20201,7 +20221,10 @@ spec:
                       description: HTTP scheme to use for scraping.
                       type: string
                     scrapeTimeout:
-                      description: Timeout after which the scrape is ended
+                      description: Timeout after which the scrape is ended If not
+                        specified, the Prometheus global scrape timeout is used unless
+                        it is less than `Interval` in which the latter is used.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     targetPort:
                       anyOf:

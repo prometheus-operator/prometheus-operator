@@ -2459,7 +2459,9 @@
                     "type": "integer"
                   },
                   "evaluationInterval": {
-                    "description": "Interval between consecutive evaluations. Default: `1m`",
+                    "default": "30s",
+                    "description": "Interval between consecutive evaluations. Default: `30s`",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "excludedFromEnforcement": {
@@ -3953,6 +3955,7 @@
                       },
                       "timeout": {
                         "description": "Maximum time a query may take before being aborted.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       }
                     },
@@ -4178,6 +4181,7 @@
                         },
                         "remoteTimeout": {
                           "description": "Timeout for requests to the remote read endpoint.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "requiredMatchers": {
@@ -4454,6 +4458,7 @@
                             },
                             "sendInterval": {
                               "description": "How frequently metric metadata is sent to the remote storage.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
                           },
@@ -4610,6 +4615,7 @@
                         },
                         "remoteTimeout": {
                           "description": "Timeout for requests to the remote write endpoint.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "sendExemplars": {
@@ -4934,6 +4940,7 @@
                   },
                   "retention": {
                     "description": "Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "retentionSize": {
@@ -5054,11 +5061,14 @@
                     "type": "object"
                   },
                   "scrapeInterval": {
-                    "description": "Interval between consecutive scrapes. Default: `1m`",
+                    "default": "30s",
+                    "description": "Interval between consecutive scrapes. Default: `30s`",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "scrapeTimeout": {
                     "description": "Number of seconds to wait for target to respond before erroring.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "secrets": {
@@ -5978,6 +5988,7 @@
                       },
                       "readyTimeout": {
                         "description": "ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "resources": {
