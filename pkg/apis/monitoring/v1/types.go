@@ -338,13 +338,14 @@ type CommonPrometheusFields struct {
 	// Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
 	// Value must be non-negative integer. The value zero indicates stop immediately via
 	// the kill signal (no opportunity to shut down).
-	// If this value is nil, the default grace period will be used instead.
+	// If this value is nil, the default grace period will be used instead. Default value is set to
+	// 10 min because Prometheus may take quite long to shutdown to checkpoint existing data.
 	// The grace period is the duration in seconds after the processes running in the pod are sent
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
 	// Set this value longer than the expected cleanup time for your process.
-	// Defaults to 600 seconds.
 	// +optional
-	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// +kubebuilder:default:="600"
+	TerminationGracePeriodSeconds *uint64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // Prometheus defines a Prometheus deployment.
