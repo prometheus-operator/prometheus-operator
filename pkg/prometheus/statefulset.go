@@ -52,6 +52,8 @@ const (
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
 	defaultPortName                 = "web"
+	defaultQueryLogDirectory        = "/var/log/prometheus"
+	defaultQueryLogVolume           = "query-log-file"
 )
 
 var (
@@ -514,13 +516,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		},
 	}
 
-	if p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "." {
-		volumes = append(volumes, v1.Volume{
-			Name: "query-log-file",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		})
+	if volume, ok := queryLogFileVolume(&p); ok {
+		volumes = append(volumes, volume)
 	}
 
 	for _, name := range ruleConfigMapNames {
@@ -569,12 +566,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
-	if p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "." {
-		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
-			Name:      "query-log-file",
-			ReadOnly:  false,
-			MountPath: "/var/log/prometheus",
-		})
+	if vmount, ok := queryLogFileVolumeMount(&p); ok {
+		promVolumeMounts = append(promVolumeMounts, vmount)
 	}
 
 	// Mount web config and web TLS credentials as volumes.
@@ -1023,4 +1016,41 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	}
 
 	return "prometheus-db"
+}
+
+func usesDefaultQueryLogVolume(p *monitoringv1.Prometheus) bool {
+	return p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "."
+}
+
+func queryLogFileVolumeMount(p *monitoringv1.Prometheus) (v1.VolumeMount, bool) {
+	if !usesDefaultQueryLogVolume(p) {
+		return v1.VolumeMount{}, false
+	}
+
+	return v1.VolumeMount{
+		Name:      defaultQueryLogVolume,
+		ReadOnly:  false,
+		MountPath: defaultQueryLogDirectory,
+	}, true
+}
+
+func queryLogFileVolume(p *monitoringv1.Prometheus) (v1.Volume, bool) {
+	if !usesDefaultQueryLogVolume(p) {
+		return v1.Volume{}, false
+	}
+
+	return v1.Volume{
+		Name: defaultQueryLogVolume,
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}, true
+}
+
+func queryLogFilePath(p *monitoringv1.Prometheus) string {
+	if !usesDefaultQueryLogVolume(p) {
+		return p.Spec.QueryLogFile
+	}
+
+	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
 }
