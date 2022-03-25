@@ -1478,13 +1478,79 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
+		Global: &monitoringv1.AlertmanagerGlobalConfig{
+			ResolveTimeout: "30s",
+			HTTPConfig: &monitoringv1.HTTPConfig{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "webhook-client-id",
+							},
+							Key: "test",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "webhook-client-secret",
+						},
+						Key: "test",
+					},
+					TokenURL: "https://test.com",
+					Scopes:   []string{"any"},
+					EndpointParams: map[string]string{
+						"some": "value",
+					},
+				},
+				FollowRedirects: toBoolPtr(true),
+			},
+		},
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	cm := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "webhook-client-id",
+			Namespace: ns,
+		},
+		Data: map[string]string{
+			"test": "clientID",
+		},
+	}
+	sec := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "webhook-client-secret",
+			Namespace: ns,
+		},
+		Data: map[string][]byte{
+			"test": []byte("clientSecret"),
+		},
+	}
+
+	ctx := context.Background()
+	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	yamlConfig := fmt.Sprintf(`route:
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlConfig := fmt.Sprintf(`global:
+  resolve_timeout: 30s
+  http_config:
+    oauth2:
+      client_id: clientID
+      client_secret: clientSecret
+      scopes:
+      - any
+      token_url: https://test.com
+      endpoint_params:
+        some: value
+    follow_redirects: true
+route:
   receiver: %[1]s
   routes:
   - receiver: %[1]s
@@ -1946,4 +2012,8 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func toBoolPtr(in bool) *bool {
+	return &in
 }

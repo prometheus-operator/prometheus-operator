@@ -33,6 +33,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
+	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 
 	v1 "k8s.io/api/core/v1"
@@ -121,13 +122,19 @@ func (cb *configBuilder) marshalJSON() ([]byte, error) {
 }
 
 // initializeFromAlertmanagerConfig initializes the configuration from an AlertmanagerConfig object.
-func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
+func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, globalConfig *monitoringv1.AlertmanagerGlobalConfig, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
 	globalAlertmanagerConfig := &alertmanagerConfig{}
 
 	crKey := types.NamespacedName{
 		Namespace: amConfig.Namespace,
 		Name:      amConfig.Name,
 	}
+
+	global, err := cb.convertGlobalConfig(ctx, globalConfig, crKey)
+	if err != nil {
+		return err
+	}
+	globalAlertmanagerConfig.Global = global
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
@@ -323,6 +330,30 @@ func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace st
 		return url, errors.Wrapf(err, "invalid URL %q in key %q from secret %q", url, selector.Key, selector.Name)
 	}
 	return url, nil
+}
+
+func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoringv1.AlertmanagerGlobalConfig, crKey types.NamespacedName) (*globalConfig, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	out := &globalConfig{}
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfigForV1(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid global httpConfig")
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.ResolveTimeout != "" {
+		timeout, err := model.ParseDuration(string(in.ResolveTimeout))
+		if err != nil {
+			return nil, errors.Wrap(err, "parse resolve timeout")
+		}
+		out.ResolveTimeout = &timeout
+	}
+	return out, nil
 }
 
 func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
@@ -1186,6 +1217,19 @@ func makeNamespacedString(in string, crKey types.NamespacedName) string {
 		return ""
 	}
 	return crKey.Namespace + "/" + crKey.Name + "/" + in
+}
+
+func (cb *configBuilder) convertHTTPConfigForV1(ctx context.Context, in monitoringv1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
+	httpcfgv1alpha1 := &monitoringv1alpha1.HTTPConfig{
+		Authorization:     in.Authorization,
+		BasicAuth:         in.BasicAuth,
+		OAuth2:            in.OAuth2,
+		BearerTokenSecret: in.BearerTokenSecret,
+		TLSConfig:         in.TLSConfig,
+		ProxyURL:          in.ProxyURL,
+		FollowRedirects:   in.FollowRedirects,
+	}
+	return cb.convertHTTPConfig(ctx, *httpcfgv1alpha1, crKey)
 }
 
 func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {

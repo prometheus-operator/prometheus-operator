@@ -2858,6 +2858,20 @@ It must be defined in the same namespace as the Alertmanager object.
 The operator will not enforce a <code>namespace</code> label for routes and inhibition rules.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>global</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">
+AlertmanagerGlobalConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The global config of the Alertmanager.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints
@@ -2995,6 +3009,53 @@ Duration
 </td>
 <td>
 <p>Timeout is a per-target Alertmanager timeout when pushing alerts.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration</a>)
+</p>
+<div>
+<p>AlertmanagerGlobalConfig configures parameters that are valid in all other configuration contexts.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resolveTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>ResolveTimeout is the default value used by alertmanager if the alert does
+not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.
+This has no impact on alerts from Prometheus, as they always include EndsAt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -3867,7 +3928,7 @@ string
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>BasicAuth allow an endpoint to authenticate over basic authentication
@@ -4835,7 +4896,7 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -5419,6 +5480,124 @@ A value of zero or less than zero disables the storage.</p>
 Supported units: h, m, s, ms
 Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</code></p>
 </div>
+<h3 id="monitoring.coreos.com/v1.HTTPConfig">HTTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>HTTPConfig defines a client HTTP configuration.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_config">https://prometheus.io/docs/alerting/latest/configuration/#http_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Authorization header configuration for the client.
+This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BasicAuth for the client.
+This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The secret&rsquo;s key that contains the bearer token to be used by the client
+for authentication.
+The secret needs to be in the same namespace as the Alertmanager
+object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration for the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional proxy URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FollowRedirects specifies whether the client should follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.HostAlias">HostAlias
 </h3>
 <p>
@@ -5558,7 +5737,7 @@ list restricting them.</p>
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 allows an endpoint to authenticate with OAuth2.
@@ -9230,7 +9409,7 @@ string
 <h3 id="monitoring.coreos.com/v1.SafeAuthorization">SafeAuthorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Authorization">Authorization</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Authorization">Authorization</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeAuthorization specifies a subset of the Authorization struct, that is
@@ -9274,7 +9453,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
