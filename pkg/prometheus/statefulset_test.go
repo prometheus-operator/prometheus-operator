@@ -1998,6 +1998,39 @@ func TestExpectedStatefulSetShardNames(t *testing.T) {
 	}
 }
 
+func TestExpectStatefulSetTerminationGracePeriodSeconds(t *testing.T) {
+	statefulSet, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	// assert defaults to 0 if nil
+	if *statefulSet.Spec.Template.Spec.TerminationGracePeriodSeconds != 0 {
+		t.Fatalf("expected TerminationGracePeriodSeconds to be 0 but got %d",
+			*statefulSet.Spec.Template.Spec.TerminationGracePeriodSeconds)
+	}
+
+	var expect uint64 = 5
+	statefulSet, err = makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				TerminationGracePeriodSeconds: &expect,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if *statefulSet.Spec.Template.Spec.TerminationGracePeriodSeconds != int64(expect) {
+		t.Fatalf("expected TerminationGracePeriodSeconds to be %d but got %d", expect,
+			*statefulSet.Spec.Template.Spec.TerminationGracePeriodSeconds)
+	}
+}
+
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	statefulSet, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
