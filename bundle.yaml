@@ -17515,7 +17515,7 @@ spec:
                   the image URL.'
                 type: string
               terminationGracePeriodSeconds:
-                default: "600"
+                default: 600
                 description: Optional duration in seconds the pod needs to terminate
                   gracefully. May be decreased in delete request. Value must be non-negative
                   integer. The value zero indicates stop immediately via the kill

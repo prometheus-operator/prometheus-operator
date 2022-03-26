@@ -344,7 +344,7 @@ type CommonPrometheusFields struct {
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
 	// Set this value longer than the expected cleanup time for your process.
 	// +optional
-	// +kubebuilder:default:="600"
+	// +kubebuilder:default:=600
 	TerminationGracePeriodSeconds *uint64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
