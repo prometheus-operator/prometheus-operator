@@ -493,7 +493,7 @@ func (cg *ConfigGenerator) Generate(
 	}
 
 	if p.Spec.QueryLogFile != "" {
-		globalItems = cg.WithMinimumVersion("2.16.0").AppendMapItem(globalItems, "query_log_file", p.Spec.QueryLogFile)
+		globalItems = cg.WithMinimumVersion("2.16.0").AppendMapItem(globalItems, "query_log_file", queryLogFilePath(p))
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})

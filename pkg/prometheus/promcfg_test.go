@@ -214,7 +214,7 @@ scrape_configs: []
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
-  query_log_file: test.log
+  query_log_file: /var/log/prometheus/test.log
 scrape_configs: []
 `,
 		},
