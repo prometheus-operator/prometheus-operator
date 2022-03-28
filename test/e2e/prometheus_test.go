@@ -32,17 +32,16 @@ import (
 	"testing"
 	"time"
 
-	certutil "k8s.io/client-go/util/cert"
-
 	appsv1 "k8s.io/api/apps/v1"
-
-	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+	certutil "k8s.io/client-go/util/cert"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -3978,6 +3977,20 @@ func testPrometheusCRDValidation(t *testing.T) {
 				t.Fatalf("expected no error but got %v", err)
 			}
 		})
+	}
+}
+
+func testPromQueryLogFile(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, "test", "", 1)
+	p.Spec.QueryLogFile = "query.log"
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+		t.Fatal(err)
 	}
 }
 
