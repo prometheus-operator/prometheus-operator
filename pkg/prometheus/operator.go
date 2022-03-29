@@ -492,7 +492,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Run a goroutine that refreshes regularly the Prometheus objects that
 	// aren't available.
-	// This is a brute-force approach to ensure that the Prometheu status
+	// This is a brute-force approach to ensure that the Prometheus status
 	// conditions reflect the current state of the world.
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
@@ -1558,8 +1558,12 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	reconciliationStatus, found := c.reconciliations.GetStatus(key)
 	if !found {
 		reconciledCondition.Status = monitoringv1.PrometheusConditionUnknown
-	} else if !reconciliationStatus.Ok() {
-		reconciledCondition.Status = monitoringv1.PrometheusConditionFalse
+		reconciledCondition.Reason = "NotFound"
+		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
+	} else {
+		if !reconciliationStatus.Ok() {
+			reconciledCondition.Status = monitoringv1.PrometheusConditionFalse
+		}
 		reconciledCondition.Reason = reconciliationStatus.Reason()
 		reconciledCondition.Message = reconciliationStatus.Message()
 	}

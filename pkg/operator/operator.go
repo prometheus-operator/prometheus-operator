@@ -49,19 +49,24 @@ type ReconciliationStatus struct {
 	err error
 }
 
-func (ss ReconciliationStatus) Reason() string {
+func (rs ReconciliationStatus) Reason() string {
+	if rs.Ok() {
+		return ""
+	}
+
 	return "ReconciliationFailed"
 }
 
-func (ss ReconciliationStatus) Message() string {
-	if ss.Ok() {
+func (rs ReconciliationStatus) Message() string {
+	if rs.Ok() {
 		return ""
 	}
-	return ss.err.Error()
+
+	return rs.err.Error()
 }
 
-func (ss ReconciliationStatus) Ok() bool {
-	return ss.err == nil
+func (rs ReconciliationStatus) Ok() bool {
+	return rs.err == nil
 }
 
 // ReconciliationTracker tracks reconciliation status per object.
@@ -74,52 +79,56 @@ type ReconciliationTracker struct {
 }
 
 // SetStatus updates the last reconciliation status for the given object.
-func (st *ReconciliationTracker) SetStatus(k string, err error) {
-	st.mtx.Lock()
-	defer st.mtx.Unlock()
+func (rt *ReconciliationTracker) SetStatus(k string, err error) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
 
-	st.once.Do(func() {
-		st.statusByObject = map[string]ReconciliationStatus{}
+	rt.once.Do(func() {
+		rt.statusByObject = map[string]ReconciliationStatus{}
 	})
 
-	st.statusByObject[k] = ReconciliationStatus{err: err}
+	rt.statusByObject[k] = ReconciliationStatus{err: err}
 }
 
 // GetStatus returns the last reconciliation status for the given object.
 // The second value indicates whether the object is known or not.
-func (st *ReconciliationTracker) GetStatus(k string) (ReconciliationStatus, bool) {
-	st.mtx.Lock()
-	defer st.mtx.Unlock()
+func (rt *ReconciliationTracker) GetStatus(k string) (ReconciliationStatus, bool) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
 
-	s, found := st.statusByObject[k]
-	return s, found
+	s, found := rt.statusByObject[k]
+	if !found {
+		return ReconciliationStatus{}, false
+	}
+
+	return s, true
 }
 
 // ForgetObject removes the given object from the tracker.
 // It should be called when the controller detects that the object has been deleted.
-func (st *ReconciliationTracker) ForgetObject(k string) {
-	st.mtx.Lock()
-	defer st.mtx.Unlock()
+func (rt *ReconciliationTracker) ForgetObject(k string) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
 
-	if st.statusByObject == nil {
+	if rt.statusByObject == nil {
 		return
 	}
 
-	delete(st.statusByObject, k)
+	delete(rt.statusByObject, k)
 }
 
 // Describe implements the prometheus.Collector interface.
-func (st *ReconciliationTracker) Describe(ch chan<- *prometheus.Desc) {
+func (rt *ReconciliationTracker) Describe(ch chan<- *prometheus.Desc) {
 	ch <- syncsDesc
 }
 
 // Collect implements the prometheus.Collector interface.
-func (st *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
-	st.mtx.RLock()
-	defer st.mtx.RUnlock()
+func (rt *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
+	rt.mtx.RLock()
+	defer rt.mtx.RUnlock()
 
 	var ok, failed float64
-	for _, st := range st.statusByObject {
+	for _, st := range rt.statusByObject {
 		if st.Ok() {
 			ok++
 		}
