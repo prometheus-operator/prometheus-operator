@@ -445,6 +445,10 @@ spec:
                         description: OpsGenieConfig configures notifications via OpsGenie.
                           See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
                         properties:
+                          actions:
+                            description: Comma separated list of actions that will
+                              be available for the alert.
+                            type: string
                           apiKey:
                             description: The secret's key that contains the OpsGenie
                               API key. The secret needs to be in the same namespace
@@ -491,6 +495,10 @@ spec:
                               - value
                               type: object
                             type: array
+                          entity:
+                            description: Optional field that can be used to specify
+                              which domain alert is related to.
+                            type: string
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
