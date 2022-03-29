@@ -105,7 +105,6 @@ func (st *ReconciliationTracker) ForgetObject(k string) {
 		return
 	}
 
-	//delete(st.statusByObject, st.objectKey(o))
 	delete(st.statusByObject, k)
 }
 

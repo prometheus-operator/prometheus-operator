@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -41,7 +40,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -1467,8 +1465,6 @@ func (c *Operator) status(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
-	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	p.Kind = monitoringv1.PrometheusesKind
 
 	pStatus := monitoringv1.PrometheusStatus{
 		Paused: p.Spec.Paused,
@@ -1582,29 +1578,8 @@ func (c *Operator) status(ctx context.Context, key string) error {
 
 	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
 
-	b, err := json.Marshal(&monitoringv1.Prometheus{
-		TypeMeta: p.TypeMeta,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: p.Name,
-		},
-		Status: pStatus,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal object")
-	}
-
-	_, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(
-		ctx,
-		p.Name,
-		types.ApplyPatchType,
-		b,
-		metav1.PatchOptions{
-			Force:        func(b bool) *bool { return &b }(true),
-			FieldManager: "prometheus-operator",
-		},
-		"status",
-	)
-	if err != nil {
+	p.Status = pStatus
+	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to update status subresource")
 	}
 
