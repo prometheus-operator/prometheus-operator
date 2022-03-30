@@ -131,8 +131,5 @@ replace (
 	// because Cortex (which is an indirect dependency through Thanos) has a
 	// requirement on a more recent commit version but untagged.
 	github.com/prometheus/alertmanager => github.com/prometheus/alertmanager v0.23.0
-	// A replace directive is needed for k8s.io/client-go because Cortex (which
-	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
-	k8s.io/client-go => k8s.io/client-go v0.23.0
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
 )
