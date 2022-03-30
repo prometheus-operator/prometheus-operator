@@ -712,6 +712,8 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Tags:          in.Tags,
 		Note:          in.Note,
 		Priority:      in.Priority,
+		Actions:       in.Actions,
+		Entity:        in.Entity,
 	}
 
 	if in.APIKey != nil {
@@ -1295,6 +1297,7 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger log.Logger) er
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		gc.OpsGenieAPIKeyFile = ""
 	}
+
 	return nil
 }
 
@@ -1379,6 +1382,18 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 }
 
 func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	actionsAndEntityAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	if ogc.Actions != "" && !actionsAndEntityAllowed {
+		msg := "opsgenie_config 'actions' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		ogc.Actions = ""
+	}
+	if ogc.Entity != "" && !actionsAndEntityAllowed {
+		msg := "opsgenie_config 'entity' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		ogc.Entity = ""
+	}
+
 	return ogc.HTTPConfig.sanitize(amVersion, logger)
 }
 

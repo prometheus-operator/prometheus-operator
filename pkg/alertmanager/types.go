@@ -141,6 +141,8 @@ type opsgenieConfig struct {
 	Tags          string              `yaml:"tags,omitempty" json:"tags,omitempty"`
 	Note          string              `yaml:"note,omitempty" json:"note,omitempty"`
 	Priority      string              `yaml:"priority,omitempty" json:"priority,omitempty"`
+	Entity        string              `yaml:"entity,omitempty" json:"entity,omitempty"`
+	Actions       string              `yaml:"actions,omitempty" json:"actions,omitempty"`
 }
 
 type weChatConfig struct {

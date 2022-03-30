@@ -1490,6 +1490,8 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
+| entity | Optional field that can be used to specify which domain alert is related to. | string | false |
+| actions | Comma separated list of actions that will be available for the alert. | string | false |
 
 [Back to TOC](#table-of-contents)
 
