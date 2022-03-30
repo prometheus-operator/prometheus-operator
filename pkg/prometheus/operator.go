@@ -506,10 +506,8 @@ func (c *Operator) Run(ctx context.Context) error {
 					p := o.(*monitoringv1.Prometheus)
 					for _, cond := range p.Status.Conditions {
 						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
-							key, found := c.keyFunc(p)
-							if found {
-								c.addToStatusQueue(key)
-							}
+							c.addToStatusQueue(p)
+							break
 						}
 					}
 				})
@@ -529,8 +527,9 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "creating key failed", "err", err)
-		return k, false
+		return "", false
 	}
+
 	return k, true
 }
 
@@ -571,7 +570,6 @@ func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
 	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "update").Inc()
 	checkPrometheusSpecDeprecation(key, cur.(*monitoringv1.Prometheus), c.logger)
 	c.addToReconcileQueue(key)
-	c.addToStatusQueue(key)
 }
 
 func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
@@ -1099,18 +1097,21 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 // processNextReconcileItem dequeues items, processes them, and marks them done.
 // It is guaranteed that the sync() method is never invoked concurrently with
 // the same key.
+// Before returning, the object's key is automatically added to the status queue.
 func (c *Operator) processNextReconcileItem(ctx context.Context) bool {
-	key, quit := c.reconcileQueue.Get()
+	item, quit := c.reconcileQueue.Get()
 	if quit {
 		return false
 	}
+	key := item.(string)
 	defer c.reconcileQueue.Done(key)
+	defer c.addToStatusQueue(key) // enqueues the object's key to update the status subresource
 
 	c.metrics.ReconcileCounter().Inc()
 	startTime := time.Now()
-	err := c.sync(ctx, key.(string))
+	err := c.sync(ctx, key)
 	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.reconciliations.SetStatus(key.(string), err)
+	c.reconciliations.SetStatus(key, err)
 
 	if err == nil {
 		c.reconcileQueue.Forget(key)
@@ -1235,7 +1236,6 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
 
 		c.addToReconcileQueue(p)
-		c.addToStatusQueue(p)
 	}
 }
 
