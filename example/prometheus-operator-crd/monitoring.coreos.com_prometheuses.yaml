@@ -14,6 +14,8 @@ spec:
     kind: Prometheus
     listKind: PrometheusList
     plural: prometheuses
+    shortNames:
+    - prom
     singular: prometheus
   scope: Namespaced
   versions:

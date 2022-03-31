@@ -17,6 +17,9 @@
       "kind": "ServiceMonitor",
       "listKind": "ServiceMonitorList",
       "plural": "servicemonitors",
+      "shortNames": [
+        "smon"
+      ],
       "singular": "servicemonitor"
     },
     "scope": "Namespaced",
