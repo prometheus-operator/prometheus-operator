@@ -49,13 +49,14 @@ var (
 type Metrics struct {
 	reg prometheus.Registerer
 
-	listCounter            prometheus.Counter
-	listFailedCounter      prometheus.Counter
-	watchCounter           prometheus.Counter
-	watchFailedCounter     prometheus.Counter
-	reconcileCounter       prometheus.Counter
-	reconcileErrorsCounter prometheus.Counter
-	stsDeleteCreateCounter prometheus.Counter
+	listCounter                prometheus.Counter
+	listFailedCounter          prometheus.Counter
+	watchCounter               prometheus.Counter
+	watchFailedCounter         prometheus.Counter
+	reconcileCounter           prometheus.Counter
+	reconcileErrorsCounter     prometheus.Counter
+	stsDeleteCreateCounter     prometheus.Counter
+	reconcileDurationHistogram prometheus.Histogram
 	// triggerByCounter is a set of counters keeping track of the amount
 	// of times Prometheus Operator was triggered to reconcile its created
 	// objects. It is split in the dimensions of Kubernetes objects and
@@ -83,6 +84,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		reconcileCounter: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_reconcile_operations_total",
 			Help: "Total number of reconcile operations",
+		}),
+		reconcileDurationHistogram: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "prometheus_operator_reconcile_duration_seconds",
+			Help:    "Histogram of reconcile operations",
+			Buckets: []float64{.1, .5, 1, 5, 10},
 		}),
 		reconcileErrorsCounter: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_reconcile_errors_total",
@@ -124,6 +130,7 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 
 	m.reg.MustRegister(
 		m.reconcileCounter,
+		m.reconcileDurationHistogram,
 		m.reconcileErrorsCounter,
 		m.triggerByCounter,
 		m.stsDeleteCreateCounter,
@@ -141,6 +148,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 // ReconcileCounter returns a counter to track attempted reconciliations.
 func (m *Metrics) ReconcileCounter() prometheus.Counter {
 	return m.reconcileCounter
+}
+
+// ReconcileDurationHistogram returns a histogram to track the duration of reconciliations.
+func (m *Metrics) ReconcileDurationHistogram() prometheus.Histogram {
+	return m.reconcileDurationHistogram
 }
 
 // ReconcileErrorsCounter returns a counter to track reconciliation errors.

@@ -565,7 +565,9 @@ func (o *Operator) processNextWorkItem(ctx context.Context) bool {
 	defer o.queue.Done(key)
 
 	o.metrics.ReconcileCounter().Inc()
+	startTime := time.Now()
 	err := o.sync(ctx, key.(string))
+	o.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
 	o.metrics.SetSyncStatus(key.(string), err == nil)
 	if err == nil {
 		o.queue.Forget(key)
