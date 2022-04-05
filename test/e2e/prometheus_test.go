@@ -4027,6 +4027,88 @@ func testPromQueryLogFile(t *testing.T) {
 	}
 }
 
+func testPromDegradedConditionStatus(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, "test", "", 2)
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	// Roll out a new version of the Prometheus object that triggers an error.
+	p, err := framework.PatchPrometheus(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Containers: []v1.Container{{
+					Name:  "bad-image",
+					Image: "quay.io/prometheus-operator/invalid-image",
+				}},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var pollErr error
+	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		if pollErr != nil {
+			return false, nil
+		}
+
+		for _, cond := range current.Status.Conditions {
+			if cond.Type != monitoringv1.PrometheusAvailable {
+				continue
+			}
+
+			if cond.Status != monitoringv1.PrometheusConditionDegraded {
+				pollErr = errors.Errorf(
+					"expected Available condition to be 'Degraded', got %q (reason %s, %q)",
+					cond.Status,
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if cond.Reason != "SomePodsNotReady" {
+				pollErr = errors.Errorf(
+					"expected Available condition's reason to be 'SomePodsNotReady',  got %s (message %q)",
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if !strings.Contains(cond.Message, "bad-image") {
+				pollErr = errors.Errorf(
+					"expected Available condition's message to contain 'bad-image', got %q",
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		pollErr = errors.Errorf("failed to find Available condition in status subresource")
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for Prometheus %v/%v: %v: %v", p.Namespace, p.Name, err, pollErr)
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(alertmanagerName))

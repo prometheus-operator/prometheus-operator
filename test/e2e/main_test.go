@@ -217,6 +217,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromMinReadySeconds":                    testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
 		"PromQueryLogFile":                       testPromQueryLogFile,
+		"PromDegradedCondition":                  testPromDegradedConditionStatus,
 	}
 
 	for name, f := range testFuncs {

@@ -331,7 +331,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 	)
 }
 
-func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
+func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
 	b, err := json.Marshal(
 		&monitoringv1.Prometheus{
 			TypeMeta: metav1.TypeMeta{
@@ -357,11 +357,20 @@ func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, 
 	)
 
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to patch Prometheus %q", name)
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
+	p, err := f.PatchPrometheus(ctx, name, ns, spec)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to patch Prometheus %s/%s", ns, name)
 	}
 
 	if err := f.WaitForPrometheusReady(ctx, p, 5*time.Minute); err != nil {
-		return nil, errors.Wrapf(err, "failed to patch Prometheus %q (data=%q)", p.Name, string(b))
+		return nil, err
 	}
 
 	return p, nil
@@ -388,7 +397,7 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
-		for _, cond := range current.Status.Conditions {
+		for _, cond := range status.Conditions {
 			// TODO: check all conditions
 			if cond.Type != monitoringv1.PrometheusAvailable {
 				continue
