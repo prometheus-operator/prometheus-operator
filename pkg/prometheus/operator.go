@@ -491,9 +491,14 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Run a goroutine that refreshes regularly the Prometheus objects that
-	// aren't available.
-	// This is a brute-force approach to ensure that the Prometheus status
-	// conditions reflect the current state of the world.
+	// aren't fully available to keep the status up-to-date with the pod
+	// conditions. In practice when a new version of the statefulset is rolled
+	// out and the updated pod is crashlooping, the statefulset status won't
+	// see any update because the number of ready/updated replicas doesn't
+	// change. Without the periodic refresh, the Prometheus object's status
+	// would report "containers with incomplete status: [init-config-reloader]"
+	// forever.
+	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
