@@ -397,27 +397,46 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
+		var reconciled, available *monitoringv1.PrometheusCondition
 		for _, cond := range status.Conditions {
-			// TODO: check all conditions
-			if cond.Type != monitoringv1.PrometheusAvailable {
-				continue
+			if cond.Type == monitoringv1.PrometheusAvailable {
+				available = &cond
 			}
-
-			if cond.Status == monitoringv1.PrometheusConditionTrue {
-				return true, nil
+			if cond.Type == monitoringv1.PrometheusReconciled {
+				reconciled = &cond
 			}
+		}
 
+		if reconciled == nil {
+			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
+			return false, nil
+		}
+
+		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
 			pollErr = errors.Errorf(
-				"expected Available condition to be 'True', got %q (reason %s, %q)",
-				cond.Status,
-				cond.Reason,
-				cond.Message,
+				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
+				reconciled.Status,
+				reconciled.Reason,
+				reconciled.Message,
 			)
 			return false, nil
 		}
 
-		pollErr = errors.Errorf("failed to find Available condition in status subresource")
-		return false, nil
+		if available == nil {
+			pollErr = errors.Errorf("failed to find Available condition in status subresource")
+			return false, nil
+		}
+
+		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+			pollErr = errors.Errorf(
+				"expected Available condition to be 'True', got %q (reason %s, %q)",
+				reconciled.Status,
+				reconciled.Reason,
+				reconciled.Message,
+			)
+			return false, nil
+		}
+		return true, nil
 	})
 
 	if err != nil {
