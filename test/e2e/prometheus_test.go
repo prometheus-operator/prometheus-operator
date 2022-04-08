@@ -3688,18 +3688,31 @@ func testPromWebTLS(t *testing.T) {
 			},
 		},
 	}
-	resp, err := httpClient.Get("https://localhost:9090")
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	var pollErr error
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		resp, err := httpClient.Get("https://localhost:9090")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
 
-	if !bytes.Equal(receivedCertBytes, certBytes) {
-		t.Fatal("Certificate received from prometheus instance does not match the one which is configured")
+		receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytes, certBytes) {
+			pollErr = fmt.Errorf("certificate received from prometheus instance does not match the one which is configured")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("failed to verify TLS certificate: %v: %v", err, pollErr)
 	}
 }
 
