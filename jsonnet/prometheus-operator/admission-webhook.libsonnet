@@ -47,7 +47,6 @@ function(params) {
         { name: 'https', targetPort: 'https', port: aw._config.port },
       ],
       selector: aw._config.selectorLabels,
-      clusterIP: 'None',
     },
   },
 

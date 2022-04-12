@@ -7,7 +7,6 @@ metadata:
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
-  clusterIP: None
   ports:
   - name: https
     port: 8443

@@ -166,12 +166,14 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 
 	testCases := []struct {
 		name                   string
-		send                   string
+		version                string
+		spec                   string
 		expectAdmissionAllowed bool
 	}{
 		{
-			name: "Test reject on duplicate receiver",
-			send: `{
+			name:    "Test reject on duplicate receiver",
+			version: "v1alpha1",
+			spec: `{
   "route": {
     "groupBy": [
       "job"
@@ -193,8 +195,33 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 			expectAdmissionAllowed: false,
 		},
 		{
-			name: "Test reject on invalid receiver",
-			send: `{
+			name:    "Test reject on duplicate receiver",
+			version: "v1beta1",
+			spec: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example"
+    },
+    {
+      "name": "wechat-example"
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
+			name:    "Test reject on invalid receiver",
+			version: "v1alpha1",
+			spec: `{
   "route": {
     "groupBy": [
       "job"
@@ -223,8 +250,40 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 			expectAdmissionAllowed: false,
 		},
 		{
-			name: "Test reject on invalid mute time intervals",
-			send: `{
+			name:    "Test reject on invalid receiver",
+			version: "v1beta1",
+			spec: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "https://%<>wechatserver:8080/",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
+			name:    "Test reject on invalid mute time intervals",
+			version: "v1alpha1",
+			spec: `{
   "route": {
     "groupBy": [
       "job"
@@ -278,8 +337,121 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 			expectAdmissionAllowed: false,
 		},
 		{
-			name: "Test happy path",
-			send: `{
+			name:    "Test reject on invalid mute time intervals",
+			version: "v1beta1",
+			spec: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "https://wechatserver:8080",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ],
+  "muteTimeIntervals": [
+    {
+      "name": "out-of-business-hours",
+      "timeIntervals": [
+        {
+          "weekdays": [
+            "Xaturday",
+            "Sunday"
+          ]
+        },
+        {
+          "times": [
+            {
+              "startTime": "50:00",
+              "endTime": "08:00"
+            },
+            {
+              "startTime": "18:00",
+              "endTime": "24:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: false,
+		},
+		{
+			name:    "Test happy path",
+			version: "v1alpha1",
+			spec: `{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "http://wechatserver:8080/",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ],
+  "muteTimeIntervals": [
+    {
+      "name": "out-of-business-hours",
+      "timeIntervals": [
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ]
+        },
+        {
+          "times": [
+            {
+              "startTime": "00:00",
+              "endTime": "08:00"
+            },
+            {
+              "startTime": "18:00",
+              "endTime": "24:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`,
+			expectAdmissionAllowed: true,
+		},
+		{
+			name:    "Test happy path",
+			version: "v1beta1",
+			spec: `{
   "route": {
     "groupBy": [
       "job"
@@ -335,8 +507,8 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp := send(t, ts, buildAlertManagerConfigFromSpec(t, tc.send))
+		t.Run(tc.name+","+tc.version, func(t *testing.T) {
+			resp := send(t, ts, buildAlertManagerConfigFromSpec(t, tc.version, tc.spec))
 			if resp.Response.Allowed != tc.expectAdmissionAllowed {
 				t.Errorf(
 					"Unexpected admission result, wanted %v but got %v - (warnings=%v) - (details=%v)",
@@ -731,7 +903,7 @@ var nonStringsInLabelsAnnotations = []byte(`
   }
 }`)
 
-func buildAlertManagerConfigFromSpec(t *testing.T, spec string) []byte {
+func buildAlertManagerConfigFromSpec(t *testing.T, version, spec string) []byte {
 	t.Helper()
 	tmpl := fmt.Sprintf(`
 {
@@ -776,11 +948,11 @@ func buildAlertManagerConfigFromSpec(t *testing.T, spec string) []byte {
 }
 `,
 		group,
-		alertManagerConfigCurrentVersion,
+		version,
 		alertManagerConfigKind,
-		alertManagerConfigCurrentVersion,
+		version,
 		alertManagerConfigResource,
-		alertManagerConfigCurrentVersion,
+		version,
 		alertManagerConfigKind,
 		spec)
 	return []byte(tmpl)
