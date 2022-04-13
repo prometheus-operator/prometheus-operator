@@ -497,10 +497,10 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	r, err := convertRouteTo(src.Spec.Route)
-	dst.Spec.Route = r
 	if err != nil {
 		return err
 	}
+	dst.Spec.Route = r
 
 	return nil
 }
