@@ -185,7 +185,7 @@ spec:
 kubectl apply -f ambassador-monitor.yaml
 ```
 
-Prometheus will now be configured to collect metrics from the `ambassadr-admin` Kubernetes service with the internal address: `http://ambassador-admin:8877/metrics`.
+Prometheus will now be configured to collect metrics from the `ambassador-admin` Kubernetes service with the internal address: `http://ambassador-admin:8877/metrics`.
 
 ## Examining Ingress Metrics
 
