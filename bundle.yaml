@@ -19667,14 +19667,43 @@ spec:
             type: object
           status:
             description: 'Most recent observed status of the Prometheus cluster. Read-only.
-              Not included when requesting from the apiserver, only from the Prometheus
-              Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+              More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
             properties:
               availableReplicas:
                 description: Total number of available pods (ready for at least minReadySeconds)
                   targeted by this Prometheus deployment.
                 format: int32
                 type: integer
+              conditions:
+                description: The current state of the Prometheus deployment.
+                items:
+                  description: PrometheusCondition represents the state of the resources
+                    associated with the Prometheus resource.
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the time of the last update
+                        to the current status property.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Human-readable message indicating details for the
+                        condition's last transition.
+                      type: string
+                    reason:
+                      description: Reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: status of the condition.
+                      type: string
+                    type:
+                      description: Type of the condition being reported.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
               paused:
                 description: Represents whether any actions on the underlying managed
                   objects are being performed. Only delete actions will be performed.
@@ -19684,6 +19713,41 @@ spec:
                   Prometheus deployment (their labels match the selector).
                 format: int32
                 type: integer
+              shardStatuses:
+                description: The list has one entry per shard. Each entry provides
+                  a summary of the shard status.
+                items:
+                  properties:
+                    availableReplicas:
+                      description: Total number of available pods (ready for at least
+                        minReadySeconds) targeted by this shard.
+                      format: int32
+                      type: integer
+                    replicas:
+                      description: Total number of pods targeted by this shard.
+                      format: int32
+                      type: integer
+                    shardID:
+                      description: Identifier of the shard.
+                      type: string
+                    unavailableReplicas:
+                      description: Total number of unavailable pods targeted by this
+                        shard.
+                      format: int32
+                      type: integer
+                    updatedReplicas:
+                      description: Total number of non-terminated pods targeted by
+                        this shard that have the desired spec.
+                      format: int32
+                      type: integer
+                  required:
+                  - availableReplicas
+                  - replicas
+                  - shardID
+                  - unavailableReplicas
+                  - updatedReplicas
+                  type: object
+                type: array
               unavailableReplicas:
                 description: Total number of unavailable pods targeted by this Prometheus
                   deployment.
@@ -19706,7 +19770,8 @@ spec:
         type: object
     served: true
     storage: true
-    subresources: {}
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""
@@ -26756,6 +26821,7 @@ rules:
   - alertmanagerconfigs
   - prometheuses
   - prometheuses/finalizers
+  - prometheuses/status
   - thanosrulers
   - thanosrulers/finalizers
   - servicemonitors

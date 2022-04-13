@@ -795,14 +795,12 @@ func testPromScaleUpDownCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p.Spec.Replicas = proto.Int32(3)
-	p, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	p, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas+1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p.Spec.Replicas = proto.Int32(2)
-	_, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas-1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -842,8 +840,16 @@ func testPromVersionMigration(t *testing.T) {
 	}
 
 	for _, v := range compatibilityMatrix {
-		p.Spec.Version = v
-		p, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+		p, err = framework.PatchPrometheusAndWaitUntilReady(
+			context.Background(),
+			p.Name,
+			ns,
+			monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Version: v,
+				},
+			},
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -884,12 +890,20 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatalf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
 	}
 
-	p.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("200Mi"),
+	p, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("200Mi"),
+					},
+				},
+			},
 		},
-	}
-	p, err = framework.MonClientV1.Prometheuses(ns).Update(context.Background(), p, metav1.UpdateOptions{})
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -998,34 +1012,40 @@ func testPromStorageUpdate(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	name := "test"
-
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p := framework.MakeBasicPrometheus(ns, "test", "", 1)
 
 	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p.Spec.Storage = &monitoringv1.StorageSpec{
-		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceStorage: resource.MustParse("200Mi"),
+	p, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						Spec: v1.PersistentVolumeClaimSpec{
+							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceStorage: resource.MustParse("200Mi"),
+								},
+							},
+						},
 					},
 				},
 			},
 		},
-	}
-	_, err = framework.MonClientV1.Prometheuses(ns).Update(context.Background(), p, metav1.UpdateOptions{})
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(p.Name))
 		if err != nil {
 			return false, err
 		}
@@ -1035,7 +1055,7 @@ func testPromStorageUpdate(t *testing.T) {
 		}
 
 		for _, volume := range pods.Items[0].Spec.Volumes {
-			if volume.Name == "prometheus-"+name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
+			if volume.Name == "prometheus-"+p.Name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
 				return true, nil
 			}
 		}
@@ -1625,16 +1645,6 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		MaxExpectedChanges int
 	}{
 		{
-			Name: "prometheus",
-			Getter: func(prometheusName string) (versionedResource, error) {
-				return framework.
-					MonClientV1.
-					Prometheuses(ns).
-					Get(context.Background(), prometheusName, metav1.GetOptions{})
-			},
-			MaxExpectedChanges: 1,
-		},
-		{
 			Name: "rulesConfigMap",
 			Getter: func(prometheusName string) (versionedResource, error) {
 				return framework.
@@ -1789,7 +1799,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					previous = version
 					continue
 				}
-				fmt.Println(pretty.Compare(previous, version))
+				t.Log(pretty.Compare(previous, version))
 				previous = version
 			}
 
@@ -1891,8 +1901,7 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 	}
 
 	// Ensure resource reconciles
-	prometheusCRD.Spec.Replicas = proto.Int32(2)
-	_, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), prometheusCRD.Name, ns, *prometheusCRD.Spec.Replicas+1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2211,8 +2220,16 @@ func testResharding(t *testing.T) {
 	}
 
 	shards := int32(2)
-	p.Spec.Shards = &shards
-	p, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	p, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Shards: &shards,
+			},
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2228,8 +2245,16 @@ func testResharding(t *testing.T) {
 	}
 
 	shards = int32(1)
-	p.Spec.Shards = &shards
-	p, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	p, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Shards: &shards,
+			},
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3663,18 +3688,31 @@ func testPromWebTLS(t *testing.T) {
 			},
 		},
 	}
-	resp, err := httpClient.Get("https://localhost:9090")
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	var pollErr error
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		resp, err := httpClient.Get("https://localhost:9090")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
 
-	if !bytes.Equal(receivedCertBytes, certBytes) {
-		t.Fatal("Certificate received from prometheus instance does not match the one which is configured")
+		receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytes, certBytes) {
+			pollErr = fmt.Errorf("certificate received from prometheus instance does not match the one which is configured")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("failed to verify TLS certificate: %v: %v", err, pollErr)
 	}
 }
 
@@ -3709,8 +3747,16 @@ func testPromMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	var got int32
-	prom.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+	if _, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		prom.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				MinReadySeconds: &updated,
+			},
+		},
+	); err != nil {
 		t.Fatal("Updating prometheus failed: ", err)
 	}
 
@@ -3991,6 +4037,88 @@ func testPromQueryLogFile(t *testing.T) {
 	p.Spec.QueryLogFile = "query.log"
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testPromDegradedConditionStatus(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, "test", "", 2)
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	// Roll out a new version of the Prometheus object that triggers an error.
+	p, err := framework.PatchPrometheus(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Containers: []v1.Container{{
+					Name:  "bad-image",
+					Image: "quay.io/prometheus-operator/invalid-image",
+				}},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var pollErr error
+	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		if pollErr != nil {
+			return false, nil
+		}
+
+		for _, cond := range current.Status.Conditions {
+			if cond.Type != monitoringv1.PrometheusAvailable {
+				continue
+			}
+
+			if cond.Status != monitoringv1.PrometheusConditionDegraded {
+				pollErr = errors.Errorf(
+					"expected Available condition to be 'Degraded', got %q (reason %s, %q)",
+					cond.Status,
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if cond.Reason != "SomePodsNotReady" {
+				pollErr = errors.Errorf(
+					"expected Available condition's reason to be 'SomePodsNotReady',  got %s (message %q)",
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if !strings.Contains(cond.Message, "bad-image") {
+				pollErr = errors.Errorf(
+					"expected Available condition's message to contain 'bad-image', got %q",
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		pollErr = errors.Errorf("failed to find Available condition in status subresource")
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for Prometheus %v/%v: %v: %v", p.Namespace, p.Name, err, pollErr)
 	}
 }
 

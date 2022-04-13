@@ -344,17 +344,17 @@ type CommonPrometheusFields struct {
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Prometheus"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Prometheuses"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
 type Prometheus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Spec PrometheusSpec `json:"spec"`
-	// Most recent observed status of the Prometheus cluster. Read-only. Not
-	// included when requesting from the apiserver, only from the Prometheus
-	// Operator API itself. More info:
+	// Most recent observed status of the Prometheus cluster. Read-only.
+	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-	Status *PrometheusStatus `json:"status,omitempty"`
+	Status PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
@@ -538,9 +538,8 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	Deny bool `json:"deny,omitempty"`
 }
 
-// PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
-// included when requesting from the apiserver, only from the Prometheus
-// Operator API itself. More info:
+// PrometheusStatus is the most recent observed status of the Prometheus cluster.
+// More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusStatus struct {
@@ -557,6 +556,70 @@ type PrometheusStatus struct {
 	// targeted by this Prometheus deployment.
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Prometheus deployment.
+	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// The current state of the Prometheus deployment.
+	// +patchMergeKey=type
+	// +patchMergeStrategy=merge
+	// +optional
+	Conditions []PrometheusCondition `json:"conditions,omitempty"`
+	// The list has one entry per shard. Each entry provides a summary of the shard status.
+	// +patchMergeKey=shardID
+	// +patchMergeStrategy=merge
+	// +optional
+	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
+}
+
+// PrometheusCondition represents the state of the resources associated with the Prometheus resource.
+// +k8s:deepcopy-gen=true
+type PrometheusCondition struct {
+	// Type of the condition being reported.
+	// +required
+	Type PrometheusConditionType `json:"type"`
+	// status of the condition.
+	// +required
+	Status PrometheusConditionStatus `json:"status"`
+	// lastTransitionTime is the time of the last update to the current status property.
+	// +required
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
+	// Reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+	// Human-readable message indicating details for the condition's last transition.
+	// +optional
+	Message string `json:"message,omitempty"`
+}
+
+type PrometheusConditionType string
+
+const (
+	// Available indicates whether enough Prometheus pods are ready to provide the service.
+	PrometheusAvailable PrometheusConditionType = "Available"
+	// Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.
+	PrometheusReconciled PrometheusConditionType = "Reconciled"
+)
+
+type PrometheusConditionStatus string
+
+const (
+	PrometheusConditionTrue     PrometheusConditionStatus = "True"
+	PrometheusConditionDegraded PrometheusConditionStatus = "Degraded"
+	PrometheusConditionFalse    PrometheusConditionStatus = "False"
+	PrometheusConditionUnknown  PrometheusConditionStatus = "Unknown"
+)
+
+type ShardStatus struct {
+	// Identifier of the shard.
+	// +required
+	ShardID string `json:"shardID"`
+	// Total number of pods targeted by this shard.
+	Replicas int32 `json:"replicas"`
+	// Total number of non-terminated pods targeted by this shard
+	// that have the desired spec.
+	UpdatedReplicas int32 `json:"updatedReplicas"`
+	// Total number of available pods (ready for at least minReadySeconds)
+	// targeted by this shard.
+	AvailableReplicas int32 `json:"availableReplicas"`
+	// Total number of unavailable pods targeted by this shard.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 

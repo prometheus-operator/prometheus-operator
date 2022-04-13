@@ -28,11 +28,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/pkg/errors"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -315,40 +318,132 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 	return result, nil
 }
 
-func (f *Framework) UpdatePrometheusAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Update(ctx, p, metav1.UpdateOptions{})
+func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Prometheus, error) {
+	return f.PatchPrometheusAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Replicas: func(i int32) *int32 { return &i }(replicas),
+			},
+		},
+	)
+}
+
+func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
+	b, err := json.Marshal(
+		&monitoringv1.Prometheus{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.PrometheusesKind,
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
+			},
+			Spec: spec,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal Prometheus spec")
+	}
+
+	p, err := f.MonClientV1.Prometheuses(ns).Patch(
+		ctx,
+		name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        func(b bool) *bool { return &b }(true),
+			FieldManager: "e2e-test",
+		},
+	)
+
 	if err != nil {
 		return nil, err
 	}
-	if err := f.WaitForPrometheusReady(ctx, result, 5*time.Minute); err != nil {
-		return nil, fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
+
+	return p, nil
+}
+
+func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
+	p, err := f.PatchPrometheus(ctx, name, ns, spec)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to patch Prometheus %s/%s", ns, name)
 	}
 
-	return result, nil
+	if err := f.WaitForPrometheusReady(ctx, p, 5*time.Minute); err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 
 func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.Prometheus, timeout time.Duration) error {
+	expected := *p.Spec.Replicas
+	if p.Spec.Shards != nil && *p.Spec.Shards > 0 {
+		expected = expected * *p.Spec.Shards
+	}
+
 	var pollErr error
-
-	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.Status(ctx, f.KubeClient, p)
-
+	err := wait.Poll(time.Second, timeout, func() (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 		if pollErr != nil {
 			return false, nil
 		}
 
-		shards := p.Spec.Shards
-		defaultShards := int32(1)
-		if shards == nil {
-			shards = &defaultShards
-		}
-		if st.UpdatedReplicas == (*p.Spec.Replicas * *shards) {
-			return true, nil
+		status := current.Status
+
+		if status.UpdatedReplicas != expected {
+			pollErr = errors.Errorf("expected %d updated replicas, got %d", expected, status.UpdatedReplicas)
+			return false, nil
 		}
 
-		return false, nil
+		var reconciled, available *monitoringv1.PrometheusCondition
+		for _, cond := range status.Conditions {
+			if cond.Type == monitoringv1.PrometheusAvailable {
+				available = &cond
+			}
+			if cond.Type == monitoringv1.PrometheusReconciled {
+				reconciled = &cond
+			}
+		}
+
+		if reconciled == nil {
+			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
+			return false, nil
+		}
+
+		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+			pollErr = errors.Errorf(
+				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
+				reconciled.Status,
+				reconciled.Reason,
+				reconciled.Message,
+			)
+			return false, nil
+		}
+
+		if available == nil {
+			pollErr = errors.Errorf("failed to find Available condition in status subresource")
+			return false, nil
+		}
+
+		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+			pollErr = errors.Errorf(
+				"expected Available condition to be 'True', got %q (reason %s, %q)",
+				reconciled.Status,
+				reconciled.Reason,
+				reconciled.Message,
+			)
+			return false, nil
+		}
+		return true, nil
 	})
-	return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+
+	if err != nil {
+		return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+	}
+
+	return nil
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, name string) error {
@@ -420,22 +515,24 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 // WaitForHealthyTargets waits for a number of targets to be configured and
 // healthy.
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
-	var targets []*Target
+	var loopErr error
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		var err error
-		targets, err = f.GetHealthyTargets(ctx, ns, svcName)
-		if err != nil {
-			return false, err
+	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+		var targets []*Target
+		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
+		if loopErr != nil {
+			return false, nil
 		}
 
 		if len(targets) == amount {
 			return true, nil
 		}
 
+		loopErr = errors.Errorf("expected %d, found %d healthy targets", amount, len(targets))
 		return false, nil
-	}); err != nil {
-		return fmt.Errorf("waiting for healthy targets timed out. %v of %v healthy targets found. %v", len(targets), amount, err)
+	})
+	if err != nil {
+		return fmt.Errorf("waiting for healthy targets failed: %v: %v", err, loopErr)
 	}
 
 	return nil
