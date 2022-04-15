@@ -87,9 +87,9 @@ func TestConfigGeneration(t *testing.T) {
 func TestGlobalSettings(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario           string
-		EvaluationInterval string
-		ScrapeInterval     string
-		ScrapeTimeout      string
+		EvaluationInterval monitoringv1.Duration
+		ScrapeInterval     monitoringv1.Duration
+		ScrapeTimeout      monitoringv1.Duration
 		ExternalLabels     map[string]string
 		QueryLogFile       string
 		Version            string

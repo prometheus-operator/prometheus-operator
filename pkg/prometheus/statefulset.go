@@ -361,7 +361,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
 		} else {
 			if p.Spec.Retention != "" {
-				promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
+				promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
 			}
 
 			if p.Spec.RetentionSize != "" {
@@ -374,7 +374,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		if p.Spec.Retention == "" {
 			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
 		} else {
-			promArgs = append(promArgs, retentionTimeFlag+p.Spec.Retention)
+			promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
 		}
 	}
 
@@ -865,7 +865,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 
 		if p.Spec.Thanos.ReadyTimeout != "" {
-			container.Args = append(container.Args, "--prometheus.ready_timeout="+p.Spec.Thanos.ReadyTimeout)
+			container.Args = append(container.Args, "--prometheus.ready_timeout="+string(p.Spec.Thanos.ReadyTimeout))
 		}
 		additionalContainers = append(additionalContainers, container)
 	}

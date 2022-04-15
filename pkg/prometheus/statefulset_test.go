@@ -1337,7 +1337,7 @@ func TestThanosSideCarVolumes(t *testing.T) {
 func TestRetentionAndRetentionSize(t *testing.T) {
 	tests := []struct {
 		version                    string
-		specRetention              string
+		specRetention              monitoringv1.Duration
 		specRetentionSize          monitoringv1.ByteSize
 		expectedRetentionArg       string
 		expectedRetentionSizeArg   string

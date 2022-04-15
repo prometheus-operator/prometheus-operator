@@ -17,6 +17,7 @@ package operator
 import (
 	"github.com/alecthomas/units"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/common/model"
 )
 
@@ -37,7 +38,7 @@ func ValidateDurationField(durationField string) error {
 }
 
 // CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
-func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval string) error {
+func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
 	var err error
 	var si, st model.Duration
 
@@ -46,10 +47,12 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval string) 
 		scrapeInterval = "30s"
 	}
 
-	if si, err = model.ParseDuration(scrapeInterval); err != nil {
+	// TODO(slashpai): Remove this validation after v0.57 since this is set at CRD level
+	if si, err = model.ParseDuration(string(scrapeInterval)); err != nil {
 		return errors.Wrapf(err, "invalid scrapeInterval %q", scrapeInterval)
 	}
-	if st, err = model.ParseDuration(scrapeTimeout); err != nil {
+	// TODO(slashpai): Remove this validation after v0.57 since this is set at CRD level
+	if st, err = model.ParseDuration(string(scrapeTimeout)); err != nil {
 		return errors.Wrapf(err, "invalid scrapeTimeout: %q", scrapeTimeout)
 	}
 
