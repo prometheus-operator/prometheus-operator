@@ -3658,39 +3658,44 @@ func testPromWebTLS(t *testing.T) {
 		},
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
-
-	promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(promPods.Items) == 0 {
-		t.Fatalf("No prometheus pods found in namespace %s", ns)
-	}
-
-	cfg := framework.RestConfig
-	podName := promPods.Items[0].Name
-	if err := testFramework.StartPortForward(cfg, "https", podName, ns, "9090"); err != nil {
-		return
-	}
-
-	// The prometheus certificate is issued to <pod>.<namespace>.svc,
-	// but port-forwarding is done through localhost.
-	// This is why we use an http client which skips the TLS verification.
-	// In the test we will verify the TLS certificate manually to make sure
-	// the prometheus instance is configured properly.
-	httpClient := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
+		t.Fatalf("Creating prometheus failed: %v", err)
 	}
 
 	var pollErr error
 	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(promPods.Items) == 0 {
+			t.Fatalf("No prometheus pods found in namespace %s", ns)
+		}
+
+		cfg := framework.RestConfig
+		podName := promPods.Items[0].Name
+		closer, err := testFramework.StartPortForward(cfg, "https", podName, ns, "9090", func(format string, a ...interface{}) {
+			t.Logf(format, a...)
+		})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			return false, nil
+		}
+		defer closer()
+
+		// The prometheus certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the prometheus instance is configured properly.
+		httpClient := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}
+
 		resp, err := httpClient.Get("https://localhost:9090")
 		if err != nil {
 			pollErr = err
