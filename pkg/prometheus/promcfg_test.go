@@ -7642,3 +7642,122 @@ scrape_configs:
 		})
 	}
 }
+
+func TestTracingConfig(t *testing.T) {
+	boolFalse := false
+	testCases := []struct {
+		tracingConfig  *monitoringv1.PrometheusTracingConfig
+		name           string
+		expectedConfig string
+		shouldSucceed  bool
+	}{
+		{
+			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+				Endpoint: "",
+			},
+			name:           "Invalid endpoint",
+			expectedConfig: "",
+			shouldSucceed:  false,
+		},
+		{
+			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+				Endpoint:   "test.com:80",
+				ClientType: "invalid",
+			},
+			name:           "Invalid client type",
+			expectedConfig: "",
+			shouldSucceed:  false,
+		},
+		{
+			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+				Endpoint:    "test.com:80",
+				Compression: "invalid",
+			},
+			name:           "Invalid compression type",
+			expectedConfig: "",
+			shouldSucceed:  false,
+		},
+		{
+			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+				Endpoint: "test.com:80",
+				// Expect to be a float between 0 and 1
+				SamplingFraction: "2",
+			},
+			name:           "Invalid sampling fraction",
+			expectedConfig: "",
+			shouldSucceed:  false,
+		},
+		{
+			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+				ClientType:       "grpc",
+				Endpoint:         "https://otel-collector.default.svc.local:3333",
+				SamplingFraction: "0.5",
+				Headers: map[string]string{
+					"custom": "header",
+				},
+				Compression: "gzip",
+				Timeout:     "10s",
+				Insecure:    &boolFalse,
+			},
+			name:          "Expect valid config",
+			shouldSucceed: true,
+			expectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+tracing_config:
+  client_type: grpc
+  endpoint: https://otel-collector.default.svc.local:3333
+  sampling_fraction: 0.5
+  insecure: false
+  headers:
+    custom: header
+  compression: gzip
+  timeout: 10s
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		p := &monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				TracingConfig: tc.tracingConfig,
+			},
+		}
+		cg := mustNewConfigGenerator(t, p)
+
+		cfg, err := cg.Generate(
+			p,
+			nil,
+			nil,
+			nil,
+			&assets.Store{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+
+		if !tc.shouldSucceed && err == nil {
+			t.Fatalf("expected config generation to fail during test case '%s'.", tc.name)
+		}
+
+		if tc.shouldSucceed && err != nil {
+			t.Fatalf("expected config generation to not fail during test case '%s'.", tc.name)
+		}
+
+		result := string(cfg)
+		if result != tc.expectedConfig {
+			t.Logf("\n%s", pretty.Compare(tc.expectedConfig, result))
+			t.Fatalf("expected Prometheus configuration and actual configuration do not match on test case '%s'", tc.name)
+		}
+	}
+
+}

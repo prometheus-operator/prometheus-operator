@@ -16,9 +16,11 @@ package prometheus
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -618,6 +620,15 @@ func (cg *ConfigGenerator) Generate(
 
 	if len(p.Spec.RemoteRead) > 0 {
 		cfg = append(cfg, cg.generateRemoteReadConfig(p, store))
+	}
+
+	if p.Spec.TracingConfig != nil {
+		tracingcfg, err := cg.generateTracingConfig(p)
+		if err != nil {
+			return nil, errors.Wrap(err, "generating tracing configuration failed")
+		}
+
+		cfg = append(cfg, tracingcfg)
 	}
 
 	return yaml.Marshal(cfg)
@@ -1737,6 +1748,96 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 		Key:   "remote_read",
 		Value: cfgs,
 	}
+}
+
+func (cg *ConfigGenerator) generateTracingConfig(p *v1.Prometheus) (yaml.MapItem, error) {
+	cfg := yaml.MapSlice{}
+
+	clientType := p.Spec.TracingConfig.ClientType
+	if clientType != "" {
+		if clientType != "grpc" && clientType != "http" {
+			return yaml.MapItem{}, errors.New("Invalid ClientType")
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "client_type",
+			Value: clientType,
+		})
+	}
+
+	_, err := url.ParseRequestURI(p.Spec.TracingConfig.Endpoint)
+	if err != nil {
+		return yaml.MapItem{}, err
+	}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "endpoint",
+		Value: p.Spec.TracingConfig.Endpoint,
+	})
+
+	if p.Spec.TracingConfig.SamplingFraction != "" {
+		parsedFraction, err := strconv.ParseFloat(p.Spec.TracingConfig.SamplingFraction, 64)
+		if err != nil {
+			return yaml.MapItem{}, err
+		}
+		if parsedFraction > 1 || parsedFraction < 0 {
+			return yaml.MapItem{}, errors.New("SamplingFraction must be between 0 and 1")
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "sampling_fraction",
+			Value: parsedFraction,
+		})
+	}
+
+	if p.Spec.TracingConfig.Insecure != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "insecure",
+			Value: p.Spec.TracingConfig.Insecure,
+		})
+	}
+
+	if p.Spec.TracingConfig.Headers != nil {
+		headers := yaml.MapSlice{}
+		for key, value := range p.Spec.TracingConfig.Headers {
+			headers = append(headers, yaml.MapItem{
+				Key:   key,
+				Value: value,
+			})
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "headers",
+			Value: headers,
+		})
+	}
+
+	compression := p.Spec.TracingConfig.Compression
+	if compression != "" {
+		if compression != "gzip" {
+			return yaml.MapItem{}, errors.New("Invalid Compression")
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "compression",
+			Value: compression,
+		})
+	}
+
+	if p.Spec.TracingConfig.Timeout != "" {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "timeout",
+			Value: p.Spec.TracingConfig.Timeout,
+		})
+	}
+
+	if p.Spec.TracingConfig.TLSConfig != nil {
+		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, p.Spec.TracingConfig.TLSConfig)
+	}
+
+	return yaml.MapItem{
+		Key:   "tracing_config",
+		Value: cfg,
+	}, nil
 }
 
 func (cg *ConfigGenerator) addOAuth2ToYaml(
