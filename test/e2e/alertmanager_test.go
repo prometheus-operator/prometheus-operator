@@ -38,6 +38,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -709,6 +710,76 @@ inhibit_rules:
 	c = strings.Count(logs, "Alertmanager Notification Payload Received")
 	if c != 1 {
 		t.Fatalf("Only one notification expected, but %d received after rolling update of Alertmanager cluster.\n\n%s", c, logs)
+	}
+}
+
+func testAlertmanagerConfigVersions(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager("amconfig-versions", 1)
+	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amcfg-v1alpha1",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "webhook",
+				Matchers: []monitoringv1alpha1.Matcher{{
+					Name:      "job",
+					Value:     "webapp.+",
+					MatchType: "=~",
+				}},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "webhook",
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{}); err != nil {
+		t.Fatalf("failed to create v1alpha1 AlertmanagerConfig object: %v", err)
+	}
+
+	if _, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1alpha1.Name, metav1.GetOptions{}); err != nil {
+		t.Fatalf("failed to get v1beta1 AlertmanagerConfig object: %v", err)
+	}
+
+	amcfgV1beta1 := &monitoringv1beta1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amcfg-v1beta1",
+		},
+		Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+			Route: &monitoringv1beta1.Route{
+				Receiver: "webhook",
+				Matchers: []monitoringv1beta1.Matcher{{
+					Name:      "job",
+					Value:     "webapp.+",
+					MatchType: "=~",
+				}},
+			},
+			Receivers: []monitoringv1beta1.Receiver{{
+				Name: "webhook",
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1beta1, metav1.CreateOptions{}); err != nil {
+		t.Fatalf("failed to create v1beta1 AlertmanagerConfig object: %v", err)
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1beta1.Name, metav1.GetOptions{}); err != nil {
+		t.Fatalf("failed to get v1alpha1 AlertmanagerConfig object: %v", err)
 	}
 }
 
