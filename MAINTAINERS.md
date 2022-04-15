@@ -16,7 +16,7 @@ Please reach any of the maintainers on slack (#prometheus-operator on https://sl
 
 ## Triage
 
-We also have some nice souls that help triaging issues and PRs. See [here](https://help.github.com/en/articles/repository-permission-levels-for-an-organization#permission-levels-for-repositories-owned-by-an-organization) for details about the role's permission.
+We also have some nice souls that help triaging issues and PRs. See [here](https://docs.github.com/en/articles/repository-permission-levels-for-an-organization#permission-levels-for-repositories-owned-by-an-organization) for details about the role's permission.
 
 Full list of triage people is displayed below:
 
