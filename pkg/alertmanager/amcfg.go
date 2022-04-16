@@ -1393,8 +1393,20 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.Entity = ""
 	}
+	for _, responder := range ogc.Responders {
+		if err := responder.sanitize(amVersion, logger); err != nil {
+			return err
+		}
+	}
 
 	return ogc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ops *opsgenieResponder) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if ops.Type == "teams" && amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
+	}
+	return nil
 }
 
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
