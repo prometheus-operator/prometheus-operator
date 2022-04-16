@@ -2,6 +2,9 @@ version: 1
 timeout: "1m"
 
 validators:
+  # docs.github.com returns 403 if not in browser. Cannot curl as well.
+  - regex: 'docs\.github\.com'
+    type: "ignore"
   # Cloudflare protection, so returns 503 if not in browser. Cannot curl as well.
   - regex: 'wise\.com'
     type: "ignore"
