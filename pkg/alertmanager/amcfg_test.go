@@ -981,6 +981,76 @@ receivers:
 templates: []
 `,
 		},
+
+		{
+			name: "CR with Telegram Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-telegram-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"botToken": []byte("bipbop"),
+						"chatID":   []byte("12345"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL: "https://api.telegram.org",
+								BotToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-telegram-test-receiver",
+									},
+									Key: "botToken",
+								},
+								ChatID: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-telegram-test-receiver",
+									},
+									Key: "chatID",
+								},
+							}},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  telegram_configs:
+  - api_url: https://api.telegram.org
+    bot_token: bipbop
+    chat_id: 12345
+templates: []
+`,
+		},
+
 		{
 
 			name:    "CR with Slack Receiver and global Slack URL",

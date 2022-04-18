@@ -1220,6 +1220,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkTelegramConfigs(ctx, receiver.TelegramConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1487,6 +1492,41 @@ func checkSnsConfigs(
 			return err
 		}
 	}
+	return nil
+}
+
+func checkTelegramConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.TelegramConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
+	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		telegramConfigKey := fmt.Sprintf("%s/telegram/%d", key, i)
+
+		if config.BotToken != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.BotToken); err != nil {
+				return err
+			}
+		}
+
+		if config.ChatID != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.ChatID); err != nil {
+				return err
+			}
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, telegramConfigKey, store); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

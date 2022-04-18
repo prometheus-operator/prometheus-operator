@@ -20,6 +20,7 @@ import (
 	"net"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -495,6 +496,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var telegramConfigs []*telegramConfig
+	if l := len(in.TelegramConfigs); l > 0 {
+		telegramConfigs = make([]*telegramConfig, l)
+		for i := range in.TelegramConfigs {
+			receiver, err := cb.convertTelegramConfig(ctx, in.TelegramConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "TelegramConfig[%d]", i)
+			}
+			telegramConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -506,6 +519,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		VictorOpsConfigs: victorOpsConfigs,
 		PushoverConfigs:  pushoverConfigs,
 		SNSConfigs:       snsConfigs,
+		TelegramConfigs:  telegramConfigs,
 	}, nil
 }
 
@@ -948,6 +962,52 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	return out, nil
 }
 
+func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitoringv1alpha1.TelegramConfig, crKey types.NamespacedName) (*telegramConfig, error) {
+	out := &telegramConfig{
+		VSendResolved:        in.SendResolved,
+		APIUrl:               in.APIURL,
+		Message:              in.Message,
+		DisableNotifications: false,
+		ParseMode:            in.ParseMode,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.ChatID != nil {
+		chatID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.ChatID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get chat id")
+		}
+		if chatID == "" {
+			return nil, errors.Errorf("mandatory field %q is empty", "chatID")
+		}
+		chatIDn, err := strconv.ParseInt(chatID, 10, 32)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse chat id")
+		}
+		out.ChatID = int32(chatIDn)
+	}
+
+	if in.BotToken != nil {
+		botToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.BotToken)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get bot token")
+		}
+		if botToken == "" {
+			return nil, errors.Errorf("mandatory field %q is empty", "botToken")
+		}
+		out.BotToken = botToken
+	}
+
+	return out, nil
+}
+
 func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
 	out := &snsConfig{
 		VSendResolved: in.SendResolved,
@@ -1379,6 +1439,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 		}
 	}
 
+	for _, conf := range r.TelegramConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -1474,6 +1540,10 @@ func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 
 func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	return sc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) error {
