@@ -241,8 +241,8 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 
 Details (optional):
 - HA Pair of Prometheus
-- 517000 samples/s
-- 10.7M active series
+- 786000 samples/s
+- 23.6M active series
 
 ## VSHN AG
 
