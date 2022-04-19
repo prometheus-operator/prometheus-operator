@@ -344,10 +344,17 @@ func makeStatefulSetSpec(
 		retentionTimeFlagValue = defaultRetention
 	}
 
-	if retentionTimeFlagValue != "" {
+	for _, f := range p.Spec.EnableFeatures {
+		switch f {
+		case "agent":
+			prometheusAgentMode = true
+		}
+	}
+
+	if retentionTimeFlagValue != "" && !prometheusAgentMode {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
-	if p.Spec.RetentionSize != "" {
+	if p.Spec.RetentionSize != "" && !prometheusAgentMode {
 		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}

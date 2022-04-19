@@ -1387,11 +1387,13 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 }
 
 func TestAgentModeStorageArgs(t *testing.T) {
-	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
-			EnableFeatures: []string{"agent"},
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnableFeatures: []string{"agent"},
+			},
 		},
-	}, defaultTestConfig, nil, "", 0, nil)
+	})
 
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
@@ -2486,8 +2488,8 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"--web.console.libraries=/etc/prometheus/console_libraries",
 		"--storage.tsdb.retention.time=24h",
 		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
-		"--storage.tsdb.path=/prometheus",
 		"--web.enable-lifecycle",
+		"--storage.tsdb.path=/prometheus",
 		"--web.route-prefix=/",
 		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
 		"--scrape.discovery-reload-interval=30s",
