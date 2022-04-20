@@ -426,10 +426,10 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 						GroupBy:           []string{"..."},
 						MuteTimeIntervals: []string{"weekdays-only"},
 					},
-					MuteTimeIntervals: []monitoringv1beta1.MuteTimeInterval{
+					TimeIntervals: []monitoringv1beta1.TimeInterval{
 						{
 							Name: "weekdays-only",
-							TimeIntervals: []monitoringv1beta1.TimeInterval{
+							TimeIntervals: []monitoringv1beta1.TimePeriod{
 								{
 									Weekdays: []monitoringv1beta1.WeekdayRange{
 										monitoringv1beta1.WeekdayRange("Saturday"),

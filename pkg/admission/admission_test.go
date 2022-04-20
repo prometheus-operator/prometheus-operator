@@ -337,7 +337,7 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
 			expectAdmissionAllowed: false,
 		},
 		{
-			name:    "Test reject on invalid mute time intervals",
+			name:    "Test reject on invalid time intervals",
 			version: "v1beta1",
 			spec: `{
   "route": {
@@ -364,7 +364,7 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
       ]
     }
   ],
-  "muteTimeIntervals": [
+  "timeIntervals": [
     {
       "name": "out-of-business-hours",
       "timeIntervals": [
@@ -476,7 +476,7 @@ func TestAlertManagerConfigAdmission(t *testing.T) {
       ]
     }
   ],
-  "muteTimeIntervals": [
+  "timeIntervals": [
     {
       "name": "out-of-business-hours",
       "timeIntervals": [

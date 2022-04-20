@@ -75,9 +75,9 @@ type AlertmanagerConfigSpec struct {
 	// the resource’s namespace.
 	// +optional
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
-	// List of MuteTimeInterval specifying when the routes should be muted.
+	// List of TimeInterval specifying when the routes should be muted or active.
 	// +optional
-	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeIntervals,omitempty"`
+	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
 }
 
 // Route defines a node in the routing tree.
@@ -882,17 +882,17 @@ func openMetricsEscape(s string) string {
 	return r.Replace(s)
 }
 
-// MuteTimeInterval specifies the periods in time when notifications will be muted
-type MuteTimeInterval struct {
-	// Name of the time interval
+// TimeInterval specifies the periods in time when notifications will be muted or active.
+type TimeInterval struct {
+	// Name of the time interval.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
-	// TimeIntervals is a list of TimeInterval
-	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
+	// TimeIntervals is a list of TimePeriod.
+	TimeIntervals []TimePeriod `json:"timeIntervals,omitempty"`
 }
 
-// TimeInterval describes intervals of time
-type TimeInterval struct {
+// TimePeriod describes periods of time.
+type TimePeriod struct {
 	// Times is a list of TimeRange
 	// +optional
 	Times []TimeRange `json:"times,omitempty"`

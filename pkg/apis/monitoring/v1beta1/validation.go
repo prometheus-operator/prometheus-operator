@@ -64,13 +64,13 @@ func (hc *HTTPConfig) Validate() error {
 	return nil
 }
 
-// Validate the MuteTimeInterval
-func (mti MuteTimeInterval) Validate() error {
-	if mti.Name == "" {
-		return errors.New("empty name field for mute time interval")
+// Validate the TimeInterval
+func (ti TimeInterval) Validate() error {
+	if ti.Name == "" {
+		return errors.New("empty name field for time interval")
 	}
 
-	for i, ti := range mti.TimeIntervals {
+	for i, ti := range ti.TimeIntervals {
 		for _, time := range ti.Times {
 			if err := time.Validate(); err != nil {
 				return fmt.Errorf("time range at %d is invalid: %w", i, err)
@@ -83,7 +83,7 @@ func (mti MuteTimeInterval) Validate() error {
 		}
 		for _, dom := range ti.DaysOfMonth {
 			if err := dom.Validate(); err != nil {
-				return fmt.Errorf("mute time interval is invalid - day of month range at %d is invalid: %w", i, err)
+				return fmt.Errorf("day of month range at %d is invalid: %w", i, err)
 			}
 		}
 		for _, month := range ti.Months {

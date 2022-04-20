@@ -80,7 +80,7 @@ func convertMatchersTo(in []Matcher) []v1alpha1.Matcher {
 	return out
 }
 
-func convertTimeIntervalsTo(in []TimeInterval) []v1alpha1.TimeInterval {
+func convertTimeIntervalsTo(in []TimePeriod) []v1alpha1.TimeInterval {
 	out := make([]v1alpha1.TimeInterval, 0, len(in))
 
 	for _, ti := range in {
@@ -485,7 +485,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 
 	}
 
-	for _, in := range src.Spec.MuteTimeIntervals {
+	for _, in := range src.Spec.TimeIntervals {
 		dst.Spec.MuteTimeIntervals = append(
 			dst.Spec.MuteTimeIntervals,
 			v1alpha1.MuteTimeInterval{

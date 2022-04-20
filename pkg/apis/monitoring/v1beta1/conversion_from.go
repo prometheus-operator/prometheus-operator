@@ -87,8 +87,8 @@ func convertMatchersFrom(in []v1alpha1.Matcher) []Matcher {
 	return out
 }
 
-func convertTimeIntervalsFrom(in []v1alpha1.TimeInterval) []TimeInterval {
-	out := make([]TimeInterval, 0, len(in))
+func convertTimeIntervalsFrom(in []v1alpha1.TimeInterval) []TimePeriod {
+	out := make([]TimePeriod, 0, len(in))
 
 	for _, ti := range in {
 		var (
@@ -121,7 +121,7 @@ func convertTimeIntervalsFrom(in []v1alpha1.TimeInterval) []TimeInterval {
 
 		out = append(
 			out,
-			TimeInterval{
+			TimePeriod{
 				Times:       trs,
 				Weekdays:    wds,
 				DaysOfMonth: doms,
@@ -493,9 +493,9 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 
 	for _, in := range src.Spec.MuteTimeIntervals {
-		dst.Spec.MuteTimeIntervals = append(
-			dst.Spec.MuteTimeIntervals,
-			MuteTimeInterval{
+		dst.Spec.TimeIntervals = append(
+			dst.Spec.TimeIntervals,
+			TimeInterval{
 				Name:          in.Name,
 				TimeIntervals: convertTimeIntervalsFrom(in.TimeIntervals),
 			},

@@ -121,7 +121,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [InhibitRule](#inhibitrule)
 * [KeyValue](#keyvalue)
 * [Matcher](#matcher)
-* [MuteTimeInterval](#mutetimeinterval)
 * [OpsGenieConfig](#opsgenieconfig)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
@@ -136,6 +135,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
 * [TimeInterval](#timeinterval)
+* [TimePeriod](#timeperiod)
 * [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
 * [WeChatConfig](#wechatconfig)
@@ -1438,7 +1438,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 DayOfMonthRange is an inclusive range of days of the month beginning at 1
 
 
-<em>appears in: [TimeInterval](#timeinterval)</em>
+<em>appears in: [TimePeriod](#timeperiod)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1540,9 +1540,6 @@ Matcher defines how to match on alert's labels.
 ## MuteTimeInterval
 
 MuteTimeInterval specifies the periods in time when notifications will be muted
-
-
-<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1850,7 +1847,7 @@ TelegramConfig configures notifications via Telegram. See https://prometheus.io/
 TimeInterval describes intervals of time
 
 
-<em>appears in: [MuteTimeInterval](#mutetimeinterval)</em>
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec), [MuteTimeInterval](#mutetimeinterval)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1867,7 +1864,7 @@ TimeInterval describes intervals of time
 TimeRange defines a start and end time in 24hr format
 
 
-<em>appears in: [TimeInterval](#timeinterval)</em>
+<em>appears in: [TimePeriod](#timeperiod)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1975,7 +1972,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 | route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
 | receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
-| muteTimeIntervals | List of MuteTimeInterval specifying when the routes should be muted. | [][MuteTimeInterval](#mutetimeinterval) | false |
+| timeIntervals | List of TimeInterval specifying when the routes should be muted or active. | [][TimeInterval](#timeinterval) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1984,7 +1981,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 DayOfMonthRange is an inclusive range of days of the month beginning at 1
 
 
-<em>appears in: [TimeInterval](#timeinterval)</em>
+<em>appears in: [TimePeriod](#timeperiod)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -2079,20 +2076,6 @@ Matcher defines how to match on alert's labels.
 | name | Label to match. | string | true |
 | value | Label value to match. | string | true |
 | matchType | Match operator, one of `=` (equal to), `!=` (not equal to), `=~` (regex match) or `!~` (not regex match). Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0. | MatchType | false |
-
-[Back to TOC](#table-of-contents)
-
-## MuteTimeInterval
-
-MuteTimeInterval specifies the periods in time when notifications will be muted
-
-
-<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec)</em>
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| name | Name of the time interval | string | false |
-| timeIntervals | TimeIntervals is a list of TimeInterval | [][TimeInterval](#timeinterval) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -2370,10 +2353,24 @@ SlackField configures a single Slack field that is sent with each notification. 
 
 ## TimeInterval
 
-TimeInterval describes intervals of time
+TimeInterval specifies the periods in time when notifications will be muted or active.
 
 
-<em>appears in: [MuteTimeInterval](#mutetimeinterval)</em>
+<em>appears in: [AlertmanagerConfigSpec](#alertmanagerconfigspec), [MuteTimeInterval](#mutetimeinterval)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name of the time interval. | string | false |
+| timeIntervals | TimeIntervals is a list of TimePeriod. | [][TimePeriod](#timeperiod) | false |
+
+[Back to TOC](#table-of-contents)
+
+## TimePeriod
+
+TimePeriod describes periods of time.
+
+
+<em>appears in: [TimeInterval](#timeinterval)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -2390,7 +2387,7 @@ TimeInterval describes intervals of time
 TimeRange defines a start and end time in 24hr format
 
 
-<em>appears in: [TimeInterval](#timeinterval)</em>
+<em>appears in: [TimePeriod](#timeperiod)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
