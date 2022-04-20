@@ -67,13 +67,19 @@ func convertMatchersFrom(in []v1alpha1.Matcher) []Matcher {
 	out := make([]Matcher, 0, len(in))
 
 	for _, m := range in {
+		mt := m.MatchType
+		if mt == "" {
+			mt = "="
+			if m.Regex {
+				mt = "=~"
+			}
+		}
 		out = append(
 			out,
 			Matcher{
 				Name:      m.Name,
 				Value:     m.Value,
-				MatchType: MatchType(m.MatchType),
-				Regex:     m.Regex,
+				MatchType: MatchType(mt),
 			},
 		)
 	}

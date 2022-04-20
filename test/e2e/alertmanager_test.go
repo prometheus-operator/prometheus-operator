@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -736,9 +737,9 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "webhook",
 				Matchers: []monitoringv1alpha1.Matcher{{
-					Name:      "job",
-					Value:     "webapp.+",
-					MatchType: "=~",
+					Name:  "job",
+					Value: "webapp.+",
+					Regex: true,
 				}},
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
@@ -751,8 +752,14 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		t.Fatalf("failed to create v1alpha1 AlertmanagerConfig object: %v", err)
 	}
 
-	if _, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1alpha1.Name, metav1.GetOptions{}); err != nil {
+	amcfgV1beta1Converted, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1alpha1.Name, metav1.GetOptions{})
+	if err != nil {
 		t.Fatalf("failed to get v1beta1 AlertmanagerConfig object: %v", err)
+	}
+
+	expected := []monitoringv1beta1.Matcher{{Name: "job", Value: "webapp.+", MatchType: monitoringv1beta1.MatchRegexp}}
+	if !reflect.DeepEqual(amcfgV1beta1Converted.Spec.Route.Matchers, expected) {
+		t.Fatalf("expected %#v matcher, got %#v", expected, amcfgV1beta1Converted.Spec.Route.Matchers)
 	}
 
 	amcfgV1beta1 := &monitoringv1beta1.AlertmanagerConfig{

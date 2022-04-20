@@ -803,15 +803,11 @@ type Matcher struct {
 	// Label value to match.
 	// +optional
 	Value string `json:"value"`
-	// Match operation available with AlertManager >= v0.22.0 and
-	// takes precedence over Regex (deprecated) if non-empty.
+	// Match operator, one of `=` (equal to), `!=` (not equal to), `=~` (regex
+	// match) or `!~` (not regex match).
+	// Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0.
 	// +kubebuilder:validation:Enum=!=;=;=~;!~
-	// +optional
 	MatchType MatchType `json:"matchType,omitempty"`
-	// Whether to match on equality (false) or regular-expression (true).
-	// Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead.
-	// +optional
-	Regex bool `json:"regex,omitempty"`
 }
 
 // String returns Matcher as a string

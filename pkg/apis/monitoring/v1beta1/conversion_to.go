@@ -73,7 +73,6 @@ func convertMatchersTo(in []Matcher) []v1alpha1.Matcher {
 				Name:      m.Name,
 				Value:     m.Value,
 				MatchType: v1alpha1.MatchType(m.MatchType),
-				Regex:     m.Regex,
 			},
 		)
 	}

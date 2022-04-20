@@ -2078,8 +2078,7 @@ Matcher defines how to match on alert's labels.
 | ----- | ----------- | ------ | -------- |
 | name | Label to match. | string | true |
 | value | Label value to match. | string | true |
-| matchType | Match operation available with AlertManager >= v0.22.0 and takes precedence over Regex (deprecated) if non-empty. | MatchType | false |
-| regex | Whether to match on equality (false) or regular-expression (true). Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead. | bool | false |
+| matchType | Match operator, one of `=` (equal to), `!=` (not equal to), `=~` (regex match) or `!~` (not regex match). Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0. | MatchType | false |
 
 [Back to TOC](#table-of-contents)
 
