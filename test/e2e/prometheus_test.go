@@ -3665,23 +3665,34 @@ func testPromWebTLS(t *testing.T) {
 	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
 		promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
 		if err != nil {
-			t.Fatal(err)
+			pollErr = err
+			return false, nil
 		}
 
 		if len(promPods.Items) == 0 {
-			t.Fatalf("No prometheus pods found in namespace %s", ns)
+			pollErr = fmt.Errorf("No prometheus pods found in namespace %s", ns)
+			return false, nil
 		}
 
 		cfg := framework.RestConfig
 		podName := promPods.Items[0].Name
-		closer, err := testFramework.StartPortForward(cfg, "https", podName, ns, "9090", func(format string, a ...interface{}) {
-			t.Logf(format, a...)
-		})
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9090")
 		if err != nil {
 			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
 			return false, nil
 		}
 		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9090", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
 
 		// The prometheus certificate is issued to <pod>.<namespace>.svc,
 		// but port-forwarding is done through localhost.
@@ -3696,7 +3707,7 @@ func testPromWebTLS(t *testing.T) {
 			},
 		}
 
-		resp, err := httpClient.Get("https://localhost:9090")
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			pollErr = err
 			return false, nil
