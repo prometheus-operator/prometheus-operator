@@ -1383,7 +1383,7 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 }
 
 func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	actionsAndEntityAndUpdateAlertsAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	atLeastV0_24 := amVersion.GTE(semver.MustParse("0.24.0"))
 	if ogc.Actions != "" && !actionsAndEntityAndUpdateAlertsAllowed {
 		msg := "opsgenie_config 'actions' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
