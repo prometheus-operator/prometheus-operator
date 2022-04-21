@@ -204,7 +204,7 @@ subjects:
   namespace: default
 ```
 
-Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `RoleBinding` associates it with the `ClusterRole` named `prometheus-operator` it now has permission to access all the resources as described above.
+Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `ClusterRoleBinding` associates it with the `ClusterRole` named `prometheus-operator`, it now has permission to access all the resources as described above.
 
 When creating `Prometheus` objects the procedure is similar. It starts with a `ServiceAccount`.
 
