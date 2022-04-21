@@ -1396,7 +1396,7 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 	}
 
 	if ogc.UpdateAlerts != nil && !actionsAndEntityAndUpdateAlertsAllowed {
-		msg := "update_alerts 'entity' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		msg := "opsgenie_config 'update_alerts' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.UpdateAlerts = nil
 	}
