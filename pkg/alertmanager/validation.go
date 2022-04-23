@@ -334,7 +334,7 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 			return errors.Errorf("mandatory field %q is empty", "botToken")
 		}
 
-		if config.ChatID == nil {
+		if config.ChatID == 0 {
 			return errors.Errorf("mandatory field %q is empty", "chatID")
 		}
 

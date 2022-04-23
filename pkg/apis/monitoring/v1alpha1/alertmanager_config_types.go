@@ -792,10 +792,8 @@ type TelegramConfig struct {
 	// +kubebuilder:validation:Required
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
 	// The Telegram chat ID.
-	// The secret needs to be in the same namespace as the AlertmanagerConfig
-	// object and accessible by the Prometheus Operator.
 	// +kubebuilder:validation:Required
-	ChatID *v1.SecretKeySelector `json:"chatID,omitempty"`
+	ChatID int64 `json:"chatID,omitempty"`
 	// Message template
 	// +optional
 	Message string `json:"message,omitempty"`

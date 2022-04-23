@@ -1794,7 +1794,7 @@ TelegramConfig configures notifications via Telegram. See https://prometheus.io/
 | sendResolved | Whether to notify about resolved alerts. | *bool | false |
 | apiURL | The Telegram API URL i.e. https://api.telegram.org. If not specified, default API URL will be used. | string | false |
 | botToken | Telegram bot token The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
-| chatID | The Telegram chat ID. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| chatID | The Telegram chat ID. | int64 | false |
 | message | Message template | string | false |
 | disableNotifications | Disable telegram notifications | *bool | false |
 | parseMode | Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text. | string | false |

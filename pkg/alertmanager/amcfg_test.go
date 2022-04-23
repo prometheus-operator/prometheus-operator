@@ -138,6 +138,10 @@ func TestGenerateConfig(t *testing.T) {
 		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
 		expected   string
 	}
+	version24, err := semver.ParseTolerant("v0.24.0")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
@@ -983,7 +987,8 @@ templates: []
 		},
 
 		{
-			name: "CR with Telegram Receiver",
+			name:      "CR with Telegram Receiver",
+			amVersion: &version24,
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -992,7 +997,6 @@ templates: []
 					},
 					Data: map[string][]byte{
 						"botToken": []byte("bipbop"),
-						"chatID":   []byte("12345"),
 					},
 				},
 			),
@@ -1022,12 +1026,7 @@ templates: []
 									},
 									Key: "botToken",
 								},
-								ChatID: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-telegram-test-receiver",
-									},
-									Key: "chatID",
-								},
+								ChatID: 12345,
 							}},
 						}},
 					},

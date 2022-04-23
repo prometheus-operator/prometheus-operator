@@ -1503,6 +1503,11 @@ func checkTelegramConfigs(
 	store *assets.Store,
 	amVersion semver.Version,
 ) error {
+	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	if !telegramAllowed && len(configs) > 0 {
+		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
+	}
+
 	for i, config := range configs {
 		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
 			return err
@@ -1512,12 +1517,6 @@ func checkTelegramConfigs(
 
 		if config.BotToken != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.BotToken); err != nil {
-				return err
-			}
-		}
-
-		if config.ChatID != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.ChatID); err != nil {
 				return err
 			}
 		}

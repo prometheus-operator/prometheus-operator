@@ -20,7 +20,6 @@ import (
 	"net"
 	"path"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -966,6 +965,7 @@ func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 	out := &telegramConfig{
 		VSendResolved:        in.SendResolved,
 		APIUrl:               in.APIURL,
+		ChatID:               in.ChatID,
 		Message:              in.Message,
 		DisableNotifications: false,
 		ParseMode:            in.ParseMode,
@@ -979,19 +979,8 @@ func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		out.HTTPConfig = httpConfig
 	}
 
-	if in.ChatID != nil {
-		chatID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.ChatID)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get chat id")
-		}
-		if chatID == "" {
-			return nil, errors.Errorf("mandatory field %q is empty", "chatID")
-		}
-		chatIDn, err := strconv.ParseInt(chatID, 10, 32)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse chat id")
-		}
-		out.ChatID = int32(chatIDn)
+	if in.ChatID == 0 {
+		return nil, errors.Errorf("mandatory field %q is empty", "chatID")
 	}
 
 	if in.BotToken != nil {
@@ -1543,6 +1532,11 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error
 }
 
 func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	if !telegramAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 

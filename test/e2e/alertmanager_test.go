@@ -752,14 +752,12 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 
 	// telegram secret
 	telegramTestingSecret := "telegram-testing-secret"
-	telegramTestingChatIDKey := "telegram-testing-chatid-key"
 	telegramTestingbotTokenKey := "telegram-testing-bottoken-key"
 	telegramTestingKeySecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: telegramTestingSecret,
 		},
 		Data: map[string][]byte{
-			telegramTestingChatIDKey:   []byte("12345"),
 			telegramTestingbotTokenKey: []byte("bipbop"),
 		},
 	}
@@ -911,12 +909,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: telegramTestingbotTokenKey,
 					},
-					ChatID: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: telegramTestingSecret,
-						},
-						Key: telegramTestingChatIDKey,
-					},
+					ChatID: 12345,
 				}},
 
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
