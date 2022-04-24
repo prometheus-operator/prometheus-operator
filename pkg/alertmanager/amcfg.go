@@ -1382,13 +1382,19 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 }
 
 func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	actionsAndEntityAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
-	if ogc.Actions != "" && !actionsAndEntityAllowed {
+	if err := ogc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
+
+	if ogc.Actions != "" && lessThanV0_24 {
 		msg := "opsgenie_config 'actions' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.Actions = ""
 	}
-	if ogc.Entity != "" && !actionsAndEntityAllowed {
+
+	if ogc.Entity != "" && lessThanV0_24 {
 		msg := "opsgenie_config 'entity' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.Entity = ""
@@ -1399,7 +1405,22 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		}
 	}
 
-	return ogc.HTTPConfig.sanitize(amVersion, logger)
+	if ogc.APIKey != "" {
+		level.Warn(logger).Log("msg", "'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
+		ogc.APIKeyFile = ""
+	}
+
+	if ogc.APIKeyFile == "" {
+		return nil
+	}
+
+	if lessThanV0_24 {
+		msg := "'api_key_file' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		ogc.APIKeyFile = ""
+	}
+
+	return nil
 }
 
 func (ops *opsgenieResponder) sanitize(amVersion semver.Version, logger log.Logger) error {
@@ -1426,6 +1447,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) err
 	if sc.APIURLFile == "" {
 		return nil
 	}
+
 	// We need to sanitize the config for slack receivers
 	// As of v0.22.0 AlertManager config supports passing URL via file name
 	fileURLAllowed := amVersion.GTE(semver.MustParse("0.22.0"))
@@ -1440,6 +1462,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) err
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		sc.APIURLFile = ""
 	}
+
 	return nil
 }
 

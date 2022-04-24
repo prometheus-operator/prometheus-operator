@@ -27,7 +27,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.55.1
+    app.kubernetes.io/version: 0.56.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -121,7 +121,7 @@ Additionally as the Prometheus Operator takes care of generating configurations 
 
 When the Prometheus Operator performs version migrations from one version of Prometheus or Alertmanager to the other it needs to `list` `pods` running an old version and `delete` those.
 
-The Prometheus Operator reconciles `services` called `prometheus-operated` and `alertmanager-operated`, which are used as governing `Service`s for the `StatefulSet`s. To perform this reconciliation
+The Prometheus Operator reconciles `services` called `prometheus-operated` and `alertmanager-operated`, which are used as governing `Service`s for the `StatefulSet`s. To perform this reconciliation it needs to `get`, `create`, `update` and `delete` for `services`.
 
 As the kubelet is currently not self-hosted, the Prometheus Operator has a feature to synchronize the IPs of the kubelets into an `Endpoints` object, which requires access to `list` and `watch` of `nodes` (kubelets) and `create` and `update` for `endpoints`.
 
@@ -176,7 +176,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.55.1
+    app.kubernetes.io/version: 0.56.0
   name: prometheus-operator
   namespace: default
 ```
@@ -192,7 +192,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.55.1
+    app.kubernetes.io/version: 0.56.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -204,7 +204,7 @@ subjects:
   namespace: default
 ```
 
-Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `RoleBinding` associates it with the `ClusterRole` named `prometheus-operator` it now has permission to access all the resources as described above.
+Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `ClusterRoleBinding` associates it with the `ClusterRole` named `prometheus-operator`, it now has permission to access all the resources as described above.
 
 When creating `Prometheus` objects the procedure is similar. It starts with a `ServiceAccount`.
 

@@ -3658,40 +3658,56 @@ func testPromWebTLS(t *testing.T) {
 		},
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
-
-	promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(promPods.Items) == 0 {
-		t.Fatalf("No prometheus pods found in namespace %s", ns)
-	}
-
-	cfg := framework.RestConfig
-	podName := promPods.Items[0].Name
-	if err := testFramework.StartPortForward(cfg, "https", podName, ns, "9090"); err != nil {
-		return
-	}
-
-	// The prometheus certificate is issued to <pod>.<namespace>.svc,
-	// but port-forwarding is done through localhost.
-	// This is why we use an http client which skips the TLS verification.
-	// In the test we will verify the TLS certificate manually to make sure
-	// the prometheus instance is configured properly.
-	httpClient := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
+		t.Fatalf("Creating prometheus failed: %v", err)
 	}
 
 	var pollErr error
 	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		resp, err := httpClient.Get("https://localhost:9090")
+		promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(promPods.Items) == 0 {
+			pollErr = fmt.Errorf("No prometheus pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := promPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9090")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9090", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		// The prometheus certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the prometheus instance is configured properly.
+		httpClient := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}
+
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			pollErr = err
 			return false, nil

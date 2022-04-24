@@ -1623,7 +1623,7 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test slack_api_url_file config",
+			name:           "opsgenie_api_key_file config",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1637,7 +1637,64 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test slack_api_url_file is dropped for unsupported versions",
+			name:           "api_key_file field for OpsGenie config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "api_key_file and api_key fields for OpsGenie config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKey:     "test",
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKey: "test",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "opsgenie_api_key_file is dropped for unsupported versions",
 			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1646,6 +1703,30 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 			expect: alertmanagerConfig{
 				Global: &globalConfig{},
+			},
+		},
+		{
+			name:           "api_key_file is dropped for unsupported versions",
+			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name:            "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{{}},
+					},
+				},
 			},
 		},
 	} {
