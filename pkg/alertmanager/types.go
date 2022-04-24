@@ -58,12 +58,12 @@ type globalConfig struct {
 	HipchatAuthToken   string          `yaml:"hipchat_auth_token,omitempty" json:"hipchat_auth_token,omitempty"`
 	OpsGenieAPIURL     *config.URL     `yaml:"opsgenie_api_url,omitempty" json:"opsgenie_api_url,omitempty"`
 	OpsGenieAPIKey     string          `yaml:"opsgenie_api_key,omitempty" json:"opsgenie_api_key,omitempty"`
+	OpsGenieAPIKeyFile string          `yaml:"opsgenie_api_key_file,omitempty" json:"opsgenie_api_key_file,omitempty"`
 	WeChatAPIURL       *config.URL     `yaml:"wechat_api_url,omitempty" json:"wechat_api_url,omitempty"`
 	WeChatAPISecret    string          `yaml:"wechat_api_secret,omitempty" json:"wechat_api_secret,omitempty"`
 	WeChatAPICorpID    string          `yaml:"wechat_api_corp_id,omitempty" json:"wechat_api_corp_id,omitempty"`
 	VictorOpsAPIURL    *config.URL     `yaml:"victorops_api_url,omitempty" json:"victorops_api_url,omitempty"`
 	VictorOpsAPIKey    string          `yaml:"victorops_api_key,omitempty" json:"victorops_api_key,omitempty"`
-	OpsGenieAPIKeyFile string          `yaml:"opsgenie_api_key_file,omitempty" json:"opsgenie_api_key_file,omitempty"`
 }
 
 type route struct {
@@ -132,6 +132,7 @@ type opsgenieConfig struct {
 	VSendResolved *bool               `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig   `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIKey        string              `yaml:"api_key,omitempty" json:"api_key,omitempty"`
+	APIKeyFile    string              `yaml:"api_key_file,omitempty" json:"api_key_file,omitempty"`
 	APIURL        string              `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	Message       string              `yaml:"message,omitempty" json:"message,omitempty"`
 	Description   string              `yaml:"description,omitempty" json:"description,omitempty"`

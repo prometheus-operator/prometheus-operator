@@ -1,3 +1,16 @@
+## 0.56.0 / 2022-04-20
+
+* [CHANGE] Added validation at the API level for size-based fields of the Prometheus CRD. #4661
+* [CHANGE] Added validation at the API level for log level and format fields of the Alertmanager, Prometheus and ThanosRuler CRDs. #4638
+* [CHANGE] Added validation at the API level for duration and time-based fields of the Prometheus CRD. #4684
+* [CHANGE] Added shortnames for custom resources (`amcfg` for AlertmanagerConfig, `am` for Alertmanager, `pmon` for PodMonitor, `prb` for Probe, `prom` for Prometheus, `smon` for ServiceMonitor, `ruler` for Thanos Ruler). #4680
+* [FEATURE] Added `status` subresource to the Prometheus CRD. #4580
+* [ENHANCEMENT] Added `excludedFromEnforce` field to the Prometheus CRD. It allows to define PodMonitor, ServiceMonitor, Probe or PrometheusRule objects for which the namespace label enforcement (if enabled) should not be applied. This deprecates `prometheusRulesExcludedFromEnforce` which is still supported but users are encouraged to migrate to the new field. #4397
+* [ENHANCEMENT] Added `enableRemoteWriteReceiver` field to the Prometheus CRD. #4633
+* [ENHANCEMENT] Added `entity` and `actions` fields for the OpsGenie receiver to the AlertmanagerConfig CRD. #4697
+* [ENHANCEMENT] Added `prometheus_operator_reconcile_duration_seconds` histogram metric. #4706
+* [BUGFIX] Added support for `opsgenie_api_key_file` and `api_key_file` in the generated Alertmanager configuration. #4666 #4738
+
 ## 0.55.1 / 2022-03-26
 
 * [BUGFIX] Fixed Prometheus configuration when `spec.queryLogFile` has no path ("query.log" for instance). #4683
