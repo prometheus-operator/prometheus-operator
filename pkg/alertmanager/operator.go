@@ -221,27 +221,27 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
-		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
+	// newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+	// 	// nsResyncPeriod is used to control how often the namespace informer
+	// 	// should resync. If the unprivileged ListerWatcher is used, then the
+	// 	// informer must resync more often because it cannot watch for
+	// 	// namespace changes.
+	// 	nsResyncPeriod := 15 * time.Second
+	// 	// If the only namespace is v1.NamespaceAll, then the client must be
+	// 	// privileged and a regular cache.ListWatch will be used. In this case
+	// 	// watching works and we do not need to resync so frequently.
+	// 	if listwatch.IsAllNamespaces(allowList) {
+	// 		nsResyncPeriod = resyncPeriod
+	// 	}
+	// 	nsInf := cache.NewSharedIndexInformer(
+	// 		o.metrics.NewInstrumentedListerWatcher(
+	// 			listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+	// 		),
+	// 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+	// 	)
 
-		return nsInf
-	}
+	// 	return nsInf
+	// }
 
 	// c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
 	// if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {

@@ -1057,7 +1057,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// 	return
 		// }
 
-
 		// if pmNSSelector.Matches(labels.Set(ns.Labels)) {
 		// 	c.addToReconcileQueue(p)
 		// 	return
@@ -1072,7 +1071,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// 	)
 		// 	return
 		// }
-
 
 		// if bmNSSelector.Matches(labels.Set(ns.Labels)) {
 		// 	c.addToReconcileQueue(p)
@@ -1089,7 +1087,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// 	)
 		// 	return
 		// }
-
 
 		// if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
 		// 	c.addToReconcileQueue(p)
