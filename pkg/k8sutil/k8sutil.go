@@ -23,9 +23,9 @@ import (
 	"regexp"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1"
-
 	"github.com/hashicorp/go-version"
+	promversion "github.com/prometheus/common/version"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -95,6 +95,8 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 
 	cfg.QPS = 100
 	cfg.Burst = 100
+
+	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
 
 	return cfg, nil
 }
@@ -212,6 +214,26 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	}
 
 	return ver.Segments()[1], nil
+}
+
+// IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
+//
+// you can exec `kubectl api-resources` to find groupVersion and resource.
+func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupversion string, resource string) (bool, error) {
+	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupversion)
+	if err != nil {
+		if IsResourceNotFoundError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	for _, apiResource := range apiResourceList.APIResources {
+		if resource == apiResource.Name {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label

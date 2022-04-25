@@ -103,7 +103,7 @@ func (c *FakePrometheusRules) Update(ctx context.Context, prometheusRule *monito
 // Delete takes name of the prometheusRule and deletes it. Returns an error if one occurs.
 func (c *FakePrometheusRules) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(prometheusrulesResource, c.ns, name), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewDeleteActionWithOptions(prometheusrulesResource, c.ns, name, opts), &monitoringv1.PrometheusRule{})
 
 	return err
 }

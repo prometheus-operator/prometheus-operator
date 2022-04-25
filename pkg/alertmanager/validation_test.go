@@ -25,7 +25,7 @@ import (
 	"github.com/prometheus/alertmanager/config"
 )
 
-func TestValidateConfig(t *testing.T) {
+func TestValidateAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
 		in        *monitoringv1alpha1.AlertmanagerConfig
@@ -450,7 +450,7 @@ func TestValidateConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateConfig(tc.in)
+			err := ValidateAlertmanagerConfig(tc.in)
 			if tc.expectErr && err == nil {
 				t.Error("expected error but got none")
 			}

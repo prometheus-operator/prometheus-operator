@@ -22,13 +22,50 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
-func ValidateConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
+// ValidateAlertmanager runs extra validation on the AlertManager fields which
+// can't be done at the CRD schema validation level.
+func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
+	if am.Spec.Retention != "" {
+		if err := operator.ValidateDurationField(am.Spec.Retention); err != nil {
+			return errors.Wrap(err, "invalid retention value specified")
+		}
+	}
+
+	if am.Spec.ClusterGossipInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPushpullInterval != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
+			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
+		}
+	}
+
+	if am.Spec.ClusterPeerTimeout != "" {
+		if err := operator.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
+			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
+		}
+	}
+
+	return nil
+}
+
+// ValidateAlertmanagerConfig checks that the given resource complies with the
+// semantics of the Alertmanager configuration.
+// In particular, it verifies things that can't be modelized with the OpenAPI
+// specification such as routes should refer to an existing receiver.
+func ValidateAlertmanagerConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	receivers, err := validateReceivers(amc.Spec.Receivers)
 	if err != nil {
 		return err
@@ -115,6 +152,10 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
 		}
+
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -129,6 +170,10 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -136,6 +181,10 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
 	for _, config := range configs {
 		if err := config.Validate(); err != nil {
+			return err
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
 	}
@@ -152,6 +201,10 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 				return errors.Wrapf(err, "invalid 'url'")
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -162,6 +215,10 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 			if _, err := ValidateURL(config.APIURL); err != nil {
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -226,6 +283,10 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
 			}
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -239,6 +300,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 		if config.Token == nil {
 			return errors.Errorf("mandatory field %q is empty", "token")
 		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -248,6 +313,10 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 	for _, config := range configs {
 		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
 			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -261,8 +330,14 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 		return nil
 	}
 
-	if _, found := receivers[r.Receiver]; !found && (r.Receiver != "" || topLevelRoute) {
-		return errors.Errorf("receiver %q not found", r.Receiver)
+	if r.Receiver == "" {
+		if topLevelRoute {
+			return errors.Errorf("root route must define a receiver")
+		}
+	} else {
+		if _, found := receivers[r.Receiver]; !found {
+			return errors.Errorf("receiver %q not found", r.Receiver)
+		}
 	}
 
 	if groupLen := len(r.GroupBy); groupLen > 0 {
@@ -290,11 +365,11 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 
 	}
 	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
 	}
 
 	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
 	children, err := r.ChildRoutes()

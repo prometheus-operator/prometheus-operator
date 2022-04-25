@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package operator
+package server
 
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -43,15 +42,10 @@ type TLSServerConfig struct {
 func NewTLSConfig(logger log.Logger, certFile, keyFile, clientCAFile, minVersion string, cipherSuites []string) (*tls.Config, error) {
 	if certFile == "" && keyFile == "" {
 		if clientCAFile != "" {
-			return nil, errors.New("when a client CA is used a server key and certificate must also be provided")
+			return nil, fmt.Errorf("when a client CA is used a server key and certificate must also be provided")
 		}
-
-		level.Info(logger).Log("msg", "TLS disabled key and cert must be set to enable")
-
-		return nil, nil
+		return nil, fmt.Errorf("TLS disabled. key and cert must be set to enable")
 	}
-
-	level.Info(logger).Log("msg", "enabling server side TLS")
 
 	tlsCfg := &tls.Config{}
 
@@ -64,7 +58,7 @@ func NewTLSConfig(logger log.Logger, certFile, keyFile, clientCAFile, minVersion
 
 	cipherSuiteIDs, err := flag.TLSCipherSuites(cipherSuites)
 	if err != nil {
-		return nil, fmt.Errorf("TLS cipher suite name to ID conversion: %v", err)
+		return nil, fmt.Errorf("TLS cipher suite name to ID conversion: %w", err)
 	}
 
 	// A list of supported cipher suites for TLS versions up to TLS 1.2.

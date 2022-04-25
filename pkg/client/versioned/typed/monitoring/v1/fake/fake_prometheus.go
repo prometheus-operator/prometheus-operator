@@ -115,7 +115,7 @@ func (c *FakePrometheuses) UpdateStatus(ctx context.Context, prometheus *monitor
 // Delete takes name of the prometheus and deletes it. Returns an error if one occurs.
 func (c *FakePrometheuses) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(prometheusesResource, c.ns, name), &monitoringv1.Prometheus{})
+		Invokes(testing.NewDeleteActionWithOptions(prometheusesResource, c.ns, name, opts), &monitoringv1.Prometheus{})
 
 	return err
 }

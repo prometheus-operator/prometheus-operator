@@ -24,8 +24,10 @@ import (
 )
 
 // AlertmanagerConfigLister helps list AlertmanagerConfigs.
+// All objects returned here must be treated as read-only.
 type AlertmanagerConfigLister interface {
 	// List lists all AlertmanagerConfigs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.AlertmanagerConfig, err error)
 	// AlertmanagerConfigs returns an object that can list and get AlertmanagerConfigs.
 	AlertmanagerConfigs(namespace string) AlertmanagerConfigNamespaceLister
@@ -56,10 +58,13 @@ func (s *alertmanagerConfigLister) AlertmanagerConfigs(namespace string) Alertma
 }
 
 // AlertmanagerConfigNamespaceLister helps list and get AlertmanagerConfigs.
+// All objects returned here must be treated as read-only.
 type AlertmanagerConfigNamespaceLister interface {
 	// List lists all AlertmanagerConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.AlertmanagerConfig, err error)
 	// Get retrieves the AlertmanagerConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.AlertmanagerConfig, error)
 	AlertmanagerConfigNamespaceListerExpansion
 }

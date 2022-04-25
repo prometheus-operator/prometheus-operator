@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.6.2"
+      "controller-gen.kubebuilder.io/version": "v0.8.0"
     },
     "creationTimestamp": null,
     "name": "prometheusrules.monitoring.coreos.com"
@@ -17,6 +17,9 @@
       "kind": "PrometheusRule",
       "listKind": "PrometheusRuleList",
       "plural": "prometheusrules",
+      "shortNames": [
+        "promrule"
+      ],
       "singular": "prometheusrule"
     },
     "scope": "Namespaced",

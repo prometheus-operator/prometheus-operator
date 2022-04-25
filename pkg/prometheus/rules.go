@@ -26,6 +26,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -172,9 +173,20 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
+	excludedFromEnforcement := p.Spec.ExcludedFromEnforcement
+	// append the deprecated PrometheusRulesExcludedFromEnforce
+	for _, rule := range p.Spec.PrometheusRulesExcludedFromEnforce {
+		excludedFromEnforcement = append(excludedFromEnforcement,
+			monitoringv1.ObjectReference{
+				Namespace: rule.RuleNamespace,
+				Group:     monitoring.GroupName,
+				Resource:  monitoringv1.PrometheusRuleName,
+				Name:      rule.RuleName,
+			})
+	}
 	nsLabeler := namespacelabeler.New(
 		p.Spec.EnforcedNamespaceLabel,
-		p.Spec.PrometheusRulesExcludedFromEnforce,
+		excludedFromEnforcement,
 		true,
 	)
 

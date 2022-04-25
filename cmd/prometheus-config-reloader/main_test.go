@@ -15,8 +15,14 @@
 package main
 
 import (
+	"crypto/tls"
+	"net"
+	"net/http"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/go-test/deep"
 )
 
 var cases = []struct {
@@ -41,4 +47,33 @@ func TestCreateOrdinalEnvVar(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreateHTTPClient(t *testing.T) {
+	t.Run("http-client-is-created-correctly", func(t *testing.T) {
+		transport := (http.DefaultTransport.(*http.Transport)).Clone()
+
+		transport.DialContext = (&net.Dialer{
+			Timeout:   -1,
+			KeepAlive: -1,
+		}).DialContext
+
+		transport.DisableKeepAlives = true
+		transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost
+
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+
+		expectedClient := http.Client{
+			Transport: transport,
+			Timeout:   30 * time.Second,
+		}
+
+		client := createHTTPClient()
+
+		if diff := deep.Equal(client, expectedClient); diff != nil {
+			t.Errorf("found differences %v", diff)
+		}
+	})
 }

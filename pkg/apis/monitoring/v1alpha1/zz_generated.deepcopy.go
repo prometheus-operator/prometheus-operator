@@ -185,6 +185,11 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		*out = new(monitoringv1.BasicAuth)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.BearerTokenSecret != nil {
 		in, out := &in.BearerTokenSecret, &out.BearerTokenSecret
 		*out = new(corev1.SecretKeySelector)
@@ -194,6 +199,11 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
 	}
 }
 

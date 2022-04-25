@@ -17,7 +17,9 @@ package prometheus
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -29,7 +31,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -51,6 +56,8 @@ const (
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
 	defaultPortName                 = "web"
+	defaultQueryLogDirectory        = "/var/log/prometheus"
+	defaultQueryLogVolume           = "query-log-file"
 )
 
 var (
@@ -122,9 +129,6 @@ func makeStatefulSet(
 	intZero := int32(0)
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
-	}
-	if p.Spec.Retention == "" {
-		p.Spec.Retention = defaultRetention
 	}
 
 	if p.Spec.Resources.Requests == nil {
@@ -342,24 +346,41 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
+	// TODO(slashpai): Refactor the code to cover logging for all components
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
 	retentionTimeFlag := "-storage.tsdb.retention="
-	if version.Minor >= 7 {
+	if version.GTE(semver.MustParse("2.7.0")) {
 		retentionTimeFlag = "-storage.tsdb.retention.time="
-		if p.Spec.RetentionSize != "" {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-			)
+		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			if p.Spec.Retention != "" {
+				promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
+			}
+
+			if p.Spec.RetentionSize != "" {
+				promArgs = append(promArgs,
+					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+				)
+			}
+		}
+	} else {
+		if p.Spec.Retention == "" {
+			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+		} else {
+			promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
 		}
 	}
+
 	promArgs = append(promArgs,
 		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
 	)
 
@@ -413,6 +434,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, "-web.enable-admin-api")
+	}
+
+	if p.Spec.EnableRemoteWriteReceiver {
+		if version.GTE(semver.MustParse("2.33.0")) {
+			promArgs = append(promArgs, "-web.enable-remote-write-receiver")
+		} else {
+			level.Warn(logger).Log("msg", fmt.Sprintf("ignoring \"enableRemoteWriteReceiver\" not supported by Prometheus version=%s minimum_version=2.33.0", version))
+		}
 	}
 
 	if len(p.Spec.EnableFeatures) > 0 {
@@ -502,6 +531,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		},
 	}
 
+	if volume, ok := queryLogFileVolume(&p); ok {
+		volumes = append(volumes, volume)
+	}
+
 	for _, name := range ruleConfigMapNames {
 		volumes = append(volumes, v1.Volume{
 			Name: name,
@@ -546,6 +579,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Name:      name,
 			MountPath: rulesDir + "/" + name,
 		})
+	}
+
+	if vmount, ok := queryLogFileVolumeMount(&p); ok {
+		promVolumeMounts = append(promVolumeMounts, vmount)
 	}
 
 	// Mount web config and web TLS credentials as volumes.
@@ -642,8 +679,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		FailureThreshold: 60,
 	}
 
-	// TODO(paulfantom): Re-add livenessProbe when kubernetes 1.21 is available.
-	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
+	livenessProbe := &v1.Probe{
+		ProbeHandler:     probeHandler("/-/healthy"),
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+
 	readinessProbe := &v1.Probe{
 		ProbeHandler:     probeHandler("/-/ready"),
 		TimeoutSeconds:   probeTimeoutSeconds,
@@ -655,6 +697,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": version.String(),
 	}
+	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible since doing
+	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := map[string]string{
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
@@ -728,11 +774,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 
+		boolFalse := false
+		boolTrue := true
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args:                     thanosArgs,
+			SecurityContext: &v1.SecurityContext{
+				AllowPrivilegeEscalation: &boolFalse,
+				ReadOnlyRootFilesystem:   &boolTrue,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",
@@ -810,7 +865,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 
 		if p.Spec.Thanos.ReadyTimeout != "" {
-			container.Args = append(container.Args, "--prometheus.ready_timeout="+p.Spec.Thanos.ReadyTimeout)
+			container.Args = append(container.Args, "--prometheus.ready_timeout="+string(p.Spec.Thanos.ReadyTimeout))
 		}
 		additionalContainers = append(additionalContainers, container)
 	}
@@ -867,6 +922,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
+	boolFalse := false
+	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -875,9 +932,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
+			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				ReadOnlyRootFilesystem:   &boolTrue,
+				AllowPrivilegeEscalation: &boolFalse,
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			},
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
@@ -902,6 +967,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to merge containers spec")
 	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -925,6 +991,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				InitContainers:                initContainers,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
+				AutomountServiceAccountToken:  &boolTrue,
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
@@ -964,4 +1031,41 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	}
 
 	return "prometheus-db"
+}
+
+func usesDefaultQueryLogVolume(p *monitoringv1.Prometheus) bool {
+	return p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "."
+}
+
+func queryLogFileVolumeMount(p *monitoringv1.Prometheus) (v1.VolumeMount, bool) {
+	if !usesDefaultQueryLogVolume(p) {
+		return v1.VolumeMount{}, false
+	}
+
+	return v1.VolumeMount{
+		Name:      defaultQueryLogVolume,
+		ReadOnly:  false,
+		MountPath: defaultQueryLogDirectory,
+	}, true
+}
+
+func queryLogFileVolume(p *monitoringv1.Prometheus) (v1.Volume, bool) {
+	if !usesDefaultQueryLogVolume(p) {
+		return v1.Volume{}, false
+	}
+
+	return v1.Volume{
+		Name: defaultQueryLogVolume,
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}, true
+}
+
+func queryLogFilePath(p *monitoringv1.Prometheus) string {
+	if !usesDefaultQueryLogVolume(p) {
+		return p.Spec.QueryLogFile
+	}
+
+	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
 }

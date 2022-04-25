@@ -17,7 +17,7 @@ groups:
         in {{$labels.namespace}} namespace.
       summary: Errors while performing watch operations in controller.
     expr: |
-      (sum by (controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job="prometheus-operator"}[10m])) / sum by (controller,namespace) (rate(prometheus_operator_watch_operations_total{job="prometheus-operator"}[10m]))) > 0.4
+      (sum by (controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job="prometheus-operator"}[5m])) / sum by (controller,namespace) (rate(prometheus_operator_watch_operations_total{job="prometheus-operator"}[5m]))) > 0.4
     for: 15m
     labels:
       severity: warning

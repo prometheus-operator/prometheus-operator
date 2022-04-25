@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -33,10 +34,100 @@ import (
 	"github.com/prometheus/common/model"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+func TestGenerateGlobalConfig(t *testing.T) {
+	myroute := monitoringv1alpha1.Route{
+		Receiver: "myreceiver",
+		Matchers: []monitoringv1alpha1.Matcher{
+			{
+				Name:  "mykey",
+				Value: "myvalue",
+				Regex: false,
+			},
+		},
+	}
+
+	myrouteJSON, _ := json.Marshal(myroute)
+
+	tests := []struct {
+		name     string
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		want     *alertmanagerConfig
+		wantErr  bool
+	}{
+		{
+			name: "generateGlobalConfig succeed",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			want: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		version, err := semver.ParseTolerant("v0.22.2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		kclient := fake.NewSimpleClientset()
+		cb := newConfigBuilder(
+			log.NewNopLogger(),
+			version,
+			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+		)
+		t.Run(tt.name, func(t *testing.T) {
+			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.amConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(cb.cfg, tt.want) {
+				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", cb.cfg, tt.want)
+			}
+		})
+	}
+}
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
@@ -163,7 +254,6 @@ templates: []
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
-					Matchers: []string{"namespace=test"},
 					Routes: []*route{{
 						Matchers: []string{"namespace=custom-test"},
 						Receiver: "custom",
@@ -177,8 +267,6 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
-  matchers:
-  - namespace=test
   routes:
   - receiver: custom
     matchers:
@@ -327,7 +415,7 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     group_by:
     - job
     matchers:
@@ -335,7 +423,7 @@ templates: []
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
 templates: []
 `,
 		},
@@ -523,14 +611,14 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
   - receiver: "null"
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
 templates: []
 `,
 		},
@@ -593,13 +681,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test-pd
+  - receiver: mynamespace/myamc/test-pd
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test-pd
+- name: mynamespace/myamc/test-pd
   pagerduty_configs:
   - routing_key: 1234abc
     images:
@@ -613,8 +701,27 @@ templates: []
 `,
 		},
 		{
-			name:    "CR with Webhook Receiver",
-			kclient: fake.NewSimpleClientset(),
+			name: "CR with Webhook Receiver and custom http config (oauth2)",
+			kclient: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-id",
+						Namespace: "mynamespace",
+					},
+					Data: map[string]string{
+						"test": "clientID",
+					},
+				},
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"test": []byte("clientSecret"),
+					},
+				},
+			),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -637,6 +744,30 @@ templates: []
 								URL: func(s string) *string {
 									return &s
 								}("http://test.url"),
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									OAuth2: &monitoringingv1.OAuth2{
+										ClientID: monitoringingv1.SecretOrConfigMap{
+											ConfigMap: &corev1.ConfigMapKeySelector{
+												LocalObjectReference: corev1.LocalObjectReference{
+													Name: "webhook-client-id",
+												},
+												Key: "test",
+											},
+										},
+										ClientSecret: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "webhook-client-secret",
+											},
+											Key: "test",
+										},
+										TokenURL: "https://test.com",
+										Scopes:   []string{"any"},
+										EndpointParams: map[string]string{
+											"some": "value",
+										},
+									},
+									FollowRedirects: toBoolPtr(true),
+								},
 							}},
 						}},
 					},
@@ -645,15 +776,25 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   webhook_configs:
   - url: http://test.url
+    http_config:
+      oauth2:
+        client_id: clientID
+        client_secret: clientSecret
+        scopes:
+        - any
+        token_url: https://test.com
+        endpoint_params:
+          some: value
+      follow_redirects: true
 templates: []
 `,
 		},
@@ -703,13 +844,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   opsgenie_configs:
   - api_key: 1234abc
 templates: []
@@ -765,13 +906,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   opsgenie_configs:
   - api_key: 1234abc
     responders:
@@ -827,13 +968,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   wechat_configs:
   - api_secret: wechatsecret
     corp_id: wechatcorpid
@@ -892,13 +1033,13 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -964,13 +1105,13 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -1044,13 +1185,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   sns_configs:
   - api_url: https://sns.us-east-2.amazonaws.com
     sigv4:
@@ -1145,15 +1286,15 @@ templates: []
 route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace/myamc/test
     matchers:
     - namespace="mynamespace"
     continue: true
     mute_time_intervals:
-    - mynamespace-myamc-test
+    - mynamespace/myamc/test
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   slack_configs:
   - fields:
     - title: title
@@ -1165,7 +1306,7 @@ receivers:
       confirm:
         text: text
 mute_time_intervals:
-- name: mynamespace-myamc-test
+- name: mynamespace/myamc/test
   time_intervals:
   - times:
     - start_time: "08:00"
@@ -1192,21 +1333,25 @@ templates: []
 				tc.amVersion = &version
 			}
 
-			cg := newConfigGenerator(logger, *tc.amVersion, store)
-			cfgBytes, err := cg.generateConfig(context.Background(), tc.baseConfig, tc.amConfigs)
+			cb := newConfigBuilder(logger, *tc.amVersion, store)
+			cb.cfg = &tc.baseConfig
+
+			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {
+				t.Fatal(err)
+			}
+
+			cfgBytes, err := cb.marshalJSON()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			result := string(cfgBytes)
-
 			// Verify the generated yaml is as expected
-			if diff := cmp.Diff(tc.expected, result); diff != "" {
+			if diff := cmp.Diff(tc.expected, string(cfgBytes)); diff != "" {
 				t.Errorf("Unexpected result (-want +got):\n%s", diff)
 			}
 
 			// Verify the generated config is something that Alertmanager will be happy with
-			_, err = config.Load(result)
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1225,6 +1370,8 @@ func TestSanitizeConfig(t *testing.T) {
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
+	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
+	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -1323,39 +1470,7 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test basicAuth takes precedence over authorization in http config",
-			againstVersion: versionFileURLNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/drop",
-						},
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
-						BasicAuth: &basicAuth{
-							Username:     "tester",
-							Password:     "testing",
-							PasswordFile: "/test",
-						},
-					},
-				},
-			},
-		},
-		{
-			name:           "Test authorization is dropped in global http config for unsupported versions",
+			name:           "Test authorization causes error for unsupported versions",
 			againstVersion: versionAuthzNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -1368,13 +1483,24 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
+			expectErr: true,
+		},
+		{
+			name:           "Test oauth2 causes error for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
-						Authorization: nil,
+						OAuth2: &oauth2{
+							ClientID:         "a",
+							ClientSecret:     "b",
+							ClientSecretFile: "c",
+							TokenURL:         "d",
+						},
 					},
 				},
 			},
+			expectErr: true,
 		},
 		{
 			name:           "Test slack config happy path",
@@ -1496,6 +1622,113 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:           "opsgenie_api_key_file config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+		},
+		{
+			name:           "api_key_file field for OpsGenie config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "api_key_file and api_key fields for OpsGenie config",
+			againstVersion: versionOpsGenieAPIKeyFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKey:     "test",
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKey: "test",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "opsgenie_api_key_file is dropped for unsupported versions",
+			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "/test",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{},
+			},
+		},
+		{
+			name:           "api_key_file is dropped for unsupported versions",
+			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIKeyFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name:            "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{{}},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -1519,41 +1752,6 @@ func TestSanitizeConfig(t *testing.T) {
 		in             *httpClientConfig
 		expect         httpClientConfig
 	}{
-		{
-			name: "Test authorization is dropped in http config for unsupported versions",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect:         httpClientConfig{},
-		},
-		{
-			name: "Test authorization is dropped in favour of basicAuth for http config",
-			in: &httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/drop",
-				},
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-			againstVersion: versionAuthzNotAllowed,
-			expect: httpClientConfig{
-				BasicAuth: &basicAuth{
-					Username:     "tester",
-					Password:     "testing",
-					PasswordFile: "/test",
-				},
-			},
-		},
 		{
 			name: "Test happy path",
 			in: &httpClientConfig{
@@ -1704,12 +1902,12 @@ func TestSanitizeRoute(t *testing.T) {
 func TestLoadConfig(t *testing.T) {
 	testCase := []struct {
 		name     string
-		rawConf  string
+		rawConf  []byte
 		expected *alertmanagerConfig
 	}{
 		{
 			name: "Test mute_time_intervals",
-			rawConf: `route:
+			rawConf: []byte(`route:
   receiver: "null"
 receivers:
 - name: "null"
@@ -1722,7 +1920,7 @@ mute_time_intervals:
     days_of_month: ["7", "18", "28"]
     months: ["january"]
 templates: []
-`,
+`),
 			expected: &alertmanagerConfig{
 				Global: nil,
 				Route: &route{
@@ -1782,7 +1980,7 @@ templates: []
 	}
 
 	for _, tc := range testCase {
-		ac, err := alertmanagerConfigFrom(tc.rawConf)
+		ac, err := alertmanagerConfigFromBytes(tc.rawConf)
 		if err != nil {
 			t.Error(err)
 		}
@@ -1790,4 +1988,8 @@ templates: []
 			t.Errorf("got %v but wanted %v", ac, tc.expected)
 		}
 	}
+}
+
+func toBoolPtr(in bool) *bool {
+	return &in
 }

@@ -30,51 +30,199 @@ import (
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
-	kubernetesSDRoleEndpoint = "endpoints"
-	kubernetesSDRolePod      = "pod"
-	kubernetesSDRoleIngress  = "ingress"
+	kubernetesSDRoleEndpoint      = "endpoints"
+	kubernetesSDRoleEndpointSlice = "endpointslice"
+	kubernetesSDRolePod           = "pod"
+	kubernetesSDRoleIngress       = "ingress"
 )
 
 var (
 	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 )
 
+func sanitizeLabelName(name string) string {
+	return invalidLabelCharRE.ReplaceAllString(name, "_")
+}
+
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger  log.Logger
-	version semver.Version
+	logger                 log.Logger
+	version                semver.Version
+	notCompatible          bool
+	spec                   *v1.PrometheusSpec
+	endpointSliceSupported bool
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p *v1.Prometheus) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p *v1.Prometheus, endpointSliceSupported bool) (*ConfigGenerator, error) {
+	if logger == nil {
+		logger = log.NewNopLogger()
+	}
+
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse prometheus version")
+		return nil, errors.Wrap(err, "failed to parse Prometheus version")
 	}
 
-	logger = log.With(logger, "version", promVersion)
+	logger = log.WithSuffix(logger, "version", promVersion)
 
 	return &ConfigGenerator{
-		logger:  logger,
-		version: version,
+		logger:                 logger,
+		version:                version,
+		spec:                   p.Spec.DeepCopy(),
+		endpointSliceSupported: endpointSliceSupported,
 	}, nil
 }
 
-func (cg *ConfigGenerator) WithLogger(logger log.Logger) *ConfigGenerator {
+// WithKeyVals returns a new ConfigGenerator with the same characteristics as
+// the current object, expect that the keyvals are appended to the existing
+// logger.
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:  logger,
-		version: cg.version,
+		logger:                 log.WithSuffix(cg.logger, keyvals),
+		version:                cg.version,
+		notCompatible:          cg.notCompatible,
+		spec:                   cg.spec,
+		endpointSliceSupported: cg.endpointSliceSupported,
 	}
 }
 
-func sanitizeLabelName(name string) string {
-	return invalidLabelCharRE.ReplaceAllString(name, "_")
+// WithMinimumVersion returns a new ConfigGenerator that does nothing (except
+// logging a warning message) if the Prometheus version is lesser than the
+// given version.
+// The method panics if version isn't a valid SemVer value.
+func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
+	minVersion := semver.MustParse(version)
+
+	if cg.version.LT(minVersion) {
+		return &ConfigGenerator{
+			logger:                 log.WithSuffix(cg.logger, "minimum_version", version),
+			version:                cg.version,
+			notCompatible:          true,
+			spec:                   cg.spec,
+			endpointSliceSupported: cg.endpointSliceSupported,
+		}
+	}
+
+	return cg
+}
+
+// WithMaximumVersion returns a new ConfigGenerator that does nothing (except
+// logging a warning message) if the Prometheus version is greater than or
+// equal to the given version.
+// The method panics if version isn't a valid SemVer value.
+func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
+	minVersion := semver.MustParse(version)
+
+	if cg.version.GTE(minVersion) {
+		return &ConfigGenerator{
+			logger:                 log.WithSuffix(cg.logger, "maximum_version", version),
+			version:                cg.version,
+			notCompatible:          true,
+			spec:                   cg.spec,
+			endpointSliceSupported: cg.endpointSliceSupported,
+		}
+	}
+
+	return cg
+}
+
+// AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
+// the updated slice.
+func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+	if cg.notCompatible {
+		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", k))
+		return m
+	}
+
+	return append(m, yaml.MapItem{Key: k, Value: v})
+}
+
+type limitKey struct {
+	specField       string
+	prometheusField string
+	minVersion      string
+}
+
+var (
+	sampleLimitKey = limitKey{
+		specField:       "sampleLimit",
+		prometheusField: "sample_limit",
+	}
+	targetLimitKey = limitKey{
+		specField:       "targetLimit",
+		prometheusField: "target_limit",
+		minVersion:      "2.21.0",
+	}
+	labelLimitKey = limitKey{
+		specField:       "labelLimit",
+		prometheusField: "label_limit",
+		minVersion:      "2.27.0",
+	}
+	labelNameLengthLimitKey = limitKey{
+		specField:       "labelNameLengthLimit",
+		prometheusField: "label_name_length_limit",
+		minVersion:      "2.27.0",
+	}
+	labelValueLengthLimitKey = limitKey{
+		specField:       "labelValueLengthLimit",
+		prometheusField: "label_value_length_limit",
+		minVersion:      "2.27.0",
+	}
+)
+
+// AddLimitsToYAML appends the given limit key to the configuration if
+// supported by the Prometheus version.
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
+	if limit == 0 && enforcedLimit == nil {
+		return cfg
+	}
+
+	if k.minVersion == "" {
+		return cg.AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+	}
+
+	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+}
+
+// AddHonorTimestamps adds the honor_timestamps field into scrape configurations.
+// honor_timestamps is false only when the user specified it or when the global
+// override applies.
+// For backwards compatibility with Prometheus <2.9.0 we don't set
+// honor_timestamps.
+func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool) yaml.MapSlice {
+	// Fast path.
+	if userHonorTimestamps == nil && !cg.spec.OverrideHonorTimestamps {
+		return cfg
+	}
+
+	honor := false
+	if userHonorTimestamps != nil {
+		honor = *userHonorTimestamps
+	}
+
+	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cg.spec.OverrideHonorTimestamps)
+}
+
+// AddHonorLabels adds the honor_labels field into scrape configurations.
+// if OverrideHonorLabels is true then honor_labels is always false.
+func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
+	if cg.spec.OverrideHonorLabels {
+		honorLabels = false
+	}
+
+	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
+}
+
+func (cg *ConfigGenerator) EndpointSliceSupported() bool {
+	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
 }
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
@@ -146,25 +294,21 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 		return cfg
 	}
 
-	if cg.version.LT(semver.MustParse("2.26.0")) {
-		// extract current cfg section from assetStoreKey, assuming
-		// "<component>/something..."
-		component := strings.Split(assetStoreKey, "/")[0]
-		level.Warn(cg.logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
-			"component", component)
-		return cfg
-	}
 	authCfg := yaml.MapSlice{}
 	if auth.Type == "" {
 		auth.Type = "Bearer"
 	}
+
 	authCfg = append(authCfg, yaml.MapItem{Key: "type", Value: strings.TrimSpace(auth.Type)})
 	if auth.Credentials != nil {
 		if s, ok := store.TokenAssets[assetStoreKey]; ok {
 			authCfg = append(authCfg, yaml.MapItem{Key: "credentials", Value: s})
 		}
 	}
-	return append(cfg, yaml.MapItem{Key: "authorization", Value: authCfg})
+
+	// extract current cfg section from assetStoreKey, assuming
+	// "<component>/something..."
+	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
 }
 
 func (cg *ConfigGenerator) addAuthorizationToYaml(
@@ -176,21 +320,16 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 	if auth == nil {
 		return cfg
 	}
-	if cg.version.LT(semver.MustParse("2.26.0")) {
-		// extract current cfg section from assetStoreKey, assuming
-		// "<component>/something..."
-		component := strings.Split(assetStoreKey, "/")[0]
-		level.Warn(cg.logger).Log("msg", "found authorization section, but prometheus version is < 2.26.0, ignoring",
-			"component", component)
-		return cfg
-	}
+
 	// reuse addSafeAuthorizationToYaml and unpack the part we're interested
 	// in, namely the value under the "authorization" key
 	authCfg := cg.addSafeAuthorizationToYaml(yaml.MapSlice{}, assetStoreKey, store, &auth.SafeAuthorization)[0].Value.(yaml.MapSlice)
+
 	if auth.CredentialsFile != "" {
 		authCfg = append(authCfg, yaml.MapItem{Key: "credentials_file", Value: auth.CredentialsFile})
 	}
-	return append(cfg, yaml.MapItem{Key: "authorization", Value: authCfg})
+
+	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
 }
 
 func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
@@ -224,71 +363,85 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 
 // validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
 func validateConfigInputs(p *v1.Prometheus) error {
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.EnforcedBodySizeLimit != "" {
-		if err := operator.ValidateSizeField(p.Spec.EnforcedBodySizeLimit); err != nil {
+		if err := operator.ValidateSizeField(string(p.Spec.EnforcedBodySizeLimit)); err != nil {
 			return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.RetentionSize != "" {
-		if err := operator.ValidateSizeField(p.Spec.RetentionSize); err != nil {
+		if err := operator.ValidateSizeField(string(p.Spec.RetentionSize)); err != nil {
 			return errors.Wrap(err, "invalid retentionSize value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(p.Spec.Retention); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.Retention)); err != nil {
 			return errors.Wrap(err, "invalid retention value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.ScrapeInterval != "" {
-		if err := operator.ValidateDurationField(p.Spec.ScrapeInterval); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.ScrapeInterval)); err != nil {
 			return errors.Wrap(err, "invalid scrapeInterval value specified")
 		}
 	}
 
 	if p.Spec.ScrapeTimeout != "" {
-		if err := operator.ValidateDurationField(p.Spec.ScrapeTimeout); err != nil {
+		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
+		if err := operator.ValidateDurationField(string(p.Spec.ScrapeTimeout)); err != nil {
 			return errors.Wrap(err, "invalid scrapeTimeout value specified")
+		}
+		if err := operator.CompareScrapeTimeoutToScrapeInterval(p.Spec.ScrapeTimeout, p.Spec.ScrapeInterval); err != nil {
+			return err
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.EvaluationInterval != "" {
-		if err := operator.ValidateDurationField(p.Spec.EvaluationInterval); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.EvaluationInterval)); err != nil {
 			return errors.Wrap(err, "invalid evaluationInterval value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
-		if err := operator.ValidateDurationField(p.Spec.Thanos.ReadyTimeout); err != nil {
+		if err := operator.ValidateDurationField(string(p.Spec.Thanos.ReadyTimeout)); err != nil {
 			return errors.Wrap(err, "invalid thanos.readyTimeout value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if p.Spec.Query != nil && p.Spec.Query.Timeout != nil && *p.Spec.Query.Timeout != "" {
-		if err := operator.ValidateDurationField(*p.Spec.Query.Timeout); err != nil {
+		if err := operator.ValidateDurationField(string(*p.Spec.Query.Timeout)); err != nil {
 			return errors.Wrap(err, "invalid query.timeout value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	for i, rr := range p.Spec.RemoteRead {
 		if rr.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(rr.RemoteTimeout); err != nil {
+			if err := operator.ValidateDurationField(string(rr.RemoteTimeout)); err != nil {
 				return errors.Wrapf(err, "invalid remoteRead[%d].remoteTimeout value specified", i)
 			}
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	for i, rw := range p.Spec.RemoteWrite {
 		if rw.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(rw.RemoteTimeout); err != nil {
+			if err := operator.ValidateDurationField(string(rw.RemoteTimeout)); err != nil {
 				return errors.Wrapf(err, "invalid remoteWrite[%d].remoteTimeout value specified", i)
 			}
 		}
 
+		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
-			if err := operator.ValidateDurationField(rw.MetadataConfig.SendInterval); err != nil {
+			if err := operator.ValidateDurationField(string(rw.MetadataConfig.SendInterval)); err != nil {
 				return errors.Wrapf(err, "invalid remoteWrite[%d].metadataConfig.sendInterval value specified", i)
 			}
 		}
@@ -297,7 +450,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 	if p.Spec.Alerting != nil {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {
-				if err := operator.ValidateDurationField(*ap.Timeout); err != nil {
+				if err := operator.ValidateDurationField(string(*ap.Timeout)); err != nil {
 					return errors.Wrapf(err, "invalid alertmanagers[%d].timeout value specified", i)
 				}
 			}
@@ -324,26 +477,20 @@ func (cg *ConfigGenerator) Generate(
 		return nil, err
 	}
 
-	versionStr := p.Spec.Version
-	if versionStr == "" {
-		versionStr = operator.DefaultPrometheusVersion
-	}
-
-	version, err := semver.ParseTolerant(versionStr)
-	if err != nil {
-		return nil, errors.Wrap(err, "parse version")
-	}
-
 	cfg := yaml.MapSlice{}
 
+	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
 	scrapeInterval := "30s"
+	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
 	if p.Spec.ScrapeInterval != "" {
-		scrapeInterval = p.Spec.ScrapeInterval
+		scrapeInterval = string(p.Spec.ScrapeInterval)
 	}
 
+	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
 	evaluationInterval := "30s"
+	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
 	if p.Spec.EvaluationInterval != "" {
-		evaluationInterval = p.Spec.EvaluationInterval
+		evaluationInterval = string(p.Spec.EvaluationInterval)
 	}
 
 	globalItems := yaml.MapSlice{
@@ -358,10 +505,8 @@ func (cg *ConfigGenerator) Generate(
 		})
 	}
 
-	if version.GTE(semver.MustParse("2.16.0")) && p.Spec.QueryLogFile != "" {
-		globalItems = append(globalItems, yaml.MapItem{
-			Key: "query_log_file", Value: p.Spec.QueryLogFile,
-		})
+	if p.Spec.QueryLogFile != "" {
+		globalItems = cg.WithMinimumVersion("2.16.0").AppendMapItem(globalItems, "query_log_file", queryLogFilePath(p))
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
@@ -417,21 +562,11 @@ func (cg *ConfigGenerator) Generate(
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
 			scrapeConfigs = append(scrapeConfigs,
-				cg.generateServiceMonitorConfig(
+				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
 					sMons[identifier],
 					ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.OverrideHonorLabels,
-					p.Spec.OverrideHonorTimestamps,
-					p.Spec.IgnoreNamespaceSelectors,
-					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit,
-					p.Spec.EnforcedLabelLimit,
-					p.Spec.EnforcedLabelNameLengthLimit,
-					p.Spec.EnforcedLabelValueLengthLimit,
-					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -440,20 +575,10 @@ func (cg *ConfigGenerator) Generate(
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
 			scrapeConfigs = append(scrapeConfigs,
-				cg.generatePodMonitorConfig(
+				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					store,
-					p.Spec.OverrideHonorLabels,
-					p.Spec.OverrideHonorTimestamps,
-					p.Spec.IgnoreNamespaceSelectors,
-					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit,
-					p.Spec.EnforcedLabelLimit,
-					p.Spec.EnforcedLabelNameLengthLimit,
-					p.Spec.EnforcedLabelValueLengthLimit,
-					p.Spec.EnforcedBodySizeLimit,
 					shards,
 				),
 			)
@@ -462,26 +587,17 @@ func (cg *ConfigGenerator) Generate(
 
 	for _, identifier := range probeIdentifiers {
 		scrapeConfigs = append(scrapeConfigs,
-			cg.generateProbeConfig(
+			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
 				apiserverConfig,
 				store,
-				p.Spec.OverrideHonorLabels,
-				p.Spec.OverrideHonorTimestamps,
-				p.Spec.IgnoreNamespaceSelectors,
-				p.Spec.EnforcedNamespaceLabel,
-				p.Spec.EnforcedSampleLimit,
-				p.Spec.EnforcedTargetLimit,
-				p.Spec.EnforcedLabelLimit,
-				p.Spec.EnforcedLabelNameLengthLimit,
-				p.Spec.EnforcedLabelValueLengthLimit,
-				p.Spec.EnforcedBodySizeLimit,
+				shards,
 			),
 		)
 	}
 
 	var addlScrapeConfigs []yaml.MapSlice
-	addlScrapeConfigs, err = cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
+	addlScrapeConfigs, err := cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
@@ -562,34 +678,6 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	}), nil
 }
 
-// honorLabels determines the value of honor_labels.
-// if overrideHonorLabels is true and user tries to set the
-// value to true, we want to set honor_labels to false.
-func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
-	if userHonorLabels && overrideHonorLabels {
-		return false
-	}
-	return userHonorLabels
-}
-
-// honorTimestamps adds option to enforce honor_timestamps option in scrape_config.
-// We want to disable honoring timestamps when user specified it or when global
-// override is set. For backwards compatibility with prometheus <2.9.0 we don't
-// set honor_timestamps when that option wasn't specified anywhere
-func honorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool, overrideHonorTimestamps bool) yaml.MapSlice {
-	// Ensuring backwards compatibility by checking if user set any option
-	if userHonorTimestamps == nil && !overrideHonorTimestamps {
-		return cfg
-	}
-
-	honor := false
-	if userHonorTimestamps != nil {
-		honor = *userHonorTimestamps
-	}
-
-	return append(cfg, yaml.MapItem{Key: "honor_timestamps", Value: honor && !overrideHonorTimestamps})
-}
-
 func initRelabelings() []yaml.MapSlice {
 	// Relabel prometheus job name into a meta label
 	return []yaml.MapSlice{
@@ -605,37 +693,18 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreHonorLabels bool,
-	overrideHonorTimestamps bool,
-	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	logger := log.With(cg.logger, "podMonitor", m.Name, "namespace", m.Namespace)
-
-	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
 			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
-		{
-			Key:   "honor_labels",
-			Value: hl,
-		},
 	}
-	if cg.version.GTE(semver.MustParse("2.9.0")) {
-		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
-	}
+	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
+	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
-	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRolePod))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -654,6 +723,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+	if ep.FollowRedirects != nil {
+		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
 
 	if ep.TLSConfig != nil {
@@ -738,7 +810,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
+		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -812,29 +884,23 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	rcg := relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
-	}
-	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	enforcer := limitEnforcer{
-		logger:            logger,
-		prometheusVersion: cg.version,
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
-	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
 
-	// Since BodySizeLimit is defined only in PrometheusCRD
-	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
-
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -843,17 +909,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	ignoreHonorLabels bool,
-	overrideHonorTimestamps bool,
-	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string) yaml.MapSlice {
-	logger := log.With(cg.logger, "probe", m.Name, "namespace", m.Namespace)
+	shards int32,
+) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
@@ -864,7 +921,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	hTs := true
-	cfg = honorTimestamps(cfg, &hTs, overrideHonorTimestamps)
+	cfg = cg.AddHonorTimestamps(cfg, &hTs)
 
 	path := "/probe"
 	if m.Spec.ProberSpec.Path != "" {
@@ -891,18 +948,15 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}})
 	}
 
-	enforcer := limitEnforcer{
-		logger:            logger,
-		prometheusVersion: cg.version,
-	}
-	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
-	// Since BodySizeLimit is defined only in PrometheusCRD
-	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
+	}
 
 	relabelings := initRelabelings()
 
@@ -914,14 +968,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 	}
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
 
-	rcg := &relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
-	}
-
-	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
+		// Generate static_config section.
 		staticConfig := yaml.MapSlice{
 			{Key: "targets", Value: m.Spec.Targets.StaticConfig.Targets},
 		}
@@ -960,17 +1010,15 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add configured relabelings.
-		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.StaticConfig.RelabelConfigs)...)
-
+		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
+		relabelings = append(relabelings, generateRelabelConfig(xc)...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	}
-
-	// Generate kubernetes_sd_config section for ingress resources.
-	if m.Spec.Targets.StaticConfig == nil {
-		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
+	} else {
+		// Generate kubernetes_sd_config section for the ingress resources.
 
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
+		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
 		for k := range m.Spec.Targets.Ingress.Selector.MatchLabels {
 			labelKeys = append(labelKeys, k)
 		}
@@ -1015,8 +1063,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleIngress))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleIngress))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1041,6 +1088,14 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
+				{Key: "source_labels", Value: []string{"__address__"}},
+				{Key: "separator", Value: ";"},
+				{Key: "regex", Value: "(.*)"},
+				{Key: "target_label", Value: "__tmp_ingress_address"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+			{
 				{Key: "source_labels", Value: []string{"__param_target"}},
 				{Key: "target_label", Value: "instance"},
 			},
@@ -1051,11 +1106,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add configured relabelings.
-		rcg := &relabelConfigGenerator{
-			obj:                    m,
-			enforcedNamespaceLabel: enforcedNamespaceLabel,
-		}
-		relabelings = append(relabelings, rcg.generate(m.Spec.Targets.Ingress.RelabelConfigs)...)
+		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
+		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
@@ -1086,9 +1138,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(m.Spec.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -1099,37 +1151,23 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	i int,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
-	overrideHonorLabels bool,
-	overrideHonorTimestamps bool,
-	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64,
-	enforcedLabelLimit *uint64,
-	enforcedLabelNameLengthLimit *uint64,
-	enforcedLabelValueLengthLimit *uint64,
-	enforcedBodySizeLimit string,
 	shards int32,
 ) yaml.MapSlice {
-	logger := log.With(cg.logger, "serviceMonitor", m.Name, "namespace", m.Namespace)
-
-	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
 			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
-		{
-			Key:   "honor_labels",
-			Value: hl,
-		},
 	}
-	if cg.version.GTE(semver.MustParse("2.9.0")) {
-		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
+	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
+	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
+
+	role := kubernetesSDRoleEndpoint
+	if cg.EndpointSliceSupported() {
+		role = kubernetesSDRoleEndpointSlice
 	}
 
-	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, store, kubernetesSDRoleEndpoint))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1148,6 +1186,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+	if ep.FollowRedirects != nil {
+		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
 
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
@@ -1176,7 +1217,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = cg.WithLogger(logger).addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1229,9 +1270,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
+		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
+		if cg.EndpointSliceSupported() {
+			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+		}
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil {
@@ -1250,17 +1295,22 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
+	sourceLabels := []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}
+	if cg.EndpointSliceSupported() {
+		sourceLabels = []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}
+	}
+
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		{ // Relabel node labels for pre v2.3 meta labels
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+		{ // Relabel node labels with meta labels available with Prometheus >= v2.3.
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Node;(.*)"},
 			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "node"},
 		},
 		{ // Relabel pod labels for >=v2.3 meta labels
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Pod;(.*)"},
 			{Key: "replacement", Value: "${1}"},
@@ -1335,29 +1385,23 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	rcg := &relabelConfigGenerator{
-		obj:                    m,
-		enforcedNamespaceLabel: enforcedNamespaceLabel,
-	}
-	relabelings = append(relabelings, rcg.generate(ep.RelabelConfigs)...)
+	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	enforcer := limitEnforcer{
-		logger:            logger,
-		prometheusVersion: cg.version,
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+
+	if cg.spec.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
 	}
-	cfg = enforcer.addLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, enforcedSampleLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, enforcedTargetLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, enforcedLabelLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, enforcedLabelNameLengthLimit)
-	cfg = enforcer.addLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, enforcedLabelValueLengthLimit)
 
-	// Since BodySizeLimit is defined only in PrometheusCRD
-	cfg = enforcer.addBodySizeLimitsToYAML(cfg, enforcedBodySizeLimit)
-
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: rcg.generate(ep.MetricRelabelConfigs)})
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -1373,8 +1417,16 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+}
+
+func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
+}
+
+func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
 	return append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__address__"}},
+		{Key: "source_labels", Value: []string{shardLabel}},
 		{Key: "target_label", Value: "__tmp_hash"},
 		{Key: "modulus", Value: shards},
 		{Key: "action", Value: "hashmod"},
@@ -1385,44 +1437,49 @@ func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards 
 	})
 }
 
-func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {
-	relabeling := yaml.MapSlice{}
+func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
+	var cfg []yaml.MapSlice
 
-	if len(c.SourceLabels) > 0 {
-		relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+	for _, c := range rc {
+		relabeling := yaml.MapSlice{}
+
+		if len(c.SourceLabels) > 0 {
+			relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+		}
+
+		if c.Separator != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+		}
+
+		if c.TargetLabel != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+		}
+
+		if c.Regex != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+		}
+
+		if c.Modulus != uint64(0) {
+			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+		}
+
+		if c.Replacement != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+		}
+
+		if c.Action != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
+		}
+
+		cfg = append(cfg, relabeling)
 	}
-
-	if c.Separator != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
-	}
-
-	if c.TargetLabel != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
-	}
-
-	if c.Regex != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
-	}
-
-	if c.Modulus != uint64(0) {
-		relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
-	}
-
-	if c.Replacement != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
-	}
-
-	if c.Action != "" {
-		relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
-	}
-
-	return relabeling
+	return cfg
 }
 
-// getNamespacesFromNamespaceSelector gets a list of namespaces to select based on
+// GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors
-func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace string, ignoreNamespaceSelectors bool) []string {
-	if ignoreNamespaceSelectors {
+func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceSelector, namespace string) []string {
+	if cg.spec.IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
 		return []string{}
@@ -1432,7 +1489,14 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, store *assets.Store, role string) yaml.MapItem {
+// generateK8SSDConfig generates a kubernetes_sd_configs entry.
+func (cg *ConfigGenerator) generateK8SSDConfig(
+	namespaceSelector v1.NamespaceSelector,
+	namespace string,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	role string,
+) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1440,6 +1504,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 		},
 	}
 
+	namespaces := cg.getNamespacesFromNamespaceSelector(namespaceSelector, namespace)
 	if len(namespaces) != 0 {
 		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 			Key: "namespaces",
@@ -1519,7 +1584,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig([]string{am.Namespace}, apiserverConfig, store, kubernetesSDRoleEndpoint))
+		cfg = append(cfg, cg.generateK8SSDConfig(v1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint))
 
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
@@ -1527,10 +1592,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
-		if cg.version.GTE(semver.MustParse("2.11.0")) {
-			if am.APIVersion == "v1" || am.APIVersion == "v2" {
-				cfg = append(cfg, yaml.MapItem{Key: "api_version", Value: am.APIVersion})
-			}
+		if am.APIVersion == "v1" || am.APIVersion == "v2" {
+			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
 
 		var relabelings []yaml.MapSlice
@@ -1622,12 +1685,12 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
-		if len(spec.Headers) > 0 && cg.version.GTE(semver.MustParse("2.26.0")) {
-			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
+		if len(spec.Headers) > 0 {
+			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
 		}
 
-		if spec.Name != "" && cg.version.GTE(semver.MustParse("2.15.0")) {
-			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
+		if spec.Name != "" {
+			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", spec.Name)
 		}
 
 		if len(spec.RequiredMatchers) > 0 {
@@ -1682,7 +1745,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 	tlsAssets map[string]assets.OAuth2Credentials,
 	assetKey string,
 ) yaml.MapSlice {
-	if oauth2 == nil || !cg.version.GTE(semver.MustParse("2.27.0")) {
+	if oauth2 == nil {
 		return cfg
 	}
 
@@ -1706,7 +1769,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
 	}
 
-	return append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
+	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
@@ -1726,16 +1789,16 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
-		if len(spec.Headers) > 0 && cg.version.GTE(semver.MustParse("2.25.0")) {
-			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
+		if len(spec.Headers) > 0 {
+			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
 		}
 
-		if spec.Name != "" && cg.version.GTE(semver.MustParse("2.15.0")) {
-			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
+		if spec.Name != "" {
+			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", spec.Name)
 		}
 
-		if spec.SendExemplars != nil && cg.version.GTE(semver.MustParse("2.27.0")) {
-			cfg = append(cfg, yaml.MapItem{Key: "send_exemplars", Value: spec.SendExemplars})
+		if spec.SendExemplars != nil {
+			cfg = cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "send_exemplars", spec.SendExemplars)
 		}
 
 		if spec.WriteRelabelConfigs != nil {
@@ -1806,7 +1869,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		if spec.Sigv4 != nil && cg.version.GTE(semver.MustParse("2.26.0")) {
+		if spec.Sigv4 != nil {
 			sigV4 := yaml.MapSlice{}
 			if spec.Sigv4.Region != "" {
 				sigV4 = append(sigV4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
@@ -1824,7 +1887,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			if spec.Sigv4.RoleArn != "" {
 				sigV4 = append(sigV4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
 			}
-			cfg = append(cfg, yaml.MapItem{Key: "sigv4", Value: sigV4})
+
+			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "sigv4", sigV4)
 		}
 
 		if spec.QueueConfig != nil {
@@ -1834,10 +1898,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
 			}
 
-			if cg.version.GTE(semver.MustParse("2.6.0")) {
-				if spec.QueueConfig.MinShards != int(0) {
-					queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
-				}
+			if spec.QueueConfig.MinShards != int(0) {
+				queueConfig = cg.WithMinimumVersion("2.6.0").AppendMapItem(queueConfig, "min_shards", spec.QueueConfig.MinShards)
 			}
 
 			if spec.QueueConfig.MaxShards != int(0) {
@@ -1852,10 +1914,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
 			}
 
-			if cg.version.LT(semver.MustParse("2.11.0")) {
-				if spec.QueueConfig.MaxRetries != int(0) {
-					queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
-				}
+			if spec.QueueConfig.MaxRetries != int(0) {
+				queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
 			}
 
 			if spec.QueueConfig.MinBackoff != "" {
@@ -1866,22 +1926,20 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
 			}
 
-			if cg.version.GTE(semver.MustParse("2.26.0")) {
-				if spec.QueueConfig.RetryOnRateLimit {
-					queueConfig = append(queueConfig, yaml.MapItem{Key: "retry_on_http_429", Value: spec.QueueConfig.RetryOnRateLimit})
-				}
+			if spec.QueueConfig.RetryOnRateLimit {
+				queueConfig = cg.WithMinimumVersion("2.26.0").AppendMapItem(queueConfig, "retry_on_http_429", spec.QueueConfig.RetryOnRateLimit)
 			}
 
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
 
-		if spec.MetadataConfig != nil && cg.version.GTE(semver.MustParse("2.23.0")) {
-			metadataConfig := yaml.MapSlice{}
-			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+		if spec.MetadataConfig != nil {
+			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}
-			cfg = append(cfg, yaml.MapItem{Key: "metadata_config", Value: metadataConfig})
+
+			cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
 		}
 
 		cfgs = append(cfgs, cfg)
@@ -1891,94 +1949,4 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 		Key:   "remote_write",
 		Value: cfgs,
 	}
-}
-
-type limitKey struct {
-	specField       string
-	prometheusField string
-	minVersion      string
-}
-
-var (
-	sampleLimitKey = limitKey{
-		specField:       "sampleLimit",
-		prometheusField: "sample_limit",
-	}
-	targetLimitKey = limitKey{
-		specField:       "targetLimit",
-		prometheusField: "target_limit",
-		minVersion:      "2.21.0",
-	}
-	labelLimitKey = limitKey{
-		specField:       "labelLimit",
-		prometheusField: "label_limit",
-		minVersion:      "2.27.0",
-	}
-	labelNameLengthLimitKey = limitKey{
-		specField:       "labelNameLengthLimit",
-		prometheusField: "label_name_length_limit",
-		minVersion:      "2.27.0",
-	}
-	labelValueLengthLimitKey = limitKey{
-		specField:       "labelValueLengthLimit",
-		prometheusField: "label_value_length_limit",
-		minVersion:      "2.27.0",
-	}
-)
-
-type limitEnforcer struct {
-	logger            log.Logger
-	prometheusVersion semver.Version
-}
-
-func (l *limitEnforcer) addLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == 0 && enforcedLimit == nil {
-		return cfg
-	}
-
-	if k.minVersion != "" && l.prometheusVersion.LT(semver.MustParse(k.minVersion)) {
-		level.Warn(l.logger).Log("msg", fmt.Sprintf("%q is only available starting from prometheus %s", string(k.specField), k.minVersion))
-
-		return cfg
-	}
-
-	return append(cfg, yaml.MapItem{Key: k.prometheusField, Value: getLimit(limit, enforcedLimit)})
-}
-
-type relabelConfigGenerator struct {
-	obj                    metav1.Object
-	enforcedNamespaceLabel string
-}
-
-func (rcg relabelConfigGenerator) generate(c []*v1.RelabelConfig) []yaml.MapSlice {
-	var cfg []yaml.MapSlice
-
-	for _, c := range c {
-		cfg = append(cfg, generateRelabelConfig(c))
-	}
-
-	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
-	// relabel configurations as the last relabeling, to ensure it overrides any other relabelings.
-	if rcg.enforcedNamespaceLabel != "" {
-		cfg = append(cfg,
-			yaml.MapSlice{
-				{Key: "target_label", Value: rcg.enforcedNamespaceLabel},
-				{Key: "replacement", Value: rcg.obj.GetNamespace()},
-			},
-		)
-	}
-
-	return cfg
-}
-
-func (l *limitEnforcer) addBodySizeLimitsToYAML(cfg yaml.MapSlice, enforcedLimit string) yaml.MapSlice {
-	if enforcedLimit == "" {
-		return cfg
-	}
-
-	if l.prometheusVersion.LT(semver.MustParse("2.28.0")) {
-		level.Warn(l.logger).Log("msg", "body_size_limit is only available starting from prometheus 2.28.0")
-		return cfg
-	}
-	return append(cfg, yaml.MapItem{Key: "body_size_limit", Value: enforcedLimit})
 }

@@ -6,7 +6,7 @@ metadata:
   name: thanos-ruler
   namespace: default
 spec:
-  image: quay.io/thanos/thanos:v0.11.2
+  image: quay.io/thanos/thanos:v0.25.1
   queryEndpoints:
   - dnssrv+_http._tcp.thanos-query.default.svc.cluster.local
   ruleSelector:

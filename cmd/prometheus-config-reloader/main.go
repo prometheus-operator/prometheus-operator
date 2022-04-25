@@ -16,8 +16,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	stdlog "log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -132,6 +134,9 @@ func main() {
 			},
 		)
 
+		client := createHTTPClient()
+		rel.SetHttpClient(client)
+
 		g.Add(func() error {
 			return rel.Watch(ctx)
 		}, func(error) {
@@ -152,6 +157,27 @@ func main() {
 	if err := g.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func createHTTPClient() http.Client {
+	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
+
+	transport.DialContext = (&net.Dialer{
+		Timeout:   30 * time.Second, // Default Timeout as of http.DefaultTransport
+		KeepAlive: -1,               // Keep alive probe is unnecessary
+	}).DialContext
+
+	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
+	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
+
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
+	}
+
+	return http.Client{
+		Timeout:   30 * time.Second, // Construct with a 30 second timeout. This timeout is unchanged related to the Dialer Timeout and is subject for change. Other timeouts are neglected.
+		Transport: transport,
 	}
 }
 
