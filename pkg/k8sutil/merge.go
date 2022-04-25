@@ -23,53 +23,54 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
-// MergePatchContainers adds patches to base using a strategic merge patch and iterating by container name, failing on the first error
+// MergePatchContainers adds patches to base using a strategic merge patch and
+// iterating by container name, failing on the first error
 func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) {
 	var out []v1.Container
 
-	// map of containers that still need to be patched by name
-	containersToPatch := make(map[string]v1.Container)
+	containersByName := make(map[string]v1.Container)
 	for _, c := range patches {
-		containersToPatch[c.Name] = c
+		containersByName[c.Name] = c
 	}
 
+	// Patch the containers that exist in base.
 	for _, container := range base {
-		// If we have a patch result, iterate over each container and try and calculate the patch
-		if patchContainer, ok := containersToPatch[container.Name]; ok {
-			// Get the json for the container and the patch
-			containerBytes, err := json.Marshal(container)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("failed to marshal json for container %s", container.Name))
-			}
-			patchBytes, err := json.Marshal(patchContainer)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("failed to marshal json for patch container %s", container.Name))
-			}
-
-			// Calculate the patch result
-			jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, v1.Container{})
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("failed to generate merge patch for %s", container.Name))
-			}
-			var patchResult v1.Container
-			if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("failed to unmarshal merged container %s", container.Name))
-			}
-
-			// Add the patch result and remove the corresponding key from the to do list
-			out = append(out, patchResult)
-			delete(containersToPatch, container.Name)
-		} else {
-			// This container didn't need to be patched
+		patchContainer, ok := containersByName[container.Name]
+		if !ok {
+			// This container didn't need to be patched.
 			out = append(out, container)
+			continue
 		}
+
+		containerBytes, err := json.Marshal(container)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to marshal JSON for container %s", container.Name))
+		}
+
+		patchBytes, err := json.Marshal(patchContainer)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to marshal JSON for patch container %s", container.Name))
+		}
+
+		// Calculate the patch result
+		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, v1.Container{})
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to generate merge patch for container %s", container.Name))
+		}
+
+		var patchResult v1.Container
+		if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to unmarshal merged container %s", container.Name))
+		}
+
+		// Add the patch result and remove the corresponding key from the to do list
+		out = append(out, patchResult)
+		delete(containersByName, container.Name)
 	}
 
-	// Iterate over the patches and add all the containers that were not previously part of a patch result
-	for _, container := range patches {
-		if _, ok := containersToPatch[container.Name]; ok {
-			out = append(out, container)
-		}
+	// Append containers that are left in containersToPatch.
+	for _, container := range containersByName {
+		out = append(out, container)
 	}
 
 	return out, nil

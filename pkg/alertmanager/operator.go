@@ -80,7 +80,8 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
-	metrics *operator.Metrics
+	metrics         *operator.Metrics
+	reconciliations *operator.ReconciliationTracker
 
 	config Config
 }
@@ -115,11 +116,12 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 	}
 
 	o := &Operator{
-		kclient: client,
-		mclient: mclient,
-		logger:  logger,
-		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		metrics: operator.NewMetrics("alertmanager", r),
+		kclient:         client,
+		mclient:         mclient,
+		logger:          logger,
+		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
+		metrics:         operator.NewMetrics("alertmanager", r),
+		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
 			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
@@ -147,6 +149,8 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "can not parse alertmanager selector value")
 	}
 
+	c.metrics.MustRegister(c.reconciliations)
+
 	c.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AlertmanagerAllowList,
@@ -171,7 +175,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
 			c.mclient,
 			resyncPeriod,
@@ -189,7 +193,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	}
 	c.secrInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
@@ -238,8 +242,9 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 	// 	return nsInf
 	// }
-	// c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
-	// if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.AlertmanagerAllowList) {
+
+	// c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+	// if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
 	// 	c.nsAlrtInf = c.nsAlrtCfgInf
 	// } else {
 	// 	c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
@@ -537,8 +542,11 @@ func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 	defer c.queue.Done(key)
 
 	c.metrics.ReconcileCounter().Inc()
+	startTime := time.Now()
 	err := c.sync(ctx, key.(string))
-	c.metrics.SetSyncStatus(key.(string), err == nil)
+	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
+	c.reconciliations.SetStatus(key.(string), err)
+
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -721,7 +729,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	aobj, err := c.alrtInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
-		c.metrics.ForgetObject(key)
+		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
@@ -764,13 +772,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to retrieve statefulset")
 	}
 
-	oldSpec := appsv1.StatefulSetSpec{}
+	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		oldSpec = ss.Spec
+		existingStatefulSet = obj.(*appsv1.StatefulSet)
+		if existingStatefulSet.DeletionTimestamp != nil {
+			level.Info(logger).Log(
+				"msg", "halting update of StatefulSet",
+				"reason", "resource has been marked for deletion",
+				"resource_name", existingStatefulSet.GetName(),
+			)
+			return nil
+		}
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, oldSpec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
@@ -783,11 +798,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 
-	var oldSSetInputHash string
-	if obj != nil {
-		oldSSetInputHash = obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	}
-	if newSSetInputHash == oldSSetInputHash {
+	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
 		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -847,63 +858,76 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 	return fmt.Sprintf("%d", hash), nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
-	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
-
-	// Validate AlertManager Config Inputs at AlertManager CRD level
-	if err := validateConfigInputs(am); err != nil {
-		return err
-	}
-
-	secretName := defaultConfigSecretName(am.Name)
-	if am.Spec.ConfigSecret != "" {
-		secretName = am.Spec.ConfigSecret
-	}
-
-	// Tentatively retrieve the secret containing the user-provided Alertmanager
-	// configuration.
-	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, secretName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "get base configuration secret")
-	}
-
-	var secretData map[string][]byte
-	if secret != nil {
-		secretData = secret.Data
-	}
-
-	rawBaseConfig := []byte(`route:
+func defaultAlertmanagerConfiguration() []byte {
+	return []byte(`route:
   receiver: 'null'
 receivers:
 - name: 'null'`)
-	if len(secretData[alertmanagerConfigFile]) > 0 {
-		rawBaseConfig = secretData[alertmanagerConfigFile]
-	} else {
-		if secret == nil {
-			level.Info(namespacedLogger).Log("msg", "base config secret not found", "secret", secretName)
-		} else {
-			level.Info(namespacedLogger).
-				Log("msg", "key not found in base config secret", "secret", secretName, "key", alertmanagerConfigFile)
+}
+
+// loadConfigurationFromSecret returns the raw Alertmanager configuration and
+// additional keys from the configured secret. If the secret doesn't exist or
+// the key isn't found, it will return a working minimal data.
+func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitoringv1.Alertmanager) ([]byte, map[string][]byte, error) {
+	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+
+	name := defaultConfigSecretName(am)
+
+	// Tentatively retrieve the secret containing the user-provided Alertmanager
+	// configuration.
+	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			level.Info(namespacedLogger).Log("msg", "config secret not found, using default Alertmanager configuration", "secret", name)
+			return defaultAlertmanagerConfiguration(), nil, nil
 		}
+
+		return nil, nil, err
 	}
 
-	// If no AlertmanagerConfig selectors are configured, the user wants to
-	// manage configuration themselves.
-	if am.Spec.AlertmanagerConfigSelector == nil {
-		level.Debug(namespacedLogger).
-			Log("msg", "no AlertmanagerConfig selector specified, copying base config as-is",
-				"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name))
+	if _, ok := secret.Data[alertmanagerConfigFile]; !ok {
+		level.Info(namespacedLogger).
+			Log("msg", "key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		return defaultAlertmanagerConfiguration(), secret.Data, nil
+	}
 
-		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, rawBaseConfig, secretData)
+	rawAlertmanagerConfig := secret.Data[alertmanagerConfigFile]
+	delete(secret.Data, alertmanagerConfigFile)
+
+	if len(rawAlertmanagerConfig) == 0 {
+		level.Info(namespacedLogger).
+			Log("msg", "empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		rawAlertmanagerConfig = defaultAlertmanagerConfiguration()
+	}
+
+	return rawAlertmanagerConfig, secret.Data, nil
+}
+
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
+	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+
+	if err := ValidateAlertmanager(am); err != nil {
+		return err
+	}
+
+	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
+	// configured, the user wants to manage configuration themselves.
+	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
+		level.Debug(namespacedLogger).
+			Log("msg", "AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
+				"secret", defaultConfigSecretName(am))
+
+		amRawConfiguration, additionalData, err := c.loadConfigurationFromSecret(ctx, am)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve configuration from secret")
+		}
+
+		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, amRawConfiguration, additionalData)
 		if err != nil {
 			return errors.Wrap(err, "create or update generated config secret failed")
 		}
-		return nil
-	}
 
-	baseConfig, err := alertmanagerConfigFrom(string(rawBaseConfig))
-	if err != nil {
-		return errors.Wrap(err, "base config from Secret could not be parsed")
+		return nil
 	}
 
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
@@ -914,18 +938,56 @@ receivers:
 
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
 	if err != nil {
-		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
+		return errors.Wrap(err, "failed to select AlertmanagerConfig objects")
 	}
 
-	generator := newConfigGenerator(namespacedLogger, version, store)
-	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
-	if err != nil {
-		return errors.Wrap(err, "generating Alertmanager config yaml failed")
+	var (
+		additionalData map[string][]byte
+		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store)
+	)
+
+	if am.Spec.AlertmanagerConfiguration != nil {
+		// Load the base configuration from the referenced AlertmanagerConfig.
+		globalAmConfig, err := c.mclient.MonitoringV1alpha1().AlertmanagerConfigs(am.Namespace).
+			Get(ctx, am.Spec.AlertmanagerConfiguration.Name, metav1.GetOptions{})
+		if err != nil {
+			return errors.Wrap(err, "failed to get global AlertmanagerConfig")
+		}
+
+		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, globalAmConfig)
+		if err != nil {
+			return errors.Wrap(err, "failed to initialize from global AlertmangerConfig")
+		}
+	} else {
+		// Load the base configuration from the referenced secret.
+		var (
+			amRawConfiguration []byte
+			err                error
+		)
+
+		amRawConfiguration, additionalData, err = c.loadConfigurationFromSecret(ctx, am)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve configuration from secret")
+		}
+
+		err = cfgBuilder.initializeFromRawConfiguration(amRawConfiguration)
+		if err != nil {
+			return errors.Wrap(err, "failed to initialize from secret")
+		}
 	}
 
-	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, generatedConfig, secretData)
+	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
+		return errors.Wrap(err, "failed to generate Alertmanager configuration")
+	}
+
+	generatedConfig, err := cfgBuilder.marshalJSON()
 	if err != nil {
-		return errors.Wrap(err, "create or update generated config secret failed")
+		return errors.Wrap(err, "failed to marshal configuration")
+	}
+
+	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, generatedConfig, additionalData)
+	if err != nil {
+		return errors.Wrap(err, "failed to create or update the generated configuration secret")
 	}
 
 	return nil
@@ -1003,7 +1065,12 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				// Add when it is not specified as the global AlertmanagerConfig
+				if am.Spec.AlertmanagerConfiguration == nil ||
+					(amConfig.Namespace != am.Namespace || amConfig.Name != am.Spec.AlertmanagerConfiguration.Name) {
+					amConfigs[k] = amConfig
+				}
 			}
 		})
 		if err != nil {
@@ -1045,38 +1112,28 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 }
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
-// and has no missing references to other objects.
+// for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
-	receiverNames, err := checkReceivers(ctx, amc, store)
-	if err != nil {
+	if err := ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
-	muteTimeIntervalNames, err := validateMuteTimeIntervals(amc.Spec.MuteTimeIntervals)
-	if err != nil {
+	if err := checkReceivers(ctx, amc, store, amVersion); err != nil {
 		return err
 	}
 
-	if err := checkRoutes(ctx, amc.Spec.Route, receiverNames, muteTimeIntervalNames, amVersion); err != nil {
+	if err := checkRoute(ctx, amc.Spec.Route, amVersion); err != nil {
 		return err
 	}
 
 	return checkInhibitRules(ctx, amc, amVersion)
 }
 
-func checkRoutes(ctx context.Context, route *monitoringv1alpha1.Route, receiverNames, muteTimeIntervalNames map[string]struct{}, amVersion semver.Version) error {
+func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
 	if route == nil {
 		return nil
 	}
 
-	if err := validateAlertManagerRoutes(route, receiverNames, muteTimeIntervalNames, true); err != nil {
-		return err
-	}
-
-	return checkRoute(ctx, *route, amVersion)
-}
-
-func checkRoute(ctx context.Context, route monitoringv1alpha1.Route, amVersion semver.Version) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	if !matchersV2Allowed && checkIsV2Matcher(route.Matchers) {
 		return fmt.Errorf(
@@ -1088,73 +1145,102 @@ func checkRoute(ctx context.Context, route monitoringv1alpha1.Route, amVersion s
 	if err != nil {
 		return err
 	}
+
 	for _, route := range childRoutes {
-		if err := checkRoute(ctx, route, amVersion); err != nil {
+		if err := checkRoute(ctx, &route, amVersion); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
-	receiverNames, err := validateReceivers(amc.Spec.Receivers)
-	if err != nil {
-		return nil, errors.Wrap(err, "checkReceivers: failed to validateReceivers")
+func checkHTTPConfig(ctx context.Context, hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version) error {
+	if hc == nil {
+		return nil
 	}
 
+	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		return fmt.Errorf(
+			"'authorization' config set in 'httpConfig' but supported in AlertManager >= 0.22.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
+	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
+		return fmt.Errorf(
+			"'oauth2' config set in 'httpConfig' but supported in AlertManager >= 0.22.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
+	return nil
+}
+
+func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store, amVersion semver.Version) error {
 	for i, receiver := range amc.Spec.Receivers {
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
-		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
+		err := checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
-		}
-
-		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amc.GetNamespace(), amcKey, store)
-		if err != nil {
-			return nil, err
+			return err
 		}
 
-		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
+		}
+
+		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
 		}
 
 		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return receiverNames, nil
+	return nil
 }
 
-func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, namespace string, key string, store *assets.Store) error {
+func checkPagerDutyConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.PagerDutyConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
 		pagerDutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
 
 		if config.RoutingKey != nil {
@@ -1177,8 +1263,18 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 	return nil
 }
 
-func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, namespace string, key string, store *assets.Store) error {
+func checkOpsGenieConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.OpsGenieConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
 
 		if config.APIKey != nil {
@@ -1195,8 +1291,18 @@ func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsG
 	return nil
 }
 
-func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, namespace string, key string, store *assets.Store) error {
+func checkSlackConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.SlackConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
 
 		if config.APIURL != nil {
@@ -1213,8 +1319,18 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 	return nil
 }
 
-func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, namespace string, key string, store *assets.Store) error {
+func checkWebhookConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.WebhookConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
 
 		if config.URLSecret != nil {
@@ -1235,8 +1351,18 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 	return nil
 }
 
-func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, namespace string, key string, store *assets.Store) error {
+func checkWechatConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.WeChatConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
 		if config.APISecret != nil {
@@ -1274,9 +1400,18 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 	return nil
 }
 
-func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, namespace string, key string, store *assets.Store) error {
+func checkVictorOpsConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.VictorOpsConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
-
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		if config.APIKey != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
 				return err
@@ -1292,7 +1427,14 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 	return nil
 }
 
-func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
+func checkPushoverConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.PushoverConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
 		if secret == nil {
 			return errors.Errorf("mandatory field %s is empty", name)
@@ -1308,7 +1450,9 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 	}
 
 	for i, config := range configs {
-
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		if err := checkSecret(config.UserKey, "userKey"); err != nil {
 			return err
 		}
@@ -1325,8 +1469,18 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 	return nil
 }
 
-func checkSnsConfigs(ctx context.Context, configs []monitoringv1alpha1.SNSConfig, namespace string, key string, store *assets.Store) error {
+func checkSnsConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.SNSConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
 	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
 		snsConfigKey := fmt.Sprintf("%s/sns/%d", key, i)
 		if err := store.AddSigV4(ctx, namespace, config.Sigv4, key); err != nil {
 			return err
@@ -1366,6 +1520,7 @@ func checkInhibitRules(ctx context.Context, amc *monitoringv1alpha1.Alertmanager
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -1390,7 +1545,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
-	return store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig)
+	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2, key)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*operator.ShardedSecret, error) {

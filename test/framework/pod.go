@@ -19,19 +19,18 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/remotecommand"
-
-	"github.com/pkg/errors"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/client-go/transport/spdy"
 )
 
 // PrintPodLogs prints the logs of a specified Pod
@@ -129,13 +128,15 @@ func execute(method string, url *url.URL, config *rest.Config, stdin io.Reader, 
 	})
 }
 
-// StartPortForward initiates a port forwarding connection to a pod on the localhost interface.
-//
-// StartPortForward blocks until the port forwarding proxy server is ready to receive connections.
-func StartPortForward(config *rest.Config, scheme string, name string, ns string, port string) error {
+// StartPortForward initiates a port forwarding connection to a pod on the
+// localhost interface. It returns a closer function that should be invoked to
+// stop the proxy server.
+// The function blocks until the port forwarding proxy server is ready to
+// receive connections or the context is canceled.
+func StartPortForward(ctx context.Context, config *rest.Config, scheme string, name string, ns string, port string) (func(), error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", ns, name)
@@ -147,15 +148,26 @@ func StartPortForward(config *rest.Config, scheme string, name string, ns string
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 	forwarder, err := portforward.New(dialer, []string{port}, stopChan, readyChan, out, errOut)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	forwardErr := make(chan error, 1)
 	go func() {
 		if err := forwarder.ForwardPorts(); err != nil {
-			panic(err)
+			forwardErr <- err
 		}
+		close(forwardErr)
 	}()
 
-	<-readyChan
-	return nil
+	select {
+	case <-readyChan:
+		return func() { close(stopChan) }, nil
+	case <-ctx.Done():
+		var err error
+		select {
+		case err = <-forwardErr:
+		default:
+		}
+		return nil, fmt.Errorf("%v: %v", ctx.Err(), err)
+	}
 }

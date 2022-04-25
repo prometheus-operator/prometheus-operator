@@ -6,7 +6,7 @@ This documentation is for an alpha feature. For questions and feedback on the Pr
 
 # Prometheus Operator
 
-Operators were introduced by CoreOS as a class of software that operates other software, putting operational knowledge collected by humans into software. Read more in the original blog post, [Introducing Operators](https://web.archive.org/web/20210210032403/https://coreos.com/blog/introducing-operators.html).
+[Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) were introduced by CoreOS as a class of software that operates other software, putting operational knowledge collected by humans into software.
 
 The Prometheus Operator serves to make running Prometheus on top of Kubernetes as easy as possible, while preserving Kubernetes-native configuration options.
 

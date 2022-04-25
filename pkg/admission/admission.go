@@ -216,20 +216,20 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 }
 
 func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	a.promRuleValidationTriggeredCounter.Inc()
+	a.incrementCounter(a.promRuleValidationTriggeredCounter)
 	level.Debug(a.logger).Log("msg", "Validating prometheusrules")
 
 	if ar.Request.Resource != prometheusRuleGVR {
 		err := fmt.Errorf("expected resource to be %v, but received %v", prometheusRuleResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
-		a.promRuleValidationErrorsCounter.Inc()
+		a.incrementCounter(a.promRuleValidationErrorsCounter)
 		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []error{err})
 	}
 
 	promRule := &monitoringv1.PrometheusRule{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
-		a.promRuleValidationErrorsCounter.Inc()
+		a.incrementCounter(a.promRuleValidationErrorsCounter)
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
@@ -241,7 +241,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 			level.Info(a.logger).Log("msg", m, "err", err)
 		}
 
-		a.promRuleValidationErrorsCounter.Inc()
+		a.incrementCounter(a.promRuleValidationErrorsCounter)
 		return toAdmissionResponseFailure("Rules are not valid", prometheusRuleResource, errors)
 	}
 
@@ -249,29 +249,40 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 }
 
 func (a *Admission) validateAlertManagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	a.amConfValidationTriggeredCounter.Inc()
+	a.incrementCounter(a.amConfValidationTriggeredCounter)
 	level.Debug(a.logger).Log("msg", "Validating alertmanagerconfigs")
 
 	if ar.Request.Resource != alertManagerConfigGVR {
 		err := fmt.Errorf("expected resource to be %v, but received %v", alertManagerConfigResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
-		a.amConfValidationErrorsCounter.Inc()
+		a.incrementCounter(a.amConfValidationErrorsCounter)
 		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []error{err})
 	}
 
 	amConf := &monitoringv1alpha1.AlertmanagerConfig{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, amConf); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalConfig, "err", err)
-		a.amConfValidationErrorsCounter.Inc()
+		a.incrementCounter(a.amConfValidationErrorsCounter)
 		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []error{err})
 	}
 
-	if err := alertmanager.ValidateConfig(amConf); err != nil {
+	if err := alertmanager.ValidateAlertmanagerConfig(amConf); err != nil {
 		msg := "invalid config"
 		level.Debug(a.logger).Log("msg", msg, "content", amConf.Spec)
 		level.Info(a.logger).Log("msg", msg, "err", err)
-		a.amConfValidationErrorsCounter.Inc()
+		a.incrementCounter(a.amConfValidationErrorsCounter)
 		return toAdmissionResponseFailure("AlertManagerConfig is invalid", alertManagerConfigResource, []error{err})
 	}
 	return &v1.AdmissionResponse{Allowed: true}
+}
+
+// TODO (PhilipGough) - this can be removed when the following deprecated metrics are removed
+//  -  prometheus_operator_rule_validation_triggered_total
+//  -  prometheus_operator_rule_validation_errors_total
+//  -  prometheus_operator_alertmanager_config_validation_errors_total
+//  -  prometheus_operator_alertmanager_config_validation_triggered_total
+func (a *Admission) incrementCounter(counter prometheus.Counter) {
+	if counter != nil {
+		counter.Inc()
+	}
 }

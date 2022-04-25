@@ -24,6 +24,7 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -32,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
 	"github.com/prometheus/prometheus/model/labels"
@@ -62,6 +64,66 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitori
 			LogLevel: "debug",
 		},
 	}
+}
+
+func (f *Framework) CreateAlertmanagerConfig(ctx context.Context, ns, name string) (*monitoringv1alpha1.AlertmanagerConfig, error) {
+	subRoute := monitoringv1alpha1.Route{
+		Receiver: "null",
+		Matchers: []monitoringv1alpha1.Matcher{
+			{
+				Name:  "mykey",
+				Value: "myvalue-1",
+				Regex: false,
+			},
+		},
+	}
+	subRouteJSON, err := json.Marshal(subRoute)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal subroute")
+	}
+
+	amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns,
+			Name:      name,
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			InhibitRules: []monitoringv1alpha1.InhibitRule{
+				{
+					SourceMatch: []monitoringv1alpha1.Matcher{
+						{
+							Name:  "mykey",
+							Value: "myvalue-1",
+							Regex: false,
+						},
+					},
+					TargetMatch: []monitoringv1alpha1.Matcher{
+						{
+							Name:  "mykey",
+							Value: "myvalue-2",
+							Regex: false,
+						},
+					},
+					Equal: []string{"equalkey"},
+				},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "null",
+				},
+			},
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "null",
+				Routes: []extv1.JSON{
+					{
+						Raw: subRouteJSON,
+					},
+				},
+			},
+		},
+	}
+
+	return f.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, amConfig, metav1.CreateOptions{})
 }
 
 func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.ServiceType) *v1.Service {

@@ -152,21 +152,22 @@ func TestAllNS(t *testing.T) {
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AMCreateDeleteCluster":           testAMCreateDeleteCluster,
-		"AMScaling":                       testAMScaling,
-		"AMVersionMigration":              testAMVersionMigration,
-		"AMStorageUpdate":                 testAMStorageUpdate,
-		"AMExposingWithKubernetesAPI":     testAMExposingWithKubernetesAPI,
-		"AMClusterInitialization":         testAMClusterInitialization,
-		"AMClusterAfterRollingUpdate":     testAMClusterAfterRollingUpdate,
-		"AMClusterGossipSilences":         testAMClusterGossipSilences,
-		"AMReloadConfig":                  testAMReloadConfig,
-		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,
-		"AMAlertmanagerConfigCRD":         testAlertmanagerConfigCRD,
-		"AMUserDefinedAlertmanagerConfig": testUserDefinedAlertmanagerConfig,
-		"AMPreserveUserAddedMetadata":     testAMPreserveUserAddedMetadata,
-		"AMRollbackManualChanges":         testAMRollbackManualChanges,
-		"AMMinReadySeconds":               testAlertManagerMinReadySeconds,
+		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
+		"AMScaling":                               testAMScaling,
+		"AMVersionMigration":                      testAMVersionMigration,
+		"AMStorageUpdate":                         testAMStorageUpdate,
+		"AMExposingWithKubernetesAPI":             testAMExposingWithKubernetesAPI,
+		"AMClusterInitialization":                 testAMClusterInitialization,
+		"AMClusterAfterRollingUpdate":             testAMClusterAfterRollingUpdate,
+		"AMClusterGossipSilences":                 testAMClusterGossipSilences,
+		"AMReloadConfig":                          testAMReloadConfig,
+		"AMZeroDowntimeRollingDeployment":         testAMZeroDowntimeRollingDeployment,
+		"AMAlertmanagerConfigCRD":                 testAlertmanagerConfigCRD,
+		"AMUserDefinedAMConfigFromSecret":         testUserDefinedAlertmanagerConfigFromSecret,
+		"AMUserDefinedAMConfigFromCustomResource": testUserDefinedAlertmanagerConfigFromCustomResource,
+		"AMPreserveUserAddedMetadata":             testAMPreserveUserAddedMetadata,
+		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
+		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 	}
 
 	for name, f := range testFuncs {
@@ -177,6 +178,7 @@ func testAllNSAlertmanager(t *testing.T) {
 func testAllNSPrometheus(t *testing.T) {
 	skipPrometheusAllNSTests(t)
 	testFuncs := map[string]func(t *testing.T){
+		"PrometheusCRDValidation":                testPrometheusCRDValidation,
 		"PromRemoteWriteWithTLS":                 testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,
 		"PromScaleUpDownCluster":                 testPromScaleUpDownCluster,
@@ -214,6 +216,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromWebTLS":                             testPromWebTLS,
 		"PromMinReadySeconds":                    testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
+		"PromQueryLogFile":                       testPromQueryLogFile,
+		"PromDegradedCondition":                  testPromDegradedConditionStatus,
 	}
 
 	for name, f := range testFuncs {

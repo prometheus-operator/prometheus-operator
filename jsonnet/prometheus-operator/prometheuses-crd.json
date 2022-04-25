@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.6.2"
+      "controller-gen.kubebuilder.io/version": "v0.8.0"
     },
     "creationTimestamp": null,
     "name": "prometheuses.monitoring.coreos.com"
@@ -17,6 +17,9 @@
       "kind": "Prometheus",
       "listKind": "PrometheusList",
       "plural": "prometheuses",
+      "shortNames": [
+        "prom"
+      ],
       "singular": "prometheus"
     },
     "scope": "Namespaced",
@@ -2417,8 +2420,13 @@
                     },
                     "type": "array"
                   },
+                  "enableRemoteWriteReceiver": {
+                    "description": "Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`. WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver Only valid in Prometheus versions 2.33.0 and newer.",
+                    "type": "boolean"
+                  },
                   "enforcedBodySizeLimit": {
                     "description": "EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer.",
+                    "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
                   "enforcedLabelLimit": {
@@ -2437,7 +2445,7 @@
                     "type": "integer"
                   },
                   "enforcedNamespaceLabel": {
-                    "description": "EnforcedNamespaceLabel If set, a label will be added to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to    * alerting & recording rules and    * the metrics used in their expressions (`expr`). \n Label name is this field's value. Label value is the namespace of the created object (mentioned above).",
+                    "description": "EnforcedNamespaceLabel If set, a label will be added to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `Probe` objects) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to * alerting & recording rules and * the metrics used in their expressions (`expr`). \n Label name is this field's value. Label value is the namespace of the created object (mentioned above).",
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
@@ -2451,8 +2459,51 @@
                     "type": "integer"
                   },
                   "evaluationInterval": {
-                    "description": "Interval between consecutive evaluations. Default: `1m`",
+                    "default": "30s",
+                    "description": "Interval between consecutive evaluations. Default: `30s`",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
+                  },
+                  "excludedFromEnforcement": {
+                    "description": "List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects to be excluded from enforcing a namespace label of origin. Applies only if enforcedNamespaceLabel set to true.",
+                    "items": {
+                      "description": "ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.",
+                      "properties": {
+                        "group": {
+                          "default": "monitoring.coreos.com",
+                          "description": "Group of the referent. When not specified, it defaults to `monitoring.coreos.com`",
+                          "enum": [
+                            "monitoring.coreos.com"
+                          ],
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the referent. When not set, all resources are matched.",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "resource": {
+                          "description": "Resource of the referent.",
+                          "enum": [
+                            "prometheusrules",
+                            "servicemonitors",
+                            "podmonitors",
+                            "probes"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "namespace",
+                        "resource"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
                   },
                   "externalLabels": {
                     "additionalProperties": {
@@ -2466,7 +2517,7 @@
                     "type": "string"
                   },
                   "ignoreNamespaceSelectors": {
-                    "description": "IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from the podmonitor and servicemonitor configs, and they will only discover endpoints within their current namespace.  Defaults to false.",
+                    "description": "IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from all PodMonitor, ServiceMonitor and Probe objects. They will only discover endpoints within their current namespace. Defaults to false.",
                     "type": "boolean"
                   },
                   "image": {
@@ -3617,10 +3668,22 @@
                   },
                   "logFormat": {
                     "description": "Log format for Prometheus to be configured with.",
+                    "enum": [
+                      "",
+                      "logfmt",
+                      "json"
+                    ],
                     "type": "string"
                   },
                   "logLevel": {
                     "description": "Log level for Prometheus to be configured with.",
+                    "enum": [
+                      "",
+                      "debug",
+                      "info",
+                      "warn",
+                      "error"
+                    ],
                     "type": "string"
                   },
                   "minReadySeconds": {
@@ -3636,11 +3699,11 @@
                     "type": "object"
                   },
                   "overrideHonorLabels": {
-                    "description": "OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.",
+                    "description": "When true, Prometheus resolves label conflicts by renaming the labels in the scraped data to \"exported_<label value>\" for all targets created from service and pod monitors. Otherwise the HonorLabels field of the service or pod monitor applies.",
                     "type": "boolean"
                   },
                   "overrideHonorTimestamps": {
-                    "description": "OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs.",
+                    "description": "When true, Prometheus ignores the timestamps for all the targets created from service and pod monitors. Otherwise the HonorTimestamps field of the service or pod monitor applies.",
                     "type": "boolean"
                   },
                   "paused": {
@@ -3852,7 +3915,7 @@
                     "type": "string"
                   },
                   "prometheusRulesExcludedFromEnforce": {
-                    "description": "PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair",
+                    "description": "PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair. Deprecated: use excludedFromEnforcement instead.",
                     "items": {
                       "description": "PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces to be ignored while enforcing namespace label for alerts and metrics.",
                       "properties": {
@@ -3892,19 +3955,20 @@
                       },
                       "timeout": {
                         "description": "Maximum time a query may take before being aborted.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       }
                     },
                     "type": "object"
                   },
                   "queryLogFile": {
-                    "description": "QueryLogFile specifies the file to which PromQL queries are logged. Note that this location must be writable, and can be persisted using an attached volume. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log querie information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)",
+                    "description": "QueryLogFile specifies the file to which PromQL queries are logged. If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an emptyDir volume at `/var/log/prometheus`. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log query information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)",
                     "type": "string"
                   },
                   "remoteRead": {
-                    "description": "If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+                    "description": "remoteRead is the list of remote read configurations.",
                     "items": {
-                      "description": "RemoteReadSpec defines the remote_read configuration for prometheus.",
+                      "description": "RemoteReadSpec defines the configuration for Prometheus to read back samples from a remote endpoint.",
                       "properties": {
                         "authorization": {
                           "description": "Authorization section for remote read",
@@ -4005,7 +4069,7 @@
                           "type": "object"
                         },
                         "name": {
-                          "description": "The name of the remote read queue, must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer.",
+                          "description": "The name of the remote read queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer.",
                           "type": "string"
                         },
                         "oauth2": {
@@ -4108,7 +4172,7 @@
                           "type": "object"
                         },
                         "proxyUrl": {
-                          "description": "Optional ProxyURL",
+                          "description": "Optional ProxyURL.",
                           "type": "string"
                         },
                         "readRecent": {
@@ -4117,6 +4181,7 @@
                         },
                         "remoteTimeout": {
                           "description": "Timeout for requests to the remote read endpoint.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "requiredMatchers": {
@@ -4270,7 +4335,7 @@
                           "type": "object"
                         },
                         "url": {
-                          "description": "The URL of the endpoint to send samples to.",
+                          "description": "The URL of the endpoint to query from.",
                           "type": "string"
                         }
                       },
@@ -4282,9 +4347,9 @@
                     "type": "array"
                   },
                   "remoteWrite": {
-                    "description": "If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+                    "description": "remoteWrite is the list of remote write configurations.",
                     "items": {
-                      "description": "RemoteWriteSpec defines the remote_write configuration for prometheus.",
+                      "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus to a remote endpoint.",
                       "properties": {
                         "authorization": {
                           "description": "Authorization section for remote write",
@@ -4385,21 +4450,22 @@
                           "type": "object"
                         },
                         "metadataConfig": {
-                          "description": "MetadataConfig configures the sending of series metadata to remote storage.",
+                          "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
                           "properties": {
                             "send": {
-                              "description": "Whether metric metadata is sent to remote storage or not.",
+                              "description": "Whether metric metadata is sent to the remote storage or not.",
                               "type": "boolean"
                             },
                             "sendInterval": {
-                              "description": "How frequently metric metadata is sent to remote storage.",
+                              "description": "How frequently metric metadata is sent to the remote storage.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "name": {
-                          "description": "The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer.",
+                          "description": "The name of the remote write queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer.",
                           "type": "string"
                         },
                         "oauth2": {
@@ -4502,7 +4568,7 @@
                           "type": "object"
                         },
                         "proxyUrl": {
-                          "description": "Optional ProxyURL",
+                          "description": "Optional ProxyURL.",
                           "type": "string"
                         },
                         "queueConfig": {
@@ -4549,6 +4615,7 @@
                         },
                         "remoteTimeout": {
                           "description": "Timeout for requests to the remote write endpoint.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "sendExemplars": {
@@ -4801,6 +4868,8 @@
                               "sourceLabels": {
                                 "description": "The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions.",
                                 "items": {
+                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.",
+                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -4870,11 +4939,13 @@
                     "type": "object"
                   },
                   "retention": {
-                    "description": "Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
+                    "description": "Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "retentionSize": {
-                    "description": "Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`.",
+                    "description": "Maximum amount of disk space used by blocks.",
+                    "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
                   "routePrefix": {
@@ -4990,11 +5061,14 @@
                     "type": "object"
                   },
                   "scrapeInterval": {
-                    "description": "Interval between consecutive scrapes. Default: `1m`",
+                    "default": "30s",
+                    "description": "Interval between consecutive scrapes. Default: `30s`",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "scrapeTimeout": {
                     "description": "Number of seconds to wait for target to respond before erroring.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "secrets": {
@@ -5294,7 +5368,7 @@
                                     "type": "object"
                                   },
                                   "dataSourceRef": {
-                                    "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef   preserves all values, and generates an error if a disallowed value is   specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
+                                    "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef preserves all values, and generates an error if a disallowed value is specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
                                     "properties": {
                                       "apiGroup": {
                                         "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.",
@@ -5487,7 +5561,7 @@
                                 "type": "object"
                               },
                               "dataSourceRef": {
-                                "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef   preserves all values, and generates an error if a disallowed value is   specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
+                                "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef preserves all values, and generates an error if a disallowed value is specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
                                 "properties": {
                                   "apiGroup": {
                                     "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.",
@@ -5865,10 +5939,22 @@
                       },
                       "logFormat": {
                         "description": "LogFormat for Thanos sidecar to be configured with.",
+                        "enum": [
+                          "",
+                          "logfmt",
+                          "json"
+                        ],
                         "type": "string"
                       },
                       "logLevel": {
                         "description": "LogLevel for Thanos sidecar to be configured with.",
+                        "enum": [
+                          "",
+                          "debug",
+                          "info",
+                          "warn",
+                          "error"
+                        ],
                         "type": "string"
                       },
                       "minTime": {
@@ -5902,6 +5988,7 @@
                       },
                       "readyTimeout": {
                         "description": "ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "resources": {
@@ -6108,7 +6195,7 @@
                           "type": "string"
                         },
                         "whenUnsatisfiable": {
-                          "description": "WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location,   but giving higher precedence to topologies that would help reduce the   skew. A constraint is considered \"Unsatisfiable\" for an incoming pod if and only if every possible node assignment for that pod would violate \"MaxSkew\" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.",
+                          "description": "WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location, but giving higher precedence to topologies that would help reduce the skew. A constraint is considered \"Unsatisfiable\" for an incoming pod if and only if every possible node assignment for that pod would violate \"MaxSkew\" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.",
                           "type": "string"
                         }
                       },
@@ -6511,7 +6598,7 @@
                           "type": "object"
                         },
                         "ephemeral": {
-                          "description": "Ephemeral represents a volume that is handled by a cluster storage driver. The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts, and deleted when the pod is removed. \n Use this if: a) the volume is only needed while the pod runs, b) features of normal volumes like restoring from snapshot or capacity    tracking are needed, c) the storage driver is specified through a storage class, and d) the storage driver supports dynamic volume provisioning through    a PersistentVolumeClaim (see EphemeralVolumeSource for more    information on the connection between this volume type    and PersistentVolumeClaim). \n Use PersistentVolumeClaim or one of the vendor-specific APIs for volumes that persist for longer than the lifecycle of an individual pod. \n Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to be used that way - see the documentation of the driver for more information. \n A pod can use both types of ephemeral volumes and persistent volumes at the same time.",
+                          "description": "Ephemeral represents a volume that is handled by a cluster storage driver. The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts, and deleted when the pod is removed. \n Use this if: a) the volume is only needed while the pod runs, b) features of normal volumes like restoring from snapshot or capacity tracking are needed, c) the storage driver is specified through a storage class, and d) the storage driver supports dynamic volume provisioning through a PersistentVolumeClaim (see EphemeralVolumeSource for more information on the connection between this volume type and PersistentVolumeClaim). \n Use PersistentVolumeClaim or one of the vendor-specific APIs for volumes that persist for longer than the lifecycle of an individual pod. \n Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to be used that way - see the documentation of the driver for more information. \n A pod can use both types of ephemeral volumes and persistent volumes at the same time.",
                           "properties": {
                             "volumeClaimTemplate": {
                               "description": "Will be used to create a stand-alone PVC to provision the volume. The pod in which this EphemeralVolumeSource is embedded will be the owner of the PVC, i.e. the PVC will be deleted together with the pod.  The name of the PVC will be `<pod name>-<volume name>` where `<volume name>` is the name from the `PodSpec.Volumes` array entry. Pod validation will reject the pod if the concatenated name is not valid for a PVC (for example, too long). \n An existing PVC with that name that is not owned by the pod will *not* be used for the pod to avoid using an unrelated volume by mistake. Starting the pod is then blocked until the unrelated PVC is removed. If such a pre-created PVC is meant to be used by the pod, the PVC has to updated with an owner reference to the pod once the pod exists. Normally this should not be necessary, but it may be useful when manually reconstructing a broken cluster. \n This field is read-only and no changes will be made by Kubernetes to the PVC after it has been created. \n Required, must not be nil.",
@@ -6553,7 +6640,7 @@
                                       "type": "object"
                                     },
                                     "dataSourceRef": {
-                                      "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef   preserves all values, and generates an error if a disallowed value is   specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
+                                      "description": "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef preserves all values, and generates an error if a disallowed value is specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.",
                                       "properties": {
                                         "apiGroup": {
                                           "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.",
@@ -7623,12 +7710,48 @@
                 "type": "object"
               },
               "status": {
-                "description": "Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "Most recent observed status of the Prometheus cluster. Read-only. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "availableReplicas": {
                     "description": "Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment.",
                     "format": "int32",
                     "type": "integer"
+                  },
+                  "conditions": {
+                    "description": "The current state of the Prometheus deployment.",
+                    "items": {
+                      "description": "PrometheusCondition represents the state of the resources associated with the Prometheus resource.",
+                      "properties": {
+                        "lastTransitionTime": {
+                          "description": "lastTransitionTime is the time of the last update to the current status property.",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "message": {
+                          "description": "Human-readable message indicating details for the condition's last transition.",
+                          "type": "string"
+                        },
+                        "reason": {
+                          "description": "Reason for the condition's last transition.",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "status of the condition.",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "Type of the condition being reported.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "lastTransitionTime",
+                        "status",
+                        "type"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
                   },
                   "paused": {
                     "description": "Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed.",
@@ -7638,6 +7761,46 @@
                     "description": "Total number of non-terminated pods targeted by this Prometheus deployment (their labels match the selector).",
                     "format": "int32",
                     "type": "integer"
+                  },
+                  "shardStatuses": {
+                    "description": "The list has one entry per shard. Each entry provides a summary of the shard status.",
+                    "items": {
+                      "properties": {
+                        "availableReplicas": {
+                          "description": "Total number of available pods (ready for at least minReadySeconds) targeted by this shard.",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "replicas": {
+                          "description": "Total number of pods targeted by this shard.",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "shardID": {
+                          "description": "Identifier of the shard.",
+                          "type": "string"
+                        },
+                        "unavailableReplicas": {
+                          "description": "Total number of unavailable pods targeted by this shard.",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "updatedReplicas": {
+                          "description": "Total number of non-terminated pods targeted by this shard that have the desired spec.",
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "availableReplicas",
+                        "replicas",
+                        "shardID",
+                        "unavailableReplicas",
+                        "updatedReplicas"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
                   },
                   "unavailableReplicas": {
                     "description": "Total number of unavailable pods targeted by this Prometheus deployment.",
@@ -7668,7 +7831,9 @@
         },
         "served": true,
         "storage": true,
-        "subresources": {}
+        "subresources": {
+          "status": {}
+        }
       }
     ]
   },

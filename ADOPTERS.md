@@ -111,7 +111,7 @@ Details:
 
 ## Lunar
 
-[lunar.app](https://lunar.app/)
+[lunar.app](https://www.lunar.app/)
 
 Environments: AWS
 
@@ -171,7 +171,7 @@ Opstrace installations use the Prometheus Operator internally to collect metrics
 
 ## Polar Signals
 
-[polarsignals.com](https://polarsignals.com/)
+[polarsignals.com](https://www.polarsignals.com/)
 
 Environment: Google Cloud
 
@@ -241,8 +241,8 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 
 Details (optional):
 - HA Pair of Prometheus
-- 517000 samples/s
-- 10.7M active series
+- 786000 samples/s
+- 23.6M active series
 
 ## VSHN AG
 

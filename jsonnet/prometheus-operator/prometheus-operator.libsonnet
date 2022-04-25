@@ -71,6 +71,7 @@ function(params) {
           'alertmanagerconfigs',
           'prometheuses',
           'prometheuses/finalizers',
+          'prometheuses/status',
           'thanosrulers',
           'thanosrulers/finalizers',
           'servicemonitors',
@@ -137,6 +138,8 @@ function(params) {
       resources: po.config.resources,
       securityContext: {
         allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
+        capabilities: { drop: ['ALL'] },
       },
     };
     {
@@ -154,8 +157,8 @@ function(params) {
           metadata: {
             labels: po.config.commonLabels,
             annotations: {
-              "kubectl.kubernetes.io/default-container": container.name,
-            }
+              'kubectl.kubernetes.io/default-container': container.name,
+            },
           },
           spec: {
             containers: [container],
@@ -168,6 +171,7 @@ function(params) {
               runAsUser: 65534,
             },
             serviceAccountName: po.config.name,
+            automountServiceAccountToken: true,
           },
         },
       },
@@ -181,6 +185,7 @@ function(params) {
       namespace: po.config.namespace,
       labels: po.config.commonLabels,
     },
+    automountServiceAccountToken: false,
   },
 
   service: {

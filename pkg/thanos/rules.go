@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -170,9 +171,20 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
+	excludedFromEnforcement := t.Spec.ExcludedFromEnforcement
+	// append the deprecated PrometheusRulesExcludedFromEnforce
+	for _, rule := range t.Spec.PrometheusRulesExcludedFromEnforce {
+		excludedFromEnforcement = append(excludedFromEnforcement,
+			monitoringv1.ObjectReference{
+				Namespace: rule.RuleNamespace,
+				Group:     monitoring.GroupName,
+				Resource:  monitoringv1.PrometheusRuleName,
+				Name:      rule.RuleName,
+			})
+	}
 	nsLabeler := namespacelabeler.New(
 		t.Spec.EnforcedNamespaceLabel,
-		t.Spec.PrometheusRulesExcludedFromEnforce,
+		excludedFromEnforcement,
 		false,
 	)
 

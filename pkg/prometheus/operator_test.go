@@ -21,6 +21,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus/prometheus/model/relabel"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -267,6 +268,20 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 }
 
 func TestValidateRelabelConfig(t *testing.T) {
+	defaultRegexp, err := relabel.DefaultRelabelConfig.Regex.MarshalYAML()
+	if err != nil {
+		t.Errorf("Could not marshal relabel.DefaultRelabelConfig.Regex: %v", err)
+	}
+	defaultRegex, ok := defaultRegexp.(string)
+	if !ok {
+		t.Errorf("Could not assert marshaled defaultRegexp as string: %v", defaultRegexp)
+	}
+
+	defaultSourceLabels := []monitoringv1.LabelName{}
+	for _, label := range relabel.DefaultRelabelConfig.SourceLabels {
+		defaultSourceLabels = append(defaultSourceLabels, monitoringv1.LabelName(label))
+	}
+
 	for _, tc := range []struct {
 		scenario      string
 		relabelConfig monitoringv1.RelabelConfig
@@ -311,7 +326,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid hashmod config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "hashmod",
 				Modulus:      0,
 				TargetLabel:  "__tmp_hashmod",
@@ -322,25 +337,34 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "invalid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Action: "labelmap",
-				Regex:  "__meta_kubernetes_service_label_(.+)",
+				Action:      "labelmap",
+				Regex:       "__meta_kubernetes_service_label_(.+)",
+				Replacement: "some-name-value",
 			},
 			expectedErr: true,
 		},
-		// Test valid labelmap relabel config
+		// Test valid labelmap relabel config when replacement not specified
+		{
+			scenario: "valid labelmap config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action: "labelmap",
+				Regex:  "__meta_kubernetes_service_label_(.+)",
+			},
+		},
+		// Test valid labelmap relabel config with replacement specified
 		{
 			scenario: "valid labelmap config",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: "k8s_$1",
+				Replacement: "${2}",
 			},
 		},
 		// Test invalid labelkeep relabel config
 		{
 			scenario: "invalid labelkeep config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "labelkeep",
 				TargetLabel:  "__tmp_labelkeep",
 			},
@@ -361,11 +385,23 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Regex:  "replica",
 			},
 		},
+		{
+			scenario: "valid labeldrop config with default values",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: defaultSourceLabels,
+				Separator:    relabel.DefaultRelabelConfig.Separator,
+				TargetLabel:  relabel.DefaultRelabelConfig.TargetLabel,
+				Regex:        defaultRegex,
+				Modulus:      relabel.DefaultRelabelConfig.Modulus,
+				Replacement:  relabel.DefaultRelabelConfig.Replacement,
+				Action:       "labeldrop",
+			},
+		},
 		// Test valid relabel config
 		{
 			scenario: "valid hashmod config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"instance"},
+				SourceLabels: []monitoringv1.LabelName{"instance"},
 				Action:       "hashmod",
 				Modulus:      10,
 				TargetLabel:  "__tmp_hashmod",
@@ -375,7 +411,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "valid replace config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				SourceLabels: []string{"__address__"},
+				SourceLabels: []monitoringv1.LabelName{"__address__"},
 				Action:       "replace",
 				Regex:        "([^:]+)(?::\\d+)?",
 				Replacement:  "$1:80",
@@ -466,6 +502,93 @@ func TestValidateProberUrl(t *testing.T) {
 			}
 			if err == nil && tc.expectedErr {
 				t.Fatalf("expected an error, got nil")
+			}
+		})
+	}
+}
+
+func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
+	for _, tc := range []struct {
+		scenario    string
+		prometheus  monitoringv1.Prometheus
+		smSpec      monitoringv1.ServiceMonitorSpec
+		expectedErr bool
+	}{
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec but invalid #1",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "30s",
+						ScrapeTimeout: "45s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec but invalid #2",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "30 s",
+						ScrapeTimeout: "10s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "scrape interval and timeout specified at service monitor spec are valid",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						Interval:      "15s",
+						ScrapeTimeout: "10s",
+					},
+				},
+			},
+		},
+		{
+			scenario: "only scrape timeout specified at service monitor spec but invalid compared to global scrapeInterval",
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval: "15s",
+					},
+				},
+			},
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						ScrapeTimeout: "20s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			scenario: "only scrape timeout specified at service monitor spec but invalid compared to default global scrapeInterval",
+			smSpec: monitoringv1.ServiceMonitorSpec{
+				Endpoints: []monitoringv1.Endpoint{
+					{
+						ScrapeTimeout: "60s",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+			for _, endpoint := range tc.smSpec.Endpoints {
+				err := validateScrapeIntervalAndTimeout(&tc.prometheus, endpoint.Interval, endpoint.ScrapeTimeout)
+				t.Logf("err %v", err)
+				if err != nil && !tc.expectedErr {
+					t.Fatalf("expected no error, got: %v", err)
+				}
+				if err == nil && tc.expectedErr {
+					t.Fatalf("expected an error, got nil")
+				}
 			}
 		})
 	}

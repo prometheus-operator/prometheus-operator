@@ -16,6 +16,7 @@ package namespacelabeler
 import (
 	"testing"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -24,12 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func TestEnforceNamespaceLabel(t *testing.T) {
+func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 
 	type testCase struct {
 		Name                           string
 		PromRule                       monitoringv1.PrometheusRule
 		PromSpecEnforcedNamespaceLabel string
+		ExcludedFromEnforcement        []monitoringv1.ObjectReference
 		PromSpecExcludedRules          []monitoringv1.PrometheusRuleExcludeConfig
 
 		Expected monitoringv1.PrometheusRule
@@ -38,7 +40,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 	testcases := []testCase{
 		{
 			Name: "rule-ns-enforced-add",
-			PromRule: expand(&promRuleFlat{
+			PromRule: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{
@@ -56,8 +58,9 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 					},
 				},
 			}),
+
 			PromSpecEnforcedNamespaceLabel: "namespace",
-			Expected: expand(&promRuleFlat{
+			Expected: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{
@@ -81,7 +84,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		},
 		{
 			Name: "rule-ns-enforced-replace",
-			PromRule: expand(&promRuleFlat{
+			PromRule: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{{
@@ -92,7 +95,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 			}),
 			PromSpecEnforcedNamespaceLabel: "namespace",
 
-			Expected: expand(&promRuleFlat{
+			Expected: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{{
@@ -104,7 +107,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		},
 		{
 			Name: "namespace-not-enforced",
-			PromRule: expand(&promRuleFlat{
+			PromRule: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{{
@@ -114,7 +117,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 			}),
 			PromSpecEnforcedNamespaceLabel: "",
 
-			Expected: expand(&promRuleFlat{
+			Expected: expandPromRule(&promRuleFlat{
 				Name:      "foo",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{{
@@ -125,9 +128,12 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		},
 		{
 			Name: "excludeList-exist-but-no-match",
-			PromRule: expand(&promRuleFlat{
+			PromRule: expandPromRule(&promRuleFlat{
 				Name:      "alert",
 				Namespace: "bar",
+				Labels: map[string]string{
+					"group": "group1",
+				},
 				Rules: []monitoringv1.Rule{{
 					Alert: "alert",
 					Expr:  intstr.FromString("node_cpu_seconds_total"),
@@ -140,10 +146,20 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 					RuleNamespace: "bar",
 				},
 			},
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "foo",
+					Group:     "monitoring.coreos.com",
+					Resource:  monitoringv1.PrometheusRuleName,
+				},
+			},
 
-			Expected: expand(&promRuleFlat{
+			Expected: expandPromRule(&promRuleFlat{
 				Name:      "alert",
 				Namespace: "bar",
+				Labels: map[string]string{
+					"group": "group1",
+				},
 				Rules: []monitoringv1.Rule{{
 					Alert:  "alert",
 					Expr:   intstr.FromString("node_cpu_seconds_total{namespace=\"bar\"}"),
@@ -153,7 +169,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		},
 		{
 			Name: "excludeList-exist-match",
-			PromRule: expand(&promRuleFlat{
+			PromRule: expandPromRule(&promRuleFlat{
 				Name:      "rule-to-exclude",
 				Namespace: "bar",
 				Rules: []monitoringv1.Rule{
@@ -172,9 +188,49 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 				},
 			},
 
-			Expected: expand(&promRuleFlat{
+			Expected: expandPromRule(&promRuleFlat{
 				Name:      "rule-to-exclude",
 				Namespace: "bar",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:  "alert",
+						Expr:   intstr.FromString("node_cpu_seconds_total{namespace=\"DUMMY1\"}"),
+						Labels: map[string]string{"namespace": "DUMMY2"},
+					},
+				},
+			}),
+		},
+		{
+			Name: "excludeList-exist-match-selector",
+			PromRule: expandPromRule(&promRuleFlat{
+				Name:      "rule-to-exclude",
+				Namespace: "bar",
+				Labels: map[string]string{
+					"id": "rule-to-exclude",
+				},
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:  "alert",
+						Expr:   intstr.FromString("node_cpu_seconds_total{namespace=\"DUMMY1\"}"),
+						Labels: map[string]string{"namespace": "DUMMY2"},
+					},
+				},
+			}),
+			PromSpecEnforcedNamespaceLabel: "namespace",
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "bar",
+					Group:     monitoring.GroupName,
+					Resource:  monitoringv1.PrometheusRuleName,
+				},
+			},
+
+			Expected: expandPromRule(&promRuleFlat{
+				Name:      "rule-to-exclude",
+				Namespace: "bar",
+				Labels: map[string]string{
+					"id": "rule-to-exclude",
+				},
 				Rules: []monitoringv1.Rule{
 					{
 						Alert:  "alert",
@@ -189,7 +245,18 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		t.Run(tc.Name,
 			func(t *testing.T) {
 
-				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, tc.PromSpecExcludedRules, true)
+				excludedFromEnforcement := tc.ExcludedFromEnforcement
+				// append the deprecated PrometheusRulesExcludedFromEnforce
+				for _, rule := range tc.PromSpecExcludedRules {
+					excludedFromEnforcement = append(excludedFromEnforcement,
+						monitoringv1.ObjectReference{
+							Namespace: rule.RuleNamespace,
+							Group:     monitoring.GroupName,
+							Resource:  monitoringv1.PrometheusRuleName,
+							Name:      rule.RuleName,
+						})
+				}
+				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, excludedFromEnforcement, true)
 
 				if err := nsLabeler.EnforceNamespaceLabel(&tc.PromRule); err != nil {
 					t.Error(err)
@@ -202,21 +269,157 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 	}
 }
 
+func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
+
+	type testCase struct {
+		Name                           string
+		ServiceMonitor                 monitoringv1.ServiceMonitor
+		PromSpecEnforcedNamespaceLabel string
+		ExcludedFromEnforcement        []monitoringv1.ObjectReference
+
+		Expected monitoringv1.ServiceMonitor
+	}
+
+	testcases := []testCase{
+		{
+			Name: "servicemonitor-ns-enforced-add",
+			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:                 "foo",
+				Namespace:            "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+			}),
+			PromSpecEnforcedNamespaceLabel: "namespace",
+			Expected: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:      "foo",
+				Namespace: "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						TargetLabel: "namespace",
+						Replacement: "bar",
+					},
+				},
+				RelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						TargetLabel: "namespace",
+						Replacement: "bar",
+					},
+				},
+			}),
+		},
+		{
+			Name: "servicemonitor-ns-enforced-exclude-by-name",
+			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:                 "exclude-me",
+				Namespace:            "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+			}),
+			PromSpecEnforcedNamespaceLabel: "namespace",
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "bar",
+					Group:     monitoring.GroupName,
+					Resource:  monitoringv1.ServiceMonitorName,
+					Name:      "exclude-me",
+				},
+			},
+			Expected: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:                 "exclude-me",
+				Namespace:            "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+			}),
+		},
+		{
+			Name: "servicemonitor-ns-enforced-exclude-all-by-namespace",
+			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:                 "exclude-me",
+				Namespace:            "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+			}),
+			PromSpecEnforcedNamespaceLabel: "namespace",
+			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+				{
+					Namespace: "bar",
+					Group:     monitoring.GroupName,
+					Resource:  monitoringv1.ServiceMonitorName,
+				},
+			},
+			Expected: expandServiceMonitor(&promServiceMonitorFlat{
+				Name:                 "exclude-me",
+				Namespace:            "bar",
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+			}),
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.Name,
+			func(t *testing.T) {
+				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, tc.ExcludedFromEnforcement, true)
+				tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs = nsLabeler.GetRelabelingConfigs(tc.ServiceMonitor.TypeMeta, tc.ServiceMonitor.ObjectMeta, tc.ServiceMonitor.Spec.Endpoints[0].MetricRelabelConfigs)
+				tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs = nsLabeler.GetRelabelingConfigs(tc.ServiceMonitor.TypeMeta, tc.ServiceMonitor.ObjectMeta, tc.ServiceMonitor.Spec.Endpoints[0].RelabelConfigs)
+				if diff := cmp.Diff(tc.Expected, tc.ServiceMonitor); diff != "" {
+					t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				}
+			},
+		)
+	}
+}
+
 type promRuleFlat struct {
 	Name      string
 	Namespace string
+	Labels    map[string]string
 	Rules     []monitoringv1.Rule
 }
 
-func expand(r *promRuleFlat) monitoringv1.PrometheusRule {
+func expandPromRule(r *promRuleFlat) monitoringv1.PrometheusRule {
 	return monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.Name,
 			Namespace: r.Namespace,
+			Labels:    r.Labels,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: monitoringv1.SchemeGroupVersion.String(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{Rules: r.Rules},
+			},
+		},
+	}
+}
+
+type promServiceMonitorFlat struct {
+	Name                 string
+	Namespace            string
+	Labels               map[string]string
+	MetricRelabelConfigs []*monitoringv1.RelabelConfig
+	RelabelConfigs       []*monitoringv1.RelabelConfig
+}
+
+func expandServiceMonitor(r *promServiceMonitorFlat) monitoringv1.ServiceMonitor {
+	return monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      r.Name,
+			Namespace: r.Namespace,
+			Labels:    r.Labels,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.ServiceMonitorsKind,
+			APIVersion: monitoringv1.SchemeGroupVersion.String(),
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					MetricRelabelConfigs: r.MetricRelabelConfigs,
+					RelabelConfigs:       r.RelabelConfigs,
+				},
 			},
 		},
 	}

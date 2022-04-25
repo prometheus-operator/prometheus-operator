@@ -41,11 +41,11 @@ jobs:
             thanosruler: ""
             featureGated: "include"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Import environment variables from file
       run: cat ".github/env" >> $GITHUB_ENV
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
     - name: Build images
@@ -68,6 +68,7 @@ jobs:
       run: |
         kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
         kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
       run: >

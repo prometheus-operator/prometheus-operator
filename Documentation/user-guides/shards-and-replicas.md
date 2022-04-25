@@ -20,7 +20,7 @@ View the complete [Shards manifests](../../example/shards).
 
 The following manifest creates a Prometheus server with two replicas:
 
-```yaml mdox-exec="cat example/shards/prometheus.yaml"
+```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -31,7 +31,6 @@ metadata:
 spec:
   serviceAccountName: prometheus
   replicas: 2
-  shards: 2
   serviceMonitorSelector:
     matchLabels:
       team: frontend

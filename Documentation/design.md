@@ -107,4 +107,37 @@ Alerts and recording rules can be saved and applied as YAML files, and dynamical
 
 ## AlertmanagerConfig
 
-The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibit rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated config to Alertmanager. An example on how to use it is provided [here](../example/user-guides/alerting/alertmanager-config-example.yaml). Please be aware that this CRD is not stable yet.
+The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibit rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated config to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.
+
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-config-example.yaml"
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: config-example
+  labels:
+    alertmanagerConfig: example
+spec:
+  route:
+    groupBy: ['job']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'wechat-example'
+  receivers:
+  - name: 'wechat-example'
+    wechatConfigs:
+    - apiURL: 'http://wechatserver:8080/'
+      corpID: 'wechat-corpid'
+      apiSecret:
+        name: 'wechat-config'
+        key: 'apiSecret'
+
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: wechat-config
+data:
+  apiSecret: d2VjaGF0LXNlY3JldAo=
+```

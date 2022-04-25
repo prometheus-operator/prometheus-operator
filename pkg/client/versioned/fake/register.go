@@ -28,7 +28,7 @@ import (
 
 var scheme = runtime.NewScheme()
 var codecs = serializer.NewCodecFactory(scheme)
-var parameterCodec = runtime.NewParameterCodec(scheme)
+
 var localSchemeBuilder = runtime.SchemeBuilder{
 	monitoringv1.AddToScheme,
 	monitoringv1alpha1.AddToScheme,

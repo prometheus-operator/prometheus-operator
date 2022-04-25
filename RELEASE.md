@@ -22,9 +22,10 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.52   | 2021-11-03                                 | Filip Petkovski (Github: @fpetkovski)   |
 | v0.53   | 2021-12-15                                 | Simon Pasquier (GitHub: @simonpasquier) |
 | v0.54   | 2022-01-26                                 | Filip Petkovski (Github: @fpetkovski)   |
-| v0.55   | 2022-03-09                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.56   | 2022-04-20                                 | **searching for volunteer**             |
+| v0.55   | 2022-03-09                                 | Philip Gough (GitHub: @PhilipGough)     |
+| v0.56   | 2022-04-20                                 | Simon Pasquier (GitHub: @simonpasquier) |
 | v0.57   | 2022-06-01                                 | **searching for volunteer**             |
+| v0.58   | 2022-07-13                                 | **searching for volunteer**             |
 
 # How to cut a new release
 
@@ -106,7 +107,7 @@ git tag -s "pkg/client/${tag}" -m "pkg/client/${tag}"
 git push origin "${tag}" "pkg/apis/monitoring/${tag}" "pkg/client/${tag}"
 ```
 
-Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
+Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://docs.github.com/articles/generating-a-gpg-key), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
 
 Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator) and [ghcr.io](https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator)
 

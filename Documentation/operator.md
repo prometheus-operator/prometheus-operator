@@ -19,6 +19,8 @@ This article lists arguments of operator executable.
 
 ```$ mdox-exec="./operator --help"
 Usage of ./operator:
+  -alertmanager-config-namespaces value
+    	Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.
   -alertmanager-default-base-image string
     	Alertmanager default base image (path without tag/version) (default "quay.io/prometheus/alertmanager")
   -alertmanager-instance-namespaces value
@@ -58,7 +60,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.53.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.56.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

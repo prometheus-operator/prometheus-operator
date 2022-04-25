@@ -5,7 +5,7 @@ metadata:
 webhooks:
   - clientConfig:
       service:
-        name: prometheus-operator
+        name: prometheus-operator-admission-webhook
         namespace: default
         path: /admission-prometheusrules/validate
     failurePolicy: Fail

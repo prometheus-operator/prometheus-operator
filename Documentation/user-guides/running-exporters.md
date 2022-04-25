@@ -38,7 +38,7 @@ spec:
     targetPort: metrics
     protocol: TCP
   selector:
-    app: kube-state-metrics
+    k8s-app: kube-state-metrics
 ```
 
 This Service targets all Pods with the label `k8s-app: kube-state-metrics`.

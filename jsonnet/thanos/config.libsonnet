@@ -20,7 +20,7 @@ local service(name, namespace, labels, selector, ports) = {
     thanosRulerName: 'thanos-ruler',
     thanosSidecarName: 'thanos-sidecar',
     versions+:: {
-      thanos: 'v0.11.2',
+      thanos: 'v0.25.1',
     },
 
     imageRepos+:: {

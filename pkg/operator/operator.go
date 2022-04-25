@@ -45,17 +45,121 @@ var (
 	)
 )
 
+type ReconciliationStatus struct {
+	err error
+}
+
+func (rs ReconciliationStatus) Reason() string {
+	if rs.Ok() {
+		return ""
+	}
+
+	return "ReconciliationFailed"
+}
+
+func (rs ReconciliationStatus) Message() string {
+	if rs.Ok() {
+		return ""
+	}
+
+	return rs.err.Error()
+}
+
+func (rs ReconciliationStatus) Ok() bool {
+	return rs.err == nil
+}
+
+// ReconciliationTracker tracks reconciliation status per object.
+// The zero ReconciliationTracker is ready to use.
+type ReconciliationTracker struct {
+	once sync.Once
+	// mtx protects all fields below.
+	mtx            sync.RWMutex
+	statusByObject map[string]ReconciliationStatus
+}
+
+// SetStatus updates the last reconciliation status for the given object.
+func (rt *ReconciliationTracker) SetStatus(k string, err error) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rt.once.Do(func() {
+		rt.statusByObject = map[string]ReconciliationStatus{}
+	})
+
+	rt.statusByObject[k] = ReconciliationStatus{err: err}
+}
+
+// GetStatus returns the last reconciliation status for the given object.
+// The second value indicates whether the object is known or not.
+func (rt *ReconciliationTracker) GetStatus(k string) (ReconciliationStatus, bool) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	s, found := rt.statusByObject[k]
+	if !found {
+		return ReconciliationStatus{}, false
+	}
+
+	return s, true
+}
+
+// ForgetObject removes the given object from the tracker.
+// It should be called when the controller detects that the object has been deleted.
+func (rt *ReconciliationTracker) ForgetObject(k string) {
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	if rt.statusByObject == nil {
+		return
+	}
+
+	delete(rt.statusByObject, k)
+}
+
+// Describe implements the prometheus.Collector interface.
+func (rt *ReconciliationTracker) Describe(ch chan<- *prometheus.Desc) {
+	ch <- syncsDesc
+}
+
+// Collect implements the prometheus.Collector interface.
+func (rt *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
+	rt.mtx.RLock()
+	defer rt.mtx.RUnlock()
+
+	var ok, failed float64
+	for _, st := range rt.statusByObject {
+		if st.Ok() {
+			ok++
+		}
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		syncsDesc,
+		prometheus.GaugeValue,
+		ok,
+		"ok",
+	)
+	ch <- prometheus.MustNewConstMetric(
+		syncsDesc,
+		prometheus.GaugeValue,
+		failed,
+		"failed",
+	)
+}
+
 // Metrics represents metrics associated to an operator.
 type Metrics struct {
 	reg prometheus.Registerer
 
-	listCounter            prometheus.Counter
-	listFailedCounter      prometheus.Counter
-	watchCounter           prometheus.Counter
-	watchFailedCounter     prometheus.Counter
-	reconcileCounter       prometheus.Counter
-	reconcileErrorsCounter prometheus.Counter
-	stsDeleteCreateCounter prometheus.Counter
+	listCounter                prometheus.Counter
+	listFailedCounter          prometheus.Counter
+	watchCounter               prometheus.Counter
+	watchFailedCounter         prometheus.Counter
+	reconcileCounter           prometheus.Counter
+	reconcileErrorsCounter     prometheus.Counter
+	stsDeleteCreateCounter     prometheus.Counter
+	reconcileDurationHistogram prometheus.Histogram
 	// triggerByCounter is a set of counters keeping track of the amount
 	// of times Prometheus Operator was triggered to reconcile its created
 	// objects. It is split in the dimensions of Kubernetes objects and
@@ -65,7 +169,6 @@ type Metrics struct {
 
 	// mtx protects all fields below.
 	mtx       sync.RWMutex
-	syncs     map[string]bool
 	resources map[resourceKey]map[string]int
 }
 
@@ -83,6 +186,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		reconcileCounter: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_reconcile_operations_total",
 			Help: "Total number of reconcile operations",
+		}),
+		reconcileDurationHistogram: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "prometheus_operator_reconcile_duration_seconds",
+			Help:    "Histogram of reconcile operations",
+			Buckets: []float64{.1, .5, 1, 5, 10},
 		}),
 		reconcileErrorsCounter: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_reconcile_errors_total",
@@ -118,12 +226,12 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 			Help: "1 when the controller is ready to reconcile resources, 0 otherwise",
 		}),
 
-		syncs:     make(map[string]bool),
 		resources: make(map[resourceKey]map[string]int),
 	}
 
 	m.reg.MustRegister(
 		m.reconcileCounter,
+		m.reconcileDurationHistogram,
 		m.reconcileErrorsCounter,
 		m.triggerByCounter,
 		m.stsDeleteCreateCounter,
@@ -141,6 +249,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 // ReconcileCounter returns a counter to track attempted reconciliations.
 func (m *Metrics) ReconcileCounter() prometheus.Counter {
 	return m.reconcileCounter
+}
+
+// ReconcileDurationHistogram returns a histogram to track the duration of reconciliations.
+func (m *Metrics) ReconcileDurationHistogram() prometheus.Histogram {
+	return m.reconcileDurationHistogram
 }
 
 // ReconcileErrorsCounter returns a counter to track reconciliation errors.
@@ -197,27 +310,6 @@ func (m *Metrics) setResources(objKey string, resKey resourceKey, v int) {
 	m.resources[resKey][objKey] = v
 }
 
-// SetSyncStatus tracks the status of the last sync operation for the given object.
-func (m *Metrics) SetSyncStatus(objKey string, success bool) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	m.syncs[objKey] = success
-}
-
-// ForgetObject removes the metrics tracked for the given object's key.
-// It should be called when the controller detects that the object has been deleted.
-func (m *Metrics) ForgetObject(objKey string) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
-	delete(m.syncs, objKey)
-
-	for k := range m.resources {
-		delete(m.resources[k], objKey)
-	}
-}
-
 // Ready returns a gauge to track whether the controller is ready or not.
 func (m *Metrics) Ready() prometheus.Gauge {
 	return m.ready
@@ -231,35 +323,12 @@ func (m *Metrics) MustRegister(metrics ...prometheus.Collector) {
 // Describe implements the prometheus.Collector interface.
 func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
 	ch <- resourcesDesc
-	ch <- syncsDesc
 }
 
 // Collect implements the prometheus.Collector interface.
 func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 	m.mtx.RLock()
 	defer m.mtx.RUnlock()
-
-	var ok, failed float64
-	for _, success := range m.syncs {
-		if success {
-			ok++
-		} else {
-			failed++
-		}
-	}
-
-	ch <- prometheus.MustNewConstMetric(
-		syncsDesc,
-		prometheus.GaugeValue,
-		ok,
-		"ok",
-	)
-	ch <- prometheus.MustNewConstMetric(
-		syncsDesc,
-		prometheus.GaugeValue,
-		failed,
-		"failed",
-	)
 
 	for rKey := range m.resources {
 		var total int

@@ -1122,32 +1122,32 @@ route:
   group_by:
   - job
   routes:
-  - receiver: %s-e2e-test-amconfig-many-receivers-e2e
+  - receiver: %s/e2e-test-amconfig-many-receivers/e2e
     matchers:
     - namespace="%s"
     continue: true
-  - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+  - receiver: %s/e2e-test-amconfig-sub-routes/e2e
     match:
       service: webapp
     matchers:
     - namespace="%s"
     continue: true
     routes:
-    - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+    - receiver: %s/e2e-test-amconfig-sub-routes/e2e
       group_by:
       - env
       - instance
       match:
         job: db
       routes:
-      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+      - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match:
           alertname: TargetDown
-      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+      - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match_re:
           severity: critical|warning
         mute_time_intervals:
-        - %s-e2e-test-amconfig-sub-routes-test
+        - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
     match:
       alertname: DeadMansSwitch
@@ -1156,7 +1156,7 @@ route:
   repeat_interval: 12h
 receivers:
 - name: "null"
-- name: %v-e2e-test-amconfig-many-receivers-e2e
+- name: %v/e2e-test-amconfig-many-receivers/e2e
   opsgenie_configs:
   - api_key: 1234abc
   pagerduty_configs:
@@ -1198,11 +1198,11 @@ receivers:
       access_key: 1234abc
       secret_key: 1234abc
     topic_arn: test-topicARN
-- name: %s-e2e-test-amconfig-sub-routes-e2e
+- name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
 mute_time_intervals:
-- name: %s-e2e-test-amconfig-sub-routes-test
+- name: %s/e2e-test-amconfig-sub-routes/test
   time_intervals:
   - times:
     - start_time: "08:00"
@@ -1274,7 +1274,7 @@ templates: []
 	}
 }
 
-func testUserDefinedAlertmanagerConfig(t *testing.T) {
+func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
@@ -1284,8 +1284,6 @@ func testUserDefinedAlertmanagerConfig(t *testing.T) {
 
 	yamlConfig := `route:
   receiver: "void"
-  matchers:
-  - namespace=test
 receivers:
 - name: "void"
 inhibit_rules:
@@ -1337,13 +1335,85 @@ inhibit_rules:
 			return false, nil
 		}
 
-		if string(cfgSecret.Data["alertmanager.yaml"]) != yamlConfig {
-			lastErr = errors.Errorf("expected Alertmanager configuration %q, got %q", yamlConfig, cfgSecret.Data["alertmanager.yaml"])
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
 		return true, nil
 	})
+
+	if err != nil {
+		t.Fatalf("%v: %v", err, lastErr)
+	}
+}
+
+func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager("user-amconfig", 1)
+	alertmanagerConfig, err := framework.CreateAlertmanagerConfig(context.Background(), ns, "user-amconfig")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
+		Name: alertmanagerConfig.Name,
+	}
+
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlConfig := fmt.Sprintf(`route:
+  receiver: %[1]s
+  routes:
+  - receiver: %[1]s
+    match:
+      mykey: myvalue-1
+inhibit_rules:
+- target_matchers:
+  - mykey="myvalue-2"
+  source_matchers:
+  - mykey="myvalue-1"
+  equal:
+  - equalkey
+receivers:
+- name: %[1]s
+templates: []
+`, fmt.Sprintf("%s/%s/null", ns, "user-amconfig"))
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			lastErr = err
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			lastErr = errors.New("'alertmanager.yaml' key is missing")
+			return false, nil
+		}
+
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
 	if err != nil {
 		t.Fatalf("%v: %v", err, lastErr)
 	}
