@@ -800,7 +800,8 @@ type TelegramConfig struct {
 	// Disable telegram notifications
 	// +optional
 	DisableNotifications *bool `json:"disableNotifications,omitempty"`
-	// Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text.
+	// Parse mode for telegram message
+	//+kubebuilder:validation:Enum="";MarkdownV2;Markdown;HTML
 	// +optional
 	ParseMode string `json:"parseMode,omitempty"`
 	// HTTP client configuration.

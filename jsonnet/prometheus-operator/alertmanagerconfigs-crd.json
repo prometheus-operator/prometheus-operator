@@ -3239,7 +3239,13 @@
                                 "type": "string"
                               },
                               "parseMode": {
-                                "description": "Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text.",
+                                "description": "Parse mode for telegram message",
+                                "enum": [
+                                  "",
+                                  "MarkdownV2",
+                                  "Markdown",
+                                  "HTML"
+                                ],
                                 "type": "string"
                               },
                               "sendResolved": {

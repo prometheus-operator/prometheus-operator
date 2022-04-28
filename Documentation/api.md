@@ -1797,7 +1797,7 @@ TelegramConfig configures notifications via Telegram. See https://prometheus.io/
 | chatID | The Telegram chat ID. | int64 | false |
 | message | Message template | string | false |
 | disableNotifications | Disable telegram notifications | *bool | false |
-| parseMode | Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text. | string | false |
+| parseMode | Parse mode for telegram message | string | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
