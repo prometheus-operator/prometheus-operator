@@ -23,40 +23,66 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) createMutatingHook(ctx context.Context, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
-	h, err := parseMutatingHookYaml(yamlPath)
+func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []byte, namespace, source string) (FinalizerFn, error) {
+	hook, err := parseMutatingHookYaml(source)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed parsing mutating webhook")
 	}
 
-	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
-	h.Webhooks[0].ClientConfig.CABundle = certBytes
+	hook.Webhooks[0].ClientConfig.Service.Namespace = namespace
+	hook.Webhooks[0].ClientConfig.CABundle = certBytes
 
-	_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(ctx, h, metav1.CreateOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create mutating webhook %s", h.Name)
+	h, err := f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Get(ctx, hook.Name, metav1.GetOptions{})
+	if err == nil {
+		// must set this field from existing MutatingWebhookConfiguration to prevent update fail
+		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
+
+		// MutatingWebhookConfiguration already exists -> Update
+		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to update mutating webhook %s", hook.Name)
+		}
+	} else {
+		// MutatingWebhookConfiguration doesn't exists -> Create
+		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create mutating webhook %s", hook.Name)
+		}
 	}
 
-	finalizerFn := func() error { return f.deleteMutatingWebhook(ctx, h.Name) }
+	finalizerFn := func() error { return f.deleteMutatingWebhook(ctx, hook.Name) }
 
 	return finalizerFn, nil
 }
 
-func (f *Framework) createValidatingHook(ctx context.Context, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
-	h, err := parseValidatingHookYaml(yamlPath)
+func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes []byte, namespace, source string) (FinalizerFn, error) {
+	hook, err := parseValidatingHookYaml(source)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed parsing validating webhook")
 	}
 
-	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
-	h.Webhooks[0].ClientConfig.CABundle = certBytes
+	hook.Webhooks[0].ClientConfig.Service.Namespace = namespace
+	hook.Webhooks[0].ClientConfig.CABundle = certBytes
 
-	_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, h, metav1.CreateOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create validating webhook %s", h.Name)
+	h, err := f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Get(ctx, hook.Name, metav1.GetOptions{})
+	if err == nil {
+		// must set this field from existing ValidatingWebhookConfiguration to prevent update fail
+		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
+
+		// ValidatingWebhookConfiguration already exists -> Update
+		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create validating webhook %s", hook.Name)
+		}
+	} else {
+		// ValidatingWebhookConfiguration doesn't exists -> Create
+		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create validating webhook %s", hook.Name)
+		}
 	}
 
-	finalizerFn := func() error { return f.deleteValidatingWebhook(ctx, h.Name) }
+	finalizerFn := func() error { return f.deleteValidatingWebhook(ctx, hook.Name) }
 
 	return finalizerFn, nil
 }
@@ -69,29 +95,29 @@ func (f *Framework) deleteValidatingWebhook(ctx context.Context, name string) er
 	return f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
-func parseValidatingHookYaml(pathToYaml string) (*v1.ValidatingWebhookConfiguration, error) {
-	manifest, err := PathToOSFile(pathToYaml)
+func parseValidatingHookYaml(source string) (*v1.ValidatingWebhookConfiguration, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
 
 	resource := v1.ValidatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
-		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
+		return nil, errors.Wrapf(err, "failed to decode file %s", source)
 	}
 
 	return &resource, nil
 }
 
-func parseMutatingHookYaml(pathToYaml string) (*v1.MutatingWebhookConfiguration, error) {
-	manifest, err := PathToOSFile(pathToYaml)
+func parseMutatingHookYaml(source string) (*v1.MutatingWebhookConfiguration, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
 
 	resource := v1.MutatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
-		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
+		return nil, errors.Wrapf(err, "failed to decode file %s", source)
 	}
 
 	return &resource, nil

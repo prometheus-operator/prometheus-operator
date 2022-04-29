@@ -56,6 +56,12 @@ func skipThanosRulerTests(t *testing.T) {
 	}
 }
 
+func skipOperatorUpgradeTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_OPERATOR_UPGRADE_TESTS") != "" {
+		t.Skip("Skipping Operator upgrade tests")
+	}
+}
+
 // feature gated tests need to be explicitly included
 func runFeatureGatedTests(t *testing.T) {
 	if os.Getenv("FEATURE_GATED_TESTS") != "include" {
@@ -99,7 +105,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,6 +294,18 @@ func TestAlertmanagerInstanceNs(t *testing.T) {
 		"AllNs":     testAlertmanagerInstanceNamespacesAllNs,
 		"AllowList": testAlertmanagerInstanceNamespacesAllowList,
 		"DenyNs":    testAlertmanagerInstanceNamespacesDenyNs,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+// TestOperatorUpgrade tests the prometheus upgrade from previous stable minor version to current version
+func TestOperatorUpgrade(t *testing.T) {
+	skipOperatorUpgradeTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"OperatorUpgrade": testOperatorUpgrade,
 	}
 
 	for name, f := range testFuncs {

@@ -26,24 +26,40 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func MakeService(pathToYaml string) (*v1.Service, error) {
-	manifest, err := PathToOSFile(pathToYaml)
+func MakeService(source string) (*v1.Service, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
 	resource := v1.Service{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", source))
 	}
 
 	return &resource, nil
 }
 
-func (f *Framework) CreateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
+func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
 	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
 
-	if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
-		return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
+	s, err := f.KubeClient.CoreV1().Services(namespace).Get(ctx, service.Name, metav1.GetOptions{})
+
+	if err == nil {
+		// must set these immutable fields from the existing service to prevent update fail
+		service.ObjectMeta.ResourceVersion = s.ObjectMeta.ResourceVersion
+		service.Spec.ClusterIP = s.Spec.ClusterIP
+		service.Spec.ClusterIPs = s.Spec.ClusterIPs
+		service.Spec.IPFamilies = s.Spec.IPFamilies
+
+		// Service already exists -> Update
+		if _, err := f.KubeClient.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{}); err != nil {
+			return finalizerFn, errors.Wrap(err, fmt.Sprintf("updating service %v failed", service.Name))
+		}
+	} else {
+		// Service doesn't exists -> Create
+		if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
+			return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
+		}
 	}
 
 	if err := f.WaitForServiceReady(ctx, namespace, service.Name); err != nil {

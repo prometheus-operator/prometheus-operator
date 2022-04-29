@@ -191,7 +191,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -233,7 +233,7 @@ func testAMClusterInitialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -552,10 +552,10 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			},
 		},
 	}
-	if err := framework.CreateDeployment(context.Background(), ns, whdpl); err != nil {
+	if err := framework.CreateOrUpdateDeployment(context.Background(), ns, whdpl); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, whsvc); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, whsvc); err != nil {
 		t.Fatal(err)
 	}
 	err := framework.WaitForPodsReady(context.Background(), ns, time.Minute*5, 1,
@@ -613,7 +613,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
 		t.Fatal(err)
 	}
 

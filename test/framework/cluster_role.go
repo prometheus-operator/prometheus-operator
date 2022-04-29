@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -44,8 +45,8 @@ var (
 	}
 )
 
-func (f *Framework) CreateClusterRole(ctx context.Context, relativePath string) (*rbacv1.ClusterRole, error) {
-	clusterRole, err := parseClusterRoleYaml(relativePath)
+func (f *Framework) CreateOrUpdateClusterRole(ctx context.Context, source string) (*rbacv1.ClusterRole, error) {
+	clusterRole, err := parseClusterRoleYaml(source)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +71,8 @@ func (f *Framework) CreateClusterRole(ctx context.Context, relativePath string) 
 	return clusterRole, nil
 }
 
-func (f *Framework) DeleteClusterRole(ctx context.Context, relativePath string) error {
-	clusterRole, err := parseClusterRoleYaml(relativePath)
+func (f *Framework) DeleteClusterRole(ctx context.Context, source string) error {
+	clusterRole, err := parseClusterRoleYaml(source)
 	if err != nil {
 		return err
 	}
@@ -87,8 +88,8 @@ func (f *Framework) UpdateClusterRole(ctx context.Context, clusterRole *rbacv1.C
 	return nil
 }
 
-func parseClusterRoleYaml(relativePath string) (*rbacv1.ClusterRole, error) {
-	manifest, err := PathToOSFile(relativePath)
+func parseClusterRoleYaml(source string) (*rbacv1.ClusterRole, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}

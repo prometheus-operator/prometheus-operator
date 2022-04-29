@@ -36,25 +36,37 @@ func (f *Framework) UpdateDeployment(ctx context.Context, deployment *appsv1.Dep
 	return f.KubeClient.AppsV1().Deployments(deployment.Namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 }
 
-func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
-	manifest, err := PathToOSFile(pathToYaml)
+func MakeDeployment(source string) (*appsv1.Deployment, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
 	deployment := appsv1.Deployment{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&deployment); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", source))
 	}
 
 	return &deployment, nil
 }
 
-func (f *Framework) CreateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
+func (f *Framework) CreateOrUpdateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
 	d.Namespace = namespace
-	_, err := f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+	_, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, d.Name, metav1.GetOptions{})
+
+	if err == nil {
+		// Deployment already exists -> Update
+		_, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, d, metav1.UpdateOptions{})
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to update deployment %s", d.Name))
+		}
+	} else {
+		// Deployment doesn't exists -> Create
+		_, err = f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+		}
 	}
+
 	return nil
 }
 
