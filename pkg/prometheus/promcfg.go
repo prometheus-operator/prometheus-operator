@@ -511,15 +511,17 @@ func (cg *ConfigGenerator) Generate(
 
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
-	if p.Spec.RuleSelector != nil {
-		ruleFilePaths := []string{}
-		for _, name := range ruleConfigMapNames {
-			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+	if !isFeatureEnabled(p.Spec.EnableFeatures, "agent") {
+		if p.Spec.RuleSelector != nil {
+			ruleFilePaths := []string{}
+			for _, name := range ruleConfigMapNames {
+				ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+			}
+			cfg = append(cfg, yaml.MapItem{
+				Key:   "rule_files",
+				Value: ruleFilePaths,
+			})
 		}
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "rule_files",
-			Value: ruleFilePaths,
-		})
 	}
 
 	sMonIdentifiers := make([]string, len(sMons))
@@ -630,7 +632,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	additionalAlertmanagerConfigs []byte,
 	store *assets.Store,
 ) (yaml.MapSlice, error) {
-	if p.Spec.Alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
+	if isFeatureEnabled(p.Spec.EnableFeatures, "agent") || p.Spec.Alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
 	}
 

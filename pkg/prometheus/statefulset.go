@@ -325,6 +325,16 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 	return svc
 }
 
+func isFeatureEnabled(features []string, feat string) bool {
+	for _, f := range features {
+		if f == feat {
+			return true
+		}
+	}
+
+	return false
+}
+
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
 	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
@@ -354,25 +364,25 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
+	// Only add tsdb retention flags if not running in agent mode, see error below:
+	// `The following flag(s) can not be used in agent mode: ["--storage.tsdb.retention.time" "--storage.tsdb.path"]`
+	if !isFeatureEnabled(p.Spec.EnableFeatures, "agent") {
 	retentionTimeFlag := "-storage.tsdb.retention="
-	if version.GTE(semver.MustParse("2.7.0")) {
-		retentionTimeFlag = "-storage.tsdb.retention.time="
-		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
-			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
-		} else {
-			if p.Spec.Retention != "" {
-				promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
-			}
+		if version.GTE(semver.MustParse("2.7.0")) {
+			retentionTimeFlag = "-storage.tsdb.retention.time="
+			if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+				promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+			} else {
+				if p.Spec.Retention != "" {
+					promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
+				}
 
-			if p.Spec.RetentionSize != "" {
-				promArgs = append(promArgs,
-					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-				)
+				if p.Spec.RetentionSize != "" {
+					promArgs = append(promArgs,
+						fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+					)
+				}
 			}
-		}
-	} else {
-		if p.Spec.Retention == "" {
-			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
 		} else {
 			promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
 		}
@@ -380,9 +390,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	promArgs = append(promArgs,
 		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 		"-web.enable-lifecycle",
 	)
+
+	// Only add tsdb retention flags if not running in agent mode, see error below:
+	// `The following flag(s) can not be used in agent mode: ["--storage.tsdb.retention.time" "--storage.tsdb.path"]`
+	if !isFeatureEnabled(p.Spec.EnableFeatures, "agent") {
+		promArgs = append(promArgs,
+			fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
+		)
+	}
 
 	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
 		promArgs = append(promArgs,

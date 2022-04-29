@@ -194,6 +194,32 @@ func TestStatefulSetPVC(t *testing.T) {
 
 }
 
+func TestStatefulSetAgentMode(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				EnableFeatures: []string{"agent"},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--enable-feature=agent" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus enabled feature is not correctly set.")
+	}
+}
+
 func TestStatefulSetEmptyDir(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
