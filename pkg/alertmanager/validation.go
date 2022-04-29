@@ -338,13 +338,6 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 			return errors.Errorf("mandatory field %q is empty", "chatID")
 		}
 
-		// Parse mode supported values are MarkdownV2, Markdown, HTML and empty string for plain text.
-		if config.ParseMode != "" {
-			if !(config.ParseMode == "MarkdownV2" || config.ParseMode == "Markdown" || config.ParseMode == "HTML") {
-				return errors.Errorf("invalid value for parseMode: %s. Valid values are %s", config.ParseMode, "MarkdownV2, Markdown, HTML or empty string")
-			}
-		}
-
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
