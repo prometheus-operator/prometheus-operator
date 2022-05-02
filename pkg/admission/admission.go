@@ -51,6 +51,11 @@ const (
 
 	alertManagerConfigResource = monitoringv1beta1.AlertmanagerConfigName
 	alertManagerConfigKind     = monitoringv1beta1.AlertmanagerConfigKind
+
+	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
+	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"
+	alertmanagerConfigValidatePath = "/admission-alertmanagerconfigs/validate"
+	convertPath                    = "/convert"
 )
 
 var (
@@ -101,10 +106,10 @@ func New(logger log.Logger) *Admission {
 }
 
 func (a *Admission) Register(mux *http.ServeMux) {
-	mux.HandleFunc("/admission-prometheusrules/validate", a.servePrometheusRulesValidate)
-	mux.HandleFunc("/admission-prometheusrules/mutate", a.servePrometheusRulesMutate)
-	mux.HandleFunc("/admission-alertmanagerconfigs/validate", a.serveAlertManagerConfigValidate)
-	mux.HandleFunc("/convert", a.wh.ServeHTTP)
+	mux.HandleFunc(prometheusRuleValidatePath, a.servePrometheusRulesValidate)
+	mux.HandleFunc(prometheusRuleMutatePath, a.servePrometheusRulesMutate)
+	mux.HandleFunc(alertmanagerConfigValidatePath, a.serveAlertmanagerConfigValidate)
+	mux.HandleFunc(convertPath, a.serveConvert)
 }
 
 func (a *Admission) RegisterMetrics(
@@ -129,8 +134,12 @@ func (a *Admission) servePrometheusRulesValidate(w http.ResponseWriter, r *http.
 	a.serveAdmission(w, r, a.validatePrometheusRules)
 }
 
-func (a *Admission) serveAlertManagerConfigValidate(w http.ResponseWriter, r *http.Request) {
-	a.serveAdmission(w, r, a.validateAlertManagerConfig)
+func (a *Admission) serveAlertmanagerConfigValidate(w http.ResponseWriter, r *http.Request) {
+	a.serveAdmission(w, r, a.validateAlertmanagerConfig)
+}
+
+func (a *Admission) serveConvert(w http.ResponseWriter, r *http.Request) {
+	a.wh.ServeHTTP(w, r)
 }
 
 func toAdmissionResponseFailure(message, resource string, errors []error) *v1.AdmissionResponse {
@@ -270,7 +279,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 	return &v1.AdmissionResponse{Allowed: true}
 }
 
-func (a *Admission) validateAlertManagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
+func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	a.incrementCounter(a.amConfValidationTriggeredCounter)
 	level.Debug(a.logger).Log("msg", "Validating alertmanagerconfigs")
 
@@ -314,7 +323,7 @@ func (a *Admission) validateAlertManagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		level.Debug(a.logger).Log("msg", msg, "content", string(ar.Request.Object.Raw))
 		level.Info(a.logger).Log("msg", msg, "err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure("AlertManagerConfig is invalid", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []error{err})
 	}
 	return &v1.AdmissionResponse{Allowed: true}
 }
