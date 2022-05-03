@@ -38,23 +38,78 @@ func TestListOptions(t *testing.T) {
 }
 
 func TestCreateStatefulSetInputHash(t *testing.T) {
-	p1 := monitoringv1.Prometheus{}
-	p1.Spec.Version = "v1.7.0"
-	p2 := monitoringv1.Prometheus{}
-	p2.Spec.Version = "v1.7.2"
-	c := operator.Config{}
+	for _, tc := range []struct {
+		name string
+		a, b monitoringv1.Prometheus
 
-	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	p2Hash, err := createSSetInputHash(p2, c, []string{}, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+		equal bool
+	}{
+		{
+			name: "different versions",
+			a: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.0",
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+		},
+		{
+			name: "same hash with different status",
+			a: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Paused:  true,
+						Version: "v1.7.2",
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Paused:  true,
+						Version: "v1.7.2",
+					},
+				},
+				Status: monitoringv1.PrometheusStatus{
+					Paused: true,
+				},
+			},
 
-	if p1Hash == p2Hash {
-		t.Fatal("expected two different Prometheus CRDs to result in two different hash but got equal hash")
+			equal: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := operator.Config{}
+
+			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, nil, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, nil, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if tc.equal {
+				if p1Hash != p2Hash {
+					t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
+				}
+				return
+			}
+
+			if p1Hash == p2Hash {
+				t.Fatal("expected two different Prometheus CRDs to produce different hashes but got equal hash")
+			}
+		})
 	}
 }
 
