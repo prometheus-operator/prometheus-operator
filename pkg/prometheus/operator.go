@@ -1625,6 +1625,10 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ss interface{}) (string, error) {
+	// The status field is updated only by the operator hence it shouldn't be
+	// taken into account for computing the hash value.
+	p.Status = monitoringv1.PrometheusStatus{}
+
 	hash, err := hashstructure.Hash(struct {
 		P monitoringv1.Prometheus
 		C operator.Config

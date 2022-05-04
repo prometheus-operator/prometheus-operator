@@ -1,3 +1,7 @@
+## 0.56.1 / 2022-05-03
+
+* [BUGFIX] Avoid unnecessary updates of the Prometheus StatefulSet object. #4762
+
 ## 0.56.0 / 2022-04-20
 
 * [CHANGE] Added validation at the API level for size-based fields of the Prometheus CRD. #4661
