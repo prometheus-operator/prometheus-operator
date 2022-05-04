@@ -335,7 +335,7 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 		}
 
 		if config.ChatID == 0 {
-			return errors.Errorf("mandatory field %q is empty", "chatID")
+			return fmt.Errorf("mandatory field %q is empty", "chatID")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
