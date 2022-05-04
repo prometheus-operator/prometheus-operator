@@ -1503,8 +1503,11 @@ func checkTelegramConfigs(
 	store *assets.Store,
 	amVersion semver.Version,
 ) error {
-	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
-	if !telegramAllowed && len(configs) > 0 {
+	if len(configs) == 0 {
+		return nil
+	}
+	
+	if amVersion.LT(semver.MustParse("0.24.0") {
 		return fmt.Errorf("'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}
 
