@@ -1506,9 +1506,9 @@ func checkTelegramConfigs(
 	if len(configs) == 0 {
 		return nil
 	}
-	
-	if amVersion.LT(semver.MustParse("0.24.0") {
-		return fmt.Errorf("'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+
+	if amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}
 
 	for i, config := range configs {
