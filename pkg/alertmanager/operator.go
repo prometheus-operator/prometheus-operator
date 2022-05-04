@@ -1505,7 +1505,7 @@ func checkTelegramConfigs(
 ) error {
 	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
 	if !telegramAllowed && len(configs) > 0 {
-		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
+		return fmt.Errorf("'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}
 
 	for i, config := range configs {
