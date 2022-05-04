@@ -789,10 +789,8 @@ type TelegramConfig struct {
 	// Telegram bot token
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +kubebuilder:validation:Required
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
 	// The Telegram chat ID.
-	// +kubebuilder:validation:Required
 	ChatID int64 `json:"chatID,omitempty"`
 	// Message template
 	// +optional
@@ -801,7 +799,7 @@ type TelegramConfig struct {
 	// +optional
 	DisableNotifications *bool `json:"disableNotifications,omitempty"`
 	// Parse mode for telegram message
-	//+kubebuilder:validation:Enum="";MarkdownV2;Markdown;HTML
+	//+kubebuilder:validation:Enum=MarkdownV2;Markdown;HTML
 	// +optional
 	ParseMode string `json:"parseMode,omitempty"`
 	// HTTP client configuration.

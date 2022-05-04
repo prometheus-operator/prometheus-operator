@@ -21,11 +21,11 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.4.1-0.20211215142838-1eac0933d512
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.56.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.56.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.56.2
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.56.2
 	github.com/prometheus/alertmanager v0.24.0
 	github.com/prometheus/client_golang v1.12.2
-	github.com/prometheus/common v0.33.0
+	github.com/prometheus/common v0.34.0
 	github.com/prometheus/prometheus v1.8.2-0.20220315145411-881111fec433
 	github.com/stretchr/testify v1.7.1
 	github.com/thanos-io/thanos v0.26.0

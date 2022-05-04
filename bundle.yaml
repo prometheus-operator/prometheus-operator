@@ -3080,7 +3080,6 @@ spec:
                           parseMode:
                             description: Parse mode for telegram message
                             enum:
-                            - ""
                             - MarkdownV2
                             - Markdown
                             - HTML
