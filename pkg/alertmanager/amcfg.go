@@ -714,6 +714,7 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Priority:      in.Priority,
 		Actions:       in.Actions,
 		Entity:        in.Entity,
+		UpdateAlerts:  in.UpdateAlerts,
 	}
 
 	if in.APIKey != nil {
@@ -1398,6 +1399,11 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		msg := "opsgenie_config 'entity' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.Entity = ""
+	}
+	if ogc.UpdateAlerts != nil && lessThanV0_24 {
+		msg := "update_alerts 'entity' supported in AlertManager >= 0.24.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		ogc.UpdateAlerts = nil
 	}
 
 	if ogc.APIKey != "" {

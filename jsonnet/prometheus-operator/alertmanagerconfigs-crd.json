@@ -944,6 +944,10 @@
                               "tags": {
                                 "description": "Comma separated list of tags attached to the notifications.",
                                 "type": "string"
+                              },
+                              "updateAlerts": {
+                                "description": "Whether to update message and description of the alert in OpsGenie if it already exists By default, the alert is never updated in OpsGenie, the new message only appears in activity log.",
+                                "type": "boolean"
                               }
                             },
                             "type": "object"

@@ -142,6 +142,7 @@ type opsgenieConfig struct {
 	Tags          string              `yaml:"tags,omitempty" json:"tags,omitempty"`
 	Note          string              `yaml:"note,omitempty" json:"note,omitempty"`
 	Priority      string              `yaml:"priority,omitempty" json:"priority,omitempty"`
+	UpdateAlerts  *bool               `yaml:"update_alerts,omitempty" json:"update_alerts,omitempty"`
 	Entity        string              `yaml:"entity,omitempty" json:"entity,omitempty"`
 	Actions       string              `yaml:"actions,omitempty" json:"actions,omitempty"`
 }
