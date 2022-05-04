@@ -331,7 +331,7 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 	for _, config := range configs {
 
 		if config.BotToken == nil {
-			return errors.Errorf("mandatory field %q is empty", "botToken")
+			return fmt.Errorf("mandatory field %q is empty", "botToken")
 		}
 
 		if config.ChatID == 0 {
