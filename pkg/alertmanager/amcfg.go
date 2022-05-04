@@ -979,17 +979,13 @@ func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		out.HTTPConfig = httpConfig
 	}
 
-	if in.ChatID == 0 {
-		return nil, errors.Errorf("mandatory field %q is empty", "chatID")
-	}
-
 	if in.BotToken != nil {
 		botToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.BotToken)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get bot token")
 		}
 		if botToken == "" {
-			return nil, errors.Errorf("mandatory field %q is empty", "botToken")
+			return nil, fmt.Errorf("mandatory field %q is empty", "botToken")
 		}
 		out.BotToken = botToken
 	}
@@ -1535,6 +1531,14 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
 	if !telegramAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
+	}
+
+	if tc.ChatID == 0 {
+		return errors.Errorf("mandatory field %q is empty", "chatID")
+	}
+
+	if tc.BotToken != "" {
+		return fmt.Errorf("mandatory field %q is empty", "botToken")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
