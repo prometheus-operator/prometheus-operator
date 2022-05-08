@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/common v0.33.0
 	github.com/prometheus/prometheus v1.8.2-0.20220315145411-881111fec433
 	github.com/stretchr/testify v1.7.1
-	github.com/thanos-io/thanos v0.25.2
+	github.com/thanos-io/thanos v0.26.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
@@ -105,8 +105,8 @@ require (
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.mongodb.org/mongo-driver v1.7.5 // indirect
-	go.opentelemetry.io/otel v1.4.1 // indirect
-	go.opentelemetry.io/otel/trace v1.4.1 // indirect
+	go.opentelemetry.io/otel v1.5.0 // indirect
+	go.opentelemetry.io/otel/trace v1.5.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
