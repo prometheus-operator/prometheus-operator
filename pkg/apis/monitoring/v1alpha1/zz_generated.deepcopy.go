@@ -312,6 +312,11 @@ func (in *OpsGenieConfig) DeepCopyInto(out *OpsGenieConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.UpdateAlerts != nil {
+		in, out := &in.UpdateAlerts, &out.UpdateAlerts
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Details != nil {
 		in, out := &in.Details, &out.Details
 		*out = make([]KeyValue, len(*in))

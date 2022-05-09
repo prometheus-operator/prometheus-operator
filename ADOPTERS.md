@@ -56,6 +56,16 @@ Details:
 - 800K samples/s
 - 30M active series
 
+## Deckhouse
+
+[deckhouse.io](https://deckhouse.io/)
+
+Environments: AWS, Azure, Google Cloud, Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Deckhouse is a Kubernetes Platform. Its clusters running on any infrastructure are provided with the monitoring system based on highly available Prometheus and Prometheus Operator. Essential metrics are preconfigured out-of-the-box to ensure monitoring of all levels, from hardware and Kubernetes internals to the platform’s modules functionality. The monitoring-custom module simplifies adding custom metrics for user applications. Deckhouse also hosts a dedicated Prometheus instance in each cluster to store downsampled metric series for longer periods.
+
 ## Giant Swarm
 
 [giantswarm.io](https://www.giantswarm.io/)

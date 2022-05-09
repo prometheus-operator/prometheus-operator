@@ -475,6 +475,10 @@ type OpsGenieConfig struct {
 	// Priority level of alert. Possible values are P1, P2, P3, P4, and P5.
 	// +optional
 	Priority string `json:"priority,omitempty"`
+	// Whether to update message and description of the alert in OpsGenie if it already exists
+	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
+	// +optional
+	UpdateAlerts *bool `json:"updateAlerts,omitempty"`
 	// A set of arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`

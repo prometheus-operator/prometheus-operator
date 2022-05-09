@@ -9,4 +9,5 @@ local aw = admissionWebhook(config {
   'deployment.yaml': aw.deployment,
   'service.yaml': aw.service,
   'service-monitor.yaml': aw.serviceMonitor,
+  'pod-disruption-budget.yaml': aw.podDisruptionBudget,
 }
