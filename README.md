@@ -175,13 +175,28 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 #### Running *end-to-end* tests on local kind cluster:
 
 1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.23.0` version.
+
+> Note: In case you are running kind on MacOS using podman, it is recommended to create podman machine 4 CPUs and 8GiB memory.
+> Less resources might cause end to end tests fail because of lack of resources for cluster.
+>
+> `podman machine init --cpus=4 --memory=8192 --rootful --now`
+
 2. `kubectl cluster-info --context kind-kind`. kind version >= 0.6.x
 3. `make image` - build Prometheus Operator docker image locally.
+
+> Note: In case you are running kind using podman, the step 3 won't work for you. You will need to switch command in Makefile:
+>
+> `sed -i 's/docker build/podman build/g' Makefile`
+
 4. publish locally built images to be accessible inside kind
 
    ```bash
    for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do kind load docker-image "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; done;
    ```
+
+> Note: In case you are running kind using podman, docker-image command won't work. You need to use image archives instead:
+>
+> `for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do podman save --quiet -o images/$n.tar "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; kind load image-archive images/$n.tar; done`
 
 5. `make test-e2e`
 

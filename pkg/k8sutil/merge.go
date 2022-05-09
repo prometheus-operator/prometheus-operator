@@ -52,7 +52,7 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 			return nil, errors.Wrap(err, fmt.Sprintf("failed to marshal JSON for patch container %s", container.Name))
 		}
 
-		// Calculate the patch result
+		// Calculate the patch result.
 		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, v1.Container{})
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("failed to generate merge patch for container %s", container.Name))
@@ -63,14 +63,17 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 			return nil, errors.Wrap(err, fmt.Sprintf("failed to unmarshal merged container %s", container.Name))
 		}
 
-		// Add the patch result and remove the corresponding key from the to do list
+		// Add the patch result and remove the corresponding key from the to do list.
 		out = append(out, patchResult)
 		delete(containersByName, container.Name)
 	}
 
-	// Append containers that are left in containersToPatch.
-	for _, container := range containersByName {
-		out = append(out, container)
+	// Append containers that are left in containersByName.
+	// Iterate over patches to preserve the order.
+	for _, c := range patches {
+		if container, found := containersByName[c.Name]; found {
+			out = append(out, container)
+		}
 	}
 
 	return out, nil
