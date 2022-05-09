@@ -36,6 +36,7 @@ type Config struct {
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
 	Namespaces                   Namespaces
+	HasClusterRole               bool
 	Labels                       Labels
 	LocalHost                    string
 	LogLevel                     string

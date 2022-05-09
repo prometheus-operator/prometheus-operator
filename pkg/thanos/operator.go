@@ -26,6 +26,7 @@ import (
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
 	"github.com/go-kit/log"
@@ -63,8 +64,9 @@ type Operator struct {
 	ruleInfs        *informers.ForResource
 	ssetInfs        *informers.ForResource
 
-	// nsThanosRulerInf cache.SharedIndexInformer
-	// nsRuleInf        cache.SharedIndexInformer
+	// Those two namespace related feature need cluster role.
+	nsThanosRulerInf cache.SharedIndexInformer
+	nsRuleInf        cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -77,6 +79,7 @@ type Operator struct {
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	Host                   string
+	HasClusterRole         bool
 	TLSInsecure            bool
 	TLSConfig              rest.TLSClientConfig
 	ReloaderConfig         operator.ReloaderConfig
@@ -119,6 +122,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
 			Host:                   conf.Host,
+			HasClusterRole:         conf.HasClusterRole,
 			TLSInsecure:            conf.TLSInsecure,
 			TLSConfig:              conf.TLSConfig,
 			ReloaderConfig:         conf.ReloaderConfig,
@@ -198,33 +202,35 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	// newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-	// 	// nsResyncPeriod is used to control how often the namespace informer
-	// 	// should resync. If the unprivileged ListerWatcher is used, then the
-	// 	// informer must resync more often because it cannot watch for
-	// 	// namespace changes.
-	// 	nsResyncPeriod := 15 * time.Second
-	// 	// If the only namespace is v1.NamespaceAll, then the client must be
-	// 	// privileged and a regular cache.ListWatch will be used. In this case
-	// 	// watching works and we do not need to resync so frequently.
-	// 	if listwatch.IsAllNamespaces(allowList) {
-	// 		nsResyncPeriod = resyncPeriod
-	// 	}
-	// 	nsInf := cache.NewSharedIndexInformer(
-	// 		o.metrics.NewInstrumentedListerWatcher(
-	// 			listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-	// 		),
-	// 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-	// 	)
+	if o.config.HasClusterRole {
+		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+			// nsResyncPeriod is used to control how often the namespace informer
+			// should resync. If the unprivileged ListerWatcher is used, then the
+			// informer must resync more often because it cannot watch for
+			// namespace changes.
+			nsResyncPeriod := 15 * time.Second
+			// If the only namespace is v1.NamespaceAll, then the client must be
+			// privileged and a regular cache.ListWatch will be used. In this case
+			// watching works and we do not need to resync so frequently.
+			if listwatch.IsAllNamespaces(allowList) {
+				nsResyncPeriod = resyncPeriod
+			}
+			nsInf := cache.NewSharedIndexInformer(
+				o.metrics.NewInstrumentedListerWatcher(
+					listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				),
+				&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+			)
 
-	// 	return nsInf
-	// }
-	// o.nsRuleInf = newNamespaceInformer(o, o.config.Namespaces.AllowList)
-	// if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.ThanosRulerAllowList) {
-	// 	o.nsThanosRulerInf = o.nsRuleInf
-	// } else {
-	// 	o.nsThanosRulerInf = newNamespaceInformer(o, o.config.Namespaces.ThanosRulerAllowList)
-	// }
+			return nsInf
+		}
+		o.nsRuleInf = newNamespaceInformer(o, o.config.Namespaces.AllowList)
+		if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.ThanosRulerAllowList) {
+			o.nsThanosRulerInf = o.nsRuleInf
+		} else {
+			o.nsThanosRulerInf = newNamespaceInformer(o, o.config.Namespaces.ThanosRulerAllowList)
+		}
+	}
 
 	return o, nil
 }
@@ -247,18 +253,19 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 	}
 
-	// for _, inf := range []struct {
-	// 	name     string
-	// 	informer cache.SharedIndexInformer
-	// }{
-	// 	{"ThanosRulerNamespace", o.nsThanosRulerInf},
-	// 	{"RuleNamespace", o.nsRuleInf},
-	// } {
-	// 	if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
-	// 		return errors.Errorf("failed to sync cache for %s informer", inf.name)
-	// 	}
-	// }
-
+	if o.config.HasClusterRole {
+		for _, inf := range []struct {
+			name     string
+			informer cache.SharedIndexInformer
+		}{
+			{"ThanosRulerNamespace", o.nsThanosRulerInf},
+			{"RuleNamespace", o.nsRuleInf},
+		} {
+			if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
+				return errors.Errorf("failed to sync cache for %s informer", inf.name)
+			}
+		}
+	}
 	level.Info(o.logger).Log("msg", "successfully synced all caches")
 	return nil
 }
@@ -291,9 +298,11 @@ func (o *Operator) addHandlers() {
 	// change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on rules.
-	// o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-	// 	UpdateFunc: o.handleNamespaceUpdate,
-	// })
+	if o.config.HasClusterRole {
+		o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			UpdateFunc: o.handleNamespaceUpdate,
+		})
+	}
 }
 
 // Run the controller.
@@ -326,10 +335,14 @@ func (o *Operator) Run(ctx context.Context) error {
 	go o.thanosRulerInfs.Start(ctx.Done())
 	go o.cmapInfs.Start(ctx.Done())
 	go o.ruleInfs.Start(ctx.Done())
-	// go o.nsRuleInf.Run(ctx.Done())
-	// if o.nsRuleInf != o.nsThanosRulerInf {
-	// 	go o.nsThanosRulerInf.Run(ctx.Done())
-	// }
+
+	if o.config.HasClusterRole {
+		go o.nsRuleInf.Run(ctx.Done())
+		if o.nsRuleInf != o.nsThanosRulerInf {
+			go o.nsThanosRulerInf.Run(ctx.Done())
+		}
+	}
+
 	go o.ssetInfs.Start(ctx.Done())
 	if err := o.waitForCacheSync(ctx); err != nil {
 		return err
@@ -739,14 +752,13 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 // listMatchingNamespaces lists all the namespaces that match the provided
 // selector.
 func (o *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
-	// var ns []string
-	// err := cache.ListAll(o.nsRuleInf.GetStore(), selector, func(obj interface{}) {
-	// 	ns = append(ns, obj.(*v1.Namespace).Name)
-	// })
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to list namespaces")
-	// }
-	ns := []string{"rio"}
+	var ns []string
+	err := cache.ListAll(o.nsRuleInf.GetStore(), selector, func(obj interface{}) {
+		ns = append(ns, obj.(*v1.Namespace).Name)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list namespaces")
+	}
 	return ns, nil
 }
 
@@ -835,35 +847,43 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 }
 
 func (o *Operator) enqueueForThanosRulerNamespace(nsName string) {
-	// o.enqueueForNamespace(o.nsThanosRulerInf.GetStore(), nsName)
-	o.enqueueForNamespace(nil, nsName)
+	if o.config.HasClusterRole {
+		o.enqueueForNamespace(o.nsThanosRulerInf.GetStore(), nsName)
+	} else {
+		o.enqueueForNamespace(nil, nsName)
+	}
 }
 
 func (o *Operator) enqueueForRulesNamespace(nsName string) {
-	// o.enqueueForNamespace(o.nsRuleInf.GetStore(), nsName)
-	o.enqueueForNamespace(nil, nsName)
+	if o.config.HasClusterRole {
+		o.enqueueForNamespace(o.nsRuleInf.GetStore(), nsName)
+	} else {
+		o.enqueueForNamespace(nil, nsName)
+	}
 }
 
 // enqueueForNamespace enqueues all ThanosRuler object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	// nsObject, exists, err := store.GetByKey(nsName)
-	// if err != nil {
-	// 	level.Error(o.logger).Log(
-	// 		"msg", "get namespace to enqueue ThanosRuler instances failed",
-	// 		"err", err,
-	// 	)
-	// 	return
-	// }
-	// if !exists {
-	// 	level.Error(o.logger).Log(
-	// 		"msg", "get namespace to enqueue ThanosRuler instances failed: namespace does not exist",
-	// 		"namespace", nsName,
-	// 	)
-	// 	return
-	// }
-	// ns := nsObject.(*v1.Namespace)
-
+	var ns *v1.Namespace = nil
+	if o.config.HasClusterRole {
+		nsObject, exists, err := store.GetByKey(nsName)
+		if err != nil {
+			level.Error(o.logger).Log(
+				"msg", "get namespace to enqueue ThanosRuler instances failed",
+				"err", err,
+			)
+			return
+		}
+		if !exists {
+			level.Error(o.logger).Log(
+				"msg", "get namespace to enqueue ThanosRuler instances failed: namespace does not exist",
+				"namespace", nsName,
+			)
+			return
+		}
+		ns = nsObject.(*v1.Namespace)
+	}
 	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
@@ -871,24 +891,25 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			o.enqueue(tr)
 			return
 		}
+		if o.config.HasClusterRole {
+			// Check for ThanosRuler instances selecting PrometheusRules in
+			// the namespace.
+			ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
+			if err != nil {
+				level.Error(o.logger).Log(
+					"err", errors.Wrap(err, "failed to convert RuleNamespaceSelector"),
+					"name", tr.Name,
+					"namespace", tr.Namespace,
+					"selector", tr.Spec.RuleNamespaceSelector,
+				)
+				return
+			}
 
-		// Check for ThanosRuler instances selecting PrometheusRules in
-		// the namespace.
-		// ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
-		// if err != nil {
-		// 	level.Error(o.logger).Log(
-		// 		"err", errors.Wrap(err, "failed to convert RuleNamespaceSelector"),
-		// 		"name", tr.Name,
-		// 		"namespace", tr.Namespace,
-		// 		"selector", tr.Spec.RuleNamespaceSelector,
-		// 	)
-		// 	return
-		// }
-
-		// if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-		// 	o.enqueue(tr)
-		// 	return
-		// }
+			if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
+				o.enqueue(tr)
+				return
+			}
+		}
 	})
 	if err != nil {
 		level.Error(o.logger).Log(
