@@ -130,6 +130,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Receiver](#receiver)
 * [Route](#route)
 * [SNSConfig](#snsconfig)
+* [SecretKeySelector](#secretkeyselector)
 * [SlackAction](#slackaction)
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
@@ -2005,8 +2006,8 @@ EmailConfig configures notifications via Email.
 | hello | The hostname to identify to the SMTP server. | string | false |
 | smarthost | The SMTP host and port through which emails are sent. E.g. example.com:25 | string | false |
 | authUsername | The username to use for authentication. | string | false |
-| authPassword | The secret's key that contains the password to use for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
-| authSecret | The secret's key that contains the CRAM-MD5 secret. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| authPassword | The secret's key that contains the password to use for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
+| authSecret | The secret's key that contains the CRAM-MD5 secret. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | authIdentity | The identity to use for authentication. | string | false |
 | headers | Further headers email header key/value pairs. Overrides any headers previously set by the notification implementation. | [][KeyValue](#keyvalue) | false |
 | html | The HTML body of the email notification. | string | false |
@@ -2028,7 +2029,7 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 | authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+. | *monitoringv1.SafeAuthorization | false |
 | basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence. | *monitoringv1.BasicAuth | false |
 | oauth2 | OAuth2 client credentials used to fetch a token for the targets. | *monitoringv1.OAuth2 | false |
-| bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
 | proxyURL | Optional proxy URL. | string | false |
 | followRedirects | FollowRedirects specifies whether the client should follow HTTP 3xx redirects. | *bool | false |
@@ -2089,7 +2090,7 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiKey | The secret's key that contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| apiKey | The secret's key that contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | apiURL | The URL to send OpsGenie API requests to. | string | false |
 | message | Alert text limited to 130 characters. | string | false |
 | description | Description of the incident. | string | false |
@@ -2131,8 +2132,8 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| routingKey | The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or `serviceKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
-| serviceKey | The secret's key that contains the PagerDuty service key (when using integration type \"Prometheus\"). Either this field or `routingKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| routingKey | The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or `serviceKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
+| serviceKey | The secret's key that contains the PagerDuty service key (when using integration type \"Prometheus\"). Either this field or `routingKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | url | The URL to send requests to. | string | false |
 | client | Client identification. | string | false |
 | clientURL | Backlink to the sender of notification. | string | false |
@@ -2187,8 +2188,8 @@ PushoverConfig configures notifications via Pushover. See https://prometheus.io/
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| userKey | The secret's key that contains the recipient user’s user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
-| token | The secret's key that contains the registered application’s API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| userKey | The secret's key that contains the recipient user’s user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
+| token | The secret's key that contains the registered application’s API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | title | Notification title. | string | false |
 | message | Notification message. | string | false |
 | url | A supplementary URL shown alongside the message. | string | false |
@@ -2267,6 +2268,20 @@ SNSConfig configures notifications via AWS SNS. See https://prometheus.io/docs/a
 
 [Back to TOC](#table-of-contents)
 
+## SecretKeySelector
+
+SecretKeySelector selects a key of a Secret.
+
+
+<em>appears in: [EmailConfig](#emailconfig), [HTTPConfig](#httpconfig), [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | The name of the secret in the object's namespace to select from. | string | true |
+| key | The key of the secret to select from.  Must be a valid secret key. | string | true |
+
+[Back to TOC](#table-of-contents)
+
 ## SlackAction
 
 SlackAction configures a single Slack action that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons for more information.
@@ -2296,7 +2311,7 @@ SlackConfig configures notifications via Slack. See https://prometheus.io/docs/a
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiURL | The secret's key that contains the Slack webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| apiURL | The secret's key that contains the Slack webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | channel | The channel or user to send notifications to. | string | false |
 | username |  | string | false |
 | color |  | string | false |
@@ -2406,7 +2421,7 @@ VictorOpsConfig configures notifications via VictorOps. See https://prometheus.i
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiKey | The secret's key that contains the API key to use when talking to the VictorOps API. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| apiKey | The secret's key that contains the API key to use when talking to the VictorOps API. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | apiUrl | The VictorOps API URL. | string | false |
 | routingKey | A key used to map the alert to a team. | string | true |
 | messageType | Describes the behavior of the alert (CRITICAL, WARNING, INFO). | string | false |
@@ -2428,7 +2443,7 @@ WeChatConfig configures notifications via WeChat. See https://prometheus.io/docs
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiSecret | The secret's key that contains the WeChat API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| apiSecret | The secret's key that contains the WeChat API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | apiURL | The WeChat API URL. | string | false |
 | corpID | The corp id for authentication. | string | false |
 | agentID |  | string | false |
@@ -2452,7 +2467,7 @@ WebhookConfig configures notifications via a generic receiver supporting the web
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
 | url | The URL to send HTTP POST requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. | *string | false |
-| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[SecretKeySelector](#secretkeyselector) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 | maxAlerts | Maximum number of alerts to be sent per webhook message. When 0, all alerts are included. | int32 | false |
 
