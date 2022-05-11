@@ -22,7 +22,6 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
-	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -180,14 +179,14 @@ type PagerDutyConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	RoutingKey *v1.SecretKeySelector `json:"routingKey,omitempty"`
+	RoutingKey *SecretKeySelector `json:"routingKey,omitempty"`
 	// The secret's key that contains the PagerDuty service key (when using
 	// integration type "Prometheus"). Either this field or `routingKey` needs to
 	// be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	ServiceKey *v1.SecretKeySelector `json:"serviceKey,omitempty"`
+	ServiceKey *SecretKeySelector `json:"serviceKey,omitempty"`
 	// The URL to send requests to.
 	// +optional
 	URL string `json:"url,omitempty"`
@@ -259,7 +258,7 @@ type SlackConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	APIURL *SecretKeySelector `json:"apiURL,omitempty"`
 	// The channel or user to send notifications to.
 	// +optional
 	Channel string `json:"channel,omitempty"`
@@ -433,7 +432,7 @@ type WebhookConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	URLSecret *v1.SecretKeySelector `json:"urlSecret,omitempty"`
+	URLSecret *SecretKeySelector `json:"urlSecret,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
@@ -453,7 +452,7 @@ type OpsGenieConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
+	APIKey *SecretKeySelector `json:"apiKey,omitempty"`
 	// The URL to send OpsGenie API requests to.
 	// +optional
 	APIURL string `json:"apiURL,omitempty"`
@@ -547,7 +546,7 @@ type HTTPConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
+	BearerTokenSecret *SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// TLS configuration for the client.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -569,7 +568,7 @@ type WeChatConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+	APISecret *SecretKeySelector `json:"apiSecret,omitempty"`
 	// The WeChat API URL.
 	// +optional
 	APIURL string `json:"apiURL,omitempty"`
@@ -616,11 +615,11 @@ type EmailConfig struct {
 	// The secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
+	AuthPassword *SecretKeySelector `json:"authPassword,omitempty"`
 	// The secret's key that contains the CRAM-MD5 secret.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
+	AuthSecret *SecretKeySelector `json:"authSecret,omitempty"`
 	// The identity to use for authentication.
 	// +optional
 	AuthIdentity string `json:"authIdentity,omitempty"`
@@ -652,7 +651,7 @@ type VictorOpsConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +optional
-	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
+	APIKey *SecretKeySelector `json:"apiKey,omitempty"`
 	// The VictorOps API URL.
 	// +optional
 	APIURL string `json:"apiUrl,omitempty"`
@@ -689,12 +688,12 @@ type PushoverConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +kubebuilder:validation:Required
-	UserKey *v1.SecretKeySelector `json:"userKey,omitempty"`
+	UserKey *SecretKeySelector `json:"userKey,omitempty"`
 	// The secret's key that contains the registered application’s API token, see https://pushover.net/apps.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +kubebuilder:validation:Required
-	Token *v1.SecretKeySelector `json:"token,omitempty"`
+	Token *SecretKeySelector `json:"token,omitempty"`
 	// Notification title.
 	// +optional
 	Title string `json:"title,omitempty"`
@@ -842,6 +841,18 @@ type MatchType string
 func (mt MatchType) Valid() bool {
 	_, ok := validMatchTypes[mt]
 	return ok
+}
+
+// SecretKeySelector selects a key of a Secret.
+type SecretKeySelector struct {
+	// The name of the secret in the object's namespace to select from.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	// The key of the secret to select from.  Must be a valid secret key.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Key string `json:"key"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

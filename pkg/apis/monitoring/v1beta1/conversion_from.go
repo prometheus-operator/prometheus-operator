@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -143,7 +144,7 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 		Authorization:     in.Authorization,
 		BasicAuth:         in.BasicAuth,
 		OAuth2:            in.OAuth2,
-		BearerTokenSecret: in.BearerTokenSecret,
+		BearerTokenSecret: convertSecretKeySelectorFrom(in.BearerTokenSecret),
 		TLSConfig:         in.TLSConfig,
 		ProxyURL:          in.ProxyURL,
 	}
@@ -161,6 +162,17 @@ func convertKeyValuesFrom(in []v1alpha1.KeyValue) []KeyValue {
 
 	return out
 
+}
+
+func convertSecretKeySelectorFrom(in *v1.SecretKeySelector) *SecretKeySelector {
+	if in == nil {
+		return nil
+	}
+
+	return &SecretKeySelector{
+		Name: in.Name,
+		Key:  in.Key,
+	}
 }
 
 func convertOpsGenieConfigRespondersFrom(in []v1alpha1.OpsGenieConfigResponder) []OpsGenieConfigResponder {
@@ -181,7 +193,7 @@ func convertOpsGenieConfigRespondersFrom(in []v1alpha1.OpsGenieConfigResponder) 
 func convertOpsGenieConfigFrom(in v1alpha1.OpsGenieConfig) OpsGenieConfig {
 	return OpsGenieConfig{
 		SendResolved: in.SendResolved,
-		APIKey:       in.APIKey,
+		APIKey:       convertSecretKeySelectorFrom(in.APIKey),
 		APIURL:       in.APIURL,
 		Message:      in.Message,
 		Description:  in.Description,
@@ -227,8 +239,8 @@ func convertPagerDutyLinkConfigsFrom(in []v1alpha1.PagerDutyLinkConfig) []PagerD
 func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 	return PagerDutyConfig{
 		SendResolved:          in.SendResolved,
-		RoutingKey:            in.RoutingKey,
-		ServiceKey:            in.ServiceKey,
+		RoutingKey:            convertSecretKeySelectorFrom(in.RoutingKey),
+		ServiceKey:            convertSecretKeySelectorFrom(in.ServiceKey),
 		URL:                   in.URL,
 		Client:                in.Client,
 		ClientURL:             in.ClientURL,
@@ -286,7 +298,7 @@ func convertSlackActionsFrom(in []v1alpha1.SlackAction) []SlackAction {
 func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 	return SlackConfig{
 		SendResolved: in.SendResolved,
-		APIURL:       in.APIURL,
+		APIURL:       convertSecretKeySelectorFrom(in.APIURL),
 		Channel:      in.Channel,
 		Username:     in.Username,
 		Color:        in.Color,
@@ -314,7 +326,7 @@ func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 	return WebhookConfig{
 		SendResolved: in.SendResolved,
 		URL:          in.URL,
-		URLSecret:    in.URLSecret,
+		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
 	}
@@ -323,7 +335,7 @@ func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 func convertWeChatConfigFrom(in v1alpha1.WeChatConfig) WeChatConfig {
 	return WeChatConfig{
 		SendResolved: in.SendResolved,
-		APISecret:    in.APISecret,
+		APISecret:    convertSecretKeySelectorFrom(in.APISecret),
 		APIURL:       in.APIURL,
 		CorpID:       in.CorpID,
 		AgentID:      in.AgentID,
@@ -344,8 +356,8 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 		Hello:        in.Hello,
 		Smarthost:    in.Smarthost,
 		AuthUsername: in.AuthUsername,
-		AuthPassword: in.AuthPassword,
-		AuthSecret:   in.AuthSecret,
+		AuthPassword: convertSecretKeySelectorFrom(in.AuthPassword),
+		AuthSecret:   convertSecretKeySelectorFrom(in.AuthSecret),
 		AuthIdentity: in.AuthIdentity,
 		Headers:      convertKeyValuesFrom(in.Headers),
 		HTML:         in.HTML,
@@ -358,7 +370,7 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 func convertVictorOpsConfigFrom(in v1alpha1.VictorOpsConfig) VictorOpsConfig {
 	return VictorOpsConfig{
 		SendResolved:      in.SendResolved,
-		APIKey:            in.APIKey,
+		APIKey:            convertSecretKeySelectorFrom(in.APIKey),
 		APIURL:            in.APIURL,
 		RoutingKey:        in.RoutingKey,
 		MessageType:       in.MessageType,
@@ -373,8 +385,8 @@ func convertVictorOpsConfigFrom(in v1alpha1.VictorOpsConfig) VictorOpsConfig {
 func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 	return PushoverConfig{
 		SendResolved: in.SendResolved,
-		UserKey:      in.UserKey,
-		Token:        in.Token,
+		UserKey:      convertSecretKeySelectorFrom(in.UserKey),
+		Token:        convertSecretKeySelectorFrom(in.Token),
 		Title:        in.Title,
 		Message:      in.Message,
 		URL:          in.URL,
