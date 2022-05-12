@@ -17,8 +17,6 @@ package v1beta1
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -259,7 +257,10 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
 								{
-									UserKey: &v1.SecretKeySelector{},
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
 								},
 							},
 						},
@@ -379,8 +380,11 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL:       strToPtr("https://www.test.com"),
-									URLSecret: &v1.SecretKeySelector{},
+									URL: strToPtr("https://www.test.com"),
+									URLSecret: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "url",
+									},
 								},
 							},
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
@@ -413,10 +417,16 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
 								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "10m",
-									Expire:  "5m",
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									Retry:  "10m",
+									Expire: "5m",
 								},
 							},
 						},

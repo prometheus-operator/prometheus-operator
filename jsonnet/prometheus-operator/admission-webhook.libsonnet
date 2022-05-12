@@ -21,7 +21,6 @@ local defaults = {
   },
 };
 
-
 function(params) {
   local aw = self,
   _config:: defaults + params,

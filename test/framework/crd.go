@@ -104,7 +104,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 func (f *Framework) CreateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 	group := monitoring.GroupName
-	assetPath := "../../example/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
+	assetPath := "../../example/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
