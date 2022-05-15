@@ -26,6 +26,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
+* [AttachMetadata](#attachmetadata)
 * [Authorization](#authorization)
 * [BasicAuth](#basicauth)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
@@ -287,6 +288,19 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 
 [Back to TOC](#table-of-contents)
 
+## AttachMetadata
+
+
+
+
+<em>appears in: [PodMonitorSpec](#podmonitorspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| node | When set to true, Prometheus must have permissions to get Nodes. | bool | false |
+
+[Back to TOC](#table-of-contents)
+
 ## Authorization
 
 Authorization contains optional `Authorization` header configuration. This section is only understood by versions of Prometheus >= 2.26.0.
@@ -529,6 +543,7 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| attachMetadata | Attaches node metadata to discovered targets. Only valid for role: pod. Only valid in Prometheus versions 2.35.0 and newer. | *[AttachMetadata](#attachmetadata) | false |
 
 [Back to TOC](#table-of-contents)
 

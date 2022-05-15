@@ -44,6 +44,16 @@
               "spec": {
                 "description": "Specification of desired Pod selection for target discovery by Prometheus.",
                 "properties": {
+                  "attachMetadata": {
+                    "description": "Attaches node metadata to discovered targets. Only valid for role: pod. Only valid in Prometheus versions 2.35.0 and newer.",
+                    "properties": {
+                      "node": {
+                        "description": "When set to true, Prometheus must have permissions to get Nodes.",
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "jobLabel": {
                     "description": "The label to use to retrieve the job name from.",
                     "type": "string"
