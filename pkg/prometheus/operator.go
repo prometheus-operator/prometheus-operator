@@ -1364,16 +1364,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if obj != nil {
 			existingStatefulSet = obj.(*appsv1.StatefulSet)
 			if existingStatefulSet.DeletionTimestamp != nil {
-				// We want to avoid entering a hot-loop of update/delete cycles here since the sts was
-				// marked for deletion in foreground, which means it may take some time before the finalizers complete and
-				// the resource disappears from the API. The deletion timestamp will have been set when the initial
-				// delete request was issued. In that case, we avoid further processing.
+				// We want to avoid entering a hot-loop of update/delete cycles
+				// here since the sts was marked for deletion in foreground,
+				// which means it may take some time before the finalizers
+				// complete and the resource disappears from the API. The
+				// deletion timestamp will have been set when the initial
+				// delete request was issued. In that case, we avoid further
+				// processing.
 				level.Info(logger).Log(
 					"msg", "halting update of StatefulSet",
 					"reason", "resource has been marked for deletion",
 					"resource_name", existingStatefulSet.GetName(),
 				)
-				return nil
+				continue
 			}
 		}
 
@@ -1394,7 +1397,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return errors.Wrap(err, "creating statefulset failed")
 			}
-			return nil
+			continue
 		}
 
 		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
@@ -1422,7 +1425,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 			}
-			return nil
+			continue
 		}
 
 		if err != nil {
@@ -1441,6 +1444,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, ok := ssets[s.Name]; ok {
 			// Do not delete statefulsets that we still expect to exist. This
 			// is to cleanup StatefulSets when shards are reduced.
+			return
+		}
+
+		// Deletion already in progress.
+		if s.DeletionTimestamp != nil {
 			return
 		}
 
