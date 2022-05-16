@@ -410,6 +410,19 @@ func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 	}
 }
 
+func convertTelegramConfigTo(in TelegramConfig) v1alpha1.TelegramConfig {
+	return v1alpha1.TelegramConfig{
+		SendResolved:         in.SendResolved,
+		APIURL:               in.APIURL,
+		BotToken:             convertSecretKeySelectorTo(in.BotToken),
+		ChatID:               in.ChatID,
+		Message:              in.Message,
+		DisableNotifications: in.DisableNotifications,
+		ParseMode:            in.ParseMode,
+		HTTPConfig:           convertHTTPConfigTo(in.HTTPConfig),
+	}
+}
+
 // ConvertTo converts from this version (v1beta1) to the Hub version (v1alpha1).
 func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
@@ -481,6 +494,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.SNSConfigs = append(
 				out.SNSConfigs,
 				convertSNSConfigTo(in),
+			)
+		}
+
+		for _, in := range in.TelegramConfigs {
+			out.TelegramConfigs = append(
+				out.TelegramConfigs,
+				convertTelegramConfigTo(in),
 			)
 		}
 
