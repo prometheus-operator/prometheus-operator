@@ -590,7 +590,7 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	if l := len(in.Actions); l > 0 {
 		actions = make([]slackAction, l)
 		for i, a := range in.Actions {
-			var action slackAction = slackAction{
+			action := slackAction{
 				Type:  a.Type,
 				Text:  a.Text,
 				URL:   a.URL,
@@ -615,9 +615,9 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 
 	if l := len(in.Fields); l > 0 {
-		var fields []slackField = make([]slackField, l)
+		fields := make([]slackField, l)
 		for i, f := range in.Fields {
-			var field slackField = slackField{
+			field := slackField{
 				Title: f.Title,
 				Value: f.Value,
 			}
@@ -751,7 +751,7 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 	if l := len(in.Responders); l > 0 {
 		responders = make([]opsgenieResponder, 0, l)
 		for _, r := range in.Responders {
-			var responder opsgenieResponder = opsgenieResponder{
+			responder := opsgenieResponder{
 				ID:       r.ID,
 				Name:     r.Name,
 				Username: r.Username,
