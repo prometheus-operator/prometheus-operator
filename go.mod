@@ -10,7 +10,7 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-kit/log v0.2.0
+	github.com/go-kit/log v0.2.1
 	github.com/go-openapi/swag v0.21.1
 	github.com/go-test/deep v1.0.8
 	github.com/gogo/protobuf v1.3.2
