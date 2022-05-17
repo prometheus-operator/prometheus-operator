@@ -1189,8 +1189,8 @@ type PodMonitorSpec struct {
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
-	//Attaches node metadata to discovered targets. Only valid for role: pod.
-	//Only valid in Prometheus versions 2.35.0 and newer.
+	// Attaches node metadata to discovered targets. Only valid for role: pod.
+	// Only valid in Prometheus versions 2.35.0 and newer.
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 
