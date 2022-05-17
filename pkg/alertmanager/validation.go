@@ -137,6 +137,11 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -319,6 +324,25 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
+	for _, config := range configs {
+
+		if config.BotToken == nil {
+			return fmt.Errorf("mandatory field %q is empty", "botToken")
+		}
+
+		if config.ChatID == 0 {
+			return fmt.Errorf("mandatory field %q is empty", "chatID")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -495,6 +495,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var telegramConfigs []*telegramConfig
+	if l := len(in.TelegramConfigs); l > 0 {
+		telegramConfigs = make([]*telegramConfig, l)
+		for i := range in.TelegramConfigs {
+			receiver, err := cb.convertTelegramConfig(ctx, in.TelegramConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "TelegramConfig[%d]", i)
+			}
+			telegramConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -506,6 +518,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		VictorOpsConfigs: victorOpsConfigs,
 		PushoverConfigs:  pushoverConfigs,
 		SNSConfigs:       snsConfigs,
+		TelegramConfigs:  telegramConfigs,
 	}, nil
 }
 
@@ -577,7 +590,7 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	if l := len(in.Actions); l > 0 {
 		actions = make([]slackAction, l)
 		for i, a := range in.Actions {
-			var action slackAction = slackAction{
+			action := slackAction{
 				Type:  a.Type,
 				Text:  a.Text,
 				URL:   a.URL,
@@ -602,9 +615,9 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 
 	if l := len(in.Fields); l > 0 {
-		var fields []slackField = make([]slackField, l)
+		fields := make([]slackField, l)
 		for i, f := range in.Fields {
-			var field slackField = slackField{
+			field := slackField{
 				Title: f.Title,
 				Value: f.Value,
 			}
@@ -738,7 +751,7 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 	if l := len(in.Responders); l > 0 {
 		responders = make([]opsgenieResponder, 0, l)
 		for _, r := range in.Responders {
-			var responder opsgenieResponder = opsgenieResponder{
+			responder := opsgenieResponder{
 				ID:       r.ID,
 				Name:     r.Name,
 				Username: r.Username,
@@ -943,6 +956,38 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 			return nil, err
 		}
 		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitoringv1alpha1.TelegramConfig, crKey types.NamespacedName) (*telegramConfig, error) {
+	out := &telegramConfig{
+		VSendResolved:        in.SendResolved,
+		APIUrl:               in.APIURL,
+		ChatID:               in.ChatID,
+		Message:              in.Message,
+		DisableNotifications: false,
+		ParseMode:            in.ParseMode,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.BotToken != nil {
+		botToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.BotToken)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get bot token")
+		}
+		if botToken == "" {
+			return nil, fmt.Errorf("mandatory field %q is empty", "botToken")
+		}
+		out.BotToken = botToken
 	}
 
 	return out, nil
@@ -1379,6 +1424,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 		}
 	}
 
+	for _, conf := range r.TelegramConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -1474,6 +1525,23 @@ func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 
 func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	return sc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	if !telegramAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
+	}
+
+	if tc.ChatID == 0 {
+		return errors.Errorf("mandatory field %q is empty", "chatID")
+	}
+
+	if tc.BotToken == "" {
+		return fmt.Errorf("mandatory field %q is empty", "botToken")
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) error {

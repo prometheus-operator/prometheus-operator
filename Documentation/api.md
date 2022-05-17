@@ -105,6 +105,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [TelegramConfig](#telegramconfig)
 * [TimeInterval](#timeinterval)
 * [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
@@ -1434,7 +1435,7 @@ EmailConfig configures notifications via Email.
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 
-<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [TelegramConfig](#telegramconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1650,6 +1651,7 @@ Receiver defines one or more notification integrations.
 | victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
 | pushoverConfigs | List of Pushover configurations. | [][PushoverConfig](#pushoverconfig) | false |
 | snsConfigs | List of SNS configurations | [][SNSConfig](#snsconfig) | false |
+| telegramConfigs | List of Telegram configurations. | [][TelegramConfig](#telegramconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1777,6 +1779,26 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TelegramConfig
+
+TelegramConfig configures notifications via Telegram. See https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether to notify about resolved alerts. | *bool | false |
+| apiURL | The Telegram API URL i.e. https://api.telegram.org. If not specified, default API URL will be used. | string | false |
+| botToken | Telegram bot token The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| chatID | The Telegram chat ID. | int64 | false |
+| message | Message template | string | false |
+| disableNotifications | Disable telegram notifications | *bool | false |
+| parseMode | Parse mode for telegram message | string | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

@@ -1,3 +1,7 @@
+## 0.56.2 / 2022-05-09
+
+* [BUGFIX] Fix StatefulSet spec's generation to be determistic when `spec.containers` is not empty. #4772
+
 ## 0.56.1 / 2022-05-03
 
 * [BUGFIX] Avoid unnecessary updates of the Prometheus StatefulSet object. #4762
