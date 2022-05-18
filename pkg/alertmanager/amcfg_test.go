@@ -1906,7 +1906,7 @@ func TestLoadConfig(t *testing.T) {
 		expected *alertmanagerConfig
 	}{
 		{
-			name: "Test mute_time_intervals",
+			name: "mute_time_intervals field",
 			rawConf: []byte(`route:
   receiver: "null"
 receivers:
@@ -1977,16 +1977,74 @@ templates: []
 				Templates: []string{},
 			},
 		},
+		{
+			name: "Global opsgenie_api_key_file field",
+			rawConf: []byte(`route:
+  receiver: "null"
+receivers:
+- name: "null"
+global:
+  opsgenie_api_key_file: "xxx"
+templates: []
+`),
+			expected: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKeyFile: "xxx",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "null",
+					},
+				},
+				Templates: []string{},
+			},
+		},
+		{
+			name: "OpsGenie entity and actions fields",
+			rawConf: []byte(`route:
+  receiver: "opsgenie"
+receivers:
+- name: "opsgenie"
+  opsgenie_configs:
+  - entity: entity1
+    actions: action1,action2
+    api_key: xxx
+templates: []
+`),
+			expected: &alertmanagerConfig{
+				Route: &route{
+					Receiver: "opsgenie",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "opsgenie",
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								Entity:  "entity1",
+								Actions: "action1,action2",
+								APIKey:  "xxx",
+							},
+						},
+					},
+				},
+				Templates: []string{},
+			},
+		},
 	}
 
 	for _, tc := range testCase {
-		ac, err := alertmanagerConfigFromBytes(tc.rawConf)
-		if err != nil {
-			t.Error(err)
-		}
-		if !reflect.DeepEqual(ac, tc.expected) {
-			t.Errorf("got %v but wanted %v", ac, tc.expected)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			ac, err := alertmanagerConfigFromBytes(tc.rawConf)
+			if err != nil {
+				t.Fatalf("expecing no error, got %v", err)
+			}
+			if !reflect.DeepEqual(ac, tc.expected) {
+				t.Fatalf("got:\n%v\nbut wanted:\n%v", ac, tc.expected)
+			}
+		})
 	}
 }
 
