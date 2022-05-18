@@ -1549,10 +1549,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
 	}
 	if attachMetadata != nil {
-		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
-			Key: "attach_metadata", Value: yaml.MapSlice{
-				{Key: "node", Value: attachMetadata.Node},
-			},
+		k8sSDConfig = cg.WithMinimumVersion("2.35.0").AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
+			{Key: "node", Value: attachMetadata.Node},
 		})
 	}
 
