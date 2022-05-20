@@ -565,13 +565,13 @@ type PrometheusStatus struct {
 	// Total number of unavailable pods targeted by this Prometheus deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The current state of the Prometheus deployment.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=type
 	// +optional
 	Conditions []PrometheusCondition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
-	// +patchMergeKey=shardID
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=shardID
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
