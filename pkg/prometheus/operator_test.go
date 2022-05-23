@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/prometheus/model/relabel"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -46,21 +47,68 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		equal bool
 	}{
 		{
-			name: "different specs",
+			name: "different generations",
+			a: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Generation: 1,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.0",
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("200Mi"),
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Generation: 2,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.0",
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("100Mi"),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			// differrent resource.Quantity produce the same hash because the
+			// struct contains private fields that aren't integrated into the
+			// hash computation.
+			name: "different specs but same hash",
 			a: monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: "v1.7.0",
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("200Mi"),
+							},
+						},
 					},
 				},
 			},
 			b: monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: "v1.7.2",
+						Version: "v1.7.0",
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("100Mi"),
+							},
+						},
 					},
 				},
 			},
+			equal: true,
 		},
 		{
 			name: "same hash with different status",
