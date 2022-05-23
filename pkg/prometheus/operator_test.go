@@ -22,6 +22,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/prometheus/model/relabel"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -45,7 +46,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		equal bool
 	}{
 		{
-			name: "different versions",
+			name: "different specs",
 			a: monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
@@ -85,29 +86,82 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			equal: true,
 		},
+		{
+			name: "different labels",
+			a: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"foo": "bar"},
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+
+			equal: false,
+		},
+		{
+			name: "different annotations",
+			a: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"foo": "bar"},
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+
+			equal: false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c := operator.Config{}
 
-			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, nil, nil)
+			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, nil, nil)
+			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, nil, appsv1.StatefulSetSpec{})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if tc.equal {
-				if p1Hash != p2Hash {
-					t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
+			if !tc.equal {
+				if p1Hash == p2Hash {
+					t.Fatal("expected two different Prometheus CRDs to produce different hashes but got equal hash")
 				}
 				return
 			}
 
+			if p1Hash != p2Hash {
+				t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
+			}
+
+			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{Replicas: func(i int32) *int32 { return &i }(2)})
+			if err != nil {
+				t.Fatal(err)
+			}
+
 			if p1Hash == p2Hash {
-				t.Fatal("expected two different Prometheus CRDs to produce different hashes but got equal hash")
+				t.Fatal("expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
 			}
 		})
 	}
