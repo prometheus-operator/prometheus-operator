@@ -1702,7 +1702,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
 		PrometheusAnnotations map[string]string
-		PrometheusSpec        monitoringv1.PrometheusSpec
+		PrometheusGeneration  int64
 		Config                operator.Config
 		StatefulSetSpec       appsv1.StatefulSetSpec
 		RuleConfigMaps        []string `hash:"set"`
@@ -1710,7 +1710,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 	}{
 		PrometheusLabels:      p.Labels,
 		PrometheusAnnotations: p.Annotations,
-		PrometheusSpec:        p.Spec,
+		PrometheusGeneration:  p.Generation,
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
 		RuleConfigMaps:        ruleConfigMapNames,
