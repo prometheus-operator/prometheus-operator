@@ -1,3 +1,8 @@
+## 0.56.3 / 2022-05-23
+
+* [BUGFIX] Fixed errors for Alertmanager configurations using the new `entity`, `actions` and `opsgenie_api_key_file` fields. #4797
+* [BUGFIX] Fixed high CPU usage by reducing the number of number of reconciliations on Prometheus objects. #4798 #4806
+
 ## 0.56.2 / 2022-05-09
 
 * [BUGFIX] Fix StatefulSet spec's generation to be determistic when `spec.containers` is not empty. #4772
