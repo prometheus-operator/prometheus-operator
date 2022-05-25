@@ -7655,7 +7655,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			StorageSettings: &monitoringv1.StorageSettingsSpec{
+			StorageSettings: &monitoringv1.StorageSettings{
 				Exemplars: &monitoringv1.Exemplars{
 					MaxExemplars: 1000000,
 				},
@@ -7706,7 +7706,7 @@ func TestStorageSettingWithoutExemplars(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			StorageSettings: &monitoringv1.StorageSettingsSpec{},
+			StorageSettings: &monitoringv1.StorageSettings{},
 		},
 	}
 
