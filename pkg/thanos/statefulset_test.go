@@ -571,8 +571,8 @@ func TestAdditionalContainers(t *testing.T) {
 
 func TestRetention(t *testing.T) {
 	for _, tc := range []struct {
-		specRetention     string
-		expectedRetention string
+		specRetention     monitoringv1.Duration
+		expectedRetention monitoringv1.Duration
 		ok                bool
 	}{
 		{"", "24h", true},
@@ -580,7 +580,7 @@ func TestRetention(t *testing.T) {
 		{"1k", "", false},
 		{"somevalue", "", false},
 	} {
-		t.Run(tc.specRetention, func(t *testing.T) {
+		t.Run(string(tc.specRetention), func(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
 					Retention:      tc.specRetention,

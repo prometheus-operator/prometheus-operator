@@ -1896,7 +1896,9 @@
                     "type": "string"
                   },
                   "evaluationInterval": {
+                    "default": "15s",
                     "description": "Interval between consecutive evaluations.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "excludedFromEnforcement": {
@@ -3427,7 +3429,9 @@
                     "type": "object"
                   },
                   "retention": {
+                    "default": "24h",
                     "description": "Time duration ThanosRuler shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "routePrefix": {
