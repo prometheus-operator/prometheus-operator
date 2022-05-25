@@ -6213,6 +6213,15 @@ spec:
                         type: object
                     type: object
                 type: object
+              storageSettings:
+                description: Storage related settings that are runtime reloadable.
+                properties:
+                  exemplars:
+                    properties:
+                      maxExemplars:
+                        type: integer
+                    type: object
+                type: object
               tag:
                 description: 'Tag of Prometheus container image to be deployed. Defaults
                   to the value of `version`. Version is ignored if Tag is set. Deprecated:
