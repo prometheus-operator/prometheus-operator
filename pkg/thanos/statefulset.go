@@ -329,6 +329,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.RemoteWriteConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
+	} else if tr.Spec.RemoteWriteConfig != nil {
+		trCLIArgs = append(trCLIArgs, "--remote-write.config=$(REMOTE_WRITE_CONFIG)")
+		trEnvVars = append(trEnvVars, v1.EnvVar{
+			Name: "REMOTE_WRITE_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: tr.Spec.RemoteWriteConfig,
+			},
+		})
+	}
+
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (

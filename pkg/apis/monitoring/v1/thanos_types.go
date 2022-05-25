@@ -208,6 +208,14 @@ type ThanosRulerSpec struct {
 	// AlertRelabelConfigFile specifies the path of the alert relabeling configuration file.
 	// When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence.
 	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
+	// RemoteWriteConfig configures stateless mode in ThanosRuler.
+	// RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
+	// https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write
+	// +optional
+	RemoteWriteConfig *v1.SecretKeySelector `json:"remoteWriteConfigFile,omitempty"`
+	// RemoteWriteConfigFile specifies the path of the remote write file.
+	// When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence.
+	RemoteWriteConfigFile *string `json:"remoteWriteConfigFile,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
