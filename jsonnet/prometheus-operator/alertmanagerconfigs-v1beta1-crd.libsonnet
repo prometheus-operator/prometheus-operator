@@ -788,6 +788,13 @@
                                 },
                                 type: {
                                   description: 'Type of responder.',
+                                  enum: [
+                                    'team',
+                                    'teams',
+                                    'user',
+                                    'escalation',
+                                    'schedule',
+                                  ],
                                   minLength: 1,
                                   type: 'string',
                                 },
