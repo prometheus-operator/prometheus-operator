@@ -7647,3 +7647,98 @@ scrape_configs:
 		})
 	}
 }
+
+func TestStorageSettingMaxExemplars(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			StorageSettings: &monitoringv1.StorageSettingsSpec{
+				Exemplars: &monitoringv1.Exemplars{
+					MaxExemplars: 1000000,
+				},
+			},
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+storage:
+  exemplars:
+    max_exemplars: 1000000
+`
+	result := string(cfg)
+
+	if expected != result {
+		t.Logf("\n%s", pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration with storage and actual configuration do not match")
+	}
+}
+
+func TestStorageSettingWithoutExemplars(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			StorageSettings: &monitoringv1.StorageSettingsSpec{},
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`
+	result := string(cfg)
+
+	if expected != result {
+		t.Logf("\n%s", pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration without storage and actual configuration do not match")
+	}
+}
