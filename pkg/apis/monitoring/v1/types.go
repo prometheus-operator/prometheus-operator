@@ -476,7 +476,7 @@ type PrometheusSpec struct {
 	// used.  If both values are zero, no limit is enforced.
 
 	// Storage related settings that are runtime reloadable.
-	StorageSettings *StorageSettings `json:"storageSettingsSpec,omitempty"`
+	StorageSettings *StorageSettings `json:"storageSettings,omitempty"`
 }
 
 type Exemplars struct {
