@@ -32,6 +32,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [Exemplars](#exemplars)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [OAuth2](#oauth2)
@@ -74,6 +75,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitorSpec](#servicemonitorspec)
 * [ShardStatus](#shardstatus)
 * [Sigv4](#sigv4)
+* [StorageSettings](#storagesettings)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
@@ -389,6 +391,19 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## Exemplars
+
+
+
+
+<em>appears in: [StorageSettings](#storagesettings)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| maxExemplars |  | uint | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -862,6 +877,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | thanos | Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release. | *[ThanosSpec](#thanosspec) | false |
 | queryLogFile | QueryLogFile specifies the file to which PromQL queries are logged. If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an emptyDir volume at `/var/log/prometheus`. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log query information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/) | string | false |
 | allowOverlappingBlocks | AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus. This is still experimental in Prometheus so it may change in any upcoming release. | bool | false |
+| storageSettings | Storage related settings that are runtime reloadable. | *[StorageSettings](#storagesettings) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1162,6 +1178,19 @@ Sigv4 optionally configures AWS's Signature Verification 4 signing process to si
 | secretKey | SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | profile | Profile is the named AWS profile used to authenticate. | string | false |
 | roleArn | RoleArn is the named AWS profile used to authenticate. | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## StorageSettings
+
+
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| exemplars |  | *[Exemplars](#exemplars) | false |
 
 [Back to TOC](#table-of-contents)
 
