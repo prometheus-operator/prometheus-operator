@@ -607,6 +607,11 @@ func (cg *ConfigGenerator) Generate(
 		Value: append(scrapeConfigs, addlScrapeConfigs...),
 	})
 
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating storage_settings configuration failed")
+	}
+
 	cfg, err = cg.appendAlertingConfig(cfg, p, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating alerting configuration failed")
@@ -621,6 +626,45 @@ func (cg *ConfigGenerator) Generate(
 	}
 
 	return yaml.Marshal(cfg)
+}
+
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.Prometheus) (yaml.MapSlice, error) {
+	if p.Spec.EnableFeatures == nil || p.Spec.Exemplars == nil {
+		return cfg, nil
+	}
+
+	isExemplarsEnabled := false
+	for _, featureFlag := range p.Spec.EnableFeatures {
+		if featureFlag == "exemplar-storage" {
+			isExemplarsEnabled = true
+			break
+		}
+	}
+
+	if !isExemplarsEnabled {
+		return cfg, nil
+	}
+
+	storageSettings := yaml.MapSlice{
+		{
+			Key: "storage",
+			Value: yaml.MapSlice{
+				{
+					Key: "exemplars",
+					Value: yaml.MapSlice{
+						{
+							Key:   "max_exemplars",
+							Value: p.Spec.Exemplars.MaxExemplars,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cfg = append(cfg, storageSettings...)
+
+	return cfg, nil
 }
 
 func (cg *ConfigGenerator) appendAlertingConfig(
