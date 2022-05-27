@@ -26,9 +26,9 @@ function(params) {
   local aw = self,
   _config:: defaults + params,
   _metadata:: {
-      name: aw._config.name,
-      namespace: aw._config.namespace,
-      labels: aw._config.commonLabels,
+    name: aw._config.name,
+    namespace: aw._config.namespace,
+    labels: aw._config.commonLabels,
   },
 
   serviceAccount: {
@@ -77,8 +77,8 @@ function(params) {
           metadata: {
             labels: aw._config.commonLabels,
             annotations: {
-              "kubectl.kubernetes.io/default-container": container.name,
-            }
+              'kubectl.kubernetes.io/default-container': container.name,
+            },
           },
           spec: {
             containers: [container],
@@ -107,6 +107,17 @@ function(params) {
       selector: {
         matchLabels: aw._config.commonLabels,
       },
+    },
+  },
+
+  [if (defaults + params).replicas > 1 then 'podDisruptionBudget']: {
+    apiVersion: 'policy/v1',
+    kind: 'PodDisruptionBudget',
+    metadata: aw._metadata,
+    spec: {
+      minAvailable: 1,
+      selector: { matchLabels: aw._config.selectorLabels },
+
     },
   },
 }

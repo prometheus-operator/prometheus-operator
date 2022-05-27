@@ -382,7 +382,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			},
 		)
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint)
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, nil)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -407,6 +407,9 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 			NamespaceSelector: monitoringv1.NamespaceSelector{
 				MatchNames: []string{"test"},
 			},
+			AttachMetadata: &monitoringv1.AttachMetadata{
+				Node: true,
+			},
 		},
 	}
 
@@ -421,7 +424,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		},
 	)
 
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod)
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, pm.Spec.AttachMetadata)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
@@ -433,6 +436,8 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
   namespaces:
     names:
     - test
+  attach_metadata:
+    node: true
 `
 
 	result := string(s)
@@ -1413,7 +1418,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			sm.Namespace,
 			tc.apiserverConfig,
 			tc.store,
-			kubernetesSDRoleEndpoint,
+			kubernetesSDRoleEndpoint, nil,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {

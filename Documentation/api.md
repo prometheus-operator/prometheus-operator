@@ -26,6 +26,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
+* [AttachMetadata](#attachmetadata)
 * [Authorization](#authorization)
 * [BasicAuth](#basicauth)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
@@ -106,6 +107,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [TelegramConfig](#telegramconfig)
 * [TimeInterval](#timeinterval)
 * [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
@@ -285,6 +287,19 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | deny |  | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## AttachMetadata
+
+
+
+
+<em>appears in: [PodMonitorSpec](#podmonitorspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| node | When set to true, Prometheus must have permissions to get Nodes. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -530,6 +545,7 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| attachMetadata | Attaches node metadata to discovered targets. Only valid for role: pod. Only valid in Prometheus versions 2.35.0 and newer. | *[AttachMetadata](#attachmetadata) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1456,7 +1472,7 @@ EmailConfig configures notifications via Email.
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 
-<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [TelegramConfig](#telegramconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1547,6 +1563,7 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | tags | Comma separated list of tags attached to the notifications. | string | false |
 | note | Additional alert note. | string | false |
 | priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | string | false |
+| updateAlerts | Whether to update message and description of the alert in OpsGenie if it already exists By default, the alert is never updated in OpsGenie, the new message only appears in activity log. | *bool | false |
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
@@ -1671,6 +1688,7 @@ Receiver defines one or more notification integrations.
 | victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
 | pushoverConfigs | List of Pushover configurations. | [][PushoverConfig](#pushoverconfig) | false |
 | snsConfigs | List of SNS configurations | [][SNSConfig](#snsconfig) | false |
+| telegramConfigs | List of Telegram configurations. | [][TelegramConfig](#telegramconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1798,6 +1816,26 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TelegramConfig
+
+TelegramConfig configures notifications via Telegram. See https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether to notify about resolved alerts. | *bool | false |
+| apiURL | The Telegram API URL i.e. https://api.telegram.org. If not specified, default API URL will be used. | string | false |
+| botToken | Telegram bot token The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| chatID | The Telegram chat ID. | int64 | false |
+| message | Message template | string | false |
+| disableNotifications | Disable telegram notifications | *bool | false |
+| parseMode | Parse mode for telegram message | string | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

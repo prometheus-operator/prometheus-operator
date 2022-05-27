@@ -750,6 +750,21 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// telegram secret
+	telegramTestingSecret := "telegram-testing-secret"
+	telegramTestingbotTokenKey := "telegram-testing-bottoken-key"
+	telegramTestingKeySecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: telegramTestingSecret,
+		},
+		Data: map[string][]byte{
+			telegramTestingbotTokenKey: []byte("bipbop"),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), telegramTestingKeySecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	apiKeySecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "og-receiver-api-key",
@@ -886,6 +901,17 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: testingSecretKey,
 					},
 				}},
+				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+					APIURL: "https://telegram.api.url",
+					BotToken: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: telegramTestingSecret,
+						},
+						Key: telegramTestingbotTokenKey,
+					},
+					ChatID: 12345,
+				}},
+
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
@@ -1198,6 +1224,10 @@ receivers:
       access_key: 1234abc
       secret_key: 1234abc
     topic_arn: test-topicARN
+  telegram_configs:
+  - api_url: https://telegram.api.url
+    bot_token: bipbop
+    chat_id: 12345
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
