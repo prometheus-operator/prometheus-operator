@@ -429,6 +429,82 @@ func TestAlertRelabelFile(t *testing.T) {
 	}
 }
 
+func TestRemoteWriteConfigFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-remotewrite-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:        emptyQueryEndpoints,
+			RemoteWriteConfigFile: &testPath,
+			RemoteWriteConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArgConfigFile, containsArgConfigs bool
+		expectedArgConfigFile := "--remote-write.config-file=" + testPath
+		expectedArgConfigs := "--remote-write.config=$(REMOTE_WRITE_CONFIG)"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfigs {
+						containsArgConfigs = true
+					}
+				}
+			}
+		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfigs {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfigs)
+		}
+	}
+}
+
+func TestRemoteWriteConfig(t *testing.T) {
+	testKey := "thanos-remotewrite-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			RemoteWriteConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArgConfigs bool
+		expectedArgConfigs := "--remote-write.config=$(REMOTE_WRITE_CONFIG)"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArgConfigs {
+						containsArgConfigs = true
+					}
+				}
+			}
+		}
+
+		require.Equal(t, containsArgConfigs, true)
+	}
+}
+
 func TestLabelsAndAlertDropLabels(t *testing.T) {
 	labelPrefix := "--label="
 	alertDropLabelPrefix := "--alert.label-drop="
