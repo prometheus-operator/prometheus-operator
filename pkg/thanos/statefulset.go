@@ -169,22 +169,26 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.Wrap(err, "failed to build image path")
 	}
 
+	// TODO(slashpai): Remove this assignment after v0.57 since this is handled at CRD level
 	if tr.Spec.EvaluationInterval == "" {
 		tr.Spec.EvaluationInterval = defaultEvaluationInterval
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if tr.Spec.EvaluationInterval != "" {
-		if err := operator.ValidateDurationField(tr.Spec.EvaluationInterval); err != nil {
+		if err := operator.ValidateDurationField(string(tr.Spec.EvaluationInterval)); err != nil {
 			return nil, errors.Wrap(err, "invalid evaluationInterval value specified")
 		}
 	}
 
+	// TODO(slashpai): Remove this assignment after v0.57 since this is handled at CRD level
 	if tr.Spec.Retention == "" {
 		tr.Spec.Retention = defaultRetention
 	}
 
+	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
 	if tr.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(tr.Spec.Retention); err != nil {
+		if err := operator.ValidateDurationField(string(tr.Spec.Retention)); err != nil {
 			return nil, errors.Wrap(err, "invalid retention value specified")
 		}
 	}
