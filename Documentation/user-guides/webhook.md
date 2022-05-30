@@ -118,8 +118,9 @@ webhooks:
 
 ### `/admission-prometheusrules/mutate`
 
-The endpoint `/admission-prometheusrules/mutate` ensures that integers and
-boolean yaml data elements are coerced into strings.
+The endpoint `/admission-prometheusrules/mutate` mutates `PrometheusRule`
+objects so that integers and boolean yaml data elements are coerced into
+strings.
 
 The following example deploys the mutating admission webhook:
 
