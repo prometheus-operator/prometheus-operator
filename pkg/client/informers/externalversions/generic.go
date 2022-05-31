@@ -21,6 +21,7 @@ import (
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -70,6 +71,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("alertmanagerconfigs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1alpha1().AlertmanagerConfigs().Informer()}, nil
+
+		// Group=monitoring.coreos.com, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("alertmanagerconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1beta1().AlertmanagerConfigs().Informer()}, nil
 
 	}
 

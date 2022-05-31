@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,12 +25,15 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -41,6 +45,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	v1alpha1monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1alpha1"
+	v1beta1monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1beta1"
 )
 
 const (
@@ -56,6 +61,7 @@ type Framework struct {
 	KubeClient        kubernetes.Interface
 	MonClientV1       v1monitoringclient.MonitoringV1Interface
 	MonClientV1alpha1 v1alpha1monitoringclient.MonitoringV1alpha1Interface
+	MonClientV1beta1  v1beta1monitoringclient.MonitoringV1beta1Interface
 	APIServerClient   apiclient.Interface
 	HTTPClient        *http.Client
 	MasterHost        string
@@ -90,9 +96,14 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating v1 monitoring client failed")
 	}
 
-	mClientV1alpha1, err := v1alpha1monitoringclient.NewForConfig(config)
+	mClientv1alpha1, err := v1alpha1monitoringclient.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating v1alpha1 monitoring client failed")
+	}
+
+	mClientv1beta1, err := v1beta1monitoringclient.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating v1beta1 monitoring client failed")
 	}
 
 	f := &Framework{
@@ -100,7 +111,8 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		MasterHost:        config.Host,
 		KubeClient:        cli,
 		MonClientV1:       mClientV1,
-		MonClientV1alpha1: mClientV1alpha1,
+		MonClientV1alpha1: mClientv1alpha1,
+		MonClientV1beta1:  mClientv1beta1,
 		APIServerClient:   apiCli,
 		HTTPClient:        httpc,
 		DefaultTimeout:    time.Minute,
@@ -279,7 +291,14 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "initialize AlertmanagerConfig CRD")
+		return nil, errors.Wrap(err, "initialize AlertmanagerConfig v1alpha1 CRD")
+	}
+
+	err = WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1beta1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
 	}
 
 	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator-deployment.yaml")
@@ -387,7 +406,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 	}
 
 	if createResourceAdmissionHooks {
-		b, err := f.CreateAdmissionWebhookServer(ctx, ns, webhookServerImage)
+		webhookService, b, err := f.CreateAdmissionWebhookServer(ctx, ns, webhookServerImage)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create webhook server")
 		}
@@ -407,6 +426,12 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context, ns, opImage st
 		finalizer, err = f.createValidatingHook(ctx, b, ns, "../../test/framework/resources/alertmanager-config-validating-webhook.yaml")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook for AlertManagerConfigs")
+		}
+		finalizers = append(finalizers, finalizer)
+
+		finalizer, err = f.configureAlertmanagerConfigConversion(ctx, webhookService, b)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to configure conversion webhook for AlertManagerConfigs")
 		}
 		finalizers = append(finalizers, finalizer)
 	}
@@ -448,14 +473,80 @@ func (f *Framework) SetupPrometheusRBACGlobal(ctx context.Context, t *testing.T,
 	}
 }
 
+func (f *Framework) configureAlertmanagerConfigConversion(ctx context.Context, svc *v1.Service, cert []byte) (FinalizerFn, error) {
+	patch, err := f.MakeCRD("../../example/alertmanager-crd-conversion/patch.json")
+	if err != nil {
+		return nil, err
+	}
+
+	crd, err := f.GetCRD(ctx, patch.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	originalBytes, err := json.Marshal(crd)
+	if err != nil {
+		return nil, err
+	}
+
+	patch.Spec.Conversion.Webhook.ClientConfig.Service.Name = svc.Name
+	patch.Spec.Conversion.Webhook.ClientConfig.Service.Namespace = svc.Namespace
+	patch.Spec.Conversion.Webhook.ClientConfig.Service.Port = &svc.Spec.Ports[0].Port
+	patch.Spec.Conversion.Webhook.ClientConfig.CABundle = cert
+
+	crd.Spec.Conversion = patch.Spec.Conversion
+
+	patchBytes, err := json.Marshal(crd)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonResult, err := strategicpatch.StrategicMergePatch(originalBytes, patchBytes, apiextensionsv1.CustomResourceDefinition{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate merge patch: %w", err)
+	}
+
+	crd, err = f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Patch(
+		ctx,
+		crd.Name,
+		types.StrategicMergePatchType,
+		jsonResult,
+		metav1.PatchOptions{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to patch CustomResourceDefinition object: %w", err)
+	}
+
+	if crd.Spec.Conversion.Strategy != apiextensionsv1.WebhookConverter {
+		return nil, fmt.Errorf("expected conversion strategy to be %s, got %s", apiextensionsv1.WebhookConverter, crd.Spec.Conversion.Strategy)
+	}
+
+	finalizerFn := func() error {
+		crd, err := f.GetCRD(ctx, patch.Name)
+		if err != nil {
+			return err
+		}
+
+		crd.Spec.Conversion = nil
+		_, err = f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Update(ctx, crd, metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("unable to reset conversion configuration of AlertmanagerConfig CRD: %w", err)
+		}
+
+		return err
+	}
+
+	return finalizerFn, nil
+}
+
 // CreateAdmissionWebhookServer deploys an HTTPS server
 // Acts as a validating and mutating webhook server for PrometheusRule and AlertManagerConfig
-// Returns the CA, which can be used to access the server over TLS
+// Returns the service and the CA which can be used to access the server over TLS
 func (f *Framework) CreateAdmissionWebhookServer(
 	ctx context.Context,
 	namespace string,
 	image string,
-) ([]byte, error) {
+) (*v1.Service, []byte, error) {
 
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
 		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
@@ -463,17 +554,20 @@ func (f *Framework) CreateAdmissionWebhookServer(
 		nil,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to generate certificate and key")
+		return nil, nil, errors.Wrap(err, "failed to generate certificate and key")
 	}
 
 	if err := f.CreateSecretWithCert(ctx, certBytes, keyBytes, namespace, standaloneAdmissionHookSecretName); err != nil {
-		return nil, errors.Wrap(err, "failed to create admission webhook secret")
+		return nil, nil, errors.Wrap(err, "failed to create admission webhook secret")
 	}
 
 	deploy, err := MakeDeployment("../../example/admission-webhook/deployment.yaml")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	// Only 1 replica needed for the tests.
+	deploy.Spec.Replicas = func(i int32) *int32 { return &i }(1)
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 
@@ -482,7 +576,7 @@ func (f *Framework) CreateAdmissionWebhookServer(
 		deploy.Spec.Template.Spec.Containers[0].Image = image
 		repoAndTag := strings.Split(image, ":")
 		if len(repoAndTag) != 2 {
-			return nil, errors.Errorf(
+			return nil, nil, errors.Errorf(
 				"expected image '%v' split by colon to result in two substrings but got '%v'",
 				image,
 				repoAndTag,
@@ -501,32 +595,31 @@ func (f *Framework) CreateAdmissionWebhookServer(
 
 	_, err = f.createServiceAccount(ctx, namespace, "../../example/admission-webhook/service-account.yaml")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	err = f.CreateDeployment(ctx, namespace, deploy)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = f.WaitForPodsReady(ctx, namespace, f.DefaultTimeout, 2, opts)
+	err = f.WaitForPodsReady(ctx, namespace, f.DefaultTimeout, int(*deploy.Spec.Replicas), opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to wait for admission webhook server to become ready")
+		return nil, nil, errors.Wrap(err, "failed to wait for admission webhook server to become ready")
 	}
 
 	service, err := MakeService("../../example/admission-webhook/service.yaml")
 	if err != nil {
-		return certBytes, errors.Wrap(err, "cannot parse service file")
+		return nil, nil, errors.Wrap(err, "cannot parse service file")
 	}
 
 	service.Namespace = namespace
-	service.Spec.ClusterIP = ""
 	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
 	if _, err := f.CreateServiceAndWaitUntilReady(ctx, namespace, service); err != nil {
-		return certBytes, errors.Wrap(err, "failed to create admission webhook server service")
+		return nil, nil, errors.Wrap(err, "failed to create admission webhook server service")
 	}
 
-	return certBytes, nil
+	return service, certBytes, nil
 }

@@ -41,6 +41,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
+// +kubebuilder:storageversion
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
