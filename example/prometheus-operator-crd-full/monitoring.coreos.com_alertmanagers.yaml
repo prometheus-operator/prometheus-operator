@@ -998,12 +998,15 @@ spec:
                 type: string
               clusterGossipInterval:
                 description: Interval between gossip attempts.
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               clusterPeerTimeout:
                 description: Timeout for cluster peering.
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               clusterPushpullInterval:
                 description: Interval between pushpull attempts.
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               configMaps:
                 description: ConfigMaps is a list of ConfigMaps in the same namespace
@@ -3631,9 +3634,11 @@ spec:
                     type: object
                 type: object
               retention:
+                default: 120h
                 description: Time duration Alertmanager shall retain data for. Default
                   is '120h', and must match the regular expression `[0-9]+(ms|s|m|h)`
                   (milliseconds seconds minutes hours).
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               routePrefix:
                 description: The route prefix Alertmanager registers HTTP handlers

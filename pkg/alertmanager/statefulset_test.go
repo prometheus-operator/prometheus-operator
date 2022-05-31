@@ -602,8 +602,8 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 
 func TestRetention(t *testing.T) {
 	tests := []struct {
-		specRetention     string
-		expectedRetention string
+		specRetention     monitoringv1.GoDuration
+		expectedRetention monitoringv1.GoDuration
 	}{
 		{"", "120h"},
 		{"1d", "1d"},

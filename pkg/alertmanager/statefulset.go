@@ -66,6 +66,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 	if am.Spec.Replicas != nil && *am.Spec.Replicas < 0 {
 		am.Spec.Replicas = &intZero
 	}
+	// TODO(slashpai): Remove this assignment after v0.60 since this is handled at CRD level
 	if am.Spec.Retention == "" {
 		am.Spec.Retention = defaultRetention
 	}
