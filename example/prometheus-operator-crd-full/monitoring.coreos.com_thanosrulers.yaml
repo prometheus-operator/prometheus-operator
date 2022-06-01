@@ -3727,6 +3727,11 @@ spec:
                 items:
                   type: string
                 type: array
+              remoteWriteConfigFile:
+                description: RemoteWriteConfigFile specifies the path of the remote
+                  write file. When used alongside with RemoteWriteConfig, remoteWriteConfigFile
+                  takes precedence.
+                type: string
               replicas:
                 description: Number of thanos ruler instances to deploy.
                 format: int32
