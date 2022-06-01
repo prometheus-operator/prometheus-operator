@@ -565,13 +565,13 @@ type PrometheusStatus struct {
 	// Total number of unavailable pods targeted by this Prometheus deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The current state of the Prometheus deployment.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=type
 	// +optional
 	Conditions []PrometheusCondition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
-	// +patchMergeKey=shardID
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=shardID
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
@@ -1189,6 +1189,14 @@ type PodMonitorSpec struct {
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Attaches node metadata to discovered targets. Only valid for role: pod.
+	// Only valid in Prometheus versions 2.35.0 and newer.
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+}
+
+type AttachMetadata struct {
+	// When set to true, Prometheus must have permissions to get Nodes.
+	Node bool `json:"node,omitempty"`
 }
 
 // PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.

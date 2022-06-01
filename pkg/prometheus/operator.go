@@ -561,8 +561,61 @@ func (c *Operator) handlePrometheusDelete(obj interface{}) {
 	c.addToReconcileQueue(key)
 }
 
+// hasStateChanged returns true if the 2 objects are different in a way that
+// the controller should reconcile the actual state against the desired state.
+// It helps preventing hot loops when the controller updates the status
+// subresource for instance.
+func (c *Operator) hasStateChanged(old, cur metav1.Object) bool {
+	if old.GetGeneration() != cur.GetGeneration() {
+		level.Debug(c.logger).Log(
+			"msg", "different generations",
+			"current", cur.GetGeneration(),
+			"old", old.GetGeneration(),
+			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+		)
+		return true
+	}
+
+	if !reflect.DeepEqual(old.GetLabels(), cur.GetLabels()) {
+		level.Debug(c.logger).Log(
+			"msg", "different labels",
+			"current", fmt.Sprintf("%v", cur.GetLabels()),
+			"old", fmt.Sprintf("%v", old.GetLabels()),
+			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+		)
+		return true
+
+	}
+	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
+		level.Debug(c.logger).Log(
+			"msg", "different annotations",
+			"current", fmt.Sprintf("%v", cur.GetAnnotations()),
+			"old", fmt.Sprintf("%v", old.GetAnnotations()),
+			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+		)
+		return true
+	}
+
+	return false
+}
+
+// hasObjectChanged returns true if the 2 objects are different.
+func (c *Operator) hasObjectChanged(old, cur metav1.Object) bool {
+	if old.GetResourceVersion() != cur.GetResourceVersion() {
+		level.Debug(c.logger).Log(
+			"msg", "different resource versions",
+			"current", cur.GetResourceVersion(),
+			"old", old.GetResourceVersion(),
+			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+		)
+		return true
+	}
+
+	return false
+}
+
 func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.Prometheus).ResourceVersion == cur.(*monitoringv1.Prometheus).ResourceVersion {
+	if !c.hasStateChanged(&old.(*monitoringv1.Prometheus).ObjectMeta, &cur.(*monitoringv1.Prometheus).ObjectMeta) {
 		return
 	}
 
@@ -1206,21 +1259,27 @@ func prometheusKeyToStatefulSetKey(key string, shard int) string {
 }
 
 func (c *Operator) handleStatefulSetDelete(obj interface{}) {
-	if ps := c.prometheusForStatefulSet(obj); ps != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet delete")
-		c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
-
-		c.addToReconcileQueue(ps)
+	ps := c.prometheusForStatefulSet(obj)
+	if ps == nil {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "StatefulSet delete")
+	c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
+
+	c.addToReconcileQueue(ps)
 }
 
 func (c *Operator) handleStatefulSetAdd(obj interface{}) {
-	if ps := c.prometheusForStatefulSet(obj); ps != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet added")
-		c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
-
-		c.addToReconcileQueue(ps)
+	ps := c.prometheusForStatefulSet(obj)
+	if ps == nil {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "StatefulSet added")
+	c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
+
+	c.addToReconcileQueue(ps)
 }
 
 func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
@@ -1229,19 +1288,27 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 
 	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	// Periodic resync may resend the StatefulSet without changes
-	// in-between. Also breaks loops created by updating the resource
-	// ourselves.
-	if old.ResourceVersion == cur.ResourceVersion {
+	if !c.hasObjectChanged(old, cur) {
 		return
 	}
 
-	if p := c.prometheusForStatefulSet(cur); p != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet updated")
-		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
-
-		c.addToReconcileQueue(p)
+	p := c.prometheusForStatefulSet(cur)
+	if p == nil {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "StatefulSet updated")
+	c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
+
+	if !c.hasStateChanged(old, cur) {
+		// If the statefulset state (spec, labels or annotations) hasn't
+		// changed, the operator can only update the status subresource instead
+		// of doing a full reconciliation.
+		c.addToStatusQueue(p)
+		return
+	}
+
+	c.addToReconcileQueue(p)
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
@@ -1364,16 +1431,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if obj != nil {
 			existingStatefulSet = obj.(*appsv1.StatefulSet)
 			if existingStatefulSet.DeletionTimestamp != nil {
-				// We want to avoid entering a hot-loop of update/delete cycles here since the sts was
-				// marked for deletion in foreground, which means it may take some time before the finalizers complete and
-				// the resource disappears from the API. The deletion timestamp will have been set when the initial
-				// delete request was issued. In that case, we avoid further processing.
+				// We want to avoid entering a hot-loop of update/delete cycles
+				// here since the sts was marked for deletion in foreground,
+				// which means it may take some time before the finalizers
+				// complete and the resource disappears from the API. The
+				// deletion timestamp will have been set when the initial
+				// delete request was issued. In that case, we avoid further
+				// processing.
 				level.Info(logger).Log(
 					"msg", "halting update of StatefulSet",
 					"reason", "resource has been marked for deletion",
 					"resource_name", existingStatefulSet.GetName(),
 				)
-				return nil
+				continue
 			}
 		}
 
@@ -1394,7 +1464,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return errors.Wrap(err, "creating statefulset failed")
 			}
-			return nil
+			continue
 		}
 
 		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
@@ -1402,7 +1472,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		level.Debug(logger).Log("msg", "updating current statefulset")
+		level.Debug(logger).Log(
+			"msg", "updating current statefulset because of hash divergence",
+			"new_hash", newSSetInputHash,
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName],
+		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 		sErr, ok := err.(*apierrors.StatusError)
@@ -1422,7 +1496,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 			}
-			return nil
+			continue
 		}
 
 		if err != nil {
@@ -1441,6 +1515,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, ok := ssets[s.Name]; ok {
 			// Do not delete statefulsets that we still expect to exist. This
 			// is to cleanup StatefulSets when shards are reduced.
+			return
+		}
+
+		// Deletion already in progress.
+		if s.DeletionTimestamp != nil {
 			return
 		}
 
@@ -1624,26 +1703,28 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 	}
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ss interface{}) (string, error) {
-	// The status field is updated only by the operator hence it shouldn't be
-	// taken into account for computing the hash value.
-	p.Status = monitoringv1.PrometheusStatus{}
-
+func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
 	hash, err := hashstructure.Hash(struct {
-		P monitoringv1.Prometheus
-		C operator.Config
-		S interface{}
-		R []string `hash:"set"`
-		A []string `hash:"set"`
-	}{p, c, ss, ruleConfigMapNames, tlsAssets.ShardNames()},
+		PrometheusLabels      map[string]string
+		PrometheusAnnotations map[string]string
+		PrometheusGeneration  int64
+		Config                operator.Config
+		StatefulSetSpec       appsv1.StatefulSetSpec
+		RuleConfigMaps        []string `hash:"set"`
+		Assets                []string `hash:"set"`
+	}{
+		PrometheusLabels:      p.Labels,
+		PrometheusAnnotations: p.Annotations,
+		PrometheusGeneration:  p.Generation,
+		Config:                c,
+		StatefulSetSpec:       ssSpec,
+		RuleConfigMaps:        ruleConfigMapNames,
+		Assets:                tlsAssets.ShardNames(),
+	},
 		nil,
 	)
 	if err != nil {
-		return "", errors.Wrap(
-			err,
-			"failed to calculate combined hash of Prometheus StatefulSet, Prometheus CRD, config and"+
-				" rule ConfigMap names",
-		)
+		return "", errors.Wrap(err, "failed to calculate combined hash")
 	}
 
 	return fmt.Sprintf("%d", hash), nil
