@@ -1009,6 +1009,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
 				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
+				HostAliases:                   operator.MakeHostAliases(p.Spec.HostAliases),
 			},
 		},
 	}, nil

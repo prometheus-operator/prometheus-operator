@@ -2785,6 +2785,28 @@ spec:
                   under. This is necessary to generate correct URLs. This is necessary
                   if Prometheus is not served from root of a DNS name.
                 type: string
+              hostAliases:
+                description: Pods' hostAliases configuration
+                items:
+                  description: HostAlias holds the mapping between IP and hostnames
+                    that will be injected as an entry in the pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - hostnames
+                  - ip
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - ip
+                x-kubernetes-list-type: map
               ignoreNamespaceSelectors:
                 description: IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
                   settings from all PodMonitor, ServiceMonitor and Probe objects.

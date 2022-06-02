@@ -2258,6 +2258,28 @@ spec:
                   Use case is e.g. spanning an Alertmanager cluster across Kubernetes
                   clusters with a single replica in each.
                 type: boolean
+              hostAliases:
+                description: Pods' hostAliases configuration
+                items:
+                  description: HostAlias holds the mapping between IP and hostnames
+                    that will be injected as an entry in the pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - hostnames
+                  - ip
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - ip
+                x-kubernetes-list-type: map
               image:
                 description: Image if specified has precedence over baseImage, tag
                   and sha combinations. Specifying the version is still necessary
