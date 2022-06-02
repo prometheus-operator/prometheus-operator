@@ -40,6 +40,25 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
+func testAMCreateDeleteClusterNoneClusterRole(ns string, t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	// ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBACNoneClusterRole(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func testAMCreateDeleteCluster(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.

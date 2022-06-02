@@ -28,8 +28,11 @@ import (
 )
 
 var (
-	framework *operatorFramework.Framework
-	opImage   *string
+	framework       *operatorFramework.Framework
+	opImage         *string
+	reImage         *string
+	weImage         *string
+	imagePullSecret *string
 )
 
 func skipPrometheusAllNSTests(t *testing.T) {
@@ -74,6 +77,21 @@ func TestMain(m *testing.M) {
 		"",
 		"operator image, e.g. quay.io/prometheus-operator/prometheus-operator",
 	)
+	reImage = flag.String(
+		"reloader-image",
+		"",
+		"reloader image, e.g. quay.io/prometheus-operator/prometheus-config-reloader",
+	)
+	weImage = flag.String(
+		"webhook-image",
+		"",
+		"webhook image, e.g. quay.io/prometheus-operator/admission-webhook",
+	)
+	imagePullSecret = flag.String(
+		"image-pull-secret",
+		"",
+		"image pull secret, e.g. regcred",
+	)
 	flag.Parse()
 
 	var (
@@ -81,7 +99,8 @@ func TestMain(m *testing.M) {
 		exitCode int
 	)
 
-	if framework, err = operatorFramework.New(*kubeconfig, *opImage); err != nil {
+	log.Printf("IMAGE_PULL_SECRET: %s", *imagePullSecret)
+	if framework, err = operatorFramework.New(*kubeconfig, *opImage, *imagePullSecret); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
@@ -93,13 +112,13 @@ func TestMain(m *testing.M) {
 
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
-func TestAllNS(t *testing.T) {
+func aTestAllNS(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreatePrometheusOperatorWithImage(context.Background(), ns, *opImage, *reImage, *weImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,6 +138,65 @@ func TestAllNS(t *testing.T) {
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
+
+	// Check if Prometheus Operator ever restarted.
+	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+		"app.kubernetes.io/name": "prometheus-operator",
+	})).String()}
+
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if expected := 1; len(pl.Items) != expected {
+		t.Fatalf("expected %v Prometheus Operator pods, but got %v", expected, len(pl.Items))
+	}
+	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
+	if err != nil {
+		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
+	}
+	if len(restarts) != 1 {
+		t.Fatalf("expected to have 1 container but got %d", len(restarts))
+	}
+	for _, restart := range restarts {
+		if restart != 0 {
+			t.Fatalf(
+				"expected Prometheus Operator to never restart during entire test execution but got %d restarts",
+				restart,
+			)
+		}
+	}
+}
+
+// TestAllNS tests the Prometheus Operator watching all namespaces in a
+// Kubernetes cluster.
+func TestNoneClusterRole(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	finalizers, err := framework.CreatePrometheusOperatorNoneClusterRole(context.Background(), ns, *opImage, *reImage, *weImage, nil, nil, nil, nil, true, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
+	}
+
+	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
+
+	// t.Run blocks until the function passed as the second argument (f) returns or
+	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
+	// (or at least did not fail before calling t.Parallel). As all tests in
+	// testAllNS are parallel, the deferred ctx.Cleanup above would be run before
+	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
+	// fixes this.
+	testAMCreateDeleteClusterNoneClusterRole(ns, t)
+	// t.Run("x", testAllNSAlertmanager)
+	// t.Run("y", testAllNSPrometheus)
+	// t.Run("z", testAllNSThanosRuler)
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -240,7 +318,7 @@ func testAllNSThanosRuler(t *testing.T) {
 
 // TestMultiNS tests the Prometheus Operator configured to watch specific
 // namespaces.
-func TestMultiNS(t *testing.T) {
+func aTestMultiNS(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"OperatorNSScope": testOperatorNSScope,
@@ -252,7 +330,7 @@ func TestMultiNS(t *testing.T) {
 }
 
 // TestDenylist tests the Prometheus Operator configured not to watch specific namespaces.
-func TestDenylist(t *testing.T) {
+func aTestDenylist(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
@@ -266,7 +344,7 @@ func TestDenylist(t *testing.T) {
 }
 
 // TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given
-func TestPromInstanceNs(t *testing.T) {
+func aTestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":             testPrometheusInstanceNamespacesAllNs,
@@ -281,7 +359,7 @@ func TestPromInstanceNs(t *testing.T) {
 }
 
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given
-func TestAlertmanagerInstanceNs(t *testing.T) {
+func aTestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":     testAlertmanagerInstanceNamespacesAllNs,
