@@ -14534,6 +14534,12 @@ spec:
                   - resource
                   type: object
                 type: array
+              exemplars:
+                description: Exemplars related settings that are runtime reloadable.
+                properties:
+                  maxExemplars:
+                    type: integer
+                type: object
               externalLabels:
                 additionalProperties:
                   type: string

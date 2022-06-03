@@ -489,6 +489,13 @@ type PrometheusSpec struct {
 	// Note that if TargetLimit is lower, that value will be taken instead,
 	// except if either value is zero, in which case the non-zero value will be
 	// used.  If both values are zero, no limit is enforced.
+
+	// Exemplars related settings that are runtime reloadable.
+	Exemplars *Exemplars `json:"exemplars,omitempty"`
+}
+
+type Exemplars struct {
+	MaxExemplars uint `json:"maxExemplars,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
