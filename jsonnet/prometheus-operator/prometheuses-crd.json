@@ -5813,6 +5813,20 @@
                     },
                     "type": "object"
                   },
+                  "storageSettings": {
+                    "description": "Storage related settings that are runtime reloadable.",
+                    "properties": {
+                      "exemplars": {
+                        "properties": {
+                          "maxExemplars": {
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "tag": {
                     "description": "Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. Deprecated: use 'image' instead.  The image tag can be specified as part of the image URL.",
                     "type": "string"
