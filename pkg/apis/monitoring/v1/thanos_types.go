@@ -218,7 +218,7 @@ type ThanosRulerSpec struct {
 	// RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
 	// https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write
 	// +optional
-	RemoteWriteConfig []*RemoteWriteSpec `json:"remoteWriteConfigFile,omitempty"`
+	RemoteWriteConfig []RemoteWriteSpec `json:"remoteWriteConfigFile,omitempty"`
 	// RemoteWriteConfigFile specifies the path of the remote write file.
 	// When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence.
 	RemoteWriteConfigFile *string `json:"remoteWriteConfigFile,omitempty"`

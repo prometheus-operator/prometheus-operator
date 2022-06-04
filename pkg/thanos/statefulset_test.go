@@ -431,15 +431,26 @@ func TestAlertRelabelFile(t *testing.T) {
 
 func TestRemoteWriteConfigFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
-	testKey := "thanos-remotewrite-config-secret"
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:        emptyQueryEndpoints,
 			RemoteWriteConfigFile: &testPath,
-			RemoteWriteConfig: &v1.SecretKeySelector{
-				Key: testKey,
+			RemoteWriteConfig: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					QueueConfig: &monitoringv1.QueueConfig{
+						Capacity:          1000,
+						MinShards:         1,
+						MaxShards:         10,
+						MaxSamplesPerSend: 100,
+						BatchSendDeadline: "20s",
+						MaxRetries:        3,
+						MinBackoff:        "1s",
+						MaxBackoff:        "10s",
+					},
+				},
 			},
 		},
 	}, defaultTestConfig, nil, "")
@@ -473,14 +484,24 @@ func TestRemoteWriteConfigFile(t *testing.T) {
 }
 
 func TestRemoteWriteConfig(t *testing.T) {
-	testKey := "thanos-remotewrite-config-secret"
-
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			RemoteWriteConfig: &v1.SecretKeySelector{
-				Key: testKey,
+			RemoteWriteConfig: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					QueueConfig: &monitoringv1.QueueConfig{
+						Capacity:          1000,
+						MinShards:         1,
+						MaxShards:         10,
+						MaxSamplesPerSend: 100,
+						BatchSendDeadline: "20s",
+						MaxRetries:        3,
+						MinBackoff:        "1s",
+						MaxBackoff:        "10s",
+					},
+				},
 			},
 		},
 	}, defaultTestConfig, nil, "")
@@ -490,7 +511,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 
 	{
 		var containsArgConfigs bool
-		expectedArgConfigs := "--remote-write.config=$(REMOTE_WRITE_CONFIG)"
+		expectedArgConfigs := "--remote-write.config=remote_write:\n- url: http://example.com\n  remote_timeout: 30s\n  name: \"\"\n  queue_config:\n    capacity: 1000\n    min_shards: 1\n    max_shards: 10\n    max_samples_per_send: 100\n    batch_send_deadline: 20s\n    min_backoff: 1s\n    max_backoff: 10s\n"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {

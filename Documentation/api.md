@@ -1362,7 +1362,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | alertRelabelConfigs | AlertRelabelConfigs configures alert relabeling in ThanosRuler. Alert relabel configurations must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs Alternative to AlertRelabelConfigFile, and lower order priority. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | alertRelabelConfigFile | AlertRelabelConfigFile specifies the path of the alert relabeling configuration file. When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence. | *string | false |
 | hostAliases | Pods' hostAliases configuration | [][HostAlias](#hostalias) | false |
-| remoteWriteConfigFile | RemoteWriteConfig configures stateless mode in ThanosRuler. RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation: https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write | []*[RemoteWriteSpec](#remotewritespec) | false |
+| remoteWriteConfigFile | RemoteWriteConfig configures stateless mode in ThanosRuler. RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation: https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteWriteConfigFile | RemoteWriteConfigFile specifies the path of the remote write file. When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence. | *string | false |
 
 [Back to TOC](#table-of-contents)

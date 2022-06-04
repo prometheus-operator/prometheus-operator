@@ -2308,13 +2308,9 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 	}
 	if in.RemoteWriteConfig != nil {
 		in, out := &in.RemoteWriteConfig, &out.RemoteWriteConfig
-		*out = make([]*RemoteWriteSpec, len(*in))
+		*out = make([]RemoteWriteSpec, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RemoteWriteSpec)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.RemoteWriteConfigFile != nil {

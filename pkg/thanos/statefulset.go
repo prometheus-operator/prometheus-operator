@@ -560,7 +560,7 @@ func volumeName(name string) string {
 	return fmt.Sprintf("%s-data", prefixedName(name))
 }
 
-func generateRemoteWriteConfigYaml(remoteWrites []*monitoringv1.RemoteWriteSpec) yaml.MapItem {
+func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {
 	cfgs := []yaml.MapSlice{}
 	for _, spec := range remoteWrites {
 		//defaults
@@ -609,9 +609,12 @@ func generateRemoteWriteConfigYaml(remoteWrites []*monitoringv1.RemoteWriteSpec)
 
 		cfgs = append(cfgs, cfg)
 	}
-	return yaml.MapItem{
+
+	var cfg yaml.MapSlice
+	cfg = append(cfg, yaml.MapItem{
 		Key:   "remote_write",
 		Value: cfgs,
-	}
+	})
+	return cfg
 
 }
