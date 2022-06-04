@@ -693,7 +693,6 @@ func TestRetention(t *testing.T) {
 }
 
 func TestPodTemplateConfig(t *testing.T) {
-
 	nodeSelector := map[string]string{
 		"foo": "bar",
 	}
@@ -723,6 +722,17 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	priorityClassName := "foo"
 	serviceAccountName := "thanos-ruler-sa"
+	hostAliases := []monitoringv1.HostAlias{
+		{
+			Hostnames: []string{"foo.com"},
+			IP:        "1.1.1.1",
+		},
+	}
+	imagePullSecrets := []v1.LocalObjectReference{
+		{
+			Name: "registry-secret",
+		},
+	}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -734,6 +744,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			SecurityContext:    &securityContext,
 			PriorityClassName:  priorityClassName,
 			ServiceAccountName: serviceAccountName,
+			HostAliases:        hostAliases,
+			ImagePullSecrets:   imagePullSecrets,
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -757,6 +769,12 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if sset.Spec.Template.Spec.ServiceAccountName != serviceAccountName {
 		t.Fatalf("expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	}
+	if len(sset.Spec.Template.Spec.HostAliases) != len(hostAliases) {
+		t.Fatalf("expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
+	}
+	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
+		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	}
 }
 

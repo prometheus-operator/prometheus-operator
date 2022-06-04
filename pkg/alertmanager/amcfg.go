@@ -1463,7 +1463,7 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		}
 	}
 
-	if ogc.APIKey != "" {
+	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		level.Warn(logger).Log("msg", "'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
 		ogc.APIKeyFile = ""
 	}
