@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"net/url"
 	"path"
 	"strings"
@@ -336,13 +337,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.RemoteWriteConfigFile != nil {
 		trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
 	} else if tr.Spec.RemoteWriteConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--remote-write.config=$(REMOTE_WRITE_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "REMOTE_WRITE_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.RemoteWriteConfig,
-			},
-		})
+		remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to generate remote write spec")
+		}
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
 	}
 
 	var additionalContainers []v1.Container
@@ -559,4 +558,60 @@ func prefixedName(name string) string {
 
 func volumeName(name string) string {
 	return fmt.Sprintf("%s-data", prefixedName(name))
+}
+
+func generateRemoteWriteConfigYaml(remoteWrites []*monitoringv1.RemoteWriteSpec) yaml.MapItem {
+	cfgs := []yaml.MapSlice{}
+	for _, spec := range remoteWrites {
+		//defaults
+		if spec.RemoteTimeout == "" {
+			spec.RemoteTimeout = "30s"
+		}
+
+		cfg := yaml.MapSlice{
+			{Key: "url", Value: spec.URL},
+			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+			{Key: "name", Value: spec.Name},
+		}
+		if spec.QueueConfig != nil {
+			queueConfig := yaml.MapSlice{}
+
+			if spec.QueueConfig.Capacity != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
+			}
+
+			if spec.QueueConfig.MinShards != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
+			}
+
+			if spec.QueueConfig.MaxShards != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
+			}
+
+			if spec.QueueConfig.MaxSamplesPerSend != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
+			}
+
+			if spec.QueueConfig.BatchSendDeadline != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
+			}
+
+			if spec.QueueConfig.MinBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: spec.QueueConfig.MinBackoff})
+			}
+
+			if spec.QueueConfig.MaxBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
+		}
+
+		cfgs = append(cfgs, cfg)
+	}
+	return yaml.MapItem{
+		Key:   "remote_write",
+		Value: cfgs,
+	}
+
 }
