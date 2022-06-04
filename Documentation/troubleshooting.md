@@ -139,7 +139,7 @@ The incorrect example will give an error along these lines `spec.endpoints.port 
 
 #### Prometheus/Alertmanager pods stuck in terminating loop with healthy start up logs
 
-Double check that only one operator is running on the cluster! Having more than one operator wil lead to such beahaviour. To check run:
+Hint: Check that only one operator is running on the cluster! Having more than one operator wil lead to such beahaviour. To check run:
 
 `kubeclt get pods --all-namespaces | grep operator` 
  
