@@ -696,6 +696,8 @@ func (f *Framework) CreatePrometheusOperatorNoneClusterRole(ctx context.Context,
 		webhookServerImage = weImage
 	}
 
+	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--has-clusterrole=false")
+
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
 	deploy.Name = prometheusOperatorServiceDeploymentName
 

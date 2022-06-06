@@ -193,7 +193,6 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, ns 
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
-	fmt.Println(a)
 
 	return a, f.WaitForAlertmanagerReady(ctx, ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode)
 }

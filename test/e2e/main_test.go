@@ -168,62 +168,52 @@ func aTestAllNS(t *testing.T) {
 	}
 }
 
-// TestAllNS tests the Prometheus Operator watching all namespaces in a
-// Kubernetes cluster.
+type TestCaseContext struct {
+	IsClusterRole bool
+	Namespace     string
+	Ctx           *operatorFramework.TestCtx
+	t             *testing.T
+}
+
+func (ctx *TestCaseContext) test() {
+
+}
+
+// TestNoneClusterRole tests the Prometheus Operator watching role in one
+// namespaces in a Kubernetes cluster.
 func TestNoneClusterRole(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
 
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-
-	finalizers, err := framework.CreatePrometheusOperatorNoneClusterRole(context.Background(), ns, *opImage, *reImage, *weImage, nil, nil, nil, nil, true, false)
-	if err != nil {
-		t.Fatal(err)
+	testFuncs := map[string]func(ns string, testCtx *operatorFramework.TestCtx, t *testing.T){
+		"testAMCreateDeleteClusterNCR":          testAMCreateDeleteClusterNoneClusterRole,
+		"testAMScalingNCR":                      testAMScalingNoneClusterRole,
+		"testAMVersionMigrationNCR":             testAMVersionMigrationNoneClusterRole,
+		"testPromCreateDeleteClusterNCR":        testPromCreateDeleteClusterNoneClusterRole,
+		"testPromScaleUpDownClusterNCR":         testPromScaleUpDownClusterNoneClusterRole,
+		"testPromNoServiceMonitorSelectorNCR":   testPromNoServiceMonitorSelectorNoneClusterRole,
+		"testPromResourceUpdateNCR":             testPromResourceUpdateNoneClusterRole,
+		"testThanosRulerCreateDeleteClusterNCR": testThanosRulerCreateDeleteClusterNoneClusterRole,
+		"testThanosRulerProRuleInDifNsNCR":      testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole,
+		"testTRPreserveUserAddedMetadataNCR":    testTRPreserveUserAddedMetadataNoneClusterRole,
 	}
 
-	for _, f := range finalizers {
-		testCtx.AddFinalizerFn(f)
-	}
+	for name, fn := range testFuncs {
+		t.Run(name, func(t *testing.T) {
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	// t.Run blocks until the function passed as the second argument (f) returns or
-	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
-	// (or at least did not fail before calling t.Parallel). As all tests in
-	// testAllNS are parallel, the deferred ctx.Cleanup above would be run before
-	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
-	// fixes this.
-	testAMCreateDeleteClusterNoneClusterRole(ns, t)
-	// t.Run("x", testAllNSAlertmanager)
-	// t.Run("y", testAllNSPrometheus)
-	// t.Run("z", testAllNSThanosRuler)
+			finalizers, err := framework.CreatePrometheusOperatorNoneClusterRole(context.Background(), ns, *opImage, *reImage, *weImage, []string{ns}, nil, nil, nil, true, false)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	// Check if Prometheus Operator ever restarted.
-	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-		"app.kubernetes.io/name": "prometheus-operator",
-	})).String()}
+			for _, f := range finalizers {
+				testCtx.AddFinalizerFn(f)
+			}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expected := 1; len(pl.Items) != expected {
-		t.Fatalf("expected %v Prometheus Operator pods, but got %v", expected, len(pl.Items))
-	}
-	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
-	if err != nil {
-		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
-	}
-	if len(restarts) != 1 {
-		t.Fatalf("expected to have 1 container but got %d", len(restarts))
-	}
-	for _, restart := range restarts {
-		if restart != 0 {
-			t.Fatalf(
-				"expected Prometheus Operator to never restart during entire test execution but got %d restarts",
-				restart,
-			)
-		}
+			fn(ns, testCtx, t)
+		})
 	}
 }
 

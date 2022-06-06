@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,9 @@ func testThanosRulerCreateDeleteCluster(t *testing.T) {
 	defer testCtx.Cleanup(t)
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testThanosRulerCreateDeleteClusterNoneClusterRole(ns, testCtx, t)
+}
+func testThanosRulerCreateDeleteClusterNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
@@ -49,6 +53,15 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	defer testCtx.Cleanup(t)
 
 	thanosNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
+	testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole(thanosNamespace, testCtx, t)
+}
+
+func testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole(
+	thanosNamespace string,
+	testCtx *operatorFramework.TestCtx,
+	t *testing.T,
+) {
+
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, thanosNamespace)
 
 	name := "test"
@@ -125,6 +138,11 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testTRPreserveUserAddedMetadataNoneClusterRole(ns, testCtx, t)
+}
+
+func testTRPreserveUserAddedMetadataNoneClusterRole(ns string,
+	testCtx *operatorFramework.TestCtx, t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"

@@ -38,13 +38,14 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
-func testAMCreateDeleteClusterNoneClusterRole(ns string, t *testing.T) {
+func testAMCreateDeleteClusterNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
+	// testCtx := framework.NewTestCtx(t)
+	// defer testCtx.Cleanup(t)
 	// ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBACNoneClusterRole(context.Background(), t, testCtx, ns)
 
@@ -55,6 +56,63 @@ func testAMCreateDeleteClusterNoneClusterRole(ns string, t *testing.T) {
 	}
 
 	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testAMScalingNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	// testCtx := framework.NewTestCtx(t)
+	// defer testCtx.Cleanup(t)
+	// ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBACNoneClusterRole(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	a, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 3))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a.Spec.Replicas = proto.Int32(5)
+	a, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, a)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a.Spec.Replicas = proto.Int32(3)
+	if _, err := framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, a); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testAMVersionMigrationNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	// testCtx := framework.NewTestCtx(t)
+	// defer testCtx.Cleanup(t)
+	// ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBACNoneClusterRole(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	am := framework.MakeBasicAlertmanager(name, 1)
+	am.Spec.Version = "v0.16.2"
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	am.Spec.Version = "v0.17.0"
+	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	am.Spec.Version = "v0.16.2"
+	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	if err != nil {
 		t.Fatal(err)
 	}
 }
