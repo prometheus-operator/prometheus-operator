@@ -112,7 +112,7 @@ func TestMain(m *testing.M) {
 
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
-func aTestAllNS(t *testing.T) {
+func TestAllNS(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
@@ -168,17 +168,6 @@ func aTestAllNS(t *testing.T) {
 	}
 }
 
-type TestCaseContext struct {
-	IsClusterRole bool
-	Namespace     string
-	Ctx           *operatorFramework.TestCtx
-	t             *testing.T
-}
-
-func (ctx *TestCaseContext) test() {
-
-}
-
 // TestNoneClusterRole tests the Prometheus Operator watching role in one
 // namespaces in a Kubernetes cluster.
 func TestNoneClusterRole(t *testing.T) {
@@ -192,7 +181,6 @@ func TestNoneClusterRole(t *testing.T) {
 		"testPromNoServiceMonitorSelectorNCR":   testPromNoServiceMonitorSelectorNoneClusterRole,
 		"testPromResourceUpdateNCR":             testPromResourceUpdateNoneClusterRole,
 		"testThanosRulerCreateDeleteClusterNCR": testThanosRulerCreateDeleteClusterNoneClusterRole,
-		"testThanosRulerProRuleInDifNsNCR":      testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole,
 		"testTRPreserveUserAddedMetadataNCR":    testTRPreserveUserAddedMetadataNoneClusterRole,
 	}
 
@@ -308,7 +296,7 @@ func testAllNSThanosRuler(t *testing.T) {
 
 // TestMultiNS tests the Prometheus Operator configured to watch specific
 // namespaces.
-func aTestMultiNS(t *testing.T) {
+func TestMultiNS(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"OperatorNSScope": testOperatorNSScope,
@@ -320,7 +308,7 @@ func aTestMultiNS(t *testing.T) {
 }
 
 // TestDenylist tests the Prometheus Operator configured not to watch specific namespaces.
-func aTestDenylist(t *testing.T) {
+func TestDenylist(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
@@ -334,7 +322,7 @@ func aTestDenylist(t *testing.T) {
 }
 
 // TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given
-func aTestPromInstanceNs(t *testing.T) {
+func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":             testPrometheusInstanceNamespacesAllNs,
@@ -349,7 +337,7 @@ func aTestPromInstanceNs(t *testing.T) {
 }
 
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given
-func aTestAlertmanagerInstanceNs(t *testing.T) {
+func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":     testAlertmanagerInstanceNamespacesAllNs,

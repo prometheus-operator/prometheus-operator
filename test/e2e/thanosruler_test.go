@@ -53,14 +53,6 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	defer testCtx.Cleanup(t)
 
 	thanosNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
-	testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole(thanosNamespace, testCtx, t)
-}
-
-func testThanosRulerPrometheusRuleInDifferentNamespaceNoneClusterRole(
-	thanosNamespace string,
-	testCtx *operatorFramework.TestCtx,
-	t *testing.T,
-) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, thanosNamespace)
 
