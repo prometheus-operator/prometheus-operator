@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alertmanager
+package v1alpha1
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"regexp"
@@ -23,43 +22,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus/alertmanager/config"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
-
-// ValidateAlertmanager runs extra validation on the AlertManager fields which
-// can't be done at the CRD schema validation level.
-func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
-	if am.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(am.Spec.Retention); err != nil {
-			return errors.Wrap(err, "invalid retention value specified")
-		}
-	}
-
-	if am.Spec.ClusterGossipInterval != "" {
-		if err := operator.ValidateDurationField(am.Spec.ClusterGossipInterval); err != nil {
-			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
-		}
-	}
-
-	if am.Spec.ClusterPushpullInterval != "" {
-		if err := operator.ValidateDurationField(am.Spec.ClusterPushpullInterval); err != nil {
-			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
-		}
-	}
-
-	if am.Spec.ClusterPeerTimeout != "" {
-		if err := operator.ValidateDurationField(am.Spec.ClusterPeerTimeout); err != nil {
-			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
-		}
-	}
-
-	return nil
-}
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
@@ -77,19 +44,6 @@ func ValidateAlertmanagerConfig(amc *monitoringv1alpha1.AlertmanagerConfig) erro
 	}
 
 	return validateAlertManagerRoutes(amc.Spec.Route, receivers, muteTimeIntervals, true)
-}
-
-// ValidateURL against the config.URL
-// This could potentially become a regex and be validated via OpenAPI
-// but right now, since we know we need to unmarshal into an upstream type
-// after conversion, we validate we don't error when doing so
-func ValidateURL(url string) (*config.URL, error) {
-	var u config.URL
-	err := json.Unmarshal([]byte(fmt.Sprintf(`"%s"`, url)), &u)
-	if err != nil {
-		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
-	}
-	return &u, nil
 }
 
 func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]struct{}, error) {
@@ -137,6 +91,11 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -145,7 +104,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
 	for _, conf := range configs {
 		if conf.URL != "" {
-			if _, err := ValidateURL(conf.URL); err != nil {
+			if _, err := validation.ValidateURL(conf.URL); err != nil {
 				return errors.Wrap(err, "pagerduty validation failed for 'url'")
 			}
 		}
@@ -166,7 +125,7 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 			return err
 		}
 		if config.APIURL != "" {
-			if _, err := ValidateURL(config.APIURL); err != nil {
+			if _, err := validation.ValidateURL(config.APIURL); err != nil {
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
@@ -197,7 +156,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
 		if config.URL != nil {
-			if _, err := ValidateURL(*config.URL); err != nil {
+			if _, err := validation.ValidateURL(*config.URL); err != nil {
 				return errors.Wrapf(err, "invalid 'url'")
 			}
 		}
@@ -212,7 +171,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 	for _, config := range configs {
 		if config.APIURL != "" {
-			if _, err := ValidateURL(config.APIURL); err != nil {
+			if _, err := validation.ValidateURL(config.APIURL); err != nil {
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
@@ -279,7 +238,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 		}
 
 		if config.APIURL != "" {
-			if _, err := ValidateURL(config.APIURL); err != nil {
+			if _, err := validation.ValidateURL(config.APIURL); err != nil {
 				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
 			}
 		}
@@ -319,6 +278,25 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
+	for _, config := range configs {
+
+		if config.BotToken == nil {
+			return fmt.Errorf("mandatory field %q is empty", "botToken")
+		}
+
+		if config.ChatID == 0 {
+			return fmt.Errorf("mandatory field %q is empty", "chatID")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

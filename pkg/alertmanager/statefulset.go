@@ -628,6 +628,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				Tolerations:                   a.Spec.Tolerations,
 				Affinity:                      a.Spec.Affinity,
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
+				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
 			},
 		},
 	}, nil

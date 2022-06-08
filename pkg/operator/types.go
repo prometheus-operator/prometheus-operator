@@ -36,3 +36,19 @@ func MakeVolumeClaimTemplate(e monitoringv1.EmbeddedPersistentVolumeClaim) *v1.P
 	}
 	return &pvc
 }
+
+// MakeHostAliases converts array of monitoringv1 HostAlias to array of corev1 HostAlias
+func MakeHostAliases(input []monitoringv1.HostAlias) []v1.HostAlias {
+	if len(input) == 0 {
+		return nil
+	}
+
+	output := make([]v1.HostAlias, len(input))
+
+	for i, in := range input {
+		output[i].Hostnames = in.Hostnames
+		output[i].IP = in.IP
+	}
+
+	return output
+}

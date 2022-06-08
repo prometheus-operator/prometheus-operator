@@ -1,50 +1,89 @@
 # Admission webhooks
 
-This document describes how to set up an admission webhook to validate
-PrometheusRules, and thus preventing Prometheus from loading invalid
-configuration.
+This document describes how to deploy the Prometheus operator's admission webhook service.
+
+The admission webhook can be used to:
+* Ensure that all annotations of PrometheusRule objects are coerced into string values.
+* Check that PrometheusRule objects are semantically valid.
+* Check that AlertmanagerConfig objects are semantically valid.
+* Convert AlertmanagerConfig objects between v1alpha1 and v1beta1 versions.
 
 ## Prerequisites
 
 This guide assumes that you have already [deployed the Prometheus
-Operator](getting-started.md) and that [admission
-controllers are
+Operator](getting-started.md) and that [admission controllers are
 enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 on your cluster.
 
-Admission webhooks require TLS, and as such this guide also assumes that you
-have a TLS certificate and key ready.
+The Kubernetes API server expects admission webhooks to communicate over HTTPS
+so this guide also assumes the following:
+1. A valid TLS certificate and key has been provisioned for the admission webhook service.
+2. A secret holding the TLS certificate and key has been created.
 
-## Preparing the Operator
+If you don't want to manually provision the TLS materials,
+[cert-manager](https://cert-manager.io/) is a good option.
 
-A secret needs to be created from the TLS certificate and key, assuming the
-certificate is in `tls.crt` and the key in `tls.key`:
+## Admission webhook deployment
 
-```bash
-kubectl create secret tls prometheus-operator-certs --cert=tls.crt --key=tls.key
+Assuming that the following secret exists and contains the base64-encoded
+[PEM](https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail) certificate
+(`tls.crt`) and key (`tls.key`) for the admission webhook service.
+
+```yaml
+apiVersion: v1
+data:
+  tls.crt: LS0tLS...LS0tCg==
+  tls.key: LS0tLS...LS0tCg==
+kind: Secret
+metadata:
+  name: admission-webhook-certs
+  namespace: default
 ```
 
-The Prometheus Operator will serve the admission webhook. However, to do so, it
-requires being available over TLS, and not only plain HTTP. Thus the following
-flags need to be added to the Prometheus Operator deployment:
+The admission webhook's pod template should be modified to mount the secret as a
+volume and the container arguments should be modified to include the
+certificate and key:
 
-* `--web.enable-tls=true` to enable the Prometheus Operator to serve its API
-  over TLS,
-
-* `--web.cert-file` to load the TLS certificate to use,
-
-* `--web.key-file` to load the associate key.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-operator-admission-webhook
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: prometheus-operator-admission-webhook
+        args:
+        - --web.enable-tls=true
+        - --web.cert-file=/etc/tls/private/tls.crt
+        - --web.key-file=/etc/tls/private/tls.key
+        volumeMounts:
+        - mountPath: /etc/tls/private
+          name: tls-certificates
+          readOnly: true
+     volumes:
+     - name: tls-certificates
+     - secret:
+         secretName: admission-webhook-certs
+```
 
 ## Webhook endpoints
 
 ### caBundle note
 
-The `caBundle` contains the base64-encoded CA certificate used to sign the
-webhook's certificate.
+The `caBundle` field contains the base64-encoded CA certificate used to sign the
+webhook's certificate. It is used by the Kubernetes API server to validate the
+certificate of the webhook service.
+
+Certificate managers like [cert-manager](https://cert-manager.io/) supports CA
+injection into webhook configurations and custom resource definitions.
 
 ### `/admission-prometheusrules/validate`
 
-The endpoint `/admission-prometheusrules/validate` rejects rules that are not valid prometheus config.
+The endpoint `/admission-prometheusrules/validate` rejects `PrometheusRule`
+objects that are not valid.
 
 The following example deploys the validating admission webhook:
 
@@ -55,7 +94,7 @@ metadata:
   name: prometheus-operator-rulesvalidation
 webhooks:
   - clientConfig:
-      caBundle: SOMECABASE64ENCODED==
+      caBundle: LS0tLS...LS0tCg==
       service:
         name: prometheus-operator
         namespace: default
@@ -79,7 +118,9 @@ webhooks:
 
 ### `/admission-prometheusrules/mutate`
 
-The endpoint `/admission-prometheusrules/mutate` ensures that integers and boolean yaml data elements are cooerced into strings.
+The endpoint `/admission-prometheusrules/mutate` mutates `PrometheusRule`
+objects so that integers and boolean yaml data elements are coerced into
+strings.
 
 The following example deploys the mutating admission webhook:
 
@@ -90,7 +131,7 @@ metadata:
   name: prometheus-operator-rulesmutation
 webhooks:
   - clientConfig:
-      caBundle: SOMECABASE64ENCODED==
+      caBundle: LS0tLS...LS0tCg==
       service:
         name: prometheus-operator
         namespace: default
@@ -114,7 +155,8 @@ webhooks:
 
 ### `/admission-alertmanagerconfigs/validate`
 
-The endpoint `/admission-alertmanagerconfigs/validate` rejects alertmanagerconfigs that are not valid alertmanager config.
+The endpoint `/admission-alertmanagerconfigs/validate` rejects
+`AlertmanagerConfig` objects that are not valid.
 
 The following example deploys the validating admission webhook:
 
@@ -125,7 +167,7 @@ metadata:
   name: prometheus-operator-alertmanager-config-validation
 webhooks:
   - clientConfig:
-      caBundle: SOMECABASE64ENCODED==
+      caBundle: LS0tLS...LS0tCg==
       service:
         name: prometheus-operator
         namespace: default
@@ -145,4 +187,43 @@ webhooks:
           - alertmanagerconfigs
     admissionReviewVersions: ["v1", "v1beta1"]
     sideEffects: None
+```
+
+### `/convert`
+
+The endpoint `/convert` convert `Alertmanagerconfig` objects between `v1alpha1`
+and `v1beta1` versions.
+
+The following example is a patch for the
+`alertmanagerconfigs.monitoring.coreos.com` CRD to configure the conversion
+webhook.
+
+```json
+{
+   "apiVersion": "apiextensions.k8s.io/v1",
+   "kind": "CustomResourceDefinition",
+   "metadata": {
+      "name": "alertmanagerconfigs.monitoring.coreos.com"
+   },
+   "spec": {
+      "conversion": {
+         "strategy": "Webhook",
+         "webhook": {
+            "clientConfig": {
+               "service": {
+                  "name": "prometheus-operator-admission-webhook",
+                  "namespace": "default",
+                  "path": "/convert",
+                  "port": 8443
+               },
+               "caBundle": "LS0tLS...LS0tCg=="
+            },
+            "conversionReviewVersions": [
+               "v1beta1",
+               "v1alpha1"
+            ]
+         }
+      }
+   }
+}
 ```

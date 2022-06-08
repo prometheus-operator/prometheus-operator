@@ -26,11 +26,13 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
+* [AttachMetadata](#attachmetadata)
 * [Authorization](#authorization)
 * [BasicAuth](#basicauth)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [HostAlias](#hostalias)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [OAuth2](#oauth2)
@@ -105,6 +107,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [TelegramConfig](#telegramconfig)
 * [TimeInterval](#timeinterval)
 * [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
@@ -253,6 +256,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
+| hostAliases | Pods' hostAliases configuration | [][HostAlias](#hostalias) | false |
 | alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
 
 [Back to TOC](#table-of-contents)
@@ -284,6 +288,19 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | deny |  | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## AttachMetadata
+
+
+
+
+<em>appears in: [PodMonitorSpec](#podmonitorspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| node | When set to true, Prometheus must have permissions to get Nodes. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -374,6 +391,20 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## HostAlias
+
+HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the pod's hosts file.
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec), [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ip | IP address of the host file entry. | string | true |
+| hostnames | Hostnames for the above IP address. | []string | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -529,6 +560,7 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+| attachMetadata | Attaches node metadata to discovered targets. Only valid for role: pod. Only valid in Prometheus versions 2.35.0 and newer. | *[AttachMetadata](#attachmetadata) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -829,6 +861,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedLabelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 | enforcedBodySizeLimit | EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer. | ByteSize | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
+| hostAliases | Pods' hostAliases configuration | [][HostAlias](#hostalias) | false |
 | retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | Duration | false |
 | retentionSize | Maximum amount of disk space used by blocks. | ByteSize | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
@@ -1314,8 +1347,8 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | logLevel | Log level for ThanosRuler to be configured with. | string | false |
 | logFormat | Log format for ThanosRuler to be configured with. | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
-| evaluationInterval | Interval between consecutive evaluations. | string | false |
-| retention | Time duration ThanosRuler shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
+| evaluationInterval | Interval between consecutive evaluations. | Duration | false |
+| retention | Time duration ThanosRuler shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | Duration | false |
 | containers | Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`. Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
 | initContainers | InitContainers allows adding initContainers to the pod definition. Those can be used to e.g. fetch secrets for injection into the ThanosRuler configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ Using initContainers for any use case other then secret fetching is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
 | tracingConfig | TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
@@ -1328,6 +1361,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
 | alertRelabelConfigs | AlertRelabelConfigs configures alert relabeling in ThanosRuler. Alert relabel configurations must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs Alternative to AlertRelabelConfigFile, and lower order priority. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | alertRelabelConfigFile | AlertRelabelConfigFile specifies the path of the alert relabeling configuration file. When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence. | *string | false |
+| hostAliases | Pods' hostAliases configuration | [][HostAlias](#hostalias) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1434,7 +1468,7 @@ EmailConfig configures notifications via Email.
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 
-<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
+<em>appears in: [OpsGenieConfig](#opsgenieconfig), [PagerDutyConfig](#pagerdutyconfig), [PushoverConfig](#pushoverconfig), [SNSConfig](#snsconfig), [SlackConfig](#slackconfig), [TelegramConfig](#telegramconfig), [VictorOpsConfig](#victoropsconfig), [WeChatConfig](#wechatconfig), [WebhookConfig](#webhookconfig)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1525,6 +1559,7 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | tags | Comma separated list of tags attached to the notifications. | string | false |
 | note | Additional alert note. | string | false |
 | priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | string | false |
+| updateAlerts | Whether to update message and description of the alert in OpsGenie if it already exists By default, the alert is never updated in OpsGenie, the new message only appears in activity log. | *bool | false |
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
@@ -1649,6 +1684,7 @@ Receiver defines one or more notification integrations.
 | victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
 | pushoverConfigs | List of Pushover configurations. | [][PushoverConfig](#pushoverconfig) | false |
 | snsConfigs | List of SNS configurations | [][SNSConfig](#snsconfig) | false |
+| telegramConfigs | List of Telegram configurations. | [][TelegramConfig](#telegramconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1776,6 +1812,26 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TelegramConfig
+
+TelegramConfig configures notifications via Telegram. See https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
+
+
+<em>appears in: [Receiver](#receiver)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether to notify about resolved alerts. | *bool | false |
+| apiURL | The Telegram API URL i.e. https://api.telegram.org. If not specified, default API URL will be used. | string | false |
+| botToken | Telegram bot token The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
+| chatID | The Telegram chat ID. | int64 | false |
+| message | Message template | string | false |
+| disableNotifications | Disable telegram notifications | *bool | false |
+| parseMode | Parse mode for telegram message | string | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
