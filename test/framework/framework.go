@@ -202,6 +202,7 @@ func (f *Framework) CreatePrometheusOperator(ctx context.Context,
 		namespaceAllowlist,
 		namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces, createResourceAdmissionHooks, createRoleBindings)
 }
+
 func (f *Framework) CreatePrometheusOperatorWithImage(ctx context.Context, ns,
 	opImage, reImage, weImage string,
 	namespaceAllowlist,
@@ -866,7 +867,7 @@ func (f *Framework) CreatePrometheusOperatorNoneClusterRole(ctx context.Context,
 	}
 
 	if createResourceAdmissionHooks {
-		b, err := f.CreateAdmissionWebhookServer(ctx, ns, webhookServerImage)
+		b, err := f.CreateAdmissionWebhookServerNoneClusterRole(ctx, ns, webhookServerImage)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create webhook server")
 		}
