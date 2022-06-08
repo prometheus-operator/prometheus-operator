@@ -646,21 +646,31 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		probePath = path.Clean(webRoutePrefix + probePath)
 		handler := v1.ProbeHandler{}
 		if p.Spec.ListenLocal {
+			probeURL := url.URL{
+				Scheme: "http",
+				Host:   "localhost:9090",
+				Path:   probePath,
+			}
 			handler.Exec = &v1.ExecAction{
 				Command: []string{
 					"sh",
 					"-c",
-					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
+					fmt.Sprintf(
+						`if [ -x "$(command -v curl)" ]; then exec %s; elif [ -x "$(command -v wget)" ]; then exec %s; else exit 1; fi`,
+						operator.CurlProber(probeURL.String()),
+						operator.WgetProber(probeURL.String()),
+					),
 				},
 			}
-		} else {
-			handler.HTTPGet = &v1.HTTPGetAction{
-				Path: probePath,
-				Port: intstr.FromString(p.Spec.PortName),
-			}
-			if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
-				handler.HTTPGet.Scheme = v1.URISchemeHTTPS
-			}
+			return handler
+		}
+
+		handler.HTTPGet = &v1.HTTPGetAction{
+			Path: probePath,
+			Port: intstr.FromString(p.Spec.PortName),
+		}
+		if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+			handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 		}
 		return handler
 	}
@@ -999,6 +1009,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
 				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
+				HostAliases:                   operator.MakeHostAliases(p.Spec.HostAliases),
 			},
 		},
 	}, nil

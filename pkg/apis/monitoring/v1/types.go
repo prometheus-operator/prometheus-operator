@@ -337,6 +337,10 @@ type CommonPrometheusFields struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// Pods' hostAliases configuration
+	// +listType=map
+	// +listMapKey=ip
+	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 }
 
 // Prometheus defines a Prometheus deployment.
@@ -379,6 +383,17 @@ type ByteSize string
 // Supported units: y, w, d, h, m, s, ms Examples: `30s`, `1m`, `1h20m15s`
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 type Duration string
+
+// HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
+// pod's hosts file.
+type HostAlias struct {
+	// IP address of the host file entry.
+	// +kubebuilder:validation:Required
+	IP string `json:"ip"`
+	// Hostnames for the above IP address.
+	// +kubebuilder:validation:Required
+	Hostnames []string `json:"hostnames"`
+}
 
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
@@ -565,13 +580,13 @@ type PrometheusStatus struct {
 	// Total number of unavailable pods targeted by this Prometheus deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The current state of the Prometheus deployment.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=type
 	// +optional
 	Conditions []PrometheusCondition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
-	// +patchMergeKey=shardID
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=shardID
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
@@ -1189,6 +1204,14 @@ type PodMonitorSpec struct {
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Attaches node metadata to discovered targets. Only valid for role: pod.
+	// Only valid in Prometheus versions 2.35.0 and newer.
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+}
+
+type AttachMetadata struct {
+	// When set to true, Prometheus must have permissions to get Nodes.
+	Node bool `json:"node,omitempty"`
 }
 
 // PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
@@ -1836,6 +1859,10 @@ type AlertmanagerSpec struct {
 	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	// Pods' hostAliases configuration
+	// +listType=map
+	// +listMapKey=ip
+	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.

@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -919,7 +921,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
-	if err := ValidateAlertmanager(am); err != nil {
+	if err := validation.ValidateAlertmanager(am); err != nil {
 		return err
 	}
 
@@ -1130,7 +1132,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
-	if err := ValidateAlertmanagerConfig(amc); err != nil {
+	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
@@ -1296,6 +1298,9 @@ func checkOpsGenieConfigs(
 		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
+		if err := checkOpsGenieResponder(ctx, config.Responders, amVersion); err != nil {
+			return err
+		}
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
 
 		if config.APIKey != nil {
@@ -1309,6 +1314,16 @@ func checkOpsGenieConfigs(
 		}
 	}
 
+	return nil
+}
+
+func checkOpsGenieResponder(ctx context.Context, opsgenieResponder []monitoringv1alpha1.OpsGenieConfigResponder, amVersion semver.Version) error {
+	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
+	for _, resp := range opsgenieResponder {
+		if resp.Type == "teams" && lessThanV0_24 {
+			return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
+		}
+	}
 	return nil
 }
 
@@ -1359,7 +1374,7 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := ValidateURL(strings.TrimSpace(url)); err != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 				return errors.Wrapf(err, "webhook 'url' %s invalid", url)
 			}
 		}

@@ -12,30 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alertmanager
+package v1beta1
 
 import (
-	"net/url"
-	"reflect"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus/alertmanager/config"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 func TestValidateAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
-		in        *monitoringv1alpha1.AlertmanagerConfig
+		in        *monitoringv1beta1.AlertmanagerConfig
 		expectErr bool
 	}{
 		{
 			name: "Test fail to validate on duplicate receiver",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
@@ -49,17 +44,17 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate on opsgenie config - missing required fields",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
 								{
-									Responders: []monitoringv1alpha1.OpsGenieConfigResponder{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{},
 									},
 								},
@@ -72,28 +67,28 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
 								{
-									Actions: []monitoringv1alpha1.SlackAction{
+									Actions: []monitoringv1beta1.SlackAction{
 										{
 											Type: "a",
 											Text: "b",
 											URL:  "www.test.com",
 											Name: "c",
-											ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
 										},
 									},
-									Fields: []monitoringv1alpha1.SlackField{
+									Fields: []monitoringv1beta1.SlackField{
 										{},
 									},
 								},
@@ -106,15 +101,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate webhook config - missing required fields",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{},
 							},
 						},
@@ -125,15 +120,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate wechat config - invalid URL",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
 									APIURL: "http://%><invalid.com",
 								},
@@ -146,15 +141,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate email config - missing to field",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{},
 							},
 						},
@@ -165,15 +160,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate email config - invalid smarthost",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
 									To:        "a",
 									Smarthost: "invalid",
@@ -187,15 +182,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate VictorOpsConfigs - missing routing key",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
+							VictorOpsConfigs: []monitoringv1beta1.VictorOpsConfig{
 								{},
 							},
 						},
@@ -206,18 +201,18 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate VictorOpsConfigs - reservedFields",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
+							VictorOpsConfigs: []monitoringv1beta1.VictorOpsConfig{
 								{
 									RoutingKey: "a",
-									CustomFields: []monitoringv1alpha1.KeyValue{
+									CustomFields: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "routing_key",
 											Value: "routing_key",
@@ -233,15 +228,15 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate PushoverConfigs - missing user key",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
 								{},
 							},
 						},
@@ -252,17 +247,20 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate PushoverConfigs - missing token",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
 								{
-									UserKey: &v1.SecretKeySelector{},
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
 								},
 							},
 						},
@@ -273,14 +271,14 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate routes - parent route has no receiver",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 					},
-					Route: &monitoringv1alpha1.Route{
+					Route: &monitoringv1beta1.Route{
 						Receiver: "will-not-be-found",
 					},
 				},
@@ -289,14 +287,14 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate routes with duplicate groupBy",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 					},
-					Route: &monitoringv1alpha1.Route{
+					Route: &monitoringv1beta1.Route{
 						Receiver: "same",
 						GroupBy:  []string{"job", "job"},
 					},
@@ -306,14 +304,14 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate routes with exclusive value and other in groupBy",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 					},
-					Route: &monitoringv1alpha1.Route{
+					Route: &monitoringv1beta1.Route{
 						Receiver: "same",
 						GroupBy:  []string{"job", "..."},
 					},
@@ -323,14 +321,14 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test fail to validate routes - named mute time interval does not exist",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 					},
-					Route: &monitoringv1alpha1.Route{
+					Route: &monitoringv1beta1.Route{
 						Receiver:          "same",
 						MuteTimeIntervals: []string{"awol"},
 					},
@@ -340,17 +338,17 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "Test happy path",
-			in: &monitoringv1alpha1.AlertmanagerConfig{
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
 						{
 							Name: "same",
 						},
 						{
 							Name: "different",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
 								{
-									Responders: []monitoringv1alpha1.OpsGenieConfigResponder{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
 											ID:       "a",
 											Name:     "b",
@@ -359,20 +357,20 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									},
 								},
 							},
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
 								{
-									Actions: []monitoringv1alpha1.SlackAction{
+									Actions: []monitoringv1beta1.SlackAction{
 										{
 											Type: "a",
 											Text: "b",
 											URL:  "https://www.test.com",
 											Name: "c",
-											ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
 										},
 									},
-									Fields: []monitoringv1alpha1.SlackField{
+									Fields: []monitoringv1beta1.SlackField{
 										{
 											Title: "a",
 											Value: "b",
@@ -380,22 +378,25 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									},
 								},
 							},
-							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL:       strToPtr("https://www.test.com"),
-									URLSecret: &v1.SecretKeySelector{},
+									URL: strToPtr("https://www.test.com"),
+									URLSecret: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "url",
+									},
 								},
 							},
-							WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
 									APIURL: "https://test.com",
 								},
 							},
-							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
 									To:        "a",
 									Smarthost: "b:8080",
-									Headers: []monitoringv1alpha1.KeyValue{
+									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",
 											Value: "d",
@@ -403,10 +404,10 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									},
 								},
 							},
-							VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
+							VictorOpsConfigs: []monitoringv1beta1.VictorOpsConfig{
 								{
 									RoutingKey: "a",
-									CustomFields: []monitoringv1alpha1.KeyValue{
+									CustomFields: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "b",
 											Value: "c",
@@ -414,29 +415,35 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									},
 								},
 							},
-							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
 								{
-									UserKey: &v1.SecretKeySelector{},
-									Token:   &v1.SecretKeySelector{},
-									Retry:   "10m",
-									Expire:  "5m",
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									Retry:  "10m",
+									Expire: "5m",
 								},
 							},
 						},
 					},
-					Route: &monitoringv1alpha1.Route{
+					Route: &monitoringv1beta1.Route{
 						Receiver:          "same",
 						GroupBy:           []string{"..."},
 						MuteTimeIntervals: []string{"weekdays-only"},
 					},
-					MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+					TimeIntervals: []monitoringv1beta1.TimeInterval{
 						{
 							Name: "weekdays-only",
-							TimeIntervals: []monitoringv1alpha1.TimeInterval{
+							TimeIntervals: []monitoringv1beta1.TimePeriod{
 								{
-									Weekdays: []monitoringv1alpha1.WeekdayRange{
-										monitoringv1alpha1.WeekdayRange("Saturday"),
-										monitoringv1alpha1.WeekdayRange("Sunday"),
+									Weekdays: []monitoringv1beta1.WeekdayRange{
+										monitoringv1beta1.WeekdayRange("Saturday"),
+										monitoringv1beta1.WeekdayRange("Sunday"),
 									},
 								},
 							},
@@ -460,54 +467,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					return
 				}
 				t.Errorf("got error but expected none -%s", err.Error())
-			}
-		})
-	}
-}
-
-func TestValidateUrl(t *testing.T) {
-	tests := []struct {
-		name         string
-		in           string
-		expectErr    bool
-		expectResult func() *config.URL
-	}{
-		{
-			name:      "Test invalid url returns error",
-			in:        "https://!^invalid.com",
-			expectErr: true,
-		},
-		{
-			name:      "Test missing scheme returns error",
-			in:        "is.normally.valid",
-			expectErr: true,
-		},
-		{
-			name: "Test happy path",
-			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
-			expectResult: func() *config.URL {
-				u, _ := url.Parse("https://u:p@is.compliant.with.upstream.unmarshal")
-				return &config.URL{URL: u}
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			u, err := ValidateURL(tc.in)
-			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
-				return
-			}
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			res := tc.expectResult()
-			if !reflect.DeepEqual(u, res) {
-				t.Fatalf("wanted %v but got %v", res, u)
 			}
 		})
 	}

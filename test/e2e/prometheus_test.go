@@ -868,10 +868,10 @@ func testPromVersionMigration(t *testing.T) {
 			},
 		)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("update to version %s: %v", v, err)
 		}
 		if err := framework.WaitForPrometheusRunImageAndReady(context.Background(), ns, p); err != nil {
-			t.Fatal(err)
+			t.Fatalf("update to version %s: %v", v, err)
 		}
 	}
 }

@@ -151,10 +151,12 @@ type ThanosRulerSpec struct {
 	// This defaults to web
 	PortName string `json:"portName,omitempty"`
 	// Interval between consecutive evaluations.
-	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// +kubebuilder:default:="15s"
+	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 	// Time duration ThanosRuler shall retain data for. Default is '24h',
 	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
-	Retention string `json:"retention,omitempty"`
+	// +kubebuilder:default:="24h"
+	Retention Duration `json:"retention,omitempty"`
 	// Containers allows injecting additional containers or modifying operator generated
 	// containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
 	// to change the behavior of an operator generated container. Containers described here modify
@@ -208,6 +210,10 @@ type ThanosRulerSpec struct {
 	// AlertRelabelConfigFile specifies the path of the alert relabeling configuration file.
 	// When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence.
 	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
+	// Pods' hostAliases configuration
+	// +listType=map
+	// +listMapKey=ip
+	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

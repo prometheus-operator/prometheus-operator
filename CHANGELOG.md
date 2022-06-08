@@ -1,3 +1,42 @@
+## 0.57.0 / 2022-06-02
+
+The main change introduced by this release is a new v1beta1 API version for the
+AlertmanagerConfig CRD.
+
+Changes compared to the v1alpha1 API:
+* Renamed `spec.muteTimeIntervals` field to `to spec.timeIntervals`.
+* Removed `regex` field from the `Matcher` type.
+* Replaced all `v1.SecretKeySelector` types by the `SecretKeySelector` type
+  * Removed `optional` field.
+  * `name` and `key` fields are required.
+
+As a pre-requisite, you need to deploy the admission webhook and configure the
+conversion webhook in the AlertmanagerConfig CRD object so that users can use
+both v1alpha1 and v1beta1 versions at the same time. There are more details in
+`Documentation/user-guides/webhook.md` about the webhook configuration.
+
+Because of the conversion webhook requirement, the new version is an opt-in
+feature: the `bundle.yaml` file and the manifests from
+`example/prometheus-operator-crd` don't deploy the new API version (the
+manifests to enable the v1beta1 version are under the
+`example/prometheus-operator-crd-full` directory). We will wait until v0.59.0
+(at least) before enabling the new API version by default.
+
+* [CHANGE] Added validations at the API level for the time-based fields of the ThanosRuler CRD. #4815
+* [CHANGE] Added validations at the API level for the OpsGenie's `responders` field of the AlertmanagerConfig CRD. #4725
+* [FEATURE] Added v1beta1 version for AlertmanagerConfig CRD. #4709
+* [FEATURE] Added support for Telegram receiver in the AlertmanagerConfig CRD. #4726
+* [FEATURE] Added `updateAlerts` field to the OpsGenie configuration of the AlertmanagerConfig CRD. #4726
+* [FEATURE] Added `hostAliases` field to the the Alertmanager, Prometheus and ThanosRuler CRDs. #4787
+* [ENHANCEMENT] Added configuration option in the jsonnet mixins to specify the aggregation labels. #4814
+* [ENHANCEMENT] Added `attachMetadata` field to the PodMonitor CRD. #4792
+* [BUGFIX] Fixed the curl command for exec probes when `listenLocal` is set to true in the Prometheus object. It avoids temporary service outage due to long WAL replays. #4804
+
+## 0.56.3 / 2022-05-23
+
+* [BUGFIX] Fixed errors for Alertmanager configurations using the new `entity`, `actions` and `opsgenie_api_key_file` fields. #4797
+* [BUGFIX] Fixed high CPU usage by reducing the number of number of reconciliations on Prometheus objects. #4798 #4806
+
 ## 0.56.2 / 2022-05-09
 
 * [BUGFIX] Fix StatefulSet spec's generation to be determistic when `spec.containers` is not empty. #4772

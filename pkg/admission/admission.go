@@ -23,15 +23,19 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
+	validationv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
+	kscheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
@@ -45,21 +49,24 @@ const (
 	prometheusRuleResource = monitoringv1.PrometheusRuleName
 	prometheusRuleVersion  = monitoringv1.Version
 
-	alertManagerConfigResource       = monitoringv1alpha1.AlertmanagerConfigName
-	alertManagerConfigCurrentVersion = monitoringv1alpha1.Version
-	alertManagerConfigKind           = monitoringv1alpha1.AlertmanagerConfigKind
+	alertManagerConfigResource = monitoringv1beta1.AlertmanagerConfigName
+	alertManagerConfigKind     = monitoringv1beta1.AlertmanagerConfigKind
+
+	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
+	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"
+	alertmanagerConfigValidatePath = "/admission-alertmanagerconfigs/validate"
+	convertPath                    = "/convert"
 )
 
 var (
-	deserializer      = scheme.Codecs.UniversalDeserializer()
+	deserializer      = kscheme.Codecs.UniversalDeserializer()
 	prometheusRuleGVR = metav1.GroupVersionResource{
 		Group:    group,
 		Version:  prometheusRuleVersion,
 		Resource: prometheusRuleResource,
 	}
-	alertManagerConfigGVR = metav1.GroupVersionResource{
+	alertManagerConfigGR = metav1.GroupResource{
 		Group:    group,
-		Version:  alertManagerConfigCurrentVersion,
 		Resource: alertManagerConfigResource,
 	}
 )
@@ -73,16 +80,36 @@ type Admission struct {
 	amConfValidationErrorsCounter      prometheus.Counter
 	amConfValidationTriggeredCounter   prometheus.Counter
 	logger                             log.Logger
+	wh                                 *conversion.Webhook
 }
 
 func New(logger log.Logger) *Admission {
-	return &Admission{logger: logger}
+	scheme := runtime.NewScheme()
+
+	if err := monitoringv1alpha1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
+
+	if err := monitoringv1beta1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
+
+	wh := &conversion.Webhook{}
+	if err := wh.InjectScheme(scheme); err != nil {
+		panic(fmt.Sprintf("failed to inject scheme into the webhook handler: %s", err))
+	}
+
+	return &Admission{
+		logger: logger,
+		wh:     wh,
+	}
 }
 
 func (a *Admission) Register(mux *http.ServeMux) {
-	mux.HandleFunc("/admission-prometheusrules/validate", a.servePrometheusRulesValidate)
-	mux.HandleFunc("/admission-prometheusrules/mutate", a.servePrometheusRulesMutate)
-	mux.HandleFunc("/admission-alertmanagerconfigs/validate", a.serveAlertManagerConfigValidate)
+	mux.HandleFunc(prometheusRuleValidatePath, a.servePrometheusRulesValidate)
+	mux.HandleFunc(prometheusRuleMutatePath, a.servePrometheusRulesMutate)
+	mux.HandleFunc(alertmanagerConfigValidatePath, a.serveAlertmanagerConfigValidate)
+	mux.HandleFunc(convertPath, a.serveConvert)
 }
 
 func (a *Admission) RegisterMetrics(
@@ -107,8 +134,12 @@ func (a *Admission) servePrometheusRulesValidate(w http.ResponseWriter, r *http.
 	a.serveAdmission(w, r, a.validatePrometheusRules)
 }
 
-func (a *Admission) serveAlertManagerConfigValidate(w http.ResponseWriter, r *http.Request) {
-	a.serveAdmission(w, r, a.validateAlertManagerConfig)
+func (a *Admission) serveAlertmanagerConfigValidate(w http.ResponseWriter, r *http.Request) {
+	a.serveAdmission(w, r, a.validateAlertmanagerConfig)
+}
+
+func (a *Admission) serveConvert(w http.ResponseWriter, r *http.Request) {
+	a.wh.ServeHTTP(w, r)
 }
 
 func toAdmissionResponseFailure(message, resource string, errors []error) *v1.AdmissionResponse {
@@ -248,30 +279,51 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 	return &v1.AdmissionResponse{Allowed: true}
 }
 
-func (a *Admission) validateAlertManagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
+func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	a.incrementCounter(a.amConfValidationTriggeredCounter)
 	level.Debug(a.logger).Log("msg", "Validating alertmanagerconfigs")
 
-	if ar.Request.Resource != alertManagerConfigGVR {
+	gr := metav1.GroupResource{Group: ar.Request.Resource.Group, Resource: ar.Request.Resource.Resource}
+	if gr != alertManagerConfigGR {
 		err := fmt.Errorf("expected resource to be %v, but received %v", alertManagerConfigResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
 		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []error{err})
 	}
 
-	amConf := &monitoringv1alpha1.AlertmanagerConfig{}
+	var amConf interface{}
+	switch ar.Request.Resource.Version {
+	case monitoringv1alpha1.Version:
+		amConf = &monitoringv1alpha1.AlertmanagerConfig{}
+	case monitoringv1beta1.Version:
+		amConf = &monitoringv1beta1.AlertmanagerConfig{}
+	default:
+		err := fmt.Errorf("expected resource version to be 'v1alpha1' or 'v1beta1', but received %v", ar.Request.Resource.Version)
+		return toAdmissionResponseFailure("Unexpected resource version", alertManagerConfigResource, []error{err})
+	}
+
 	if err := json.Unmarshal(ar.Request.Object.Raw, amConf); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalConfig, "err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
 		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []error{err})
 	}
 
-	if err := alertmanager.ValidateAlertmanagerConfig(amConf); err != nil {
+	var (
+		err error
+	)
+	switch ar.Request.Resource.Version {
+	case monitoringv1alpha1.Version:
+		err = validationv1alpha1.ValidateAlertmanagerConfig(amConf.(*monitoringv1alpha1.AlertmanagerConfig))
+	case monitoringv1beta1.Version:
+		err = validationv1beta1.ValidateAlertmanagerConfig(amConf.(*monitoringv1beta1.AlertmanagerConfig))
+	}
+
+	if err != nil {
 		msg := "invalid config"
-		level.Debug(a.logger).Log("msg", msg, "content", amConf.Spec)
+		level.Debug(a.logger).Log("msg", msg, "content", string(ar.Request.Object.Raw))
 		level.Info(a.logger).Log("msg", msg, "err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure("AlertManagerConfig is invalid", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []error{err})
 	}
 	return &v1.AdmissionResponse{Allowed: true}
 }

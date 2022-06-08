@@ -27,6 +27,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -318,7 +319,7 @@ func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace st
 	}
 
 	url = strings.TrimSpace(url)
-	if _, err := ValidateURL(url); err != nil {
+	if _, err := validation.ValidateURL(url); err != nil {
 		return url, errors.Wrapf(err, "invalid URL %q in key %q from secret %q", url, selector.Key, selector.Name)
 	}
 	return url, nil
@@ -534,7 +535,7 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := ValidateURL(*in.URL)
+		url, err := validation.ValidateURL(*in.URL)
 		if err != nil {
 			return nil, err
 		}
@@ -1456,8 +1457,13 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.UpdateAlerts = nil
 	}
+	for _, responder := range ogc.Responders {
+		if err := responder.sanitize(amVersion, logger); err != nil {
+			return err
+		}
+	}
 
-	if ogc.APIKey != "" {
+	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		level.Warn(logger).Log("msg", "'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
 		ogc.APIKeyFile = ""
 	}
@@ -1472,6 +1478,13 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		ogc.APIKeyFile = ""
 	}
 
+	return nil
+}
+
+func (ops *opsgenieResponder) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if ops.Type == "teams" && amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
+	}
 	return nil
 }
 

@@ -860,6 +860,12 @@ spec:
                                   type: string
                                 type:
                                   description: Type of responder.
+                                  enum:
+                                  - team
+                                  - teams
+                                  - user
+                                  - escalation
+                                  - schedule
                                   minLength: 1
                                   type: string
                                 username:
@@ -6627,6 +6633,28 @@ spec:
                   Use case is e.g. spanning an Alertmanager cluster across Kubernetes
                   clusters with a single replica in each.
                 type: boolean
+              hostAliases:
+                description: Pods' hostAliases configuration
+                items:
+                  description: HostAlias holds the mapping between IP and hostnames
+                    that will be injected as an entry in the pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - hostnames
+                  - ip
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - ip
+                x-kubernetes-list-type: map
               image:
                 description: Image if specified has precedence over baseImage, tag
                   and sha combinations. Specifying the version is still necessary
@@ -10484,6 +10512,15 @@ spec:
             description: Specification of desired Pod selection for target discovery
               by Prometheus.
             properties:
+              attachMetadata:
+                description: 'Attaches node metadata to discovered targets. Only valid
+                  for role: pod. Only valid in Prometheus versions 2.35.0 and newer.'
+                properties:
+                  node:
+                    description: When set to true, Prometheus must have permissions
+                      to get Nodes.
+                    type: boolean
+                type: object
               jobLabel:
                 description: The label to use to retrieve the job name from.
                 type: string
@@ -14508,6 +14545,28 @@ spec:
                   under. This is necessary to generate correct URLs. This is necessary
                   if Prometheus is not served from root of a DNS name.
                 type: string
+              hostAliases:
+                description: Pods' hostAliases configuration
+                items:
+                  description: HostAlias holds the mapping between IP and hostnames
+                    that will be injected as an entry in the pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - hostnames
+                  - ip
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - ip
+                x-kubernetes-list-type: map
               ignoreNamespaceSelectors:
                 description: IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
                   settings from all PodMonitor, ServiceMonitor and Probe objects.
@@ -20115,6 +20174,9 @@ spec:
                   - type
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               paused:
                 description: Represents whether any actions on the underlying managed
                   objects are being performed. Only delete actions will be performed.
@@ -20159,6 +20221,9 @@ spec:
                   - updatedReplicas
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - shardID
+                x-kubernetes-list-type: map
               unavailableReplicas:
                 description: Total number of unavailable pods targeted by this Prometheus
                   deployment.
@@ -23111,7 +23176,9 @@ spec:
                   value will always be the namespace of the object that is being created.
                 type: string
               evaluationInterval:
+                default: 15s
                 description: Interval between consecutive evaluations.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               excludedFromEnforcement:
                 description: List of references to PrometheusRule objects to be excluded
@@ -23275,6 +23342,28 @@ spec:
                     description: Used to verify the hostname for the targets.
                     type: string
                 type: object
+              hostAliases:
+                description: Pods' hostAliases configuration
+                items:
+                  description: HostAlias holds the mapping between IP and hostnames
+                    that will be injected as an entry in the pod's hosts file.
+                  properties:
+                    hostnames:
+                      description: Hostnames for the above IP address.
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      description: IP address of the host file entry.
+                      type: string
+                  required:
+                  - hostnames
+                  - ip
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - ip
+                x-kubernetes-list-type: map
               image:
                 description: Thanos container image URL.
                 type: string
@@ -24699,9 +24788,11 @@ spec:
                     type: object
                 type: object
               retention:
+                default: 24h
                 description: Time duration ThanosRuler shall retain data for. Default
                   is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
                   (milliseconds seconds minutes hours days weeks years).
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               routePrefix:
                 description: The route prefix ThanosRuler registers HTTP handlers
@@ -27209,7 +27300,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.56.2
+    app.kubernetes.io/version: 0.57.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -27226,7 +27317,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.56.2
+    app.kubernetes.io/version: 0.57.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -27307,7 +27398,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.56.2
+    app.kubernetes.io/version: 0.57.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -27323,14 +27414,14 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.56.2
+        app.kubernetes.io/version: 0.57.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.56.2
-        image: quay.io/prometheus-operator/prometheus-operator:v0.56.2
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.57.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.57.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -27362,7 +27453,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.56.2
+    app.kubernetes.io/version: 0.57.0
   name: prometheus-operator
   namespace: default
 ---
@@ -27372,7 +27463,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.56.2
+    app.kubernetes.io/version: 0.57.0
   name: prometheus-operator
   namespace: default
 spec:
