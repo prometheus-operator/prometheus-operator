@@ -241,6 +241,21 @@ For more information, please see [how Rancher monitoring works](https://rancher.
 
 The open-source rancher-monitoring Helm chart (based on [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)) can be found at [rancher/charts](https://github.com/rancher/charts).
 
+## Trendyol
+
+[trendyol.com](https://trendyol.com)
+
+Environments: OpenStack, VMware vCloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- All Kubernetes clusters use one Prometheus Operator instance with remote write enabled
+- Prometheus instances push metrics to central H/A VirtualMetric, which gathers all data from clusters in 3 different data centers
+- Grafana is used for dashboarding and visualization
+- 7.50M samples/s
+- 190M active series
+
 ## Veepee
 
 [veepee.com](https://www.veepee.com)
