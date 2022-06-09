@@ -200,7 +200,7 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 			// Header names are case-insensitive, check for collisions.
 			normalizedHeaders := map[string]struct{}{}
 			for _, v := range config.Headers {
-				normalized := strings.Title(v.Key)
+				normalized := strings.ToLower(v.Key)
 				if _, ok := normalizedHeaders[normalized]; ok {
 					return fmt.Errorf("duplicate header %q", normalized)
 				}

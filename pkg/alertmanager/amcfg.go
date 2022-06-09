@@ -843,7 +843,7 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 	if l := len(in.Headers); l > 0 {
 		headers := make(map[string]string, l)
 		for _, d := range in.Headers {
-			headers[strings.Title(d.Key)] = d.Value
+			headers[d.Key] = d.Value
 		}
 		out.Headers = headers
 	}
