@@ -8,6 +8,8 @@ else
 	ARCH=$(GOARCH)
 endif
 
+CONTAINER_CLI ?= docker
+
 GO_PKG=github.com/prometheus-operator/prometheus-operator
 IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
 IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
@@ -163,21 +165,21 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admissi
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
 .hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
 .hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 	touch $@
 
 .PHONY: update-go-deps
