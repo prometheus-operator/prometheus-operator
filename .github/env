@@ -1,3 +1,3 @@
-golang-version=1.17
+golang-version=1.18
 kind-version=v0.11.1
 kind-image=kindest/node:v1.23.0
