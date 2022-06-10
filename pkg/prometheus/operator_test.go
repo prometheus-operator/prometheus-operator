@@ -439,9 +439,18 @@ func TestValidateRelabelConfig(t *testing.T) {
 		defaultSourceLabels = append(defaultSourceLabels, monitoringv1.LabelName(label))
 	}
 
+	defaultPrometheusSpec := monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.36.0",
+			},
+		},
+	}
+
 	for _, tc := range []struct {
 		scenario      string
 		relabelConfig monitoringv1.RelabelConfig
+		prometheus    monitoringv1.Prometheus
 		expectedErr   bool
 	}{
 		// Test invalid regex expression
@@ -450,6 +459,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Regex: "invalid regex)",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test invalid target label
@@ -459,6 +469,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action:      "replace",
 				TargetLabel: "l\\${3}",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test empty target label for action replace
@@ -468,6 +479,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action:      "replace",
 				TargetLabel: "",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test empty target label for action hashmod
@@ -477,6 +489,37 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action:      "hashmod",
 				TargetLabel: "",
 			},
+			prometheus:  defaultPrometheusSpec,
+			expectedErr: true,
+		},
+		// Test empty target label for action uppercase
+		{
+			scenario: "empty target label for uppercase action",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "uppercase",
+				TargetLabel: "",
+			},
+			prometheus:  defaultPrometheusSpec,
+			expectedErr: true,
+		},
+		// Test empty target label for action lowercase
+		{
+			scenario: "empty target label for lowercase action",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "lowercase",
+				TargetLabel: "",
+			},
+			prometheus:  defaultPrometheusSpec,
+			expectedErr: true,
+		},
+		// Test replacement set for action uppercase
+		{
+			scenario: "replacement set for uppercase action",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "uppercase",
+				Replacement: "some-replace-value",
+			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test invalid hashmod relabel config
@@ -488,6 +531,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Modulus:      0,
 				TargetLabel:  "__tmp_hashmod",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test invalid labelmap relabel config
@@ -498,6 +542,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Regex:       "__meta_kubernetes_service_label_(.+)",
 				Replacement: "some-name-value",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test valid labelmap relabel config when replacement not specified
@@ -507,6 +552,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action: "labelmap",
 				Regex:  "__meta_kubernetes_service_label_(.+)",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
 		// Test valid labelmap relabel config with replacement specified
 		{
@@ -516,6 +562,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Regex:       "__meta_kubernetes_service_label_(.+)",
 				Replacement: "${2}",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
 		// Test invalid labelkeep relabel config
 		{
@@ -525,6 +572,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action:       "labelkeep",
 				TargetLabel:  "__tmp_labelkeep",
 			},
+			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
 		},
 		// Test valid labelkeep relabel config
@@ -533,6 +581,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action: "labelkeep",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
 		// Test valid labeldrop relabel config
 		{
@@ -541,6 +590,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action: "labeldrop",
 				Regex:  "replica",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
 		{
 			scenario: "valid labeldrop config with default values",
@@ -553,8 +603,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Replacement:  relabel.DefaultRelabelConfig.Replacement,
 				Action:       "labeldrop",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
-		// Test valid relabel config
+		// Test valid hashmod relabel config
 		{
 			scenario: "valid hashmod config",
 			relabelConfig: monitoringv1.RelabelConfig{
@@ -563,8 +614,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Modulus:      10,
 				TargetLabel:  "__tmp_hashmod",
 			},
+			prometheus: defaultPrometheusSpec,
 		},
-		// Test valid relabel config
+		// Test valid replace relabel config
 		{
 			scenario: "valid replace config",
 			relabelConfig: monitoringv1.RelabelConfig{
@@ -574,10 +626,65 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Replacement:  "$1:80",
 				TargetLabel:  "__address__",
 			},
+			prometheus: defaultPrometheusSpec,
+		},
+		// Test valid uppercase relabel config
+		{
+			scenario: "valid uppercase config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"foo"},
+				Action:       "uppercase",
+				TargetLabel:  "foo_uppercase",
+			},
+			prometheus: defaultPrometheusSpec,
+		},
+		// Test valid lowercase relabel config
+		{
+			scenario: "valid lowercase config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"bar"},
+				Action:       "lowercase",
+				TargetLabel:  "bar_lowercase",
+			},
+			prometheus: defaultPrometheusSpec,
+		},
+		// Test uppercase relabel config but lower prometheus version
+		{
+			scenario: "uppercase config with lower prometheus version",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"foo"},
+				Action:       "uppercase",
+				TargetLabel:  "foo_uppercase",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.35.0",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		// Test lowercase relabel config but lower prometheus version
+		{
+			scenario: "lowercase config with lower prometheus version",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"bar"},
+				Action:       "lowercase",
+				TargetLabel:  "bar_lowercase",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.35.0",
+					},
+				},
+			},
+			expectedErr: true,
 		},
 	} {
 		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
-			err := validateRelabelConfig(tc.relabelConfig)
+			err := validateRelabelConfig(tc.prometheus, tc.relabelConfig)
 			if err != nil && !tc.expectedErr {
 				t.Fatalf("expected no error, got: %v", err)
 			}

@@ -1025,8 +1025,9 @@ type RelabelConfig struct {
 	//Replacement value against which a regex replace is performed if the
 	//regular expression matches. Regex capture groups are available. Default is '$1'
 	Replacement string `json:"replacement,omitempty"`
-	// Action to perform based on regex matching. Default is 'replace'
-	//+kubebuilder:validation:Enum=replace;keep;drop;hashmod;labelmap;labeldrop;labelkeep
+	//Action to perform based on regex matching. Default is 'replace'.
+	//uppercase and lowercase actions require Prometheus >= 2.36.
+	//+kubebuilder:validation:Enum=replace;keep;drop;hashmod;labelmap;labeldrop;labelkeep;uppercase;lowercase
 	//+kubebuilder:default=replace
 	Action string `json:"action,omitempty"`
 }
