@@ -657,8 +657,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			Name: "registry-secret",
 		},
 	}
-         dnsConfig := v1.PodDNSConfig{}
-         dnsPolicy := v1.DNSPolicy("default")
+	dnsConfig := v1.PodDNSConfig{}
+	dnsPolicy := v1.DNSPolicy("default")
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -707,9 +707,9 @@ func TestPodTemplateConfig(t *testing.T) {
 	if sset.Spec.Template.Spec.DNSPolicy != dnsPolicy {
 		t.Fatalf("expected dns policy to match, want %s, got %s", dnsPolicy, sset.Spec.Template.Spec.DNSPolicy)
 	}
-         if !reflect.DeepEqual(*sset.Spec.Template.Spec.DNSConfig, dnsConfig) {
+	if !reflect.DeepEqual(*sset.Spec.Template.Spec.DNSConfig, dnsConfig) {
 		t.Fatalf("expected dns configuration to match, want %v, got %v", dnsConfig, *sset.Spec.Template.Spec.DNSConfig)
-	} 
+	}
 }
 
 func TestExternalQueryURL(t *testing.T) {
