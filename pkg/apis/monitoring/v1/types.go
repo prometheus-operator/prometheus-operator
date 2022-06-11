@@ -495,7 +495,7 @@ type PrometheusSpec struct {
 }
 
 type Exemplars struct {
-	MaxExemplars uint `json:"maxExemplars,omitempty"`
+	MaxSize uint `json:"maxSize,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces

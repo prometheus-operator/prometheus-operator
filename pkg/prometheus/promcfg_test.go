@@ -7666,7 +7666,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 						EnableFeatures: []string{"exemplar-storage"},
 					},
 					Exemplars: &monitoringv1.Exemplars{
-						MaxExemplars: 1000000,
+						MaxSize: 1000000,
 					},
 				},
 			},
@@ -7691,7 +7691,7 @@ storage:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					Exemplars: &monitoringv1.Exemplars{
-						MaxExemplars: 1000000,
+						MaxSize: 1000000,
 					},
 				},
 			},
