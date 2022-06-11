@@ -404,7 +404,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| maxExemplars |  | uint | false |
+| maxSize |  | uint | false |
 
 [Back to TOC](#table-of-contents)
 

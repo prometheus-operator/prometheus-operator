@@ -2777,7 +2777,7 @@ spec:
               exemplars:
                 description: Exemplars related settings that are runtime reloadable.
                 properties:
-                  maxExemplars:
+                  maxSize:
                     type: integer
                 type: object
               externalLabels:
