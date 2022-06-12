@@ -305,46 +305,6 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 	return service
 }
 
-// CreatePrometheusAndWaitUntilReadyV055x create and wait prometheus for operator v0.55.x.
-// `status` subresource was implemented for Prometheus CRD in operator v0.56.0.
-// For details, please refer to https://github.com/prometheus-operator/prometheus-operator/pull/4580.
-// Hence, for operator v0.56.0, `status` subresource can be used to check the Prometheus readiness,
-// but for operator v0.55.x, we need to use the old way to check the Prometheus readiness.
-// This function is needed for upgrade path e2e test from v0.55.x to v0.56.x
-// TODO(heylongdacoder): This function can be removed when the latest operator version reach 0.57.0
-func (f *Framework) CreatePrometheusAndWaitUntilReadyV055x(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Create(ctx, p, metav1.CreateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
-	}
-
-	var pollErr error
-
-	err = wait.Poll(2*time.Second, 5*time.Minute, func() (bool, error) {
-		st, _, pollErr := prometheus.Status(ctx, f.KubeClient, p)
-
-		if pollErr != nil {
-			return false, nil
-		}
-
-		shards := p.Spec.Shards
-		defaultShards := int32(1)
-		if shards == nil {
-			shards = &defaultShards
-		}
-		if st.UpdatedReplicas == (*p.Spec.Replicas * *shards) {
-			return true, nil
-		}
-
-		return false, nil
-	})
-	if err != nil {
-		return nil, errors.Wrapf(pollErr, "waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
-	}
-
-	return result, nil
-}
-
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
 	result, err := f.MonClientV1.Prometheuses(ns).Create(ctx, p, metav1.CreateOptions{})
 	if err != nil {

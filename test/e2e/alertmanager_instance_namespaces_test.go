@@ -45,7 +45,7 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 	nonInstanceNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, instanceNs)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, nil, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 	instanceNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, instanceNs)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, *opImage, []string{"notfound", allowedNs}, nil, nil, []string{"notfound", instanceNs}, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{"notfound", allowedNs}, nil, nil, []string{"notfound", instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -39,6 +39,19 @@ func MakeService(source string) (*v1.Service, error) {
 	return &resource, nil
 }
 
+func (f *Framework) CreateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
+
+	if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
+		return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
+	}
+
+	if err := f.WaitForServiceReady(ctx, namespace, service.Name); err != nil {
+		return finalizerFn, errors.Wrap(err, fmt.Sprintf("waiting for service %v to become ready timed out", service.Name))
+	}
+	return finalizerFn, nil
+}
+
 func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
 	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
 
@@ -55,6 +68,9 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 		if _, err := f.KubeClient.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{}); err != nil {
 			return finalizerFn, errors.Wrap(err, fmt.Sprintf("updating service %v failed", service.Name))
 		}
+
+		// Allow controller to update the endpoints
+		time.Sleep(15 * time.Second)
 	} else {
 		// Service doesn't exists -> Create
 		if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {

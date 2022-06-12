@@ -49,25 +49,57 @@ func MakeDeployment(source string) (*appsv1.Deployment, error) {
 	return &deployment, nil
 }
 
-func (f *Framework) CreateOrUpdateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
+func (f *Framework) CreateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
 	d.Namespace = namespace
-	_, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, d.Name, metav1.GetOptions{})
+	_, err := f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+	}
+	return nil
+}
+
+func (f *Framework) CreateOrUpdateDeploymentAndWaitUntilReady(ctx context.Context, namespace string, deployment *appsv1.Deployment) error {
+	deployment.Namespace = namespace
+	d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, deployment.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// Deployment already exists -> Update
-		_, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, d, metav1.UpdateOptions{})
+		_, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to update deployment %s", d.Name))
+			return errors.Wrap(err, fmt.Sprintf("failed to update deployment %s", deployment.Name))
+		}
+
+		if err := f.WaitForDeploymentReady(ctx, namespace, deployment.Name, d.Status.ObservedGeneration+1); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("after update, waiting for deployment %v to become ready timed out", deployment.Name))
 		}
 	} else {
 		// Deployment doesn't exists -> Create
-		_, err = f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
+		_, err = f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+			return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", deployment.Name))
+		}
+
+		if err := f.WaitForDeploymentReady(ctx, namespace, deployment.Name, 1); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("after create, waiting for deployment %v to become ready timed out", deployment.Name))
 		}
 	}
 
 	return nil
+}
+
+func (f *Framework) WaitForDeploymentReady(ctx context.Context, namespace, deploymentName string, expectedGeneration int64) error {
+	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+		d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if d.Status.ObservedGeneration == expectedGeneration && *d.Spec.Replicas == d.Status.AvailableReplicas {
+			return true, nil
+		}
+		return false, nil
+	})
+	return err
 }
 
 func (f *Framework) DeleteDeployment(ctx context.Context, namespace, name string) error {

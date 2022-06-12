@@ -17,18 +17,12 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"strings"
 	"testing"
 	"time"
 
-	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/blang/semver/v4"
 )
 
 func testOperatorUpgrade(t *testing.T) {
@@ -42,30 +36,8 @@ func testOperatorUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	currentVersion, err := os.ReadFile("../../VERSION")
-	if err != nil {
-		t.Fatal(err)
-	}
-	currentSemVer, err := semver.ParseTolerant(string(currentVersion))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prevStableVersionURL := fmt.Sprintf("https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-%d.%d/VERSION", currentSemVer.Major, currentSemVer.Minor-1)
-	reader, err := operatorFramework.URLToIOReader(prevStableVersionURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prevStableVersion, err := io.ReadAll(reader)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prevStableOpImage := fmt.Sprintf("%s:v%s", "quay.io/prometheus-operator/prometheus-operator", strings.TrimSpace(string(prevStableVersion)))
-
 	// Create Prometheus Operator with previous stable minor version
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, prevStableOpImage, nil, nil, nil, nil, false, true)
+	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,51 +122,42 @@ func testOperatorUpgrade(t *testing.T) {
 		},
 	}
 
-	alertmanager := framework.MakeBasicAlertmanager(name, 1)
-	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+	alertmanager := previousVersionFramework.MakeBasicAlertmanager(name, 1)
+	_, err = previousVersionFramework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
+	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	previousVersionFramework.SetupPrometheusRBAC(context.Background(), t, nil, ns)
+	prometheus := previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1)
+
+	_, err = previousVersionFramework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &prometheusService)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	thanosRuler := previousVersionFramework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
+	_, err = previousVersionFramework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
-
-	// Method to wait for prometheus ready changed since v0.56.0.
-	// Hence we need to use the old way to check if prometheus ready for operator v0.55.x
-	// TODO(heylongdacoder): this condition checking can be removed when the latest operator version reach 0.57.0
-	if currentSemVer.LT(semver.MustParse("0.57.0")) {
-		_, err = framework.CreatePrometheusAndWaitUntilReadyV055x(context.Background(), ns, prometheus)
-		if err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, framework.MakeBasicPrometheus(ns, name, name, 1))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &prometheusService)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	thanosRuler := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Update Prometheus Operator to current version
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, false, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}

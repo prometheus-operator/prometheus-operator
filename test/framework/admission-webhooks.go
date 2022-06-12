@@ -72,7 +72,7 @@ func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes 
 		// ValidatingWebhookConfiguration already exists -> Update
 		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create validating webhook %s", hook.Name)
+			return nil, errors.Wrapf(err, "failed to update validating webhook %s", hook.Name)
 		}
 	} else {
 		// ValidatingWebhookConfiguration doesn't exists -> Create
