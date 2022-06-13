@@ -1712,3 +1712,117 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, amSS.Spec.MinReadySeconds)
 	}
 }
+
+func testAlertmanagerCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	replicas := int32(1)
+
+	tests := []struct {
+		name             string
+		alertmanagerSpec monitoringv1.AlertmanagerSpec
+		expectedError    bool
+	}{
+		//
+		// Retention Validation:
+		//
+		{
+			name: "zero-time-without-unit",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0",
+			},
+		},
+		{
+			name: "time-in-hours",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "48h",
+			},
+		},
+		{
+			name: "time-in-minutes",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "60m",
+			},
+		},
+		{
+			name: "time-in-seconds",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120s",
+			},
+		},
+		{
+			name: "time-in-milli-seconds",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120s",
+			},
+		},
+		{
+			name: "complex-time",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "1h30m15s",
+			},
+		},
+		{
+			name: "time-missing-symbols",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120",
+			},
+			expectedError: true,
+		},
+		{
+			name: "timeunit-misspelled",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120hh",
+			},
+			expectedError: true,
+		},
+		{
+			name: "unaccepted-time",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "15d",
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			am := &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Spec: test.alertmanagerSpec,
+			}
+
+			if test.expectedError {
+				_, err := framework.MonClientV1.Alertmanagers(ns).Create(context.Background(), am, metav1.CreateOptions{})
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
