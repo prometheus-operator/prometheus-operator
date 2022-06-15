@@ -2331,3 +2331,219 @@ func TestPodTemplateConfig(t *testing.T) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	}
 }
+
+func TestPrometheusAdditionalArgsNoError(t *testing.T) {
+	expectedPrometheusArgs := []string{
+		"--web.console.templates=/etc/prometheus/consoles",
+		"--web.console.libraries=/etc/prometheus/console_libraries",
+		"--storage.tsdb.retention.time=24h",
+		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--storage.tsdb.path=/prometheus",
+		"--web.enable-lifecycle",
+		"--web.route-prefix=/",
+		"--scrape.discovery-reload-interval=30s",
+		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
+	}
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AdditionalArgs: []string{
+					"--scrape.discovery-reload-interval=30s",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	require.NoError(t, err)
+	ssetContainerArgs := sset.Spec.Template.Spec.Containers[0].Args
+	if !reflect.DeepEqual(ssetContainerArgs, expectedPrometheusArgs) {
+		t.Fatalf("expected Prometheus container args to match, want %s, got %s", expectedPrometheusArgs, ssetContainerArgs)
+	}
+}
+
+func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
+	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [config.file]"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AdditionalArgs: []string{
+					"--config.file=/foo/bar.yaml",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Prometheus additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+}
+
+func TestPrometheusAdditionalArgsInvalid(t *testing.T) {
+	expectedErrorMsg := "invalid argument syntax for args: [-foo.bar=10m]"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AdditionalArgs: []string{
+					"-foo.bar=10m",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Prometheus additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+}
+
+func TestThanosAdditionalArgsNoError(t *testing.T) {
+	expectedThanosArgs := []string{
+		"sidecar",
+		"--prometheus.url=http://localhost:9090/",
+		"--grpc-address=:10901",
+		"--http-address=:10902",
+		"--log.level=info",
+		"--reloader.watch-interval=5m",
+	}
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "info",
+				AdditionalArgs: []string{
+					"--reloader.watch-interval=5m",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	require.NoError(t, err)
+	ssetContainerArgs := sset.Spec.Template.Spec.Containers[2].Args
+	if !reflect.DeepEqual(ssetContainerArgs, expectedThanosArgs) {
+		t.Fatalf("expected Thanos container args to match, want %s, got %s", expectedThanosArgs, ssetContainerArgs)
+	}
+}
+
+func TestThanosAdditionalArgsDuplicate(t *testing.T) {
+	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [log.level]"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "info",
+				AdditionalArgs: []string{
+					"--log.level=error",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Thanos additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+
+}
+
+func TestThanosAdditionalArgsInvalid(t *testing.T) {
+	expectedErrorMsg := "invalid argument syntax for args: [-foo.bar=10m]"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "info",
+				AdditionalArgs: []string{
+					"-foo.bar=10m",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Thanos additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+
+}

@@ -342,6 +342,10 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the Prometheus container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet.
+	AdditionalArgs []string `json:"additionalArgs,omitempty"`
 }
 
 // +genclient
@@ -885,6 +889,8 @@ type ThanosSpec struct {
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the Thanos container.
+	AdditionalArgs []string `json:"additionalArgs,omitempty"`
 }
 
 // RemoteWriteSpec defines the configuration to write samples from Prometheus

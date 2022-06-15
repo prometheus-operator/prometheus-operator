@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -71,6 +72,7 @@ var (
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
 	probeTimeoutSeconds     int32 = 3
+	argKeyRegex                   = regexp.MustCompile("^--(?:([a-z\\.\\-]+)(?:=.+)?)$")
 )
 
 func expectedStatefulSetShardNames(
@@ -504,6 +506,15 @@ func makeStatefulSetSpec(
 		promArgs[i] = "-" + a
 	}
 
+	if len(p.Spec.AdditionalArgs) > 0 {
+		if err := verifyAdditionalArgs(promArgs, p.Spec.AdditionalArgs); err != nil {
+			return nil, err
+		}
+		for _, a := range p.Spec.AdditionalArgs {
+			promArgs = append(promArgs, a)
+		}
+	}
+
 	assetsVolume := v1.Volume{
 		Name: "tls-assets",
 		VolumeSource: v1.VolumeSource{
@@ -885,6 +896,16 @@ func makeStatefulSetSpec(
 		if p.Spec.Thanos.ReadyTimeout != "" {
 			container.Args = append(container.Args, "--prometheus.ready_timeout="+string(p.Spec.Thanos.ReadyTimeout))
 		}
+
+		if len(p.Spec.Thanos.AdditionalArgs) > 0 {
+			if err := verifyAdditionalArgs(container.Args, p.Spec.Thanos.AdditionalArgs); err != nil {
+				return nil, err
+			}
+			for _, a := range p.Spec.Thanos.AdditionalArgs {
+				container.Args = append(container.Args, a)
+			}
+		}
+
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
@@ -1087,4 +1108,50 @@ func queryLogFilePath(p *monitoringv1.Prometheus) string {
 	}
 
 	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
+}
+
+func intersection(a, b []string) (i []string) {
+	m := make(map[string]bool)
+
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		if _, ok := m[item]; ok {
+			i = append(i, item)
+		}
+	}
+	return i
+}
+
+func extractArgKeys(args []string) ([]string, []string) {
+	var k []string
+	var e []string
+	for _, arg := range args {
+		key := argKeyRegex.FindStringSubmatch(arg)
+		if len(key) != 2 {
+			e = append(e, arg)
+		} else {
+			k = append(k, key[1])
+		}
+	}
+
+	return k, e
+}
+
+func verifyAdditionalArgs(operatorArgs []string, additionalArgs []string) (e error) {
+	operatorArgKeys, _ := extractArgKeys(operatorArgs)
+	additionalArgKeys, invalidArgs := extractArgKeys(additionalArgs)
+	if len(invalidArgs) > 0 {
+		return errors.Errorf("invalid argument syntax for args: %s", invalidArgs)
+	}
+
+	i := intersection(operatorArgKeys, additionalArgKeys)
+	fmt.Println(i)
+	if len(i) > 0 {
+		return errors.Errorf("invalid additionalArgs configuration for already defined args: %s", i)
+	}
+
+	return nil
 }
