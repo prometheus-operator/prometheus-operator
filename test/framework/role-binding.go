@@ -18,6 +18,7 @@ import (
 	"context"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -30,15 +31,19 @@ func (f *Framework) CreateOrUpdateRoleBinding(ctx context.Context, ns string, re
 	}
 
 	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Get(ctx, roleBinding.Name, metav1.GetOptions{})
-	if err == nil {
-		// RoleBinding already exists -> Update
-		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
+
+	if apierrors.IsNotFound(err) {
+		// RoleBinding doesn't exists -> Create
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
-		// RoleBinding doesn't exists -> Create
-		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
+		// RoleBinding already exists -> Update
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
@@ -60,7 +65,11 @@ func (f *Framework) CreateOrUpdateRoleBindingForSubjectNamespace(ctx context.Con
 	}
 
 	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Get(ctx, roleBinding.Name, metav1.GetOptions{})
-	if err == nil {
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
+
+	if apierrors.IsNotFound(err) {
 		// RoleBinding already exists -> Update
 		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
 		if err != nil {

@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -56,8 +57,16 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
 
 	s, err := f.KubeClient.CoreV1().Services(namespace).Get(ctx, service.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, errors.Wrap(err, fmt.Sprintf("getting service %v failed", service.Name))
+	}
 
-	if err == nil {
+	if apierrors.IsNotFound(err) {
+		// Service doesn't exists -> Create
+		if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
+			return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
+		}
+	} else {
 		// must set these immutable fields from the existing service to prevent update fail
 		service.ObjectMeta.ResourceVersion = s.ObjectMeta.ResourceVersion
 		service.Spec.ClusterIP = s.Spec.ClusterIP
@@ -71,11 +80,6 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 
 		// Allow controller to update the endpoints
 		time.Sleep(15 * time.Second)
-	} else {
-		// Service doesn't exists -> Create
-		if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
-			return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
-		}
 	}
 
 	if err := f.WaitForServiceReady(ctx, namespace, service.Name); err != nil {

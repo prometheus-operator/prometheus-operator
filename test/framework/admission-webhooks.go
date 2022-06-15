@@ -19,6 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/admissionregistration/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -33,7 +34,17 @@ func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []
 	hook.Webhooks[0].ClientConfig.CABundle = certBytes
 
 	h, err := f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Get(ctx, hook.Name, metav1.GetOptions{})
-	if err == nil {
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, errors.Wrapf(err, "failed to get mutating webhook %s", hook.Name)
+	}
+
+	if apierrors.IsNotFound(err) {
+		// MutatingWebhookConfiguration doesn't exists -> Create
+		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create mutating webhook %s", hook.Name)
+		}
+	} else {
 		// must set this field from existing MutatingWebhookConfiguration to prevent update fail
 		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
 
@@ -41,12 +52,6 @@ func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []
 		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to update mutating webhook %s", hook.Name)
-		}
-	} else {
-		// MutatingWebhookConfiguration doesn't exists -> Create
-		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create mutating webhook %s", hook.Name)
 		}
 	}
 
@@ -65,7 +70,17 @@ func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes 
 	hook.Webhooks[0].ClientConfig.CABundle = certBytes
 
 	h, err := f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Get(ctx, hook.Name, metav1.GetOptions{})
-	if err == nil {
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, errors.Wrapf(err, "failed to get validating webhook %s", hook.Name)
+	}
+
+	if apierrors.IsNotFound(err) {
+		// ValidatingWebhookConfiguration doesn't exists -> Create
+		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create validating webhook %s", hook.Name)
+		}
+	} else {
 		// must set this field from existing ValidatingWebhookConfiguration to prevent update fail
 		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
 
@@ -73,12 +88,6 @@ func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes 
 		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to update validating webhook %s", hook.Name)
-		}
-	} else {
-		// ValidatingWebhookConfiguration doesn't exists -> Create
-		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, hook, metav1.CreateOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create validating webhook %s", hook.Name)
 		}
 	}
 

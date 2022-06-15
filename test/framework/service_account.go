@@ -18,6 +18,7 @@ import (
 	"context"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -31,16 +32,19 @@ func (f *Framework) createOrUpdateServiceAccount(ctx context.Context, namespace 
 	}
 	serviceAccount.Namespace = namespace
 	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccount.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
 
-	if err == nil {
-		// ServiceAccount already exists -> Update
-		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Update(ctx, serviceAccount, metav1.UpdateOptions{})
+	if apierrors.IsNotFound(err) {
+		// ServiceAccount doesn't exists -> Create
+		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
-		// ServiceAccount doesn't exists -> Create
-		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
+		// ServiceAccount already exists -> Update
+		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Update(ctx, serviceAccount, metav1.UpdateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}

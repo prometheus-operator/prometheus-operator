@@ -18,6 +18,7 @@ import (
 	"context"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -36,16 +37,19 @@ func (f *Framework) createOrUpdateClusterRoleBinding(ctx context.Context, ns str
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
 	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
 
-	if err == nil {
-		// ClusterRoleBinding already exists -> Update
-		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
+	if apierrors.IsNotFound(err) {
+		// ClusterRoleBinding doesn't exists -> Create
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
-		// ClusterRoleBinding doesn't exists -> Create
-		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
+		// ClusterRoleBinding already exists -> Update
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}

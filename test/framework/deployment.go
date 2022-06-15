@@ -61,26 +61,31 @@ func (f *Framework) CreateDeployment(ctx context.Context, namespace string, d *a
 func (f *Framework) CreateOrUpdateDeploymentAndWaitUntilReady(ctx context.Context, namespace string, deployment *appsv1.Deployment) error {
 	deployment.Namespace = namespace
 	d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, deployment.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrap(err, fmt.Sprintf("failed to get deployment %s", deployment.Name))
+	}
 
-	if err == nil {
-		// Deployment already exists -> Update
-		_, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to update deployment %s", deployment.Name))
-		}
-
-		if err := f.WaitForDeploymentReady(ctx, namespace, deployment.Name, d.Status.ObservedGeneration+1); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("after update, waiting for deployment %v to become ready timed out", deployment.Name))
-		}
-	} else {
+	if apierrors.IsNotFound(err) {
 		// Deployment doesn't exists -> Create
 		_, err = f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", deployment.Name))
 		}
 
-		if err := f.WaitForDeploymentReady(ctx, namespace, deployment.Name, 1); err != nil {
+		err = f.WaitForDeploymentReady(ctx, namespace, deployment.Name, 1)
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("after create, waiting for deployment %v to become ready timed out", deployment.Name))
+		}
+	} else {
+		// Deployment already exists -> Update
+		_, err = f.KubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to update deployment %s", deployment.Name))
+		}
+
+		err = f.WaitForDeploymentReady(ctx, namespace, deployment.Name, d.Status.ObservedGeneration+1)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("after update, waiting for deployment %v to become ready timed out", deployment.Name))
 		}
 	}
 
