@@ -147,6 +147,7 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 		BearerTokenSecret: convertSecretKeySelectorFrom(in.BearerTokenSecret),
 		TLSConfig:         in.TLSConfig,
 		ProxyURL:          in.ProxyURL,
+		FollowRedirects:   in.FollowRedirects,
 	}
 }
 
