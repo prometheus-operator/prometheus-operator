@@ -2510,7 +2510,6 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
 	}
-
 }
 
 func TestThanosAdditionalArgsInvalid(t *testing.T) {
@@ -2545,5 +2544,4 @@ func TestThanosAdditionalArgsInvalid(t *testing.T) {
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
 	}
-
 }

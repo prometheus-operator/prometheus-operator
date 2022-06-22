@@ -72,7 +72,7 @@ var (
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
 	probeTimeoutSeconds     int32 = 3
-	argKeyRegex                   = regexp.MustCompile("^--(?:([a-z\\.\\-]+)(?:=.+)?)$")
+	argKeyRegex                   = regexp.MustCompile(`^--(?:([a-z\.-]+)(?:=.+)?)$`)
 )
 
 func expectedStatefulSetShardNames(
@@ -510,9 +510,7 @@ func makeStatefulSetSpec(
 		if err := verifyAdditionalArgs(promArgs, p.Spec.AdditionalArgs); err != nil {
 			return nil, err
 		}
-		for _, a := range p.Spec.AdditionalArgs {
-			promArgs = append(promArgs, a)
-		}
+		promArgs = append(promArgs, p.Spec.AdditionalArgs...)
 	}
 
 	assetsVolume := v1.Volume{
@@ -901,9 +899,7 @@ func makeStatefulSetSpec(
 			if err := verifyAdditionalArgs(container.Args, p.Spec.Thanos.AdditionalArgs); err != nil {
 				return nil, err
 			}
-			for _, a := range p.Spec.Thanos.AdditionalArgs {
-				container.Args = append(container.Args, a)
-			}
+			container.Args = append(container.Args, p.Spec.Thanos.AdditionalArgs...)
 		}
 
 		additionalContainers = append(additionalContainers, container)
@@ -1148,7 +1144,6 @@ func verifyAdditionalArgs(operatorArgs []string, additionalArgs []string) (e err
 	}
 
 	i := intersection(operatorArgKeys, additionalArgKeys)
-	fmt.Println(i)
 	if len(i) > 0 {
 		return errors.Errorf("invalid additionalArgs configuration for already defined args: %s", i)
 	}
