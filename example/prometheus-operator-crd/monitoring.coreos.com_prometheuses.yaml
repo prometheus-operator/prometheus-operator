@@ -108,6 +108,14 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              additionalArgs:
+                description: AdditionalArgs allows setting additional arguments for
+                  the Prometheus container. It is intended for e.g. activating hidden
+                  flags which are not supported by the dedicated configuration options
+                  yet.
+                items:
+                  type: string
+                type: array
               additionalScrapeConfigs:
                 description: 'AdditionalScrapeConfigs allows specifying a key of a
                   Secret containing additional Prometheus scrape configurations. Scrape
@@ -6351,6 +6359,12 @@ spec:
                   notice in any release. \n This is experimental and may change significantly
                   without backward compatibility in any release."
                 properties:
+                  additionalArgs:
+                    description: AdditionalArgs allows setting additional arguments
+                      for the Thanos container.
+                    items:
+                      type: string
+                    type: array
                   baseImage:
                     description: 'Thanos base image if other than default. Deprecated:
                       use ''image'' instead'

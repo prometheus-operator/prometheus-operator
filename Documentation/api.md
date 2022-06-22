@@ -2142,6 +2142,19 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </tr>
 <tr>
 <td>
+<code>additionalArgs</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -4830,6 +4843,19 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet.</p>
 </td>
 </tr>
 </tbody>
@@ -7894,6 +7920,19 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet.</p>
 </td>
 </tr>
 <tr>
@@ -11536,6 +11575,17 @@ Duration
 <td>
 <p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Thanos container.</p>
 </td>
 </tr>
 </tbody>
