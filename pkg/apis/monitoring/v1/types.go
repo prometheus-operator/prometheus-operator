@@ -1097,10 +1097,10 @@ type ServiceMonitorSpec struct {
 	// The value of this field will be used as the value for the `job`-label in each created metric.
 	//
 	// For example:
-	// If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`°,
-	// then each metric gets `{job="bar"}`-label. (° to be precise: in the `Endpoint`)
+	// If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`,
+	// then each metric gets `{job="bar"}`-label.
 	//
-	// Default & fallback value: the name of the respective Kubernetes `Endpoint`.
+	// Default & fallback value: the name of the `Service`.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
 	TargetLabels []string `json:"targetLabels,omitempty"`
