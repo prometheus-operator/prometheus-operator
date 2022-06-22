@@ -529,10 +529,9 @@ spec:
                 description: "JobLabel chooses the label of the Kubernetes `Endpoints`.
                   The value of this field will be used as the value for the `job`-label
                   in each created metric. \n For example: If in `ServiceMonitor.spec.jobLabel:
-                  foo` and in `Service.metadata.labels.foo: bar`°, then each metric
-                  gets `{job=\"bar\"}`-label. (° to be precise: in the `Endpoint`)
-                  \n Default & fallback value: the name of the respective Kubernetes
-                  `Endpoint`."
+                  foo` and in `Service.metadata.labels.foo: bar`, then each metric
+                  gets `{job=\"bar\"}`-label. \n Default & fallback value: the name
+                  of the `Service`."
                 type: string
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted

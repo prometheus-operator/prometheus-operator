@@ -1134,7 +1134,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jobLabel | JobLabel chooses the label of the Kubernetes `Endpoints`. The value of this field will be used as the value for the `job`-label in each created metric.\n\nFor example: If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`°, then each metric gets `{job=\"bar\"}`-label. (° to be precise: in the `Endpoint`)\n\nDefault & fallback value: the name of the respective Kubernetes `Endpoint`. | string | false |
+| jobLabel | JobLabel chooses the label of the Kubernetes `Endpoints`. The value of this field will be used as the value for the `job`-label in each created metric.\n\nFor example: If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`, then each metric gets `{job=\"bar\"}`-label.\n\nDefault & fallback value: the name of the `Service`. | string | false |
 | targetLabels | TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. | []string | false |
 | podTargetLabels | PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics. | []string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
