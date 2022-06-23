@@ -17,7 +17,6 @@ package prometheus
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -99,6 +98,7 @@ func prometheusNameByShard(name string, shard int32) string {
 }
 
 func makeStatefulSet(
+	logger log.Logger,
 	name string,
 	p monitoringv1.Prometheus,
 	config *operator.Config,
@@ -149,7 +149,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
+	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -325,8 +325,15 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 	return svc
 }
 
-func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
-	tlsAssetSecrets []string, version semver.Version) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(
+	logger log.Logger,
+	p monitoringv1.Prometheus,
+	c *operator.Config,
+	shard int32,
+	ruleConfigMapNames []string,
+	tlsAssetSecrets []string,
+	version semver.Version,
+) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -346,14 +353,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
-	// TODO(slashpai): Refactor the code to cover logging for all components
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
+	// TODO(simonpasquier): log a warning message if the Prometheus version
+	// doesn't support the flag (do it everywhere it needs to be, not only for
+	// this block).
 	retentionTimeFlag := "-storage.tsdb.retention="
 	if version.GTE(semver.MustParse("2.7.0")) {
 		retentionTimeFlag = "-storage.tsdb.retention.time="
@@ -426,6 +433,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
+	// TODO(simonpasquier): check that the Prometheus version supports the flag.
 	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
 		promArgs = append(promArgs,
 			fmt.Sprintf("-web.page-title=%s", *p.Spec.Web.PageTitle),
@@ -440,7 +448,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		if version.GTE(semver.MustParse("2.33.0")) {
 			promArgs = append(promArgs, "-web.enable-remote-write-receiver")
 		} else {
-			level.Warn(logger).Log("msg", fmt.Sprintf("ignoring \"enableRemoteWriteReceiver\" not supported by Prometheus version=%s minimum_version=2.33.0", version))
+			level.Warn(logger).Log("msg", "ignoring 'enableRemoteWriteReceiver' not supported by Prometheus", "version", version, "minimum_version", "2.33.0")
 		}
 	}
 
