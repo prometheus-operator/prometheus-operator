@@ -1452,7 +1452,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return err
 		}
 
-		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
