@@ -27,10 +27,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
 	defaultTestConfig = Config{
+		LocalHost: "localhost",
 		ReloaderConfig: operator.ReloaderConfig{
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 			CPURequest:    "100m",
@@ -311,6 +313,77 @@ func TestListenLocal(t *testing.T) {
 
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 2 {
 		t.Fatal("Alertmanager container should only have one port defined")
+	}
+}
+
+func TestListenTLS(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Web: &monitoringv1.AlertmanagerWebSpec{
+				TLSConfig: &monitoringv1.WebTLSConfig{
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "some-secret",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-configmap",
+							},
+						},
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
+		return v1.ProbeHandler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   probePath,
+				Port:   intstr.FromString("web"),
+				Scheme: "HTTPS",
+			},
+		}
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		FailureThreshold: 10,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		ProbeHandler:        expectedProbeHandler("/-/ready"),
+		InitialDelaySeconds: 3,
+		TimeoutSeconds:      3,
+		PeriodSeconds:       5,
+		FailureThreshold:    10,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
+	}
+
+	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9093/-/reload"
+	reloadURLFound := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
+		fmt.Println(arg)
+
+		if arg == expectedConfigReloaderReloadURL {
+			reloadURLFound = true
+		}
+	}
+	if !reloadURLFound {
+		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
 	}
 }
 

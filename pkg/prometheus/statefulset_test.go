@@ -529,7 +529,7 @@ func TestListenTLS(t *testing.T) {
 	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Web: &monitoringv1.WebSpec{
+				Web: &monitoringv1.PrometheusWebSpec{
 					TLSConfig: &monitoringv1.WebTLSConfig{
 						KeySecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -1954,7 +1954,7 @@ func TestWebPageTitle(t *testing.T) {
 	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Web: &monitoringv1.WebSpec{
+				Web: &monitoringv1.PrometheusWebSpec{
 					PageTitle: &pageTitle,
 				},
 			},

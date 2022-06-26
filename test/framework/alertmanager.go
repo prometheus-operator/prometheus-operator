@@ -194,12 +194,17 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, ns 
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ctx, ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode)
+	isAMHTTPS := false
+	if a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil {
+		isAMHTTPS = true
+	}
+
+	return a, f.WaitForAlertmanagerReady(ctx, ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode, isAMHTTPS)
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name string, replicas int, forceEnableClusterMode bool) error {
+func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name string, replicas int, forceEnableClusterMode, isAMHTTPS bool) error {
 	if err := f.WaitForPodsReady(
 		ctx,
 		ns,
@@ -216,7 +221,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name strin
 
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitialized(ctx, ns, name, replicas, forceEnableClusterMode); err != nil {
+		if err := f.WaitForAlertmanagerInitialized(ctx, ns, name, replicas, forceEnableClusterMode, isAMHTTPS); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -272,11 +277,11 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 	return f.KubeClient.CoreV1().Secrets(ns).Delete(ctx, fmt.Sprintf("alertmanager-%s", name), metav1.DeleteOptions{})
 }
 
-func (f *Framework) WaitForAlertmanagerInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode bool) error {
+func (f *Framework) WaitForAlertmanagerInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode, isAMHTTPS bool) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 
-		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, name)
+		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, name, isAMHTTPS)
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
 			return false, nil
@@ -317,9 +322,15 @@ func (f *Framework) WaitForAlertmanagerInitialized(ctx context.Context, ns, name
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerStatus(ctx context.Context, ns, n string) (models.AlertmanagerStatus, error) {
+func (f *Framework) GetAlertmanagerStatus(ctx context.Context, ns, n string, isAMHTTPS bool) (models.AlertmanagerStatus, error) {
 	var amStatus models.AlertmanagerStatus
-	request := f.ProxyGetPod(ns, n, "/api/v2/status")
+
+	proxyName := n
+	if isAMHTTPS {
+		proxyName = fmt.Sprintf("https:%v:", n)
+	}
+
+	request := f.ProxyGetPod(ns, proxyName, "/api/v2/status")
 	resp, err := request.DoRaw(ctx)
 
 	if err != nil {
@@ -407,7 +418,7 @@ func (f *Framework) GetSilences(ctx context.Context, ns, n string) (models.Getta
 func (f *Framework) PollAlertmanagerConfiguration(ctx context.Context, ns, amName string, conditions ...func(config string) error) error {
 	var pollError error
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, "alertmanager-"+amName+"-0")
+		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, "alertmanager-"+amName+"-0", false)
 
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)

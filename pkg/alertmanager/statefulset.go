@@ -31,6 +31,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
 	alertmanagerConfigDir  = "/etc/alertmanager/config"
+	webConfigDir           = "/etc/alertmanager/web_config"
 	alertmanagerConfigFile = "alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
 	sSetInputHashName      = "prometheus-operator-input-hash"
@@ -286,6 +288,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer-timeout=%s", a.Spec.ClusterPeerTimeout))
 	}
 
+	var isHTTPS bool
+	if a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0")) {
+		isHTTPS = true
+	}
+
 	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
@@ -315,6 +322,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			TimeoutSeconds:      3,
 			PeriodSeconds:       5,
 			FailureThreshold:    10,
+		}
+
+		if isHTTPS {
+			livenessProbe.HTTPGet.Scheme = v1.URISchemeHTTPS
+			readinessProbe.HTTPGet.Scheme = v1.URISchemeHTTPS
 		}
 	}
 
@@ -532,6 +544,27 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
 
+	// Mount web config and web TLS credentials as volumes.
+	// We always mount the web config file for versions greater than 0.22.0.
+	// With this we avoid redeploying alertmanager when reconfiguring between
+	// HTTP and HTTPS and vice-versa.
+	if version.GTE(semver.MustParse("0.22.0")) {
+		var webTLSConfig *monitoringv1.WebTLSConfig
+		if a.Spec.Web != nil {
+			webTLSConfig = a.Spec.Web.TLSConfig
+		}
+
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), webTLSConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount := webConfig.GetMountParameters()
+		amArgs = append(amArgs, confArg)
+		volumes = append(volumes, configVol...)
+		amVolumeMounts = append(amVolumeMounts, configMount...)
+	}
+
 	terminationGracePeriod := int64(120)
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
@@ -541,6 +574,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	boolFalse := false
 	boolTrue := true
+	alertmanagerURIScheme := "http"
+	if isHTTPS {
+		alertmanagerURIScheme = "https"
+	}
+
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -575,7 +613,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			"config-reloader",
 			operator.ReloaderResources(config.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
-				Scheme: "http",
+				Scheme: alertmanagerURIScheme,
 				Host:   config.LocalHost + ":9093",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
@@ -645,6 +683,10 @@ func defaultConfigSecretName(am *monitoringv1.Alertmanager) string {
 
 func generatedConfigSecretName(name string) string {
 	return prefixedName(name) + "-generated"
+}
+
+func webConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(name))
 }
 
 func volumeName(name string) string {
