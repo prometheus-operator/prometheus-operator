@@ -660,7 +660,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.
 		},
 	}
 
-	cfg = append(cfg, storageSettings...)
+	cfg = cg.WithMinimumVersion("2.29.0").AppendMapItem(cfg, "storage", ...)
 
 	return cfg, nil
 }
