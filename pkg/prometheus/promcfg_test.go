@@ -7655,18 +7655,15 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 		ExpectedConfig string
 	}{
 		{
-			Scenario: "Exemplars feature flag is enabled and max_exemplars is set to 1000000",
+			Scenario: "Exemplars maxSize is set to 5000000",
 			Prometheus: &monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						EnableFeatures: []string{"exemplar-storage"},
-					},
 					Exemplars: &monitoringv1.Exemplars{
-						MaxSize: 1000000,
+						MaxSize: getInt64Pointer(5000000),
 					},
 				},
 			},
@@ -7679,33 +7676,11 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 scrape_configs: []
 storage:
   exemplars:
-    max_exemplars: 1000000
+    max_exemplars: 5000000
 `,
 		},
 		{
-			Scenario: "Exemplars feature flag is disable and max_exemplars is set to 1000000",
-			Prometheus: &monitoringv1.Prometheus{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.PrometheusSpec{
-					Exemplars: &monitoringv1.Exemplars{
-						MaxSize: 1000000,
-					},
-				},
-			},
-			ExpectedConfig: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
-		},
-		{
-			Scenario: "Exemplars feature flag is enable and max_exemplars is not set",
+			Scenario: "Exemplars maxSize is not set",
 			Prometheus: &monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -7753,4 +7728,8 @@ scrape_configs: []
 			}
 		})
 	}
+}
+
+func getInt64Pointer(i int64) *int64 {
+	return &i
 }
