@@ -404,7 +404,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| maxSize |  | uint | false |
+| maxSize | Maximum number of exemplars stored in memory for all series. If not set, Prometheus uses its default value. A value of zero or less than zero disables the storage. | *int64 | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -893,7 +893,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | thanos | Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release. | *[ThanosSpec](#thanosspec) | false |
 | queryLogFile | QueryLogFile specifies the file to which PromQL queries are logged. If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an emptyDir volume at `/var/log/prometheus`. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log query information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/) | string | false |
 | allowOverlappingBlocks | AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus. This is still experimental in Prometheus so it may change in any upcoming release. | bool | false |
-| exemplars | Exemplars related settings that are runtime reloadable. | *[Exemplars](#exemplars) | false |
+| exemplars | Exemplars related settings that are runtime reloadable. It requires to enable the exemplar storage feature to be effective. | *[Exemplars](#exemplars) | false |
 
 [Back to TOC](#table-of-contents)
 
