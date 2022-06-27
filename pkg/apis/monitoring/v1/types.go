@@ -491,6 +491,7 @@ type PrometheusSpec struct {
 	// used.  If both values are zero, no limit is enforced.
 
 	// Exemplars related settings that are runtime reloadable.
+	// It requires to enable the exemplar storage feature to be effective.
 	Exemplars *Exemplars `json:"exemplars,omitempty"`
 }
 
