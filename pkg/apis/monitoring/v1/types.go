@@ -496,7 +496,10 @@ type PrometheusSpec struct {
 }
 
 type Exemplars struct {
-	MaxSize uint `json:"maxSize,omitempty"`
+	// Maximum number of exemplars stored in memory for all series.
+	// If not set, Prometheus uses its default value.
+	// A value of zero or less than zero disables the storage.
+	MaxSize *int64 `json:"maxSize,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
