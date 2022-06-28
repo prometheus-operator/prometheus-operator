@@ -639,7 +639,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.
 			Value: yaml.MapSlice{
 				{
 					Key:   "max_exemplars",
-					Value: p.Spec.Exemplars.MaxSize,
+					Value: *p.Spec.Exemplars.MaxSize,
 				},
 			},
 		},

@@ -7680,6 +7680,31 @@ storage:
 `,
 		},
 		{
+			Scenario: "max_exemplars is not set if version is less than v2.29.0",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.28.0",
+					},
+					Exemplars: &monitoringv1.Exemplars{
+						MaxSize: getInt64Pointer(5000000),
+					},
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
 			Scenario: "Exemplars maxSize is not set",
 			Prometheus: &monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
