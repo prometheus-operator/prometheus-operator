@@ -23,7 +23,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/go-version"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -199,21 +198,6 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 		_, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{})
 		return err
 	})
-}
-
-// GetMinorVersion returns the minor version as an integer
-func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
-	v, err := dclient.ServerVersion()
-	if err != nil {
-		return 0, err
-	}
-
-	ver, err := version.NewVersion(v.String())
-	if err != nil {
-		return 0, err
-	}
-
-	return ver.Segments()[1], nil
 }
 
 // IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
