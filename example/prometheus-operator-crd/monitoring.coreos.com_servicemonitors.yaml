@@ -168,7 +168,8 @@ spec:
                           action:
                             default: replace
                             description: Action to perform based on regex matching.
-                              Default is 'replace'
+                              Default is 'replace'. uppercase and lowercase actions
+                              require Prometheus >= 2.36.
                             enum:
                             - replace
                             - keep
@@ -177,6 +178,8 @@ spec:
                             - labelmap
                             - labeldrop
                             - labelkeep
+                            - uppercase
+                            - lowercase
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -332,7 +335,8 @@ spec:
                           action:
                             default: replace
                             description: Action to perform based on regex matching.
-                              Default is 'replace'
+                              Default is 'replace'. uppercase and lowercase actions
+                              require Prometheus >= 2.36.
                             enum:
                             - replace
                             - keep
@@ -341,6 +345,8 @@ spec:
                             - labelmap
                             - labeldrop
                             - labelkeep
+                            - uppercase
+                            - lowercase
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source

@@ -953,7 +953,7 @@ RelabelConfig allows dynamic rewriting of the label set, being applied to sample
 | regex | Regular expression against which the extracted value is matched. Default is '(.*)' | string | false |
 | modulus | Modulus to take of the hash of the source label values. | uint64 | false |
 | replacement | Replacement value against which a regex replace is performed if the regular expression matches. Regex capture groups are available. Default is '$1' | string | false |
-| action | Action to perform based on regex matching. Default is 'replace' | string | false |
+| action | Action to perform based on regex matching. Default is 'replace'. uppercase and lowercase actions require Prometheus >= 2.36. | string | false |
 
 [Back to TOC](#table-of-contents)
 

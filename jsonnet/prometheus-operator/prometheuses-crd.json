@@ -4865,7 +4865,7 @@
                             "properties": {
                               "action": {
                                 "default": "replace",
-                                "description": "Action to perform based on regex matching. Default is 'replace'",
+                                "description": "Action to perform based on regex matching. Default is 'replace'. uppercase and lowercase actions require Prometheus >= 2.36.",
                                 "enum": [
                                   "replace",
                                   "keep",
@@ -4873,7 +4873,9 @@
                                   "hashmod",
                                   "labelmap",
                                   "labeldrop",
-                                  "labelkeep"
+                                  "labelkeep",
+                                  "uppercase",
+                                  "lowercase"
                                 ],
                                 "type": "string"
                               },
