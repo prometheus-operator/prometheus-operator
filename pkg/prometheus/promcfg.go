@@ -1493,7 +1493,7 @@ func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
 		}
 
 		if c.Action != "" {
-			relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
+			relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
 		}
 
 		cfg = append(cfg, relabeling)
@@ -1862,7 +1862,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				}
 
 				if c.Action != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
 				}
 				relabelings = append(relabelings, relabeling)
 			}
