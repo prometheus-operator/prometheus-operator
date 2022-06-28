@@ -15,7 +15,7 @@ require (
 	github.com/go-test/deep v1.0.8
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.8
-	github.com/hashicorp/go-version v1.5.0
+	github.com/hashicorp/go-version v1.6.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
