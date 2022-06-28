@@ -496,6 +496,17 @@ type PrometheusSpec struct {
 	// Note that if TargetLimit is lower, that value will be taken instead,
 	// except if either value is zero, in which case the non-zero value will be
 	// used.  If both values are zero, no limit is enforced.
+
+	// Exemplars related settings that are runtime reloadable.
+	// It requires to enable the exemplar storage feature to be effective.
+	Exemplars *Exemplars `json:"exemplars,omitempty"`
+}
+
+type Exemplars struct {
+	// Maximum number of exemplars stored in memory for all series.
+	// If not set, Prometheus uses its default value.
+	// A value of zero or less than zero disables the storage.
+	MaxSize *int64 `json:"maxSize,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces

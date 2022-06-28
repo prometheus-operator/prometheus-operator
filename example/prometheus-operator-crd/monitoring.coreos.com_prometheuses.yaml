@@ -2774,6 +2774,17 @@ spec:
                   - resource
                   type: object
                 type: array
+              exemplars:
+                description: Exemplars related settings that are runtime reloadable.
+                  It requires to enable the exemplar storage feature to be effective.
+                properties:
+                  maxSize:
+                    description: Maximum number of exemplars stored in memory for
+                      all series. If not set, Prometheus uses its default value. A
+                      value of zero or less than zero disables the storage.
+                    format: int64
+                    type: integer
+                type: object
               externalLabels:
                 additionalProperties:
                   type: string

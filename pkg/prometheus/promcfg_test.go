@@ -7647,3 +7647,114 @@ scrape_configs:
 		})
 	}
 }
+
+func TestStorageSettingMaxExemplars(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario       string
+		Prometheus     *monitoringv1.Prometheus
+		ExpectedConfig string
+	}{
+		{
+			Scenario: "Exemplars maxSize is set to 5000000",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Exemplars: &monitoringv1.Exemplars{
+						MaxSize: getInt64Pointer(5000000),
+					},
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+storage:
+  exemplars:
+    max_exemplars: 5000000
+`,
+		},
+		{
+			Scenario: "max_exemplars is not set if version is less than v2.29.0",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.28.0",
+					},
+					Exemplars: &monitoringv1.Exemplars{
+						MaxSize: getInt64Pointer(5000000),
+					},
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			Scenario: "Exemplars maxSize is not set",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						EnableFeatures: []string{"exemplar-storage"},
+					},
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tc.Prometheus)
+
+			cfg, err := cg.Generate(
+				tc.Prometheus,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actualConfig := string(cfg)
+
+			if tc.ExpectedConfig != actualConfig {
+				t.Logf("\n%s", pretty.Compare(tc.ExpectedConfig, actualConfig))
+				t.Fatal("expected prometheus configuration with storage and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func getInt64Pointer(i int64) *int64 {
+	return &i
+}
