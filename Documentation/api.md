@@ -375,7 +375,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | ----- | ----------- | ------ | -------- |
 | port | Name of the service port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
 | targetPort | Name or number of the target port of the Pod behind the Service, the port must be specified with container port property. Mutually exclusive with port. | *intstr.IntOrString | false |
-| path | HTTP path to scrape for metrics. | string | false |
+| path | HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. `/metrics`). | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |
@@ -494,7 +494,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | ----- | ----------- | ------ | -------- |
 | port | Name of the pod port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
 | targetPort | Deprecated: Use 'port' instead. | *intstr.IntOrString | false |
-| path | HTTP path to scrape for metrics. | string | false |
+| path | HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. `/metrics`). | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |

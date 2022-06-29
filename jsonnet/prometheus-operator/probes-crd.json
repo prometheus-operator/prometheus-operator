@@ -331,6 +331,7 @@
                     "description": "Specification for the prober to use for probing targets. The prober.URL parameter is required. Targets cannot be probed if left empty.",
                     "properties": {
                       "path": {
+                        "default": "/probe",
                         "description": "Path to collect metrics from. Defaults to `/probe`.",
                         "type": "string"
                       },

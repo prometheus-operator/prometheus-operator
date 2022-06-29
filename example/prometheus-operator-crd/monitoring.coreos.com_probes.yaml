@@ -305,6 +305,7 @@ spec:
                   left empty.
                 properties:
                   path:
+                    default: /probe
                     description: Path to collect metrics from. Defaults to `/probe`.
                     type: string
                   proxyUrl:
