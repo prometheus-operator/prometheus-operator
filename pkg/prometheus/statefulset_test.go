@@ -2341,8 +2341,8 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"--storage.tsdb.path=/prometheus",
 		"--web.enable-lifecycle",
 		"--web.route-prefix=/",
-		"--scrape.discovery-reload-interval=30s",
 		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
+		"--scrape.discovery-reload-interval=30s",
 	}
 
 	labels := map[string]string{
@@ -2359,8 +2359,11 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				AdditionalArgs: []string{
-					"--scrape.discovery-reload-interval=30s",
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name:  "scrape.discovery-reload-interval",
+						Value: "30s",
+					},
 				},
 			},
 		},
@@ -2390,41 +2393,11 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				AdditionalArgs: []string{
-					"--config.file=/foo/bar.yaml",
-				},
-			},
-		},
-	}, defaultTestConfig, nil, "", 0, nil)
-
-	if err == nil {
-		t.Fatal("expected error for Prometheus additionalArgs configuration")
-	}
-
-	if !strings.Contains(err.Error(), expectedErrorMsg) {
-		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
-	}
-}
-
-func TestPrometheusAdditionalArgsInvalid(t *testing.T) {
-	expectedErrorMsg := "invalid argument syntax for args: [-foo.bar=10m]"
-
-	labels := map[string]string{
-		"testlabel": "testlabelvalue",
-	}
-	annotations := map[string]string{
-		"testannotation": "testannotationvalue",
-	}
-
-	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:      labels,
-			Annotations: annotations,
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				AdditionalArgs: []string{
-					"-foo.bar=10m",
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name:  "config.file",
+						Value: "/foo/bar.yaml",
+					},
 				},
 			},
 		},
@@ -2464,8 +2437,11 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
 				LogLevel: "info",
-				AdditionalArgs: []string{
-					"--reloader.watch-interval=5m",
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name:  "reloader.watch-interval",
+						Value: "5m",
+					},
 				},
 			},
 		},
@@ -2496,42 +2472,11 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
 				LogLevel: "info",
-				AdditionalArgs: []string{
-					"--log.level=error",
-				},
-			},
-		},
-	}, defaultTestConfig, nil, "", 0, nil)
-
-	if err == nil {
-		t.Fatal("expected error for Thanos additionalArgs configuration")
-	}
-
-	if !strings.Contains(err.Error(), expectedErrorMsg) {
-		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
-	}
-}
-
-func TestThanosAdditionalArgsInvalid(t *testing.T) {
-	expectedErrorMsg := "invalid argument syntax for args: [-foo.bar=10m]"
-
-	labels := map[string]string{
-		"testlabel": "testlabelvalue",
-	}
-	annotations := map[string]string{
-		"testannotation": "testannotationvalue",
-	}
-
-	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:      labels,
-			Annotations: annotations,
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			Thanos: &monitoringv1.ThanosSpec{
-				LogLevel: "info",
-				AdditionalArgs: []string{
-					"-foo.bar=10m",
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name:  "log.level",
+						Value: "error",
+					},
 				},
 			},
 		},

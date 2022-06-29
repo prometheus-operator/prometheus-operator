@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -72,7 +71,6 @@ var (
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
 	probeTimeoutSeconds     int32 = 3
-	argKeyRegex                   = regexp.MustCompile(`^--(?:([a-z\.-]+)(?:=.+)?)$`)
 )
 
 func expectedStatefulSetShardNames(
@@ -355,67 +353,66 @@ func makeStatefulSetSpec(
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
-	promArgs := []string{
-		"-web.console.templates=/etc/prometheus/consoles",
-		"-web.console.libraries=/etc/prometheus/console_libraries",
+	promArgs := []monitoringv1.Argument{
+		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
+		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
 	}
 
 	// TODO(simonpasquier): log a warning message if the Prometheus version
 	// doesn't support the flag (do it everywhere it needs to be, not only for
 	// this block).
-	retentionTimeFlag := "-storage.tsdb.retention="
+	retentionTimeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention"}
 	if version.GTE(semver.MustParse("2.7.0")) {
-		retentionTimeFlag = "-storage.tsdb.retention.time="
+		retentionTimeFlag = monitoringv1.Argument{Name: "storage.tsdb.retention.time"}
 		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
-			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+			retentionTimeFlag.Value = defaultRetention
+			promArgs = append(promArgs, retentionTimeFlag)
 		} else {
 			if p.Spec.Retention != "" {
-				promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
+				retentionTimeFlag.Value = string(p.Spec.Retention)
+				promArgs = append(promArgs, retentionTimeFlag)
 			}
 
 			if p.Spec.RetentionSize != "" {
-				promArgs = append(promArgs,
-					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-				)
+				retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
+				promArgs = append(promArgs, retentionSizeFlag)
 			}
 		}
 	} else {
 		if p.Spec.Retention == "" {
-			promArgs = append(promArgs, retentionTimeFlag+defaultRetention)
+			retentionTimeFlag.Value = defaultRetention
+			promArgs = append(promArgs, retentionTimeFlag)
 		} else {
-			promArgs = append(promArgs, retentionTimeFlag+string(p.Spec.Retention))
+			retentionTimeFlag.Value = string(p.Spec.Retention)
+			promArgs = append(promArgs, retentionTimeFlag)
 		}
 	}
 
 	promArgs = append(promArgs,
-		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-		"-web.enable-lifecycle",
+		monitoringv1.Argument{Name: "config.file", Value: path.Join(confOutDir, configEnvsubstFilename)},
+		monitoringv1.Argument{Name: "storage.tsdb.path", Value: storageDir},
+		monitoringv1.Argument{Name: "web.enable-lifecycle"},
 	)
 
 	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
-		promArgs = append(promArgs,
-			fmt.Sprintf("-query.lookback-delta=%s", *p.Spec.Query.LookbackDelta),
-		)
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *p.Spec.Query.LookbackDelta})
 	}
 
 	if version.Minor >= 4 {
 		if p.Spec.Rules.Alert.ForOutageTolerance != "" {
-			promArgs = append(promArgs, "-rules.alert.for-outage-tolerance="+p.Spec.Rules.Alert.ForOutageTolerance)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: p.Spec.Rules.Alert.ForOutageTolerance})
 		}
 		if p.Spec.Rules.Alert.ForGracePeriod != "" {
-			promArgs = append(promArgs, "-rules.alert.for-grace-period="+p.Spec.Rules.Alert.ForGracePeriod)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.for-grace-period", Value: p.Spec.Rules.Alert.ForGracePeriod})
 		}
 		if p.Spec.Rules.Alert.ResendDelay != "" {
-			promArgs = append(promArgs, "-rules.alert.resend-delay="+p.Spec.Rules.Alert.ResendDelay)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.resend-delay", Value: p.Spec.Rules.Alert.ResendDelay})
 		}
 	}
 
 	if version.Minor >= 5 {
 		if p.Spec.Query != nil && p.Spec.Query.MaxSamples != nil {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-query.max-samples=%d", *p.Spec.Query.MaxSamples),
-			)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: string(*p.Spec.Query.MaxSamples)})
 		}
 	}
 
@@ -424,74 +421,68 @@ func makeStatefulSetSpec(
 			if *p.Spec.Query.MaxConcurrency < 1 {
 				p.Spec.Query.MaxConcurrency = &defaultMaxConcurrency
 			}
-			promArgs = append(promArgs,
-				fmt.Sprintf("-query.max-concurrency=%d", *p.Spec.Query.MaxConcurrency),
-			)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-concurrency", Value: string(*p.Spec.Query.MaxConcurrency)})
 		}
 		if p.Spec.Query.Timeout != nil {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-query.timeout=%s", *p.Spec.Query.Timeout),
-			)
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.timeout", Value: string(*p.Spec.Query.Timeout)})
 		}
 	}
 
 	// TODO(simonpasquier): check that the Prometheus version supports the flag.
 	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
-		promArgs = append(promArgs,
-			fmt.Sprintf("-web.page-title=%s", *p.Spec.Web.PageTitle),
-		)
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
 	}
 
 	if p.Spec.EnableAdminAPI {
-		promArgs = append(promArgs, "-web.enable-admin-api")
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-admin-api"})
 	}
 
 	if p.Spec.EnableRemoteWriteReceiver {
 		if version.GTE(semver.MustParse("2.33.0")) {
-			promArgs = append(promArgs, "-web.enable-remote-write-receiver")
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
 		} else {
 			level.Warn(logger).Log("msg", "ignoring 'enableRemoteWriteReceiver' not supported by Prometheus", "version", version, "minimum_version", "2.33.0")
 		}
 	}
 
 	if len(p.Spec.EnableFeatures) > 0 {
-		promArgs = append(promArgs, "-enable-feature="+strings.Join(p.Spec.EnableFeatures[:], ","))
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(p.Spec.EnableFeatures[:], ",")})
 	}
 
 	if p.Spec.ExternalURL != "" {
-		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: p.Spec.ExternalURL})
 	}
 
 	webRoutePrefix := "/"
 	if p.Spec.RoutePrefix != "" {
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
-	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
+	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: webRoutePrefix})
 
 	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
-		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: p.Spec.LogLevel})
 	}
 	if version.GTE(semver.MustParse("2.6.0")) {
 		if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
-			promArgs = append(promArgs, fmt.Sprintf("-log.format=%s", p.Spec.LogFormat))
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "log.format", Value: p.Spec.LogFormat})
 		}
 	}
 
 	if version.GTE(semver.MustParse("2.11.0")) && p.Spec.WALCompression != nil {
 		if *p.Spec.WALCompression {
-			promArgs = append(promArgs, "-storage.tsdb.wal-compression")
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.wal-compression"})
 		} else {
-			promArgs = append(promArgs, "-no-storage.tsdb.wal-compression")
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"})
 		}
 	}
 
 	if version.GTE(semver.MustParse("2.8.0")) && p.Spec.AllowOverlappingBlocks {
-		promArgs = append(promArgs, "-storage.tsdb.allow-overlapping-blocks")
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
 	}
 
 	var ports []v1.ContainerPort
 	if p.Spec.ListenLocal {
-		promArgs = append(promArgs, "-web.listen-address=127.0.0.1:9090")
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
 	} else {
 		ports = []v1.ContainerPort{
 			{
@@ -500,17 +491,6 @@ func makeStatefulSetSpec(
 				Protocol:      v1.ProtocolTCP,
 			},
 		}
-	}
-
-	for i, a := range promArgs {
-		promArgs[i] = "-" + a
-	}
-
-	if len(p.Spec.AdditionalArgs) > 0 {
-		if err := verifyAdditionalArgs(promArgs, p.Spec.AdditionalArgs); err != nil {
-			return nil, err
-		}
-		promArgs = append(promArgs, p.Spec.AdditionalArgs...)
 	}
 
 	assetsVolume := v1.Volume{
@@ -782,22 +762,23 @@ func makeStatefulSetSpec(
 			bindAddress = "127.0.0.1"
 		}
 
-		thanosArgs := []string{"sidecar",
-			fmt.Sprintf("--prometheus.url=%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix)),
-			fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
-			fmt.Sprintf("--http-address=%s:10902", bindAddress),
+		thanosContainerArgs := []string{"sidecar"}
+		thanosArgs := []monitoringv1.Argument{
+			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix))},
+			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", bindAddress)},
+			{Name: "http-address", Value: fmt.Sprintf("%s:10902", bindAddress)},
 		}
 
 		if p.Spec.Thanos.GRPCServerTLSConfig != nil {
 			tls := p.Spec.Thanos.GRPCServerTLSConfig
 			if tls.CertFile != "" {
-				thanosArgs = append(thanosArgs, "--grpc-server-tls-cert="+tls.CertFile)
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-cert", Value: tls.CertFile})
 			}
 			if tls.KeyFile != "" {
-				thanosArgs = append(thanosArgs, "--grpc-server-tls-key="+tls.KeyFile)
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-key", Value: tls.KeyFile})
 			}
 			if tls.CAFile != "" {
-				thanosArgs = append(thanosArgs, "--grpc-server-tls-client-ca="+tls.CAFile)
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 			}
 		}
 
@@ -807,7 +788,7 @@ func makeStatefulSetSpec(
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Args:                     thanosArgs,
+			Args:                     thanosContainerArgs,
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
@@ -837,9 +818,9 @@ func makeStatefulSetSpec(
 
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
 			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
-				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *p.Spec.Thanos.ObjectStorageConfigFile})
 			} else {
-				container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "$(OBJSTORE_CONFIG)"})
 				container.Env = append(container.Env, v1.EnvVar{
 					Name: "OBJSTORE_CONFIG",
 					ValueFrom: &v1.EnvVarSource{
@@ -847,7 +828,7 @@ func makeStatefulSetSpec(
 					},
 				})
 			}
-			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: storageDir})
 			container.VolumeMounts = append(
 				container.VolumeMounts,
 				v1.VolumeMount{
@@ -864,9 +845,9 @@ func makeStatefulSetSpec(
 
 		if p.Spec.Thanos.TracingConfig != nil || len(p.Spec.Thanos.TracingConfigFile) > 0 {
 			if len(p.Spec.Thanos.TracingConfigFile) > 0 {
-				container.Args = append(container.Args, "--tracing.config-file="+p.Spec.Thanos.TracingConfigFile)
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: p.Spec.Thanos.TracingConfigFile})
 			} else {
-				container.Args = append(container.Args, "--tracing.config=$(TRACING_CONFIG)")
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config", Value: "$(TRACING_CONFIG)"})
 				container.Env = append(container.Env, v1.EnvVar{
 					Name: "TRACING_CONFIG",
 					ValueFrom: &v1.EnvVarSource{
@@ -877,36 +858,38 @@ func makeStatefulSetSpec(
 		}
 
 		if p.Spec.Thanos.LogLevel != "" {
-			container.Args = append(container.Args, "--log.level="+p.Spec.Thanos.LogLevel)
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: p.Spec.Thanos.LogLevel})
 		} else if p.Spec.LogLevel != "" {
-			container.Args = append(container.Args, "--log.level="+p.Spec.LogLevel)
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: p.Spec.LogLevel})
 		}
 		if p.Spec.Thanos.LogFormat != "" {
-			container.Args = append(container.Args, "--log.format="+p.Spec.Thanos.LogFormat)
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: p.Spec.Thanos.LogFormat})
 		} else if p.Spec.LogFormat != "" {
-			container.Args = append(container.Args, "--log.format="+p.Spec.LogFormat)
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: p.Spec.LogFormat})
 		}
 
 		if p.Spec.Thanos.MinTime != "" {
-			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "min-time", Value: p.Spec.Thanos.MinTime})
 		}
 
 		if p.Spec.Thanos.ReadyTimeout != "" {
-			container.Args = append(container.Args, "--prometheus.ready_timeout="+string(p.Spec.Thanos.ReadyTimeout))
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(p.Spec.Thanos.ReadyTimeout)})
 		}
 
 		if len(p.Spec.Thanos.AdditionalArgs) > 0 {
-			if err := verifyAdditionalArgs(container.Args, p.Spec.Thanos.AdditionalArgs); err != nil {
+			if err := verifyAdditionalArgs(thanosArgs, p.Spec.Thanos.AdditionalArgs); err != nil {
 				return nil, err
 			}
-			container.Args = append(container.Args, p.Spec.Thanos.AdditionalArgs...)
+			thanosArgs = append(thanosArgs, p.Spec.Thanos.AdditionalArgs...)
 		}
+
+		container.Args = append(container.Args, createContainerArgs(thanosArgs)...)
 
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
-		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
-		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: "2h"})
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: "2h"})
 	}
 
 	var watchedDirectories []string
@@ -957,6 +940,15 @@ func makeStatefulSetSpec(
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
+	if len(p.Spec.AdditionalArgs) > 0 {
+		if err := verifyAdditionalArgs(promArgs, p.Spec.AdditionalArgs); err != nil {
+			return nil, err
+		}
+		promArgs = append(promArgs, p.Spec.AdditionalArgs...)
+	}
+
+	containerArgs := createContainerArgs(promArgs)
+
 	boolFalse := false
 	boolTrue := true
 	operatorContainers := append([]v1.Container{
@@ -964,7 +956,7 @@ func makeStatefulSetSpec(
 			Name:                     "prometheus",
 			Image:                    prometheusImagePath,
 			Ports:                    ports,
-			Args:                     promArgs,
+			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
 			LivenessProbe:            livenessProbe,
@@ -1121,27 +1113,19 @@ func intersection(a, b []string) (i []string) {
 	return i
 }
 
-func extractArgKeys(args []string) ([]string, []string) {
+func extractArgKeys(args []monitoringv1.Argument) []string {
 	var k []string
-	var e []string
 	for _, arg := range args {
-		key := argKeyRegex.FindStringSubmatch(arg)
-		if len(key) != 2 {
-			e = append(e, arg)
-		} else {
-			k = append(k, key[1])
-		}
+		key := arg.Name
+		k = append(k, key)
 	}
 
-	return k, e
+	return k
 }
 
-func verifyAdditionalArgs(operatorArgs []string, additionalArgs []string) (e error) {
-	operatorArgKeys, _ := extractArgKeys(operatorArgs)
-	additionalArgKeys, invalidArgs := extractArgKeys(additionalArgs)
-	if len(invalidArgs) > 0 {
-		return errors.Errorf("invalid argument syntax for args: %s", invalidArgs)
-	}
+func verifyAdditionalArgs(operatorArgs []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) (e error) {
+	operatorArgKeys := extractArgKeys(operatorArgs)
+	additionalArgKeys := extractArgKeys(additionalArgs)
 
 	i := intersection(operatorArgKeys, additionalArgKeys)
 	if len(i) > 0 {
@@ -1149,4 +1133,18 @@ func verifyAdditionalArgs(operatorArgs []string, additionalArgs []string) (e err
 	}
 
 	return nil
+}
+
+func createContainerArgs(args []monitoringv1.Argument) []string {
+	var containerArgs []string
+	for _, arg := range args {
+		if arg.Value != "" {
+			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
+		} else {
+			containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
+
+		}
+	}
+
+	return containerArgs
 }

@@ -16,7 +16,6 @@ package webconfig
 
 import (
 	"context"
-	"fmt"
 	"path"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -67,7 +66,7 @@ func New(mountingDir string, secretName string, tlsConfig *monitoringv1.WebTLSCo
 // and the associated TLS credentials.
 // In addition, GetMountParameters returns a web.config.file command line option pointing
 // to the file in the volume mount.
-func (c Config) GetMountParameters() (string, []v1.Volume, []v1.VolumeMount) {
+func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount) {
 	destinationPath := path.Join(c.mountingDir, configFile)
 
 	var volumes []v1.Volume
@@ -183,8 +182,8 @@ func (c Config) generateConfigFileContents() ([]byte, error) {
 	return yaml.Marshal(cfg)
 }
 
-func (c Config) makeArg(filePath string) string {
-	return fmt.Sprintf("--web.config.file=%s", filePath)
+func (c Config) makeArg(filePath string) monitoringv1.Argument {
+	return monitoringv1.Argument{Name: "web.config.file", Value: filePath}
 }
 
 func (c Config) makeVolume() v1.Volume {
