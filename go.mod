@@ -15,7 +15,6 @@ require (
 	github.com/go-test/deep v1.0.8
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.8
-	github.com/hashicorp/go-version v1.5.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
@@ -29,7 +28,7 @@ require (
 	github.com/prometheus/common v0.35.0
 	// This version is replaced using replace directive below
 	github.com/prometheus/prometheus v1.8.2-0.20220315145411-881111fec433
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 	github.com/thanos-io/thanos v0.26.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.28.0
