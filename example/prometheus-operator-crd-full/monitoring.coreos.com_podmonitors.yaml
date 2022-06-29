@@ -212,14 +212,23 @@ spec:
                               require Prometheus >= 2.36.
                             enum:
                             - replace
+                            - Replace
                             - keep
+                            - Keep
                             - drop
+                            - Drop
                             - hashmod
+                            - HashMod
                             - labelmap
+                            - LabelMap
                             - labeldrop
+                            - LabelDrop
                             - labelkeep
-                            - uppercase
+                            - LabelKeep
                             - lowercase
+                            - Lowercase
+                            - uppercase
+                            - Uppercase
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source
@@ -379,14 +388,23 @@ spec:
                               require Prometheus >= 2.36.
                             enum:
                             - replace
+                            - Replace
                             - keep
+                            - Keep
                             - drop
+                            - Drop
                             - hashmod
+                            - HashMod
                             - labelmap
+                            - LabelMap
                             - labeldrop
+                            - LabelDrop
                             - labelkeep
-                            - uppercase
+                            - LabelKeep
                             - lowercase
+                            - Lowercase
+                            - uppercase
+                            - Uppercase
                             type: string
                           modulus:
                             description: Modulus to take of the hash of the source

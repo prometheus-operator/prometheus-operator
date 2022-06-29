@@ -222,14 +222,23 @@
                                 "description": "Action to perform based on regex matching. Default is 'replace'. uppercase and lowercase actions require Prometheus >= 2.36.",
                                 "enum": [
                                   "replace",
+                                  "Replace",
                                   "keep",
+                                  "Keep",
                                   "drop",
+                                  "Drop",
                                   "hashmod",
+                                  "HashMod",
                                   "labelmap",
+                                  "LabelMap",
                                   "labeldrop",
+                                  "LabelDrop",
                                   "labelkeep",
+                                  "LabelKeep",
+                                  "lowercase",
+                                  "Lowercase",
                                   "uppercase",
-                                  "lowercase"
+                                  "Uppercase"
                                 ],
                                 "type": "string"
                               },
@@ -399,14 +408,23 @@
                                 "description": "Action to perform based on regex matching. Default is 'replace'. uppercase and lowercase actions require Prometheus >= 2.36.",
                                 "enum": [
                                   "replace",
+                                  "Replace",
                                   "keep",
+                                  "Keep",
                                   "drop",
+                                  "Drop",
                                   "hashmod",
+                                  "HashMod",
                                   "labelmap",
+                                  "LabelMap",
                                   "labeldrop",
+                                  "LabelDrop",
                                   "labelkeep",
+                                  "LabelKeep",
+                                  "lowercase",
+                                  "Lowercase",
                                   "uppercase",
-                                  "lowercase"
+                                  "Uppercase"
                                 ],
                                 "type": "string"
                               },
