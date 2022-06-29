@@ -614,7 +614,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -702,7 +702,7 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1666,11 +1666,11 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 0, false, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 0); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 3, false, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 3); err != nil {
 		t.Fatal(err)
 	}
 }

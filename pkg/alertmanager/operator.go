@@ -761,7 +761,33 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secrets failed")
 	}
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
+	var tlsConfig *monitoringv1.WebTLSConfig
+	if am.Spec.Web != nil {
+		tlsConfig = am.Spec.Web.TLSConfig
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(am.Name),
+		tlsConfig,
+	)
+	if err != nil {
+		return errors.Wrap(err, "init web config instance failed")
+	}
+
+	boolTrue := true
+	secretClient := c.kclient.CoreV1().Secrets(am.Namespace)
+	webConfigOwnerReference := metav1.OwnerReference{
+		APIVersion:         am.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               am.Kind,
+		Name:               am.Name,
+		UID:                am.UID,
+	}
+	webConfigLabels := c.config.Labels.Merge(managedByOperatorLabels)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, webConfigLabels, webConfigOwnerReference); err != nil {
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
@@ -1650,47 +1676,6 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 		},
 		Data: make(map[string][]byte),
 	}
-}
-
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	boolTrue := true
-	client := c.kclient.CoreV1().Secrets(a.Namespace)
-
-	var tlsConfig *monitoringv1.WebTLSConfig
-	if a.Spec.Web != nil {
-		tlsConfig = a.Spec.Web.TLSConfig
-	}
-
-	webConfig, err := webconfig.New(
-		webConfigDir,
-		webConfigSecretName(a.Name),
-		tlsConfig,
-	)
-	if err != nil {
-		return err
-	}
-
-	ownerReference := metav1.OwnerReference{
-		APIVersion:         a.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               a.Kind,
-		Name:               a.Name,
-		UID:                a.UID,
-	}
-
-	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
-	secret, err := webConfig.MakeConfigFileSecret(secretLabels, ownerReference)
-	if err != nil {
-		return err
-	}
-
-	err = k8sutil.CreateOrUpdateSecret(ctx, client, secret)
-	if err != nil {
-		return errors.Wrap(err, "failed to create web config for Alertmanager")
-	}
-
-	return err
 }
 
 //checkAlertmanagerSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable

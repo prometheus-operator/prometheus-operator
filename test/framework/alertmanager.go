@@ -194,34 +194,31 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, ns 
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	isAMHTTPS := false
-	if a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil {
-		isAMHTTPS = true
-	}
-
-	return a, f.WaitForAlertmanagerReady(ctx, ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode, isAMHTTPS)
+	return a, f.WaitForAlertmanagerReady(ctx, ns, a, int(*a.Spec.Replicas))
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name string, replicas int, forceEnableClusterMode, isAMHTTPS bool) error {
+func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns string, a *monitoringv1.Alertmanager, replicas int) error {
 	if err := f.WaitForPodsReady(
 		ctx,
 		ns,
 		5*time.Minute,
 		replicas,
-		alertmanager.ListOptions(name),
+		alertmanager.ListOptions(a.Name),
 	); err != nil {
 		return errors.Wrap(err,
 			fmt.Sprintf(
 				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
-				name, replicas,
+				a.Name, replicas,
 			))
 	}
 
+	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
+
 	for i := 0; i < replicas; i++ {
-		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitialized(ctx, ns, name, replicas, forceEnableClusterMode, isAMHTTPS); err != nil {
+		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
+		if err := f.WaitForAlertmanagerInitialized(ctx, ns, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",

@@ -6051,8 +6051,7 @@ spec:
                   type: object
                 type: array
               web:
-                description: Web defines the web command line flags when starting
-                  Alertmanager.
+                description: Defines the web command line flags when starting Alertmanager.
                 properties:
                   tlsConfig:
                     description: WebTLSConfig defines the TLS parameters for HTTPS.
