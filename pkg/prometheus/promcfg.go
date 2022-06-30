@@ -447,6 +447,7 @@ func validateConfigInputs(p *v1.Prometheus) error {
 		}
 	}
 
+	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
 	if p.Spec.Alerting != nil {
 		for i, ap := range p.Spec.Alerting.Alertmanagers {
 			if ap.Timeout != nil && *ap.Timeout != "" {

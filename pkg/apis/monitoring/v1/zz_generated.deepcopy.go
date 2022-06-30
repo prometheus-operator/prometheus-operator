@@ -131,7 +131,7 @@ func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
-		*out = new(string)
+		*out = new(Duration)
 		**out = **in
 	}
 }
