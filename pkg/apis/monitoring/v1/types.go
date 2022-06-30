@@ -1093,14 +1093,13 @@ type ServiceMonitor struct {
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
-	// JobLabel chooses the label of the Kubernetes `Endpoints`.
-	// The value of this field will be used as the value for the `job`-label in each created metric.
+	// JobLabel selects the label from the associated Kubernetes service which will be used as the `job` label for all metrics.
 	//
 	// For example:
 	// If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`,
-	// then each metric gets `{job="bar"}`-label.
+	// then the `job="bar"` label is added to all metrics.
 	//
-	// Default & fallback value: the name of the `Service`.
+	// If the value of this field is empty or if the label doesn't exist for the given Service, the `job` label of the metrics defaults to the name of the Kubernetes Service.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
 	TargetLabels []string `json:"targetLabels,omitempty"`
