@@ -1457,11 +1457,6 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		ogc.UpdateAlerts = nil
 	}
-	for _, responder := range ogc.Responders {
-		if err := responder.sanitize(amVersion, logger); err != nil {
-			return err
-		}
-	}
 
 	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		level.Warn(logger).Log("msg", "'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
@@ -1478,13 +1473,6 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		ogc.APIKeyFile = ""
 	}
 
-	return nil
-}
-
-func (ops *opsgenieResponder) sanitize(amVersion semver.Version, logger log.Logger) error {
-	if ops.Type == "teams" && amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
-	}
 	return nil
 }
 
