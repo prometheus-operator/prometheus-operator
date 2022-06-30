@@ -133,7 +133,7 @@ func testDenyServiceMonitor(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("denied", "denied", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), denied, svc); err != nil {
+		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), denied, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
@@ -155,7 +155,7 @@ func testDenyServiceMonitor(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("allowed", "allowed", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), allowed, svc); err != nil {
+		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowed, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)

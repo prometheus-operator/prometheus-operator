@@ -127,7 +127,7 @@ func testOperatorUpgrade(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
+	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func testOperatorUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &prometheusService)
+	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &prometheusService)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func testOperatorUpgrade(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = previousVersionFramework.CreateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
+	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
 	if err != nil {
 		t.Fatal(err)
 	}
