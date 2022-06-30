@@ -387,7 +387,7 @@
                           "type": "object"
                         },
                         "path": {
-                          "description": "HTTP path to scrape for metrics.",
+                          "description": "HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. `/metrics`).",
                           "type": "string"
                         },
                         "port": {

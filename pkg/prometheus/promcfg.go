@@ -948,6 +948,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	hTs := true
 	cfg = cg.AddHonorTimestamps(cfg, &hTs)
 
+	// TODO(slashpai): Remove this assignment after v0.60 since this is handled at CRD level
 	path := "/probe"
 	if m.Spec.ProberSpec.Path != "" {
 		path = m.Spec.ProberSpec.Path
