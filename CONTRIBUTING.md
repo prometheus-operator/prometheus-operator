@@ -37,6 +37,15 @@ The project currently uses the [Kubernetes Slack](https://slack.k8s.io/):
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
 
+# Office Hours Meetings
+
+The project also holds bi-weekly public meetings where maintainers,
+contributors and users of the Prometheus Operator and kube-prometheus can
+discuss issues, pull requests or any topic related to the projects. The
+meetings happen at 13:30 UTC on Tuesday, check the [online
+notes](https://docs.google.com/document/d/1-fjJmzrwRpKmSPHtXN5u6VZnn39M28KqyQGBEJsqUOk/edit?usp=sharing)
+to know the exact dates and the connection details.
+
 ## Getting Started
 
 - Fork the repository on GitHub
