@@ -1079,7 +1079,7 @@ type AlertmanagerEndpoints struct {
 	// can be "v1" or "v2".
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
-	Timeout *string `json:"timeout,omitempty"`
+	Timeout *Duration `json:"timeout,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.

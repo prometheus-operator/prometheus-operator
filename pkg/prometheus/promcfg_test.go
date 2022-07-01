@@ -1608,7 +1608,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 						Namespace:  "default",
 						Port:       intstr.FromString("web"),
 						APIVersion: "v2",
-						Timeout:    pointer.StringPtr("60s"),
+						Timeout:    (*monitoringv1.Duration)(pointer.StringPtr("60s")),
 					},
 				},
 			},
@@ -7754,6 +7754,7 @@ scrape_configs: []
 		})
 	}
 }
+
 func TestGenerateRelabelConfig(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{

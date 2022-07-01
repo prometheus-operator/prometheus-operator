@@ -12855,6 +12855,7 @@ spec:
                         timeout:
                           description: Timeout is a per-target Alertmanager timeout
                             when pushing alerts.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         tlsConfig:
                           description: TLS Config to use for alertmanager connection.
