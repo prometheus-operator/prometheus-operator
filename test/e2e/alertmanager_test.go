@@ -244,7 +244,7 @@ func testAMClusterInitialization(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -273,7 +273,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -288,7 +288,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -311,7 +311,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}

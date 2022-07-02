@@ -15,171 +15,184 @@
 package webconfig_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 var falseVal = false
 
-// func TestMakeSecret(t *testing.T) {
-// 	tc := []struct {
-// 		name         string
-// 		webTLSConfig *monitoringv1.WebTLSConfig
-// 		expectedData string
-// 	}{
-// 		{
-// 			name:         "tls config not defined",
-// 			webTLSConfig: nil,
-// 			expectedData: "",
-// 		},
-// 		{
-// 			name: "minimal TLS config with certificate from secret",
-// 			webTLSConfig: &monitoringv1.WebTLSConfig{
-// 				Cert: monitoringv1.SecretOrConfigMap{
-// 					Secret: &v1.SecretKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-secret",
-// 						},
-// 						Key: "tls.crt",
-// 					},
-// 				},
-// 				KeySecret: v1.SecretKeySelector{
-// 					LocalObjectReference: v1.LocalObjectReference{
-// 						Name: "test-secret",
-// 					},
-// 					Key: "tls.key",
-// 				},
-// 			},
-// 			expectedData: `tls_server_config:
-//   cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
-//   key_file: /web_certs_path_prefix/secret_test-secret_tls.key
-// `,
-// 		},
-// 		{
-// 			name: "minimal TLS config with certificate from configmap",
-// 			webTLSConfig: &monitoringv1.WebTLSConfig{
-// 				Cert: monitoringv1.SecretOrConfigMap{
-// 					ConfigMap: &v1.ConfigMapKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-configmap",
-// 						},
-// 						Key: "tls.crt",
-// 					},
-// 				},
-// 				KeySecret: v1.SecretKeySelector{
-// 					LocalObjectReference: v1.LocalObjectReference{
-// 						Name: "test-secret",
-// 					},
-// 					Key: "tls.key",
-// 				},
-// 			},
-// 			expectedData: `tls_server_config:
-//   cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
-//   key_file: /web_certs_path_prefix/secret_test-secret_tls.key
-// `,
-// 		},
-// 		{
-// 			name: "minimal TLS config with client CA from configmap",
-// 			webTLSConfig: &monitoringv1.WebTLSConfig{
-// 				Cert: monitoringv1.SecretOrConfigMap{
-// 					ConfigMap: &v1.ConfigMapKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-configmap",
-// 						},
-// 						Key: "tls.crt",
-// 					},
-// 				},
-// 				KeySecret: v1.SecretKeySelector{
-// 					LocalObjectReference: v1.LocalObjectReference{
-// 						Name: "test-secret",
-// 					},
-// 					Key: "tls.key",
-// 				},
-// 				ClientCA: monitoringv1.SecretOrConfigMap{
-// 					ConfigMap: &v1.ConfigMapKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-configmap",
-// 						},
-// 						Key: "tls.client_ca",
-// 					},
-// 				},
-// 			},
-// 			expectedData: `tls_server_config:
-//   cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
-//   key_file: /web_certs_path_prefix/secret_test-secret_tls.key
-//   client_ca_file: /web_certs_path_prefix/configmap_test-configmap_tls.client_ca
-// `,
-// 		},
-// 		{
-// 			name: "TLS config with all parameters from secrets",
-// 			webTLSConfig: &monitoringv1.WebTLSConfig{
-// 				ClientCA: monitoringv1.SecretOrConfigMap{
-// 					Secret: &v1.SecretKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-secret",
-// 						},
-// 						Key: "tls.ca",
-// 					},
-// 				},
-// 				Cert: monitoringv1.SecretOrConfigMap{
-// 					Secret: &v1.SecretKeySelector{
-// 						LocalObjectReference: v1.LocalObjectReference{
-// 							Name: "test-secret",
-// 						},
-// 						Key: "tls.crt",
-// 					},
-// 				},
-// 				KeySecret: v1.SecretKeySelector{
-// 					LocalObjectReference: v1.LocalObjectReference{
-// 						Name: "test-secret",
-// 					},
-// 					Key: "tls.keySecret",
-// 				},
-// 				ClientAuthType:           "RequireAnyClientCert",
-// 				MinVersion:               "TLS11",
-// 				MaxVersion:               "TLS13",
-// 				CipherSuites:             []string{"cipher-1", "cipher-2"},
-// 				PreferServerCipherSuites: &falseVal,
-// 				CurvePreferences:         []string{"curve-1", "curve-2"},
-// 			},
-// 			expectedData: `tls_server_config:
-//   cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
-//   key_file: /web_certs_path_prefix/secret_test-secret_tls.keySecret
-//   client_auth_type: RequireAnyClientCert
-//   client_ca_file: /web_certs_path_prefix/secret_test-secret_tls.ca
-//   min_version: TLS11
-//   max_version: TLS13
-//   cipher_suites:
-//   - cipher-1
-//   - cipher-2
-//   prefer_server_cipher_suites: false
-//   curve_preferences:
-//   - curve-1
-//   - curve-2
-// `,
-// 		},
-// 	}
+func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
+	tc := []struct {
+		name         string
+		webTLSConfig *monitoringv1.WebTLSConfig
+		expectedData string
+	}{
+		{
+			name:         "tls config not defined",
+			webTLSConfig: nil,
+			expectedData: "",
+		},
+		{
+			name: "minimal TLS config with certificate from secret",
+			webTLSConfig: &monitoringv1.WebTLSConfig{
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-secret",
+						},
+						Key: "tls.crt",
+					},
+				},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+			},
+			expectedData: `tls_server_config:
+  cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
+  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
+`,
+		},
+		{
+			name: "minimal TLS config with certificate from configmap",
+			webTLSConfig: &monitoringv1.WebTLSConfig{
+				Cert: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &v1.ConfigMapKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-configmap",
+						},
+						Key: "tls.crt",
+					},
+				},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+			},
+			expectedData: `tls_server_config:
+  cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
+  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
+`,
+		},
+		{
+			name: "minimal TLS config with client CA from configmap",
+			webTLSConfig: &monitoringv1.WebTLSConfig{
+				Cert: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &v1.ConfigMapKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-configmap",
+						},
+						Key: "tls.crt",
+					},
+				},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+				ClientCA: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &v1.ConfigMapKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-configmap",
+						},
+						Key: "tls.client_ca",
+					},
+				},
+			},
+			expectedData: `tls_server_config:
+  cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
+  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
+  client_ca_file: /web_certs_path_prefix/configmap_test-configmap_tls.client_ca
+`,
+		},
+		{
+			name: "TLS config with all parameters from secrets",
+			webTLSConfig: &monitoringv1.WebTLSConfig{
+				ClientCA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-secret",
+						},
+						Key: "tls.ca",
+					},
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-secret",
+						},
+						Key: "tls.crt",
+					},
+				},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.keySecret",
+				},
+				ClientAuthType:           "RequireAnyClientCert",
+				MinVersion:               "TLS11",
+				MaxVersion:               "TLS13",
+				CipherSuites:             []string{"cipher-1", "cipher-2"},
+				PreferServerCipherSuites: &falseVal,
+				CurvePreferences:         []string{"curve-1", "curve-2"},
+			},
+			expectedData: `tls_server_config:
+  cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
+  key_file: /web_certs_path_prefix/secret_test-secret_tls.keySecret
+  client_auth_type: RequireAnyClientCert
+  client_ca_file: /web_certs_path_prefix/secret_test-secret_tls.ca
+  min_version: TLS11
+  max_version: TLS13
+  cipher_suites:
+  - cipher-1
+  - cipher-2
+  prefer_server_cipher_suites: false
+  curve_preferences:
+  - curve-1
+  - curve-2
+`,
+		},
+	}
 
-// 	for _, tt := range tc {
-// 		config, err := webconfig.New("/web_certs_path_prefix", "test-secret", tt.webTLSConfig)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
+	for _, tt := range tc {
+		t.Run(tt.name, func(t *testing.T) {
+			secretName := "test-secret"
+			ctx := context.TODO()
+			secretClient := fake.NewSimpleClientset().CoreV1().Secrets("default")
 
-// 		secret, err := config.MakeConfigFileSecret(nil, metav1.OwnerReference{})
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
+			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webTLSConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 		if tt.expectedData != string(secret.Data["web-config.yaml"]) {
-// 			t.Fatalf("%s failed.\n\nGot %s\nwant %s\n", tt.name, secret.Data["web-config.yaml"], tt.expectedData)
-// 		}
-// 	}
-// }
+			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}); err != nil {
+				t.Fatal(err)
+			}
+
+			secret, err := secretClient.Get(ctx, secretName, metav1.GetOptions{})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if tt.expectedData != string(secret.Data["web-config.yaml"]) {
+				t.Fatalf("Got %s\nwant %s\n", secret.Data["web-config.yaml"], tt.expectedData)
+			}
+		})
+	}
+}
 
 func TestGetMountParameters(t *testing.T) {
 	ts := []struct {

@@ -1403,33 +1403,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
-	var tlsConfig *monitoringv1.WebTLSConfig
-	if p.Spec.Web != nil {
-		tlsConfig = p.Spec.Web.TLSConfig
-	}
-
-	webConfig, err := webconfig.New(
-		webConfigDir,
-		webConfigSecretName(p.Name),
-		tlsConfig,
-	)
-	if err != nil {
-		return errors.Wrap(err, "init web config instance failed")
-	}
-
-	boolTrue := true
-	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	webConfigOwnerReference := metav1.OwnerReference{
-		APIVersion:         p.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               p.Kind,
-		Name:               p.Name,
-		UID:                p.UID,
-	}
-	webConfigLabels := c.config.Labels.Merge(managedByOperatorLabels)
-
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, webConfigLabels, webConfigOwnerReference); err != nil {
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
@@ -2134,6 +2108,41 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 		},
 		Data: map[string][]byte{},
 	}
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	boolTrue := true
+
+	var tlsConfig *monitoringv1.WebTLSConfig
+	if p.Spec.Web != nil {
+		tlsConfig = p.Spec.Web.TLSConfig
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(p.Name),
+		tlsConfig,
+	)
+	if err != nil {
+		return errors.Wrap(err, "init web config instance failed")
+	}
+
+	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	webConfigOwnerReference := metav1.OwnerReference{
+		APIVersion:         p.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               p.Kind,
+		Name:               p.Name,
+		UID:                p.UID,
+	}
+	webConfigLabels := c.config.Labels.Merge(managedByOperatorLabels)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, webConfigLabels, webConfigOwnerReference); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
