@@ -135,8 +135,8 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, a
 	}
 
 	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
-	if amConfig.Spec.Route != nil {
-		globalAlertmanagerConfig.Route = cb.convertRoute(amConfig.Spec.Route, crKey)
+	if convertedRoute := cb.convertRoute(amConfig.Spec.Route, crKey); convertedRoute != nil {
+		globalAlertmanagerConfig.Route = convertedRoute
 	}
 
 	for _, receiver := range amConfig.Spec.Receivers {
@@ -328,6 +328,9 @@ func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace st
 }
 
 func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
+	if in == nil {
+		return nil
+	}
 	var matchers []string
 
 	// deprecated
