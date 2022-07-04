@@ -61,7 +61,7 @@ func TestGenerateGlobalConfig(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name: "generateGlobalConfig succeed",
+			name: "valid global config",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -102,6 +102,16 @@ func TestGenerateGlobalConfig(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "missing route",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
