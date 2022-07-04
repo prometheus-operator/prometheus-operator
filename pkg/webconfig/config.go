@@ -109,12 +109,7 @@ func (c *Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient
 		},
 	}
 
-	err = k8sutil.CreateOrUpdateSecret(ctx, secretClient, secret)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return k8sutil.CreateOrUpdateSecret(ctx, secretClient, secret)
 }
 
 func (c Config) generateConfigFileContents() ([]byte, error) {

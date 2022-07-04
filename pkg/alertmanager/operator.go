@@ -1666,11 +1666,11 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		tlsConfig,
 	)
 	if err != nil {
-		return errors.Wrap(err, "init web config instance failed")
+		return errors.Wrap(err, "failed to initialize web config")
 	}
 
 	secretClient := c.kclient.CoreV1().Secrets(a.Namespace)
-	webConfigOwnerReference := metav1.OwnerReference{
+	ownerReference := metav1.OwnerReference{
 		APIVersion:         a.APIVersion,
 		BlockOwnerDeletion: &boolTrue,
 		Controller:         &boolTrue,
@@ -1678,10 +1678,10 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		Name:               a.Name,
 		UID:                a.UID,
 	}
-	webConfigLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, webConfigLabels, webConfigOwnerReference); err != nil {
-		return err
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 
 	return nil
