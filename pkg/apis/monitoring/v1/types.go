@@ -191,8 +191,8 @@ type CommonPrometheusFields struct {
 	// VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
 	// that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
-	// WebSpec defines the web command line flags when starting Prometheus.
-	Web *WebSpec `json:"web,omitempty"`
+	// Defines the web command line flags when starting Prometheus.
+	Web *PrometheusWebSpec `json:"web,omitempty"`
 	// Define resources requests and limits for single Pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
@@ -741,11 +741,17 @@ type QuerySpec struct {
 	Timeout *Duration `json:"timeout,omitempty"`
 }
 
-// WebSpec defines the query command line flags when starting Prometheus.
+// PrometheusWebSpec defines the query command line flags when starting Prometheus.
 // +k8s:openapi-gen=true
-type WebSpec struct {
+type PrometheusWebSpec struct {
 	// The prometheus web page title
 	PageTitle *string       `json:"pageTitle,omitempty"`
+	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// AlertmanagerWebSpec defines the query command line flags when starting Alertmanager.
+// +k8s:openapi-gen=true
+type AlertmanagerWebSpec struct {
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
 }
 
@@ -1878,6 +1884,8 @@ type AlertmanagerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// Defines the web command line flags when starting Alertmanager.
+	Web *AlertmanagerWebSpec `json:"web,omitempty"`
 	// EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.

@@ -25,6 +25,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerList](#alertmanagerlist)
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
+* [AlertmanagerWebSpec](#alertmanagerwebspec)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
 * [AttachMetadata](#attachmetadata)
 * [Authorization](#authorization)
@@ -60,6 +61,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PrometheusRuleSpec](#prometheusrulespec)
 * [PrometheusSpec](#prometheusspec)
 * [PrometheusStatus](#prometheusstatus)
+* [PrometheusWebSpec](#prometheuswebspec)
 * [QuerySpec](#queryspec)
 * [QueueConfig](#queueconfig)
 * [RelabelConfig](#relabelconfig)
@@ -79,7 +81,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
-* [WebSpec](#webspec)
 * [WebTLSConfig](#webtlsconfig)
 * [ThanosRuler](#thanosruler)
 * [ThanosRulerList](#thanosrulerlist)
@@ -258,6 +259,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
 | hostAliases | Pods' hostAliases configuration | [][HostAlias](#hostalias) | false |
+| web | Defines the web command line flags when starting Alertmanager. | *[AlertmanagerWebSpec](#alertmanagerwebspec) | false |
 | alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
 
 [Back to TOC](#table-of-contents)
@@ -276,6 +278,19 @@ AlertmanagerStatus is the most recent observed status of the Alertmanager cluste
 | updatedReplicas | Total number of non-terminated pods targeted by this Alertmanager cluster that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Alertmanager cluster. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Alertmanager cluster. | int32 | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertmanagerWebSpec
+
+AlertmanagerWebSpec defines the query command line flags when starting Alertmanager.
+
+
+<em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -845,7 +860,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | volumes | Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects. | []v1.Volume | false |
 | volumeMounts | VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the prometheus container, that are generated as a result of StorageSpec objects. | []v1.VolumeMount | false |
-| web | WebSpec defines the web command line flags when starting Prometheus. | *[WebSpec](#webspec) | false |
+| web | Defines the web command line flags when starting Prometheus. | *[PrometheusWebSpec](#prometheuswebspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
@@ -913,6 +928,20 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. M
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
 | conditions | The current state of the Prometheus deployment. | [][PrometheusCondition](#prometheuscondition) | false |
 | shardStatuses | The list has one entry per shard. Each entry provides a summary of the shard status. | [][ShardStatus](#shardstatus) | false |
+
+[Back to TOC](#table-of-contents)
+
+## PrometheusWebSpec
+
+PrometheusWebSpec defines the query command line flags when starting Prometheus.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| pageTitle | The prometheus web page title | *string | false |
+| tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1262,26 +1291,12 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 
 [Back to TOC](#table-of-contents)
 
-## WebSpec
-
-WebSpec defines the query command line flags when starting Prometheus.
-
-
-<em>appears in: [PrometheusSpec](#prometheusspec)</em>
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| pageTitle | The prometheus web page title | *string | false |
-| tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
 ## WebTLSConfig
 
 WebTLSConfig defines the TLS parameters for HTTPS.
 
 
-<em>appears in: [WebSpec](#webspec)</em>
+<em>appears in: [AlertmanagerWebSpec](#alertmanagerwebspec), [PrometheusWebSpec](#prometheuswebspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

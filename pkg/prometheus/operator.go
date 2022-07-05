@@ -2113,7 +2113,6 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
 	boolTrue := true
-	client := c.kclient.CoreV1().Secrets(p.Namespace)
 
 	var tlsConfig *monitoringv1.WebTLSConfig
 	if p.Spec.Web != nil {
@@ -2122,13 +2121,14 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
-		WebConfigSecretName(p.Name),
+		webConfigSecretName(p.Name),
 		tlsConfig,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to initialize web config")
 	}
 
+	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	ownerReference := metav1.OwnerReference{
 		APIVersion:         p.APIVersion,
 		BlockOwnerDeletion: &boolTrue,
@@ -2137,19 +2137,13 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
-	secret, err := webConfig.MakeConfigFileSecret(secretLabels, ownerReference)
-	if err != nil {
-		return err
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 
-	err = k8sutil.CreateOrUpdateSecret(ctx, client, secret)
-	if err != nil {
-		return errors.Wrap(err, "failed to create web config for Prometheus")
-	}
-
-	return err
+	return nil
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {

@@ -15,8 +15,11 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -35,11 +38,13 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+	certutil "k8s.io/client-go/util/cert"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -239,7 +244,7 @@ func testAMClusterInitialization(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -268,7 +273,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -283,7 +288,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -306,7 +311,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -609,7 +614,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -697,7 +702,7 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1661,12 +1666,128 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 0, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 0); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 3, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 3); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testAMWebTLS(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "am-web-tls"
+
+	host := fmt.Sprintf("%s.%s.svc", name, ns)
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kubeClient := framework.KubeClient
+	if err := framework.CreateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	am := framework.MakeBasicAlertmanager(name, 1)
+	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
+		TLSConfig: &monitoringv1.WebTLSConfig{
+			KeySecret: v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "web-tls",
+				},
+				Key: "tls.key",
+			},
+			Cert: monitoringv1.SecretOrConfigMap{
+				Secret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "web-tls",
+					},
+					Key: "tls.crt",
+				},
+			},
+		},
+	}
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am); err != nil {
+		t.Fatalf("Creating alertmanager failed: %v", err)
+	}
+
+	var pollErr error
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(amPods.Items) == 0 {
+			pollErr = fmt.Errorf("No alertmanager pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := amPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9093", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		// The alertmanager certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the alertmanager instance is configured properly.
+		httpClient := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytes, certBytes) {
+			pollErr = fmt.Errorf("certificate received from alertmanager instance does not match the one which is configured")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("failed to verify TLS certificate: %v: %v", err, pollErr)
 	}
 }
 

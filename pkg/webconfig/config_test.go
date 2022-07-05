@@ -15,17 +15,20 @@
 package webconfig_test
 
 import (
+	"context"
+	"reflect"
+	"testing"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
-	"testing"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 var falseVal = false
 
-func TestMakeSecret(t *testing.T) {
+func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 	tc := []struct {
 		name         string
 		webTLSConfig *monitoringv1.WebTLSConfig
@@ -165,19 +168,29 @@ func TestMakeSecret(t *testing.T) {
 	}
 
 	for _, tt := range tc {
-		config, err := webconfig.New("/web_certs_path_prefix", "test-secret", tt.webTLSConfig)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			secretName := "test-secret"
+			ctx := context.TODO()
+			secretClient := fake.NewSimpleClientset().CoreV1().Secrets("default")
 
-		secret, err := config.MakeConfigFileSecret(nil, metav1.OwnerReference{})
-		if err != nil {
-			t.Fatal(err)
-		}
+			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webTLSConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if tt.expectedData != string(secret.Data["web-config.yaml"]) {
-			t.Fatalf("%s failed.\n\nGot %s\nwant %s\n", tt.name, secret.Data["web-config.yaml"], tt.expectedData)
-		}
+			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}); err != nil {
+				t.Fatal(err)
+			}
+
+			secret, err := secretClient.Get(ctx, secretName, metav1.GetOptions{})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if tt.expectedData != string(secret.Data["web-config.yaml"]) {
+				t.Fatalf("Got %s\nwant %s\n", secret.Data["web-config.yaml"], tt.expectedData)
+			}
+		})
 	}
 }
 

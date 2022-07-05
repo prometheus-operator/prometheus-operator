@@ -603,7 +603,7 @@ func makeStatefulSetSpec(
 			webTLSConfig = p.Spec.Web.TLSConfig
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, WebConfigSecretName(p.Name), webTLSConfig)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), webTLSConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1031,7 +1031,7 @@ func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
 }
 
-func WebConfigSecretName(name string) string {
+func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
 }
 

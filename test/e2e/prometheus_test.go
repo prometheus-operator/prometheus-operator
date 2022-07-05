@@ -3639,7 +3639,7 @@ func testPromWebTLS(t *testing.T) {
 	}
 
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
-	prom.Spec.Web = &monitoringv1.WebSpec{
+	prom.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		TLSConfig: &monitoringv1.WebTLSConfig{
 			KeySecret: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{

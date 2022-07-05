@@ -33,6 +33,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -758,6 +759,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, am, assetStore)
 	if err != nil {
 		return errors.Wrap(err, "creating tls asset secrets failed")
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
 	// Create governing service if it doesn't exist.
@@ -1645,6 +1650,41 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 		},
 		Data: make(map[string][]byte),
 	}
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	boolTrue := true
+
+	var tlsConfig *monitoringv1.WebTLSConfig
+	if a.Spec.Web != nil {
+		tlsConfig = a.Spec.Web.TLSConfig
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(a.Name),
+		tlsConfig,
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize web config")
+	}
+
+	secretClient := c.kclient.CoreV1().Secrets(a.Namespace)
+	ownerReference := metav1.OwnerReference{
+		APIVersion:         a.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               a.Kind,
+		Name:               a.Name,
+		UID:                a.UID,
+	}
+	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
+	}
+
+	return nil
 }
 
 //checkAlertmanagerSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
