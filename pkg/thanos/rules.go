@@ -138,21 +138,27 @@ func prometheusRulesConfigMapSelector(thanosRulerName string) metav1.ListOptions
 func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, error) {
 	namespaces := []string{}
 
-	// If 'RuleNamespaceSelector' is nil, only check own namespace.
-	if p.Spec.RuleNamespaceSelector == nil {
-		namespaces = append(namespaces, p.Namespace)
-	} else {
-		ruleNamespaceSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
-		if err != nil {
-			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
-		}
+	if o.config.HasClusterRole {
 
-		namespaces, err = o.listMatchingNamespaces(ruleNamespaceSelector)
-		if err != nil {
-			return nil, err
+		// If 'RuleNamespaceSelector' is nil, only check own namespace.
+		if p.Spec.RuleNamespaceSelector == nil {
+			namespaces = append(namespaces, p.Namespace)
+		} else {
+			ruleNamespaceSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+			if err != nil {
+				return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
+			}
+
+			namespaces, err = o.listMatchingNamespaces(ruleNamespaceSelector)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		for ns := range o.config.Namespaces.AllowList {
+			namespaces = append(namespaces, ns)
 		}
 	}
-
 	level.Debug(o.logger).Log(
 		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),

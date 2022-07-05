@@ -51,6 +51,7 @@ import (
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -67,6 +68,7 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
+	// Those two namespaces related feature need cluster role.
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
 
@@ -296,32 +298,34 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
-		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
+	if conf.HasClusterRole {
+		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+			// nsResyncPeriod is used to control how often the namespace informer
+			// should resync. If the unprivileged ListerWatcher is used, then the
+			// informer must resync more often because it cannot watch for
+			// namespace changes.
+			nsResyncPeriod := 15 * time.Second
+			// If the only namespace is v1.NamespaceAll, then the client must be
+			// privileged and a regular cache.ListWatch will be used. In this case
+			// watching works and we do not need to resync so frequently.
+			if listwatch.IsAllNamespaces(allowList) {
+				nsResyncPeriod = resyncPeriod
+			}
+			nsInf := cache.NewSharedIndexInformer(
+				o.metrics.NewInstrumentedListerWatcher(
+					listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				),
+				&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+			)
 
-		return nsInf
-	}
-	c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
-	if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
-		c.nsPromInf = c.nsMonInf
-	} else {
-		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
+			return nsInf
+		}
+		c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
+		if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
+			c.nsPromInf = c.nsMonInf
+		} else {
+			c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
+		}
 	}
 
 	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
@@ -354,16 +358,17 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
-
-	for _, inf := range []struct {
-		name     string
-		informer cache.SharedIndexInformer
-	}{
-		{"PromNamespace", c.nsPromInf},
-		{"MonNamespace", c.nsMonInf},
-	} {
-		if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
-			return errors.Errorf("failed to sync cache for %s informer", inf.name)
+	if c.config.HasClusterRole {
+		for _, inf := range []struct {
+			name     string
+			informer cache.SharedIndexInformer
+		}{
+			{"PromNamespace", c.nsPromInf},
+			{"MonNamespace", c.nsMonInf},
+		} {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
+				return errors.Errorf("failed to sync cache for %s informer", inf.name)
+			}
 		}
 	}
 
@@ -421,9 +426,11 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: c.handleMonitorNamespaceUpdate,
-	})
+	if c.config.HasClusterRole {
+		c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			UpdateFunc: c.handleMonitorNamespaceUpdate,
+		})
+	}
 }
 
 // Run the controller.
@@ -472,10 +479,15 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	go c.nsMonInf.Run(ctx.Done())
-	if c.nsPromInf != c.nsMonInf {
-		go c.nsPromInf.Run(ctx.Done())
+
+	// Only enable related feature with clusterrole.
+	if c.config.HasClusterRole {
+		go c.nsMonInf.Run(ctx.Done())
+		if c.nsPromInf != c.nsMonInf {
+			go c.nsPromInf.Run(ctx.Done())
+		}
 	}
+
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
@@ -1048,33 +1060,44 @@ func (c *Operator) addToQueue(obj interface{}, q workqueue.Interface) {
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
+	if c.config.HasClusterRole {
+		c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
+	} else {
+		c.enqueueForNamespace(nil, nsName)
+	}
 }
 
 func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+	if c.config.HasClusterRole {
+		c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+	} else {
+		c.enqueueForNamespace(nil, nsName)
+	}
 }
 
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, exists, err := store.GetByKey(nsName)
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Prometheus instances failed",
-			"err", err,
-		)
-		return
+	var ns *v1.Namespace = nil
+	if c.config.HasClusterRole {
+		nsObject, exists, err := store.GetByKey(nsName)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", "get namespace to enqueue Prometheus instances failed",
+				"err", err,
+			)
+			return
+		}
+		if !exists {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+			)
+			return
+		}
+		ns = nsObject.(*v1.Namespace)
 	}
-	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-		)
-		return
-	}
-	ns := nsObject.(*v1.Namespace)
 
-	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -1082,66 +1105,68 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			return
 		}
 
-		// Check for Prometheus instances selecting ServiceMonitors in
-		// the namespace.
-		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+		if c.config.HasClusterRole {
+			// Check for Prometheus instances selecting ServiceMonitors in
+			// the namespace.
+			smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+					"err", err,
+				)
+				return
+			}
 
-		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
-			return
-		}
+			if smNSSelector.Matches(labels.Set(ns.Labels)) {
+				c.addToReconcileQueue(p)
+				return
+			}
 
-		// Check for Prometheus instances selecting PodMonitors in the NS.
-		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+			// Check for Prometheus instances selecting PodMonitors in the NS.
+			pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+					"err", err,
+				)
+				return
+			}
 
-		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
-			return
-		}
+			if pmNSSelector.Matches(labels.Set(ns.Labels)) {
+				c.addToReconcileQueue(p)
+				return
+			}
 
-		// Check for Prometheus instances selecting Probes in the NS.
-		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+			// Check for Prometheus instances selecting Probes in the NS.
+			bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
+					"err", err,
+				)
+				return
+			}
 
-		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
-			return
-		}
+			if bmNSSelector.Matches(labels.Set(ns.Labels)) {
+				c.addToReconcileQueue(p)
+				return
+			}
 
-		// Check for Prometheus instances selecting PrometheusRules in
-		// the NS.
-		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
-				"err", err,
-			)
-			return
-		}
+			// Check for Prometheus instances selecting PrometheusRules in
+			// the NS.
+			ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
+					"err", err,
+				)
+				return
+			}
 
-		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
-			return
+			if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
+				c.addToReconcileQueue(p)
+				return
+			}
 		}
 	})
 	if err != nil {
@@ -2162,18 +2187,25 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		return nil, err
 	}
 
-	// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
-	if p.Spec.ServiceMonitorNamespaceSelector == nil {
-		namespaces = append(namespaces, p.Namespace)
-	} else {
-		servMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
+	if c.config.HasClusterRole {
+		// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
+		if p.Spec.ServiceMonitorNamespaceSelector == nil {
+			namespaces = append(namespaces, p.Namespace)
+		} else {
+			servMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+			if err != nil {
+				return nil, err
+			}
 
-		namespaces, err = c.listMatchingNamespaces(servMonNSSelector)
-		if err != nil {
-			return nil, err
+			namespaces, err = c.listMatchingNamespaces(servMonNSSelector)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		// In case of non cluster role
+		for ns := range c.config.Namespaces.AllowList {
+			namespaces = append(namespaces, ns)
 		}
 	}
 
@@ -2290,18 +2322,26 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		return nil, err
 	}
 
-	// If 'PodMonitorNamespaceSelector' is nil only check own namespace.
-	if p.Spec.PodMonitorNamespaceSelector == nil {
-		namespaces = append(namespaces, p.Namespace)
-	} else {
-		podMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
+	if c.config.HasClusterRole {
 
-		namespaces, err = c.listMatchingNamespaces(podMonNSSelector)
-		if err != nil {
-			return nil, err
+		// If 'PodMonitorNamespaceSelector' is nil only check own namespace.
+		if p.Spec.PodMonitorNamespaceSelector == nil {
+			namespaces = append(namespaces, p.Namespace)
+		} else {
+			podMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+			if err != nil {
+				return nil, err
+			}
+
+			namespaces, err = c.listMatchingNamespaces(podMonNSSelector)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		// In case of non cluster role
+		for ns := range c.config.Namespaces.AllowList {
+			namespaces = append(namespaces, ns)
 		}
 	}
 
@@ -2410,18 +2450,25 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		return nil, err
 	}
 
-	// If 'ProbeNamespaceSelector' is nil only check own namespace.
-	if p.Spec.ProbeNamespaceSelector == nil {
-		namespaces = append(namespaces, p.Namespace)
-	} else {
-		bMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
+	if c.config.HasClusterRole {
+		// If 'ProbeNamespaceSelector' is nil only check own namespace.
+		if p.Spec.ProbeNamespaceSelector == nil {
+			namespaces = append(namespaces, p.Namespace)
+		} else {
+			bMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+			if err != nil {
+				return nil, err
+			}
 
-		namespaces, err = c.listMatchingNamespaces(bMonNSSelector)
-		if err != nil {
-			return nil, err
+			namespaces, err = c.listMatchingNamespaces(bMonNSSelector)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		// In case of non cluster role
+		for ns := range c.config.Namespaces.AllowList {
+			namespaces = append(namespaces, ns)
 		}
 	}
 

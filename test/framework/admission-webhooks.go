@@ -16,6 +16,8 @@ package framework
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/admissionregistration/v1"
@@ -33,7 +35,8 @@ func (f *Framework) createMutatingHook(ctx context.Context, certBytes []byte, na
 	h.Webhooks[0].ClientConfig.CABundle = certBytes
 
 	_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(ctx, h, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "exists") {
+		fmt.Println(err.Error())
 		return nil, errors.Wrapf(err, "failed to create mutating webhook %s", h.Name)
 	}
 
@@ -52,7 +55,7 @@ func (f *Framework) createValidatingHook(ctx context.Context, certBytes []byte, 
 	h.Webhooks[0].ClientConfig.CABundle = certBytes
 
 	_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, h, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return nil, errors.Wrapf(err, "failed to create validating webhook %s", h.Name)
 	}
 

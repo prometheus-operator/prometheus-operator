@@ -50,6 +50,8 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 }
 
 func (f *Framework) CreateDeployment(ctx context.Context, namespace string, d *appsv1.Deployment) error {
+	// data, _ := yml.Marshal(d)
+	// fmt.Println("create deployment", namespace, string(data))
 	d.Namespace = namespace
 	_, err := f.KubeClient.AppsV1().Deployments(namespace).Create(ctx, d, metav1.CreateOptions{})
 	if err != nil {

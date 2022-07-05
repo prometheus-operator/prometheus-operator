@@ -28,8 +28,11 @@ import (
 )
 
 var (
-	framework *operatorFramework.Framework
-	opImage   *string
+	framework       *operatorFramework.Framework
+	opImage         *string
+	reImage         *string
+	weImage         *string
+	imagePullSecret *string
 )
 
 func skipPrometheusAllNSTests(t *testing.T) {
@@ -74,6 +77,21 @@ func TestMain(m *testing.M) {
 		"",
 		"operator image, e.g. quay.io/prometheus-operator/prometheus-operator",
 	)
+	reImage = flag.String(
+		"reloader-image",
+		"",
+		"reloader image, e.g. quay.io/prometheus-operator/prometheus-config-reloader",
+	)
+	weImage = flag.String(
+		"webhook-image",
+		"",
+		"webhook image, e.g. quay.io/prometheus-operator/admission-webhook",
+	)
+	imagePullSecret = flag.String(
+		"image-pull-secret",
+		"",
+		"image pull secret, e.g. regcred",
+	)
 	flag.Parse()
 
 	var (
@@ -81,7 +99,8 @@ func TestMain(m *testing.M) {
 		exitCode int
 	)
 
-	if framework, err = operatorFramework.New(*kubeconfig, *opImage); err != nil {
+	log.Printf("IMAGE_PULL_SECRET: %s", *imagePullSecret)
+	if framework, err = operatorFramework.New(*kubeconfig, *opImage, *imagePullSecret); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
@@ -99,7 +118,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreatePrometheusOperator(context.Background(), ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreatePrometheusOperatorWithImage(context.Background(), ns, *opImage, *reImage, *weImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,6 +165,43 @@ func TestAllNS(t *testing.T) {
 				restart,
 			)
 		}
+	}
+}
+
+// TestNoneClusterRole tests the Prometheus Operator watching role in one
+// namespaces in a Kubernetes cluster.
+func TestNoneClusterRole(t *testing.T) {
+
+	testFuncs := map[string]func(ns string, testCtx *operatorFramework.TestCtx, t *testing.T){
+		"testAMCreateDeleteClusterNCR":          testAMCreateDeleteClusterNoneClusterRole,
+		"testAMScalingNCR":                      testAMScalingNoneClusterRole,
+		"testAMVersionMigrationNCR":             testAMVersionMigrationNoneClusterRole,
+		"testPromCreateDeleteClusterNCR":        testPromCreateDeleteClusterNoneClusterRole,
+		"testPromScaleUpDownClusterNCR":         testPromScaleUpDownClusterNoneClusterRole,
+		"testPromNoServiceMonitorSelectorNCR":   testPromNoServiceMonitorSelectorNoneClusterRole,
+		"testPromResourceUpdateNCR":             testPromResourceUpdateNoneClusterRole,
+		"testThanosRulerCreateDeleteClusterNCR": testThanosRulerCreateDeleteClusterNoneClusterRole,
+		"testTRPreserveUserAddedMetadataNCR":    testTRPreserveUserAddedMetadataNoneClusterRole,
+	}
+
+	for name, fn := range testFuncs {
+		t.Run(name, func(t *testing.T) {
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			finalizers, err := framework.CreatePrometheusOperatorNoneClusterRole(context.Background(), ns, *opImage, *reImage, *weImage, []string{ns}, nil, nil, nil, true, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for _, f := range finalizers {
+				testCtx.AddFinalizerFn(f)
+			}
+
+			fn(ns, testCtx, t)
+		})
 	}
 }
 

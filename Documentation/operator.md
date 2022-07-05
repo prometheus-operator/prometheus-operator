@@ -45,6 +45,8 @@ Usage of ./operator:
     	Config Reloader Memory request. Value "0" disables it and causes no request to be configured. Flag overrides --config-reloader-memory for the memory request (default "50Mi")
   -deny-namespaces value
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
+  -has-clusterrole
+    	set false in case of no cluster role, then disable cluster role realted features. (default true)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-service string

@@ -47,6 +47,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -765,6 +766,11 @@ func testPromCreateDeleteCluster(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testPromCreateDeleteClusterNoneClusterRole(ns, testCtx, t)
+}
+
+func testPromCreateDeleteClusterNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// t.Parallel()
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
@@ -786,6 +792,11 @@ func testPromScaleUpDownCluster(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testPromScaleUpDownClusterNoneClusterRole(ns, testCtx, t)
+}
+
+func testPromScaleUpDownClusterNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// t.Parallel()
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
@@ -811,6 +822,12 @@ func testPromNoServiceMonitorSelector(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testPromNoServiceMonitorSelectorNoneClusterRole(ns, testCtx, t)
+}
+
+func testPromNoServiceMonitorSelectorNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// t.Parallel()
+
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
@@ -858,12 +875,16 @@ func testPromVersionMigration(t *testing.T) {
 		}
 	}
 }
-
 func testPromResourceUpdate(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	testPromResourceUpdateNoneClusterRole(ns, testCtx, t)
+}
+
+func testPromResourceUpdateNoneClusterRole(ns string, testCtx *operatorFramework.TestCtx, t *testing.T) {
+	// t.Parallel()
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
