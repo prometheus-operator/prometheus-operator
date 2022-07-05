@@ -19,7 +19,7 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
-    - run: make test-unit
+    - run: make test-unit >> $GITHUB_STEP_SUMMARY
   extended-tests:
     runs-on: ubuntu-latest
     name: Extended tests
@@ -30,4 +30,4 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.golang-version }}
-    - run: make test-long
+    - run: make test-long >> $GITHUB_STEP_SUMMARY

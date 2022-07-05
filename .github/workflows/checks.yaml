@@ -35,7 +35,7 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
-    - run: make check-docs
+    - run: make check-docs >> $GITHUB_STEP_SUMMARY
   check-golang:
     runs-on: ubuntu-latest
     name: Golang linter
@@ -61,7 +61,7 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
-    - run: make check-metrics
+    - run: make check-metrics >> $GITHUB_STEP_SUMMARY
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -77,7 +77,7 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
-    - run: make operator
+    - run: make operator >> $GITHUB_STEP_SUMMARY
   po-rule-migration:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
@@ -88,5 +88,5 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: '${{ env.golang-version }}'
-    - run: cd cmd/po-rule-migration && go install
+    - run: cd cmd/po-rule-migration && go install >> $GITHUB_STEP_SUMMARY
 
