@@ -988,8 +988,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
-github.com/thanos-io/thanos v0.26.0 h1:M2v15P12Wk53AtIUdpL5DHdN5njT7LIYc/AdtV3t5RE=
-github.com/thanos-io/thanos v0.26.0/go.mod h1:yE4GgQ4dRxDScBTSQGwSFJ/yzPR1q2Szu9iGCLmcFXA=
+github.com/thanos-io/thanos v0.27.0 h1:TWOPMkWX5Q1LHdROI6dg9lKU3x6Q95vO4o/bm8GaCfE=
+github.com/thanos-io/thanos v0.27.0/go.mod h1:i0KCpF5fWAWBNZXBkuzGh0603YlMrbhLJdwOO5W21YI=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
