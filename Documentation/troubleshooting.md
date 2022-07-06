@@ -136,3 +136,15 @@ spec:
 ```
 
 The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string: "integer"`
+
+#### Prometheus/Alertmanager pods stuck in terminating loop with healthy start up logs
+
+It is usually a sign that more than one operator wants to manage the resource.
+
+Check if several operators are running on the cluster:
+
+```console
+kubeclt get pods --all-namespaces | grep 'prom.*operator'
+```
+
+Check the logs of the matching pods to see if they manage the same resource.
