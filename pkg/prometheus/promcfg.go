@@ -753,7 +753,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-
+	if ep.EnableHttp2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	}
 	if ep.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
 	}
@@ -1217,7 +1219,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-
+	if ep.EnableHttp2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	}
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 

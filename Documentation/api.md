@@ -407,6 +407,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
+| enableHttp2 | Whether to enable HTTP2. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -525,6 +526,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 | followRedirects | FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. | *bool | false |
+| enableHttp2 | Whether to enable HTTP2. | *bool | false |
 
 [Back to TOC](#table-of-contents)
 
