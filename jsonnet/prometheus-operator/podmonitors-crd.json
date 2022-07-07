@@ -195,6 +195,10 @@
                           ],
                           "type": "object"
                         },
+                        "enableHttp2": {
+                          "description": "Whether to enable HTTP2.",
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "description": "FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.",
                           "type": "boolean"
