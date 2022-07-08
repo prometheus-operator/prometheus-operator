@@ -235,6 +235,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   secret: {
                                     description: 'Secret containing data to use for the targets.',
@@ -256,6 +257,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -283,6 +285,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   secret: {
                                     description: 'Secret containing data to use for the targets.',
@@ -304,6 +307,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -332,6 +336,7 @@
                                   'key',
                                 ],
                                 type: 'object',
+                                'x-kubernetes-map-type': 'atomic',
                               },
                               serverName: {
                                 description: 'Used to verify the hostname for the targets.',
@@ -444,6 +449,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -475,6 +481,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -496,6 +503,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -550,6 +558,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -571,6 +580,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -595,6 +605,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -653,6 +664,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -674,6 +686,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -701,6 +714,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -722,6 +736,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -750,6 +765,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -905,6 +921,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -936,6 +953,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -957,6 +975,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -1011,6 +1030,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1032,6 +1052,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1056,6 +1077,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -1114,6 +1136,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1135,6 +1158,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1162,6 +1186,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1183,6 +1208,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1211,6 +1237,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -1359,6 +1386,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -1390,6 +1418,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -1411,6 +1440,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -1465,6 +1495,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1486,6 +1517,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1510,6 +1542,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -1568,6 +1601,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1589,6 +1623,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1616,6 +1651,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -1637,6 +1673,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -1665,6 +1702,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -1902,6 +1940,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -1933,6 +1972,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -1954,6 +1994,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -2008,6 +2049,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2029,6 +2071,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2053,6 +2096,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -2111,6 +2155,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2132,6 +2177,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2159,6 +2205,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2180,6 +2227,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2208,6 +2256,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -2309,6 +2358,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -2340,6 +2390,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -2361,6 +2412,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -2415,6 +2467,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2436,6 +2489,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2460,6 +2514,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -2518,6 +2573,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2539,6 +2595,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2566,6 +2623,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2587,6 +2645,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2615,6 +2674,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -2661,6 +2721,7 @@
                                   'key',
                                 ],
                                 type: 'object',
+                                'x-kubernetes-map-type': 'atomic',
                               },
                               profile: {
                                 description: 'Profile is the named AWS profile used to authenticate.',
@@ -2694,6 +2755,7 @@
                                   'key',
                                 ],
                                 type: 'object',
+                                'x-kubernetes-map-type': 'atomic',
                               },
                             },
                             type: 'object',
@@ -2779,6 +2841,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -2810,6 +2873,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -2831,6 +2895,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -2885,6 +2950,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -2906,6 +2972,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -2930,6 +2997,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -2988,6 +3056,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3009,6 +3078,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3036,6 +3106,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3057,6 +3128,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3085,6 +3157,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -3200,6 +3273,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -3231,6 +3305,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -3252,6 +3327,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -3306,6 +3382,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3327,6 +3404,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3351,6 +3429,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -3409,6 +3488,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3430,6 +3510,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3457,6 +3538,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3478,6 +3560,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3506,6 +3589,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -3573,6 +3657,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -3604,6 +3689,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -3625,6 +3711,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -3679,6 +3766,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3700,6 +3788,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3724,6 +3813,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -3782,6 +3872,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3803,6 +3894,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3830,6 +3922,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -3851,6 +3944,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -3879,6 +3973,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -3991,6 +4086,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
                                     description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
@@ -4022,6 +4118,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   username: {
                                     description: 'The secret in the service monitor namespace that contains the username for authentication.',
@@ -4043,6 +4140,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                 },
                                 type: 'object',
@@ -4097,6 +4195,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -4118,6 +4217,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -4142,6 +4242,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   endpointParams: {
                                     additionalProperties: {
@@ -4200,6 +4301,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -4221,6 +4323,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -4248,6 +4351,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       secret: {
                                         description: 'Secret containing data to use for the targets.',
@@ -4269,6 +4373,7 @@
                                           'key',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                     },
                                     type: 'object',
@@ -4297,6 +4402,7 @@
                                       'key',
                                     ],
                                     type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
