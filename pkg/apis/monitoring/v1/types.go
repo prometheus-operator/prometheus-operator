@@ -743,18 +743,70 @@ type QuerySpec struct {
 	Timeout *Duration `json:"timeout,omitempty"`
 }
 
-// PrometheusWebSpec defines the query command line flags when starting Prometheus.
+// PrometheusWebSpec defines the web command line flags when starting Prometheus.
 // +k8s:openapi-gen=true
 type PrometheusWebSpec struct {
+	WebConfigFileFields `json:",inline"`
 	// The prometheus web page title
-	PageTitle *string       `json:"pageTitle,omitempty"`
-	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+	PageTitle *string `json:"pageTitle,omitempty"`
 }
 
-// AlertmanagerWebSpec defines the query command line flags when starting Alertmanager.
+// AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 // +k8s:openapi-gen=true
 type AlertmanagerWebSpec struct {
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// WebConfigFileFields defines the file content for --web.config.file flag.
+// +k8s:deepcopy-gen=true
+type WebConfigFileFields struct {
+	// Defines the TLS parameters for HTTPS.
+	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+	// Defines HTTP parameters for web server.
+	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// WebHTTPConfig defines HTTP parameters for web server.
+// +k8s:openapi-gen=true
+type WebHTTPConfig struct {
+	// Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.
+	// When TLSConfig is not configured, HTTP/2 will be disabled.
+	// Whenever user changes this field, a rolling update will be triggered.
+	// Defaults to true.
+	//+kubebuilder:default=true
+	HTTP2 bool `json:"http2,omitempty"`
+	// List of headers that can be added to HTTP responses.
+	Headers *WebHTTPHeaders `json:"headers,omitempty"`
+}
+
+// WebHTTPHeaders defines the list of headers that can be added to HTTP responses.
+// +k8s:openapi-gen=true
+type WebHTTPHeaders struct {
+	// Set the Content-Security-Policy header to HTTP responses.
+	// Unset if blank.
+	ContentSecurityPolicy string `json:"contentSecurityPolicy,omitempty"`
+	// Set the X-Frame-Options header to HTTP responses.
+	// Unset if blank. Accepted values are deny and sameorigin.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+	//+kubebuilder:validation:Enum="";deny;sameorigin
+	XFrameOptions string `json:"xFrameOptions,omitempty"`
+	// Set the X-Content-Type-Options header to HTTP responses.
+	// Unset if blank. Accepted value is nosniff.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+	//+kubebuilder:validation:Enum="";nosniff
+	XContentTypeOptions string `json:"xContentTypeOptions,omitempty"`
+	// Set the X-XSS-Protection header to all responses.
+	// Unset if blank. Accepted value is nosniff.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+	//+kubebuilder:validation:Enum="";nosniff
+	XXSSProtection string `json:"xXSSProtection,omitempty"`
+	// Set the Strict-Transport-Security header to HTTP responses.
+	// Unset if blank.
+	// Please make sure that you use this with care as this header might force
+	// browsers to load Prometheus and the other applications hosted on the same
+	// domain and subdomains over HTTPS.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+	StrictTransportSecurity string `json:"strictTransportSecurity,omitempty"`
 }
 
 // WebTLSConfig defines the TLS parameters for HTTPS.

@@ -1655,15 +1655,15 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
 	boolTrue := true
 
-	var tlsConfig *monitoringv1.WebTLSConfig
+	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
-		tlsConfig = a.Spec.Web.TLSConfig
+		fields.TLSConfig = a.Spec.Web.TLSConfig
 	}
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		webConfigSecretName(a.Name),
-		tlsConfig,
+		fields,
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize web config")

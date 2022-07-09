@@ -3640,19 +3640,21 @@ func testPromWebTLS(t *testing.T) {
 
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	prom.Spec.Web = &monitoringv1.PrometheusWebSpec{
-		TLSConfig: &monitoringv1.WebTLSConfig{
-			KeySecret: v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: "web-tls",
-				},
-				Key: "tls.key",
-			},
-			Cert: monitoringv1.SecretOrConfigMap{
-				Secret: &v1.SecretKeySelector{
+		WebConfigFileFields: monitoringv1.WebConfigFileFields{
+			TLSConfig: &monitoringv1.WebTLSConfig{
+				KeySecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "web-tls",
 					},
-					Key: "tls.crt",
+					Key: "tls.key",
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "web-tls",
+						},
+						Key: "tls.crt",
+					},
 				},
 			},
 		},

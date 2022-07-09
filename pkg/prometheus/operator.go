@@ -2114,15 +2114,15 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
 	boolTrue := true
 
-	var tlsConfig *monitoringv1.WebTLSConfig
+	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
-		tlsConfig = p.Spec.Web.TLSConfig
+		fields = p.Spec.Web.WebConfigFileFields
 	}
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		webConfigSecretName(p.Name),
-		tlsConfig,
+		fields,
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize web config")

@@ -546,12 +546,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	// With this we avoid redeploying alertmanager when reconfiguring between
 	// HTTP and HTTPS and vice-versa.
 	if version.GTE(semver.MustParse("0.22.0")) {
-		var webTLSConfig *monitoringv1.WebTLSConfig
+		var fields monitoringv1.WebConfigFileFields
 		if a.Spec.Web != nil {
-			webTLSConfig = a.Spec.Web.TLSConfig
+			fields.TLSConfig = a.Spec.Web.TLSConfig
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), webTLSConfig)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), fields)
 		if err != nil {
 			return nil, err
 		}

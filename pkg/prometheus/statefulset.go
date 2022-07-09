@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -70,6 +71,7 @@ var (
 	}
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
+	http2AnnotationName           = "operator.prometheus.io/http2"
 	probeTimeoutSeconds     int32 = 3
 )
 
@@ -598,12 +600,12 @@ func makeStatefulSetSpec(
 	// With this we avoid redeploying prometheus when reconfiguring between
 	// HTTP and HTTPS and vice-versa.
 	if version.GTE(semver.MustParse("2.24.0")) {
-		var webTLSConfig *monitoringv1.WebTLSConfig
+		var fields monitoringv1.WebConfigFileFields
 		if p.Spec.Web != nil {
-			webTLSConfig = p.Spec.Web.TLSConfig
+			fields = p.Spec.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), webTLSConfig)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), fields)
 		if err != nil {
 			return nil, err
 		}
@@ -745,6 +747,10 @@ func makeStatefulSetSpec(
 	}
 
 	podAnnotations["kubectl.kubernetes.io/default-container"] = "prometheus"
+
+	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+		podAnnotations[http2AnnotationName] = strconv.FormatBool(p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2)
+	}
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
