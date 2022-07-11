@@ -46,7 +46,7 @@ spec:
             storage: 40Gi
 ```
 
-> The full documentation of the `storage` field can be found in the [API documentation](../api.md#storagespec).
+> The full documentation of the `storage` field can be found in the [API documentation](../api.md#monitoring.coreos.com/v1.StorageSpec).
 
 When creating the Prometheus object, a PersistentVolumeClaim is used for each Pod in the StatefulSet, and the storage should automatically be provisioned, mounted and used.
 
