@@ -249,19 +249,21 @@ example/admission-webhook: scripts/generate/vendor scripts/generate/admission-we
 example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/apis/v1/api.md Documentation/apis/v1alpha1/api.md Documentation/compatibility.md Documentation/operator.md
+FULLY_GENERATED_DOCS = Documentation/apis/v1/api.md Documentation/apis/v1alpha1/api.md Documentation/apis/v1beta1/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
 Documentation/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
-# For now, the v1beta1 CRDs aren't part of the default bundle because they
-# require to deploy/run the conversion webhook. As a consequence, they are not
-# yet included in the API documentation.
-Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+# TODO(simonpasquier): refactor the next 3 targets to make it more generic.
+Documentation/apis/v1/api.md: $(TYPES_V1_TARGET)
 	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1/api.md"
+
+Documentation/apis/v1alpha1/api.md: $(TYPES_V1ALPHA1_TARGET)
 	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1alpha1/api.md"
-	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
+
+Documentation/apis/v1beta1/api.md: $(TYPES_V1BETA1_TARGET)
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1beta1/api.md"
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
