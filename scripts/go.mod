@@ -3,7 +3,7 @@ module github.com/prometheus-operator/prometheus-operator/tooling
 go 1.18
 
 require (
-	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220119072234-a908cb2061ee
+	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220618162802-424739b250f5
 	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/bwplotka/mdox v0.9.1-0.20220712163347-7dcc385468d7
 	github.com/golangci/golangci-lint v1.46.2

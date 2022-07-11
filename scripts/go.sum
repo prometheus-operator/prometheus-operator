@@ -126,8 +126,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
 github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5/go.mod h1:SkGFH1ia65gfNATL8TAiHDNxPzPdmEL5uirI2Uyuz6c=
-github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220119072234-a908cb2061ee h1:5mlK9Zckf80b/DiKacj2/YYrTTeKz43uI5q1ZZf+IWQ=
-github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220119072234-a908cb2061ee/go.mod h1:TdjdkYhlOifCQWPs1UdTma97kQQMozf5h26hTuG70u8=
+github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220618162802-424739b250f5 h1:2tpX5eOsm8DQg65mAFRLUMSkQHAj7Y1VJrR9Ehk8YeM=
+github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220618162802-424739b250f5/go.mod h1:TdjdkYhlOifCQWPs1UdTma97kQQMozf5h26hTuG70u8=
 github.com/akavel/rsrc v0.8.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38/go.mod h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=
