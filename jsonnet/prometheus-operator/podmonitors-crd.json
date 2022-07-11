@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.8.0"
+      "controller-gen.kubebuilder.io/version": "v0.9.2"
     },
     "creationTimestamp": null,
     "name": "podmonitors.monitoring.coreos.com"
@@ -117,7 +117,8 @@
                               "required": [
                                 "key"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
                               "description": "Set the authentication type. Defaults to Bearer, Basic will cause an error",
@@ -148,7 +149,8 @@
                               "required": [
                                 "key"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
                               "description": "The secret in the service monitor namespace that contains the username for authentication.",
@@ -169,7 +171,8 @@
                               "required": [
                                 "key"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
                             }
                           },
                           "type": "object"
@@ -193,7 +196,8 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         },
                         "enableHttp2": {
                           "description": "Whether to enable HTTP2.",
@@ -306,7 +310,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
                                   "description": "Secret containing data to use for the targets.",
@@ -327,7 +332,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -351,7 +357,8 @@
                               "required": [
                                 "key"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
                             },
                             "endpointParams": {
                               "additionalProperties": {
@@ -513,7 +520,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
                                   "description": "Secret containing data to use for the targets.",
@@ -534,7 +542,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -561,7 +570,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
                                   "description": "Secret containing data to use for the targets.",
@@ -582,7 +592,8 @@
                                   "required": [
                                     "key"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -610,7 +621,8 @@
                               "required": [
                                 "key"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
                             },
                             "serverName": {
                               "description": "Used to verify the hostname for the targets.",
@@ -676,7 +688,8 @@
                         "type": "object"
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
                   },
                   "targetLimit": {
                     "description": "TargetLimit defines a limit on the number of scraped targets that will be accepted.",
@@ -701,13 +714,5 @@
         "storage": true
       }
     ]
-  },
-  "status": {
-    "acceptedNames": {
-      "kind": "",
-      "plural": ""
-    },
-    "conditions": [],
-    "storedVersions": []
   }
 }

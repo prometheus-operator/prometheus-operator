@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.8.0"
+      "controller-gen.kubebuilder.io/version": "v0.9.2"
     },
     "creationTimestamp": null,
     "name": "probes.monitoring.coreos.com"
@@ -66,7 +66,8 @@
                         "required": [
                           "key"
                         ],
-                        "type": "object"
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "type": {
                         "description": "Set the authentication type. Defaults to Bearer, Basic will cause an error",
@@ -97,7 +98,8 @@
                         "required": [
                           "key"
                         ],
-                        "type": "object"
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "username": {
                         "description": "The secret in the service monitor namespace that contains the username for authentication.",
@@ -118,7 +120,8 @@
                         "required": [
                           "key"
                         ],
-                        "type": "object"
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
                       }
                     },
                     "type": "object"
@@ -142,7 +145,8 @@
                     "required": [
                       "key"
                     ],
-                    "type": "object"
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
                   },
                   "interval": {
                     "description": "Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used.",
@@ -262,7 +266,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           },
                           "secret": {
                             "description": "Secret containing data to use for the targets.",
@@ -283,7 +288,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -307,7 +313,8 @@
                         "required": [
                           "key"
                         ],
-                        "type": "object"
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "endpointParams": {
                         "additionalProperties": {
@@ -505,7 +512,8 @@
                                 "type": "object"
                               }
                             },
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -623,7 +631,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           },
                           "secret": {
                             "description": "Secret containing data to use for the targets.",
@@ -644,7 +653,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -671,7 +681,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           },
                           "secret": {
                             "description": "Secret containing data to use for the targets.",
@@ -692,7 +703,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -720,7 +732,8 @@
                         "required": [
                           "key"
                         ],
-                        "type": "object"
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "serverName": {
                         "description": "Used to verify the hostname for the targets.",
@@ -743,13 +756,5 @@
         "storage": true
       }
     ]
-  },
-  "status": {
-    "acceptedNames": {
-      "kind": "",
-      "plural": ""
-    },
-    "conditions": [],
-    "storedVersions": []
   }
 }

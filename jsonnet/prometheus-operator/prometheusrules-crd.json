@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.8.0"
+      "controller-gen.kubebuilder.io/version": "v0.9.2"
     },
     "creationTimestamp": null,
     "name": "prometheusrules.monitoring.coreos.com"
@@ -125,13 +125,5 @@
         "storage": true
       }
     ]
-  },
-  "status": {
-    "acceptedNames": {
-      "kind": "",
-      "plural": ""
-    },
-    "conditions": [],
-    "storedVersions": []
   }
 }
