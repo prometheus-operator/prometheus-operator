@@ -1,6 +1,7 @@
+{{ define "packages" }}
 ---
-title: "API"
-description: "Generated API docs for the Prometheus Operator"
+title: "API reference docs"
+description: "Prometheus operator generated API reference docs"
 lead: ""
 date: 2022-07-11T08:49:31+00:00
 draft: false
@@ -15,8 +16,6 @@ toc: true
 > Note this document is generated from the project's Go code comments. When
 > contributing a change to this document, please do so by changing the code
 > comments.
-
-{{ define "packages" }}
 
 {{ with .packages}}
 <p>Packages:</p>
