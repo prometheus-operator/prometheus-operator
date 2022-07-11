@@ -1,3 +1,19 @@
+---
+title: "API reference docs"
+description: "Prometheus operator generated API reference docs"
+lead: ""
+date: 2022-07-11T08:49:31+00:00
+draft: false
+images: []
+menu:
+docs:
+parent: "operator"
+weight: 1000
+toc: true
+---
+> Note this document is generated from the project's Go code comments. When
+> contributing a change to this document, please do so by changing the code
+> comments.
 <p>Packages:</p>
 <ul>
 <li>
@@ -13620,7 +13636,9 @@ route by the Prometheus operator.</p>
 <td>
 <code>routes</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1#JSON">
 []k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
+</a>
 </em>
 </td>
 <td>
@@ -16847,7 +16865,9 @@ route by the Prometheus operator.</p>
 <td>
 <code>routes</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1#JSON">
 []k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
+</a>
 </em>
 </td>
 <td>
