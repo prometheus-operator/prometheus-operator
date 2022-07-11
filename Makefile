@@ -256,13 +256,13 @@ Documentation/operator.md: operator
 
 # TODO(simonpasquier): refactor the next 3 targets to make it more generic.
 Documentation/apis/v1/api.md: $(TYPES_V1_TARGET)
-	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1/api.md"
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1" -config "$(PWD)/Documentation/apis/config.json" -template-dir "$(PWD)/Documentation/apis/templates" -out-file "$(PWD)/Documentation/apis/v1/api.md"
 
 Documentation/apis/v1alpha1/api.md: $(TYPES_V1ALPHA1_TARGET)
-	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1alpha1/api.md"
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1" -config "$(PWD)/Documentation/apis/config.json" -template-dir "$(PWD)/Documentation/apis/templates" -out-file "$(PWD)/Documentation/apis/v1alpha1/api.md"
 
 Documentation/apis/v1beta1/api.md: $(TYPES_V1BETA1_TARGET)
-	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1" -config "$(PWD)/scripts/tooling/docs/config.json" -template-dir "$(PWD)/scripts/tooling/docs/templates" -out-file "$(PWD)/Documentation/apis/v1beta1/api.md"
+	$(API_DOC_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1" -config "$(PWD)/Documentation/apis/config.json" -template-dir "$(PWD)/Documentation/apis/templates" -out-file "$(PWD)/Documentation/apis/v1beta1/api.md"
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
