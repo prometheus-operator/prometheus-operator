@@ -250,7 +250,6 @@ example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/co
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
 FULLY_GENERATED_DOCS = Documentation/apis/v1/api.md Documentation/apis/v1alpha1/api.md Documentation/apis/v1beta1/api.md Documentation/compatibility.md Documentation/operator.md
-TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
 Documentation/operator.md: operator
 	$(MDOX_BINARY) fmt $@
