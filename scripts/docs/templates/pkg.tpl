@@ -1,3 +1,21 @@
+---
+title: "API"
+description: "Generated API docs for the Prometheus Operator"
+lead: ""
+date: 2022-07-11T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 1000
+toc: true
+---
+
+> Note this document is generated from the project's Go code comments. When
+> contributing a change to this document, please do so by changing the code
+> comments.
+
 {{ define "packages" }}
 
 {{ with .packages}}
