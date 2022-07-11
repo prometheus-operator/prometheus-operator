@@ -6,7 +6,9 @@
 </ul>
 <h2 id="monitoring.coreos.com/v1alpha1">monitoring.coreos.com/v1alpha1</h2>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig</a>
+</li></ul>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
@@ -21,6 +23,23 @@ across multiple namespaces configuring one Alertmanager cluster.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>AlertmanagerConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>metadata</code><br/>
@@ -417,7 +436,7 @@ Note that Go does not support unencrypted connections to remote SMTP endpoints.<
 <code>tlsConfig</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.SafeTLSConfig">
-Monitoring V1.SafeTLSConfig
+Monitoring v1.SafeTLSConfig
 </a>
 </em>
 </td>
@@ -450,7 +469,7 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_conf
 <code>authorization</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.SafeAuthorization">
-Monitoring V1.SafeAuthorization
+Monitoring v1.SafeAuthorization
 </a>
 </em>
 </td>
@@ -465,7 +484,7 @@ This is mutually exclusive with BasicAuth and is only available starting from Al
 <code>basicAuth</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.BasicAuth">
-Monitoring V1.BasicAuth
+Monitoring v1.BasicAuth
 </a>
 </em>
 </td>
@@ -480,7 +499,7 @@ This is mutually exclusive with Authorization. If both are defined, BasicAuth ta
 <code>oauth2</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.OAuth2">
-Monitoring V1.OAuth2
+Monitoring v1.OAuth2
 </a>
 </em>
 </td>
@@ -511,7 +530,7 @@ object and accessible by the Prometheus Operator.</p>
 <code>tlsConfig</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.SafeTLSConfig">
-Monitoring V1.SafeTLSConfig
+Monitoring v1.SafeTLSConfig
 </a>
 </em>
 </td>
@@ -1996,7 +2015,7 @@ If not specified, the SNS API URL from the SNS SDK will be used.</p>
 <code>sigv4</code><br/>
 <em>
 <a href="../v1/api.md#monitoring.coreos.com/v1.Sigv4">
-Monitoring V1.Sigv4
+Monitoring v1.Sigv4
 </a>
 </em>
 </td>

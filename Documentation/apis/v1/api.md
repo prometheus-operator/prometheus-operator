@@ -6,130 +6,19 @@
 </ul>
 <h2 id="monitoring.coreos.com/v1">monitoring.coreos.com/v1</h2>
 Resource Types:
-<ul></ul>
-<h3 id="monitoring.coreos.com/v1.APIServerConfig">APIServerConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
-</p>
-<div>
-<p>APIServerConfig defines a host and auth methods to access apiserver.
-More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>host</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Host of apiserver.
-A valid string consisting of a hostname or IP followed by an optional port number</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerToken</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bearer token for accessing apiserver.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerTokenFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>File to read bearer token for accessing apiserver.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TLSConfig">
-TLSConfig
-</a>
-</em>
-</td>
-<td>
-<p>TLS Config to use for accessing apiserver.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>authorization</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Authorization">
-Authorization
-</a>
-</em>
-</td>
-<td>
-<p>Authorization section for accessing apiserver</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.AlertingSpec">AlertingSpec
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
-</p>
-<div>
-<p>AlertingSpec defines parameters for alerting configuration of Prometheus servers.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>alertmanagers</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">
-[]AlertmanagerEndpoints
-</a>
-</em>
-</td>
-<td>
-<p>AlertmanagerEndpoints Prometheus should fire alerts against.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<ul><li>
+<a href="#monitoring.coreos.com/v1.Alertmanager">Alertmanager</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1.Probe">Probe</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1.Prometheus">Prometheus</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1.PrometheusRule">PrometheusRule</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>
+</li></ul>
 <h3 id="monitoring.coreos.com/v1.Alertmanager">Alertmanager
 </h3>
 <div>
@@ -143,6 +32,23 @@ Authorization
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>Alertmanager</code></td>
+</tr>
 <tr>
 <td>
 <code>metadata</code><br/>
@@ -781,6 +687,1247 @@ AlertmanagerStatus
 included when requesting from the apiserver, only from the Prometheus
 Operator API itself. More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodMonitor">PodMonitor
+</h3>
+<div>
+<p>PodMonitor defines monitoring for a set of pods.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>PodMonitor</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodMonitorSpec">
+PodMonitorSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of desired Pod selection for target discovery by Prometheus.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>jobLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The label to use to retrieve the job name from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels transfers labels on the Kubernetes Pod onto the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podMetricsEndpoints</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">
+[]PodMetricsEndpoint
+</a>
+</em>
+</td>
+<td>
+<p>A list of endpoints allowed as part of this PodMonitor.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector to select Pod objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceSelector</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NamespaceSelector">
+NamespaceSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector to select which namespaces the Endpoints objects are discovered from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<p>Attaches node metadata to discovered targets. Only valid for role: pod.
+Only valid in Prometheus versions 2.35.0 and newer.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.Probe">Probe
+</h3>
+<div>
+<p>Probe defines monitoring for a set of static targets or ingresses.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>Probe</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProbeSpec">
+ProbeSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of desired Ingress selection for target discovery by Prometheus.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>jobName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The job name assigned to scraped metrics by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prober</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProberSpec">
+ProberSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification for the prober to use for probing targets.
+The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>module</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The module to use for probing specifying how to probe the target.
+Example module configuring in the blackbox exporter:
+<a href="https://github.com/prometheus/blackbox_exporter/blob/master/example.yml">https://github.com/prometheus/blackbox_exporter/blob/master/example.yml</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targets</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProbeTargets">
+ProbeTargets
+</a>
+</em>
+</td>
+<td>
+<p>Targets defines a set of static or dynamically discovered targets to probe.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>interval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval at which targets are probed using the configured prober.
+If not specified Prometheus&rsquo; global scrape interval is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Timeout for scraping metrics from the Prometheus exporter.
+If not specified, the Prometheus global scrape interval is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
+ProbeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>TLS configuration to use when scraping the endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Secret to mount to read bearer token for scraping targets. The secret
+needs to be in the same namespace as the probe and accessible by
+the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<p>BasicAuth allow an endpoint to authenticate over basic authentication.
+More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoint">https://prometheus.io/docs/operating/configuration/#endpoint</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<p>Authorization section for this endpoint</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
+</h3>
+<div>
+<p>Prometheus defines a Prometheus deployment.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>Prometheus</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusSpec">
+PrometheusSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of the desired behavior of the Prometheus cluster. More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>CommonPrometheusFields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.CommonPrometheusFields">
+CommonPrometheusFields
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>CommonPrometheusFields</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retention</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
+retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
+(milliseconds seconds minutes hours days weeks years).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionSize</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<p>Maximum amount of disk space used by blocks.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disableCompaction</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Disable prometheus compaction.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rules</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Rules">
+Rules
+</a>
+</em>
+</td>
+<td>
+<p>/&ndash;rules.*/ command-line arguments.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prometheusRulesExcludedFromEnforce</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">
+[]PrometheusRuleExcludeConfig
+</a>
+</em>
+</td>
+<td>
+<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
+of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
+Make sure both ruleNamespace and ruleName are set for each pair.
+Deprecated: use excludedFromEnforcement instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QuerySpec">
+QuerySpec
+</a>
+</em>
+</td>
+<td>
+<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>A selector to select which PrometheusRules to mount for loading alerting/recording
+rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
+Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
+resources selected by RuleSelector. Make sure it does not match any config
+maps that you do not want to be migrated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
+the same namespace as the Prometheus object is in is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alerting</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertingSpec">
+AlertingSpec
+</a>
+</em>
+</td>
+<td>
+<p>Define details regarding alerting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteRead</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
+[]RemoteReadSpec
+</a>
+</em>
+</td>
+<td>
+<p>remoteRead is the list of remote read configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalAlertRelabelConfigs</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
+additional Prometheus alert relabel configurations. Alert relabel configurations
+specified are appended to the configurations generated by the Prometheus
+Operator. Alert relabel configurations specified must have the form as specified
+in the official Prometheus documentation:
+<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
+As alert relabel configs are appended, the user is responsible to make sure it
+is valid. Note that using this feature may expose the possibility to
+break upgrades of Prometheus. It is advised to review Prometheus release
+notes to ensure that no incompatible alert relabel configs are going to break
+Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalAlertManagerConfigs</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
+additional Prometheus AlertManager configurations. AlertManager configurations
+specified are appended to the configurations generated by the Prometheus
+Operator. Job configurations specified must have the form as specified
+in the official Prometheus documentation:
+<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
+As AlertManager configs are appended, the user is responsible to make sure it
+is valid. Note that using this feature may expose the possibility to
+break upgrades of Prometheus. It is advised to review Prometheus release
+notes to ensure that no incompatible AlertManager configs are going to break
+Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thanos</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosSpec">
+ThanosSpec
+</a>
+</em>
+</td>
+<td>
+<p>Thanos configuration allows configuring various aspects of a Prometheus
+server in a Thanos environment.</p>
+<p>This section is experimental, it may change significantly without
+deprecation notice in any release.</p>
+<p>This is experimental and may change significantly without backward
+compatibility in any release.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>queryLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>QueryLogFile specifies the file to which PromQL queries are logged.
+If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
+emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
+in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
+Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
+query information to the default Prometheus log stream.
+This is only available in versions of Prometheus &gt;= 2.16.0.
+For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allowOverlappingBlocks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
+This is still experimental in Prometheus so it may change in any upcoming release.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>exemplars</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Exemplars">
+Exemplars
+</a>
+</em>
+</td>
+<td>
+<p>Exemplars related settings that are runtime reloadable.
+It requires to enable the exemplar storage feature to be effective.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusStatus">
+PrometheusStatus
+</a>
+</em>
+</td>
+<td>
+<p>Most recent observed status of the Prometheus cluster. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PrometheusRule">PrometheusRule
+</h3>
+<div>
+<p>PrometheusRule defines recording and alerting rules for a Prometheus instance</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>PrometheusRule</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusRuleSpec">
+PrometheusRuleSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of desired alerting rule definitions for Prometheus.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>groups</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuleGroup">
+[]RuleGroup
+</a>
+</em>
+</td>
+<td>
+<p>Content of Prometheus rule file</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
+</h3>
+<div>
+<p>ServiceMonitor defines monitoring for a set of services.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>ServiceMonitor</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">
+ServiceMonitorSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of desired Service selection for target discovery by
+Prometheus.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>jobLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobLabel selects the label from the associated Kubernetes service which will be used as the <code>job</code> label for all metrics.</p>
+<p>For example:
+If in <code>ServiceMonitor.spec.jobLabel: foo</code> and in <code>Service.metadata.labels.foo: bar</code>,
+then the <code>job=&quot;bar&quot;</code> label is added to all metrics.</p>
+<p>If the value of this field is empty or if the label doesn&rsquo;t exist for the given Service, the <code>job</code> label of the metrics defaults to the name of the Kubernetes Service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>TargetLabels transfers labels from the Kubernetes <code>Service</code> onto the created metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels transfers labels on the Kubernetes <code>Pod</code> onto the created metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoints</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Endpoint">
+[]Endpoint
+</a>
+</em>
+</td>
+<td>
+<p>A list of endpoints allowed as part of this ServiceMonitor.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector to select Endpoints objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceSelector</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NamespaceSelector">
+NamespaceSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.APIServerConfig">APIServerConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>APIServerConfig defines a host and auth methods to access apiserver.
+More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>host</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Host of apiserver.
+A valid string consisting of a hostname or IP followed by an optional port number</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<p>BasicAuth allow an endpoint to authenticate over basic authentication</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bearer token for accessing apiserver.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>File to read bearer token for accessing apiserver.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>TLS Config to use for accessing apiserver.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<p>Authorization section for accessing apiserver</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AlertingSpec">AlertingSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+<p>AlertingSpec defines parameters for alerting configuration of Prometheus servers.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>alertmanagers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">
+[]AlertmanagerEndpoints
+</a>
+</em>
+</td>
+<td>
+<p>AlertmanagerEndpoints Prometheus should fire alerts against.</p>
 </td>
 </tr>
 </tbody>
@@ -3957,185 +5104,6 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.PodMonitor">PodMonitor
-</h3>
-<div>
-<p>PodMonitor defines monitoring for a set of pods.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PodMonitorSpec">
-PodMonitorSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification of desired Pod selection for target discovery by Prometheus.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>jobLabel</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The label to use to retrieve the job name from.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>podTargetLabels</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>PodTargetLabels transfers labels on the Kubernetes Pod onto the target.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>podMetricsEndpoints</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">
-[]PodMetricsEndpoint
-</a>
-</em>
-</td>
-<td>
-<p>A list of endpoints allowed as part of this PodMonitor.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>selector</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Selector to select Pod objects.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespaceSelector</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.NamespaceSelector">
-NamespaceSelector
-</a>
-</em>
-</td>
-<td>
-<p>Selector to select which namespaces the Endpoints objects are discovered from.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sampleLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>targetLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelNameLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelValueLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>attachMetadata</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AttachMetadata">
-AttachMetadata
-</a>
-</em>
-</td>
-<td>
-<p>Attaches node metadata to discovered targets. Only valid for role: pod.
-Only valid in Prometheus versions 2.35.0 and newer.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec
 </h3>
 <p>
@@ -4283,270 +5251,6 @@ AttachMetadata
 <td>
 <p>Attaches node metadata to discovered targets. Only valid for role: pod.
 Only valid in Prometheus versions 2.35.0 and newer.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.Probe">Probe
-</h3>
-<div>
-<p>Probe defines monitoring for a set of static targets or ingresses.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ProbeSpec">
-ProbeSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification of desired Ingress selection for target discovery by Prometheus.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>jobName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The job name assigned to scraped metrics by default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>prober</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ProberSpec">
-ProberSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification for the prober to use for probing targets.
-The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>module</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The module to use for probing specifying how to probe the target.
-Example module configuring in the blackbox exporter:
-<a href="https://github.com/prometheus/blackbox_exporter/blob/master/example.yml">https://github.com/prometheus/blackbox_exporter/blob/master/example.yml</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>targets</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ProbeTargets">
-ProbeTargets
-</a>
-</em>
-</td>
-<td>
-<p>Targets defines a set of static or dynamically discovered targets to probe.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>interval</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Interval at which targets are probed using the configured prober.
-If not specified Prometheus&rsquo; global scrape interval is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeTimeout</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape interval is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
-</a>
-</em>
-</td>
-<td>
-<p>TLS configuration to use when scraping the endpoint.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerTokenSecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret to mount to read bearer token for scraping targets. The secret
-needs to be in the same namespace as the probe and accessible by
-the Prometheus Operator.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication.
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoint">https://prometheus.io/docs/operating/configuration/#endpoint</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>oauth2</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
-</a>
-</em>
-</td>
-<td>
-<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metricRelabelings</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RelabelConfig">
-[]RelabelConfig
-</a>
-</em>
-</td>
-<td>
-<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>authorization</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SafeAuthorization">
-SafeAuthorization
-</a>
-</em>
-</td>
-<td>
-<p>Authorization section for this endpoint</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sampleLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>targetLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelNameLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelValueLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 </tbody>
@@ -5080,356 +5784,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
-</h3>
-<div>
-<p>Prometheus defines a Prometheus deployment.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusSpec">
-PrometheusSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification of the desired behavior of the Prometheus cluster. More info:
-<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>CommonPrometheusFields</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.CommonPrometheusFields">
-CommonPrometheusFields
-</a>
-</em>
-</td>
-<td>
-<p>
-(Members of <code>CommonPrometheusFields</code> are embedded into this type.)
-</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>retention</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
-retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
-(milliseconds seconds minutes hours days weeks years).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>retentionSize</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ByteSize">
-ByteSize
-</a>
-</em>
-</td>
-<td>
-<p>Maximum amount of disk space used by blocks.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disableCompaction</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable prometheus compaction.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>walCompression</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>rules</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Rules">
-Rules
-</a>
-</em>
-</td>
-<td>
-<p>/&ndash;rules.*/ command-line arguments.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>excludedFromEnforcement</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ObjectReference">
-[]ObjectReference
-</a>
-</em>
-</td>
-<td>
-<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>prometheusRulesExcludedFromEnforce</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">
-[]PrometheusRuleExcludeConfig
-</a>
-</em>
-</td>
-<td>
-<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-Make sure both ruleNamespace and ruleName are set for each pair.
-Deprecated: use excludedFromEnforcement instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>query</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QuerySpec">
-QuerySpec
-</a>
-</em>
-</td>
-<td>
-<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ruleSelector</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>A selector to select which PrometheusRules to mount for loading alerting/recording
-rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
-resources selected by RuleSelector. Make sure it does not match any config
-maps that you do not want to be migrated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ruleNamespaceSelector</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
-the same namespace as the Prometheus object is in is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alerting</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertingSpec">
-AlertingSpec
-</a>
-</em>
-</td>
-<td>
-<p>Define details regarding alerting.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteRead</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
-[]RemoteReadSpec
-</a>
-</em>
-</td>
-<td>
-<p>remoteRead is the list of remote read configurations.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>additionalAlertRelabelConfigs</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
-additional Prometheus alert relabel configurations. Alert relabel configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Alert relabel configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
-As alert relabel configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible alert relabel configs are going to break
-Prometheus after the upgrade.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>additionalAlertManagerConfigs</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
-additional Prometheus AlertManager configurations. AlertManager configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Job configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
-As AlertManager configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible AlertManager configs are going to break
-Prometheus after the upgrade.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>thanos</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ThanosSpec">
-ThanosSpec
-</a>
-</em>
-</td>
-<td>
-<p>Thanos configuration allows configuring various aspects of a Prometheus
-server in a Thanos environment.</p>
-<p>This section is experimental, it may change significantly without
-deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>queryLogFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>QueryLogFile specifies the file to which PromQL queries are logged.
-If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
-emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
-in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
-Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
-query information to the default Prometheus log stream.
-This is only available in versions of Prometheus &gt;= 2.16.0.
-For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>allowOverlappingBlocks</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>exemplars</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Exemplars">
-Exemplars
-</a>
-</em>
-</td>
-<td>
-<p>Exemplars related settings that are runtime reloadable.
-It requires to enable the exemplar storage feature to be effective.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusStatus">
-PrometheusStatus
-</a>
-</em>
-</td>
-<td>
-<p>Most recent observed status of the Prometheus cluster. Read-only.
-More info:
-<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition
 </h3>
 <p>
@@ -5556,65 +5910,6 @@ string
 <td><p>Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.</p>
 </td>
 </tr></tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusRule">PrometheusRule
-</h3>
-<div>
-<p>PrometheusRule defines recording and alerting rules for a Prometheus instance</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusRuleSpec">
-PrometheusRuleSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification of desired alerting rule definitions for Prometheus.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuleGroup">
-[]RuleGroup
-</a>
-</em>
-</td>
-<td>
-<p>Content of Prometheus rule file</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
@@ -7243,187 +7538,6 @@ string
 </em>
 </td>
 <td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
-</h3>
-<div>
-<p>ServiceMonitor defines monitoring for a set of services.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">
-ServiceMonitorSpec
-</a>
-</em>
-</td>
-<td>
-<p>Specification of desired Service selection for target discovery by
-Prometheus.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>jobLabel</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>JobLabel selects the label from the associated Kubernetes service which will be used as the <code>job</code> label for all metrics.</p>
-<p>For example:
-If in <code>ServiceMonitor.spec.jobLabel: foo</code> and in <code>Service.metadata.labels.foo: bar</code>,
-then the <code>job=&quot;bar&quot;</code> label is added to all metrics.</p>
-<p>If the value of this field is empty or if the label doesn&rsquo;t exist for the given Service, the <code>job</code> label of the metrics defaults to the name of the Kubernetes Service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>targetLabels</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>TargetLabels transfers labels from the Kubernetes <code>Service</code> onto the created metrics.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>podTargetLabels</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>PodTargetLabels transfers labels on the Kubernetes <code>Pod</code> onto the created metrics.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>endpoints</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Endpoint">
-[]Endpoint
-</a>
-</em>
-</td>
-<td>
-<p>A list of endpoints allowed as part of this ServiceMonitor.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>selector</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Selector to select Endpoints objects.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespaceSelector</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.NamespaceSelector">
-NamespaceSelector
-</a>
-</em>
-</td>
-<td>
-<p>Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sampleLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>targetLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelNameLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>labelValueLengthLimit</code><br/>
-<em>
-uint64
-</em>
-</td>
-<td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 </tbody>
