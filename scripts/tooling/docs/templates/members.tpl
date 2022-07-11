@@ -1,7 +1,10 @@
-{{ define "members" }}
-
-{{ range .Members }}
+{{ define "member" }}
 {{ if not (hiddenMember .)}}
+{{ if fieldEmbedded . }}
+{{ range .Type.Members }}
+{{ template "member" . }}
+{{ end }}
+{{ else }}
 <tr>
     <td>
         <code>{{ fieldName . }}</code><br/>
@@ -16,12 +19,6 @@
         </em>
     </td>
     <td>
-        {{ if fieldEmbedded . }}
-            <p>
-                (Members of <code>{{ fieldName . }}</code> are embedded into this type.)
-            </p>
-        {{ end}}
-
         {{ if isOptionalMember .}}
             <em>(Optional)</em>
         {{ end }}
@@ -43,6 +40,13 @@
     </td>
 </tr>
 {{ end }}
+{{ end }}
+{{ end }}
+
+{{ define "members" }}
+
+{{ range .Members }}
+{{ template "member" . }}
 {{ end }}
 
 {{ end }}
