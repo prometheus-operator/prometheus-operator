@@ -17,7 +17,7 @@
     },
     {
       "typeMatchPrefix": "^k8s\\.io/(api|apimachinery/pkg/apis)/",
-      "docsURLTemplate": "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#{{lower .TypeIdentifier}}-{{arrIndex .PackageSegments -1}}-{{arrIndex .PackageSegments -2}}"
+      "docsURLTemplate": "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#{{lower .TypeIdentifier}}-{{arrIndex .PackageSegments -1}}-{{arrIndex .PackageSegments -2}}"
     },
     {
       "typeMatchPrefix": "^github\\.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1",
@@ -26,13 +26,18 @@
     {
       "typeMatchPrefix": "^github\\.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1",
       "docsURLTemplate": "../v1alpha1/api.md#monitoring.coreos.com/v1alpha1.{{ .TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1",
+      "docsURLTemplate": "../v1beta1/api.md#monitoring.coreos.com/v1beta1.{{ .TypeIdentifier}}"
     }
   ],
   "typeDisplayNamePrefixOverrides": {
     "k8s.io/api/": "Kubernetes ",
     "k8s.io/apimachinery/pkg/apis/": "Kubernetes ",
-    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1": "Monitoring V1",
-    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1": "Monitoring V1 Alpha1"
+    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1": "Monitoring v1",
+    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1": "Monitoring v1alpha1",
+    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1": "Monitoring v1beta1"
   },
   "markdownDisabled": false
 }
