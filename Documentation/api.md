@@ -1,8 +1,6 @@
 ---
-title: "API reference docs"
+title: "API reference"
 description: "Prometheus operator generated API reference docs"
-lead: ""
-date: 2022-07-11T08:49:31+00:00
 draft: false
 images: []
 menu:
@@ -11,9 +9,7 @@ parent: "operator"
 weight: 1000
 toc: true
 ---
-> Note this document is generated from the project's Go code comments. When
-> contributing a change to this document, please do so by changing the code
-> comments.
+> This page is automatically generated with `gen-crd-api-reference-docs`.
 <p>Packages:</p>
 <ul>
 <li>
