@@ -25,3 +25,6 @@ validators:
   # Ignore links to /img/ because the generated content will resolve them correctly.
   - regex: '/img/.+'
     type: ignore
+  # Ignore anchor links pointing to the API documentation which are HTML <a> tags and not supported by mdox.
+  - regex: 'api\.md#monitoring\.coreos\.com/v1\.(BasicAuth|PrometheusSpec|StorageSpec)$'
+    type: ignore
