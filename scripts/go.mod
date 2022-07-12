@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/brancz/gojsontoyaml v0.1.0
-	github.com/bwplotka/mdox v0.9.0
+	github.com/bwplotka/mdox v0.9.1-0.20220712163347-7dcc385468d7
 	github.com/golangci/golangci-lint v1.46.2
 	github.com/google/go-jsonnet v0.18.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.5.1

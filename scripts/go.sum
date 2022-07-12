@@ -223,8 +223,8 @@ github.com/breml/errchkjson v0.3.0 h1:YdDqhfqMT+I1vIxPSas44P+9Z9HzJwCeAzjB8PxP1x
 github.com/breml/errchkjson v0.3.0/go.mod h1:9Cogkyv9gcT8HREpzi3TiqBxCqDzo8awa92zSDFcofU=
 github.com/butuzov/ireturn v0.1.1 h1:QvrO2QF2+/Cx1WA/vETCIYBKtRjc30vesdoPUNo1EbY=
 github.com/butuzov/ireturn v0.1.1/go.mod h1:Wh6Zl3IMtTpaIKbmwzqi6olnM9ptYQxxVacMsOEFPoc=
-github.com/bwplotka/mdox v0.9.0 h1:NRrJNWGDUjA2dWeWiJv/4WNQZp5+OcVYIHz94T6ksxs=
-github.com/bwplotka/mdox v0.9.0/go.mod h1:d9tSrvKyHqgb/IuvvhncvLzbV1SfSfhH56ct1TOYncw=
+github.com/bwplotka/mdox v0.9.1-0.20220712163347-7dcc385468d7 h1:HfWBdOFK+Ya2az0ck4DM/mer9TyFpwwnbCw0uMxQ5ow=
+github.com/bwplotka/mdox v0.9.1-0.20220712163347-7dcc385468d7/go.mod h1:d9tSrvKyHqgb/IuvvhncvLzbV1SfSfhH56ct1TOYncw=
 github.com/campoy/embedmd v1.0.0/go.mod h1:oxyr9RCiSXg0M3VJ3ks0UGfp98BpSSGr0kpiX3MzVl8=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=

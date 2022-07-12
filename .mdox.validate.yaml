@@ -1,6 +1,8 @@
 version: 1
 timeout: "1m"
 
+explicitLocalValidators: true
+
 validators:
   # docs.github.com returns 403 if not in browser. Cannot curl as well.
   - regex: 'docs\.github\.com'
@@ -20,3 +22,6 @@ validators:
   # Ignore GitHub container packages link as it returns 404 in curl, but works in browser
   - regex: 'https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator'
     type: "ignore"
+  # Ignore links to /img/ because the generated content will resolve them correctly.
+  - regex: '/img/.+'
+    type: ignore
