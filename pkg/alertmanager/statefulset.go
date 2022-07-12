@@ -42,7 +42,7 @@ const (
 	configmapsDir          = "/etc/alertmanager/configmaps/"
 	alertmanagerConfigDir  = "/etc/alertmanager/config"
 	webConfigDir           = "/etc/alertmanager/web_config"
-	alertmanagerConfigFile = "alertmanager.yaml"
+	alertmanagerConfigFile = "alertmanager.yaml.gz"
 	alertmanagerStorageDir = "/alertmanager"
 	sSetInputHashName      = "prometheus-operator-input-hash"
 	defaultPortName        = "web"
