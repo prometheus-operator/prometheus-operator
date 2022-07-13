@@ -279,8 +279,9 @@ type CommonPrometheusFields struct {
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-	// settings from all PodMonitor, ServiceMonitor and Probe objects. They
-	// will only discover endpoints within their current namespace.
+	// settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+	// only discover endpoints within the namespace of the PodMonitor,
+	// ServiceMonitor and Probe objects.
 	// Defaults to false.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 	// EnforcedNamespaceLabel If set, a label will be added to

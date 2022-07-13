@@ -2856,8 +2856,8 @@ spec:
               ignoreNamespaceSelectors:
                 description: IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
                   settings from all PodMonitor, ServiceMonitor and Probe objects.
-                  They will only discover endpoints within their current namespace.
-                  Defaults to false.
+                  They will only discover endpoints within the namespace of the PodMonitor,
+                  ServiceMonitor and Probe objects. Defaults to false.
                 type: boolean
               image:
                 description: Image if specified has precedence over baseImage, tag
