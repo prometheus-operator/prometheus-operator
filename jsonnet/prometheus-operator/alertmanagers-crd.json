@@ -814,10 +814,10 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagerConfiguration": {
-                    "description": "EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases.",
+                    "description": "EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager. If defined, it takes precedence over the `configSecret` field. This field may change in future releases.",
                     "properties": {
                       "global": {
-                        "description": "The global config of the Alertmanager.",
+                        "description": "Defines the global parameters of the Alertmanager configuration.",
                         "properties": {
                           "httpConfig": {
                             "description": "HTTP client configuration.",
@@ -844,7 +844,8 @@
                                     "required": [
                                       "key"
                                     ],
-                                    "type": "object"
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
                                   },
                                   "type": {
                                     "description": "Set the authentication type. Defaults to Bearer, Basic will cause an error",
@@ -875,7 +876,8 @@
                                     "required": [
                                       "key"
                                     ],
-                                    "type": "object"
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
                                   },
                                   "username": {
                                     "description": "The secret in the service monitor namespace that contains the username for authentication.",
@@ -896,7 +898,8 @@
                                     "required": [
                                       "key"
                                     ],
-                                    "type": "object"
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
                                   }
                                 },
                                 "type": "object"
@@ -920,7 +923,8 @@
                                 "required": [
                                   "key"
                                 ],
-                                "type": "object"
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
                               },
                               "followRedirects": {
                                 "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
@@ -951,7 +955,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
                                         "description": "Secret containing data to use for the targets.",
@@ -972,7 +977,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       }
                                     },
                                     "type": "object"
@@ -996,7 +1002,8 @@
                                     "required": [
                                       "key"
                                     ],
-                                    "type": "object"
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
                                   },
                                   "endpointParams": {
                                     "additionalProperties": {
@@ -1054,7 +1061,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
                                         "description": "Secret containing data to use for the targets.",
@@ -1075,7 +1083,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       }
                                     },
                                     "type": "object"
@@ -1102,7 +1111,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
                                         "description": "Secret containing data to use for the targets.",
@@ -1123,7 +1133,8 @@
                                         "required": [
                                           "key"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-map-type": "atomic"
                                       }
                                     },
                                     "type": "object"
@@ -1151,7 +1162,8 @@
                                     "required": [
                                       "key"
                                     ],
-                                    "type": "object"
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
                                   },
                                   "serverName": {
                                     "description": "Used to verify the hostname for the targets.",
@@ -1172,7 +1184,7 @@
                         "type": "object"
                       },
                       "name": {
-                        "description": "The name of the AlertmanagerConfig resource which is used to generate the global configuration. It must be defined in the same namespace as the Alertmanager object. The operator will not enforce a `namespace` label for routes and inhibition rules.",
+                        "description": "The name of the AlertmanagerConfig resource which is used to generate the Alertmanager configuration. It must be defined in the same namespace as the Alertmanager object. The operator will not enforce a `namespace` label for routes and inhibition rules.",
                         "minLength": 1,
                         "type": "string"
                       }

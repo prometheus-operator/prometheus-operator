@@ -683,7 +683,7 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
+<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
 </td>
@@ -2835,7 +2835,7 @@ Authorization
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
-<p>AlertmanagerConfiguration defines the global Alertmanager configuration.</p>
+<p>AlertmanagerConfiguration defines the Alertmanager configuration.</p>
 </div>
 <table>
 <thead>
@@ -2853,7 +2853,7 @@ string
 </em>
 </td>
 <td>
-<p>The name of the AlertmanagerConfig resource which is used to generate the global configuration.
+<p>The name of the AlertmanagerConfig resource which is used to generate the Alertmanager configuration.
 It must be defined in the same namespace as the Alertmanager object.
 The operator will not enforce a <code>namespace</code> label for routes and inhibition rules.</p>
 </td>
@@ -2869,7 +2869,7 @@ AlertmanagerGlobalConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>The global config of the Alertmanager.</p>
+<p>Defines the global parameters of the Alertmanager configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -3664,7 +3664,7 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration.
+<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
 </td>

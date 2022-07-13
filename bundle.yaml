@@ -5463,11 +5463,12 @@ spec:
                 x-kubernetes-map-type: atomic
               alertmanagerConfiguration:
                 description: 'EXPERIMENTAL: alertmanagerConfiguration specifies the
-                  global Alertmanager configuration. If defined, it takes precedence
-                  over the `configSecret` field. This field may change in future releases.'
+                  configuration of Alertmanager. If defined, it takes precedence over
+                  the `configSecret` field. This field may change in future releases.'
                 properties:
                   global:
-                    description: The global config of the Alertmanager.
+                    description: Defines the global parameters of the Alertmanager
+                      configuration.
                     properties:
                       httpConfig:
                         description: HTTP client configuration.
@@ -5498,6 +5499,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               type:
                                 description: Set the authentication type. Defaults
                                   to Bearer, Basic will cause an error
@@ -5529,6 +5531,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               username:
                                 description: The secret in the service monitor namespace
                                   that contains the username for authentication.
@@ -5550,6 +5553,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                             type: object
                           bearerTokenSecret:
                             description: The secret's key that contains the bearer
@@ -5573,6 +5577,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           followRedirects:
                             description: FollowRedirects specifies whether the client
                               should follow HTTP 3xx redirects.
@@ -5605,6 +5610,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                   secret:
                                     description: Secret containing data to use for
                                       the targets.
@@ -5626,6 +5632,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                 type: object
                               clientSecret:
                                 description: The secret containing the OAuth2 client
@@ -5648,6 +5655,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               endpointParams:
                                 additionalProperties:
                                   type: string
@@ -5697,6 +5705,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                   secret:
                                     description: Secret containing data to use for
                                       the targets.
@@ -5718,6 +5727,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                 type: object
                               cert:
                                 description: Struct containing the client cert file
@@ -5743,6 +5753,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                   secret:
                                     description: Secret containing data to use for
                                       the targets.
@@ -5764,6 +5775,7 @@ spec:
                                     required:
                                     - key
                                     type: object
+                                    x-kubernetes-map-type: atomic
                                 type: object
                               insecureSkipVerify:
                                 description: Disable target certificate validation.
@@ -5789,6 +5801,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               serverName:
                                 description: Used to verify the hostname for the targets.
                                 type: string
@@ -5805,10 +5818,10 @@ spec:
                     type: object
                   name:
                     description: The name of the AlertmanagerConfig resource which
-                      is used to generate the global configuration. It must be defined
-                      in the same namespace as the Alertmanager object. The operator
-                      will not enforce a `namespace` label for routes and inhibition
-                      rules.
+                      is used to generate the Alertmanager configuration. It must
+                      be defined in the same namespace as the Alertmanager object.
+                      The operator will not enforce a `namespace` label for routes
+                      and inhibition rules.
                     minLength: 1
                     type: string
                 type: object
