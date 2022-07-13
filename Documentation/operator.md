@@ -5,10 +5,10 @@ title: CLI Flags
 menu:
     docs:
         parent: operator
+lead: Command line arguments for the operator binary
 images: []
 draft: false
 description: Command line arguments for the operator binary
-lead: Command line arguments for the operator binary
 ---
 
 > Note this document is automatically generated from the `cmd/operator/main.go` file and shouldn't be edited directly.
