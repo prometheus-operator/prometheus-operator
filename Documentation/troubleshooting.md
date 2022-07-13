@@ -148,7 +148,7 @@ spec:
 
 The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string: "integer"`
 
-#### Prometheus/Alertmanager pods stuck in terminating loop with healthy start up logs
+### Prometheus/Alertmanager pods stuck in terminating loop with healthy start up logs
 
 It is usually a sign that more than one operator wants to manage the resource.
 
