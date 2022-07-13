@@ -1039,7 +1039,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	if err := gzipConfig(&buf, conf); err != nil {
 		return errors.Wrap(err, "couldnt gzip config")
 	}
-	generatedConfigSecret.Data[alertmanagerConfigFile] = buf.Bytes()
+	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
 	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
