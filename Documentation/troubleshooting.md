@@ -1,5 +1,5 @@
 ---
-weight: 307
+weight: 207
 toc: true
 title: Troubleshooting
 menu:

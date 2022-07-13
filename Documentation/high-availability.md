@@ -1,5 +1,5 @@
 ---
-weight: 303
+weight: 203
 toc: true
 title: High Availability
 menu:

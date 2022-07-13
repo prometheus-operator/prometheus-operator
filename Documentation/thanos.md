@@ -1,5 +1,5 @@
 ---
-weight: 306
+weight: 206
 toc: true
 title: Thanos
 menu:
