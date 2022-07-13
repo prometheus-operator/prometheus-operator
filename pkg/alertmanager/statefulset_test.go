@@ -1196,6 +1196,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			Name: "registry-secret",
 		},
 	}
+	dnsConfig := v1.PodDNSConfig{}
+	dnsPolicy := v1.DNSPolicy("default")
 
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -1208,6 +1210,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			ServiceAccountName: serviceAccountName,
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
+			DNSConfig:          &dnsConfig,
+			DNSPolicy:          dnsPolicy,
 		},
 	}, defaultTestConfig, "", nil)
 	if err != nil {
@@ -1237,5 +1241,11 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	}
+	if sset.Spec.Template.Spec.DNSPolicy != dnsPolicy {
+		t.Fatalf("expected dns policy to match, want %s, got %s", dnsPolicy, sset.Spec.Template.Spec.DNSPolicy)
+	}
+	if !reflect.DeepEqual(*sset.Spec.Template.Spec.DNSConfig, dnsConfig) {
+		t.Fatalf("expected dns configuration to match, want %v, got %v", dnsConfig, *sset.Spec.Template.Spec.DNSConfig)
 	}
 }
