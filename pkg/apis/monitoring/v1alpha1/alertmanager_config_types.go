@@ -36,12 +36,13 @@ const (
 	AlertmanagerConfigKindKey = "alertmanagerconfig"
 )
 
-// AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-// across multiple namespaces configuring one Alertmanager cluster.
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 // +kubebuilder:storageversion
+
+// AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
+// across multiple namespaces configuring one Alertmanager cluster.
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
