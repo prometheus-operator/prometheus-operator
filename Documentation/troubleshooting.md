@@ -1,5 +1,5 @@
 ---
-weight: 600
+weight: 307
 toc: true
 title: Troubleshooting
 menu:
@@ -9,7 +9,6 @@ lead: ""
 images: []
 draft: false
 description: Guide on troubleshooting the Prometheus Operator.
-date: "2021-03-08T08:49:31+00:00"
 ---
 
 ### RBAC on Google Container Engine (GKE)
@@ -48,7 +47,7 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 
 #### Overview of `ServiceMonitor` tagging and related elements
 
-A common problem related to `ServiceMonitor` identification by Prometheus is related to an incorrect tagging, that does not match the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
+A common problem related to `ServiceMonitor` identification by Prometheus is related to the object's labels not matching the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
@@ -96,45 +95,55 @@ sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifes
 The ServiceMonitor expects to use the port name as defined on the Service. So, using the Service example from the
 diagram above, we have this Service definition:
 
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service.yaml"
 kind: Service
+apiVersion: v1
 metadata:
+  name: example-app
   labels:
-    k8s-app: my-app
-  name: my-app
-...
-  spec:
-    ports:
-      - name: metrics
-        port: 8080
-    selector:
-      k8s-app: my-app
+    app: example-app
+spec:
+  selector:
+    app: example-app
+  ports:
+  - name: web
+    port: 8080
 ```
 
 We would then define the service monitor using `metrics` as the port not `"8080"`. E.g.
 
 **CORRECT**
 
-```yaml
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service-monitor.yaml"
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: my-app
+  name: example-app
+  labels:
+    team: frontend
 spec:
-...
+  selector:
+    matchLabels:
+      app: example-app
   endpoints:
-    - port: metrics
+  - port: web
 ```
 
 **INCORRECT**
 
 ```yaml
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: my-app
+  name: example-app
+  labels:
+    team: frontend
 spec:
-...
+  selector:
+    matchLabels:
+      app: example-app
   endpoints:
-    - port: "8080"
+  - port: "8080"
 ```
 
 The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string: "integer"`
