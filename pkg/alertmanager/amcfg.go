@@ -135,9 +135,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, a
 	}
 
 	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
-	if convertedRoute := cb.convertRoute(amConfig.Spec.Route, crKey); convertedRoute != nil {
-		globalAlertmanagerConfig.Route = convertedRoute
-	}
+	globalAlertmanagerConfig.Route = cb.convertRoute(amConfig.Spec.Route, crKey)
 
 	for _, receiver := range amConfig.Spec.Receivers {
 		receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
