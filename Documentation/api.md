@@ -1991,8 +1991,9 @@ bool
 </td>
 <td>
 <p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They
-will only discover endpoints within their current namespace.
+settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+only discover endpoints within the namespace of the PodMonitor,
+ServiceMonitor and Probe objects.
 Defaults to false.</p>
 </td>
 </tr>
@@ -4682,8 +4683,9 @@ bool
 </td>
 <td>
 <p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They
-will only discover endpoints within their current namespace.
+settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+only discover endpoints within the namespace of the PodMonitor,
+ServiceMonitor and Probe objects.
 Defaults to false.</p>
 </td>
 </tr>
@@ -7745,8 +7747,9 @@ bool
 </td>
 <td>
 <p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They
-will only discover endpoints within their current namespace.
+settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+only discover endpoints within the namespace of the PodMonitor,
+ServiceMonitor and Probe objects.
 Defaults to false.</p>
 </td>
 </tr>
