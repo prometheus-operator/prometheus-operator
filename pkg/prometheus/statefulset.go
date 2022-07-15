@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -71,7 +70,6 @@ var (
 	}
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
-	http2AnnotationName           = "operator.prometheus.io/http2"
 	probeTimeoutSeconds     int32 = 3
 )
 
@@ -747,10 +745,6 @@ func makeStatefulSetSpec(
 	}
 
 	podAnnotations["kubectl.kubernetes.io/default-container"] = "prometheus"
-
-	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
-		podAnnotations[http2AnnotationName] = strconv.FormatBool(p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2)
-	}
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)

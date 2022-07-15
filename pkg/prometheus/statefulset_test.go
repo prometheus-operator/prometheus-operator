@@ -126,25 +126,15 @@ func TestPodLabelsAnnotations(t *testing.T) {
 					Annotations: annotations,
 					Labels:      labels,
 				},
-				Web: &monitoringv1.PrometheusWebSpec{
-					WebConfigFileFields: monitoringv1.WebConfigFileFields{
-						HTTPConfig: &monitoringv1.WebHTTPConfig{
-							HTTP2: false,
-						},
-					},
-				},
 			},
 		},
 	}, defaultTestConfig, nil, "", 0, nil)
 	require.NoError(t, err)
 	if val, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok || val != "testvalue" {
-		t.Fatal("Pod label, testlabel is not properly propagated")
+		t.Fatal("Pod labels are not properly propagated")
 	}
 	if val, ok := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]; !ok || val != "testvalue" {
-		t.Fatal("Pod annotation, testannotation is not properly propagated")
-	}
-	if val, ok := sset.Spec.Template.ObjectMeta.Annotations["operator.prometheus.io/http2"]; !ok || val != "false" {
-		t.Fatal("Pod annotation, operator.prometheus.io/http2 is not properly propagated ")
+		t.Fatal("Pod annotations are not properly propagated")
 	}
 }
 func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {

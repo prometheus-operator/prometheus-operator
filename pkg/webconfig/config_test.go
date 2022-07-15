@@ -177,13 +177,13 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			name: "HTTP config with all parameters",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{
 				HTTPConfig: &monitoringv1.WebHTTPConfig{
-					HTTP2: false,
+					HTTP2: &falseVal,
 					Headers: &monitoringv1.WebHTTPHeaders{
 						ContentSecurityPolicy:   "test",
 						StrictTransportSecurity: "test",
-						XContentTypeOptions:     "nosniff",
-						XFrameOptions:           "sameorigin",
-						XXSSProtection:          "nosniff",
+						XContentTypeOptions:     "NoSniff",
+						XFrameOptions:           "SameOrigin",
+						XXSSProtection:          "test",
 					},
 				},
 			},
@@ -194,7 +194,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
     Strict-Transport-Security: test
     X-Content-Type-Options: nosniff
     X-Frame-Options: sameorigin
-    X-XSS-Protection: nosniff
+    X-XSS-Protection: test
 `,
 		},
 	}

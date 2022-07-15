@@ -771,10 +771,8 @@ type WebConfigFileFields struct {
 type WebHTTPConfig struct {
 	// Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
-	// Whenever user changes this field, a rolling update will be triggered.
-	// Defaults to true.
-	//+kubebuilder:default=true
-	HTTP2 bool `json:"http2,omitempty"`
+	// Whenever the value of the field changes, a rolling update will be triggered.
+	HTTP2 *bool `json:"http2,omitempty"`
 	// List of headers that can be added to HTTP responses.
 	Headers *WebHTTPHeaders `json:"headers,omitempty"`
 }
@@ -788,17 +786,16 @@ type WebHTTPHeaders struct {
 	// Set the X-Frame-Options header to HTTP responses.
 	// Unset if blank. Accepted values are deny and sameorigin.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
-	//+kubebuilder:validation:Enum="";deny;sameorigin
+	//+kubebuilder:validation:Enum="";Deny;SameOrigin
 	XFrameOptions string `json:"xFrameOptions,omitempty"`
 	// Set the X-Content-Type-Options header to HTTP responses.
 	// Unset if blank. Accepted value is nosniff.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
-	//+kubebuilder:validation:Enum="";nosniff
+	//+kubebuilder:validation:Enum="";NoSniff
 	XContentTypeOptions string `json:"xContentTypeOptions,omitempty"`
 	// Set the X-XSS-Protection header to all responses.
-	// Unset if blank. Accepted value is nosniff.
+	// Unset if blank.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
-	//+kubebuilder:validation:Enum="";nosniff
 	XXSSProtection string `json:"xXSSProtection,omitempty"`
 	// Set the Strict-Transport-Security header to HTTP responses.
 	// Unset if blank.

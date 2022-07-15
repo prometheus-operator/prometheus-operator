@@ -40,6 +40,8 @@ func TestListOptions(t *testing.T) {
 }
 
 func TestCreateStatefulSetInputHash(t *testing.T) {
+	falseVal := false
+
 	for _, tc := range []struct {
 		name string
 		a, b monitoringv1.Prometheus
@@ -165,6 +167,32 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: "v1.7.2",
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+
+			equal: false,
+		},
+		{
+			name: "different web http2",
+			a: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+						Web: &monitoringv1.PrometheusWebSpec{
+							WebConfigFileFields: monitoringv1.WebConfigFileFields{
+								HTTPConfig: &monitoringv1.WebHTTPConfig{
+									HTTP2: &falseVal,
+								},
+							},
+						},
 					},
 				},
 			},

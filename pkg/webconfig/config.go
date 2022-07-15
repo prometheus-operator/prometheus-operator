@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -224,13 +225,13 @@ func (c Config) addHTTPServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 
 	if headers.XContentTypeOptions != "" {
 		headersConfig = append(headersConfig, yaml.MapItem{
-			Key: "X-Content-Type-Options", Value: headers.XContentTypeOptions,
+			Key: "X-Content-Type-Options", Value: strings.ToLower(headers.XContentTypeOptions),
 		})
 	}
 
 	if headers.XFrameOptions != "" {
 		headersConfig = append(headersConfig, yaml.MapItem{
-			Key: "X-Frame-Options", Value: headers.XFrameOptions,
+			Key: "X-Frame-Options", Value: strings.ToLower(headers.XFrameOptions),
 		})
 	}
 

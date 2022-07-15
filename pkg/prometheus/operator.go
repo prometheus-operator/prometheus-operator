@@ -1705,10 +1705,16 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
+	var http2 *bool
+	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
+		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
 		PrometheusAnnotations map[string]string
 		PrometheusGeneration  int64
+		PrometheusWebHTTP2    *bool
 		Config                operator.Config
 		StatefulSetSpec       appsv1.StatefulSetSpec
 		RuleConfigMaps        []string `hash:"set"`
@@ -1717,6 +1723,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 		PrometheusLabels:      p.Labels,
 		PrometheusAnnotations: p.Annotations,
 		PrometheusGeneration:  p.Generation,
+		PrometheusWebHTTP2:    http2,
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
 		RuleConfigMaps:        ruleConfigMapNames,
