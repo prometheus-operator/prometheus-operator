@@ -320,16 +320,18 @@ func TestListenTLS(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
 			Web: &monitoringv1.AlertmanagerWebSpec{
-				TLSConfig: &monitoringv1.WebTLSConfig{
-					KeySecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "some-secret",
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				WebConfigFileFields: monitoringv1.WebConfigFileFields{
+					TLSConfig: &monitoringv1.WebTLSConfig{
+						KeySecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "some-configmap",
+								Name: "some-secret",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "some-configmap",
+								},
 							},
 						},
 					},

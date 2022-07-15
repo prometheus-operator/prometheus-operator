@@ -754,7 +754,7 @@ type PrometheusWebSpec struct {
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 // +k8s:openapi-gen=true
 type AlertmanagerWebSpec struct {
-	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
+	WebConfigFileFields `json:",inline"`
 }
 
 // WebConfigFileFields defines the file content for --web.config.file flag.

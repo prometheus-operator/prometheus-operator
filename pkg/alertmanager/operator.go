@@ -1657,7 +1657,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
-		fields.TLSConfig = a.Spec.Web.TLSConfig
+		fields = a.Spec.Web.WebConfigFileFields
 	}
 
 	webConfig, err := webconfig.New(

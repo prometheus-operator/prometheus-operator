@@ -548,7 +548,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	if version.GTE(semver.MustParse("0.22.0")) {
 		var fields monitoringv1.WebConfigFileFields
 		if a.Spec.Web != nil {
-			fields.TLSConfig = a.Spec.Web.TLSConfig
+			fields = a.Spec.Web.WebConfigFileFields
 		}
 
 		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), fields)

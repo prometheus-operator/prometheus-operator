@@ -1699,19 +1699,21 @@ func testAMWebTLS(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager(name, 1)
 	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
-		TLSConfig: &monitoringv1.WebTLSConfig{
-			KeySecret: v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: "web-tls",
-				},
-				Key: "tls.key",
-			},
-			Cert: monitoringv1.SecretOrConfigMap{
-				Secret: &v1.SecretKeySelector{
+		WebConfigFileFields: monitoringv1.WebConfigFileFields{
+			TLSConfig: &monitoringv1.WebTLSConfig{
+				KeySecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "web-tls",
 					},
-					Key: "tls.crt",
+					Key: "tls.key",
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "web-tls",
+						},
+						Key: "tls.crt",
+					},
 				},
 			},
 		},
