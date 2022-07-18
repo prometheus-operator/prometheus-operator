@@ -2135,7 +2135,8 @@ func (e *AuthorizationValidationError) Error() string {
 // Argument as part of the AdditionalArgs list.
 // +k8s:openapi-gen=true
 type Argument struct {
-	// Name of the argument, e.g. scrape.discovery-reload-interval
+	// Name of the argument, e.g. "scrape.discovery-reload-interval".
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	Value string `json:"value,omitempty"`

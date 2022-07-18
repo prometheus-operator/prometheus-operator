@@ -762,7 +762,6 @@ func makeStatefulSetSpec(
 			bindAddress = "127.0.0.1"
 		}
 
-		thanosContainerArgs := []string{"sidecar"}
 		thanosArgs := []monitoringv1.Argument{
 			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix))},
 			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", bindAddress)},
@@ -788,7 +787,6 @@ func makeStatefulSetSpec(
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Args:                     thanosContainerArgs,
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
@@ -876,14 +874,11 @@ func makeStatefulSetSpec(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(p.Spec.Thanos.ReadyTimeout)})
 		}
 
-		if len(p.Spec.Thanos.AdditionalArgs) > 0 {
-			if err := verifyAdditionalArgs(thanosArgs, p.Spec.Thanos.AdditionalArgs); err != nil {
-				return nil, err
-			}
-			thanosArgs = append(thanosArgs, p.Spec.Thanos.AdditionalArgs...)
+		containerArgs, err := buildArgs(thanosArgs, p.Spec.Thanos.AdditionalArgs)
+		if err != nil {
+			return nil, err
 		}
-
-		container.Args = append(container.Args, createContainerArgs(thanosArgs)...)
+		container.Args = append([]string{"sidecar"}, containerArgs...)
 
 		additionalContainers = append(additionalContainers, container)
 	}
@@ -940,14 +935,11 @@ func makeStatefulSetSpec(
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
-	if len(p.Spec.AdditionalArgs) > 0 {
-		if err := verifyAdditionalArgs(promArgs, p.Spec.AdditionalArgs); err != nil {
-			return nil, err
-		}
-		promArgs = append(promArgs, p.Spec.AdditionalArgs...)
-	}
+	containerArgs, err := buildArgs(promArgs, p.Spec.AdditionalArgs)
 
-	containerArgs := createContainerArgs(promArgs)
+	if err != nil {
+		return nil, err
+	}
 
 	boolFalse := false
 	boolTrue := true
@@ -1123,20 +1115,19 @@ func extractArgKeys(args []monitoringv1.Argument) []string {
 	return k
 }
 
-func verifyAdditionalArgs(operatorArgs []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) (e error) {
-	operatorArgKeys := extractArgKeys(operatorArgs)
+func buildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) ([]string, error) {
+	var containerArgs []string
+
+	argKeys := extractArgKeys(args)
 	additionalArgKeys := extractArgKeys(additionalArgs)
 
-	i := intersection(operatorArgKeys, additionalArgKeys)
+	i := intersection(argKeys, additionalArgKeys)
 	if len(i) > 0 {
-		return errors.Errorf("invalid additionalArgs configuration for already defined args: %s", i)
+		return nil, errors.Errorf("invalid additionalArgs configuration for already defined args: %s", i)
 	}
 
-	return nil
-}
+	args = append(args, additionalArgs...)
 
-func createContainerArgs(args []monitoringv1.Argument) []string {
-	var containerArgs []string
 	for _, arg := range args {
 		if arg.Value != "" {
 			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
@@ -1146,5 +1137,5 @@ func createContainerArgs(args []monitoringv1.Argument) []string {
 		}
 	}
 
-	return containerArgs
+	return containerArgs, nil
 }

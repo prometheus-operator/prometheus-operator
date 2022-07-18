@@ -2343,6 +2343,7 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"--web.route-prefix=/",
 		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
 		"--scrape.discovery-reload-interval=30s",
+		"--storage.tsdb.no-lockfile",
 	}
 
 	labels := map[string]string{
@@ -2363,6 +2364,9 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 					{
 						Name:  "scrape.discovery-reload-interval",
 						Value: "30s",
+					},
+					{
+						Name: "storage.tsdb.no-lockfile",
 					},
 				},
 			},
@@ -2397,6 +2401,41 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 					{
 						Name:  "config.file",
 						Value: "/foo/bar.yaml",
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Prometheus additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+}
+
+func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
+	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [web.enable-lifecycle]"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name: "web.enable-lifecycle",
 					},
 				},
 			},
