@@ -2353,7 +2353,7 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -2390,7 +2390,7 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	_, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -2426,7 +2426,7 @@ func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	_, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -2468,7 +2468,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -2503,7 +2503,7 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	_, err := makeStatefulSet("test", monitoringv1.Prometheus{
+	_, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
