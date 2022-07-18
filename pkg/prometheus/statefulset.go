@@ -1091,14 +1091,23 @@ func queryLogFilePath(p *monitoringv1.Prometheus) string {
 }
 
 func intersection(a, b []string) (i []string) {
-	m := make(map[string]bool)
+	m := make(map[string]struct{})
 
 	for _, item := range a {
-		m[item] = true
+		m[item] = struct{}{}
 	}
 
 	for _, item := range b {
 		if _, ok := m[item]; ok {
+			i = append(i, item)
+		}
+
+		negatedItem := strings.TrimPrefix(item, "no-")
+		if item == negatedItem {
+			negatedItem = fmt.Sprintf("no-%s", item)
+		}
+
+		if _, ok := m[negatedItem]; ok {
 			i = append(i, item)
 		}
 	}
@@ -1123,7 +1132,7 @@ func buildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argum
 
 	i := intersection(argKeys, additionalArgKeys)
 	if len(i) > 0 {
-		return nil, errors.Errorf("invalid additionalArgs configuration for already defined args: %s", i)
+		return nil, errors.Errorf("can't set arguments which are already managed by the operator: %s", strings.Join(i, ","))
 	}
 
 	args = append(args, additionalArgs...)

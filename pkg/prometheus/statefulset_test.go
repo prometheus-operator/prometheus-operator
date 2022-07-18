@@ -2381,7 +2381,7 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 }
 
 func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
-	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [config.file]"
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: config.file"
 
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
@@ -2417,7 +2417,7 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 }
 
 func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
-	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [web.enable-lifecycle]"
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: web.enable-lifecycle"
 
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
@@ -2436,6 +2436,44 @@ func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 				AdditionalArgs: []monitoringv1.Argument{
 					{
 						Name: "web.enable-lifecycle",
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err == nil {
+		t.Fatal("expected error for Prometheus additionalArgs configuration")
+	}
+
+	if !strings.Contains(err.Error(), expectedErrorMsg) {
+		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
+	}
+}
+
+func TestPrometheusAdditionalNoPrefixArgsDuplicate(t *testing.T) {
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: no-storage.tsdb.wal-compression"
+	walCompression := new(bool)
+	*walCompression = true
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			WALCompression: walCompression,
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AdditionalArgs: []monitoringv1.Argument{
+					{
+						Name: "no-storage.tsdb.wal-compression",
 					},
 				},
 			},
@@ -2494,7 +2532,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 }
 
 func TestThanosAdditionalArgsDuplicate(t *testing.T) {
-	expectedErrorMsg := "invalid additionalArgs configuration for already defined args: [log.level]"
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: log.level"
 
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",

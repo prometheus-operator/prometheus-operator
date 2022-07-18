@@ -3800,7 +3800,7 @@ string
 </em>
 </td>
 <td>
-<p>Name of the argument, e.g. scrape.discovery-reload-interval</p>
+<p>Name of the argument, e.g. &ldquo;scrape.discovery-reload-interval&rdquo;.</p>
 </td>
 </tr>
 <tr>
