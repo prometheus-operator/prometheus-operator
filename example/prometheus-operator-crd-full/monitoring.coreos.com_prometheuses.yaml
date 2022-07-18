@@ -122,7 +122,8 @@ spec:
                   description: Argument as part of the AdditionalArgs list.
                   properties:
                     name:
-                      description: Name of the argument, e.g. scrape.discovery-reload-interval
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
                       type: string
                     value:
                       description: Argument value, e.g. 30s. Can be empty for name-only
@@ -6387,7 +6388,8 @@ spec:
                       description: Argument as part of the AdditionalArgs list.
                       properties:
                         name:
-                          description: Name of the argument, e.g. scrape.discovery-reload-interval
+                          description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                          minLength: 1
                           type: string
                         value:
                           description: Argument value, e.g. 30s. Can be empty for

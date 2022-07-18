@@ -12261,14 +12261,15 @@ spec:
                   providing an invalid argument the reconciliation will fail and an
                   error will be logged.
                 items:
-                  description: Argument as part of the AdditionalArgs list
+                  description: Argument as part of the AdditionalArgs list.
                   properties:
                     name:
-                      description: Name of the argument, must not be empty
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
                       type: string
                     value:
-                      description: Argument value. Can be empty for name-only arguments
-                        (e.g. --storage.tsdb.no-lockfile)
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
                       type: string
                   required:
                   - name
@@ -18526,14 +18527,15 @@ spec:
                       itself) or when providing an invalid argument the reconciliation
                       will fail and an error will be logged.
                     items:
-                      description: Argument as part of the AdditionalArgs list
+                      description: Argument as part of the AdditionalArgs list.
                       properties:
                         name:
-                          description: Name of the argument, must not be empty
+                          description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                          minLength: 1
                           type: string
                         value:
-                          description: Argument value. Can be empty for name-only
-                            arguments (e.g. --storage.tsdb.no-lockfile)
+                          description: Argument value, e.g. 30s. Can be empty for
+                            name-only arguments (e.g. --storage.tsdb.no-lockfile)
                           type: string
                       required:
                       - name

@@ -1,0 +1,73 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+API_DOC_GEN_BINARY	Makefile	/^API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)\/gen-crd-api-reference-docs$/;"	m
+APP	test/instrumented-sample-app/Makefile	/^APP := instrumented-sample-app$/;"	m
+ARCH	Makefile	/^	ARCH=$(GOARCH)$/;"	m
+ARCH	Makefile	/^	ARCH=armv7$/;"	m
+BUILD_BRANCH	Makefile	/^	BUILD_BRANCH=$(GITHUB_REF:refs\/heads\/%=%)$/;"	m
+BUILD_BRANCH	Makefile	/^	BUILD_BRANCH?=$(shell git branch --show-current)$/;"	m
+BUILD_DATE	Makefile	/^BUILD_DATE=$(shell date +"%Y%m%d-%T")$/;"	m
+BUILD_REVISION	Makefile	/^	BUILD_REVISION=$(GITHUB_SHA)$/;"	m
+BUILD_REVISION	Makefile	/^	BUILD_REVISION?=$(shell git rev-parse --short HEAD)$/;"	m
+BUILD_USER	Makefile	/^	BUILD_USER=Action-Run-ID-$(GITHUB_RUN_ID)$/;"	m
+BUILD_USER	Makefile	/^	BUILD_USER?=$(USER)$/;"	m
+CLIENT_TARGET	Makefile	/^CLIENT_TARGET := pkg\/client\/versioned\/clientset.go$/;"	m
+CONTROLLER_GEN_BINARY	Makefile	/^CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)\/controller-gen$/;"	m
+DEEPCOPY_TARGETS	Makefile	/^DEEPCOPY_TARGETS := pkg\/apis\/monitoring\/v1\/zz_generated.deepcopy.go pkg\/apis\/monitoring\/v1alpha1\/zz_generated.deepcopy.go pkg\/apis\/monitoring\/v1beta1\/zz_generated.deepcopy.go$/;"	m
+FULLY_GENERATED_DOCS	Makefile	/^FULLY_GENERATED_DOCS = Documentation\/api.md Documentation\/compatibility.md Documentation\/operator.md$/;"	m
+GO111MODULE	test/instrumented-sample-app/Makefile	/^GO111MODULE?=on$/;"	m
+GOARCH	Makefile	/^GOARCH?=$(shell go env GOARCH)$/;"	m
+GOJSONTOYAML_BINARY	Makefile	/^GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)\/gojsontoyaml$/;"	m
+GOLANGCILINTER_BINARY	Makefile	/^GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)\/golangci-lint$/;"	m
+GOOS	Makefile	/^GOOS?=$(shell go env GOOS)$/;"	m
+GOOS	Makefile	/^image: GOOS := linux # Overriding GOOS value for docker image build$/;"	m
+GOPROXY	test/instrumented-sample-app/Makefile	/^GOPROXY?=http:\/\/proxy.golang.org$/;"	m
+GO_BUILD_LDFLAGS	Makefile	/^GO_BUILD_LDFLAGS=\\$/;"	m
+GO_BUILD_RECIPE	Makefile	/^GO_BUILD_RECIPE=\\$/;"	m
+GO_PKG	Makefile	/^GO_PKG=github.com\/prometheus-operator\/prometheus-operator$/;"	m
+IMAGE_OPERATOR	Makefile	/^IMAGE_OPERATOR?=quay.io\/prometheus-operator\/prometheus-operator$/;"	m
+IMAGE_RELOADER	Makefile	/^IMAGE_RELOADER?=quay.io\/prometheus-operator\/prometheus-config-reloader$/;"	m
+IMAGE_WEBHOOK	Makefile	/^IMAGE_WEBHOOK?=quay.io\/prometheus-operator\/admission-webhook$/;"	m
+INFORMER_TARGETS	Makefile	/^INFORMER_TARGETS := pkg\/client\/informers\/externalversions\/monitoring\/v1\/interface.go pkg\/client\/informers\/externalversions\/monitoring\/v1alpha1\/interface.go pkg\/client\/informers\/externalversions\/monitoring\/v1beta1\/interface.go$/;"	m
+JB_BINARY	Makefile	/^JB_BINARY=$(TOOLS_BIN_DIR)\/jb$/;"	m
+JSONNETFMT_BINARY	Makefile	/^JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)\/jsonnetfmt$/;"	m
+JSONNET_BINARY	Makefile	/^JSONNET_BINARY=$(TOOLS_BIN_DIR)\/jsonnet$/;"	m
+K8S_GEN_ARGS	Makefile	/^K8S_GEN_ARGS:=--go-header-file $(shell pwd)\/.header --v=1 --logtostderr$/;"	m
+K8S_GEN_BINARIES	Makefile	/^K8S_GEN_BINARIES:=informer-gen lister-gen client-gen$/;"	m
+K8S_GEN_DEPS	Makefile	/^K8S_GEN_DEPS:=.header$/;"	m
+K8S_GEN_VERSION	Makefile	/^K8S_GEN_VERSION:=release-1.14$/;"	m
+KUBECONFIG	Makefile	/^test-e2e: KUBECONFIG?=$(HOME)\/.kube\/config$/;"	m
+LISTER_TARGETS	Makefile	/^LISTER_TARGETS := pkg\/client\/listers\/monitoring\/v1\/interface.go pkg\/client\/listers\/monitoring\/v1alpha1\/interface.go pkg\/client\/listers\/monitoring\/v1beta1\/interface.go$/;"	m
+MDOX_BINARY	Makefile	/^MDOX_BINARY=$(TOOLS_BIN_DIR)\/mdox$/;"	m
+MDOX_VALIDATE_CONFIG	Makefile	/^MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml$/;"	m
+MD_FILES_TO_FORMAT	Makefile	/^MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))$/;"	m
+PATH	Makefile	/^export PATH := $(TOOLS_BIN_DIR):$(PATH)$/;"	m
+PO_DOCGEN_BINARY	Makefile	/^PO_DOCGEN_BINARY:=$(TOOLS_BIN_DIR)\/po-docgen$/;"	m
+PROMETHEUS_COMMON_PKG	Makefile	/^PROMETHEUS_COMMON_PKG=github.com\/prometheus\/common$/;"	m
+PROMLINTER_BINARY	Makefile	/^PROMLINTER_BINARY=$(TOOLS_BIN_DIR)\/promlinter$/;"	m
+RBAC_MANIFESTS	Makefile	/^RBAC_MANIFESTS = example\/rbac\/prometheus-operator\/prometheus-operator-cluster-role.yaml example\/rbac\/prometheus-operator\/prometheus-operator-cluster-role-binding.yaml example\/rbac\/prometheus-operator\/prometheus-operator-service-account.yaml example\/rbac\/prometheus-operator\/prometheus-operator-deployment.yaml$/;"	m
+RCH	Makefile	/^	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .$/;"	m
+RCH	Makefile	/^	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd\/prometheus-config-reloader\/Dockerfile .$/;"	m
+RCH	Makefile	/^	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd\/admission-webhook\/Dockerfile .$/;"	m
+REG	test/instrumented-sample-app/Makefile	/^REG := quay.io\/coreos$/;"	m
+SHELL	Makefile	/^SHELL=\/usr\/bin\/env bash -o pipefail$/;"	m
+SHELLCHECK_BINARY	Makefile	/^SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)\/shellcheck$/;"	m
+TAG	Makefile	/^TAG?=$(shell git rev-parse --short HEAD)$/;"	m
+TOOLING	Makefile	/^TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)$/;"	m
+TOOLS_BIN_DIR	Makefile	/^TOOLS_BIN_DIR ?= $(shell pwd)\/tmp\/bin$/;"	m
+TYPES_V1ALPHA1_TARGET	Makefile	/^TYPES_V1ALPHA1_TARGET := pkg\/apis\/monitoring\/v1alpha1\/alertmanager_config_types.go$/;"	m
+TYPES_V1BETA1_TARGET	Makefile	/^TYPES_V1BETA1_TARGET := pkg\/apis\/monitoring\/v1beta1\/alertmanager_config_types.go$/;"	m
+TYPES_V1_TARGET	Makefile	/^TYPES_V1_TARGET := pkg\/apis\/monitoring\/v1\/types.go$/;"	m
+VERSION	Makefile	/^VERSION?=$(shell cat VERSION | tr -d " \\t\\n\\r")$/;"	m
+VERSION	test/instrumented-sample-app/Makefile	/^VERSION ?= $(shell cat VERSION)$/;"	m
+_K8S_GEN_VAR_TARGET_	Makefile	/^define _K8S_GEN_VAR_TARGET_$/;"	m
+concat	scripts/generate-bundle.sh	/^function concat() {$/;"	f
+crdVersions	Makefile	/^	cd pkg\/apis\/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=.\/... output:crd:dir=$(PWD)\/example\/prometheus-operator-crd-full$/;"	m
+generate_bundle	scripts/generate-bundle.sh	/^function generate_bundle() {$/;"	f
+headerFile	Makefile	/^	cd .\/pkg\/apis\/monitoring\/v1alpha1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)\/.header \\$/;"	m
+headerFile	Makefile	/^	cd .\/pkg\/apis\/monitoring\/v1beta1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)\/.header \\$/;"	m
+pkgs	Makefile	/^pkgs = $(shell go list .\/... | grep -v \/test\/ | grep -v \/contrib\/)$/;"	m
