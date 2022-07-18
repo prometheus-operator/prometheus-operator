@@ -1117,7 +1117,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			expected := append(tc.expectedKeys, alertmanagerConfigFile)
+			expected := append(tc.expectedKeys, alertmanagerConfigFileCompressed)
 			if len(secret.Data) != len(expected) {
 				t.Fatalf("expecting %d items to be present in the generated secret but got %d", len(expected), len(secret.Data))
 			}
