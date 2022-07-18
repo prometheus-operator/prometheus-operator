@@ -29,8 +29,6 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "api":
-		printAPIDocs(os.Args[2:])
 	case "compatibility":
 		cm := getCompatibilityMatrix()
 		var (
