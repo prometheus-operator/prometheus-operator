@@ -1219,8 +1219,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
 			return false, nil
 		}
 
@@ -1327,7 +1327,12 @@ mute_time_intervals:
 templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
+		var expectedCompressedBuffer bytes.Buffer
+		if err := gzipConfig(&expectedCompressedBuffer, []byte(expected)); err != nil {
+			t.Fatal(err)
+		}
+
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedCompressedBuffer.Bytes()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1353,7 +1358,7 @@ templates: []
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
 			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
 			return false, nil
 		}
@@ -1374,8 +1379,12 @@ receivers:
 - name: "null"
 templates: []
 `
+		var expectedBuffer bytes.Buffer
+		if err := gzipConfig(&expectedBuffer, []byte(expected)); err != nil {
+			t.Fatal(err)
+		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedBuffer.Bytes()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1443,12 +1452,16 @@ inhibit_rules:
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
 			lastErr = errors.New("'alertmanager.yaml' key is missing")
 			return false, nil
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+		var yamlConfigBuffer bytes.Buffer
+		if err := gzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), yamlConfigBuffer.Bytes()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1514,8 +1527,8 @@ templates: []
 			return false, err
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing")
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing")
 			return false, nil
 		}
 
