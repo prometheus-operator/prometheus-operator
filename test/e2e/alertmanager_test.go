@@ -1332,7 +1332,7 @@ templates: []
 			t.Fatal(err)
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedCompressedBuffer.Bytes()); diff != "" {
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedCompressedBuffer.String()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1384,7 +1384,7 @@ templates: []
 			t.Fatal(err)
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedBuffer.Bytes()); diff != "" {
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedBuffer.String()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1461,7 +1461,7 @@ inhibit_rules:
 		if err := gzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
 			t.Fatal(err)
 		}
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), yamlConfigBuffer.Bytes()); diff != "" {
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), yamlConfigBuffer.String()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1532,7 +1532,12 @@ templates: []
 			return false, nil
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+		var yamlConfigBuffer bytes.Buffer
+		if err := gzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
+			t.Fatal(err)
+		}
+
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), yamlConfigBuffer.String()); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
