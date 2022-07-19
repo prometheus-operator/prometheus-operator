@@ -2177,7 +2177,10 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
+				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
+				svcMon.APIVersion = monitoringv1.SchemeGroupVersion.String()
+				svcMon.Kind = monitoringv1.ServiceMonitorsKind
+				serviceMonitors[k] = svcMon
 			}
 		})
 		if err != nil {
@@ -2305,7 +2308,10 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
+				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
+				podMon.APIVersion = monitoringv1.SchemeGroupVersion.String()
+				podMon.Kind = monitoringv1.PodMonitorsKind
+				podMonitors[k] = podMon
 			}
 		})
 		if err != nil {
@@ -2424,7 +2430,10 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	for _, ns := range namespaces {
 		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				probes[k] = obj.(*monitoringv1.Probe)
+				probe := obj.(*monitoringv1.Probe).DeepCopy()
+				probe.APIVersion = monitoringv1.SchemeGroupVersion.String()
+				probe.Kind = monitoringv1.ProbesKind
+				probes[k] = probe
 			}
 		})
 		if err != nil {
