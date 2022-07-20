@@ -28,6 +28,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"golang.org/x/net/http2"
 	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -1675,10 +1676,11 @@ func testAMRollbackManualChanges(t *testing.T) {
 	}
 }
 
-func testAMWebTLS(t *testing.T) {
+func testAMWeb(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
+	trueVal := true
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -1714,6 +1716,16 @@ func testAMWebTLS(t *testing.T) {
 						},
 						Key: "tls.crt",
 					},
+				},
+			},
+			HTTPConfig: &monitoringv1.WebHTTPConfig{
+				HTTP2: &trueVal,
+				Headers: &monitoringv1.WebHTTPHeaders{
+					ContentSecurityPolicy:   "default-src 'self'",
+					XFrameOptions:           "Deny",
+					XContentTypeOptions:     "NoSniff",
+					XXSSProtection:          "1; mode=block",
+					StrictTransportSecurity: "max-age=31536000; includeSubDomains",
 				},
 			},
 		},
@@ -1760,17 +1772,29 @@ func testAMWebTLS(t *testing.T) {
 		// This is why we use an http client which skips the TLS verification.
 		// In the test we will verify the TLS certificate manually to make sure
 		// the alertmanager instance is configured properly.
-		httpClient := http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
 			},
+		}
+		err = http2.ConfigureTransport(transport)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		httpClient := http.Client{
+			Transport: transport,
 		}
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			pollErr = err
+			return false, nil
+		}
+
+		if resp.ProtoMajor != 2 {
+			pollErr = fmt.Errorf("expected ProtoMajor to be 2 but got %d", resp.ProtoMajor)
 			return false, nil
 		}
 
@@ -1785,11 +1809,28 @@ func testAMWebTLS(t *testing.T) {
 			return false, nil
 		}
 
+		expectedHeaders := map[string]string{
+			"Content-Security-Policy":   "default-src 'self'",
+			"X-Frame-Options":           "deny",
+			"X-Content-Type-Options":    "nosniff",
+			"X-XSS-Protection":          "1; mode=block",
+			"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+		}
+
+		for k, v := range expectedHeaders {
+			rv := resp.Header.Get(k)
+
+			if rv != v {
+				pollErr = fmt.Errorf("expected header %s value to be %s but got %s", k, v, rv)
+				return false, nil
+			}
+		}
+
 		return true, nil
 	})
 
 	if err != nil {
-		t.Fatalf("failed to verify TLS certificate: %v: %v", err, pollErr)
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
 	}
 }
 
