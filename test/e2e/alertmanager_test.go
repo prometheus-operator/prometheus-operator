@@ -1328,12 +1328,11 @@ mute_time_intervals:
 templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
-		var expectedCompressedBuffer bytes.Buffer
-		if err := operator.GzipConfig(&expectedCompressedBuffer, []byte(expected)); err != nil {
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
 			t.Fatal(err)
 		}
-
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), expectedCompressedBuffer.String()); diff != "" {
+		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
