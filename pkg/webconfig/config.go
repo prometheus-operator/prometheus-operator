@@ -201,7 +201,10 @@ func (c Config) addHTTPServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	httpServerConfig := yaml.MapSlice{}
-	httpServerConfig = append(httpServerConfig, yaml.MapItem{Key: "http2", Value: http.HTTP2})
+
+	if http.HTTP2 != nil {
+		httpServerConfig = append(httpServerConfig, yaml.MapItem{Key: "http2", Value: *http.HTTP2})
+	}
 
 	headers := http.Headers
 	if headers == nil {
