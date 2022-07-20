@@ -740,8 +740,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	am := aobj.(*monitoringv1.Alertmanager)
 	am = am.DeepCopy()
-	am.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	am.Kind = monitoringv1.AlertmanagersKind
+	if err := k8sutil.AddTypeInformationToObject(am); err != nil {
+		return errors.Wrap(err, "failed to set Alertmanager type information")
+	}
 
 	if am.Spec.Paused {
 		return nil
