@@ -1360,7 +1360,7 @@ templates: []
 		}
 
 		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
 			return false, nil
 		}
 		expected := `global:
