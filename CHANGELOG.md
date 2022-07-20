@@ -1,3 +1,14 @@
+## 0.58.0 / 2022-07-19
+
+* [FEATURE] Add validations for timeout and time settings of alertmanager at CRD level. #4827, #4881
+* [FEATURE] Extend the PrometheusSpec to allow to configure the `max_exemplars`. #4834
+* [FEATURE] Add support for web TLS configuration for Alertmanager CRD. #4868
+* [ENHANCEMENT] Add support for `uppercase`, `lowercase`, and `CamelCase` relabel actions. #4840, #4873
+* [ENHANCEMENT] Added support for `enable_http2` in endpoint scrape configuration. #4836
+* [BUGFIX] Fixed missing conversion of the `followRedirects` field in HTTP configuration for AlertmanagerConfig v1beta1. #4854
+* [BUGFIX] fix AlertmanagerConfig.Spec.Route nil panic. #4853
+* [BUGFIX] Optimise warning log message during sanitization of OpsGenie configuration. #4833
+
 ## 0.57.0 / 2022-06-02
 
 The main change introduced by this release is a new v1beta1 API version for the
