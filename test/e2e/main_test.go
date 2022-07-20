@@ -219,6 +219,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromWebTLS":                             testPromWebTLS,
 		"PromMinReadySeconds":                    testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
+		"PromNamespaceEnforcementExclusion":      testPromNamespaceEnforcementExclusion,
 		"PromQueryLogFile":                       testPromQueryLogFile,
 		"PromDegradedCondition":                  testPromDegradedConditionStatus,
 	}
