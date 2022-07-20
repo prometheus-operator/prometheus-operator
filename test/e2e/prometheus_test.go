@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -1092,7 +1091,7 @@ scrape_configs:
 `
 
 	var bufOne bytes.Buffer
-	if err := gzipConfig(&bufOne, []byte(firstConfig)); err != nil {
+	if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
 		t.Fatal(err)
 	}
 	firstConfigCompressed := bufOne.Bytes()
@@ -1140,7 +1139,7 @@ scrape_configs:
 `
 
 	var bufTwo bytes.Buffer
-	if err := gzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
+	if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
 		t.Fatal(err)
 	}
 	secondConfigCompressed := bufTwo.Bytes()
@@ -4329,13 +4328,4 @@ type alertmanagerDiscovery struct {
 type prometheusAlertmanagerAPIResponse struct {
 	Status string                 `json:"status"`
 	Data   *alertmanagerDiscovery `json:"data"`
-}
-
-func gzipConfig(buf *bytes.Buffer, conf []byte) error {
-	w := gzip.NewWriter(buf)
-	defer w.Close()
-	if _, err := w.Write(conf); err != nil {
-		return err
-	}
-	return nil
 }

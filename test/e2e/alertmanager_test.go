@@ -44,6 +44,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -1328,7 +1329,7 @@ templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		var expectedCompressedBuffer bytes.Buffer
-		if err := gzipConfig(&expectedCompressedBuffer, []byte(expected)); err != nil {
+		if err := operator.GzipConfig(&expectedCompressedBuffer, []byte(expected)); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1380,7 +1381,7 @@ receivers:
 templates: []
 `
 		var expectedBuffer bytes.Buffer
-		if err := gzipConfig(&expectedBuffer, []byte(expected)); err != nil {
+		if err := operator.GzipConfig(&expectedBuffer, []byte(expected)); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1458,7 +1459,7 @@ inhibit_rules:
 		}
 
 		var yamlConfigBuffer bytes.Buffer
-		if err := gzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
+		if err := operator.GzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml.gz"]), yamlConfigBuffer.String()); diff != "" {
@@ -1533,7 +1534,7 @@ templates: []
 		}
 
 		var yamlConfigBuffer bytes.Buffer
-		if err := gzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
+		if err := operator.GzipConfig(&yamlConfigBuffer, []byte(yamlConfig)); err != nil {
 			t.Fatal(err)
 		}
 
