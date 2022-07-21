@@ -55,13 +55,41 @@ func TestGenerateGlobalConfig(t *testing.T) {
 	myrouteJSON, _ := json.Marshal(myroute)
 
 	tests := []struct {
-		name     string
-		amConfig *monitoringv1alpha1.AlertmanagerConfig
-		want     *alertmanagerConfig
-		wantErr  bool
+		name         string
+		globalConfig *monitoringingv1.AlertmanagerGlobalConfig
+		amConfig     *monitoringv1alpha1.AlertmanagerConfig
+		want         *alertmanagerConfig
+		wantErr      bool
 	}{
 		{
 			name: "valid global config",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					OAuth2: &monitoringingv1.OAuth2{
+						ClientID: monitoringingv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-id",
+								},
+								Key: "test",
+							},
+						},
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						TokenURL: "https://test.com",
+						Scopes:   []string{"any"},
+						EndpointParams: map[string]string{
+							"some": "value",
+						},
+					},
+					FollowRedirects: toBoolPtr(true),
+				},
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -84,6 +112,21 @@ func TestGenerateGlobalConfig(t *testing.T) {
 				},
 			},
 			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
+					HTTPConfig: &httpClientConfig{
+						OAuth2: &oauth2{
+							ClientID:     "clientID",
+							ClientSecret: "clientSecret",
+							Scopes:       []string{"any"},
+							TokenURL:     "https://test.com",
+							EndpointParams: map[string]string{
+								"some": "value",
+							},
+						},
+						FollowRedirects: toBoolPtr(true),
+					},
+				},
 				Receivers: []*receiver{
 					{
 						Name: "mynamespace/global-config/null",
@@ -113,20 +156,79 @@ func TestGenerateGlobalConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "globalConfig has null resolve timeout",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					FollowRedirects: toBoolPtr(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						FollowRedirects: toBoolPtr(true),
+					},
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		version, err := semver.ParseTolerant("v0.22.2")
 		if err != nil {
 			t.Fatal(err)
 		}
-		kclient := fake.NewSimpleClientset()
+		kclient := fake.NewSimpleClientset(
+			&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-client-id",
+					Namespace: "mynamespace",
+				},
+				Data: map[string]string{
+					"test": "clientID",
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-client-secret",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"test": []byte("clientSecret"),
+				},
+			},
+		)
 		cb := newConfigBuilder(
 			log.NewNopLogger(),
 			version,
 			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
 		)
 		t.Run(tt.name, func(t *testing.T) {
-			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.amConfig)
+			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

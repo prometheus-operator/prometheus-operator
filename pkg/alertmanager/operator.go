@@ -972,7 +972,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return errors.Wrap(err, "failed to get global AlertmanagerConfig")
 		}
 
-		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, globalAmConfig)
+		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize from global AlertmangerConfig")
 		}
