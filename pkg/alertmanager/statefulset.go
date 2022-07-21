@@ -502,7 +502,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 	}
 
-	reloadWatchDirs := []string{}
+	watchedDirectories := []string{}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-volume",
@@ -532,7 +532,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		}
 		amVolumeMounts = append(amVolumeMounts, mount)
 		configReloaderVolumeMounts = append(configReloaderVolumeMounts, mount)
-		reloadWatchDirs = append(reloadWatchDirs, mountPath)
+		watchedDirectories = append(watchedDirectories, mountPath)
 	}
 
 	for _, c := range a.Spec.ConfigMaps {
@@ -554,7 +554,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		}
 		amVolumeMounts = append(amVolumeMounts, mount)
 		configReloaderVolumeMounts = append(configReloaderVolumeMounts, mount)
-		reloadWatchDirs = append(reloadWatchDirs, mountPath)
+		watchedDirectories = append(watchedDirectories, mountPath)
 	}
 
 	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
@@ -583,9 +583,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	terminationGracePeriod := int64(120)
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
-
-	var watchedDirectories []string
-	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
 	boolFalse := false
 	boolTrue := true
