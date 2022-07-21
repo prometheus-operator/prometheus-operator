@@ -21,10 +21,10 @@ import (
 	"strings"
 )
 
-func GzipConfig(buf *bytes.Buffer, conf []byte) error {
-	w := gzip.NewWriter(buf)
-	defer w.Close()
-	if _, err := w.Write(conf); err != nil {
+func GzipConfig(w io.Writer, conf []byte) error {
+	buf := gzip.NewWriter(w)
+	defer buf.Close()
+	if _, err := buf.Write(conf); err != nil {
 		return err
 	}
 	return nil
