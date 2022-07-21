@@ -132,19 +132,9 @@ type CommonPrometheusFields struct {
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait for target to respond before erroring.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
-	// Interval between consecutive evaluations. Default: `30s`
-	// +kubebuilder:default:="30s"
-	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
-	// Enable access to prometheus web admin API. Defaults to the value of `false`.
-	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
-	// shutdown Prometheus, and more. Enabling this should be done with care and the
-	// user is advised to add additional authentication authorization via a proxy to
-	// ensure only clients authorized to perform these actions can do so.
-	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
-	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 	// Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`.
 	// WARNING: This is not considered an efficient way of ingesting samples.
 	// Use it with caution for specific low-volume use cases.
@@ -503,6 +493,16 @@ type PrometheusSpec struct {
 	// Exemplars related settings that are runtime reloadable.
 	// It requires to enable the exemplar storage feature to be effective.
 	Exemplars *Exemplars `json:"exemplars,omitempty"`
+	// Interval between consecutive evaluations. Default: `30s`
+	// +kubebuilder:default:="30s"
+	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
+	// Enable access to prometheus web admin API. Defaults to the value of `false`.
+	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+	// shutdown Prometheus, and more. Enabling this should be done with care and the
+	// user is advised to add additional authentication authorization via a proxy to
+	// ensure only clients authorized to perform these actions can do so.
+	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 }
 
 type Exemplars struct {
