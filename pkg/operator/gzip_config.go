@@ -38,5 +38,8 @@ func GunzipConfig(b []byte) (string, error) {
 	}
 	uncompressed := new(strings.Builder)
 	_, err = io.Copy(uncompressed, reader)
+	if err != nil {
+		return "", err
+	}
 	return uncompressed.String(), nil
 }
