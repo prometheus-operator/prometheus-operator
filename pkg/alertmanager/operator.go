@@ -15,6 +15,7 @@
 package alertmanager
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"reflect"
@@ -1036,7 +1037,12 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	for k, v := range additionalData {
 		generatedConfigSecret.Data[k] = v
 	}
-	generatedConfigSecret.Data[alertmanagerConfigFile] = conf
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, conf); err != nil {
+		return errors.Wrap(err, "couldnt gzip config")
+	}
+	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
 	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
