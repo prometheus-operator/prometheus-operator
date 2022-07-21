@@ -502,7 +502,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 	}
 
-	reloadWatchDirs := []string{alertmanagerConfigDir}
+	reloadWatchDirs := []string{}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-volume",
