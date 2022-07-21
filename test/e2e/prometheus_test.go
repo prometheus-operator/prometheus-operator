@@ -4046,7 +4046,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 			}
 
-			// Check that the namespace label is enforced to the correct value.
+			// Check that the namespace label isn't enforced.
 			var (
 				loopErr        error
 				namespaceLabel string
