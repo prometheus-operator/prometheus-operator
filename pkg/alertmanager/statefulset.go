@@ -557,7 +557,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		}
 
 		confArg, configVol, configMount := webConfig.GetMountParameters()
-		amArgs = append(amArgs, confArg)
+		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
 	}

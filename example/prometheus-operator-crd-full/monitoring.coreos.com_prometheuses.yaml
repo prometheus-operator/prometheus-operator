@@ -108,6 +108,31 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              additionalArgs:
+                description: AdditionalArgs allows setting additional arguments for
+                  the Prometheus container. It is intended for e.g. activating hidden
+                  flags which are not supported by the dedicated configuration options
+                  yet. The arguments are passed as-is to the Prometheus container
+                  which may cause issues if they are invalid or not supporeted by
+                  the given Prometheus version. In case of an argument conflict (e.g.
+                  an argument which is already set by the operator itself) or when
+                  providing an invalid argument the reconciliation will fail and an
+                  error will be logged.
+                items:
+                  description: Argument as part of the AdditionalArgs list.
+                  properties:
+                    name:
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               additionalScrapeConfigs:
                 description: 'AdditionalScrapeConfigs allows specifying a key of a
                   Secret containing additional Prometheus scrape configurations. Scrape
@@ -6345,6 +6370,29 @@ spec:
                   notice in any release. \n This is experimental and may change significantly
                   without backward compatibility in any release."
                 properties:
+                  additionalArgs:
+                    description: AdditionalArgs allows setting additional arguments
+                      for the Thanos container. The arguments are passed as-is to
+                      the Thanos container which may cause issues if they are invalid
+                      or not supporeted the given Thanos version. In case of an argument
+                      conflict (e.g. an argument which is already set by the operator
+                      itself) or when providing an invalid argument the reconciliation
+                      will fail and an error will be logged.
+                    items:
+                      description: Argument as part of the AdditionalArgs list.
+                      properties:
+                        name:
+                          description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Argument value, e.g. 30s. Can be empty for
+                            name-only arguments (e.g. --storage.tsdb.no-lockfile)
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
                   baseImage:
                     description: 'Thanos base image if other than default. Deprecated:
                       use ''image'' instead'

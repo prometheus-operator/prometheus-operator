@@ -2142,6 +2142,26 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </tr>
 <tr>
 <td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Prometheus container which may cause issues if they are invalid or not supporeted
+by the given Prometheus version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -3831,6 +3851,46 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.Argument">Argument
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+</p>
+<div>
+<p>Argument as part of the AdditionalArgs list.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the argument, e.g. &ldquo;scrape.discovery-reload-interval&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. &ndash;storage.tsdb.no-lockfile)</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata
 </h3>
 <p>
@@ -4905,6 +4965,26 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Prometheus container which may cause issues if they are invalid or not supporeted
+by the given Prometheus version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
 </td>
 </tr>
 </tbody>
@@ -8087,6 +8167,26 @@ This is an alpha field and requires enabling StatefulSetMinReadySeconds feature 
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Prometheus container which may cause issues if they are invalid or not supporeted
+by the given Prometheus version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
 </td>
 </tr>
 <tr>
@@ -11743,6 +11843,24 @@ Duration
 <td>
 <p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Thanos container.
+The arguments are passed as-is to the Thanos container which may cause issues
+if they are invalid or not supporeted the given Thanos version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
 </td>
 </tr>
 </tbody>
