@@ -327,6 +327,13 @@ type CommonPrometheusFields struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+	// Enable compression of the write-ahead log using Snappy. This flag is
+	// only available in versions of Prometheus >= 2.11.0.
+	WALCompression *bool `json:"walCompression,omitempty"`
+	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+	// to be excluded from enforcing a namespace label of origin.
+	// Applies only if enforcedNamespaceLabel set to true.
+	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 }
 
 // +genclient
@@ -416,15 +423,8 @@ type PrometheusSpec struct {
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 	// Disable prometheus compaction.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
-	// Enable compression of the write-ahead log using Snappy. This flag is
-	// only available in versions of Prometheus >= 2.11.0.
-	WALCompression *bool `json:"walCompression,omitempty"`
 	// /--rules.*/ command-line arguments.
 	Rules Rules `json:"rules,omitempty"`
-	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-	// to be excluded from enforcing a namespace label of origin.
-	// Applies only if enforcedNamespaceLabel set to true.
-	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 	// PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
 	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
 	// Make sure both ruleNamespace and ruleName are set for each pair.
