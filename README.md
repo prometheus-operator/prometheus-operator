@@ -186,7 +186,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 > Note: In case you are running kind using podman, the step 3 won't work for you. You will need to switch command in Makefile:
 >
-> `sed -i 's/docker build/podman build/g' Makefile`
+> `CONTAINER_CLI=podman make image`
 
 4. publish locally built images to be accessible inside kind
 
