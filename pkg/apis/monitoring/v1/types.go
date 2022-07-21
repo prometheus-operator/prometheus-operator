@@ -88,17 +88,6 @@ type CommonPrometheusFields struct {
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
-	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
-	// Version is ignored if Tag is set.
-	// Deprecated: use 'image' instead.  The image tag can be specified
-	// as part of the image URL.
-	Tag string `json:"tag,omitempty"`
-	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
-	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
-	// Version and Tag are ignored if SHA is set.
-	// Deprecated: use 'image' instead.  The image digest can be specified
-	// as part of the image URL.
-	SHA string `json:"sha,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	Paused bool `json:"paused,omitempty"`
@@ -107,9 +96,6 @@ type CommonPrometheusFields struct {
 	// Prometheus Operator knows what version of Prometheus is being
 	// configured.
 	Image *string `json:"image,omitempty"`
-	// Base image to use for a Prometheus deployment.
-	// Deprecated: use 'image' instead
-	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -418,6 +404,20 @@ type HostAlias struct {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
+	// Base image to use for a Prometheus deployment.
+	// Deprecated: use 'image' instead
+	BaseImage string `json:"baseImage,omitempty"`
+	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
+	// Version is ignored if Tag is set.
+	// Deprecated: use 'image' instead.  The image tag can be specified
+	// as part of the image URL.
+	Tag string `json:"tag,omitempty"`
+	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
+	// Deprecated: use 'image' instead.  The image digest can be specified
+	// as part of the image URL.
+	SHA string `json:"sha,omitempty"`
 	// Time duration Prometheus shall retain data for. Default is '24h' if
 	// retentionSize is not set, and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
 	// (milliseconds seconds minutes hours days weeks years).
