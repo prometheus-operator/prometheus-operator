@@ -4068,7 +4068,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				for k, v := range res[0].Metric {
 					if k == "namespace" {
 						namespaceLabel = v
-						return true, nil
+						break
 					}
 				}
 
