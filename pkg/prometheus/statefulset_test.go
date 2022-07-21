@@ -530,16 +530,18 @@ func TestListenTLS(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Web: &monitoringv1.PrometheusWebSpec{
-					TLSConfig: &monitoringv1.WebTLSConfig{
-						KeySecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "some-secret",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
+					WebConfigFileFields: monitoringv1.WebConfigFileFields{
+						TLSConfig: &monitoringv1.WebTLSConfig{
+							KeySecret: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "some-configmap",
+									Name: "some-secret",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "some-configmap",
+									},
 								},
 							},
 						},

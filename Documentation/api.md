@@ -3697,7 +3697,7 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
-<p>AlertmanagerWebSpec defines the query command line flags when starting Alertmanager.</p>
+<p>AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.</p>
 </div>
 <table>
 <thead>
@@ -3717,6 +3717,20 @@ WebTLSConfig
 </em>
 </td>
 <td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
 </tbody>
@@ -8284,7 +8298,7 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>PrometheusWebSpec defines the query command line flags when starting Prometheus.</p>
+<p>PrometheusWebSpec defines the web command line flags when starting Prometheus.</p>
 </div>
 <table>
 <thead>
@@ -8296,17 +8310,6 @@ int32
 <tbody>
 <tr>
 <td>
-<code>pageTitle</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The prometheus web page title</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.WebTLSConfig">
@@ -8315,6 +8318,31 @@ WebTLSConfig
 </em>
 </td>
 <td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pageTitle</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The prometheus web page title</p>
 </td>
 </tr>
 </tbody>
@@ -11540,10 +11568,183 @@ VolumeMounts specified will be appended to other VolumeMounts in the thanos-side
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig
+<h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
+</p>
+<div>
+<p>WebConfigFileFields defines the file content for &ndash;web.config.file flag.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.WebHTTPConfig">WebHTTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
+</p>
+<div>
+<p>WebHTTPConfig defines HTTP parameters for web server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>http2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.
+When TLSConfig is not configured, HTTP/2 will be disabled.
+Whenever the value of the field changes, a rolling update will be triggered.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPHeaders">
+WebHTTPHeaders
+</a>
+</em>
+</td>
+<td>
+<p>List of headers that can be added to HTTP responses.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.WebHTTPHeaders">WebHTTPHeaders
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebHTTPConfig">WebHTTPConfig</a>)
+</p>
+<div>
+<p>WebHTTPHeaders defines the list of headers that can be added to HTTP responses.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>contentSecurityPolicy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Set the Content-Security-Policy header to HTTP responses.
+Unset if blank.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>xFrameOptions</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Set the X-Frame-Options header to HTTP responses.
+Unset if blank. Accepted values are deny and sameorigin.
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>xContentTypeOptions</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Set the X-Content-Type-Options header to HTTP responses.
+Unset if blank. Accepted value is nosniff.
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>xXSSProtection</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Set the X-XSS-Protection header to all responses.
+Unset if blank.
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>strictTransportSecurity</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Set the Strict-Transport-Security header to HTTP responses.
+Unset if blank.
+Please make sure that you use this with care as this header might force
+browsers to load Prometheus and the other applications hosted on the same
+domain and subdomains over HTTPS.
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
 </p>
 <div>
 <p>WebTLSConfig defines the TLS parameters for HTTPS.</p>

@@ -170,7 +170,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMPreserveUserAddedMetadata":             testAMPreserveUserAddedMetadata,
 		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
-		"AMWebTLS":                                testAMWebTLS,
+		"AMWebTLS":                                testAMWeb,
 	}
 
 	for name, f := range testFuncs {
@@ -216,7 +216,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
 		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
-		"PromWebTLS":                             testPromWebTLS,
+		"PromWebTLS":                             testPromWeb,
 		"PromMinReadySeconds":                    testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
 		"PromQueryLogFile":                       testPromQueryLogFile,

@@ -845,19 +845,32 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
+	var http2 *bool
+	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
+		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+
 	hash, err := hashstructure.Hash(struct {
-		A monitoringv1.Alertmanager
-		C Config
-		S appsv1.StatefulSetSpec
-		T []string `hash:"set"`
-	}{a, c, s, tlsAssets.ShardNames()},
+		AlertmanagerLabels      map[string]string
+		AlertmanagerAnnotations map[string]string
+		AlertmanagerGeneration  int64
+		AlertmanagerWebHTTP2    *bool
+		Config                  Config
+		StatefulSetSpec         appsv1.StatefulSetSpec
+		Assets                  []string `hash:"set"`
+	}{
+		AlertmanagerLabels:      a.Labels,
+		AlertmanagerAnnotations: a.Annotations,
+		AlertmanagerGeneration:  a.Generation,
+		AlertmanagerWebHTTP2:    http2,
+		Config:                  c,
+		StatefulSetSpec:         s,
+		Assets:                  tlsAssets.ShardNames(),
+	},
 		nil,
 	)
 	if err != nil {
-		return "", errors.Wrap(
-			err,
-			"failed to calculate combined hash of Alertmanager CRD and config",
-		)
+		return "", errors.Wrap(err, "failed to calculate combined hash")
 	}
 
 	return fmt.Sprintf("%d", hash), nil
@@ -1655,15 +1668,15 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
 	boolTrue := true
 
-	var tlsConfig *monitoringv1.WebTLSConfig
+	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
-		tlsConfig = a.Spec.Web.TLSConfig
+		fields = a.Spec.Web.WebConfigFileFields
 	}
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		webConfigSecretName(a.Name),
-		tlsConfig,
+		fields,
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize web config")

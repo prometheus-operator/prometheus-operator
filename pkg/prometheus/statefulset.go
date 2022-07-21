@@ -598,12 +598,12 @@ func makeStatefulSetSpec(
 	// With this we avoid redeploying prometheus when reconfiguring between
 	// HTTP and HTTPS and vice-versa.
 	if version.GTE(semver.MustParse("2.24.0")) {
-		var webTLSConfig *monitoringv1.WebTLSConfig
+		var fields monitoringv1.WebConfigFileFields
 		if p.Spec.Web != nil {
-			webTLSConfig = p.Spec.Web.TLSConfig
+			fields = p.Spec.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), webTLSConfig)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), fields)
 		if err != nil {
 			return nil, err
 		}
