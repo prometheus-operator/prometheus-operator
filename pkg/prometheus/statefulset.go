@@ -791,7 +791,7 @@ func makeStatefulSetSpec(
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
 				Capabilities: &v1.Capabilities{
-					Add: []v1.Capability{"CAP_FOWNER"},
+					Add:  []v1.Capability{"CAP_FOWNER"},
 					Drop: []v1.Capability{"ALL"},
 				},
 			},
