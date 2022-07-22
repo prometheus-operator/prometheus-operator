@@ -637,8 +637,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	tr := trobj.(*monitoringv1.ThanosRuler)
 	tr = tr.DeepCopy()
-	tr.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	tr.Kind = monitoringv1.ThanosRulerKind
+	if err := k8sutil.AddTypeInformationToObject(tr); err != nil {
+		return errors.Wrap(err, "failed to set ThanosRuler type information")
+	}
 
 	if tr.Spec.Paused {
 		return nil

@@ -1377,8 +1377,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
-	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	p.Kind = monitoringv1.PrometheusesKind
+	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
+		return errors.Wrap(err, "failed to set Prometheus type information")
+	}
 
 	logger := log.With(c.logger, "key", key)
 	if p.Spec.Paused {
@@ -2174,7 +2175,12 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
+				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(svcMon); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set ServiceMonitor type information", "namespace", ns, "err", err)
+					return
+				}
+				serviceMonitors[k] = svcMon
 			}
 		})
 		if err != nil {
@@ -2302,7 +2308,12 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
+				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(podMon); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set PodMonitor type information", "namespace", ns, "err", err)
+					return
+				}
+				podMonitors[k] = podMon
 			}
 		})
 		if err != nil {
@@ -2421,7 +2432,12 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	for _, ns := range namespaces {
 		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				probes[k] = obj.(*monitoringv1.Probe)
+				probe := obj.(*monitoringv1.Probe).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set Probe type information", "namespace", ns, "err", err)
+					return
+				}
+				probes[k] = probe
 			}
 		})
 		if err != nil {

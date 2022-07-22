@@ -3977,6 +3977,157 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 	}
 }
 
+// testPromNamespaceEnforcementExclusion checks that the enforcedNamespaceLabel field
+// is not enforced on objects defined in ExcludedFromEnforcement.
+func testPromNamespaceEnforcementExclusion(t *testing.T) {
+	t.Parallel()
+
+	for i, tc := range []struct {
+		relabelConfigs       []*monitoringv1.RelabelConfig
+		metricRelabelConfigs []*monitoringv1.RelabelConfig
+		expectedNamespace    string
+	}{
+		{
+			// override label using the labeldrop action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Regex:  "namespace",
+					Action: "labeldrop",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Regex:  "namespace",
+					Action: "labeldrop",
+				},
+			},
+			expectedNamespace: "",
+		},
+		{
+			// override label using the replace action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: "ns1",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: "ns1",
+				},
+			},
+			expectedNamespace: "ns1",
+		},
+		{
+			// override label using the labelmap action.
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "temp_namespace",
+					Replacement: "ns1",
+				},
+			},
+			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Action:      "labelmap",
+					Regex:       "temp_namespace",
+					Replacement: "namespace",
+				},
+				{
+					Action: "labeldrop",
+					Regex:  "temp_namespace",
+				},
+			},
+			expectedNamespace: "ns1",
+		},
+	} {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, ctx)
+			framework.SetupPrometheusRBAC(context.Background(), t, ctx, ns)
+
+			prometheusName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+			s := framework.MakeBasicServiceMonitor(group)
+			s.Spec.Endpoints[0].RelabelConfigs = tc.relabelConfigs
+			s.Spec.Endpoints[0].MetricRelabelConfigs = tc.metricRelabelConfigs
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
+
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			p.Spec.EnforcedNamespaceLabel = "namespace"
+			p.Spec.ExcludedFromEnforcement = []monitoringv1.ObjectReference{
+				{
+					Namespace: ns,
+					Group:     "monitoring.coreos.com",
+					Resource:  monitoringv1.ServiceMonitorName,
+				},
+			}
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			} else {
+				ctx.AddFinalizerFn(finalizerFn)
+			}
+
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatal("Generated Secret could not be retrieved: ", err)
+			}
+
+			err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
+			}
+
+			// Check that the namespace label isn't enforced.
+			var (
+				loopErr        error
+				namespaceLabel string
+			)
+
+			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+				loopErr = nil
+				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
+				if err != nil {
+					loopErr = errors.Wrap(err, "failed to query Prometheus")
+					return false, nil
+				}
+
+				if len(res) != 1 {
+					loopErr = fmt.Errorf("expecting 1 item but got %d", len(res))
+					return false, nil
+				}
+
+				for k, v := range res[0].Metric {
+					if k == "namespace" {
+						namespaceLabel = v
+						break
+					}
+				}
+
+				return true, nil
+			})
+
+			if err != nil {
+				t.Fatalf("%v: %v", err, loopErr)
+			}
+
+			if namespaceLabel != tc.expectedNamespace {
+				t.Fatalf("expecting custom 'namespace' label value %q due to exclusion. but got %q instead", tc.expectedNamespace, namespaceLabel)
+			}
+		})
+	}
+}
+
 func testPrometheusCRDValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
