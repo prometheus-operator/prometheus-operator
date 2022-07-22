@@ -71,13 +71,12 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 // and the associated TLS credentials.
 // In addition, GetMountParameters returns a web.config.file command line option pointing
 // to the file in the volume mount.
-func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount) {
+func (c Config) GetMountParameters() ([]v1.Volume, []v1.VolumeMount) {
 	destinationPath := path.Join(c.mountingDir, configFile)
 
 	var volumes []v1.Volume
 	var mounts []v1.VolumeMount
 
-	arg := c.makeArg(destinationPath)
 	cfgVolume := c.makeVolume()
 	volumes = append(volumes, cfgVolume)
 
@@ -90,7 +89,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 		mounts = append(mounts, tlsMounts...)
 	}
 
-	return arg, volumes, mounts
+	return volumes, mounts
 }
 
 // CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the data for the web config file.
@@ -246,10 +245,6 @@ func (c Config) addHTTPServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	httpServerConfig = append(httpServerConfig, yaml.MapItem{Key: "headers", Value: headersConfig})
 
 	return append(cfg, yaml.MapItem{Key: "http_server_config", Value: httpServerConfig})
-}
-
-func (c Config) makeArg(filePath string) monitoringv1.Argument {
-	return monitoringv1.Argument{Name: "web.config.file", Value: filePath}
 }
 
 func (c Config) makeVolume() v1.Volume {

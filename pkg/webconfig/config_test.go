@@ -359,7 +359,7 @@ func TestGetMountParameters(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, volumes, mounts := tlsAssets.GetMountParameters()
+		volumes, mounts := tlsAssets.GetMountParameters()
 
 		if !reflect.DeepEqual(volumes, tt.expectedVolumes) {
 			t.Errorf("invalid volumes,\ngot  %v,\nwant %v", volumes, tt.expectedVolumes)
