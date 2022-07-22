@@ -155,7 +155,7 @@ It is usually a sign that more than one operator wants to manage the resource.
 Check if several operators are running on the cluster:
 
 ```console
-kubeclt get pods --all-namespaces | grep 'prom.*operator'
+kubectl get pods --all-namespaces | grep 'prom.*operator'
 ```
 
 Check the logs of the matching pods to see if they manage the same resource.
