@@ -1355,35 +1355,6 @@ string
 </tr>
 <tr>
 <td>
-<code>tag</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sha</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>paused</code><br/>
 <em>
 bool
@@ -1406,18 +1377,6 @@ string
 combinations. Specifying the version is still necessary to ensure the
 Prometheus Operator knows what version of Prometheus is being
 configured.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>baseImage</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
 </td>
 </tr>
 <tr>
@@ -1542,19 +1501,6 @@ Duration
 </tr>
 <tr>
 <td>
-<code>evaluationInterval</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
-</td>
-</tr>
-<tr>
-<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -1563,22 +1509,6 @@ map[string]string
 <td>
 <p>The labels to add to any time series or alerts when communicating with
 external systems (federation, remote storage, Alertmanager).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableAdminAPI</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
-shutdown Prometheus, and more. Enabling this should be done with care and the
-user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -2162,6 +2092,74 @@ fail and an error will be logged.</p>
 </tr>
 <tr>
 <td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>baseImage</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Base image to use for a Prometheus deployment.
+Deprecated: use &lsquo;image&rsquo; instead</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tag</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
+Version is ignored if Tag is set.
+Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
+as part of the image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sha</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
+Similar to a tag, but the SHA explicitly deploys an immutable container image.
+Version and Tag are ignored if SHA is set.
+Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
+as part of the image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -2201,18 +2199,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>walCompression</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>rules</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Rules">
@@ -2222,21 +2208,6 @@ Rules
 </td>
 <td>
 <p>/&ndash;rules.*/ command-line arguments.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>excludedFromEnforcement</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ObjectReference">
-[]ObjectReference
-</a>
-</em>
-</td>
-<td>
-<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 </tr>
 <tr>
@@ -2431,6 +2402,35 @@ Exemplars
 <td>
 <p>Exemplars related settings that are runtime reloadable.
 It requires to enable the exemplar storage feature to be effective.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>evaluationInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableAdminAPI</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
+WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+shutdown Prometheus, and more. Enabling this should be done with care and the
+user is advised to add additional authentication authorization via a proxy to
+ensure only clients authorized to perform these actions can do so.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 </table>
@@ -4182,35 +4182,6 @@ string
 </tr>
 <tr>
 <td>
-<code>tag</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sha</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>paused</code><br/>
 <em>
 bool
@@ -4233,18 +4204,6 @@ string
 combinations. Specifying the version is still necessary to ensure the
 Prometheus Operator knows what version of Prometheus is being
 configured.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>baseImage</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
 </td>
 </tr>
 <tr>
@@ -4369,19 +4328,6 @@ Duration
 </tr>
 <tr>
 <td>
-<code>evaluationInterval</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
-</td>
-</tr>
-<tr>
-<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -4390,22 +4336,6 @@ map[string]string
 <td>
 <p>The labels to add to any time series or alerts when communicating with
 external systems (federation, remote storage, Alertmanager).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableAdminAPI</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
-shutdown Prometheus, and more. Enabling this should be done with care and the
-user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -4985,6 +4915,33 @@ by the given Prometheus version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 </tr>
 </tbody>
@@ -5935,7 +5892,7 @@ string
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 <p>ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.</p>
@@ -7384,35 +7341,6 @@ string
 </tr>
 <tr>
 <td>
-<code>tag</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sha</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>paused</code><br/>
 <em>
 bool
@@ -7435,18 +7363,6 @@ string
 combinations. Specifying the version is still necessary to ensure the
 Prometheus Operator knows what version of Prometheus is being
 configured.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>baseImage</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
 </td>
 </tr>
 <tr>
@@ -7571,19 +7487,6 @@ Duration
 </tr>
 <tr>
 <td>
-<code>evaluationInterval</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
-</td>
-</tr>
-<tr>
-<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -7592,22 +7495,6 @@ map[string]string
 <td>
 <p>The labels to add to any time series or alerts when communicating with
 external systems (federation, remote storage, Alertmanager).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableAdminAPI</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
-shutdown Prometheus, and more. Enabling this should be done with care and the
-user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -8191,6 +8078,74 @@ fail and an error will be logged.</p>
 </tr>
 <tr>
 <td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>baseImage</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Base image to use for a Prometheus deployment.
+Deprecated: use &lsquo;image&rsquo; instead</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tag</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
+Version is ignored if Tag is set.
+Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
+as part of the image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sha</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
+Similar to a tag, but the SHA explicitly deploys an immutable container image.
+Version and Tag are ignored if SHA is set.
+Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
+as part of the image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -8230,18 +8185,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>walCompression</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>rules</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Rules">
@@ -8251,21 +8194,6 @@ Rules
 </td>
 <td>
 <p>/&ndash;rules.*/ command-line arguments.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>excludedFromEnforcement</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ObjectReference">
-[]ObjectReference
-</a>
-</em>
-</td>
-<td>
-<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 </tr>
 <tr>
@@ -8460,6 +8388,35 @@ Exemplars
 <td>
 <p>Exemplars related settings that are runtime reloadable.
 It requires to enable the exemplar storage feature to be effective.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>evaluationInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableAdminAPI</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
+WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+shutdown Prometheus, and more. Enabling this should be done with care and the
+user is advised to add additional authentication authorization via a proxy to
+ensure only clients authorized to perform these actions can do so.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 </tbody>

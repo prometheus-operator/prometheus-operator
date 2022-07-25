@@ -628,9 +628,9 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Tag:     "my-unrelated-tag",
 					Version: "v2.3.2",
 				},
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -647,10 +647,10 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-					Tag:     "my-unrelated-tag",
 					Version: "v2.3.2",
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -669,11 +669,11 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-					Tag:     "my-unrelated-tag",
 					Version: "v2.3.2",
 					Image:   &image,
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -691,11 +691,11 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-					Tag:     "my-unrelated-tag",
 					Version: "v2.3.2",
 					Image:   &image,
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -733,10 +733,10 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 					Version: "v2.3.2",
 					Image:   &image,
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -773,9 +773,9 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 					Image: &image,
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -793,9 +793,9 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Tag:   "my-unrelated-tag",
 					Image: &image,
 				},
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -813,10 +813,10 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-					Tag:   "my-unrelated-tag",
 					Image: &image,
 				},
+				SHA: "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag: "my-unrelated-tag",
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -1833,9 +1833,9 @@ func TestWALCompression(t *testing.T) {
 		sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: test.version,
+					Version:        test.version,
+					WALCompression: test.enabled,
 				},
-				WALCompression: test.enabled,
 			},
 		}, defaultTestConfig, nil, "", 0, nil)
 		if err != nil {
@@ -2471,8 +2471,8 @@ func TestPrometheusAdditionalNoPrefixArgsDuplicate(t *testing.T) {
 			Annotations: annotations,
 		},
 		Spec: monitoringv1.PrometheusSpec{
-			WALCompression: walCompression,
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				WALCompression: walCompression,
 				AdditionalArgs: []monitoringv1.Argument{
 					{
 						Name: "no-storage.tsdb.wal-compression",

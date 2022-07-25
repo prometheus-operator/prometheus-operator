@@ -224,13 +224,13 @@ scrape_configs: []
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					EvaluationInterval: tc.EvaluationInterval,
-					ScrapeInterval:     tc.ScrapeInterval,
-					ScrapeTimeout:      tc.ScrapeTimeout,
-					ExternalLabels:     tc.ExternalLabels,
-					Version:            tc.Version,
+					ScrapeInterval: tc.ScrapeInterval,
+					ScrapeTimeout:  tc.ScrapeTimeout,
+					ExternalLabels: tc.ExternalLabels,
+					Version:        tc.Version,
 				},
-				QueryLogFile: tc.QueryLogFile,
+				EvaluationInterval: tc.EvaluationInterval,
+				QueryLogFile:       tc.QueryLogFile,
 			},
 		}
 
@@ -2420,13 +2420,13 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
-			},
-			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
-				{
-					Namespace: "pod-monitor-ns",
-					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.PodMonitorName,
-					Name:      "testpodmonitor1",
+				ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+					{
+						Namespace: "pod-monitor-ns",
+						Group:     monitoring.GroupName,
+						Resource:  monitoringv1.PodMonitorName,
+						Name:      "testpodmonitor1",
+					},
 				},
 			},
 		},
@@ -2742,13 +2742,13 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
-			},
-			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
-				{
-					Namespace: "service-monitor-ns",
-					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.ServiceMonitorName,
-					Name:      "", // exclude all servicemonitors in this namespace
+				ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+					{
+						Namespace: "service-monitor-ns",
+						Group:     monitoring.GroupName,
+						Resource:  monitoringv1.ServiceMonitorName,
+						Name:      "", // exclude all servicemonitors in this namespace
+					},
 				},
 			},
 		},
