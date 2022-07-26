@@ -791,6 +791,7 @@ func makeStatefulSetSpec(
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
 				Capabilities: &v1.Capabilities{
+					// The Thanos sidecar needs the CAP_FOWNER capability because it links block files as hard link.
 					Add:  []v1.Capability{"CAP_FOWNER"},
 					Drop: []v1.Capability{"ALL"},
 				},
