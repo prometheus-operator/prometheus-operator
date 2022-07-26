@@ -124,38 +124,36 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 	cd ./pkg/apis/monitoring/v1beta1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
 		paths=.
 
-CLIENT_TARGET := pkg/client/versioned/clientset.go
-$(CLIENT_TARGET): $(K8S_GEN_DEPS)
+.PHONY: k8s-client-gen
+k8s-client-gen:
+	rm -rf pkg/client/{versioned,informers,listers}
+	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-base     "" \
-	--clientset-name "versioned" \
-	--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package "$(GO_PKG)/pkg/client"
-
-LISTER_TARGETS := pkg/client/listers/monitoring/v1/interface.go pkg/client/listers/monitoring/v1alpha1/interface.go pkg/client/listers/monitoring/v1beta1/interface.go
-$(LISTER_TARGETS): $(K8S_GEN_DEPS)
+		$(K8S_GEN_ARGS) \
+		--input-base     "" \
+		--clientset-name "versioned" \
+		--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package "$(GO_PKG)/pkg/client" \
+		--output-base    "."
+	@echo ">> generating pkg/client/listers..."
 	$(LISTER_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package "$(GO_PKG)/pkg/client/listers"
-
-INFORMER_TARGETS := pkg/client/informers/externalversions/monitoring/v1/interface.go pkg/client/informers/externalversions/monitoring/v1alpha1/interface.go pkg/client/informers/externalversions/monitoring/v1beta1/interface.go
-$(INFORMER_TARGETS): $(K8S_GEN_DEPS) $(LISTER_TARGETS) $(CLIENT_TARGET)
+		$(K8S_GEN_ARGS) \
+		--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package "$(GO_PKG)/pkg/client/listers" \
+		--output-base    "."
+	@echo ">> generating pkg/client/informers..."
 	$(INFORMER_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
-	--listers-package "$(GO_PKG)/pkg/client/listers" \
-	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package  "$(GO_PKG)/pkg/client/informers"
+		$(K8S_GEN_ARGS) \
+		--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
+		--listers-package "$(GO_PKG)/pkg/client/listers" \
+		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package  "$(GO_PKG)/pkg/client/informers" \
+		--output-base    "."
+	mv $(GO_PKG)/pkg/client/{versioned,informers,listers} pkg/client
+	rm -r github.com
 
 .PHONY: k8s-gen
-k8s-gen: \
-	$(DEEPCOPY_TARGETS) \
-	$(CLIENT_TARGET) \
-	$(LISTER_TARGETS) \
-	$(INFORMER_TARGETS) \
-	$(OPENAPI_TARGET)
+k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
@@ -203,7 +201,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
+generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -358,7 +356,7 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(TOOLS_BIN_DIR)/$(1)
 
 $(TOOLS_BIN_DIR)/$(1):
-	@go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
+	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
 
 endef
 
