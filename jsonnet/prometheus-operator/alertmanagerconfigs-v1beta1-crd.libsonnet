@@ -1,3 +1,4 @@
+// Code generated using 'make generate-crds'. DO NOT EDIT.
 { spec+: { versions+: [
   {
     name: 'v1beta1',
