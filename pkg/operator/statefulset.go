@@ -226,7 +226,6 @@ func processAdditionalArgs(opArgs map[string]string, addArgs []promv1.Argument) 
 				found = true
 			}
 		}
-		fmt.Printf(">>> %v %v %v %v\n", addArg.Name, strings.HasPrefix(addArg.Name, "no-"), found, addArg.Name[3:])
 
 		if found {
 			invalid = append(invalid, addArg.Name)
