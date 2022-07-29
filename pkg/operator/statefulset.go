@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	//"path/filepath"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -41,13 +40,13 @@ var (
 	boolFalse bool = false
 	boolTrue  bool = true
 
-	int32Zero int32 = 0
-	//minShards             int32 = 1
+	int32Zero             int32 = 0
 	minReplicas           int32 = 1
 	defaultMaxConcurrency int32 = 20
 	probeTimeoutSeconds   int32 = 3
 )
 
+// Values below are used during Statfulset creation
 const (
 	DefaultRetention                = "24h"
 	DefaultMemoryRequestValue       = "2Gi"
@@ -101,6 +100,7 @@ func MakePrometheusCommandArgs(pt PrometheusType) (out, warns []string, err erro
 	return out, warns, nil
 }
 
+// MakeThanosCommandArgs returns slice of Thanos command arguments for Thanos sidecar
 func MakeThanosCommandArgs(pt PrometheusType, c *Config) (out, warns []string, err error) {
 	promArgs, warns, err := pt.MakeCommandArgs()
 	if err != nil {
@@ -254,6 +254,7 @@ func transformArgs(args map[string]string) []string {
 
 // ------------------------------------------------------------------
 
+// MakePrometheusStatefulsetSpec creates Statefulspec from given PrometheusType object and Config
 func MakePrometheusStatefulsetSpec(pt PrometheusType, logger log.Logger,
 	c *Config, shard int32, ruleConfigMapNames []string,
 	tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
@@ -285,7 +286,7 @@ func MakePrometheusStatefulsetSpec(pt PrometheusType, logger log.Logger,
 	}
 	imageVersion := ""
 	if specVersion != nil {
-		specVersion.String()
+		imageVersion = specVersion.String()
 	}
 	imagePath, err := BuildImagePath(
 		StringPtrValOrDefault(pt.GetImage(), ""),
@@ -465,7 +466,13 @@ func MakePrometheusStatefulsetSpec(pt PrometheusType, logger log.Logger,
 		})
 	}
 
-	argMap, _, err := pt.MakeCommandArgs()
+	argMap, warns, err := pt.MakeCommandArgs()
+	if err != nil {
+		return nil, err
+	}
+	for _, msg := range warns {
+		level.Warn(logger).Log("msg", msg)
+	}
 	webRoutePrefix := getWebRoutePrefix(argMap)
 
 	probeHandler := func(probePath string) v1.ProbeHandler {
@@ -773,6 +780,7 @@ func MakePrometheusStatefulsetSpec(pt PrometheusType, logger log.Logger,
 	}, nil
 }
 
+// MakePrometheusStatefulSet creates StatefulSet from given Prometheus type object and Config
 func MakePrometheusStatefulSet(logger log.Logger, name string, pt PrometheusType,
 	config *Config, ruleConfigMapNames []string, inputHash string, shard int32,
 	tlsAssetSecrets []string,

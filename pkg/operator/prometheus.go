@@ -1,3 +1,17 @@
+// Copyright 2022 The prometheus-operator Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package operator
 
 import (
@@ -13,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	//"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 const (
@@ -23,63 +36,101 @@ const (
 
 // PrometheusType defines interface for both modes Prometheus is operating
 type PrometheusType interface {
+	// GetNomenclator returns object used for naming other objects unified way
 	GetNomenclator() *Nomenclator
+	// GetVersion returns object's spec version parsed by semver. If object's version is nil parses given default value/
+	// If default value is "" returns nil
 	GetVersion(string) (*semver.Version, error)
+	// GetImage returns object's spec image
 	GetImage() *string
+	// GetDeprecatedImageInfo returns deprecated image-related spec fields such as base image, tag and sha
 	GetDeprecatedImageInfo() (string, string, string)
+	// GetQuery returns object's QuerySpec
 	GetQuery() *promv1.QuerySpec
+	// GetStorageSpec returns object's StorageSpec
 	GetStorageSpec() *promv1.StorageSpec
+	// GetVolumeMounts returns slice of object's VolumeMounts
 	GetVolumeMounts() []v1.VolumeMount
+	// GetVolumes returns slice of objects Volumes
 	GetVolumes() []v1.Volume
+	// GetWebSpec returns object's WebSpec
 	GetWebSpec() *promv1.PrometheusWebSpec
+	// GetSecrets returns slice of object's secrets
 	GetSecrets() []string
+	// GetConfigMaps returns slice of object's config maps
 	GetConfigMaps() []string
+	// GetPodMetadata returns object's EmbeddedMetadata
 	GetPodMetadata() *promv1.EmbeddedObjectMetadata
+	// GetThanosSpec returns object's ThanosSpec
 	GetThanosSpec() *promv1.ThanosSpec
+	// GetLoggerInfo returns setting for a logger, such as logging level and record format
 	GetLoggerInfo() (string, string)
+	// GetInitContainers returns slice of object's init Containers
 	GetInitContainers() []v1.Container
+	// GetContainers returns slice of object's Containers
 	GetContainers() []v1.Container
+	// GetResources returns object's ResourceRequirements
 	GetResources() v1.ResourceRequirements
+	// GetReplicas returns object's replica count
 	GetReplicas() *int32
+	// GetMinReadySeconds return's object's ...
 	GetMinReadySeconds() *uint32
+	// GetAdditionalArgs return's arguments which should be added to object's container command
 	GetAdditionalArgs() []promv1.Argument
+	// GetObjectMeta returns object's ObjectMeta
 	GetObjectMeta() metav1.ObjectMeta
+	// GetOwnerReference returns object's OwnerReference
 	GetOwnerReference() metav1.OwnerReference
+	// GetImagePullSecrets returns object's LocalObjectReference
 	GetImagePullSecrets() []v1.LocalObjectReference
+	// DisableCompaction returns true if DisableCompaction is true in spec or if Thanos object storage is defined
 	DisableCompaction() bool
+	// ListensOn returns object's PortName or "localhost" if ListenLocal is true
 	ListensOn() string
+	// UsesDefaultQueryLogVolume returns true if QueryLogFile is set to current directory (eg. ".")
 	UsesDefaultQueryLogVolume() bool
+	// MakeCommandArgs returns map of command line arguments for object's container, slice of warnings raised during generation process and error
 	MakeCommandArgs() (map[string]string, []string, error)
+	// MakePodSpec builds PodSpec from object's spec fields
 	MakePodSpec(containers, initContainers []v1.Container, volumes []v1.Volume) v1.PodSpec
+	// Duplicate is analogy to DeepCopy
 	Duplicate() PrometheusType
+	// SetDefaultPortname sets given value to Spec.Portname
 	SetDefaultPortname(defaultPortName string)
+	// SetDefaultReplicas sets given value to Spec.Replicas
 	SetDefaultReplicas(minReplicas *int32)
+	// SetResourceRequests sets given ResourceList as Spec.Resources.Requests
 	SetResourceRequests(requests v1.ResourceList)
 }
 
+// PrometheusServer objects are used to run Prometheus instances in server mode
 type PrometheusServer struct {
 	*promv1.Prometheus
 }
 
+// PrometheusServer objects are used to run Prometheus instances in agent mode
 /*type PrometheusAgent struct {
 	*promv1a1.PrometheusAgent
 }*/
 
 //----------------------------- server mode getters ----------------------------
 
-// GetNameNomenclator returns objects name prefix. Maily used by Nomenclator objects
+// GetNameNomenclator implements PrometheusType interface
 func (p PrometheusServer) GetNomenclator() *Nomenclator {
 	return NewNomenclator(p.Kind, prometheusServerPrefix, p.Name, p.Spec.Shards)
 }
 
+// GetImage implements PrometheusType interface
 func (p PrometheusServer) GetImage() *string {
 	return p.Spec.Image
 }
 
+// GetDeprecatedImageInfo implements PrometheusType interface
 func (p PrometheusServer) GetDeprecatedImageInfo() (string, string, string) {
 	return p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA
 }
 
+// GetVersion implements PrometheusType interface
 func (p PrometheusServer) GetVersion(defValue string) (*semver.Version, error) {
 	vstr := p.Spec.Version
 	if strings.TrimSpace(vstr) == "" {
@@ -96,74 +147,92 @@ func (p PrometheusServer) GetVersion(defValue string) (*semver.Version, error) {
 	return &version, nil
 }
 
+// GetQuery implements PrometheusType interface
 func (p PrometheusServer) GetQuery() *promv1.QuerySpec {
 	return p.Spec.Query
 }
 
+// GetStorageSpec implements PrometheusType interface
 func (p PrometheusServer) GetStorageSpec() *promv1.StorageSpec {
 	return p.Spec.Storage
 }
 
+// GetVolumeMounts implements PrometheusType interface
 func (p PrometheusServer) GetVolumeMounts() []v1.VolumeMount {
 	return p.Spec.VolumeMounts
 }
 
+// GetVolumes implements PrometheusType interface
 func (p PrometheusServer) GetVolumes() []v1.Volume {
 	return p.Spec.Volumes
 }
 
+// GetWebSpec implements PrometheusType interface
 func (p PrometheusServer) GetWebSpec() *promv1.PrometheusWebSpec {
 	return p.Spec.Web
 }
 
+// GetSecrets implements PrometheusType interface
 func (p PrometheusServer) GetSecrets() []string {
 	return p.Spec.Secrets
 }
 
+// GetConfigMaps implements PrometheusType interface
 func (p PrometheusServer) GetConfigMaps() []string {
 	return p.Spec.ConfigMaps
 }
 
+// GetPodMetadata implements PrometheusType interface
 func (p PrometheusServer) GetPodMetadata() *promv1.EmbeddedObjectMetadata {
 	return p.Spec.PodMetadata
 }
 
+// GetThanosSpec implements PrometheusType interface
 func (p PrometheusServer) GetThanosSpec() *promv1.ThanosSpec {
 	return p.Spec.Thanos
 }
 
+// GetLoggerInfo implements PrometheusType interface
 func (p PrometheusServer) GetLoggerInfo() (string, string) {
 	return p.Spec.LogLevel, p.Spec.LogFormat
 }
 
+// GetInitContainers implements PrometheusType interface
 func (p PrometheusServer) GetInitContainers() []v1.Container {
 	return p.Spec.InitContainers
 }
 
+// GetContainers implements PrometheusType interface
 func (p PrometheusServer) GetContainers() []v1.Container {
 	return p.Spec.Containers
 }
 
+// GetResources implements PrometheusType interface
 func (p PrometheusServer) GetResources() v1.ResourceRequirements {
 	return p.Spec.Resources
 }
 
+// GetReplicas implements PrometheusType interface
 func (p PrometheusServer) GetReplicas() *int32 {
 	return p.Spec.Replicas
 }
 
+// GetMinReadySeconds implements PrometheusType interface
 func (p PrometheusServer) GetMinReadySeconds() *uint32 {
 	return p.Spec.MinReadySeconds
 }
 
+// GetAdditionalArgs implements PrometheusType interface
 func (p PrometheusServer) GetAdditionalArgs() []promv1.Argument {
 	return p.Spec.AdditionalArgs
 }
 
+// GetObjectMeta implements PrometheusType interface
 func (p PrometheusServer) GetObjectMeta() metav1.ObjectMeta {
 	return p.ObjectMeta
 }
 
+// GetOwnerReference implements PrometheusType interface
 func (p PrometheusServer) GetOwnerReference() metav1.OwnerReference {
 	return metav1.OwnerReference{
 		APIVersion: p.APIVersion,
@@ -173,10 +242,12 @@ func (p PrometheusServer) GetOwnerReference() metav1.OwnerReference {
 	}
 }
 
+// GetImagePullSecrets implements PrometheusType interface
 func (p PrometheusServer) GetImagePullSecrets() []v1.LocalObjectReference {
 	return p.Spec.ImagePullSecrets
 }
 
+// DisableCompaction implements PrometheusType interface
 func (p PrometheusServer) DisableCompaction() bool {
 	if p.Spec.Thanos != nil {
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
@@ -188,6 +259,7 @@ func (p PrometheusServer) DisableCompaction() bool {
 	return p.Spec.DisableCompaction
 }
 
+// ListensOn implements PrometheusType interface
 func (p PrometheusServer) ListensOn() string {
 	if p.Spec.ListenLocal {
 		return "localhost"
@@ -195,6 +267,7 @@ func (p PrometheusServer) ListensOn() string {
 	return p.Spec.PortName
 }
 
+// UsesDefaultQueryLogVolume implements PrometheusType interface
 func (p PrometheusServer) UsesDefaultQueryLogVolume() bool {
 	return p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "."
 }
@@ -338,6 +411,7 @@ func (p PrometheusServer) MakeCommandArgs() (map[string]string, []string, error)
 	return args, warns, nil
 }
 
+// MakePodSpec implements PrometheusType interface
 func (p PrometheusServer) MakePodSpec(containers, initContainers []v1.Container, volumes []v1.Volume) v1.PodSpec {
 	boolTrue := true
 	terminationGracePeriod := int64(600)
@@ -358,22 +432,26 @@ func (p PrometheusServer) MakePodSpec(containers, initContainers []v1.Container,
 	}
 }
 
+// Duplicate implements PrometheusType interface
 func (p PrometheusServer) Duplicate() PrometheusType {
 	return PrometheusServer{p.DeepCopy()}
 }
 
+// SetDefaultPortname implements PrometheusType interface
 func (p PrometheusServer) SetDefaultPortname(defaultPortName string) {
 	if p.Spec.PortName == "" {
 		p.Spec.PortName = defaultPortName
 	}
 }
 
+// SetDefaultReplicas implements PrometheusType interface
 func (p PrometheusServer) SetDefaultReplicas(minReplicas *int32) {
 	if p.Spec.Replicas != nil {
 		p.Spec.Replicas = minReplicas
 	}
 }
 
+// SetResourceRequests implements PrometheusType interface
 func (p PrometheusServer) SetResourceRequests(requests v1.ResourceList) {
 	p.Spec.Resources.Requests = requests
 }
