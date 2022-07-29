@@ -425,7 +425,7 @@ func MakePrometheusStatefulsetSpec(pt PrometheusType, logger log.Logger,
 			return nil, err
 		}
 
-		configVol, configMount := webConfig.GetMountParameters()
+		_, configVol, configMount := webConfig.GetMountParameters()
 		volumes = append(volumes, configVol...)
 		mounts = append(mounts, configMount...)
 	}
