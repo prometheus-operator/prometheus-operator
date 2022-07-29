@@ -37,10 +37,10 @@ import (
 )
 
 var (
-	boolFalse bool = false
-	boolTrue  bool = true
+	boolFalse = false
+	boolTrue  = true
 
-	int32Zero             int32 = 0
+	int32Zero             int32
 	minReplicas           int32 = 1
 	defaultMaxConcurrency int32 = 20
 	probeTimeoutSeconds   int32 = 3
@@ -84,8 +84,6 @@ const (
 
 // MakePrometheusCommandArgs returns slice of Prometheus command arguments for either Prometheus server or Proemtheus agent
 func MakePrometheusCommandArgs(pt PrometheusType) (out, warns []string, err error) {
-	warns = []string{}
-
 	args, warns, err := pt.MakeCommandArgs()
 	if err != nil {
 		return out, warns, err
@@ -870,7 +868,7 @@ func MakePrometheusStatefulSet(logger log.Logger, name string, pt PrometheusType
 	}
 
 	imagePullSecrets := pt.GetImagePullSecrets()
-	if imagePullSecrets != nil && len(imagePullSecrets) > 0 {
+	if len(imagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = imagePullSecrets
 	}
 	storageSpec := pt.GetStorageSpec()

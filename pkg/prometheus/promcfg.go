@@ -243,7 +243,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 
 func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig) yaml.MapSlice {
 	pathForSelector := func(sel v1.SecretOrConfigMap) string {
-		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
+		return path.Join(operator.PrometheusTLSAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
 	}
 	tlsConfig := yaml.MapSlice{
 		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
@@ -515,7 +515,7 @@ func (cg *ConfigGenerator) Generate(
 	if p.Spec.RuleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleConfigMapNames {
-			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+			ruleFilePaths = append(ruleFilePaths, operator.PrometheusRulesDir+"/"+name+"/*.yaml")
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "rule_files",

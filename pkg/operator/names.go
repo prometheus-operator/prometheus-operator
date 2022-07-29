@@ -18,10 +18,6 @@ import (
 	"fmt"
 )
 
-var (
-	minShards = int32(1)
-)
-
 // Nomenclator objects are used for naming Prometheus and PrometheusAgent objects
 // and sub-objects consistently.
 type Nomenclator struct {

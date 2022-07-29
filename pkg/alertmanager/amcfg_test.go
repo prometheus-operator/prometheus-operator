@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
+	"github.com/stretchr/testify/require"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -1953,7 +1954,8 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.in.sanitize(tc.againstVersion, logger)
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			require.NoError(t, err)
 			out := *tc.in
 			if !reflect.DeepEqual(out, tc.expect) {
 				t.Fatalf("wanted %v but got %v", tc.expect, out)

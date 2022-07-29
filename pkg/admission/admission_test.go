@@ -29,6 +29,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
@@ -142,7 +143,8 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 		t.Fatal(err, "Expected a valid patch")
 	}
 	rev := v1.AdmissionReview{}
-	deserializer.Decode(nonStringsInLabelsAnnotations, nil, &rev)
+	_, _, err = deserializer.Decode(nonStringsInLabelsAnnotations, nil, &rev)
+	require.NoError(t, err)
 	rev.Request.Object.Raw, err = patchObj.Apply(rev.Request.Object.Raw)
 	if err != nil {
 		fmt.Println(string(resp.Response.Patch))

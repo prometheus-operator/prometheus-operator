@@ -15,34 +15,11 @@
 package prometheus
 
 import (
-	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-var (
-	defaultTestConfig = &operator.Config{
-		LocalHost: "localhost",
-		ReloaderConfig: operator.ReloaderConfig{
-			CPURequest:    "100m",
-			CPULimit:      "100m",
-			MemoryRequest: "50Mi",
-			MemoryLimit:   "50Mi",
-			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-		},
-		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:     "quay.io/thanos/thanos",
-	}
-)
-
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
-}
 
 func TestExpectedStatefulSetShardNames(t *testing.T) {
 	replicas := int32(2)

@@ -1469,7 +1469,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.StatefulSetInputHashName] {
 			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -1477,7 +1477,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Debug(logger).Log(
 			"msg", "updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName],
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.StatefulSetInputHashName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -2119,7 +2119,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	webConfig, err := webconfig.New(
-		webConfigDir,
+		operator.WebConfigDir,
 		webConfigSecretName(p.Name),
 		fields,
 	)

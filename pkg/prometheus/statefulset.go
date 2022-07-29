@@ -17,13 +17,10 @@ package prometheus
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/pkg/errors"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -31,36 +28,23 @@ import (
 
 const (
 	governingServiceName            = "prometheus-operated"
-	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
-	storageDir                      = "/prometheus"
-	confDir                         = "/etc/prometheus/config"
-	confOutDir                      = "/etc/prometheus/config_out"
-	webConfigDir                    = "/etc/prometheus/web_config"
-	tlsAssetsDir                    = "/etc/prometheus/certs"
-	rulesDir                        = "/etc/prometheus/rules"
-	secretsDir                      = "/etc/prometheus/secrets/"
-	configmapsDir                   = "/etc/prometheus/configmaps/"
-	configFilename                  = "prometheus.yaml.gz"
-	configEnvsubstFilename          = "prometheus.env.yaml"
-	sSetInputHashName               = "prometheus-operator-input-hash"
-	defaultPortName                 = "web"
-	defaultQueryLogDirectory        = "/var/log/prometheus"
-	defaultQueryLogVolume           = "query-log-file"
+
+	configFilename           = "prometheus.yaml.gz"
+	defaultPortName          = "web"
+	defaultQueryLogDirectory = "/var/log/prometheus"
 )
 
 var (
 	minShards                   int32 = 1
 	minReplicas                 int32 = 1
-	defaultMaxConcurrency       int32 = 20
 	managedByOperatorLabel            = "managed-by"
 	managedByOperatorLabelValue       = "prometheus-operator"
 	managedByOperatorLabels           = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
-	shardLabelName                = "operator.prometheus.io/shard"
-	prometheusNameLabelName       = "operator.prometheus.io/name"
-	probeTimeoutSeconds     int32 = 3
+
+	prometheusNameLabelName = "operator.prometheus.io/name"
 )
 
 func expectedStatefulSetShardNames(
@@ -180,50 +164,12 @@ func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
 }
 
-func volumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
-}
-
 func prefixedName(name string) string {
 	return fmt.Sprintf("prometheus-%s", name)
 }
 
-func subPathForStorage(s *monitoringv1.StorageSpec) string {
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if s == nil || s.DisableMountSubPath {
-		return ""
-	}
-
-	return "prometheus-db"
-}
-
 func usesDefaultQueryLogVolume(p *monitoringv1.Prometheus) bool {
 	return p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "."
-}
-
-func queryLogFileVolumeMount(p *monitoringv1.Prometheus) (v1.VolumeMount, bool) {
-	if !usesDefaultQueryLogVolume(p) {
-		return v1.VolumeMount{}, false
-	}
-
-	return v1.VolumeMount{
-		Name:      defaultQueryLogVolume,
-		ReadOnly:  false,
-		MountPath: defaultQueryLogDirectory,
-	}, true
-}
-
-func queryLogFileVolume(p *monitoringv1.Prometheus) (v1.Volume, bool) {
-	if !usesDefaultQueryLogVolume(p) {
-		return v1.Volume{}, false
-	}
-
-	return v1.Volume{
-		Name: defaultQueryLogVolume,
-		VolumeSource: v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{},
-		},
-	}, true
 }
 
 func queryLogFilePath(p *monitoringv1.Prometheus) string {
@@ -232,63 +178,4 @@ func queryLogFilePath(p *monitoringv1.Prometheus) string {
 	}
 
 	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
-}
-
-func intersection(a, b []string) (i []string) {
-	m := make(map[string]struct{})
-
-	for _, item := range a {
-		m[item] = struct{}{}
-	}
-
-	for _, item := range b {
-		if _, ok := m[item]; ok {
-			i = append(i, item)
-		}
-
-		negatedItem := strings.TrimPrefix(item, "no-")
-		if item == negatedItem {
-			negatedItem = fmt.Sprintf("no-%s", item)
-		}
-
-		if _, ok := m[negatedItem]; ok {
-			i = append(i, item)
-		}
-	}
-	return i
-}
-
-func extractArgKeys(args []monitoringv1.Argument) []string {
-	var k []string
-	for _, arg := range args {
-		key := arg.Name
-		k = append(k, key)
-	}
-
-	return k
-}
-
-func buildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) ([]string, error) {
-	var containerArgs []string
-
-	argKeys := extractArgKeys(args)
-	additionalArgKeys := extractArgKeys(additionalArgs)
-
-	i := intersection(argKeys, additionalArgKeys)
-	if len(i) > 0 {
-		return nil, errors.Errorf("can't set arguments which are already managed by the operator: %s", strings.Join(i, ","))
-	}
-
-	args = append(args, additionalArgs...)
-
-	for _, arg := range args {
-		if arg.Value != "" {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
-		} else {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
-
-		}
-	}
-
-	return containerArgs, nil
 }

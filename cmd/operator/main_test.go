@@ -17,6 +17,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNamespacesType(t *testing.T) {
@@ -32,7 +34,8 @@ func TestNamespacesType(t *testing.T) {
 	}
 
 	ns = namespaces{}
-	ns.Set(val)
+	err = ns.Set(val)
+	require.NoError(t, err)
 	if len(ns) != 3 {
 		t.Errorf("incorrect length of namespaces, want: %v, got: %v", 3, len(ns))
 	}
