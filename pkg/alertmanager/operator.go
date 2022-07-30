@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -87,6 +88,8 @@ type Operator struct {
 	reconciliations *operator.ReconciliationTracker
 
 	config Config
+
+	webManagedUserPassword string
 }
 
 type Config struct {
@@ -763,7 +766,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secrets failed")
 	}
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
+	if err := c.addWebBasicAuthUsersToStore(ctx, am, assetStore); err != nil {
+		return errors.Wrap(err, "adding web basic auth users to store failed")
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, am, assetStore); err != nil {
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
@@ -1672,7 +1679,38 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 	}
 }
 
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+func (c *Operator) addWebBasicAuthUsersToStore(ctx context.Context, a *monitoringv1.Alertmanager, store *assets.Store) error {
+	if a.Spec.Web == nil && a.Spec.Web.BasicAuthUsers == nil {
+		return nil
+	}
+
+	if c.webManagedUserPassword != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(a.Name), bcrypt.DefaultCost)
+		if err != nil {
+			return errors.Wrap(err, "failed to bcrypt password")
+		}
+		c.webManagedUserPassword = string(hashedPassword)
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(a.Name),
+		a.Namespace,
+		a.Spec.Web.WebConfigFileFields,
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize web config")
+	}
+
+	err = webConfig.AddAuthsToStore(ctx, c.webManagedUserPassword, store)
+	if err != nil {
+		return errors.Wrap(err, "failed to...")
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager, store *assets.Store) error {
 	boolTrue := true
 
 	var fields monitoringv1.WebConfigFileFields
@@ -1683,6 +1721,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		webConfigSecretName(a.Name),
+		a.Namespace,
 		fields,
 	)
 	if err != nil {
@@ -1700,7 +1739,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	}
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference, store); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 

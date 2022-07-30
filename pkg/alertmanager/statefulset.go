@@ -566,7 +566,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			fields = a.Spec.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), fields)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(a.Name), a.Namespace, fields)
 		if err != nil {
 			return nil, err
 		}

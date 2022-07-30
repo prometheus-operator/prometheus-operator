@@ -33,6 +33,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
+	"golang.org/x/crypto/bcrypt"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -96,6 +97,7 @@ type Operator struct {
 	kubeletSyncEnabled     bool
 	config                 operator.Config
 	endpointSliceSupported bool
+	webManagedUserPassword string
 }
 
 // New creates a new controller.
@@ -1404,7 +1406,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+	if err := c.addWebBasicAuthUsersToStore(ctx, p, assetStore); err != nil {
+		return errors.Wrap(err, "adding web basic auth users to store failed")
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, p, assetStore); err != nil {
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
@@ -2109,7 +2115,38 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 	}
 }
 
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+func (c *Operator) addWebBasicAuthUsersToStore(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
+	if p.Spec.Web == nil && p.Spec.Web.BasicAuthUsers == nil {
+		return nil
+	}
+
+	if c.webManagedUserPassword != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(p.Name), bcrypt.DefaultCost)
+		if err != nil {
+			return errors.Wrap(err, "failed to bcrypt password")
+		}
+		c.webManagedUserPassword = string(hashedPassword)
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(p.Name),
+		p.Namespace,
+		p.Spec.Web.WebConfigFileFields,
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize web config")
+	}
+
+	err = webConfig.AddAuthsToStore(ctx, c.webManagedUserPassword, store)
+	if err != nil {
+		return errors.Wrap(err, "failed to...")
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
 	boolTrue := true
 
 	var fields monitoringv1.WebConfigFileFields
@@ -2120,6 +2157,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	webConfig, err := webconfig.New(
 		webConfigDir,
 		webConfigSecretName(p.Name),
+		p.Namespace,
 		fields,
 	)
 	if err != nil {
@@ -2137,7 +2175,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference, store); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 

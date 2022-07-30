@@ -16,10 +16,12 @@ package webconfig
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -40,13 +42,14 @@ var (
 type Config struct {
 	tlsConfig      *monitoringv1.WebTLSConfig
 	httpConfig     *monitoringv1.WebHTTPConfig
+	authConfig     authConfig
 	tlsCredentials *tlsCredentials
 	mountingDir    string
 	secretName     string
 }
 
 // New creates a new Config.
-func New(mountingDir string, secretName string, configFileFields monitoringv1.WebConfigFileFields) (*Config, error) {
+func New(mountingDir, secretName, namespace string, configFileFields monitoringv1.WebConfigFileFields) (*Config, error) {
 	tlsConfig := configFileFields.TLSConfig
 
 	if err := tlsConfig.Validate(); err != nil {
@@ -61,6 +64,7 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 	return &Config{
 		tlsConfig:      tlsConfig,
 		httpConfig:     configFileFields.HTTPConfig,
+		authConfig:     newAuthConfig(namespace, configFileFields.BasicAuthUsers),
 		tlsCredentials: tlsCreds,
 		mountingDir:    mountingDir,
 		secretName:     secretName,
@@ -93,11 +97,37 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 	return arg, volumes, mounts
 }
 
+func (c Config) AddAuthsToStore(ctx context.Context, managedUserPassword string, store *assets.Store) error {
+	if store == nil {
+		return fmt.Errorf("empty store")
+	}
+
+	return c.authConfig.addAuthsToStore(ctx, managedUserPassword, store)
+}
+
+func (c Config) GetManagedAuth(store *assets.Store) (string, string, error) {
+	if store == nil {
+		return "", "", fmt.Errorf("empty store")
+	}
+
+	return c.authConfig.getManagedAuth(store)
+}
+
 // CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the data for the web config file.
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
-func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, labels map[string]string, ownerReference metav1.OwnerReference) error {
-	data, err := c.generateConfigFileContents()
+func (c Config) CreateOrUpdateWebConfigSecret(
+	ctx context.Context,
+	secretClient clientv1.SecretInterface,
+	labels map[string]string,
+	ownerReference metav1.OwnerReference,
+	store *assets.Store,
+) error {
+	if store == nil {
+		return fmt.Errorf("empty store")
+	}
+
+	data, err := c.generateConfigFileContents(store)
 	if err != nil {
 		return err
 	}
@@ -116,8 +146,8 @@ func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient 
 	return k8sutil.CreateOrUpdateSecret(ctx, secretClient, secret)
 }
 
-func (c Config) generateConfigFileContents() ([]byte, error) {
-	if c.tlsConfig == nil && c.httpConfig == nil {
+func (c Config) generateConfigFileContents(store *assets.Store) ([]byte, error) {
+	if c.tlsConfig == nil && c.httpConfig == nil && c.authConfig.basicAuthUsers == nil {
 		return []byte{}, nil
 	}
 
@@ -125,6 +155,11 @@ func (c Config) generateConfigFileContents() ([]byte, error) {
 
 	cfg = c.addTLSServerConfigToYaml(cfg)
 	cfg = c.addHTTPServerConfigToYaml(cfg)
+
+	cfg, err := c.addBasicAuthUsersConfigToYaml(cfg, store)
+	if err != nil {
+		return []byte{}, err
+	}
 
 	return yaml.Marshal(cfg)
 }
@@ -246,6 +281,39 @@ func (c Config) addHTTPServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	httpServerConfig = append(httpServerConfig, yaml.MapItem{Key: "headers", Value: headersConfig})
 
 	return append(cfg, yaml.MapItem{Key: "http_server_config", Value: httpServerConfig})
+}
+
+func (c Config) addBasicAuthUsersConfigToYaml(cfg yaml.MapSlice, store *assets.Store) (yaml.MapSlice, error) {
+	bau := c.authConfig.basicAuthUsers
+	if bau == nil {
+		return cfg, nil
+	}
+
+	authConfig := yaml.MapSlice{}
+
+	managedUser, managedPassword, err := c.authConfig.getManagedAuth(store)
+	if err != nil {
+		return nil, err
+	}
+
+	authConfig = append(authConfig, yaml.MapItem{
+		Key:   managedUser,
+		Value: managedPassword,
+	})
+
+	userAuths, err := c.authConfig.getUserDefineAuths(store)
+	if err != nil {
+		return nil, err
+	}
+
+	for user, password := range userAuths {
+		authConfig = append(authConfig, yaml.MapItem{
+			Key:   user,
+			Value: password,
+		})
+	}
+
+	return append(cfg, yaml.MapItem{Key: "basic_auth_users", Value: authConfig}), nil
 }
 
 func (c Config) makeArg(filePath string) monitoringv1.Argument {

@@ -773,6 +773,8 @@ type WebConfigFileFields struct {
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
 	// Defines HTTP parameters for web server.
 	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
+	// Defines...
+	BasicAuthUsers []BasicAuth `json:"basicAuthUsers,omitempty"`
 }
 
 // WebHTTPConfig defines HTTP parameters for web server.

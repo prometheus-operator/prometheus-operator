@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,12 +31,13 @@ var falseVal = false
 
 func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 	tc := []struct {
-		name                string
-		webConfigFileFields monitoringv1.WebConfigFileFields
-		expectedData        string
+		name                 string
+		webConfigFileFields  monitoringv1.WebConfigFileFields
+		basicAuthCredentials map[string]assets.BasicAuthCredentials
+		expectedData         string
 	}{
 		{
-			name:                "tls config not defined",
+			name:                "web config file fields not defined",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{},
 			expectedData:        "",
 		},
@@ -197,6 +199,41 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
     X-XSS-Protection: test
 `,
 		},
+		{
+			name: "basic auth users config",
+			webConfigFileFields: monitoringv1.WebConfigFileFields{
+				BasicAuthUsers: []monitoringv1.BasicAuth{
+					{
+						Username: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "username",
+						},
+						Password: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "bar",
+							},
+							Key: "password",
+						},
+					},
+				},
+			},
+			basicAuthCredentials: map[string]assets.BasicAuthCredentials{
+				"webconfig/managed/prometheus-operator-managed-user": {
+					Username: "prometheus-operator-managed-user",
+					Password: "abc",
+				},
+				"webconfig/userDefine/foo": {
+					Username: "foo",
+					Password: "bar",
+				},
+			},
+			expectedData: `basic_auth_users:
+  prometheus-operator-managed-user: abc
+  foo: bar
+`,
+		},
 	}
 
 	for _, tt := range tc {
@@ -205,12 +242,12 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			ctx := context.TODO()
 			secretClient := fake.NewSimpleClientset().CoreV1().Secrets("default")
 
-			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webConfigFileFields)
+			config, err := webconfig.New("/web_certs_path_prefix", secretName, "default", tt.webConfigFileFields)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}); err != nil {
+			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}, &assets.Store{BasicAuthAssets: tt.basicAuthCredentials}); err != nil {
 				t.Fatal(err)
 			}
 
@@ -354,7 +391,7 @@ func TestGetMountParameters(t *testing.T) {
 	}
 
 	for _, tt := range ts {
-		tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.webConfigFileFields)
+		tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", "default", tt.webConfigFileFields)
 		if err != nil {
 			t.Fatal(err)
 		}

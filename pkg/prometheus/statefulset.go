@@ -564,7 +564,7 @@ func makeStatefulSetSpec(
 			fields = p.Spec.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), fields)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), p.Namespace, fields)
 		if err != nil {
 			return nil, err
 		}
