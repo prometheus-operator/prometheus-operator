@@ -45,14 +45,8 @@ type Syncer interface {
 }
 
 // ReconcilerMetrics tracks reconciler metrics.
-// TODO: remove the interface and store metrics directly in ResourceReconciler
-// once all controllers (e.g. Alertmanager and ThanosRuler) have been migrated
-// to use ResourceReconciler.
 type ReconcilerMetrics interface {
-	ReconcileCounter() prometheus.Counter
-	TriggerByCounter(triggeredBy, action string) prometheus.Counter
-	ReconcileDurationHistogram() prometheus.Histogram
-	ReconcileErrorsCounter() prometheus.Counter
+	TriggerByCounter(string, HandlerEvent) prometheus.Counter
 }
 
 // ResourceReconciler reacts on changes for statefulset-based resources and
@@ -74,7 +68,12 @@ type ResourceReconciler struct {
 
 	resourceKind string
 
-	syncer  Syncer
+	syncer Syncer
+
+	reconcileTotal    prometheus.Counter
+	reconcileErrors   prometheus.Counter
+	reconcileDuration prometheus.Histogram
+
 	metrics ReconcilerMetrics
 
 	// Queue to trigger state reconciliations of  objects.
@@ -89,17 +88,48 @@ type ResourceReconciler struct {
 func NewResourceReconciler(
 	l log.Logger,
 	syncer Syncer,
-	kind string,
 	metrics ReconcilerMetrics,
+	kind string,
+	reg prometheus.Registerer,
 ) *ResourceReconciler {
+	reconcileTotal := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_reconcile_operations_total",
+		Help: "Total number of reconcile operations",
+	})
+
+	reconcileErrors := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_reconcile_errors_total",
+		Help: "Number of errors that occurred during reconcile operations",
+	})
+
+	reconcileDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "prometheus_operator_reconcile_duration_seconds",
+		Help:    "Histogram of reconcile operations",
+		Buckets: []float64{.1, .5, 1, 5, 10},
+	})
+
+	reg.MustRegister(reconcileTotal, reconcileErrors, reconcileDuration)
+
 	qname := strings.ToLower(kind)
+
+	for _, t := range []string{"StatefulSet", kind} {
+		for _, e := range []HandlerEvent{AddEvent, DeleteEvent, UpdateEvent} {
+			metrics.TriggerByCounter(t, e)
+		}
+	}
+
 	return &ResourceReconciler{
 		logger:       l,
 		resourceKind: kind,
 		syncer:       syncer,
-		metrics:      metrics,
-		reconcileQ:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname),
-		statusQ:      workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname+"_status"),
+
+		reconcileTotal:    reconcileTotal,
+		reconcileErrors:   reconcileErrors,
+		reconcileDuration: reconcileDuration,
+		metrics:           metrics,
+
+		reconcileQ: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname),
+		statusQ:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname+"_status"),
 	}
 }
 
@@ -181,7 +211,7 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}) {
 	}
 
 	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s added", rr.resourceKind), "key", key)
-	rr.metrics.TriggerByCounter(rr.resourceKind, "add").Inc()
+	rr.metrics.TriggerByCounter(rr.resourceKind, AddEvent).Inc()
 
 	rr.reconcileQ.Add(key)
 }
@@ -213,7 +243,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 	}
 
 	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s updated", rr.resourceKind), "key", key)
-	rr.metrics.TriggerByCounter(rr.resourceKind, "update").Inc()
+	rr.metrics.TriggerByCounter(rr.resourceKind, UpdateEvent).Inc()
 
 	rr.reconcileQ.Add(key)
 }
@@ -231,7 +261,7 @@ func (rr *ResourceReconciler) OnDelete(obj interface{}) {
 	}
 
 	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s deleted", rr.resourceKind), "key", key)
-	rr.metrics.TriggerByCounter(rr.resourceKind, "delete").Inc()
+	rr.metrics.TriggerByCounter(rr.resourceKind, DeleteEvent).Inc()
 
 	rr.reconcileQ.Add(key)
 }
@@ -243,7 +273,7 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 	}
 
 	level.Debug(rr.logger).Log("msg", "StatefulSet added")
-	rr.metrics.TriggerByCounter("StatefulSet", "add").Inc()
+	rr.metrics.TriggerByCounter("StatefulSet", AddEvent).Inc()
 
 	rr.EnqueueForReconciliation(obj)
 }
@@ -261,7 +291,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 	}
 
 	level.Debug(rr.logger).Log("msg", "StatefulSet updated")
-	rr.metrics.TriggerByCounter("StatefulSet", "update").Inc()
+	rr.metrics.TriggerByCounter("StatefulSet", UpdateEvent).Inc()
 
 	if !rr.hasStateChanged(old, cur) {
 		// If the statefulset state (spec, labels or annotations) hasn't
@@ -281,7 +311,7 @@ func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 	}
 
 	level.Debug(rr.logger).Log("msg", "StatefulSet delete")
-	rr.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
+	rr.metrics.TriggerByCounter("StatefulSet", DeleteEvent).Inc()
 
 	rr.EnqueueForReconciliation(obj)
 }
@@ -336,17 +366,17 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 	defer rr.reconcileQ.Done(key)
 	defer rr.statusQ.Add(key) // enqueues the object's key to update the status subresource
 
-	rr.metrics.ReconcileCounter().Inc()
+	rr.reconcileTotal.Inc()
 	startTime := time.Now()
 	err := rr.syncer.Sync(ctx, key)
-	rr.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
+	rr.reconcileDuration.Observe(time.Since(startTime).Seconds())
 
 	if err == nil {
 		rr.reconcileQ.Forget(key)
 		return true
 	}
 
-	rr.metrics.ReconcileErrorsCounter().Inc()
+	rr.reconcileErrors.Inc()
 	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("sync %q failed", key)))
 	rr.reconcileQ.AddRateLimited(key)
 

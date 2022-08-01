@@ -133,6 +133,9 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletSyncEnabled = true
 	}
 
+	// All the metrics exposed by the controller get the controller="prometheus" label.
+	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
+
 	c := &Operator{
 		kclient:                client,
 		mclient:                mclient,
@@ -142,7 +145,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		metrics:                operator.NewMetrics("prometheus", r),
+		metrics:                operator.NewMetrics(r),
 		reconciliations:        &operator.ReconciliationTracker{},
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -167,8 +170,9 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	c.rr = operator.NewResourceReconciler(
 		c.logger,
 		c,
-		monitoringv1.PrometheusesKind,
 		c.metrics,
+		monitoringv1.PrometheusesKind,
+		r,
 	)
 
 	c.promInfs, err = informers.NewInformersForResource(
@@ -686,7 +690,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -701,7 +705,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -712,7 +716,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -723,7 +727,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -737,7 +741,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -748,7 +752,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -758,7 +762,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -771,7 +775,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 
 	if o, ok := c.getObject(cur); ok {
 		level.Debug(c.logger).Log("msg", "Probe updated")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "update")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -780,7 +784,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -790,7 +794,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule added")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -805,7 +809,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule updated")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -816,7 +820,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule deleted")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -827,7 +831,7 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", "delete").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -841,7 +845,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", "update").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -851,7 +855,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", "add").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -862,7 +866,7 @@ func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap added")
-		c.metrics.TriggerByCounter("ConfigMap", "add").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -872,7 +876,7 @@ func (c *Operator) handleConfigMapDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
-		c.metrics.TriggerByCounter("ConfigMap", "delete").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -886,7 +890,7 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap updated")
-		c.metrics.TriggerByCounter("ConfigMap", "update").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -1014,11 +1018,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	return c.prometheusForStatefulSet(ss)
-}
-
-func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prometheus {
-	key, ok := c.keyFunc(sset)
+	key, ok := c.keyFunc(ss)
 	if !ok {
 		return nil
 	}
@@ -1086,7 +1086,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
-	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
 	// Probes and PrometheusRules in the namespace.
@@ -1152,7 +1152,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := log.With(c.logger, "key", key)
-	c.logDeprecatedFields(logger, p)
+	logDeprecatedFields(logger, p)
 
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
@@ -1450,8 +1450,8 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
-	deprecationWarningf := "field %q is deprecated, %q field should be used instead"
+func logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
+	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	if p.Spec.BaseImage != "" {
 		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}

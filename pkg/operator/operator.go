@@ -152,14 +152,11 @@ func (rt *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
 type Metrics struct {
 	reg prometheus.Registerer
 
-	listCounter                prometheus.Counter
-	listFailedCounter          prometheus.Counter
-	watchCounter               prometheus.Counter
-	watchFailedCounter         prometheus.Counter
-	reconcileCounter           prometheus.Counter
-	reconcileErrorsCounter     prometheus.Counter
-	stsDeleteCreateCounter     prometheus.Counter
-	reconcileDurationHistogram prometheus.Histogram
+	listCounter            prometheus.Counter
+	listFailedCounter      prometheus.Counter
+	watchCounter           prometheus.Counter
+	watchFailedCounter     prometheus.Counter
+	stsDeleteCreateCounter prometheus.Counter
 	// triggerByCounter is a set of counters keeping track of the amount
 	// of times Prometheus Operator was triggered to reconcile its created
 	// objects. It is split in the dimensions of Kubernetes objects and
@@ -178,24 +175,9 @@ type resourceKey struct {
 }
 
 // NewMetrics initializes operator metrics and registers them with the given registerer.
-// All metrics have a "controller=<name>" label.
-func NewMetrics(name string, r prometheus.Registerer) *Metrics {
-	reg := prometheus.WrapRegistererWith(prometheus.Labels{"controller": name}, r)
+func NewMetrics(r prometheus.Registerer) *Metrics {
 	m := Metrics{
-		reg: reg,
-		reconcileCounter: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_reconcile_operations_total",
-			Help: "Total number of reconcile operations",
-		}),
-		reconcileDurationHistogram: prometheus.NewHistogram(prometheus.HistogramOpts{
-			Name:    "prometheus_operator_reconcile_duration_seconds",
-			Help:    "Histogram of reconcile operations",
-			Buckets: []float64{.1, .5, 1, 5, 10},
-		}),
-		reconcileErrorsCounter: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_reconcile_errors_total",
-			Help: "Number of errors that occurred during reconcile operations",
-		}),
+		reg: r,
 		triggerByCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "prometheus_operator_triggered_total",
 			Help: "Number of times a Kubernetes object add, delete or update event" +
@@ -230,9 +212,6 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 	}
 
 	m.reg.MustRegister(
-		m.reconcileCounter,
-		m.reconcileDurationHistogram,
-		m.reconcileErrorsCounter,
 		m.triggerByCounter,
 		m.stsDeleteCreateCounter,
 		m.listCounter,
@@ -246,29 +225,22 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 	return &m
 }
 
-// ReconcileCounter returns a counter to track attempted reconciliations.
-func (m *Metrics) ReconcileCounter() prometheus.Counter {
-	return m.reconcileCounter
-}
-
-// ReconcileDurationHistogram returns a histogram to track the duration of reconciliations.
-func (m *Metrics) ReconcileDurationHistogram() prometheus.Histogram {
-	return m.reconcileDurationHistogram
-}
-
-// ReconcileErrorsCounter returns a counter to track reconciliation errors.
-func (m *Metrics) ReconcileErrorsCounter() prometheus.Counter {
-	return m.reconcileErrorsCounter
-}
-
 // StsDeleteCreateCounter returns a counter to track statefulset's recreations.
 func (m *Metrics) StsDeleteCreateCounter() prometheus.Counter {
 	return m.stsDeleteCreateCounter
 }
 
-// TriggerByCounter returns a counter to track operator actions by operation (add/delete/update) and action.
-func (m *Metrics) TriggerByCounter(triggeredBy, action string) prometheus.Counter {
-	return m.triggerByCounter.WithLabelValues(triggeredBy, action)
+type HandlerEvent string
+
+const (
+	AddEvent    = HandlerEvent("add")
+	DeleteEvent = HandlerEvent("delete")
+	UpdateEvent = HandlerEvent("update")
+)
+
+// TriggerByCounter returns a counter to track operator actions by resource type and action (add/delete/update).
+func (m *Metrics) TriggerByCounter(triggeredBy string, action HandlerEvent) prometheus.Counter {
+	return m.triggerByCounter.With(prometheus.Labels{"triggered_by": triggeredBy, "action": string(action)})
 }
 
 const (
