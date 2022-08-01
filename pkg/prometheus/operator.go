@@ -40,10 +40,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/workqueue"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -78,10 +76,7 @@ type Operator struct {
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
 
-	// Queue to trigger reconciliations of Prometheus objects.
-	reconcileQueue workqueue.RateLimitingInterface
-	// Queue to trigger status updates of Prometheus objects.
-	statusQueue workqueue.RateLimitingInterface
+	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -142,8 +137,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:                client,
 		mclient:                mclient,
 		logger:                 logger,
-		reconcileQueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
-		statusQueue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus_status"),
 		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
@@ -169,6 +162,13 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nodeEndpointSyncs,
 		c.nodeEndpointSyncErrors,
 		c.reconciliations,
+	)
+
+	c.rr = operator.NewResourceReconciler(
+		c.logger,
+		c,
+		monitoringv1.PrometheusesKind,
+		c.metrics,
 	)
 
 	c.promInfs, err = informers.NewInformersForResource(
@@ -372,11 +372,9 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (c *Operator) addHandlers() {
-	c.promInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handlePrometheusAdd,
-		DeleteFunc: c.handlePrometheusDelete,
-		UpdateFunc: c.handlePrometheusUpdate,
-	})
+	c.promInfs.AddEventHandler(c.rr)
+
+	c.ssetInfs.AddEventHandler(c.rr)
 
 	c.smonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSmonAdd,
@@ -409,11 +407,6 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleSecretDelete,
 		UpdateFunc: c.handleSecretUpdate,
 	})
-	c.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleStatefulSetAdd,
-		DeleteFunc: c.handleStatefulSetDelete,
-		UpdateFunc: c.handleStatefulSetUpdate,
-	})
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
@@ -427,9 +420,6 @@ func (c *Operator) addHandlers() {
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	defer c.reconcileQueue.ShutDown()
-	defer c.statusQueue.ShutDown()
-
 	errChan := make(chan error)
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
@@ -451,17 +441,8 @@ func (c *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	// Start the goroutine that reconciles the desired state of Prometheus objects.
-	go func(ctx context.Context) {
-		for c.processNextReconcileItem(ctx) {
-		}
-	}(ctx)
-
-	// Start the goroutine that reconciles the status of Prometheus objects.
-	go func(ctx context.Context) {
-		for c.processNextStatusItem(ctx) {
-		}
-	}(ctx)
+	go c.rr.Run(ctx)
+	defer c.rr.Stop()
 
 	go c.promInfs.Start(ctx.Done())
 	go c.smonInfs.Start(ctx.Done())
@@ -481,7 +462,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Prometheus objects.
 	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.addToStatusQueue(obj)
+		c.rr.EnqueueForStatus(obj.(*monitoringv1.Prometheus))
 	})
 
 	c.addHandlers()
@@ -511,7 +492,7 @@ func (c *Operator) Run(ctx context.Context) error {
 					p := o.(*monitoringv1.Prometheus)
 					for _, cond := range p.Status.Conditions {
 						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
-							c.addToStatusQueue(p)
+							c.rr.EnqueueForStatus(p)
 							break
 						}
 					}
@@ -536,98 +517,6 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	}
 
 	return k, true
-}
-
-func (c *Operator) handlePrometheusAdd(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus added", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "add").Inc()
-	checkPrometheusSpecDeprecation(key, obj.(*monitoringv1.Prometheus), c.logger)
-	c.addToReconcileQueue(key)
-}
-
-func (c *Operator) handlePrometheusDelete(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus deleted", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "delete").Inc()
-	c.addToReconcileQueue(key)
-}
-
-// hasStateChanged returns true if the 2 objects are different in a way that
-// the controller should reconcile the actual state against the desired state.
-// It helps preventing hot loops when the controller updates the status
-// subresource for instance.
-func (c *Operator) hasStateChanged(old, cur metav1.Object) bool {
-	if old.GetGeneration() != cur.GetGeneration() {
-		level.Debug(c.logger).Log(
-			"msg", "different generations",
-			"current", cur.GetGeneration(),
-			"old", old.GetGeneration(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	if !reflect.DeepEqual(old.GetLabels(), cur.GetLabels()) {
-		level.Debug(c.logger).Log(
-			"msg", "different labels",
-			"current", fmt.Sprintf("%v", cur.GetLabels()),
-			"old", fmt.Sprintf("%v", old.GetLabels()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-
-	}
-	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
-		level.Debug(c.logger).Log(
-			"msg", "different annotations",
-			"current", fmt.Sprintf("%v", cur.GetAnnotations()),
-			"old", fmt.Sprintf("%v", old.GetAnnotations()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	return false
-}
-
-// hasObjectChanged returns true if the 2 objects are different.
-func (c *Operator) hasObjectChanged(old, cur metav1.Object) bool {
-	if old.GetResourceVersion() != cur.GetResourceVersion() {
-		level.Debug(c.logger).Log(
-			"msg", "different resource versions",
-			"current", cur.GetResourceVersion(),
-			"old", old.GetResourceVersion(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	return false
-}
-
-func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
-	if !c.hasStateChanged(&old.(*monitoringv1.Prometheus).ObjectMeta, &cur.(*monitoringv1.Prometheus).ObjectMeta) {
-		return
-	}
-
-	key, ok := c.keyFunc(cur)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus updated", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "update").Inc()
-	checkPrometheusSpecDeprecation(key, cur.(*monitoringv1.Prometheus), c.logger)
-	c.addToReconcileQueue(key)
 }
 
 func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
@@ -1017,35 +906,6 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	return o, true
 }
 
-// addToReconcileQueue adds the object to the reconciliation queue.
-func (c *Operator) addToReconcileQueue(obj interface{}) {
-	c.addToQueue(obj, c.reconcileQueue)
-}
-
-// addToStatusQueue adds the object to the status queue.
-func (c *Operator) addToStatusQueue(obj interface{}) {
-	c.addToQueue(obj, c.statusQueue)
-}
-
-// addToQueue adds the object to the given queue.
-// If the object is a string, it gets added directly. Otherwise, the object's
-// key is extracted via keyFunc.
-func (c *Operator) addToQueue(obj interface{}, q workqueue.Interface) {
-	if obj == nil {
-		return
-	}
-
-	key, ok := obj.(string)
-	if !ok {
-		key, ok = c.keyFunc(obj)
-		if !ok {
-			return
-		}
-	}
-
-	q.Add(key)
-}
-
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
 	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
 }
@@ -1077,7 +937,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1093,7 +953,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1108,7 +968,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1123,7 +983,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1139,7 +999,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 	})
@@ -1152,54 +1012,9 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-// processNextReconcileItem dequeues items, processes them, and marks them done.
-// It is guaranteed that the sync() method is never invoked concurrently with
-// the same key.
-// Before returning, the object's key is automatically added to the status queue.
-func (c *Operator) processNextReconcileItem(ctx context.Context) bool {
-	item, quit := c.reconcileQueue.Get()
-	if quit {
-		return false
-	}
-	key := item.(string)
-	defer c.reconcileQueue.Done(key)
-	defer c.addToStatusQueue(key) // enqueues the object's key to update the status subresource
-
-	c.metrics.ReconcileCounter().Inc()
-	startTime := time.Now()
-	err := c.sync(ctx, key)
-	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.reconciliations.SetStatus(key, err)
-
-	if err == nil {
-		c.reconcileQueue.Forget(key)
-		return true
-	}
-
-	c.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("sync %q failed", key)))
-	c.reconcileQueue.AddRateLimited(key)
-
-	return true
-}
-
-func (c *Operator) processNextStatusItem(ctx context.Context) bool {
-	key, quit := c.statusQueue.Get()
-	if quit {
-		return false
-	}
-	defer c.statusQueue.Done(key)
-
-	err := c.status(ctx, key.(string))
-	if err == nil {
-		c.statusQueue.Forget(key)
-		return true
-	}
-
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("status %q failed", key)))
-	c.statusQueue.AddRateLimited(key)
-
-	return true
+// Resolve implements the operator.Syncer interface.
+func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+	return c.prometheusForStatefulSet(ss)
 }
 
 func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prometheus {
@@ -1258,59 +1073,6 @@ func prometheusKeyToStatefulSetKey(key string, shard int) string {
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
 }
 
-func (c *Operator) handleStatefulSetDelete(obj interface{}) {
-	ps := c.prometheusForStatefulSet(obj)
-	if ps == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet delete")
-	c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
-
-	c.addToReconcileQueue(ps)
-}
-
-func (c *Operator) handleStatefulSetAdd(obj interface{}) {
-	ps := c.prometheusForStatefulSet(obj)
-	if ps == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet added")
-	c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
-
-	c.addToReconcileQueue(ps)
-}
-
-func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
-	old := oldo.(*appsv1.StatefulSet)
-	cur := curo.(*appsv1.StatefulSet)
-
-	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
-
-	if !c.hasObjectChanged(old, cur) {
-		return
-	}
-
-	p := c.prometheusForStatefulSet(cur)
-	if p == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet updated")
-	c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
-
-	if !c.hasStateChanged(old, cur) {
-		// If the statefulset state (spec, labels or annotations) hasn't
-		// changed, the operator can only update the status subresource instead
-		// of doing a full reconciliation.
-		c.addToStatusQueue(p)
-		return
-	}
-
-	c.addToReconcileQueue(p)
-}
-
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
@@ -1350,7 +1112,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			}
 
 			if sync {
-				c.addToReconcileQueue(p)
+				c.rr.EnqueueForReconciliation(p)
 				return
 			}
 		}
@@ -1361,6 +1123,14 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			"err", err,
 		)
 	}
+}
+
+// Sync implements the operator.Syncer interface.
+func (c *Operator) Sync(ctx context.Context, key string) error {
+	err := c.sync(ctx, key)
+	c.reconciliations.SetStatus(key, err)
+
+	return err
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
@@ -1382,6 +1152,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := log.With(c.logger, "key", key)
+	c.logDeprecatedFields(logger, p)
+
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
 		return nil
@@ -1536,9 +1308,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// status updates the status subresource of the object identified by the given
+// UpdateStatus updates the status subresource of the object identified by the given
 // key.
-func (c *Operator) status(ctx context.Context, key string) error {
+// UpdateStatus implements the operator.Syncer interface.
+func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -1677,27 +1450,29 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	return nil
 }
 
-// checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
-func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logger log.Logger) {
-	deprecationWarningf := "prometheus key=%v, field %v is deprecated, '%v' field should be used instead"
+func (c *Operator) logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
+	deprecationWarningf := "field %q is deprecated, %q field should be used instead"
 	if p.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.baseImage", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
+
 	if p.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.tag", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
+
 	if p.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.sha", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
+
 	if p.Spec.Thanos != nil {
 		if p.Spec.BaseImage != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.baseImage", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
 		if p.Spec.Tag != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.tag", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
 		if p.Spec.SHA != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.sha", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}
 	}
 
@@ -1750,11 +1525,6 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 type pod v1.Pod
-
-//// Ready returns true if the pod matches with the statefulset's revision.
-//func (p *pod) Updated() bool {
-//   return p.revision == p.Labels["controller-revision-hash"]
-//}
 
 // Ready returns true if the pod is ready.
 func (p *pod) Ready() bool {
