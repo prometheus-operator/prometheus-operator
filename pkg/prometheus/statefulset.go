@@ -106,12 +106,6 @@ func makeStatefulSet(
 	shard int32,
 	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSet, error) {
-	// p is passed in by value, not by reference. But p contains references like
-	// to annotation map, that do not get copied on function invocation. Ensure to
-	// prevent side effects before editing p by creating a deep copy. For more
-	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659.
-	p = *p.DeepCopy()
-
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
 	parsedVersion, err := semver.ParseTolerant(promVersion)
 	if err != nil {

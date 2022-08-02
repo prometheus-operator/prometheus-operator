@@ -150,10 +150,6 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 }
 
 func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
-	// Before editing 'tr' create deep copy, to prevent side effects. For more
-	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
-	tr = tr.DeepCopy()
-
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
