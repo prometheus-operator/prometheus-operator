@@ -25,7 +25,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -107,12 +106,6 @@ func makeStatefulSet(
 	shard int32,
 	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSet, error) {
-	// p is passed in by value, not by reference. But p contains references like
-	// to annotation map, that do not get copied on function invocation. Ensure to
-	// prevent side effects before editing p by creating a deep copy. For more
-	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659.
-	p = *p.DeepCopy()
-
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
 	parsedVersion, err := semver.ParseTolerant(promVersion)
 	if err != nil {
@@ -129,24 +122,6 @@ func makeStatefulSet(
 	intZero := int32(0)
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
-	}
-
-	if p.Spec.Resources.Requests == nil {
-		p.Spec.Resources.Requests = v1.ResourceList{}
-	}
-	_, memoryRequestFound := p.Spec.Resources.Requests[v1.ResourceMemory]
-	memoryLimit, memoryLimitFound := p.Spec.Resources.Limits[v1.ResourceMemory]
-	if !memoryRequestFound && parsedVersion.Major == 1 {
-		defaultMemoryRequest := resource.MustParse("2Gi")
-		compareResult := memoryLimit.Cmp(defaultMemoryRequest)
-		// If limit is given and smaller or equal to 2Gi, then set memory
-		// request to the given limit. This is necessary as if limit < request,
-		// then a Pod is not schedulable.
-		if memoryLimitFound && compareResult <= 0 {
-			p.Spec.Resources.Requests[v1.ResourceMemory] = memoryLimit
-		} else {
-			p.Spec.Resources.Requests[v1.ResourceMemory] = defaultMemoryRequest
-		}
 	}
 
 	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)

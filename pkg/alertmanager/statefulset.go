@@ -216,9 +216,6 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 }
 
 func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
-	// Before editing 'a' create deep copy, to prevent side effects. For more
-	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
-	a = a.DeepCopy()
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 
 	amImagePath, err := operator.BuildImagePath(
