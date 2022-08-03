@@ -23,6 +23,7 @@ Full list of triage people is displayed below:
 | Name            | Slack         | GitHub                                       | Company         |
 |-----------------|---------------|----------------------------------------------|-----------------|
 | Noah Kantrowitz | `@coderanger` | [@coderanger](https://github.com/coderanger) | Geomagical/IKEA |
+| Jayapriya Pai   | `@slashpai`   | [@slashpai](https://github.com/slashpai)     | Red Hat         |
 
 ## Emeritus maintainers
 
