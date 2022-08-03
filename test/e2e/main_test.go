@@ -170,7 +170,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMPreserveUserAddedMetadata":             testAMPreserveUserAddedMetadata,
 		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
-		"AMWebTLS":                                testAMWeb,
+		"AMWeb":                                   testAMWeb,
 	}
 
 	for name, f := range testFuncs {
