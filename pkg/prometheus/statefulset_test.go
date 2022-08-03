@@ -2569,3 +2569,135 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
 	}
 }
+
+func TestPrometheusQuerySpec(t *testing.T) {
+	int32Ptr := func(i int32) *int32 { return &i }
+	stringPtr := func(s string) *string { return &s }
+	durationPtr := func(s string) *monitoringv1.Duration { d := monitoringv1.Duration(s); return &d }
+
+	for _, tc := range []struct {
+		name string
+
+		lookbackDelta  *string
+		maxConcurrency *int32
+		maxSamples     *int32
+		timeout        *monitoringv1.Duration
+		version        string
+
+		expected []string
+	}{
+		{
+			name:     "default",
+			expected: []string{},
+		},
+		{
+			name:           "all values provided",
+			lookbackDelta:  stringPtr("2m"),
+			maxConcurrency: int32Ptr(10),
+			maxSamples:     int32Ptr(10000),
+			timeout:        durationPtr("1m"),
+
+			expected: []string{
+				"--query.lookback-delta=2m",
+				"--query.max-concurrency=10",
+				"--query.max-samples=10000",
+				"--query.timeout=1m",
+			},
+		},
+		{
+			name:           "zero values are skipped",
+			lookbackDelta:  stringPtr("2m"),
+			maxConcurrency: int32Ptr(0),
+			maxSamples:     int32Ptr(0),
+			timeout:        durationPtr("1m"),
+
+			expected: []string{
+				"--query.lookback-delta=2m",
+				"--query.timeout=1m",
+			},
+		},
+		{
+			name:           "max samples skipped if version < 2.5",
+			lookbackDelta:  stringPtr("2m"),
+			maxConcurrency: int32Ptr(10),
+			maxSamples:     int32Ptr(10000),
+			timeout:        durationPtr("1m"),
+			version:        "v2.4.0",
+
+			expected: []string{
+				"--query.lookback-delta=2m",
+				"--query.max-concurrency=10",
+				"--query.timeout=1m",
+			},
+		},
+		{
+			name:           "max samples not skipped if version > 2.5",
+			lookbackDelta:  stringPtr("2m"),
+			maxConcurrency: int32Ptr(10),
+			maxSamples:     int32Ptr(10000),
+			timeout:        durationPtr("1m"),
+			version:        "v2.5.0",
+
+			expected: []string{
+				"--query.lookback-delta=2m",
+				"--query.max-concurrency=10",
+				"--query.max-samples=10000",
+				"--query.timeout=1m",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ss, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+					},
+					Query: &monitoringv1.QuerySpec{
+						LookbackDelta:  tc.lookbackDelta,
+						MaxConcurrency: tc.maxConcurrency,
+						MaxSamples:     tc.maxSamples,
+						Timeout:        tc.timeout,
+					},
+				},
+			}, defaultTestConfig, nil, "", 0, nil)
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			for _, arg := range []string{
+				"--query.lookback-delta",
+				"--query.max-concurrency",
+				"--query.max-samples",
+				"--query.timeout",
+			} {
+				var containerArg string
+				for _, a := range ss.Spec.Template.Spec.Containers[0].Args {
+					if strings.HasPrefix(a, arg) {
+						containerArg = a
+						break
+					}
+				}
+
+				var expected string
+				for _, exp := range tc.expected {
+					if strings.HasPrefix(exp, arg) {
+						expected = exp
+						break
+					}
+				}
+
+				if expected == "" {
+					if containerArg != "" {
+						t.Fatalf("found %q while not expected", containerArg)
+					}
+					continue
+				}
+
+				if containerArg != expected {
+					t.Fatalf("expected %q to be found but got %q", expected, containerArg)
+				}
+			}
+		})
+	}
+}
