@@ -3620,7 +3620,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 	}
 }
 
-func testPromWeb(t *testing.T) {
+func testPromWebWithThanosSidecar(t *testing.T) {
 	t.Parallel()
 	trueVal := true
 	testCtx := framework.NewTestCtx(t)
@@ -3639,6 +3639,7 @@ func testPromWeb(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	version := operator.DefaultThanosVersion
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	prom.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
@@ -3670,6 +3671,10 @@ func testPromWeb(t *testing.T) {
 			},
 		},
 	}
+	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Version: &version,
+	}
+
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
 		t.Fatalf("Creating prometheus failed: %v", err)
 	}
@@ -3764,6 +3769,28 @@ func testPromWeb(t *testing.T) {
 				pollErr = fmt.Errorf("expected header %s value to be %s but got %s", k, v, rv)
 				return false, nil
 			}
+		}
+
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if reloadSuccessTimestamp == 0 {
+			pollErr = fmt.Errorf("config reloader failed to reload once")
+			return false, nil
+		}
+
+		thanosSidecarPrometheusUp, err := framework.GetMetricVal(context.Background(), ns, podName, "10902", "thanos_sidecar_prometheus_up")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if thanosSidecarPrometheusUp == 0 {
+			pollErr = fmt.Errorf("thanos sidecar failed to connect prometheus")
+			return false, nil
 		}
 
 		return true, nil

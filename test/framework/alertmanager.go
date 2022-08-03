@@ -36,8 +36,6 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
-	"github.com/prometheus/prometheus/model/labels"
-	"github.com/prometheus/prometheus/model/textparse"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -340,15 +338,6 @@ func (f *Framework) GetAlertmanagerPodStatus(ctx context.Context, ns, n string, 
 	return amStatus, nil
 }
 
-func (f *Framework) GetAlertmanagerMetrics(ctx context.Context, ns, n string) (textparse.Parser, error) {
-	request := f.ProxyGetPod(ns, n, "/metrics")
-	resp, err := request.DoRaw(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return textparse.NewPromParser(resp), nil
-}
-
 func (f *Framework) CreateSilence(ctx context.Context, ns, n string) (string, error) {
 	var createSilenceResponse silence.PostSilencesOKBody
 
@@ -451,34 +440,13 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ctx context.Context
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, ns, amName string, previousReloadTimestamp time.Time) error {
 	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		parser, err := f.GetAlertmanagerMetrics(ctx, ns, "alertmanager-"+amName+"-0")
+		timestampSec, err := f.GetMetricVal(ctx, ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
 		if err != nil {
 			return false, err
 		}
 
-		for {
-			entry, err := parser.Next()
-			if err != nil {
-				return false, err
-			}
-			if entry == textparse.EntryInvalid {
-				return false, fmt.Errorf("invalid prometheus metric entry")
-			}
-			if entry != textparse.EntrySeries {
-				continue
-			}
-
-			seriesLabels := labels.Labels{}
-			parser.Metric(&seriesLabels)
-
-			if seriesLabels.Get("__name__") != configReloadMetricName {
-				continue
-			}
-
-			_, _, timestampSec := parser.Series()
-			timestamp := time.Unix(int64(timestampSec), 0)
-			return timestamp.After(previousReloadTimestamp), nil
-		}
+		timestamp := time.Unix(int64(timestampSec), 0)
+		return timestamp.After(previousReloadTimestamp), nil
 	})
 
 	if err != nil {
