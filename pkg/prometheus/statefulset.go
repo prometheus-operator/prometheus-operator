@@ -61,7 +61,6 @@ const (
 var (
 	minShards                   int32 = 1
 	minReplicas                 int32 = 1
-	defaultMaxConcurrency       int32 = 20
 	managedByOperatorLabel            = "managed-by"
 	managedByOperatorLabelValue       = "prometheus-operator"
 	managedByOperatorLabels           = map[string]string{
@@ -369,10 +368,6 @@ func makeStatefulSetSpec(
 		monitoringv1.Argument{Name: "web.enable-lifecycle"},
 	)
 
-	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *p.Spec.Query.LookbackDelta})
-	}
-
 	if version.Minor >= 4 {
 		if p.Spec.Rules.Alert.ForOutageTolerance != "" {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: p.Spec.Rules.Alert.ForOutageTolerance})
@@ -385,19 +380,21 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	if version.Minor >= 5 {
-		if p.Spec.Query != nil && p.Spec.Query.MaxSamples != nil {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: string(*p.Spec.Query.MaxSamples)})
-		}
-	}
-
 	if p.Spec.Query != nil {
-		if p.Spec.Query.MaxConcurrency != nil {
-			if *p.Spec.Query.MaxConcurrency < 1 {
-				p.Spec.Query.MaxConcurrency = &defaultMaxConcurrency
-			}
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-concurrency", Value: string(*p.Spec.Query.MaxConcurrency)})
+		if p.Spec.Query.LookbackDelta != nil {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *p.Spec.Query.LookbackDelta})
 		}
+
+		if version.Minor >= 5 {
+			if p.Spec.Query.MaxSamples != nil && *p.Spec.Query.MaxSamples > 0 {
+				promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: fmt.Sprintf("%d", *p.Spec.Query.MaxSamples)})
+			}
+		}
+
+		if p.Spec.Query.MaxConcurrency != nil && *p.Spec.Query.MaxConcurrency > 1 {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-concurrency", Value: fmt.Sprintf("%d", *p.Spec.Query.MaxConcurrency)})
+		}
+
 		if p.Spec.Query.Timeout != nil {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.timeout", Value: string(*p.Spec.Query.Timeout)})
 		}
