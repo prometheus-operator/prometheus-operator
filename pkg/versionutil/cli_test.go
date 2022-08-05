@@ -51,7 +51,7 @@ func TestShouldPrintVersion(t *testing.T) {
 					"  build user:       test-value\n"+
 					"  build date:       test-value\n"+
 					"  go version:       test-value\n"+
-					"  platform:         "+runtime.GOOS+"/amd64", program),
+					"  platform:         "+runtime.GOOS+"/"+runtime.GOARCH, program),
 		},
 	}
 	for tn, tc := range tests {
