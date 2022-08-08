@@ -764,6 +764,7 @@ func makeStatefulSetSpec(
 
 		thanosArgs := []monitoringv1.Argument{
 			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix))},
+			{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`},
 			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", bindAddress)},
 			{Name: "http-address", Value: fmt.Sprintf("%s:10902", bindAddress)},
 		}

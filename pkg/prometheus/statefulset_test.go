@@ -2495,6 +2495,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 	expectedThanosArgs := []string{
 		"sidecar",
 		"--prometheus.url=http://localhost:9090/",
+		`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}}`,
 		"--grpc-address=:10901",
 		"--http-address=:10902",
 		"--log.level=info",
