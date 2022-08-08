@@ -1910,6 +1910,17 @@ func testAMWeb(t *testing.T) {
 			}
 		}
 
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if reloadSuccessTimestamp == 0 {
+			pollErr = fmt.Errorf("config reloader failed to reload once")
+			return false, nil
+		}
+
 		return true, nil
 	})
 
