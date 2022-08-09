@@ -247,6 +247,49 @@ func TestTracing(t *testing.T) {
 	}
 }
 
+func TestTracingFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	testKey := "thanos-tracing-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:    emptyQueryEndpoints,
+			TracingConfigFile: testPath,
+			TracingConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArgConfigFile, containsArgConfig bool
+		expectedArgConfigFile := "--tracing.config-file=" + testPath
+		expectedArgConfig := "--tracing.config=$(TRACING_CONFIG)"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArgConfigFile {
+						containsArgConfigFile = true
+					}
+					if arg == expectedArgConfig {
+						containsArgConfig = true
+					}
+				}
+			}
+		}
+		if !containsArgConfigFile {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
+		}
+		if containsArgConfig {
+			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfig)
+		}
+	}
+}
+
 func TestObjectStorage(t *testing.T) {
 	testKey := "thanos-objstore-config-secret"
 
