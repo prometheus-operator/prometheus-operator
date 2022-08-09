@@ -282,14 +282,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	if tr.Spec.TracingConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "TRACING_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.TracingConfig,
-			},
-		})
+	if tr.Spec.TracingConfig != nil || len(tr.Spec.TracingConfigFile) > 0 {
+		if len(tr.Spec.TracingConfigFile) > 0 {
+			trCLIArgs = append(trCLIArgs, "--tracing.config-file="+tr.Spec.TracingConfigFile)
+		} else {
+			trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
+			trEnvVars = append(trEnvVars, v1.EnvVar{
+				Name: "TRACING_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: tr.Spec.TracingConfig,
+				},
+			})
+		}
 	}
 
 	if tr.Spec.GRPCServerTLSConfig != nil {
