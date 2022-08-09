@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	v1 "k8s.io/api/core/v1"
@@ -292,7 +293,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-key-some-secret",
+					Name: "web-config-tls-secret-key-some-secret-38b2f493",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -300,7 +301,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-cert-some-secret",
+					Name: "web-config-tls-secret-cert-some-secret-a60e0a56",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -308,7 +309,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-client-ca-some-secret",
+					Name: "web-config-tls-secret-client-ca-some-secret-3ec4509b",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -326,7 +327,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-key-some-secret",
+					Name:             "web-config-tls-secret-key-some-secret-38b2f493",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.key",
 					SubPath:          "tls.key",
@@ -334,7 +335,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-cert-some-secret",
+					Name:             "web-config-tls-secret-cert-some-secret-a60e0a56",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.crt",
 					SubPath:          "tls.crt",
@@ -342,7 +343,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-client-ca-some-secret",
+					Name:             "web-config-tls-secret-client-ca-some-secret-3ec4509b",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.client_ca",
 					SubPath:          "tls.client_ca",
@@ -354,19 +355,27 @@ func TestGetMountParameters(t *testing.T) {
 	}
 
 	for _, tt := range ts {
-		tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.webConfigFileFields)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run("", func(t *testing.T) {
+			tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.webConfigFileFields)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		_, volumes, mounts := tlsAssets.GetMountParameters()
+			_, volumes, mounts, err := tlsAssets.GetMountParameters()
 
-		if !reflect.DeepEqual(volumes, tt.expectedVolumes) {
-			t.Errorf("invalid volumes,\ngot  %v,\nwant %v", volumes, tt.expectedVolumes)
-		}
+			if err != nil {
+				t.Fatalf("expecting no error, got %v", err)
+			}
 
-		if !reflect.DeepEqual(mounts, tt.expectedMounts) {
-			t.Errorf("invalid mounts,\ngot  %v,\nwant %v", mounts, tt.expectedMounts)
-		}
+			if !reflect.DeepEqual(volumes, tt.expectedVolumes) {
+				t.Log(pretty.Compare(tt.expectedVolumes, volumes))
+				t.Errorf("invalid volumes")
+			}
+
+			if !reflect.DeepEqual(mounts, tt.expectedMounts) {
+				t.Log(pretty.Compare(tt.expectedMounts, mounts))
+				t.Errorf("invalid mounts")
+			}
+		})
 	}
 }

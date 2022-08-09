@@ -512,9 +512,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 	}
 
+	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range a.Spec.Secrets {
+		name, err := rn.UniqueVolumeName(s)
+		if err != nil {
+			return nil, err
+		}
+
 		volumes = append(volumes, v1.Volume{
-			Name: k8sutil.SanitizeVolumeName("secret-" + s),
+			Name: name,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: s,
@@ -523,7 +529,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		})
 		mountPath := secretsDir + s
 		mount := v1.VolumeMount{
-			Name:      k8sutil.SanitizeVolumeName("secret-" + s),
+			Name:      name,
 			ReadOnly:  true,
 			MountPath: mountPath,
 		}
@@ -532,9 +538,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		watchedDirectories = append(watchedDirectories, mountPath)
 	}
 
+	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range a.Spec.ConfigMaps {
+		name, err := rn.UniqueVolumeName(c)
+		if err != nil {
+			return nil, err
+		}
+
 		volumes = append(volumes, v1.Volume{
-			Name: k8sutil.SanitizeVolumeName("configmap-" + c),
+			Name: name,
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
@@ -545,7 +557,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		})
 		mountPath := configmapsDir + c
 		mount := v1.VolumeMount{
-			Name:      k8sutil.SanitizeVolumeName("configmap-" + c),
+			Name:      name,
 			ReadOnly:  true,
 			MountPath: mountPath,
 		}
@@ -571,7 +583,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			return nil, err
 		}
 
-		confArg, configVol, configMount := webConfig.GetMountParameters()
+		confArg, configVol, configMount, err := webConfig.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)

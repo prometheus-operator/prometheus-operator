@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cespare/xxhash/v2"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -232,15 +234,57 @@ func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterfac
 	return false, nil
 }
 
-// SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
-// accepted by Kubernetes.
-func SanitizeVolumeName(name string) string {
+// ResourceNamer knows how to generate valid names for various Kubernetes resources.
+type ResourceNamer struct {
+	prefix string
+}
+
+// NewResourceNamerWithPrefix returns a ResourceNamer that adds a prefix
+// followed by an hyphen character to all resource names.
+func NewResourceNamerWithPrefix(p string) ResourceNamer {
+	return ResourceNamer{prefix: p}
+}
+
+// UniqueVolumeName returns a volume name that is a valid DNS-1123 label.
+// The returned name has a hash-based suffix to ensure uniqueness in case the
+// input name exceeds the 63-chars limit.
+func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
+	if rn.prefix != "" {
+		name = strings.TrimRight(rn.prefix, "-") + "-" + name
+	}
+
 	name = strings.ToLower(name)
 	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
-	if len(name) > validation.DNS1123LabelMaxLength {
-		name = name[0:validation.DNS1123LabelMaxLength]
+	name = strings.Trim(name, "-")
+
+	// Hash the name and append the 8 first characters of the hash
+	// value to the resulting name to ensure that 2 names longer than
+	// DNS1123LabelMaxLength return unique volume names.
+	// E.g. long-63-chars-abc, long-63-chars-XYZ may be added to
+	// volume name since they are trimmed at long-63-chars, there will be 2
+	// volume entries with the same name.
+	// In practice, the hash is computed for the full name then trimmed to
+	// the first 8 chars and added to the end:
+	// * long-63-chars-abc -> first-54-chars-deadbeef
+	// * long-63-chars-XYZ -> first-54-chars-d3adb33f
+	xxh := xxhash.New()
+	if _, err := xxh.Write([]byte(name)); err != nil {
+		return "", err
 	}
-	return strings.Trim(name, "-")
+
+	h := fmt.Sprintf("-%x", xxh.Sum64())
+	h = h[:9]
+
+	if len(name) > validation.DNS1123LabelMaxLength-9 {
+		name = name[:validation.DNS1123LabelMaxLength-9]
+	}
+
+	name = name + h
+	if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
+		return "", errors.New(strings.Join(errs, ","))
+	}
+
+	return name, nil
 }
 
 // AddTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
