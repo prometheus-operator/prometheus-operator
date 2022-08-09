@@ -16,12 +16,14 @@ package webconfig
 
 import (
 	"fmt"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	corev1 "k8s.io/api/core/v1"
 	"path"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	corev1 "k8s.io/api/core/v1"
 )
 
-var (
+const (
 	volumePrefix = "web-config-tls-"
 )
 
@@ -87,7 +89,8 @@ func (a tlsCredentials) mountParamsForSecret(
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount) {
-	volumeName := volumePrefix + secret.Name
+
+	volumeName := k8sutil.SanitizeVolumeName(volumePrefix + secret.Name)
 	volumes = append(volumes, corev1.Volume{
 		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
@@ -114,7 +117,7 @@ func (a tlsCredentials) mountParamsForConfigmap(
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount) {
-	volumeName := volumePrefix + configMap.Name
+	volumeName := k8sutil.SanitizeVolumeName(volumePrefix + configMap.Name)
 	volumes = append(volumes, corev1.Volume{
 		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{

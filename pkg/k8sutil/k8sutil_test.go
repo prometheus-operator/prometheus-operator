@@ -55,8 +55,9 @@ func Test_SanitizeVolumeName(t *testing.T) {
 			expected: "foo-bar",
 		},
 		{
-			name:     strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
-			expected: strings.Repeat("a", validation.DNS1123LabelMaxLength),
+			name: strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
+			expected: strings.Repeat("a", validation.DNS1123LabelMaxLength-9) +
+				"-" + sha1Sum(strings.Repeat("a", validation.DNS1123LabelMaxLength*2), 8),
 		},
 	}
 
@@ -65,6 +66,17 @@ func Test_SanitizeVolumeName(t *testing.T) {
 		if c.expected != out {
 			t.Errorf("expected test case %d to be %q but got %q", i, c.expected, out)
 		}
+	}
+}
+
+func Test_SanitizeVolumeNameCollision(t *testing.T) {
+	// a<63>-foo
+	foo := strings.Repeat("a", validation.DNS1123LabelMaxLength) + "foo"
+	// a<63>-bar
+	bar := strings.Repeat("a", validation.DNS1123LabelMaxLength) + "bar"
+
+	if sanitized := SanitizeVolumeName(foo); sanitized == SanitizeVolumeName(bar) {
+		t.Errorf("expected sanitized volume name of %q and %q to be diffrent but got %q", foo, bar, sanitized)
 	}
 }
 

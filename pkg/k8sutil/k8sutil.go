@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"crypto/sha1"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -238,9 +239,26 @@ func SanitizeVolumeName(name string) string {
 	name = strings.ToLower(name)
 	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
 	if len(name) > validation.DNS1123LabelMaxLength {
-		name = name[0:validation.DNS1123LabelMaxLength]
+		// NOTE: sha1 ensures that 2 names that may be trimmed at MaxLength are
+		// still unique. E.g. long-63-chars-abc, long-63-chars-XYZ may be added to
+		// volume name since they are trimmed at long-63-chars, there will be 2
+		// volume entries with the same name.
+		// To workaround this, SHA1 is computed
+		// for the full name and then trimmed to 8 chars, added to the end.
+		// So, long-63-chars-abc -> long-63-c-deadbeef  and
+		// long-63-chars-XYZ -> long-63-c-badb01
+		// that will be trimmed at long-63-chars will not collide
+
+		name = name[0:validation.DNS1123LabelMaxLength-9] + "-" + sha1Sum(name, 8)
 	}
 	return strings.Trim(name, "-")
+}
+
+func sha1Sum(x string, n int) string {
+	h := sha1.New()
+	h.Write([]byte(x))
+	sum := fmt.Sprintf("%x", h.Sum(nil))
+	return sum[0:n]
 }
 
 // AddTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme

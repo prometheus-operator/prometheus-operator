@@ -1012,7 +1012,7 @@ func webConfigSecretName(name string) string {
 }
 
 func volumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
+	return k8sutil.SanitizeVolumeName(fmt.Sprintf("%s-db", prefixedName(name)))
 }
 
 func prefixedName(name string) string {
