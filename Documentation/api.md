@@ -10715,6 +10715,18 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
+<code>tracingConfigFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>TracingConfig specifies the path of the tracing configuration file.
+When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labels</code><br/>
 <em>
 map[string]string
@@ -11350,6 +11362,18 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfigFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>TracingConfig specifies the path of the tracing configuration file.
+When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
 </td>
 </tr>
 <tr>

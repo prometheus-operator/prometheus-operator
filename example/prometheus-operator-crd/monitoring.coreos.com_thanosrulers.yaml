@@ -4831,6 +4831,11 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              tracingConfigFile:
+                description: TracingConfig specifies the path of the tracing configuration
+                  file. When used alongside with TracingConfig, TracingConfigFile
+                  takes precedence.
+                type: string
               volumes:
                 description: Volumes allows configuration of additional volumes on
                   the output StatefulSet definition. Volumes specified will be appended
