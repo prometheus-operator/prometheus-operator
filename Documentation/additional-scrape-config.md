@@ -28,7 +28,7 @@ Below we are making a simple "prometheus" config. Name this
 Then you will need to make a secret out of this configuration.
 
 ```sh
-kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run -oyaml > additional-scrape-configs.yaml
+kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run=client -oyaml > additional-scrape-configs.yaml
 ```
 
 Next, apply the generated kubernetes manifest
