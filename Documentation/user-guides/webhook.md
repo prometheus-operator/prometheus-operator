@@ -65,7 +65,7 @@ spec:
           readOnly: true
      volumes:
      - name: tls-certificates
-     - secret:
+       secret:
          secretName: admission-webhook-certs
 ```
 
