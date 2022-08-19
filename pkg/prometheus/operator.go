@@ -509,11 +509,8 @@ func (c *Operator) Run(ctx context.Context) error {
 			case <-ticker.C:
 				err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
 					p := o.(*monitoringv1.Prometheus)
-					for _, cond := range p.Status.Conditions {
-						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
-							c.addToStatusQueue(p)
-							break
-						}
+					if !meta.IsStatusConditionTrue(p.Status.Conditions, monitoringv1.PrometheusAvailable) {
+						c.addToStatusQueue(p)
 					}
 				})
 				if err != nil {
@@ -1559,12 +1556,10 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	level.Info(logger).Log("msg", "update prometheus status")
 
 	var (
-		availableCondition = monitoringv1.PrometheusCondition{
-			Type:   monitoringv1.PrometheusAvailable,
-			Status: monitoringv1.PrometheusConditionTrue,
-			LastTransitionTime: metav1.Time{
-				Time: time.Now().UTC(),
-			},
+		availableCondition = metav1.Condition{
+			Type:               monitoringv1.PrometheusAvailable,
+			Status:             metav1.ConditionTrue,
+			ObservedGeneration: p.Generation,
 		}
 		messages []string
 	)
@@ -1617,10 +1612,10 @@ func (c *Operator) status(ctx context.Context, key string) error {
 
 		if len(stsReporter.Ready()) == 0 {
 			availableCondition.Reason = "NoPodReady"
-			availableCondition.Status = monitoringv1.PrometheusConditionFalse
-		} else if availableCondition.Status != monitoringv1.PrometheusConditionFalse {
+			availableCondition.Status = metav1.ConditionFalse
+		} else if availableCondition.Status != metav1.ConditionFalse {
 			availableCondition.Reason = "SomePodsNotReady"
-			availableCondition.Status = monitoringv1.PrometheusConditionDegraded
+			availableCondition.Status = metav1.ConditionFalse
 		}
 
 		for _, p := range stsReporter.pods {
@@ -1633,39 +1628,26 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	availableCondition.Message = strings.Join(messages, "\n")
 
 	// Compute the Reconciled ConditionType.
-	reconciledCondition := monitoringv1.PrometheusCondition{
-		Type:   monitoringv1.PrometheusReconciled,
-		Status: monitoringv1.PrometheusConditionTrue,
-		LastTransitionTime: metav1.Time{
-			Time: time.Now().UTC(),
-		},
+	reconciledCondition := metav1.Condition{
+		Type:               monitoringv1.PrometheusReconciled,
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: p.Generation,
 	}
 	reconciliationStatus, found := c.reconciliations.GetStatus(key)
 	if !found {
-		reconciledCondition.Status = monitoringv1.PrometheusConditionUnknown
+		reconciledCondition.Status = metav1.ConditionUnknown
 		reconciledCondition.Reason = "NotFound"
 		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
 	} else {
 		if !reconciliationStatus.Ok() {
-			reconciledCondition.Status = monitoringv1.PrometheusConditionFalse
+			reconciledCondition.Status = metav1.ConditionFalse
 		}
 		reconciledCondition.Reason = reconciliationStatus.Reason()
 		reconciledCondition.Message = reconciliationStatus.Message()
 	}
 
-	// Update the last transition times only if the status of the available condition has changed.
-	for _, condition := range p.Status.Conditions {
-		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-			availableCondition.LastTransitionTime = condition.LastTransitionTime
-			continue
-		}
-
-		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
-			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
-		}
-	}
-
-	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
+	meta.SetStatusCondition(&pStatus.Conditions, availableCondition)
+	meta.SetStatusCondition(&pStatus.Conditions, reconciledCondition)
 
 	p.Status = pStatus
 	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {

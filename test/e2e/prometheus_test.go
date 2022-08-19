@@ -35,6 +35,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -4442,43 +4443,40 @@ func testPromDegradedConditionStatus(t *testing.T) {
 			return false, nil
 		}
 
-		for _, cond := range current.Status.Conditions {
-			if cond.Type != monitoringv1.PrometheusAvailable {
-				continue
-			}
-
-			if cond.Status != monitoringv1.PrometheusConditionDegraded {
-				pollErr = errors.Errorf(
-					"expected Available condition to be 'Degraded', got %q (reason %s, %q)",
-					cond.Status,
-					cond.Reason,
-					cond.Message,
-				)
-				return false, nil
-			}
-
-			if cond.Reason != "SomePodsNotReady" {
-				pollErr = errors.Errorf(
-					"expected Available condition's reason to be 'SomePodsNotReady',  got %s (message %q)",
-					cond.Reason,
-					cond.Message,
-				)
-				return false, nil
-			}
-
-			if !strings.Contains(cond.Message, "bad-image") {
-				pollErr = errors.Errorf(
-					"expected Available condition's message to contain 'bad-image', got %q",
-					cond.Message,
-				)
-				return false, nil
-			}
-
-			return true, nil
+		cond := meta.FindStatusCondition(current.Status.Conditions, monitoringv1.PrometheusAvailable)
+		if cond == nil {
+			pollErr = errors.Errorf("failed to find Available condition in status subresource")
+			return false, nil
 		}
 
-		pollErr = errors.Errorf("failed to find Available condition in status subresource")
-		return false, nil
+		if cond.Status != metav1.ConditionFalse {
+			pollErr = errors.Errorf(
+				"expected Available condition to be 'False', got %q (reason %s, %q)",
+				cond.Status,
+				cond.Reason,
+				cond.Message,
+			)
+			return false, nil
+		}
+
+		if cond.Reason != "SomePodsNotReady" {
+			pollErr = errors.Errorf(
+				"expected Available condition's reason to be 'SomePodsNotReady',  got %s (message %q)",
+				cond.Reason,
+				cond.Message,
+			)
+			return false, nil
+		}
+
+		if !strings.Contains(cond.Message, "bad-image") {
+			pollErr = errors.Errorf(
+				"expected Available condition's message to contain 'bad-image', got %q",
+				cond.Message,
+			)
+			return false, nil
+		}
+
+		return true, nil
 	})
 
 	if err != nil {

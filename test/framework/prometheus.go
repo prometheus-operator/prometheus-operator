@@ -26,6 +26,7 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -397,22 +398,15 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
-		var reconciled, available *monitoringv1.PrometheusCondition
-		for _, cond := range status.Conditions {
-			if cond.Type == monitoringv1.PrometheusAvailable {
-				available = &cond
-			}
-			if cond.Type == monitoringv1.PrometheusReconciled {
-				reconciled = &cond
-			}
-		}
+		available := meta.FindStatusCondition(status.Conditions, monitoringv1.PrometheusAvailable)
+		reconciled := meta.FindStatusCondition(status.Conditions, monitoringv1.PrometheusReconciled)
 
 		if reconciled == nil {
 			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
 			return false, nil
 		}
 
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+		if reconciled.Status != metav1.ConditionTrue {
 			pollErr = errors.Errorf(
 				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
 				reconciled.Status,
@@ -427,7 +421,7 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+		if reconciled.Status != metav1.ConditionTrue {
 			pollErr = errors.Errorf(
 				"expected Available condition to be 'True', got %q (reason %s, %q)",
 				reconciled.Status,

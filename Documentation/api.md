@@ -7015,133 +7015,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
-</p>
-<div>
-<p>PrometheusCondition represents the state of the resources associated with the Prometheus resource.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionType">
-PrometheusConditionType
-</a>
-</em>
-</td>
-<td>
-<p>Type of the condition being reported.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionStatus">
-PrometheusConditionStatus
-</a>
-</em>
-</td>
-<td>
-<p>status of the condition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>lastTransitionTime</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<p>lastTransitionTime is the time of the last update to the current status property.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>reason</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Reason for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>message</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionStatus">PrometheusConditionStatus
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Degraded&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;False&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;True&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Unknown&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionType">PrometheusConditionType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Available&#34;</p></td>
-<td><p>Available indicates whether enough Prometheus pods are ready to provide the service.</p>
-</td>
-</tr><tr><td><p>&#34;Reconciled&#34;</p></td>
-<td><p>Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.</p>
-</td>
-</tr></tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
 <p>
@@ -8502,8 +8375,8 @@ int32
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PrometheusCondition">
-[]PrometheusCondition
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#condition-v1-meta">
+[]Kubernetes meta/v1.Condition
 </a>
 </em>
 </td>

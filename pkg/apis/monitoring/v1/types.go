@@ -604,7 +604,7 @@ type PrometheusStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []PrometheusCondition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
 	// +listType=map
 	// +listMapKey=shardID
@@ -612,42 +612,11 @@ type PrometheusStatus struct {
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
 
-// PrometheusCondition represents the state of the resources associated with the Prometheus resource.
-// +k8s:deepcopy-gen=true
-type PrometheusCondition struct {
-	// Type of the condition being reported.
-	// +required
-	Type PrometheusConditionType `json:"type"`
-	// status of the condition.
-	// +required
-	Status PrometheusConditionStatus `json:"status"`
-	// lastTransitionTime is the time of the last update to the current status property.
-	// +required
-	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
-	// Reason for the condition's last transition.
-	// +optional
-	Reason string `json:"reason,omitempty"`
-	// Human-readable message indicating details for the condition's last transition.
-	// +optional
-	Message string `json:"message,omitempty"`
-}
-
-type PrometheusConditionType string
-
 const (
 	// Available indicates whether enough Prometheus pods are ready to provide the service.
-	PrometheusAvailable PrometheusConditionType = "Available"
+	PrometheusAvailable string = "Available"
 	// Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.
-	PrometheusReconciled PrometheusConditionType = "Reconciled"
-)
-
-type PrometheusConditionStatus string
-
-const (
-	PrometheusConditionTrue     PrometheusConditionStatus = "True"
-	PrometheusConditionDegraded PrometheusConditionStatus = "Degraded"
-	PrometheusConditionFalse    PrometheusConditionStatus = "False"
-	PrometheusConditionUnknown  PrometheusConditionStatus = "Unknown"
+	PrometheusReconciled string = "Reconciled"
 )
 
 type ShardStatus struct {
