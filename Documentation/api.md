@@ -2893,6 +2893,20 @@ AlertmanagerGlobalConfig
 <p>Defines the global parameters of the Alertmanager configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>templates</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
+[]SecretOrConfigMap
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom notification templates.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints
@@ -9620,7 +9634,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig</a>)
 </p>
 <div>
 <p>SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.</p>

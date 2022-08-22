@@ -5816,6 +5816,51 @@ spec:
                       and inhibition rules.
                     minLength: 1
                     type: string
+                  templates:
+                    description: Custom notification templates.
+                    items:
+                      description: SecretOrConfigMap allows to specify data as a Secret
+                        or ConfigMap. Fields are mutually exclusive.
+                      properties:
+                        configMap:
+                          description: ConfigMap containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key to select.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the ConfigMap or its key
+                                must be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        secret:
+                          description: Secret containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                      type: object
+                    type: array
                 type: object
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.

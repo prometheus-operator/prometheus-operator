@@ -35,20 +35,21 @@ import (
 )
 
 const (
-	governingServiceName               = "alertmanager-operated"
-	defaultRetention                   = "120h"
-	tlsAssetsDir                       = "/etc/alertmanager/certs"
-	secretsDir                         = "/etc/alertmanager/secrets/"
-	configmapsDir                      = "/etc/alertmanager/configmaps/"
-	alertmanagerConfigDir              = "/etc/alertmanager/config"
-	webConfigDir                       = "/etc/alertmanager/web_config"
-	alertmanagerConfigOutDir           = "/etc/alertmanager/config_out"
-	alertmanagerConfigFile             = "alertmanager.yaml"
-	alertmanagerConfigFileCompressed   = "alertmanager.yaml.gz"
-	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
-	alertmanagerStorageDir             = "/alertmanager"
-	sSetInputHashName                  = "prometheus-operator-input-hash"
-	defaultPortName                    = "web"
+	governingServiceName                 = "alertmanager-operated"
+	defaultRetention                     = "120h"
+	tlsAssetsDir                         = "/etc/alertmanager/certs"
+	secretsDir                           = "/etc/alertmanager/secrets/"
+	configmapsDir                        = "/etc/alertmanager/configmaps/"
+	alertmanagerNotificationTemplatesDir = "/etc/alertmanager/templates"
+	alertmanagerConfigDir                = "/etc/alertmanager/config"
+	webConfigDir                         = "/etc/alertmanager/web_config"
+	alertmanagerConfigOutDir             = "/etc/alertmanager/config_out"
+	alertmanagerConfigFile               = "alertmanager.yaml"
+	alertmanagerConfigFileCompressed     = "alertmanager.yaml.gz"
+	alertmanagerConfigEnvsubstFilename   = "alertmanager.env.yaml"
+	alertmanagerStorageDir               = "/alertmanager"
+	sSetInputHashName                    = "prometheus-operator-input-hash"
+	defaultPortName                      = "web"
 )
 
 var (
@@ -497,6 +498,53 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			MountPath: alertmanagerStorageDir,
 			SubPath:   subPathForStorage(a.Spec.Storage),
 		},
+	}
+
+	amCfg := a.Spec.AlertmanagerConfiguration
+	if amCfg != nil && len(amCfg.Templates) > 0 {
+		sources := []v1.VolumeProjection{}
+		for _, v := range amCfg.Templates {
+			if v.ConfigMap != nil {
+				sources = append(sources, v1.VolumeProjection{
+					ConfigMap: &v1.ConfigMapProjection{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: v.ConfigMap.Name,
+						},
+						Items: []v1.KeyToPath{{
+							Key:  v.ConfigMap.Key,
+							Path: v.ConfigMap.Key,
+						}},
+					},
+				})
+
+			}
+			if v.Secret != nil {
+				sources = append(sources, v1.VolumeProjection{
+					Secret: &v1.SecretProjection{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: v.Secret.Name,
+						},
+						Items: []v1.KeyToPath{{
+							Key:  v.Secret.Key,
+							Path: v.Secret.Key,
+						}},
+					},
+				})
+			}
+		}
+		volumes = append(volumes, v1.Volume{
+			Name: "notification-templates",
+			VolumeSource: v1.VolumeSource{
+				Projected: &v1.ProjectedVolumeSource{
+					Sources: sources,
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name:      "notification-templates",
+			ReadOnly:  true,
+			MountPath: alertmanagerNotificationTemplatesDir,
+		})
 	}
 
 	watchedDirectories := []string{}
