@@ -33,7 +33,7 @@ require (
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.24.4
+	k8s.io/api v0.25.0
 	k8s.io/apiextensions-apiserver v0.24.3
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.24.4
