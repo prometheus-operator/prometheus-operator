@@ -2119,6 +2119,28 @@ Applies only if enforcedNamespaceLabel set to true.</p>
 </tr>
 <tr>
 <td>
+<code>maxBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Maximum duration compacted blocks may span. For use in testing. (Defaults to 10% of the retention period.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Minimum duration of a data block before being persisted. For use in testing.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -4942,6 +4964,28 @@ only available in versions of Prometheus &gt;= 2.11.0.</p>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Maximum duration compacted blocks may span. For use in testing. (Defaults to 10% of the retention period.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Minimum duration of a data block before being persisted. For use in testing.</p>
 </td>
 </tr>
 </tbody>
@@ -8101,6 +8145,28 @@ only available in versions of Prometheus &gt;= 2.11.0.</p>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Maximum duration compacted blocks may span. For use in testing. (Defaults to 10% of the retention period.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minBlockDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Minimum duration of a data block before being persisted. For use in testing.</p>
 </td>
 </tr>
 <tr>

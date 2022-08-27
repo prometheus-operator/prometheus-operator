@@ -380,6 +380,14 @@ func makeStatefulSetSpec(
 		}
 	}
 
+	if p.Spec.MaxBlockDuration != "" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: p.Spec.MaxBlockDuration})
+	}
+
+	if p.Spec.MinBlockDuration != "" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: p.Spec.MinBlockDuration})
+	}
+
 	if p.Spec.Query != nil {
 		if p.Spec.Query.LookbackDelta != nil {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *p.Spec.Query.LookbackDelta})

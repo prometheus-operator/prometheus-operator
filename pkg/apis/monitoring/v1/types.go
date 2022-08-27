@@ -334,6 +334,10 @@ type CommonPrometheusFields struct {
 	// to be excluded from enforcing a namespace label of origin.
 	// Applies only if enforcedNamespaceLabel set to true.
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
+	// Maximum duration compacted blocks may span. For use in testing. (Defaults to 10% of the retention period.)
+	MaxBlockDuration string `json:"maxBlockDuration,omitempty"`
+	// Minimum duration of a data block before being persisted. For use in testing.
+	MinBlockDuration string `json:"minBlockDuration,omitempty"`
 }
 
 // +genclient

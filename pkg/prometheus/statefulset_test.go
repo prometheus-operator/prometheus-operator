@@ -1901,6 +1901,58 @@ func TestTerminationPolicy(t *testing.T) {
 	}
 }
 
+func TestMaxBlockDuration(t *testing.T) {
+	const maxBlockDuration = "6m"
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				MaxBlockDuration: maxBlockDuration,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--storage.tsdb.max-block-duration=6m" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus storage.tsdb.max-block-duration is not correctly set.")
+	}
+}
+
+func TestMinBlockDuration(t *testing.T) {
+	const minBlockDuration = "2h"
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				MinBlockDuration: minBlockDuration,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--storage.tsdb.min-block-duration=2h" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus storage.tsdb.min-block-duration is not correctly set.")
+	}
+}
+
 func TestEnableFeaturesWithOneFeature(t *testing.T) {
 	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
