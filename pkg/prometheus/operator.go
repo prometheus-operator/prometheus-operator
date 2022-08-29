@@ -1957,12 +1957,20 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)	
+	var SecretsInPromNS *v1.SecretList
+	if p.Spec.AdditionalScrapeConfigs != nil && p.Spec.AdditionalScrapeConfigs.Name != "" {
+		ScrapeConfigSecret, _ := sClient.Get(ctx, p.Spec.AdditionalScrapeConfigs.Name, metav1.GetOptions{})
+		SecretsInPromNS.Items = append(SecretsInPromNS.Items, *ScrapeConfigSecret)
 	}
-
+	if p.Spec.AdditionalAlertRelabelConfigs != nil && p.Spec.AdditionalAlertRelabelConfigs.Name != "" {
+		RelabelConfigSecret, _ := sClient.Get(ctx, p.Spec.AdditionalAlertRelabelConfigs.Name, metav1.GetOptions{})
+		SecretsInPromNS.Items = append(SecretsInPromNS.Items, *RelabelConfigSecret)
+	}
+	if p.Spec.AdditionalAlertManagerConfigs != nil && p.Spec.AdditionalAlertManagerConfigs.Name != "" {
+		ManagerConfigSecret, _ := sClient.Get(ctx, p.Spec.AdditionalAlertManagerConfigs.Name, metav1.GetOptions{})
+		SecretsInPromNS.Items = append(SecretsInPromNS.Items, *ManagerConfigSecret)
+	}
 	for i, remote := range p.Spec.RemoteRead {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
