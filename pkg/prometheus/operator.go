@@ -1980,9 +1980,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 		SecretsInPromNS.Items = append(SecretsInPromNS.Items, *ManagerConfigSecret)
 	}	
-	if err != nil {
-		return err
-	}
 
 	for i, remote := range p.Spec.RemoteRead {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
