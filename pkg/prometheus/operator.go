@@ -1957,8 +1957,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)	
 	var SecretsInPromNS *v1.SecretList
 	if p.Spec.AdditionalScrapeConfigs != nil && p.Spec.AdditionalScrapeConfigs.Name != "" {
 		ScrapeConfigSecret, err := sClient.Get(ctx, p.Spec.AdditionalScrapeConfigs.Name, metav1.GetOptions{})
@@ -1980,8 +1979,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 			return err
 		}
 		SecretsInPromNS.Items = append(SecretsInPromNS.Items, *ManagerConfigSecret)
-	}
-	
+	}	
 	if err != nil {
 		return err
 	}
