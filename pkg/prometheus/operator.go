@@ -1958,14 +1958,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	if p.Spec.AdditionalAlertManagerConfigs == nil && p.Spec.AdditionalAlertRelabelConfigs == nil && p.Spec.AdditionalScrapeConfigs == nil {
-		return nil
+	var SecretsInPromNS = new(v1.SecretList)
+	if p.Spec.AdditionalAlertManagerConfigs != nil || p.Spec.AdditionalAlertRelabelConfigs != nil || p.Spec.AdditionalScrapeConfigs != nil {
+		SecretsInPromNS, err = sClient.List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
 	}
-	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
 	for i, remote := range p.Spec.RemoteRead {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
