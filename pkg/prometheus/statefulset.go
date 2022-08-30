@@ -569,7 +569,10 @@ func makeStatefulSetSpec(
 			return nil, err
 		}
 
-		confArg, configVol, configMount := webConfig.GetMountParameters()
+		confArg, configVol, configMount, err := webConfig.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
@@ -577,9 +580,15 @@ func makeStatefulSetSpec(
 
 	// Mount related secrets
 
+	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range p.Spec.Secrets {
+		name, err := rn.UniqueVolumeName(s)
+		if err != nil {
+			return nil, err
+		}
+
 		volumes = append(volumes, v1.Volume{
-			Name: k8sutil.SanitizeVolumeName("secret-" + s),
+			Name: name,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: s,
@@ -587,15 +596,21 @@ func makeStatefulSetSpec(
 			},
 		})
 		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
-			Name:      k8sutil.SanitizeVolumeName("secret-" + s),
+			Name:      name,
 			ReadOnly:  true,
 			MountPath: secretsDir + s,
 		})
 	}
 
+	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range p.Spec.ConfigMaps {
+		name, err := rn.UniqueVolumeName(c)
+		if err != nil {
+			return nil, err
+		}
+
 		volumes = append(volumes, v1.Volume{
-			Name: k8sutil.SanitizeVolumeName("configmap-" + c),
+			Name: name,
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
@@ -605,7 +620,7 @@ func makeStatefulSetSpec(
 			},
 		})
 		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
-			Name:      k8sutil.SanitizeVolumeName("configmap-" + c),
+			Name:      name,
 			ReadOnly:  true,
 			MountPath: configmapsDir + c,
 		})
@@ -1012,7 +1027,7 @@ func webConfigSecretName(name string) string {
 }
 
 func volumeName(name string) string {
-	return k8sutil.SanitizeVolumeName(fmt.Sprintf("%s-db", prefixedName(name)))
+	return fmt.Sprintf("%s-db", prefixedName(name))
 }
 
 func prefixedName(name string) string {
