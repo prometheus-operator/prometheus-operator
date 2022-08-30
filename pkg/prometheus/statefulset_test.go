@@ -316,7 +316,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "web-config.yaml",
 								},
 								{
-									Name:      "secret-test-secret1",
+									Name:      "secret-test-secret1-df14634a",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
 									SubPath:   "",
@@ -374,7 +374,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
-							Name: "secret-test-secret1",
+							Name: "secret-test-secret1-df14634a",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
 									SecretName: "test-secret1",
@@ -433,7 +433,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 
 	cmVolumeFound := false
 	for _, v := range sset.Spec.Template.Spec.Volumes {
-		if v.Name == "configmap-test-cm1" {
+		if strings.HasPrefix(v.Name, "configmap-test-cm1") {
 			cmVolumeFound = true
 		}
 	}
@@ -443,7 +443,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 
 	cmMounted := false
 	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
-		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/prometheus/configmaps/test-cm1" {
+		if strings.HasPrefix(v.Name, "configmap-test-cm1") && v.MountPath == "/etc/prometheus/configmaps/test-cm1" {
 			cmMounted = true
 		}
 	}

@@ -29,42 +29,100 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func Test_SanitizeVolumeName(t *testing.T) {
+func TestUniqueVolumeName(t *testing.T) {
 	cases := []struct {
+		prefix   string
 		name     string
 		expected string
+		err      bool
 	}{
 		{
 			name:     "@$!!@$%!#$%!#$%!#$!#$%%$#@!#",
 			expected: "",
+			err:      true,
 		},
 		{
 			name:     "NAME",
-			expected: "name",
+			expected: "name-6c5f7b2e",
 		},
 		{
 			name:     "foo--",
-			expected: "foo",
+			expected: "foo-33bf00a8",
 		},
 		{
 			name:     "foo^%#$bar",
-			expected: "foo-bar",
+			expected: "foo-bar-6ab521af",
 		},
 		{
 			name:     "fOo^%#$bar",
-			expected: "foo-bar",
+			expected: "foo-bar-6ab521af",
 		},
 		{
-			name:     strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
-			expected: strings.Repeat("a", validation.DNS1123LabelMaxLength),
+			name: strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
+			expected: strings.Repeat("a", validation.DNS1123LabelMaxLength-9) +
+				"-4ed69ce2",
+		},
+		{
+			prefix:   "with-prefix",
+			name:     "name",
+			expected: "with-prefix-name-fa429965",
+		},
+		{
+			prefix:   "with-prefix-",
+			name:     "name",
+			expected: "with-prefix-name-fa429965",
+		},
+		{
+			prefix: "with-prefix",
+			name:   strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
+			expected: "with-prefix-" + strings.Repeat("a", 42) +
+				"-c183166e",
 		},
 	}
 
 	for i, c := range cases {
-		out := SanitizeVolumeName(c.name)
-		if c.expected != out {
-			t.Errorf("expected test case %d to be %q but got %q", i, c.expected, out)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			rn := ResourceNamer{prefix: c.prefix}
+
+			out, err := rn.UniqueVolumeName(c.name)
+			if c.err {
+				if err == nil {
+					t.Errorf("expecting error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("expecting no error, got %v", err)
+			}
+
+			if c.expected != out {
+				t.Errorf("expected test case %d to be %q but got %q", i, c.expected, out)
+			}
+		})
+	}
+}
+
+func TestUniqueVolumeNameCollision(t *testing.T) {
+	// a<63>-foo
+	foo := strings.Repeat("a", validation.DNS1123LabelMaxLength) + "foo"
+	// a<63>-bar
+	bar := strings.Repeat("a", validation.DNS1123LabelMaxLength) + "bar"
+
+	rn := ResourceNamer{}
+
+	fooSanitized, err := rn.UniqueVolumeName(foo)
+	if err != nil {
+		t.Errorf("expecting no error, got %v", err)
+	}
+
+	barSanitized, err := rn.UniqueVolumeName(bar)
+	if err != nil {
+		t.Errorf("expecting no error, got %v", err)
+	}
+
+	if fooSanitized == barSanitized {
+		t.Fatalf("expected sanitized volume name of %q and %q to be different but got %q", foo, bar, fooSanitized)
 	}
 }
 
