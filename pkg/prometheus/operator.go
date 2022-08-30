@@ -1958,7 +1958,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	if p.Spec.AdditionalAlertManagerConfigs == nil && p.Spec.AdditionalAlertManagerConfigs == nil && p.Spec.AdditionalScrapeConfigs == nil {
+	if p.Spec.AdditionalAlertManagerConfigs == nil && p.Spec.AdditionalAlertRelabelConfigs == nil && p.Spec.AdditionalScrapeConfigs == nil {
 		return nil
 	}
 	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
