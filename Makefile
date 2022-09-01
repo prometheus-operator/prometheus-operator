@@ -196,9 +196,9 @@ update-go-deps:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
-	cd pkg/client && go mod tidy -v -modfile=go.mod
-	cd scripts && go mod tidy -v -modfile=go.mod
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd pkg/client && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
 
 .PHONY: generate
 generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
