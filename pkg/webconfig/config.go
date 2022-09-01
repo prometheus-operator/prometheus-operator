@@ -71,7 +71,7 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 // and the associated TLS credentials.
 // In addition, GetMountParameters returns a web.config.file command line option pointing
 // to the file in the volume mount.
-func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount) {
+func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
 	destinationPath := path.Join(c.mountingDir, configFile)
 
 	var volumes []v1.Volume
@@ -85,12 +85,15 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 	mounts = append(mounts, cfgMount)
 
 	if c.tlsCredentials != nil {
-		tlsVolumes, tlsMounts := c.tlsCredentials.getMountParameters()
+		tlsVolumes, tlsMounts, err := c.tlsCredentials.getMountParameters()
+		if err != nil {
+			return monitoringv1.Argument{}, nil, nil, err
+		}
 		volumes = append(volumes, tlsVolumes...)
 		mounts = append(mounts, tlsMounts...)
 	}
 
-	return arg, volumes, mounts
+	return arg, volumes, mounts, nil
 }
 
 // CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the data for the web config file.
