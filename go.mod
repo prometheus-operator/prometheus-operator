@@ -38,7 +38,7 @@ require (
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
 	k8s.io/component-base v0.25.0
-	k8s.io/klog/v2 v2.70.1
+	k8s.io/klog/v2 v2.80.0
 	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
 	sigs.k8s.io/controller-runtime v0.12.3
 )
@@ -125,6 +125,6 @@ replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
 	// A replace directive is needed for github.com/prometheus/prometheus to ensure running against the latest version of prometheus.
-	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.37.0
+	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.38.0
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
 )
