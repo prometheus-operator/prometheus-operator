@@ -1,3 +1,16 @@
+## 0.59.0 / 2022-09-02
+
+* [FEATURE] Added validations for timeout and time settings of alertmanager at CRD level. #4898
+* [FEATURE] Added support for global `resolveTimeout` and `httpConfig` in Alertmanager CRD. #4622
+* [FEATURE] Added support for `additionalArgs` field to the Prometheus CRD for Prometheus, Alertmanager and Thanos sidecar. #4863
+* [ENHANCEMENT] Added `tracingConfigFile` option to ThanosRuler CRD. #4962
+* [BUGFIX] Fixed compress alertmanager secret to circumvent maximum size limit of 1048576 bytes. #4906
+* [BUGFIX] Fixed namespace enforcement exclusion on newly created Prometheus objects. #4915
+* [BUGFIX] Fixed `CAP_FOWNER` capability to Thanos sidecar container. #4931
+* [BUGFIX] Fixed `spec.query.maxSamples` and `spec.query.maxConcurrency` fields of Prometheus CRD. #4951
+* [BUGFIX] Fixed Thanos sidecar connectivity issue when Prometheus TLS is enabled. #4954
+* [BUGFIX] Fixed Prometheus and Alertmanager Pods not created when Secret name exceeds 63 characters. #4988
+
 ## 0.58.0 / 2022-07-19
 
 * [FEATURE] Add validations for timeout and time settings of alertmanager at CRD level. #4827, #4881
