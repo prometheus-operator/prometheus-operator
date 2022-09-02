@@ -40,7 +40,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestGenerateGlobalConfig(t *testing.T) {
+func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	myroute := monitoringv1alpha1.Route{
 		Receiver: "myreceiver",
 		Matchers: []monitoringv1alpha1.Matcher{
@@ -230,12 +230,12 @@ func TestGenerateGlobalConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("configGenerator.generateGlobalConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("initializeFromAlertmanagerConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			if !reflect.DeepEqual(cb.cfg, tt.want) {
-				t.Errorf("configGenerator.generateGlobalConfig() = %v, want %v", cb.cfg, tt.want)
+				t.Errorf("initializeFromAlertmanagerConfig() = %v, want %v", cb.cfg, tt.want)
 			}
 		})
 	}

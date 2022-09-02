@@ -1982,6 +1982,9 @@ type AlertmanagerConfiguration struct {
 	// Defines the global parameters of the Alertmanager configuration.
 	// +optional
 	Global *AlertmanagerGlobalConfig `json:"global,omitempty"`
+	// Custom notification templates.
+	// +optional
+	Templates []SecretOrConfigMap `json:"templates,omitempty"`
 }
 
 // AlertmanagerGlobalConfig configures parameters that are valid in all other configuration contexts.

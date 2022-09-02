@@ -1449,7 +1449,7 @@ inhibit_rules:
 		}
 
 		if cfgSecret.Data["template1.tmpl"] == nil {
-			lastErr = errors.New("'template1.yaml' key is missing")
+			lastErr = errors.New("'template1.tmpl' key is missing")
 			return false, nil
 		}
 
@@ -1519,6 +1519,24 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				FollowRedirects: toBoolPtr(true),
 			},
 		},
+		Templates: []monitoringv1.SecretOrConfigMap{
+			{
+				Secret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "template1",
+					},
+					Key: "template1.tmpl",
+				},
+			},
+			{
+				ConfigMap: &v1.ConfigMapKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "template2",
+					},
+					Key: "template2.tmpl",
+				},
+			},
+		},
 	}
 
 	cm := v1.ConfigMap{
@@ -1539,12 +1557,34 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": []byte("clientSecret"),
 		},
 	}
+	tpl1 := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "template1",
+		},
+		Data: map[string][]byte{
+			"template1.tmpl": []byte(`template1`),
+		},
+	}
+	tpl2 := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "template2",
+		},
+		Data: map[string]string{
+			"template2.tmpl": "template2",
+		},
+	}
 
 	ctx := context.Background()
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1579,7 +1619,9 @@ inhibit_rules:
   - equalkey
 receivers:
 - name: %[1]s
-templates: []
+templates:
+- /etc/alertmanager/templates/template1.tmpl
+- /etc/alertmanager/templates/template2.tmpl
 `, fmt.Sprintf("%s/%s/null", ns, "user-amconfig"))
 
 	// Wait for the change above to take effect.

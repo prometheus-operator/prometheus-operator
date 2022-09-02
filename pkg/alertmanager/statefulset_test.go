@@ -539,6 +539,53 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
+	replicas := int32(1)
+	a := monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas: &replicas,
+			AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+				Templates: []monitoringv1.SecretOrConfigMap{
+					{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "template1",
+							},
+							Key: "template1.tmpl",
+						},
+					},
+				},
+			},
+		},
+	}
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var foundVM, foundV bool
+	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerNotificationTemplatesDir {
+			foundVM = true
+			break
+		}
+	}
+	for _, v := range statefulSet.Template.Spec.Volumes {
+		if v.Name == "notification-templates" && v.Projected != nil {
+			for _, s := range v.Projected.Sources {
+				if s.Secret != nil && s.Secret.Name == "template1" {
+					foundV = true
+					break
+				}
+			}
+		}
+	}
+
+	if !(foundVM && foundV) {
+		t.Fatal("Notification templates were not found.")
+	}
+}
+
 func TestAdditionalSecretsMounted(t *testing.T) {
 	secrets := []string{"secret1", "secret2"}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
