@@ -11,11 +11,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Upload binaries to release
+      - name: Upload bundle.yaml to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: bundle.yaml
           asset_name: bundle.yaml
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Generate stripped down version of CRDs
+        run: make stripped-down-crds.yaml
+      - name: Upload stripped-down-crds.yaml to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: stripped-down-crds.yaml
+          asset_name: stripped-down-crds.yaml
           tag: ${{ github.ref }}
           overwrite: true

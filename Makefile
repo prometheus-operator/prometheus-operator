@@ -227,6 +227,15 @@ generate-docs: $(shell find Documentation -type f)
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
 
+# stripped-down-crds.yaml is a version of the Prometheus Operator CRDs with all
+# description fields being removed. It is meant as a workaround for the issue
+# that `kubectl apply -f ...` might fail with the full version of the CRDs
+# because of too long annotations field.
+# See https://github.com/prometheus-operator/prometheus-operator/issues/4355
+stripped-down-crds.yaml: $(shell find example/prometheus-operator-crd/*.yaml -type f)
+	: > $@
+	for f in example/prometheus-operator-crd/*.yaml; do echo '---' >> $@; $(GOJSONTOYAML_BINARY) -yamltojson < $$f | jq 'walk(if type == "object" then with_entries(select(.key | test("description") | not)) else . end)' | $(GOJSONTOYAML_BINARY) >> $@; done
+
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
 	cd scripts/generate; $(JB_BINARY) install;
 
