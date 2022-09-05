@@ -1050,9 +1050,9 @@ func TestThanosNoObjectStorage(t *testing.T) {
 		}
 	}
 
-	for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
-		if vol.MountPath == storageDir {
-			t.Fatal("Prometheus data volume should not be mounted in the Thanos sidecar")
+	for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
+		if addCap == "CAP_FOWNER" {
+			t.Fatal("Thanos sidecar shouldn't have the CAP_FOWNER capability")
 		}
 	}
 }
@@ -1144,6 +1144,19 @@ func TestThanosObjectStorage(t *testing.T) {
 		}
 		if !found {
 			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
+		}
+	}
+
+	{
+		var found bool
+		for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
+			if addCap == "CAP_FOWNER" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatal("Thanos sidecar should have CAP_FOWNER capability")
 		}
 	}
 }
