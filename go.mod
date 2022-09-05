@@ -40,7 +40,7 @@ require (
 	k8s.io/component-base v0.25.0
 	k8s.io/klog/v2 v2.80.0
 	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
-	sigs.k8s.io/controller-runtime v0.12.3
+	sigs.k8s.io/controller-runtime v0.13.0
 )
 
 require (
