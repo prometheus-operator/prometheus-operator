@@ -14,42 +14,31 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        suite: [alertmanager, prometheus, prometheusAllNS, thanosruler, operatorUpgrade]
+        suite: [alertmanager, prometheus, prometheusAllNS, thanosruler]
         include:
           - suite: alertmanager
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: ""
             thanosruler: "exclude"
-            operatorUpgrade: "exclude"
             featureGated: "include"
           - suite: prometheus
             prometheus: ""
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
-            operatorUpgrade: "exclude"
             featureGated: "include"
           - suite: prometheusAllNS
             prometheus: "exclude"
             prometheusAllNS: ""
             alertmanager: "exclude"
             thanosruler: "exclude"
-            operatorUpgrade: "exclude"
             featureGated: "include"
           - suite: thanosruler
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: ""
-            operatorUpgrade: "exclude"
-            featureGated: "include"
-          - suite: operatorUpgrade
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: ""
             featureGated: "include"
     steps:
     - uses: actions/checkout@v3
@@ -87,7 +76,6 @@ jobs:
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
         EXCLUDE_PROMETHEUS_ALL_NS_TESTS=${{ matrix.prometheusAllNS }}
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
-        EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
         FEATURE_GATED_TESTS=${{ matrix.featureGated }}
         make test-e2e
 

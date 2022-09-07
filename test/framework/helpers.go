@@ -17,11 +17,9 @@ package framework
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -35,14 +33,6 @@ import (
 	"github.com/prometheus/prometheus/model/textparse"
 )
 
-func SourceToIOReader(source string) (io.Reader, error) {
-	if strings.HasPrefix(source, "http") {
-		return URLToIOReader(source)
-	} else {
-		return PathToOSFile(source)
-	}
-}
-
 func PathToOSFile(relativePath string) (*os.File, error) {
 	path, err := filepath.Abs(relativePath)
 	if err != nil {
@@ -55,30 +45,6 @@ func PathToOSFile(relativePath string) (*os.File, error) {
 	}
 
 	return manifest, nil
-}
-
-func URLToIOReader(url string) (io.Reader, error) {
-	var resp *http.Response
-	timeout := 30 * time.Second
-
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
-		var err error
-		resp, err = http.Get(url)
-		if err == nil && resp.StatusCode == 200 {
-			return true, nil
-		}
-		return false, nil
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"waiting for %v to return a successful status code timed out. Last response from server was: %v",
-			url,
-			resp,
-		))
-	}
-
-	return resp.Body, nil
 }
 
 // WaitForPodsReady waits for a selection of Pods to be running and each

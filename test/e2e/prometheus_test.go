@@ -235,7 +235,7 @@ func createK8sSampleApp(t *testing.T, name, ns string) {
 		},
 	}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -288,7 +288,7 @@ func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWrite
 		return nil, "", err
 	}
 	prometheusReceiverSvc := framework.MakePrometheusService(receiverName, receiverName, v1.ServiceTypeClusterIP)
-	if _, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, prometheusReceiverSvc); err != nil {
+	if _, err = framework.CreateServiceAndWaitUntilReady(context.Background(), ns, prometheusReceiverSvc); err != nil {
 		return nil, "", err
 	}
 	prometheusReceiverURL := "https://" + prometheusReceiverSvc.Name + ":9090/api/v1/write"
@@ -301,7 +301,7 @@ func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWrite
 	}
 
 	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
-	if _, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
+	if _, err = framework.CreateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
 		return nil, "", err
 	}
 
@@ -1117,7 +1117,7 @@ scrape_configs:
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(err)
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1205,7 +1205,7 @@ func testPromAdditionalScrapeConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1263,7 +1263,7 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1321,7 +1321,7 @@ func testPromReloadRules(t *testing.T) {
 	}
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1379,7 +1379,7 @@ func testPromMultiplePrometheusRulesSameNS(t *testing.T) {
 	}
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1435,7 +1435,7 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	}
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), rootNS, pSVC); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), rootNS, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1506,7 +1506,7 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	}()
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -1758,7 +1758,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	}
 
 	pSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2049,7 +2049,7 @@ func testPromDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2087,7 +2087,7 @@ func testPromSharedResourcesReconciliation(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService(prometheusName, fmt.Sprintf("reconcile-%s", prometheusName), v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 			t.Fatal(err)
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
@@ -2142,7 +2142,7 @@ func testShardingProvisioning(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2213,7 +2213,7 @@ func testResharding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2298,7 +2298,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2318,7 +2318,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Alertmanager service failed"))
 	}
 
@@ -2342,7 +2342,7 @@ func testPromExposingWithKubernetesAPI(t *testing.T) {
 		t.Fatal("Creating prometheus failed: ", err)
 	}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, service); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, service); err != nil {
 		t.Fatal("Creating prometheus service failed: ", err)
 	}
 
@@ -2396,7 +2396,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2452,7 +2452,7 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), prometheusNSName, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), prometheusNSName, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -2518,7 +2518,7 @@ func testThanos(t *testing.T) {
 	}
 
 	qrySvc := framework.MakeThanosQuerierService(qryDep.Name)
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, qrySvc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, qrySvc); err != nil {
 		t.Fatal("Creating Thanos query service failed: ", err)
 	}
 
@@ -2690,7 +2690,7 @@ func testPromGetAuthSecret(t *testing.T) {
 			}
 
 			sm := test.serviceMonitor()
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), testNamespace, svc); err != nil {
+			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), testNamespace, svc); err != nil {
 				t.Fatal(err)
 			} else {
 				testCtx.AddFinalizerFn(finalizerFn)
@@ -2739,7 +2739,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{mainNS}, nil, nil, nil, false, true)
+		_, err := framework.CreatePrometheusOperator(context.Background(), operatorNS, *opImage, []string{mainNS}, nil, nil, nil, false, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2767,7 +2767,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), mainNS, pSVC); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), mainNS, pSVC); err != nil {
 			t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
@@ -2810,7 +2810,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{prometheusNS, ruleNS}, nil, nil, nil, false, true)
+		_, err := framework.CreatePrometheusOperator(context.Background(), operatorNS, *opImage, []string{prometheusNS, ruleNS}, nil, nil, nil, false, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2838,7 +2838,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), prometheusNS, pSVC); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), prometheusNS, pSVC); err != nil {
 			t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
@@ -3093,7 +3093,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			}
 
 			svc := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
-			if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+			if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 				t.Fatal(err)
 			}
 
@@ -3234,7 +3234,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -3282,7 +3282,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 
 	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
 		t.Fatal(err)
 	}
 
@@ -3329,7 +3329,7 @@ func testPromStaticProbe(t *testing.T) {
 	}
 
 	blackboxSvc := framework.MakeBlackBoxExporterService(ns, blackboxExporterName)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, blackboxSvc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, blackboxSvc); err != nil {
 		t.Fatal("creating blackbox exporter service failed ", err)
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -3357,7 +3357,7 @@ func testPromStaticProbe(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
@@ -3635,7 +3635,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	}
 
 	kubeClient := framework.KubeClient
-	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
+	if err := framework.CreateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -3947,7 +3947,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+			if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 				t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 			} else {
 				ctx.AddFinalizerFn(finalizerFn)
