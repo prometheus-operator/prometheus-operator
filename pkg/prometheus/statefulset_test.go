@@ -316,7 +316,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "web-config.yaml",
 								},
 								{
-									Name:      "secret-test-secret1-df14634a",
+									Name:      "secret-test-secret1",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
 									SubPath:   "",
@@ -374,7 +374,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
-							Name: "secret-test-secret1-df14634a",
+							Name: "secret-test-secret1",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
 									SecretName: "test-secret1",

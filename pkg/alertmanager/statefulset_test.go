@@ -569,10 +569,10 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 	secret1Found = false
 	secret2Found = false
 	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
-		if strings.HasPrefix(v.Name, "secret-secret1-") && v.MountPath == "/etc/alertmanager/secrets/secret1" {
+		if v.Name == "secret-secret1" && v.MountPath == "/etc/alertmanager/secrets/secret1" {
 			secret1Found = true
 		}
-		if strings.HasPrefix(v.Name, "secret-secret2-") && v.MountPath == "/etc/alertmanager/secrets/secret2" {
+		if v.Name == "secret-secret2" && v.MountPath == "/etc/alertmanager/secrets/secret2" {
 			secret2Found = true
 		}
 	}
@@ -722,7 +722,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 
 	cmVolumeFound := false
 	for _, v := range sset.Spec.Template.Spec.Volumes {
-		if strings.HasPrefix(v.Name, "configmap-test-cm1-") {
+		if v.Name == "configmap-test-cm1" {
 			cmVolumeFound = true
 			break
 		}
@@ -733,7 +733,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 
 	cmMounted := false
 	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
-		if strings.HasPrefix(v.Name, "configmap-test-cm1-") && v.MountPath == "/etc/alertmanager/configmaps/test-cm1" {
+		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/alertmanager/configmaps/test-cm1" {
 			cmMounted = true
 			break
 		}
