@@ -16,9 +16,7 @@ package framework
 
 import (
 	"context"
-
 	rbacv1 "k8s.io/api/rbac/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -46,26 +44,24 @@ var (
 	}
 )
 
-func (f *Framework) CreateOrUpdateClusterRole(ctx context.Context, source string) (*rbacv1.ClusterRole, error) {
-	clusterRole, err := parseClusterRoleYaml(source)
+func (f *Framework) CreateClusterRole(ctx context.Context, relativePath string) (*rbacv1.ClusterRole, error) {
+	clusterRole, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = f.KubeClient.RbacV1().ClusterRoles().Get(ctx, clusterRole.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, err
-	}
 
-	if apierrors.IsNotFound(err) {
-		// ClusterRole doesn't exists -> Create
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
+	if err == nil {
+		// ClusterRole already exists -> Update
+		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Update(ctx, clusterRole, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, err
 		}
+
 	} else {
-		// ClusterRole already exists -> Update
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Update(ctx, clusterRole, metav1.UpdateOptions{})
+		// ClusterRole doesn't exists -> Create
+		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -74,8 +70,8 @@ func (f *Framework) CreateOrUpdateClusterRole(ctx context.Context, source string
 	return clusterRole, nil
 }
 
-func (f *Framework) DeleteClusterRole(ctx context.Context, source string) error {
-	clusterRole, err := parseClusterRoleYaml(source)
+func (f *Framework) DeleteClusterRole(ctx context.Context, relativePath string) error {
+	clusterRole, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return err
 	}
@@ -91,8 +87,8 @@ func (f *Framework) UpdateClusterRole(ctx context.Context, clusterRole *rbacv1.C
 	return nil
 }
 
-func parseClusterRoleYaml(source string) (*rbacv1.ClusterRole, error) {
-	manifest, err := SourceToIOReader(source)
+func parseClusterRoleYaml(relativePath string) (*rbacv1.ClusterRole, error) {
+	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
 	}

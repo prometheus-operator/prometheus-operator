@@ -60,7 +60,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -91,7 +91,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService); err != nil {
 		t.Fatalf("creating Thanos ruler service failed: %v", err)
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
