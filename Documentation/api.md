@@ -7108,6 +7108,19 @@ string
 <p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>observedGeneration</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusConditionStatus">PrometheusConditionStatus
