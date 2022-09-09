@@ -200,7 +200,8 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 <td>
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
-The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.</p>
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -213,7 +214,8 @@ The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.</p>
 <td>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
-The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.</p>
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -1671,7 +1673,8 @@ Prometheus Pods.</p>
 <td>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -1684,7 +1687,8 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
 <td>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>.</p>
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -3216,7 +3220,8 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 <td>
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
-The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.</p>
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -3229,7 +3234,8 @@ The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.</p>
 <td>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
-The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.</p>
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -4512,7 +4518,8 @@ Prometheus Pods.</p>
 <td>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -4525,7 +4532,8 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
 <td>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>.</p>
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -7149,10 +7157,21 @@ string
 </tr>
 </thead>
 <tbody><tr><td><p>&#34;Available&#34;</p></td>
-<td><p>Available indicates whether enough Prometheus pods are ready to provide the service.</p>
+<td><p>Available indicates whether enough Prometheus pods are ready to provide
+the service.
+The possible status values for this condition type are:
+- True: all pods are running and ready, the service is fully available.
+- Degraded: some pods aren&rsquo;t ready, the service is partially available.
+- False: no pods are running, the service is totally unavailable.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
 </td>
 </tr><tr><td><p>&#34;Reconciled&#34;</p></td>
-<td><p>Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.</p>
+<td><p>Reconciled indicates whether the operator has reconciled the state of
+the underlying resources with the Prometheus object spec.
+The possible status values for this condition type are:
+- True: the reconciliation was successful.
+- False: the reconciliation failed.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
 </td>
 </tr></tbody>
 </table>
@@ -7671,7 +7690,8 @@ Prometheus Pods.</p>
 <td>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -7684,7 +7704,8 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.</p>
 <td>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
-The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>.</p>
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
