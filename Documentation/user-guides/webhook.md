@@ -63,10 +63,10 @@ spec:
         - mountPath: /etc/tls/private
           name: tls-certificates
           readOnly: true
-     volumes:
-     - name: tls-certificates
-       secret:
-         secretName: admission-webhook-certs
+      volumes:
+      - name: tls-certificates
+        secret:
+          secretName: admission-webhook-certs
 ```
 
 ## Webhook endpoints
@@ -213,8 +213,7 @@ webhook.
                "service": {
                   "name": "prometheus-operator-admission-webhook",
                   "namespace": "default",
-                  "path": "/convert",
-                  "port": 8443
+                  "path": "/convert"
                },
                "caBundle": "LS0tLS...LS0tCg=="
             },

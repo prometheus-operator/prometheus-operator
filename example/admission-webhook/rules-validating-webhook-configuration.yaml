@@ -1,0 +1,31 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-rulesvalidation
+  labels:
+    app.kubernetes.io/name: prometheus-operator-admission-webhook
+    app.kubernetes.io/version: 0.59.0
+  annotations:
+    # If you're using cert-manager, this annotation injects the caBundle from the given certificate
+    cert-manager.io/inject-ca-from: "prometheus/prometheus-operator-admission-webhook-certs"
+webhooks:
+  - clientConfig:
+      service:
+        name: prometheus-operator-admission-webhook
+        namespace: prometheus
+        path: /admission-prometheusrules/validate
+    failurePolicy: Fail
+    name: prometheusrulemutate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - '*'
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - prometheusrules
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None

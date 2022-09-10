@@ -3,7 +3,8 @@
    "kind": "CustomResourceDefinition",
    "metadata": {
       "annotations": {
-         "controller-gen.kubebuilder.io/version": "v0.9.2"
+         "controller-gen.kubebuilder.io/version": "v0.9.2",
+         "cert-manager.io/inject-ca-from": "prometheus/prometheus-operator-admission-webhook-certs"
       },
       "creationTimestamp": null,
       "name": "alertmanagerconfigs.monitoring.coreos.com"
@@ -16,8 +17,7 @@
                "service": {
                   "name": "prometheus-operator-admission-webhook",
                   "namespace": "default",
-                  "path": "/convert",
-                  "port": 8443
+                  "path": "/convert"
                }
             },
             "conversionReviewVersions": [

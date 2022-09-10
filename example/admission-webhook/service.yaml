@@ -9,7 +9,7 @@ metadata:
 spec:
   ports:
   - name: https
-    port: 8443
+    port: 443
     targetPort: https
   selector:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
