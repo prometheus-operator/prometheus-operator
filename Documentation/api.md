@@ -7116,7 +7116,7 @@ int64
 </em>
 </td>
 <td>
-<p>observedGeneration represents the .metadata.generation that the condition was set based upon.
+<p>ObservedGeneration represents the .metadata.generation that the condition was set based upon.
 For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
 with respect to the current state of the instance.</p>
 </td>

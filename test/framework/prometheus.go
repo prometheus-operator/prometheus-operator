@@ -406,7 +406,10 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 				reconciled = &cond
 			}
 			if cond.ObservedGeneration != current.Generation {
-				pollErr = errors.Errorf("prometheus generation is not equal to conditions observed generation")
+				pollErr = errors.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
+					cond.ObservedGeneration,
+					cond.Type,
+					current.Generation)
 				return false, nil
 			}
 		}
