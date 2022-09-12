@@ -178,11 +178,13 @@ type CommonPrometheusFields struct {
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 	// Secrets is a list of Secrets in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
-	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.
+	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
+	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
-	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>.
+	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
+	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// If specified, the pod's scheduling constraints.
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
@@ -635,9 +637,20 @@ type PrometheusCondition struct {
 type PrometheusConditionType string
 
 const (
-	// Available indicates whether enough Prometheus pods are ready to provide the service.
+	// Available indicates whether enough Prometheus pods are ready to provide
+	// the service.
+	// The possible status values for this condition type are:
+	// - True: all pods are running and ready, the service is fully available.
+	// - Degraded: some pods aren't ready, the service is partially available.
+	// - False: no pods are running, the service is totally unavailable.
+	// - Unknown: the operator couldn't determine the condition status.
 	PrometheusAvailable PrometheusConditionType = "Available"
-	// Reconciled indicates that the operator has reconciled the state of the underlying resources with the Prometheus object spec.
+	// Reconciled indicates whether the operator has reconciled the state of
+	// the underlying resources with the Prometheus object spec.
+	// The possible status values for this condition type are:
+	// - True: the reconciliation was successful.
+	// - False: the reconciliation failed.
+	// - Unknown: the operator couldn't determine the condition status.
 	PrometheusReconciled PrometheusConditionType = "Reconciled"
 )
 
@@ -1837,11 +1850,13 @@ type AlertmanagerSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Secrets is a list of Secrets in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
-	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
+	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
+	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the 'alertmanager' container.
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
-	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.
+	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
+	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the 'alertmanager' container.
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
 	// Alertmanager object, which contains the configuration for this Alertmanager
