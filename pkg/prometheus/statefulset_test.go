@@ -1051,8 +1051,8 @@ func TestThanosNoObjectStorage(t *testing.T) {
 	}
 
 	for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-		if addCap == "CAP_FOWNER" {
-			t.Fatal("Thanos sidecar shouldn't have the CAP_FOWNER capability")
+		if addCap == "FOWNER" {
+			t.Fatal("Thanos sidecar shouldn't have the FOWNER capability")
 		}
 	}
 }
@@ -1150,13 +1150,13 @@ func TestThanosObjectStorage(t *testing.T) {
 	{
 		var found bool
 		for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-			if addCap == "CAP_FOWNER" {
+			if addCap == "FOWNER" {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Fatal("Thanos sidecar should have CAP_FOWNER capability")
+			t.Fatal("Thanos sidecar should have FOWNER capability")
 		}
 	}
 }
