@@ -1565,6 +1565,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 			LastTransitionTime: metav1.Time{
 				Time: time.Now().UTC(),
 			},
+			ObservedGeneration: p.Generation,
 		}
 		messages []string
 	)
@@ -1639,6 +1640,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		LastTransitionTime: metav1.Time{
 			Time: time.Now().UTC(),
 		},
+		ObservedGeneration: p.Generation,
 	}
 	reconciliationStatus, found := c.reconciliations.GetStatus(key)
 	if !found {
