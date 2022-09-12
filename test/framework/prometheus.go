@@ -405,6 +405,10 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			if cond.Type == monitoringv1.PrometheusReconciled {
 				reconciled = &cond
 			}
+			if cond.ObservedGeneration != current.Generation {
+				pollErr = errors.Errorf("prometheus generation is not equal to conditions observed generation")
+				return false, nil
+			}
 		}
 
 		if reconciled == nil {
@@ -427,12 +431,12 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+		if available.Status != monitoringv1.PrometheusConditionTrue {
 			pollErr = errors.Errorf(
 				"expected Available condition to be 'True', got %q (reason %s, %q)",
-				reconciled.Status,
-				reconciled.Reason,
-				reconciled.Message,
+				available.Status,
+				available.Reason,
+				available.Message,
 			)
 			return false, nil
 		}
