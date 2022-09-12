@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -49,33 +50,57 @@ func (f *Framework) ListCRDs(ctx context.Context) (*v1.CustomResourceDefinitionL
 	return crds, nil
 }
 
-// CreateCRD creates a custom resource definition on the apiserver.
-func (f *Framework) CreateCRD(ctx context.Context, crd *v1.CustomResourceDefinition) error {
-	_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
+// CreateOrUpdateCRD creates a custom resource definition on the apiserver.
+func (f *Framework) CreateOrUpdateCRD(ctx context.Context, crd *v1.CustomResourceDefinition) error {
+	c, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 	}
 
 	if apierrors.IsNotFound(err) {
+		// CRD doesn't exists -> Create
 		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Create(ctx, crd, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "create CRD: %s", crd.Spec.Names.Kind)
+		}
+	} else {
+		// must set this field from existing CRD to prevent update fail
+		crd.ObjectMeta.ResourceVersion = c.ObjectMeta.ResourceVersion
+
+		// CRD already exists -> Update
+		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Update(ctx, crd, metav1.UpdateOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "update CRD: %s", crd.Spec.Names.Kind)
 		}
 	}
 	return nil
 }
 
-// MakeCRD creates a CustomResourceDefinition object from yaml manifest.
-func (f *Framework) MakeCRD(pathToYaml string) (*v1.CustomResourceDefinition, error) {
-	manifest, err := ioutil.ReadFile(pathToYaml)
+func (f *Framework) DeleteCRD(ctx context.Context, name string) error {
+	err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Delete(ctx, name, metav1.DeleteOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "read CRD asset file: %s", pathToYaml)
+		return errors.Wrapf(err, "unable to delete CRD with name %v", name)
+	}
+
+	return nil
+}
+
+// MakeCRD creates a CustomResourceDefinition object from yaml manifest.
+func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error) {
+	manifest, err := SourceToIOReader(source)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get manifest from source: %s", source)
+	}
+
+	content, err := ioutil.ReadAll(manifest)
+	if err != nil {
+		return nil, errors.Wrap(err, "get manifest content")
 	}
 
 	crd := v1.CustomResourceDefinition{}
-	err = yaml.Unmarshal(manifest, &crd)
+	err = yaml.Unmarshal(content, &crd)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unmarshal CRD asset file: %s", pathToYaml)
+		return nil, errors.Wrapf(err, "unmarshal CRD asset file: %s", source)
 	}
 
 	return &crd, nil
@@ -101,10 +126,17 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 
 // CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
 // manifest on the apiserver and wait until it is available for use.
-func (f *Framework) CreateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
+func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 	group := monitoring.GroupName
-	assetPath := "../../example/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
+
+	var assetPath string
+
+	if f.operatorVersion.GTE(semver.MustParse("0.57.0")) {
+		assetPath = f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
+	} else {
+		assetPath = f.exampleDir + "/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
+	}
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
@@ -114,7 +146,7 @@ func (f *Framework) CreateCRDAndWaitUntilReady(ctx context.Context, crdName stri
 	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
 	crd.Spec.Group = group
 
-	err = f.CreateCRD(ctx, crd)
+	err = f.CreateOrUpdateCRD(ctx, crd)
 	if err != nil {
 		return errors.Wrapf(err, "create CRD %s on the apiserver", crdName)
 	}
