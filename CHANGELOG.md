@@ -1,3 +1,9 @@
+## 0.59.1 / 2022-09-12
+
+* [BUGFIX] Fixed secret and configmap volume names that need to be mounted in additional containers. #5000
+* [BUGFIX] Removed `CAP_FOWNER` capability for the Thanos sidecar when not required. #5004
+* [BUGFIX] Removed the `CAP_` prefix of the `FOWNER` capability on Thanos sidecar. #5014
+
 ## 0.59.0 / 2022-09-02
 
 * [FEATURE] Added validations for timeout and time settings of alertmanager at CRD level. #4898

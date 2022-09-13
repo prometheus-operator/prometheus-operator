@@ -562,7 +562,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range a.Spec.Secrets {
-		name, err := rn.UniqueVolumeName(s)
+		name, err := rn.VolumeName(s)
 		if err != nil {
 			return nil, err
 		}
@@ -588,7 +588,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range a.Spec.ConfigMaps {
-		name, err := rn.UniqueVolumeName(c)
+		name, err := rn.VolumeName(c)
 		if err != nil {
 			return nil, err
 		}
