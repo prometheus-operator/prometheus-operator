@@ -43,19 +43,19 @@ func TestUniqueVolumeName(t *testing.T) {
 		},
 		{
 			name:     "NAME",
-			expected: "name-4cfd3574",
+			expected: "name-6c5f7b2e",
 		},
 		{
 			name:     "foo--",
-			expected: "foo-e705c7c8",
+			expected: "foo-33bf00a8",
 		},
 		{
 			name:     "foo^%#$bar",
-			expected: "foo-bar-f3e212b1",
+			expected: "foo-bar-6ab521af",
 		},
 		{
 			name:     "fOo^%#$bar",
-			expected: "foo-bar-ee5c3c18",
+			expected: "foo-bar-6ab521af",
 		},
 		{
 			name: strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
@@ -65,17 +65,18 @@ func TestUniqueVolumeName(t *testing.T) {
 		{
 			prefix:   "with-prefix",
 			name:     "name",
-			expected: "with-prefix-name-6c5f7b2e",
+			expected: "with-prefix-name-fa429965",
 		},
 		{
 			prefix:   "with-prefix-",
 			name:     "name",
-			expected: "with-prefix-name-6c5f7b2e",
+			expected: "with-prefix-name-fa429965",
 		},
 		{
-			prefix:   "with-prefix",
-			name:     strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
-			expected: "with-prefix-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-4ed69ce2",
+			prefix: "with-prefix",
+			name:   strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
+			expected: "with-prefix-" + strings.Repeat("a", 42) +
+				"-c183166e",
 		},
 	}
 

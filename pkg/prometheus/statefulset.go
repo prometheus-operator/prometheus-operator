@@ -582,7 +582,7 @@ func makeStatefulSetSpec(
 
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range p.Spec.Secrets {
-		name, err := rn.VolumeName(s)
+		name, err := rn.UniqueVolumeName(s)
 		if err != nil {
 			return nil, err
 		}
@@ -604,7 +604,7 @@ func makeStatefulSetSpec(
 
 	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range p.Spec.ConfigMaps {
-		name, err := rn.VolumeName(c)
+		name, err := rn.UniqueVolumeName(c)
 		if err != nil {
 			return nil, err
 		}
@@ -779,6 +779,8 @@ func makeStatefulSetSpec(
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
 				Capabilities: &v1.Capabilities{
+					// The Thanos sidecar needs the CAP_FOWNER capability because it links block files as hard link.
+					Add:  []v1.Capability{"CAP_FOWNER"},
 					Drop: []v1.Capability{"ALL"},
 				},
 			},
@@ -823,9 +825,6 @@ func makeStatefulSetSpec(
 					SubPath:   subPathForStorage(p.Spec.Storage),
 				},
 			)
-
-			// The Thanos sidecar needs the FOWNER capability because it links block files as hard link.
-			container.SecurityContext.Capabilities.Add = append(container.SecurityContext.Capabilities.Add, "FOWNER")
 
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
