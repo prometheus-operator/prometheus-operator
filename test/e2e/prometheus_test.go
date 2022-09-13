@@ -4486,53 +4486,6 @@ func testPromDegradedConditionStatus(t *testing.T) {
 	}
 }
 
-func testPromStrategicMergePatch(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Name: "secret", Namespace: ns},
-		Type:       v1.SecretType("Opaque"),
-		Data:       map[string][]byte{},
-	}
-	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("failed to create secret: %s", err)
-	}
-
-	configmap := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: "configmap", Namespace: ns},
-		Data:       map[string]string{},
-	}
-	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), configmap, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("failed to create configmap: %s", err)
-	}
-
-	p := framework.MakeBasicPrometheus(ns, "test", "", 1)
-	p.Spec.Secrets = []string{secret.Name}
-	p.Spec.ConfigMaps = []string{configmap.Name}
-	p.Spec.Containers = []v1.Container{{
-		Name:  "sidecar",
-		Image: "nginx",
-		// Ensure that the sidecar container can mount the additional secret and configmap.
-		VolumeMounts: []v1.VolumeMount{{
-			Name:      "secret-" + secret.Name,
-			MountPath: "/tmp/secret",
-		}, {
-			Name:      "configmap-" + configmap.Name,
-			MountPath: "/tmp/configmap",
-		}},
-	}}
-
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(alertmanagerName))

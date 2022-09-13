@@ -316,7 +316,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "web-config.yaml",
 								},
 								{
-									Name:      "secret-test-secret1",
+									Name:      "secret-test-secret1-df14634a",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
 									SubPath:   "",
@@ -374,7 +374,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
-							Name: "secret-test-secret1",
+							Name: "secret-test-secret1-df14634a",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
 									SecretName: "test-secret1",
@@ -1050,9 +1050,9 @@ func TestThanosNoObjectStorage(t *testing.T) {
 		}
 	}
 
-	for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-		if addCap == "FOWNER" {
-			t.Fatal("Thanos sidecar shouldn't have the FOWNER capability")
+	for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
+		if vol.MountPath == storageDir {
+			t.Fatal("Prometheus data volume should not be mounted in the Thanos sidecar")
 		}
 	}
 }
@@ -1144,19 +1144,6 @@ func TestThanosObjectStorage(t *testing.T) {
 		}
 		if !found {
 			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
-		}
-	}
-
-	{
-		var found bool
-		for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-			if addCap == "FOWNER" {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Fatal("Thanos sidecar should have FOWNER capability")
 		}
 	}
 }

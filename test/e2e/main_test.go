@@ -222,7 +222,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromNamespaceEnforcementExclusion":      testPromNamespaceEnforcementExclusion,
 		"PromQueryLogFile":                       testPromQueryLogFile,
 		"PromDegradedCondition":                  testPromDegradedConditionStatus,
-		"PromStrategicMergePatch":                testPromStrategicMergePatch,
 	}
 
 	for name, f := range testFuncs {

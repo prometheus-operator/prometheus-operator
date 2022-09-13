@@ -293,7 +293,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-key-some-secret-3556f148",
+					Name: "web-config-tls-secret-key-some-secret-38b2f493",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -301,7 +301,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-cert-some-secret-3556f148",
+					Name: "web-config-tls-secret-cert-some-secret-a60e0a56",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -309,7 +309,7 @@ func TestGetMountParameters(t *testing.T) {
 					},
 				},
 				{
-					Name: "web-config-tls-secret-client-ca-some-secret-3556f148",
+					Name: "web-config-tls-secret-client-ca-some-secret-3ec4509b",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -327,7 +327,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-key-some-secret-3556f148",
+					Name:             "web-config-tls-secret-key-some-secret-38b2f493",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.key",
 					SubPath:          "tls.key",
@@ -335,7 +335,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-cert-some-secret-3556f148",
+					Name:             "web-config-tls-secret-cert-some-secret-a60e0a56",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.crt",
 					SubPath:          "tls.crt",
@@ -343,7 +343,7 @@ func TestGetMountParameters(t *testing.T) {
 					SubPathExpr:      "",
 				},
 				{
-					Name:             "web-config-tls-secret-client-ca-some-secret-3556f148",
+					Name:             "web-config-tls-secret-client-ca-some-secret-3ec4509b",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.client_ca",
 					SubPath:          "tls.client_ca",

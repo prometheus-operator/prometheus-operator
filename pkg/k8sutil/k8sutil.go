@@ -245,7 +245,10 @@ func NewResourceNamerWithPrefix(p string) ResourceNamer {
 	return ResourceNamer{prefix: p}
 }
 
-func (rn ResourceNamer) sanitizedVolumeName(name string) string {
+// UniqueVolumeName returns a volume name that is a valid DNS-1123 label.
+// The returned name has a hash-based suffix to ensure uniqueness in case the
+// input name exceeds the 63-chars limit.
+func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 	if rn.prefix != "" {
 		name = strings.TrimRight(rn.prefix, "-") + "-" + name
 	}
@@ -254,21 +257,6 @@ func (rn ResourceNamer) sanitizedVolumeName(name string) string {
 	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
 	name = strings.Trim(name, "-")
 
-	return name
-}
-
-func isValidDNS1123Label(name string) error {
-	if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
-		return errors.New(strings.Join(errs, ","))
-	}
-
-	return nil
-}
-
-// UniqueVolumeName returns a volume name that is a valid DNS-1123 label.
-// The returned name has a hash-based suffix to ensure uniqueness in case the
-// input name exceeds the 63-chars limit.
-func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 	// Hash the name and append the 8 first characters of the hash
 	// value to the resulting name to ensure that 2 names longer than
 	// DNS1123LabelMaxLength return unique volume names.
@@ -287,8 +275,6 @@ func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 	h := fmt.Sprintf("-%x", xxh.Sum64())
 	h = h[:9]
 
-	name = rn.sanitizedVolumeName(name)
-
 	if len(name) > validation.DNS1123LabelMaxLength-9 {
 		name = name[:validation.DNS1123LabelMaxLength-9]
 	}
@@ -298,18 +284,7 @@ func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 		return "", errors.New(strings.Join(errs, ","))
 	}
 
-	return name, isValidDNS1123Label(name)
-}
-
-// VolumeName returns a volume name that is a valid DNS-1123 label.
-func (rn ResourceNamer) VolumeName(name string) (string, error) {
-	name = rn.sanitizedVolumeName(name)
-
-	if len(name) > validation.DNS1123LabelMaxLength {
-		name = name[:validation.DNS1123LabelMaxLength]
-	}
-
-	return name, isValidDNS1123Label(name)
+	return name, nil
 }
 
 // AddTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
