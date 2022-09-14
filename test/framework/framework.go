@@ -305,13 +305,11 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		return nil, errors.Wrap(err, "initialize AlertmanagerConfig v1alpha1 CRD")
 	}
 
-	if f.operatorVersion.GTE(semver.MustParse("0.57.0")) {
-		err = WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return f.MonClientV1beta1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
-		}
+	err = WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1beta1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
 	}
 
 	deploy, err := MakeDeployment(fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-deployment.yaml", f.exampleDir))
@@ -439,13 +437,11 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		}
 		finalizers = append(finalizers, finalizer)
 
-		if f.operatorVersion.GTE(semver.MustParse("0.57.0")) {
-			finalizer, err = f.configureAlertmanagerConfigConversion(ctx, webhookService, b)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to configure conversion webhook for AlertManagerConfigs")
-			}
-			finalizers = append(finalizers, finalizer)
+		finalizer, err = f.configureAlertmanagerConfigConversion(ctx, webhookService, b)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to configure conversion webhook for AlertManagerConfigs")
 		}
+		finalizers = append(finalizers, finalizer)
 	}
 
 	return finalizers, nil

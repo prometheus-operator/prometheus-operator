@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -129,14 +128,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 	group := monitoring.GroupName
-
-	var assetPath string
-
-	if f.operatorVersion.GTE(semver.MustParse("0.57.0")) {
-		assetPath = f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
-	} else {
-		assetPath = f.exampleDir + "/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
-	}
+	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
