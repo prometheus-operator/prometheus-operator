@@ -137,7 +137,14 @@ func TestMain(m *testing.M) {
 	exampleDir := "../../example"
 	resourcesDir := "../framework/resources"
 
-	if framework, err = operatorFramework.New(*kubeconfig, *opImage, exampleDir, resourcesDir, currentSemVer); err != nil {
+	nextSemVer, err := semver.ParseTolerant(fmt.Sprintf("0.%d.0", currentSemVer.Minor))
+	if err != nil {
+		logger.Printf("failed to parse next version: %v\n", err)
+		os.Exit(1)
+	}
+
+	// init with next minor version since we are developing toward it.
+	if framework, err = operatorFramework.New(*kubeconfig, *opImage, exampleDir, resourcesDir, nextSemVer); err != nil {
 		logger.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
