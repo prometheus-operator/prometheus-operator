@@ -2715,3 +2715,34 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultPodManagementPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.PodManagementPolicy != appsv1.ParallelPodManagement {
+		t.Fatal("Default PodManagementPolicy in StatefulSet not Parallel.")
+	}
+}
+
+func TestCustomPodManagementPolicy(t *testing.T) {
+	policy := appsv1.OrderedReadyPodManagement
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			PodManagementPolicy: &policy,
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.PodManagementPolicy != appsv1.OrderedReadyPodManagement {
+		t.Fatal("PodManagementPolicy in StatefulSet not OrderedReady.")
+	}
+}

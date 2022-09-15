@@ -3982,6 +3982,11 @@ spec:
                 description: If set to true all actions on the underlying managed
                   objects are not goint to be performed, except for delete actions.
                 type: boolean
+              podManagementPolicy:
+                description: 'StatefulSet PodManagementPolicy. Defaults to value of
+                  `Parallel`. WARNING: Read limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
+                  before setting this value'
+                type: string
               podMetadata:
                 description: PodMetadata configures Labels and Annotations which are
                   propagated to the alertmanager pods.

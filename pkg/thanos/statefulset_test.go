@@ -43,7 +43,8 @@ var (
 		},
 		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
 	}
-	emptyQueryEndpoints = []string{""}
+	emptyQueryEndpoints        = []string{""}
+	defaultPodManagementPolicy = appsv1.ParallelPodManagement
 )
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -1067,8 +1068,9 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 func TestStatefulSetMinReadySeconds(t *testing.T) {
 	tr := monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
-			MinReadySeconds: nil,
-			QueryEndpoints:  emptyQueryEndpoints,
+			MinReadySeconds:     nil,
+			QueryEndpoints:      emptyQueryEndpoints,
+			PodManagementPolicy: &defaultPodManagementPolicy,
 		},
 	}
 
@@ -1201,5 +1203,39 @@ func TestStatefulSetEphemeral(t *testing.T) {
 	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
 		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
 		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
+	}
+}
+
+func TestDefaultPodManagementPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+		},
+	}, defaultTestConfig, nil, "")
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.PodManagementPolicy != appsv1.ParallelPodManagement {
+		t.Fatal("Default PodManagementPolicy in StatefulSet not Parallel.")
+	}
+}
+
+func TestCustomPodManagementPolicy(t *testing.T) {
+	policy := appsv1.OrderedReadyPodManagement
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:      emptyQueryEndpoints,
+			PodManagementPolicy: &policy,
+		},
+	}, defaultTestConfig, nil, "")
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.PodManagementPolicy != appsv1.OrderedReadyPodManagement {
+		t.Fatal("PodManagementPolicy in StatefulSet not OrderedReady.")
 	}
 }

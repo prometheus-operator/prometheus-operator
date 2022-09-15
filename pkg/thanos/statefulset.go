@@ -49,6 +49,7 @@ var (
 	managedByOperatorLabels           = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
+	ParallelPodManagement = appsv1.ParallelPodManagement
 )
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
@@ -58,6 +59,9 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	}
 	if _, ok := tr.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
 		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
+	}
+	if tr.Spec.PodManagementPolicy == nil {
+		tr.Spec.PodManagementPolicy = &ParallelPodManagement
 	}
 
 	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames)
@@ -466,7 +470,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	return &appsv1.StatefulSetSpec{
 		Replicas:            tr.Spec.Replicas,
 		MinReadySeconds:     minReadySeconds,
-		PodManagementPolicy: appsv1.ParallelPodManagement,
+		PodManagementPolicy: *tr.Spec.PodManagementPolicy,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},

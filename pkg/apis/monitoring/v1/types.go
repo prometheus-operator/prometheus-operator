@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -505,6 +506,9 @@ type PrometheusSpec struct {
 	// ensure only clients authorized to perform these actions can do so.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+	// StatefulSet PodManagementPolicy. Defaults to value of `Parallel`.
+	// WARNING: Read limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations before setting this value
+	PodManagementPolicy *appsv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 }
 
 type Exemplars struct {
@@ -1988,6 +1992,9 @@ type AlertmanagerSpec struct {
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
+	// StatefulSet PodManagementPolicy. Defaults to value of `Parallel`.
+	// WARNING: Read limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations before setting this value
+	PodManagementPolicy *appsv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 }
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.

@@ -690,6 +690,20 @@ If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -2437,6 +2451,20 @@ ensure only clients authorized to perform these actions can do so.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3708,6 +3736,20 @@ AlertmanagerConfiguration
 <p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
 </td>
 </tr>
 </tbody>
@@ -8467,6 +8509,20 @@ ensure only clients authorized to perform these actions can do so.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus
@@ -10906,6 +10962,20 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 <p>Pods&rsquo; hostAliases configuration</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -11555,6 +11625,20 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podmanagementpolicytype-v1-apps">
+Kubernetes apps/v1.PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>StatefulSet PodManagementPolicy. Defaults to value of <code>Parallel</code>.
+WARNING: Read limitations of StatefulSets: <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations</a> before setting this value</p>
 </td>
 </tr>
 </tbody>

@@ -53,8 +53,9 @@ const (
 )
 
 var (
-	minReplicas         int32 = 1
-	probeTimeoutSeconds int32 = 3
+	minReplicas           int32 = 1
+	probeTimeoutSeconds   int32 = 3
+	ParallelPodManagement       = appsv1.ParallelPodManagement
 )
 
 func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash string, tlsAssetSecrets []string) (*appsv1.StatefulSet, error) {
@@ -81,6 +82,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 	}
 	if _, ok := am.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
+	}
+	if am.Spec.PodManagementPolicy == nil {
+		am.Spec.PodManagementPolicy = &ParallelPodManagement
 	}
 
 	spec, err := makeStatefulSetSpec(am, config, tlsAssetSecrets)
@@ -717,7 +721,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		ServiceName:         governingServiceName,
 		Replicas:            a.Spec.Replicas,
 		MinReadySeconds:     minReadySeconds,
-		PodManagementPolicy: appsv1.ParallelPodManagement,
+		PodManagementPolicy: *a.Spec.PodManagementPolicy,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},

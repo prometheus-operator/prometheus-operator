@@ -15,6 +15,7 @@
 package v1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -217,6 +218,9 @@ type ThanosRulerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// StatefulSet PodManagementPolicy. Defaults to value of `Parallel`.
+	// WARNING: Read limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations before setting this value
+	PodManagementPolicy *appsv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

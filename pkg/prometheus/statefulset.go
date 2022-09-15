@@ -69,6 +69,7 @@ var (
 	shardLabelName                = "operator.prometheus.io/shard"
 	prometheusNameLabelName       = "operator.prometheus.io/name"
 	probeTimeoutSeconds     int32 = 3
+	ParallelPodManagement         = appsv1.ParallelPodManagement
 )
 
 func expectedStatefulSetShardNames(
@@ -121,6 +122,9 @@ func makeStatefulSet(
 	intZero := int32(0)
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
+	}
+	if p.Spec.PodManagementPolicy == nil {
+		p.Spec.PodManagementPolicy = &ParallelPodManagement
 	}
 
 	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
@@ -983,7 +987,7 @@ func makeStatefulSetSpec(
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            p.Spec.Replicas,
-		PodManagementPolicy: appsv1.ParallelPodManagement,
+		PodManagementPolicy: *p.Spec.PodManagementPolicy,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
