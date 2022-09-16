@@ -528,7 +528,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "webhook-server",
-							Image: "quay.io/coreos/prometheus-alertmanager-test-webhook",
+							Image: "quay.io/prometheus-operator/prometheus-alertmanager-test-webhook:latest",
 							Ports: []v1.ContainerPort{
 								{
 									Name:          "web",
