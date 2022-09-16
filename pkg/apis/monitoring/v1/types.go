@@ -336,6 +336,10 @@ type CommonPrometheusFields struct {
 	// to be excluded from enforcing a namespace label of origin.
 	// Applies only if enforcedNamespaceLabel set to true.
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
+	// Enable ability to add DNS policy. Kubernetes currently supports following "Default", "ClusterFirst", "ClusterFirstWithHostNet" and "None".
+	// More details can be found at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+	// Note: "Default" is not the default DNS policy. If dnsPolicy is not explicitly specified, then "ClusterFirst" is used.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 }
 
 // +genclient

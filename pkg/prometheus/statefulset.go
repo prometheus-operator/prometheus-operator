@@ -1010,6 +1010,7 @@ func makeStatefulSetSpec(
 				Affinity:                      p.Spec.Affinity,
 				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(p.Spec.HostAliases),
+				DNSPolicy:                     p.Spec.DNSPolicy,
 			},
 		},
 	}, nil

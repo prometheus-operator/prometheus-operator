@@ -2466,6 +2466,10 @@
                     "description": "Disable prometheus compaction.",
                     "type": "boolean"
                   },
+                  "dnsPolicy": {
+                    "description": "Enable ability to add DNS policy. Kubernetes currently supports following \"Default\", \"ClusterFirst\", \"ClusterFirstWithHostNet\" and \"None\". More details can be found at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy Note: \"Default\" is not the default DNS policy. If dnsPolicy is not explicitly specified, then \"ClusterFirst\" is used.",
+                    "type": "string"
+                  },
                   "enableAdminAPI": {
                     "description": "Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis",
                     "type": "boolean"

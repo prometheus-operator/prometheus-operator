@@ -2123,6 +2123,21 @@ Applies only if enforcedNamespaceLabel set to true.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
+Kubernetes core/v1.DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Enable ability to add DNS policy. Kubernetes currently supports following &ldquo;Default&rdquo;, &ldquo;ClusterFirst&rdquo;, &ldquo;ClusterFirstWithHostNet&rdquo; and &ldquo;None&rdquo;.
+More details can be found at <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy">https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy</a>
+Note: &ldquo;Default&rdquo; is not the default DNS policy. If dnsPolicy is not explicitly specified, then &ldquo;ClusterFirst&rdquo; is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -4964,6 +4979,21 @@ only available in versions of Prometheus &gt;= 2.11.0.</p>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
+Kubernetes core/v1.DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Enable ability to add DNS policy. Kubernetes currently supports following &ldquo;Default&rdquo;, &ldquo;ClusterFirst&rdquo;, &ldquo;ClusterFirstWithHostNet&rdquo; and &ldquo;None&rdquo;.
+More details can be found at <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy">https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy</a>
+Note: &ldquo;Default&rdquo; is not the default DNS policy. If dnsPolicy is not explicitly specified, then &ldquo;ClusterFirst&rdquo; is used.</p>
 </td>
 </tr>
 </tbody>
@@ -8149,6 +8179,21 @@ only available in versions of Prometheus &gt;= 2.11.0.</p>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
+Kubernetes core/v1.DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Enable ability to add DNS policy. Kubernetes currently supports following &ldquo;Default&rdquo;, &ldquo;ClusterFirst&rdquo;, &ldquo;ClusterFirstWithHostNet&rdquo; and &ldquo;None&rdquo;.
+More details can be found at <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy">https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy</a>
+Note: &ldquo;Default&rdquo; is not the default DNS policy. If dnsPolicy is not explicitly specified, then &ldquo;ClusterFirst&rdquo; is used.</p>
 </td>
 </tr>
 <tr>
