@@ -1049,12 +1049,6 @@ func TestThanosNoObjectStorage(t *testing.T) {
 			t.Fatal("--tsdb.path argument should not be given to the Thanos sidecar")
 		}
 	}
-
-	for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-		if addCap == "FOWNER" {
-			t.Fatal("Thanos sidecar shouldn't have the FOWNER capability")
-		}
-	}
 }
 
 func TestThanosObjectStorage(t *testing.T) {
@@ -1144,19 +1138,6 @@ func TestThanosObjectStorage(t *testing.T) {
 		}
 		if !found {
 			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
-		}
-	}
-
-	{
-		var found bool
-		for _, addCap := range sset.Spec.Template.Spec.Containers[2].SecurityContext.Capabilities.Add {
-			if addCap == "FOWNER" {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Fatal("Thanos sidecar should have FOWNER capability")
 		}
 	}
 }
@@ -2710,6 +2691,61 @@ func TestPrometheusQuerySpec(t *testing.T) {
 
 				if containerArg != expected {
 					t.Fatalf("expected %q to be found but got %q", expected, containerArg)
+				}
+			}
+		})
+	}
+}
+
+func TestSecurityContextCapabilities(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "default",
+			spec: monitoringv1.PrometheusSpec{},
+		},
+		{
+			name: "Thanos sidecar",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{},
+			},
+		},
+		{
+			name: "Thanos sidecar with object storage",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					ObjectStorageConfigFile: func(s string) *string { return &s }("/etc/thanos.cfg"),
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{Spec: tc.spec}, defaultTestConfig, nil, "", 0, nil)
+			if err != nil {
+				t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+			}
+
+			exp := 2
+			if tc.spec.Thanos != nil {
+				exp++
+			}
+			if len(sset.Spec.Template.Spec.Containers) != exp {
+				t.Fatalf("Expecting %d containers, got %d", exp, len(sset.Spec.Template.Spec.Containers))
+			}
+
+			for _, c := range sset.Spec.Template.Spec.Containers {
+				if len(c.SecurityContext.Capabilities.Add) != 0 {
+					t.Fatalf("Expecting 0 added capabilities, got %d", len(c.SecurityContext.Capabilities.Add))
+				}
+
+				if len(c.SecurityContext.Capabilities.Drop) != 1 {
+					t.Fatalf("Expecting 1 dropped capabilities, got %d", len(c.SecurityContext.Capabilities.Drop))
+				}
+
+				if string(c.SecurityContext.Capabilities.Drop[0]) != "ALL" {
+					t.Fatalf("Expecting ALL dropped capability, got %s", c.SecurityContext.Capabilities.Drop[0])
 				}
 			}
 		})
