@@ -2,6 +2,7 @@
 /admission-webhook
 /po-lint
 /prometheus-config-reloader
+example/alertmanager-webhook/linux/
 .build/
 *~
 *.tgz
