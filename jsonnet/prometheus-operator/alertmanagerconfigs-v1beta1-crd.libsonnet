@@ -21,7 +21,7 @@
             description: 'AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration. By definition, the Alertmanager configuration only applies to alerts for which the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.',
             properties: {
               inhibitRules: {
-                description: 'List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace.',
+                description: "List of inhibition rules. The rules will only apply to alerts matching the resource's namespace.",
                 items: {
                   description: 'InhibitRule defines an inhibition rule that allows to mute alerts when other alerts are already firing. See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule',
                   properties: {
@@ -33,7 +33,7 @@
                       type: 'array',
                     },
                     sourceMatch: {
-                      description: 'Matchers for which one or more alerts have to exist for the inhibition to take effect. The operator enforces that the alert matches the resource’s namespace.',
+                      description: "Matchers for which one or more alerts have to exist for the inhibition to take effect. The operator enforces that the alert matches the resource's namespace.",
                       items: {
                         description: "Matcher defines how to match on alert's labels.",
                         properties: {
@@ -65,7 +65,7 @@
                       type: 'array',
                     },
                     targetMatch: {
-                      description: 'Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource’s namespace.',
+                      description: "Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource's namespace.",
                       items: {
                         description: "Matcher defines how to match on alert's labels.",
                         properties: {
@@ -1741,7 +1741,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: "The secret's key that contains the registered application’s API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            description: "The secret's key that contains the registered application's API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1769,7 +1769,7 @@
                             type: 'string',
                           },
                           userKey: {
-                            description: "The secret's key that contains the recipient user’s user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            description: "The secret's key that contains the recipient user's user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4449,7 +4449,7 @@
                 type: 'array',
               },
               route: {
-                description: 'The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route.',
+                description: "The Alertmanager route definition for alerts matching the resource's namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route.",
                 properties: {
                   continue: {
                     description: 'Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.',
@@ -4471,7 +4471,7 @@
                     type: 'string',
                   },
                   matchers: {
-                    description: 'List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher.',
+                    description: "List of matchers that the alert's labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher.",
                     items: {
                       description: "Matcher defines how to match on alert's labels.",
                       properties: {

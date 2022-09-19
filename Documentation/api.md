@@ -12300,7 +12300,7 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Alertmanager route definition for alerts matching the resource’s
+<p>The Alertmanager route definition for alerts matching the resource&rsquo;s
 namespace. If present, it will be added to the generated Alertmanager
 configuration as a first-level route.</p>
 </td>
@@ -12331,7 +12331,7 @@ configuration as a first-level route.</p>
 <td>
 <em>(Optional)</em>
 <p>List of inhibition rules. The rules will only apply to alerts matching
-the resource’s namespace.</p>
+the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -12382,7 +12382,7 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Alertmanager route definition for alerts matching the resource’s
+<p>The Alertmanager route definition for alerts matching the resource&rsquo;s
 namespace. If present, it will be added to the generated Alertmanager
 configuration as a first-level route.</p>
 </td>
@@ -12413,7 +12413,7 @@ configuration as a first-level route.</p>
 <td>
 <em>(Optional)</em>
 <p>List of inhibition rules. The rules will only apply to alerts matching
-the resource’s namespace.</p>
+the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -12816,7 +12816,7 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#inhibit_r
 </td>
 <td>
 <p>Matchers that have to be fulfilled in the alerts to be muted. The
-operator enforces that the alert matches the resource’s namespace.</p>
+operator enforces that the alert matches the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -12831,7 +12831,7 @@ operator enforces that the alert matches the resource’s namespace.</p>
 <td>
 <p>Matchers for which one or more alerts have to exist for the inhibition
 to take effect. The operator enforces that the alert matches the
-resource’s namespace.</p>
+resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -13737,7 +13737,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the recipient user’s user key.
+<p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
@@ -13752,7 +13752,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the registered application’s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+<p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
@@ -14138,7 +14138,7 @@ Example: &ldquo;4h&rdquo;</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of matchers that the alert’s labels should match. For the first
+<p>List of matchers that the alert&rsquo;s labels should match. For the first
 level route, the operator removes any existing equality and regexp
 matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object
 namespace&gt;</code> matcher.</p>
@@ -15597,7 +15597,7 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Alertmanager route definition for alerts matching the resource’s
+<p>The Alertmanager route definition for alerts matching the resource&rsquo;s
 namespace. If present, it will be added to the generated Alertmanager
 configuration as a first-level route.</p>
 </td>
@@ -15628,7 +15628,7 @@ configuration as a first-level route.</p>
 <td>
 <em>(Optional)</em>
 <p>List of inhibition rules. The rules will only apply to alerts matching
-the resource’s namespace.</p>
+the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -15679,7 +15679,7 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Alertmanager route definition for alerts matching the resource’s
+<p>The Alertmanager route definition for alerts matching the resource&rsquo;s
 namespace. If present, it will be added to the generated Alertmanager
 configuration as a first-level route.</p>
 </td>
@@ -15710,7 +15710,7 @@ configuration as a first-level route.</p>
 <td>
 <em>(Optional)</em>
 <p>List of inhibition rules. The rules will only apply to alerts matching
-the resource’s namespace.</p>
+the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -16113,7 +16113,7 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#inhibit_r
 </td>
 <td>
 <p>Matchers that have to be fulfilled in the alerts to be muted. The
-operator enforces that the alert matches the resource’s namespace.</p>
+operator enforces that the alert matches the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -16128,7 +16128,7 @@ operator enforces that the alert matches the resource’s namespace.</p>
 <td>
 <p>Matchers for which one or more alerts have to exist for the inhibition
 to take effect. The operator enforces that the alert matches the
-resource’s namespace.</p>
+resource&rsquo;s namespace.</p>
 </td>
 </tr>
 <tr>
@@ -16966,7 +16966,7 @@ SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the recipient user’s user key.
+<p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
@@ -16981,7 +16981,7 @@ SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the registered application’s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+<p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
@@ -17367,7 +17367,7 @@ Example: &ldquo;4h&rdquo;</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of matchers that the alert’s labels should match. For the first
+<p>List of matchers that the alert&rsquo;s labels should match. For the first
 level route, the operator removes any existing equality and regexp
 matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object
 namespace&gt;</code> matcher.</p>
