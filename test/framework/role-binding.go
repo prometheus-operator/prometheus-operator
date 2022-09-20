@@ -16,25 +16,45 @@ package framework
 
 import (
 	"context"
+
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) CreateRoleBinding(ctx context.Context, ns string, relativePath string) (FinalizerFn, error) {
+func (f *Framework) CreateOrUpdateRoleBinding(ctx context.Context, ns string, relativePath string) (FinalizerFn, error) {
 	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, relativePath) }
 	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
 
-	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Get(ctx, roleBinding.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
+
+	if apierrors.IsNotFound(err) {
+		// RoleBinding doesn't exists -> Create
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
+		if err != nil {
+			return finalizerFn, err
+		}
+	} else {
+		// RoleBinding already exists -> Update
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
+		if err != nil {
+			return finalizerFn, err
+		}
+	}
+
 	return finalizerFn, err
 }
 
-func (f *Framework) CreateRoleBindingForSubjectNamespace(ctx context.Context, ns, subjectNs string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, relativePath) }
-	roleBinding, err := f.parseRoleBindingYaml(relativePath)
+func (f *Framework) CreateOrUpdateRoleBindingForSubjectNamespace(ctx context.Context, ns, subjectNs string, source string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, source) }
+	roleBinding, err := f.parseRoleBindingYaml(source)
 
 	for i := range roleBinding.Subjects {
 		roleBinding.Subjects[i].Namespace = subjectNs
@@ -44,12 +64,30 @@ func (f *Framework) CreateRoleBindingForSubjectNamespace(ctx context.Context, ns
 		return finalizerFn, err
 	}
 
-	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
-	return finalizerFn, err
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Get(ctx, roleBinding.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
+
+	if apierrors.IsNotFound(err) {
+		// RoleBinding already exists -> Update
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
+		if err != nil {
+			return finalizerFn, err
+		}
+	} else {
+		// RoleBinding doesn't exists -> Create
+		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
+		if err != nil {
+			return finalizerFn, err
+		}
+	}
+
+	return finalizerFn, nil
 }
 
-func (f *Framework) DeleteRoleBinding(ctx context.Context, ns string, relativePath string) error {
-	roleBinding, err := f.parseRoleBindingYaml(relativePath)
+func (f *Framework) DeleteRoleBinding(ctx context.Context, ns string, source string) error {
+	roleBinding, err := f.parseRoleBindingYaml(source)
 	if err != nil {
 		return err
 	}
@@ -57,8 +95,8 @@ func (f *Framework) DeleteRoleBinding(ctx context.Context, ns string, relativePa
 	return f.KubeClient.RbacV1().RoleBindings(ns).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
 }
 
-func (f *Framework) parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {
-	manifest, err := PathToOSFile(relativePath)
+func (f *Framework) parseRoleBindingYaml(source string) (*rbacv1.RoleBinding, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}

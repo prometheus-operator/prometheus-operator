@@ -16,14 +16,16 @@ package framework
 
 import (
 	"context"
+
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) createClusterRoleBinding(ctx context.Context, ns string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteClusterRoleBinding(ctx, ns, relativePath) }
-	clusterRoleBinding, err := parseClusterRoleBindingYaml(relativePath)
+func (f *Framework) createOrUpdateClusterRoleBinding(ctx context.Context, ns string, source string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteClusterRoleBinding(ctx, ns, source) }
+	clusterRoleBinding, err := parseClusterRoleBindingYaml(source)
 	if err != nil {
 		return finalizerFn, err
 	}
@@ -35,16 +37,19 @@ func (f *Framework) createClusterRoleBinding(ctx context.Context, ns string, rel
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
 	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, err
+	}
 
-	if err == nil {
-		// ClusterRoleBinding already exists -> Update
-		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
+	if apierrors.IsNotFound(err) {
+		// ClusterRoleBinding doesn't exists -> Create
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
-		// ClusterRoleBinding doesn't exists -> Create
-		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
+		// ClusterRoleBinding already exists -> Update
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
@@ -53,8 +58,8 @@ func (f *Framework) createClusterRoleBinding(ctx context.Context, ns string, rel
 	return finalizerFn, err
 }
 
-func (f *Framework) DeleteClusterRoleBinding(ctx context.Context, ns string, relativePath string) error {
-	clusterRoleBinding, err := parseClusterRoleYaml(relativePath)
+func (f *Framework) DeleteClusterRoleBinding(ctx context.Context, ns string, source string) error {
+	clusterRoleBinding, err := parseClusterRoleYaml(source)
 	if err != nil {
 		return err
 	}
@@ -66,8 +71,8 @@ func (f *Framework) DeleteClusterRoleBinding(ctx context.Context, ns string, rel
 	return f.KubeClient.RbacV1().ClusterRoleBindings().Delete(ctx, clusterRoleBinding.Name, metav1.DeleteOptions{})
 }
 
-func parseClusterRoleBindingYaml(relativePath string) (*rbacv1.ClusterRoleBinding, error) {
-	manifest, err := PathToOSFile(relativePath)
+func parseClusterRoleBindingYaml(source string) (*rbacv1.ClusterRoleBinding, error) {
+	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
