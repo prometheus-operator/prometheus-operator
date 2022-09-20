@@ -824,9 +824,6 @@ func makeStatefulSetSpec(
 				},
 			)
 
-			// The Thanos sidecar needs the FOWNER capability because it links block files as hard link.
-			container.SecurityContext.Capabilities.Add = append(container.SecurityContext.Capabilities.Add, "FOWNER")
-
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
 			disableCompaction = true
