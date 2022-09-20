@@ -1,21 +1,18 @@
-REG := quay.io/coreos
-APP := instrumented-sample-app
-VERSION ?= $(shell cat VERSION)
-GO111MODULE?=on
-GOPROXY?=http://proxy.golang.org
-export GO111MODULE
-export GOPROXY
+IMAGE ?= quay.io/prometheus-operator/instrumented-sample-app
+TAG ?= latest
+VERSION=$(shell cat VERSION)
 
-all: container push
-
+.PHONY: build
 build:
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -o instrumented-sample-app main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags netgo -o linux/amd64/ .
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags netgo -o linux/arm64/ .
 
-container:
-	@docker build -t $(REG)/$(APP):$(VERSION) --file Dockerfile ../../
-
-push:
-	@docker push $(REG)/$(APP):$(VERSION)
+.PHONY: push
+push: build
+	buildah manifest create $(IMAGE):$(TAG)
+	buildah bud --arch amd64 --build-arg ARCH=amd64 --build-arg VERSION=$(VERSION) --manifest $(IMAGE):$(TAG) -t $(IMAGE):$(TAG)-amd64 .
+	buildah bud --arch arm64 --build-arg ARCH=arm64 --build-arg VERSION=$(VERSION) --manifest $(IMAGE):$(TAG) -t $(IMAGE):$(TAG)-arm64 .
+	buildah manifest push --all $(IMAGE):$(TAG) docker://$(IMAGE):$(TAG)
 
 generate-certs:
 	mkdir -p certs && \

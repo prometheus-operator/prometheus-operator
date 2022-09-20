@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: quay.io/coreos/instrumented-sample-app:0.2.0-bearer-mtls-1
+        image: quay.io/prometheus-operator/instrumented-sample-app:latest
         imagePullPolicy: IfNotPresent
         ports:
         - name: web
