@@ -1,3 +1,7 @@
+## 0.59.2 / 2022-09-20
+
+* [CHANGE/BUGFIX] Removed `FOWNER` capability from the Thanos sidecar. #5030
+
 ## 0.59.1 / 2022-09-12
 
 * [BUGFIX] Fixed secret and configmap volume names that need to be mounted in additional containers. #5000
