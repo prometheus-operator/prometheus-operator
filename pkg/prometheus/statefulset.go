@@ -744,16 +744,20 @@ func makeStatefulSetSpec(
 			return nil, errors.Wrap(err, "failed to build image path")
 		}
 
-		bindAddress := "" // Listen to all available IP addresses by default
-		if p.Spec.Thanos.ListenLocal {
-			bindAddress = "127.0.0.1"
+		var grpcBindAddress, httpBindAddress string
+		if p.Spec.Thanos.ListenLocal || p.Spec.Thanos.GRPCListenLocal {
+			grpcBindAddress = "127.0.0.1"
+		}
+
+		if p.Spec.Thanos.ListenLocal || p.Spec.Thanos.HTTPListenLocal {
+			httpBindAddress = "127.0.0.1"
 		}
 
 		thanosArgs := []monitoringv1.Argument{
 			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", prometheusURIScheme, c.LocalHost, path.Clean(webRoutePrefix))},
 			{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`},
-			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", bindAddress)},
-			{Name: "http-address", Value: fmt.Sprintf("%s:10902", bindAddress)},
+			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
+			{Name: "http-address", Value: fmt.Sprintf("%s:10902", httpBindAddress)},
 		}
 
 		if p.Spec.Thanos.GRPCServerTLSConfig != nil {

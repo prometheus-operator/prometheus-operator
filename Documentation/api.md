@@ -11769,8 +11769,36 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Thanos sidecar listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>If true, the Thanos sidecar listens on the loopback interface
+for the HTTP and gRPC endpoints.
+It takes precedence over <code>grpcListenLocal</code> and <code>httpListenLocal</code>.
+Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>grpcListenLocal</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If true, the Thanos sidecar listens on the loopback interface
+for the gRPC endpoints.
+It has no effect if <code>listenLocal</code> is true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpListenLocal</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If true, the Thanos sidecar listens on the loopback interface
+for the HTTP endpoints.
+It has no effect if <code>listenLocal</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -11808,8 +11836,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
-recorded rule data.
+<p>GRPCServerTLSConfig configures the TLS parameters for the gRPC server
+providing the StoreAPI.
 Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
 Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
 </td>

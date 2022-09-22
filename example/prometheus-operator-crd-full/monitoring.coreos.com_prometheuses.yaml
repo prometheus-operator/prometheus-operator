@@ -6402,9 +6402,14 @@ spec:
                     description: 'Thanos base image if other than default. Deprecated:
                       use ''image'' instead'
                     type: string
+                  grpcListenLocal:
+                    description: If true, the Thanos sidecar listens on the loopback
+                      interface for the gRPC endpoints. It has no effect if `listenLocal`
+                      is true.
+                    type: boolean
                   grpcServerTlsConfig:
-                    description: 'GRPCServerTLSConfig configures the gRPC server from
-                      which Thanos Querier reads recorded rule data. Note: Currently
+                    description: 'GRPCServerTLSConfig configures the TLS parameters
+                      for the gRPC server providing the StoreAPI. Note: Currently
                       only the CAFile, CertFile, and KeyFile fields are supported.
                       Maps to the ''--grpc-server-tls-*'' CLI args.'
                     properties:
@@ -6537,6 +6542,11 @@ spec:
                         description: Used to verify the hostname for the targets.
                         type: string
                     type: object
+                  httpListenLocal:
+                    description: If true, the Thanos sidecar listens on the loopback
+                      interface for the HTTP endpoints. It has no effect if `listenLocal`
+                      is true.
+                    type: boolean
                   image:
                     description: Image if specified has precedence over baseImage,
                       tag and sha combinations. Specifying the version is still necessary
@@ -6544,8 +6554,10 @@ spec:
                       is being configured.
                     type: string
                   listenLocal:
-                    description: ListenLocal makes the Thanos sidecar listen on loopback,
-                      so that it does not bind against the Pod IP.
+                    description: 'If true, the Thanos sidecar listens on the loopback
+                      interface for the HTTP and gRPC endpoints. It takes precedence
+                      over `grpcListenLocal` and `httpListenLocal`. Deprecated: use
+                      `grpcListenLocal` and `httpListenLocal` instead.'
                     type: boolean
                   logFormat:
                     description: LogFormat for Thanos sidecar to be configured with.
