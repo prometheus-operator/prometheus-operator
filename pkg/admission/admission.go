@@ -329,10 +329,10 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 }
 
 // TODO (PhilipGough) - this can be removed when the following deprecated metrics are removed
-//  -  prometheus_operator_rule_validation_triggered_total
-//  -  prometheus_operator_rule_validation_errors_total
-//  -  prometheus_operator_alertmanager_config_validation_errors_total
-//  -  prometheus_operator_alertmanager_config_validation_triggered_total
+//   - prometheus_operator_rule_validation_triggered_total
+//   - prometheus_operator_rule_validation_errors_total
+//   - prometheus_operator_alertmanager_config_validation_errors_total
+//   - prometheus_operator_alertmanager_config_validation_triggered_total
 func (a *Admission) incrementCounter(counter prometheus.Counter) {
 	if counter != nil {
 		counter.Inc()
