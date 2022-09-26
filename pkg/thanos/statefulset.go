@@ -491,6 +491,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Affinity:                      tr.Spec.Affinity,
 				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(tr.Spec.HostAliases),
+				DNSPolicy:                     tr.Spec.DNSPolicy,
 			},
 		},
 	}, nil

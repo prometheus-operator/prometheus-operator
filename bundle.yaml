@@ -24455,6 +24455,13 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsPolicy:
+                description: 'Enable ability to add DNS policy. Kubernetes currently
+                  supports following "Default", "ClusterFirst", "ClusterFirstWithHostNet"
+                  and "None". More details can be found at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+                  Note: "Default" is not the default DNS policy. If dnsPolicy is not
+                  explicitly specified, then "ClusterFirst" is used.'
+                type: string
               enforcedNamespaceLabel:
                 description: EnforcedNamespaceLabel enforces adding a namespace label
                   of origin for each alert and metric that is user created. The label

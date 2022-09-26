@@ -217,6 +217,10 @@ type ThanosRulerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// Enable ability to add DNS policy. Kubernetes currently supports following "Default", "ClusterFirst", "ClusterFirstWithHostNet" and "None".
+	// More details can be found at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+	// Note: "Default" is not the default DNS policy. If dnsPolicy is not explicitly specified, then "ClusterFirst" is used.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
