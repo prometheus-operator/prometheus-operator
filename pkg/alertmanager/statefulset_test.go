@@ -1248,6 +1248,8 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 
+	dnsPolicy := v1.DNSPolicy("ClusterFirst")
+
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
@@ -1259,6 +1261,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ServiceAccountName: serviceAccountName,
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
+			DNSPolicy:          dnsPolicy,
 		},
 	}, defaultTestConfig, "", nil)
 	if err != nil {
@@ -1288,5 +1291,8 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	}
+	if sset.Spec.Template.Spec.DNSPolicy != dnsPolicy {
+		t.Fatalf("expected dnsPolicy to match, want %s, got %s", dnsPolicy, sset.Spec.Template.Spec.DNSPolicy)
 	}
 }

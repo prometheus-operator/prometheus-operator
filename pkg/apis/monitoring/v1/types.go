@@ -1992,6 +1992,10 @@ type AlertmanagerSpec struct {
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
+	// Enable ability to add DNS policy. Kubernetes currently supports following "Default", "ClusterFirst", "ClusterFirstWithHostNet" and "None".
+	// More details can be found at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+	// Note: "Default" is not the default DNS policy. If dnsPolicy is not explicitly specified, then "ClusterFirst" is used.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 }
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.
