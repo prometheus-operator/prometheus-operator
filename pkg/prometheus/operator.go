@@ -1677,7 +1677,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	return nil
 }
 
-//checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
+// checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
 func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logger log.Logger) {
 	deprecationWarningf := "prometheus key=%v, field %v is deprecated, '%v' field should be used instead"
 	if p.Spec.BaseImage != "" {

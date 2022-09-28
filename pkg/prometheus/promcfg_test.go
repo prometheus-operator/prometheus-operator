@@ -2351,6 +2351,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -2506,6 +2510,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -3194,6 +3202,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -4226,6 +4238,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -5107,8 +5123,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -5368,8 +5384,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -5527,8 +5543,8 @@ remote_read:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 
@@ -5987,8 +6003,8 @@ remote_write:
 				return
 			}
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 
@@ -6251,8 +6267,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6279,6 +6295,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -6327,6 +6347,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -6475,8 +6499,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6688,8 +6712,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6937,8 +6961,8 @@ scrape_configs:
 				return
 			}
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -7381,8 +7405,8 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -7409,6 +7433,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7458,6 +7486,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7506,6 +7538,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7640,8 +7676,8 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -7956,11 +7992,117 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
+	}
+}
+
+func TestPodMonitorPhaseFilter(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.9.0",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+	}
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.Generate(
+		p,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							FilterRunning: swag.Bool(false),
+							Port:          "test",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/default/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: test
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: default/testpodmonitor1
+  - target_label: endpoint
+    replacement: test
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	result := string(cfg)
+
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Logf("\n%s", diff)
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
 
@@ -7984,6 +8126,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -8033,6 +8179,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -8081,6 +8231,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -8215,8 +8369,8 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})

@@ -784,6 +784,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	relabelings := initRelabelings()
 
+	if ep.FilterRunning == nil || *ep.FilterRunning {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "drop"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
+			{Key: "regex", Value: "(Failed|Succeeded)"},
+		})
+	}
+
 	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
