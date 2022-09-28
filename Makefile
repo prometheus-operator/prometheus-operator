@@ -26,7 +26,6 @@ TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
 
-PO_DOCGEN_BINARY:=$(TOOLS_BIN_DIR)/po-docgen
 CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)/controller-gen
 JB_BINARY=$(TOOLS_BIN_DIR)/jb
 GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
@@ -37,10 +36,9 @@ PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
 
 
-K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
@@ -125,7 +123,7 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 		paths=.
 
 .PHONY: k8s-client-gen
-k8s-client-gen:
+k8s-client-gen: $(K8S_GEN_DEPS)
 	rm -rf pkg/client/{versioned,informers,listers}
 	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
