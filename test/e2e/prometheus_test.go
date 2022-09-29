@@ -4390,6 +4390,109 @@ func testPrometheusCRDValidation(t *testing.T) {
 	}
 }
 
+func testRelabelConfigCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	tests := []struct {
+		scenario       string
+		relabelConfigs []*monitoringv1.RelabelConfig
+		expectedError  bool
+	}{
+		{
+			scenario: "no-explicit-sep",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					SourceLabels: []monitoringv1.LabelName{"__address__"},
+					Action:       "replace",
+					Regex:        "([^:]+)(?::\\d+)?",
+					Replacement:  "$1:80",
+					TargetLabel:  "__address__",
+				},
+			},
+		},
+		{
+			scenario: "no-explicit-action",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					SourceLabels: []monitoringv1.LabelName{"__address__"},
+					Separator:    ",",
+					Regex:        "([^:]+)(?::\\d+)?",
+					Replacement:  "$1:80",
+					TargetLabel:  "__address__",
+				},
+			},
+		},
+		{
+			scenario: "empty-separator",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Separator: "",
+				},
+			},
+		},
+		{
+			scenario: "invalid-action",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Action: "replacee",
+				},
+			},
+			expectedError: true,
+		},
+		{
+			scenario: "empty-source-lbl",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					SourceLabels: []monitoringv1.LabelName{""},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			scenario: "invalid-source-lbl",
+			relabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					SourceLabels: []monitoringv1.LabelName{"metric%)"},
+				},
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.scenario, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			p := framework.MakeBasicPrometheus(ns, name, "", 1)
+
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+
+			s := framework.MakeBasicServiceMonitor(name)
+			s.Spec.Endpoints[0].RelabelConfigs = test.relabelConfigs
+			_, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{})
+
+			if err == nil {
+				if test.expectedError {
+					t.Fatal("expected error but got nil")
+				}
+				return
+			}
+
+			if !apierrors.IsInvalid(err) {
+				t.Fatalf("expected Invalid error but got %v", err)
+			}
+		})
+	}
+}
+
 func testPromQueryLogFile(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)

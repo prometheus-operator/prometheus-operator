@@ -286,6 +286,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromQueryLogFile":                       testPromQueryLogFile,
 		"PromDegradedCondition":                  testPromDegradedConditionStatus,
 		"PromStrategicMergePatch":                testPromStrategicMergePatch,
+		"RelabelConfigCRDValidation":             testRelabelConfigCRDValidation,
 	}
 
 	for name, f := range testFuncs {
