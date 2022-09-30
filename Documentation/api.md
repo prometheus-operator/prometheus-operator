@@ -203,7 +203,7 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
-The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsquo;alertmanager&rsquo; container.</p>
+The Secrets are mounted into <code>/etc/alertmanager/secrets/&lt;secret-name&gt;</code> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -217,7 +217,7 @@ The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsq
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
-The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the &lsquo;alertmanager&rsquo; container.</p>
+The ConfigMaps are mounted into <code>/etc/alertmanager/configmaps/&lt;configmap-name&gt;</code> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -230,7 +230,7 @@ string
 <td>
 <p>ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
 Alertmanager object, which contains the configuration for this Alertmanager
-instance. If empty, it defaults to &lsquo;alertmanager-<alertmanager-name>&rsquo;.</p>
+instance. If empty, it defaults to <code>alertmanager-&lt;alertmanager-name&gt;</code>.</p>
 <p>The Alertmanager configuration should be available under the
 <code>alertmanager.yaml</code> key. Additional keys from the original secret are
 copied to the generated secret.</p>
@@ -3916,7 +3916,7 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
-The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsquo;alertmanager&rsquo; container.</p>
+The Secrets are mounted into <code>/etc/alertmanager/secrets/&lt;secret-name&gt;</code> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -3930,7 +3930,7 @@ The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the &lsq
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
-The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the &lsquo;alertmanager&rsquo; container.</p>
+The ConfigMaps are mounted into <code>/etc/alertmanager/configmaps/&lt;configmap-name&gt;</code> in the &lsquo;alertmanager&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -3943,7 +3943,7 @@ string
 <td>
 <p>ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
 Alertmanager object, which contains the configuration for this Alertmanager
-instance. If empty, it defaults to &lsquo;alertmanager-<alertmanager-name>&rsquo;.</p>
+instance. If empty, it defaults to <code>alertmanager-&lt;alertmanager-name&gt;</code>.</p>
 <p>The Alertmanager configuration should be available under the
 <code>alertmanager.yaml</code> key. Additional keys from the original secret are
 copied to the generated secret.</p>

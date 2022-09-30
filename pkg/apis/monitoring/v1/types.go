@@ -1868,16 +1868,16 @@ type AlertmanagerSpec struct {
 	// Secrets is a list of Secrets in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
-	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name> in the 'alertmanager' container.
+	// The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
-	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name> in the 'alertmanager' container.
+	// The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
 	// Alertmanager object, which contains the configuration for this Alertmanager
-	// instance. If empty, it defaults to 'alertmanager-<alertmanager-name>'.
+	// instance. If empty, it defaults to `alertmanager-<alertmanager-name>`.
 	//
 	// The Alertmanager configuration should be available under the
 	// `alertmanager.yaml` key. Additional keys from the original secret are
