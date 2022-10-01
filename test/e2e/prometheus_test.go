@@ -245,7 +245,7 @@ func createK8sSampleApp(t *testing.T, name, ns string) {
 	}
 }
 
-func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (prometheus *monitoringv1.Prometheus, prometheusRecieverSvc string, err error) {
+func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (prometheus *monitoringv1.Prometheus, prometheusReceiverSvc string, err error) {
 
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
@@ -276,7 +276,7 @@ func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWrite
 	}
 
 	if _, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
-		return nil, prometheusRecieverSvc, errors.Wrap(err, "creating ServiceMonitor failed")
+		return nil, prometheusReceiverSvc, errors.Wrap(err, "creating ServiceMonitor failed")
 	}
 
 	// Create prometheus receiver for remote writes
@@ -719,7 +719,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			createK8sSampleApp(t, name, ns)
 
 			// Setup monitoring.
-			prometheusCRD, prometheusRecieverSvc, err := createK8sAppMonitoring(name, ns, test)
+			prometheusCRD, prometheusReceiverSvc, err := createK8sAppMonitoring(name, ns, test)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -735,14 +735,14 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			// use wait.Poll() in k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go
 			time.Sleep(45 * time.Second)
 
-			response, err := framework.PrometheusQuery(ns, prometheusRecieverSvc, "https", "up{container = 'example-app'}")
+			response, err := framework.PrometheusQuery(ns, prometheusReceiverSvc, "https", "up{container = 'example-app'}")
 			if test.ShouldSuccess {
 				if err != nil {
 					t.Logf("test with (%s, %s, %s) failed with error %s", test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename, err.Error())
 				}
 				if response[0].Value[1] != "1" {
 					framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
-					t.Fatalf("test with (%s, %s, %s) failed\nReciever Prometheus does not have the instrumented app metrics",
+					t.Fatalf("test with (%s, %s, %s) failed\nReceiver Prometheus does not have the instrumented app metrics",
 						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
 				}
 			} else {
@@ -751,7 +751,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 					t.Fatalf("test with (%s, %s, %s) failed with error %s", test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename, err.Error())
 				}
 				if len(response) != 0 {
-					t.Fatalf("test with (%s, %s, %s) failed\nExpeted reciever prometheus to not have the instrumented app metrics",
+					t.Fatalf("test with (%s, %s, %s) failed\nExpeted receiver prometheus to not have the instrumented app metrics",
 						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
 				}
 			}
