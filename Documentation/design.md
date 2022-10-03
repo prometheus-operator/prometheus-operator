@@ -45,7 +45,7 @@ The `ThanosRuler` custom resource definition (CRD) declaratively defines a desir
 
 A `ThanosRuler` instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.
 
-Further information can also be found in the [Thanos section](/Documentation/thanos).
+Further information can also be found in the [Thanos section]({{< ref "thanos.md" >}}).
 
 ## ServiceMonitor
 
