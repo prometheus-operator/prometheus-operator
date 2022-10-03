@@ -24,13 +24,28 @@ spec:
       jsonPath: .spec.version
       name: Version
       type: string
-    - description: The desired replicas number of Prometheuses
+    - description: The number of desired replicas
       jsonPath: .spec.replicas
-      name: Replicas
+      name: Desired
       type: integer
+    - description: The number of ready replicas
+      jsonPath: .status.availableReplicas
+      name: Ready
+      type: integer
+    - jsonPath: .status.conditions[?(@.type == 'Reconciled')].status
+      name: Reconciled
+      type: string
+    - jsonPath: .status.conditions[?(@.type == 'Available')].status
+      name: Available
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    - description: Whether the resource reconciliation is paused or not
+      jsonPath: .status.paused
+      name: Paused
+      priority: 1
+      type: boolean
     name: v1
     schema:
       openAPIV3Schema:

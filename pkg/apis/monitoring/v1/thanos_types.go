@@ -29,8 +29,9 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="ruler"
-// +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Thanos Rulers"
+// +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The number of desired replicas"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
 
 // ThanosRuler defines a ThanosRuler deployment.
 type ThanosRuler struct {
