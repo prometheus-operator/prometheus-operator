@@ -49,7 +49,7 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 
 A common problem related to `ServiceMonitor` identification by Prometheus is related to the object's labels not matching the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
 
-<!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
+<!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev/docs/operator/troubleshooting/ -->
 
 ![flow diagram](/Documentation/img/custom-metrics-elements.png)
 
