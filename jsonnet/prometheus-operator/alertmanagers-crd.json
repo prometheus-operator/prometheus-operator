@@ -33,7 +33,7 @@
             "type": "string"
           },
           {
-            "description": "The desired replicas number of Alertmanagers",
+            "description": "The number of desired replicas",
             "jsonPath": ".spec.replicas",
             "name": "Replicas",
             "type": "integer"
@@ -42,6 +42,13 @@
             "jsonPath": ".metadata.creationTimestamp",
             "name": "Age",
             "type": "date"
+          },
+          {
+            "description": "Whether the resource reconciliation is paused or not",
+            "jsonPath": ".status.paused",
+            "name": "Paused",
+            "priority": 1,
+            "type": "boolean"
           }
         ],
         "name": "v1",
