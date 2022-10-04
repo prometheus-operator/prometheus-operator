@@ -16,7 +16,7 @@ operator using [strategic merge
 patches](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/#use-a-strategic-merge-patch-to-update-a-deployment).
 
 When users need to apply a specific configuration to the containers that is
-either not exposed in the custome resource definitions or is already defined by
+either not exposed in the custom resource definitions or already defined by
 the operator, strategic merge patch can be used.
 
 ## How does it work?

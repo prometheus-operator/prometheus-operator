@@ -22,7 +22,7 @@ users to declaratively describe an Alertmanager cluster. To successfully deploy
 an Alertmanager cluster, it is important to understand the contract between
 Prometheus and Alertmanager. Alertmanager is used to:
 
-* Deduplicate alerts received frmo Prometheus.
+* Deduplicate alerts received from Prometheus.
 * Silence alerts.
 * Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
 
@@ -60,7 +60,7 @@ spec:
 Wait for all Alertmanager pods to be ready:
 
 ```bash
-oc get pods -l alertmanager=main -w
+kubectl get pods -l alertmanager=main -w
 ```
 
 ## Managing Alertmanager configuration
@@ -162,7 +162,7 @@ spec:
 Create the AlertmanagerConfig resource in your cluster:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/user-guides/alerting/alertmanager-config-example.yaml | kubectl create -f 
+curl -sL https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/user-guides/alerting/alertmanager-config-example.yaml | kubectl create -f -
 ```
 
 The `spec.alertmanagerConfigSelector` field in the Alertmanager resource

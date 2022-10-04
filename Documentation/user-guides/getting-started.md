@@ -220,7 +220,7 @@ spec:
 To verify that the instance is up and running, run:
 
 ```bash
-oc get prometheus prometheus -w
+kubectl get -n default prometheus prometheus -w
 ```
 
 By default, Prometheus will only pick up ServiceMonitors from the current
