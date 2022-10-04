@@ -2636,6 +2636,10 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "hostNetwork": {
+                    "description": "Use the host's network namespace if true. Make sure to understand the security implications if you want to enable it. When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.",
+                    "type": "boolean"
+                  },
                   "ignoreNamespaceSelectors": {
                     "description": "IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from all PodMonitor, ServiceMonitor and Probe objects. They will only discover endpoints within the namespace of the PodMonitor, ServiceMonitor and Probe objects. Defaults to false.",
                     "type": "boolean"

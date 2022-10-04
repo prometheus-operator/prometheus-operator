@@ -215,6 +215,10 @@ func makeStatefulSet(
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, p.Spec.Volumes...)
 
+	if p.Spec.HostNetwork {
+		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+
 	return statefulset, nil
 }
 
@@ -1011,6 +1015,7 @@ func makeStatefulSetSpec(
 				Affinity:                      p.Spec.Affinity,
 				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(p.Spec.HostAliases),
+				HostNetwork:                   p.Spec.HostNetwork,
 			},
 		},
 	}, nil
