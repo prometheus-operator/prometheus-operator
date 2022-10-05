@@ -2123,6 +2123,19 @@ Applies only if enforcedNamespaceLabel set to true.</p>
 </tr>
 <tr>
 <td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Use the host&rsquo;s network namespace if true.
+Make sure to understand the security implications if you want to enable it.
+When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -5659,6 +5672,19 @@ to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Use the host&rsquo;s network namespace if true.
+Make sure to understand the security implications if you want to enable it.
+When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
@@ -8854,6 +8880,19 @@ only available in versions of Prometheus &gt;= 2.11.0.</p>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Use the host&rsquo;s network namespace if true.
+Make sure to understand the security implications if you want to enable it.
+When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
 </td>
 </tr>
 <tr>

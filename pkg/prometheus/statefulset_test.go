@@ -2323,6 +2323,8 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 
+	hostNetwork := false
+
 	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.PrometheusSpec{
@@ -2335,6 +2337,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				ServiceAccountName: serviceAccountName,
 				HostAliases:        hostAliases,
 				ImagePullSecrets:   imagePullSecrets,
+				HostNetwork:        hostNetwork,
 			},
 		},
 	}, defaultTestConfig, nil, "", 0, nil)
@@ -2365,6 +2368,9 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	}
+	if sset.Spec.Template.Spec.HostNetwork != hostNetwork {
+		t.Fatalf("expected hostNetwork configuration to match but failed")
 	}
 }
 
@@ -2789,5 +2795,30 @@ func TestSecurityContextCapabilities(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPodHostNetworkConfig(t *testing.T) {
+
+	hostNetwork := true
+
+	sset, err := makeStatefulSet(newLogger(), "test", monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				HostNetwork: hostNetwork,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.HostNetwork != hostNetwork {
+		t.Fatalf("expected hostNetwork configuration to match but failed")
+	}
+
+	if sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
+		t.Fatalf("expected DNSPolicy configuration to match due to hostNetwork but failed")
 	}
 }

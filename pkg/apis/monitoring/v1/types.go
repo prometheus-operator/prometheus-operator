@@ -336,6 +336,10 @@ type CommonPrometheusFields struct {
 	// to be excluded from enforcing a namespace label of origin.
 	// Applies only if enforcedNamespaceLabel set to true.
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
+	// Use the host's network namespace if true.
+	// Make sure to understand the security implications if you want to enable it.
+	// When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.
+	HostNetwork bool `json:"hostNetwork,omitempty"`
 }
 
 // +genclient
