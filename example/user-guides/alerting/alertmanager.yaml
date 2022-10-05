@@ -1,5 +1,3 @@
-global:
-  resolve_timeout: 5m
 route:
   group_by: ['job']
   group_wait: 30s
@@ -9,4 +7,4 @@ route:
 receivers:
 - name: 'webhook'
   webhook_configs:
-  - url: 'http://alertmanagerwh:30500/'
+  - url: 'http://example.com/'

@@ -3,10 +3,8 @@ title: "API reference"
 description: "Prometheus operator generated API reference docs"
 draft: false
 images: []
-menu:
-docs:
-parent: "operator"
-weight: 208
+menu: "operator"
+weight: 210
 toc: true
 ---
 > This page is automatically generated with `gen-crd-api-reference-docs`.

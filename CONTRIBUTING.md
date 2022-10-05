@@ -1,5 +1,5 @@
 ---
-weight: 200
+weight: 120
 toc: true
 title: Contributing
 menu:
