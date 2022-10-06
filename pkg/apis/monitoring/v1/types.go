@@ -513,6 +513,19 @@ type PrometheusSpec struct {
 	// ensure only clients authorized to perform these actions can do so.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+	// Defines the runtime reloadable configuration of the timeseries database
+	// (TSDB).
+	TSDB TSDBSpec `json:"tsdb,omitempty"`
+}
+
+type TSDBSpec struct {
+	// Configures how old an out-of-order/out-of-bounds sample can be w.r.t.
+	// the TSDB max time.
+	// An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
+	// the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).
+	// Out of order ingestion is an experimental feature and requires
+	// Prometheus >= v2.39.0.
+	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 type Exemplars struct {

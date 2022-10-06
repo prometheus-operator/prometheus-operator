@@ -626,7 +626,22 @@ func (cg *ConfigGenerator) Generate(
 		cfg = append(cfg, cg.generateRemoteReadConfig(p, store))
 	}
 
+	cfg = cg.appendTSDBConfig(cfg, p.Spec.TSDB)
+
 	return yaml.Marshal(cfg)
+}
+
+func (cg *ConfigGenerator) appendTSDBConfig(cfg yaml.MapSlice, tsdb v1.TSDBSpec) yaml.MapSlice {
+	if tsdb.OutOfOrderTimeWindow == "" {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("2.39.0").AppendMapItem(cfg, "tsdb", yaml.MapSlice{
+		{
+			Key:   "out_of_order_time_window",
+			Value: tsdb.OutOfOrderTimeWindow,
+		},
+	})
 }
 
 func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.Prometheus) (yaml.MapSlice, error) {
