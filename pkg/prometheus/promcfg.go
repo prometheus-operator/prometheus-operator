@@ -227,7 +227,7 @@ func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
-	ks := make([]string, 0)
+	ks := make([]string, 0, len(m))
 
 	for k := range m {
 		ks = append(ks, k)
