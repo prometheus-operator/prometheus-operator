@@ -8483,6 +8483,110 @@ scrape_configs: []
 		})
 	}
 }
+func TestTSDBConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		p        *monitoringv1.Prometheus
+		expected string
+	}{
+		{
+			name: "no TSDB config",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			name: "TSDB config < v2.39.0",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.38.0",
+					},
+					TSDB: monitoringv1.TSDBSpec{
+						OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			name: "TSDB config >= v2.39.0",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.39.0",
+					},
+					TSDB: monitoringv1.TSDBSpec{
+						OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+tsdb:
+  out_of_order_time_window: 10m
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tc.p)
+
+			cfg, err := cg.Generate(
+				tc.p,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actualConfig := string(cfg)
+
+			if tc.expected != actualConfig {
+				t.Logf("\n%s", pretty.Compare(tc.expected, actualConfig))
+				t.Fatal("expected TSDB configuration doesn't match with actual configuration")
+			}
+		})
+	}
+}
 
 func TestGenerateRelabelConfig(t *testing.T) {
 	p := &monitoringv1.Prometheus{
