@@ -202,7 +202,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 #### Running *end-to-end* tests on local minikube cluster:
 
-1. `minikube start --kubernetes-version=v1.10.0 --memory=4096 --extra-config=apiserver.authorization-mode=RBAC`
+1. `minikube start --kubernetes-version=stable --memory=4096 --extra-config=apiserver.authorization-mode=RBAC`
 2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
    docker image on minikube's docker
 3. `make test-e2e`
