@@ -29,7 +29,7 @@ require (
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.8.0
 	github.com/thanos-io/thanos v0.28.0
-	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
+	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
@@ -38,19 +38,19 @@ require (
 	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.2
 	k8s.io/component-base v0.25.2
-	k8s.io/klog/v2 v2.80.0
-	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
+	k8s.io/klog/v2 v2.80.1
+	k8s.io/utils v0.0.0-20220922133306-665eaaec4324
 	sigs.k8s.io/controller-runtime v0.13.0
 )
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2
-	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 )
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/aws/aws-sdk-go v1.44.72 // indirect
+	github.com/aws/aws-sdk-go v1.44.102 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
@@ -100,19 +100,19 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	go.mongodb.org/mongo-driver v1.10.0 // indirect
-	go.opentelemetry.io/otel v1.9.0 // indirect
-	go.opentelemetry.io/otel/trace v1.9.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/goleak v1.1.12 // indirect
-	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	go.mongodb.org/mongo-driver v1.10.2 // indirect
+	go.opentelemetry.io/otel v1.10.0 // indirect
+	go.opentelemetry.io/otel/trace v1.10.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/goleak v1.2.0 // indirect
+	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/time v0.0.0-20220920022843-2ce7c2934d45 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220808204814-fd01256a5276 // indirect
-	google.golang.org/grpc v1.48.0 // indirect
+	google.golang.org/genproto v0.0.0-20220920201722-2b89144ce006 // indirect
+	google.golang.org/grpc v1.49.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803164354-a70c9af30aea // indirect
@@ -125,6 +125,6 @@ replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
 	// A replace directive is needed for github.com/prometheus/prometheus to ensure running against the latest version of prometheus.
-	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.38.0
+	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.38.1-0.20221005044927-6d7f26c46ff7
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
 )

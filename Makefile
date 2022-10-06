@@ -262,6 +262,9 @@ FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Docum
 Documentation/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
+Documentation/compatibility.md: pkg/operator/defaults.go
+	$(MDOX_BINARY) fmt $@
+
 Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
 	$(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api.md"
 
