@@ -28,7 +28,7 @@ require (
 	// This version is replaced using replace directive below
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.8.0
-	github.com/thanos-io/thanos v0.28.0
+	github.com/thanos-io/thanos v0.28.1
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
