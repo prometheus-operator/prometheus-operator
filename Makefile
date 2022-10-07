@@ -230,7 +230,7 @@ bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml 
 # that `kubectl apply -f ...` might fail with the full version of the CRDs
 # because of too long annotations field.
 # See https://github.com/prometheus-operator/prometheus-operator/issues/4355
-stripped-down-crds.yaml: $(shell find example/prometheus-operator-crd/*.yaml -type f)
+stripped-down-crds.yaml: $(shell find example/prometheus-operator-crd/*.yaml -type f) $(GOJSONTOYAML_BINARY)
 	: > $@
 	for f in example/prometheus-operator-crd/*.yaml; do echo '---' >> $@; $(GOJSONTOYAML_BINARY) -yamltojson < $$f | jq 'walk(if type == "object" then with_entries(select(.key | test("description") | not)) else . end)' | $(GOJSONTOYAML_BINARY) >> $@; done
 
