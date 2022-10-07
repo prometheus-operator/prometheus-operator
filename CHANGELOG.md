@@ -1,3 +1,12 @@
+## 0.60.0 / 2022-10-06
+
+* [CHANGE] Added `filterRunning` field to the PodMonitor CRD. By default, non-running pods are dropped by the Prometheus service discovery. To preserve the old behavior and keep pods which aren't running, set `filterRunning: false`. #5049
+* [FEATURE] Added `grpcListenLocal` and `httpListenLocal` fields to the Thanos sidecar configuration of the Prometheus CRD. #5045
+* [FEATURE] Added `hostNetwork` field to the Prometheus CRD. #5010
+* [FEATURE] Added `spec.tsdb.outOfOrderTimeWindow` field to the Prometheus CRD to allow out-of-order samples in TSDB. #5071
+* [ENHANCEMENT] Added columns showing the Prometheus conditions to the output of `kubectl get prometheus`. #5055
+* [ENHANCEMENT] Added `observedGeneration` field to the Prometheus status conditions. #5005
+
 ## 0.59.2 / 2022-09-20
 
 * [CHANGE/BUGFIX] Removed `FOWNER` capability from the Thanos sidecar. #5030
