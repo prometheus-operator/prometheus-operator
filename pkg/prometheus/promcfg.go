@@ -626,42 +626,38 @@ func (cg *ConfigGenerator) Generate(
 		cfg = append(cfg, cg.generateRemoteReadConfig(p, store))
 	}
 
-	cfg = cg.appendTSDBConfig(cfg, p.Spec.TSDB)
-
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendTSDBConfig(cfg yaml.MapSlice, tsdb v1.TSDBSpec) yaml.MapSlice {
-	if tsdb.OutOfOrderTimeWindow == "" {
-		return cfg
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.Prometheus) (yaml.MapSlice, error) {
+	var (
+		storage   yaml.MapSlice
+		cgStorage = cg.WithMinimumVersion("2.29.0")
+	)
+
+	if p.Spec.Exemplars != nil && p.Spec.Exemplars.MaxSize != nil {
+		storage = cgStorage.AppendMapItem(storage, "exemplars", yaml.MapSlice{
+			{
+				Key:   "max_exemplars",
+				Value: *p.Spec.Exemplars.MaxSize,
+			},
+		})
 	}
 
-	return cg.WithMinimumVersion("2.39.0").AppendMapItem(cfg, "tsdb", yaml.MapSlice{
-		{
-			Key:   "out_of_order_time_window",
-			Value: tsdb.OutOfOrderTimeWindow,
-		},
-	})
-}
+	if p.Spec.TSDB.OutOfOrderTimeWindow != "" {
+		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
+			{
+				Key:   "out_of_order_time_window",
+				Value: p.Spec.TSDB.OutOfOrderTimeWindow,
+			},
+		})
+	}
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.Prometheus) (yaml.MapSlice, error) {
-	if p.Spec.Exemplars == nil || p.Spec.Exemplars.MaxSize == nil {
+	if len(storage) == 0 {
 		return cfg, nil
 	}
 
-	cfg = cg.WithMinimumVersion("2.29.0").AppendMapItem(cfg, "storage", yaml.MapSlice{
-		{
-			Key: "exemplars",
-			Value: yaml.MapSlice{
-				{
-					Key:   "max_exemplars",
-					Value: *p.Spec.Exemplars.MaxSize,
-				},
-			},
-		},
-	})
-
-	return cfg, nil
+	return cgStorage.AppendMapItem(cfg, "storage", storage), nil
 }
 
 func (cg *ConfigGenerator) appendAlertingConfig(
