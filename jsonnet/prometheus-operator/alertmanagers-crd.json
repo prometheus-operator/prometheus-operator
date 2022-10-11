@@ -734,6 +734,11 @@
                     },
                     "type": "object"
                   },
+                  "alertmanagerConfigNamespaceMatcher": {
+                    "default": "true",
+                    "description": "If set to false namespace matchers will not be added to the routes.",
+                    "type": "boolean"
+                  },
                   "alertmanagerConfigNamespaceSelector": {
                     "description": "Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace.",
                     "properties": {

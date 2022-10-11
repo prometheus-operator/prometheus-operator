@@ -897,7 +897,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
+	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs, am.Spec.AlertmanagerConfigNamespaceMatcher); err != nil {
 		return errors.Wrap(err, "failed to generate Alertmanager configuration")
 	}
 

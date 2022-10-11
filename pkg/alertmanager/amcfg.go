@@ -184,7 +184,7 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 }
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
-func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
+func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig, namespaceMatcher bool) error {
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
 	// same order.
@@ -227,6 +227,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 					crKey,
 				),
 				amConfigs[amConfigIdentifier].Namespace,
+				namespaceMatcher,
 			),
 		)
 
@@ -298,9 +299,16 @@ func (cb *configBuilder) enforceNamespaceForInhibitRule(ir *inhibitRule, namespa
 
 // enforceNamespaceForRoute modifies the route configuration to match alerts
 // originating only from the given namespace.
-func (cb *configBuilder) enforceNamespaceForRoute(r *route, namespace string) *route {
+func (cb *configBuilder) enforceNamespaceForRoute(r *route, namespace string, enabled bool) *route {
 	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
 
+	// Alerts should still be evaluated by the following routes.
+	r.Continue = true
+
+	// If enabled is false then namespace matching is skipped.
+	if enabled == false {
+		return r
+	}
 	// Routes created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
 	if matchersV2Allowed {
