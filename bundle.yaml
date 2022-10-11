@@ -5369,7 +5369,7 @@ spec:
               alertmanagerConfigNamespaceMatcher:
                 default: true
                 description: If set to false namespace matchers will not be added
-                  to the routes. Default is 'true'.
+                  to the routes.
                 type: boolean
               alertmanagerConfigNamespaceSelector:
                 description: Namespaces to be selected for AlertmanagerConfig discovery.
