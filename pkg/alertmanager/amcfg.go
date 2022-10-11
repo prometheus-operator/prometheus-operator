@@ -306,7 +306,7 @@ func (cb *configBuilder) enforceNamespaceForRoute(r *route, namespace string, en
 	r.Continue = true
 
 	// If enabled is false then namespace matching is skipped.
-	if enabled == false {
+	if !enabled {
 		return r
 	}
 	// Routes created from AlertmanagerConfig resources should only match
