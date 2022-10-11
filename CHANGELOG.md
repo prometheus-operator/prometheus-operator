@@ -1,3 +1,7 @@
+## 0.60.1 / 2022-10-10
+
+* [BUGFIX] Fixed configuration when `spec.tsdb.outOfOrderTimeWindow` is set in the Prometheus CRD. #5078
+
 ## 0.60.0 / 2022-10-06
 
 * [CHANGE] Added `filterRunning` field to the PodMonitor CRD. By default, non-running pods are dropped by the Prometheus service discovery. To preserve the old behavior and keep pods which aren't running, set `filterRunning: false`. #5049
