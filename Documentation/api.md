@@ -628,7 +628,7 @@ bool
 </em>
 </td>
 <td>
-<p>If set to false namespace matchers will not be added to the routes.</p>
+<p>If set to false namespace matchers will not be added to the routes. Default is &lsquo;true&rsquo;.</p>
 </td>
 </tr>
 <tr>
@@ -4379,7 +4379,7 @@ bool
 </em>
 </td>
 <td>
-<p>If set to false namespace matchers will not be added to the routes.</p>
+<p>If set to false namespace matchers will not be added to the routes. Default is &lsquo;true&rsquo;.</p>
 </td>
 </tr>
 <tr>
