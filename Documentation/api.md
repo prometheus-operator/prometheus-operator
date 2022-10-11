@@ -622,6 +622,17 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigNamespaceMatcher</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If set to false namespace matchers will not be added to the routes.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -4358,6 +4369,17 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigNamespaceMatcher</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If set to false namespace matchers will not be added to the routes.</p>
 </td>
 </tr>
 <tr>

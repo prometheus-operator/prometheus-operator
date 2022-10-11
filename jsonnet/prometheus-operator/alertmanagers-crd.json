@@ -735,7 +735,7 @@
                     "type": "object"
                   },
                   "alertmanagerConfigNamespaceMatcher": {
-                    "default": "true",
+                    "default": true,
                     "description": "If set to false namespace matchers will not be added to the routes.",
                     "type": "boolean"
                   },
