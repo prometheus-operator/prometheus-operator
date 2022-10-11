@@ -554,6 +554,42 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base, simple CR with namespaceMatcher disabled",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			namespaceMatcher: false,
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    group_by:
+    - job
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
