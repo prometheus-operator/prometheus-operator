@@ -2004,7 +2004,7 @@ type AlertmanagerSpec struct {
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 	// AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.
 	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
-	// If set to false namespace matchers will not be added to the routes. Default is 'true'.
+	// If set to false namespace matchers will not be added to the routes. Default is `true`.
 	// +kubebuilder:default:=true
 	AlertmanagerConfigNamespaceMatcher bool `json:"alertmanagerConfigNamespaceMatcher,omitempty"`
 	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
