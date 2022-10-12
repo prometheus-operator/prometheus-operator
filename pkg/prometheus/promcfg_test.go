@@ -8555,8 +8555,9 @@ scrape_configs: []
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs: []
-tsdb:
-  out_of_order_time_window: 10m
+storage:
+  tsdb:
+    out_of_order_time_window: 10m
 `,
 		},
 	} {
