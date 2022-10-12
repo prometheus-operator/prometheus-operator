@@ -231,9 +231,10 @@ Alertmanager object, which contains the configuration for this Alertmanager
 instance. If empty, it defaults to <code>alertmanager-&lt;alertmanager-name&gt;</code>.</p>
 <p>The Alertmanager configuration should be available under the
 <code>alertmanager.yaml</code> key. Additional keys from the original secret are
-copied to the generated secret.</p>
+copied to the generated secret and mounted into the
+<code>/etc/alertmanager/config</code> directory in the <code>alertmanager</code> container.</p>
 <p>If either the secret or the <code>alertmanager.yaml</code> key is missing, the
-operator provisions an Alertmanager configuration with one empty
+operator provisions a minimal Alertmanager configuration with one empty
 receiver (effectively dropping alert notifications).</p>
 </td>
 </tr>
@@ -3971,9 +3972,10 @@ Alertmanager object, which contains the configuration for this Alertmanager
 instance. If empty, it defaults to <code>alertmanager-&lt;alertmanager-name&gt;</code>.</p>
 <p>The Alertmanager configuration should be available under the
 <code>alertmanager.yaml</code> key. Additional keys from the original secret are
-copied to the generated secret.</p>
+copied to the generated secret and mounted into the
+<code>/etc/alertmanager/config</code> directory in the <code>alertmanager</code> container.</p>
 <p>If either the secret or the <code>alertmanager.yaml</code> key is missing, the
-operator provisions an Alertmanager configuration with one empty
+operator provisions a minimal Alertmanager configuration with one empty
 receiver (effectively dropping alert notifications).</p>
 </td>
 </tr>
