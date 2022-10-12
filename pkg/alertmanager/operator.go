@@ -667,12 +667,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
 		existingStatefulSet = obj.(*appsv1.StatefulSet)
-		if existingStatefulSet.DeletionTimestamp != nil {
-			level.Info(logger).Log(
-				"msg", "halting update of StatefulSet",
-				"reason", "resource has been marked for deletion",
-				"resource_name", existingStatefulSet.GetName(),
-			)
+		if c.rr.DeletionInProgress(existingStatefulSet) {
 			return nil
 		}
 	}
