@@ -17,7 +17,7 @@ package admission
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -164,7 +164,7 @@ func toAdmissionResponseFailure(message, resource string, errors []error) *v1.Ad
 func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	var body []byte
 	if r.Body != nil {
-		if data, err := ioutil.ReadAll(r.Body); err == nil {
+		if data, err := io.ReadAll(r.Body); err == nil {
 			body = data
 		}
 	}

@@ -18,7 +18,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -68,7 +67,7 @@ func NewTLSConfig(logger log.Logger, certFile, keyFile, clientCAFile, minVersion
 
 	if clientCAFile != "" {
 		if info, err := os.Stat(clientCAFile); err == nil && info.Mode().IsRegular() {
-			caPEM, err := ioutil.ReadFile(clientCAFile)
+			caPEM, err := os.ReadFile(clientCAFile)
 			if err != nil {
 				return nil, fmt.Errorf("reading client CA: %w", err)
 			}

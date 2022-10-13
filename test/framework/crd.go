@@ -16,7 +16,7 @@ package framework
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -91,7 +91,7 @@ func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error)
 		return nil, errors.Wrapf(err, "get manifest from source: %s", source)
 	}
 
-	content, err := ioutil.ReadAll(manifest)
+	content, err := io.ReadAll(manifest)
 	if err != nil {
 		return nil, errors.Wrap(err, "get manifest content")
 	}
