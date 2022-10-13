@@ -7003,7 +7003,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the CA cert to use for the targets.</p>
+<p>Certificate authority used when verifying server certificates.</p>
 </td>
 </tr>
 <tr>
@@ -7016,7 +7016,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the client cert file for the targets.</p>
+<p>Client certificate to present when doing client-authentication.</p>
 </td>
 </tr>
 <tr>
@@ -7449,7 +7449,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
 </p>
 <div>
-<p>ProbeTLSConfig specifies TLS configuration parameters.</p>
+<p>ProbeTLSConfig specifies TLS configuration parameters for the prober.</p>
 </div>
 <table>
 <thead>
@@ -7469,7 +7469,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the CA cert to use for the targets.</p>
+<p>Certificate authority used when verifying server certificates.</p>
 </td>
 </tr>
 <tr>
@@ -7482,7 +7482,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the client cert file for the targets.</p>
+<p>Client certificate to present when doing client-authentication.</p>
 </td>
 </tr>
 <tr>
@@ -10384,7 +10384,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the CA cert to use for the targets.</p>
+<p>Certificate authority used when verifying server certificates.</p>
 </td>
 </tr>
 <tr>
@@ -10397,7 +10397,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the client cert file for the targets.</p>
+<p>Client certificate to present when doing client-authentication.</p>
 </td>
 </tr>
 <tr>
@@ -10911,7 +10911,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the CA cert to use for the targets.</p>
+<p>Certificate authority used when verifying server certificates.</p>
 </td>
 </tr>
 <tr>
@@ -10924,7 +10924,7 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Struct containing the client cert file for the targets.</p>
+<p>Client certificate to present when doing client-authentication.</p>
 </td>
 </tr>
 <tr>

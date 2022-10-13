@@ -312,8 +312,8 @@ spec:
                             description: TLS configuration
                             properties:
                               ca:
-                                description: Struct containing the CA cert to use
-                                  for the targets.
+                                description: Certificate authority used when verifying
+                                  server certificates.
                                 properties:
                                   configMap:
                                     description: ConfigMap containing data to use
@@ -360,8 +360,8 @@ spec:
                                     x-kubernetes-map-type: atomic
                                 type: object
                               cert:
-                                description: Struct containing the client cert file
-                                  for the targets.
+                                description: Client certificate to present when doing
+                                  client-authentication.
                                 properties:
                                   configMap:
                                     description: ConfigMap containing data to use
@@ -723,8 +723,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -772,8 +772,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1169,8 +1169,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1218,8 +1218,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1625,8 +1625,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1674,8 +1674,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2159,8 +2159,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2208,8 +2208,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2551,8 +2551,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2600,8 +2600,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3025,8 +3025,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3074,8 +3074,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3436,8 +3436,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3485,8 +3485,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3807,8 +3807,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3856,8 +3856,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4228,8 +4228,8 @@ spec:
                                 description: TLS configuration for the client.
                                 properties:
                                   ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
+                                    description: Certificate authority used when verifying
+                                      server certificates.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4277,8 +4277,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
+                                    description: Client certificate to present when
+                                      doing client-authentication.
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5679,8 +5679,8 @@ spec:
                             description: TLS configuration for the client.
                             properties:
                               ca:
-                                description: Struct containing the CA cert to use
-                                  for the targets.
+                                description: Certificate authority used when verifying
+                                  server certificates.
                                 properties:
                                   configMap:
                                     description: ConfigMap containing data to use
@@ -5727,8 +5727,8 @@ spec:
                                     x-kubernetes-map-type: atomic
                                 type: object
                               cert:
-                                description: Struct containing the client cert file
-                                  for the targets.
+                                description: Client certificate to present when doing
+                                  client-authentication.
                                 properties:
                                   configMap:
                                     description: ConfigMap containing data to use
@@ -11785,8 +11785,8 @@ spec:
                       description: TLS configuration to use when scraping the endpoint.
                       properties:
                         ca:
-                          description: Struct containing the CA cert to use for the
-                            targets.
+                          description: Certificate authority used when verifying server
+                            certificates.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -11830,8 +11830,7 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         cert:
-                          description: Struct containing the client cert file for
-                            the targets.
+                          description: Client certificate to present when doing client-authentication.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -12564,7 +12563,8 @@ spec:
                 description: TLS configuration to use when scraping the endpoint.
                 properties:
                   ca:
-                    description: Struct containing the CA cert to use for the targets.
+                    description: Certificate authority used when verifying server
+                      certificates.
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.
@@ -12605,7 +12605,7 @@ spec:
                         x-kubernetes-map-type: atomic
                     type: object
                   cert:
-                    description: Struct containing the client cert file for the targets.
+                    description: Client certificate to present when doing client-authentication.
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.
@@ -13761,8 +13761,8 @@ spec:
                           description: TLS Config to use for alertmanager connection.
                           properties:
                             ca:
-                              description: Struct containing the CA cert to use for
-                                the targets.
+                              description: Certificate authority used when verifying
+                                server certificates.
                               properties:
                                 configMap:
                                   description: ConfigMap containing data to use for
@@ -13813,8 +13813,8 @@ spec:
                                 to use for the targets.
                               type: string
                             cert:
-                              description: Struct containing the client cert file
-                                for the targets.
+                              description: Client certificate to present when doing
+                                client-authentication.
                               properties:
                                 configMap:
                                   description: ConfigMap containing data to use for
@@ -14007,8 +14007,8 @@ spec:
                     description: TLS Config to use for accessing apiserver.
                     properties:
                       ca:
-                        description: Struct containing the CA cert to use for the
-                          targets.
+                        description: Certificate authority used when verifying server
+                          certificates.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -14056,8 +14056,7 @@ spec:
                           to use for the targets.
                         type: string
                       cert:
-                        description: Struct containing the client cert file for the
-                          targets.
+                        description: Client certificate to present when doing client-authentication.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -17375,8 +17374,8 @@ spec:
                       description: TLS Config to use for remote read.
                       properties:
                         ca:
-                          description: Struct containing the CA cert to use for the
-                            targets.
+                          description: Certificate authority used when verifying server
+                            certificates.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -17424,8 +17423,7 @@ spec:
                             to use for the targets.
                           type: string
                         cert:
-                          description: Struct containing the client cert file for
-                            the targets.
+                          description: Client certificate to present when doing client-authentication.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -17826,8 +17824,8 @@ spec:
                       description: TLS Config to use for remote write.
                       properties:
                         ca:
-                          description: Struct containing the CA cert to use for the
-                            targets.
+                          description: Certificate authority used when verifying server
+                            certificates.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -17875,8 +17873,7 @@ spec:
                             to use for the targets.
                           type: string
                         cert:
-                          description: Struct containing the client cert file for
-                            the targets.
+                          description: Client certificate to present when doing client-authentication.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -19115,8 +19112,8 @@ spec:
                       Maps to the ''--grpc-server-tls-*'' CLI args.'
                     properties:
                       ca:
-                        description: Struct containing the CA cert to use for the
-                          targets.
+                        description: Certificate authority used when verifying server
+                          certificates.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -19164,8 +19161,7 @@ spec:
                           to use for the targets.
                         type: string
                       cert:
-                        description: Struct containing the client cert file for the
-                          targets.
+                        description: Client certificate to present when doing client-authentication.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -22074,8 +22070,8 @@ spec:
                       description: TLS configuration to use when scraping the endpoint
                       properties:
                         ca:
-                          description: Struct containing the CA cert to use for the
-                            targets.
+                          description: Certificate authority used when verifying server
+                            certificates.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -22123,8 +22119,7 @@ spec:
                             to use for the targets.
                           type: string
                         cert:
-                          description: Struct containing the client cert file for
-                            the targets.
+                          description: Client certificate to present when doing client-authentication.
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -24560,7 +24555,8 @@ spec:
                   the ''--grpc-server-tls-*'' CLI args.'
                 properties:
                   ca:
-                    description: Struct containing the CA cert to use for the targets.
+                    description: Certificate authority used when verifying server
+                      certificates.
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.
@@ -24605,7 +24601,7 @@ spec:
                       use for the targets.
                     type: string
                   cert:
-                    description: Struct containing the client cert file for the targets.
+                    description: Client certificate to present when doing client-authentication.
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.

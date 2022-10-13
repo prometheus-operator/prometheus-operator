@@ -1646,9 +1646,9 @@ func (c *SecretOrConfigMap) Validate() error {
 // SafeTLSConfig specifies safe TLS configuration parameters.
 // +k8s:openapi-gen=true
 type SafeTLSConfig struct {
-	// Struct containing the CA cert to use for the targets.
+	// Certificate authority used when verifying server certificates.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
-	// Struct containing the client cert file for the targets.
+	// Client certificate to present when doing client-authentication.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 	// Secret containing the client key file for the targets.
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
@@ -2222,7 +2222,7 @@ func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
-// ProbeTLSConfig specifies TLS configuration parameters.
+// ProbeTLSConfig specifies TLS configuration parameters for the prober.
 // +k8s:openapi-gen=true
 type ProbeTLSConfig struct {
 	SafeTLSConfig `json:",inline"`
