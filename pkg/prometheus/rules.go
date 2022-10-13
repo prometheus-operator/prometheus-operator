@@ -355,11 +355,13 @@ func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
 		if group.PartialResponseStrategy == "" {
 			continue
 		}
+		// TODO(slashpai): Remove this validation after v0.65 since this is handled at CRD level
 		if _, ok := thanostypes.PartialResponseStrategy_value[strings.ToUpper(group.PartialResponseStrategy)]; !ok {
 			return []error{
 				fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
 			}
 		}
+
 		// reset this as the upstream prometheus rule validator
 		// is not aware of the partial_response_strategy field
 		promRule.Groups[i].PartialResponseStrategy = ""

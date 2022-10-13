@@ -4493,6 +4493,146 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 	}
 }
 
+func testPrometheusRuleCRDValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		promRuleSpec  monitoringv1.PrometheusRuleSpec
+		expectedError bool
+	}{
+		{
+			name: "duplicate-rule-name",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-partial-rsp",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "invalid",
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-rule-names",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+					{
+						Name:  "rule2",
+						Rules: []monitoringv1.Rule{},
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-1",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "abort",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-2",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "ABORT",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-3",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "Warn",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-4",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "WaRn",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-5",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "",
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			promRule := framework.MakeBasicRule(ns, "prometheus-rule", test.promRuleSpec.Groups)
+			_, err := framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), promRule, metav1.CreateOptions{})
+
+			if err == nil {
+				if test.expectedError {
+					t.Fatal("expected error but got nil")
+				}
+				return
+			}
+
+			if !apierrors.IsInvalid(err) {
+				t.Fatalf("expected Invalid error but got %v", err)
+			}
+		})
+	}
+}
+
 func testPromQueryLogFile(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
