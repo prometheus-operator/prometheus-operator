@@ -11,6 +11,9 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus-operator-admission-webhook
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
   template:
     metadata:
       annotations:
@@ -19,6 +22,15 @@ spec:
         app.kubernetes.io/name: prometheus-operator-admission-webhook
         app.kubernetes.io/version: 0.60.1
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus-operator-admission-webhook
+            namespaces:
+            - default
+            topologyKey: kubernetes.io/hostname
       automountServiceAccountToken: false
       containers:
       - image: quay.io/prometheus-operator/admission-webhook:v0.60.1
@@ -35,6 +47,9 @@ spec:
             memory: 50Mi
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
           readOnlyRootFilesystem: true
         terminationMessagePolicy: FallbackToLogsOnError
       securityContext:
