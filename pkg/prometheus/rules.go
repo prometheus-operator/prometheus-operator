@@ -333,6 +333,7 @@ func prometheusRuleConfigMapName(prometheusName string) string {
 
 // GenerateContent takes a PrometheusRuleSpec and generates the rule content
 func GenerateContent(promRule monitoringv1.PrometheusRuleSpec, logger log.Logger) (string, error) {
+	promRule = addAnnotationsAndLabels(promRule)
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal content")
@@ -372,4 +373,20 @@ func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
 	}
 	_, errs := rulefmt.Parse(content)
 	return errs
+}
+
+func addAnnotationsAndLabels(promRule monitoringv1.PrometheusRuleSpec) monitoringv1.PrometheusRuleSpec {
+	returnedPromRule := monitoringv1.PrometheusRuleSpec{}
+
+	for _, group := range promRule.Groups {
+		for i, rule := range group.Rules {
+			rule.Annotations = k8sutil.MergeMaps(rule.Annotations, promRule.Annotations)
+			rule.Labels = k8sutil.MergeMaps(rule.Labels, promRule.Labels)
+			group.Rules[i] = rule
+		}
+	}
+
+	returnedPromRule.Groups = promRule.Groups
+
+	return returnedPromRule
 }

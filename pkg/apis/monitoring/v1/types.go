@@ -1803,10 +1803,26 @@ type PrometheusRule struct {
 // PrometheusRuleSpec contains specification parameters for a Rule.
 // +k8s:openapi-gen=true
 type PrometheusRuleSpec struct {
+	// Annotations is an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	// They will be merged with the annotations in all the prometheus rules defined under Groups
+	// More info: http://kubernetes.io/docs/user-guide/annotations
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
+
 	// Content of Prometheus rule file
 	// +listType=map
 	// +listMapKey=name
 	Groups []RuleGroup `json:"groups,omitempty"`
+
+	// Map of string keys and values that can be used to organize and categorize
+	// (scope and select) objects. May match selectors of replication controllers
+	// and services.
+	// They will be merged with the labels in all the prometheus rules defined under Groups
+	// More info: http://kubernetes.io/docs/user-guide/labels
+	// +optional
+	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
 }
 
 // RuleGroup and Rule are copied instead of vendored because the

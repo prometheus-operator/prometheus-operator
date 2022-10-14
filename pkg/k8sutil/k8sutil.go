@@ -183,7 +183,7 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 
 		mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
 		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-		mergeKubectlAnnotations(&existingSset.Spec.Template.ObjectMeta, sset.Spec.Template.ObjectMeta)
+		mergeKubectlAnnotations(existingSset.Spec.Template.ObjectMeta, &sset.Spec.Template.ObjectMeta)
 
 		_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
 		return err
@@ -354,19 +354,21 @@ func mergeOwnerReferences(old []metav1.OwnerReference, new []metav1.OwnerReferen
 func mergeMetadata(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
 	new.ResourceVersion = old.ResourceVersion
 
-	new.SetLabels(mergeMaps(new.Labels, old.Labels))
-	new.SetAnnotations(mergeMaps(new.Annotations, old.Annotations))
+	new.SetLabels(MergeMaps(new.Labels, old.Labels))
+	new.SetAnnotations(MergeMaps(new.Annotations, old.Annotations))
 }
 
-func mergeMaps(new map[string]string, old map[string]string) map[string]string {
+func MergeMaps(new map[string]string, old map[string]string) map[string]string {
 	return mergeMapsByPrefix(new, old, "")
 }
 
-func mergeKubectlAnnotations(from *metav1.ObjectMeta, to metav1.ObjectMeta) {
-	from.SetAnnotations(mergeMapsByPrefix(from.Annotations, to.Annotations, "kubectl.kubernetes.io/"))
+func mergeKubectlAnnotations(from metav1.ObjectMeta, to *metav1.ObjectMeta) {
+	to.SetAnnotations(mergeMapsByPrefix(from.Annotations, to.Annotations, "kubectl.kubernetes.io/"))
 }
 
 func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix string) map[string]string {
+	mergedMap := make(map[string]string)
+
 	if to == nil {
 		to = make(map[string]string)
 	}
@@ -375,11 +377,15 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 		from = make(map[string]string)
 	}
 
+	for k, v := range to {
+		mergedMap[k] = v
+	}
+
 	for k, v := range from {
 		if strings.HasPrefix(k, prefix) {
-			to[k] = v
+			mergedMap[k] = v
 		}
 	}
 
-	return to
+	return mergedMap
 }

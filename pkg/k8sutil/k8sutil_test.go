@@ -136,7 +136,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 	}{
 		{
 			name:     "no annotations",
-			expected: nil,
+			expected: map[string]string{},
 		},
 		{
 			name: "add owned annotation",

@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -35,6 +36,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
 	t.Run("shouldRejectRuleWithInvalidPartialResponseStrategyValue", shouldRejectRuleWithInvalidPartialResponseStrategyValue)
+	t.Run("shouldMergeGroupMetadata", shouldMergeGroupMetadata)
 
 }
 
@@ -189,4 +191,214 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
 		t.Fatal("expected ConfigMap data to match rule file content")
 	}
+}
+
+func shouldMergeGroupMetadata(t *testing.T) {
+	for _, tt := range []struct {
+		promRule         monitoringv1.PrometheusRuleSpec
+		expectedPromRule monitoringv1.PrometheusRuleSpec
+	}{
+		{
+			promRule: monitoringv1.PrometheusRuleSpec{
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+							},
+						},
+					},
+				}},
+			expectedPromRule: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"foo": "bar",
+								},
+								Annotations: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				}},
+		},
+		{
+			promRule: monitoringv1.PrometheusRuleSpec{
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"valid_label": "valid_value",
+								},
+							},
+						},
+					},
+				}},
+			expectedPromRule: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"valid_label": "valid_value",
+									"foo":         "bar",
+								},
+								Annotations: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				}},
+		},
+		{
+			promRule: monitoringv1.PrometheusRuleSpec{
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"foo": "foo",
+								},
+							},
+						},
+					},
+				}},
+			expectedPromRule: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"foo": "foo",
+								},
+								Annotations: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				}},
+		},
+		{
+			promRule: monitoringv1.PrometheusRuleSpec{
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"valid_label": "valid_value",
+								},
+							},
+						},
+					},
+					{
+						Name: "group",
+
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"bob": "alice",
+								},
+							},
+						},
+					},
+				}},
+			expectedPromRule: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "group",
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"valid_label": "valid_value",
+									"foo":         "bar",
+								},
+								Annotations: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+					{
+						Name: "group",
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+								Labels: map[string]string{
+									"bob": "alice",
+									"foo": "bar",
+								},
+								Annotations: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				}},
+		},
+	} {
+		promRule := addAnnotationsAndLabels(tt.promRule)
+		if !reflect.DeepEqual(promRule, tt.expectedPromRule) {
+			t.Fatalf("expected generated prometheus rules %v but got %v", tt.expectedPromRule, promRule)
+		}
+	}
+
 }

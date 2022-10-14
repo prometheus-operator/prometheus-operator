@@ -2545,6 +2545,22 @@ PrometheusRuleSpec
 <table>
 <tr>
 <td>
+<code>annotations</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+They will be merged with the annotations in all the prometheus rules defined under Groups
+More info: <a href="http://kubernetes.io/docs/user-guide/annotations">http://kubernetes.io/docs/user-guide/annotations</a></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>groups</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuleGroup">
@@ -2554,6 +2570,22 @@ PrometheusRuleSpec
 </td>
 <td>
 <p>Content of Prometheus rule file</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+They will be merged with the labels in all the prometheus rules defined under Groups
+More info: <a href="http://kubernetes.io/docs/user-guide/labels">http://kubernetes.io/docs/user-guide/labels</a></p>
 </td>
 </tr>
 </table>
@@ -7994,6 +8026,22 @@ string
 <tbody>
 <tr>
 <td>
+<code>annotations</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+They will be merged with the annotations in all the prometheus rules defined under Groups
+More info: <a href="http://kubernetes.io/docs/user-guide/annotations">http://kubernetes.io/docs/user-guide/annotations</a></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>groups</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuleGroup">
@@ -8003,6 +8051,22 @@ string
 </td>
 <td>
 <p>Content of Prometheus rule file</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+They will be merged with the labels in all the prometheus rules defined under Groups
+More info: <a href="http://kubernetes.io/docs/user-guide/labels">http://kubernetes.io/docs/user-guide/labels</a></p>
 </td>
 </tr>
 </tbody>
