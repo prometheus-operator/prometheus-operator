@@ -214,7 +214,7 @@
                             description: 'TLS configuration',
                             properties: {
                               ca: {
-                                description: 'Struct containing the CA cert to use for the targets.',
+                                description: 'Certificate authority used when verifying server certificates.',
                                 properties: {
                                   configMap: {
                                     description: 'ConfigMap containing data to use for the targets.',
@@ -264,7 +264,7 @@
                                 type: 'object',
                               },
                               cert: {
-                                description: 'Struct containing the client cert file for the targets.',
+                                description: 'Client certificate to present when doing client-authentication.',
                                 properties: {
                                   configMap: {
                                     description: 'ConfigMap containing data to use for the targets.',
@@ -643,7 +643,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -693,7 +693,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -1115,7 +1115,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -1165,7 +1165,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -1580,7 +1580,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -1630,7 +1630,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -2134,7 +2134,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -2184,7 +2184,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -2552,7 +2552,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -2602,7 +2602,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3035,7 +3035,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3085,7 +3085,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3467,7 +3467,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3517,7 +3517,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3851,7 +3851,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -3901,7 +3901,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -4280,7 +4280,7 @@
                                 description: 'TLS configuration for the client.',
                                 properties: {
                                   ca: {
-                                    description: 'Struct containing the CA cert to use for the targets.',
+                                    description: 'Certificate authority used when verifying server certificates.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
@@ -4330,7 +4330,7 @@
                                     type: 'object',
                                   },
                                   cert: {
-                                    description: 'Struct containing the client cert file for the targets.',
+                                    description: 'Client certificate to present when doing client-authentication.',
                                     properties: {
                                       configMap: {
                                         description: 'ConfigMap containing data to use for the targets.',
