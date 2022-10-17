@@ -143,5 +143,5 @@ spec:
   receivers:
   - name: 'webhook'
     webhookConfigs:
-    - api: 'http://example.com/'
+    - url: 'http://example.com/'
 ```
