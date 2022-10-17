@@ -60,7 +60,7 @@ spec:
 Wait for all Alertmanager pods to be ready:
 
 ```bash
-kubectl get pods -l alertmanager=main -w
+kubectl get pods -l alertmanager=example -w
 ```
 
 ## Managing Alertmanager configuration
@@ -137,7 +137,7 @@ templates:
 ### Using AlertmanagerConfig Resources
 
 The following example configuration creates an AlertmanagerConfig resource that
-sends notifications to a fictuous webhook service.
+sends notifications to a fictitious webhook service.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-config-example.yaml"
 apiVersion: monitoring.coreos.com/v1alpha1
@@ -156,7 +156,7 @@ spec:
   receivers:
   - name: 'webhook'
     webhookConfigs:
-    - api: 'http://example.com/'
+    - url: 'http://example.com/'
 ```
 
 Create the AlertmanagerConfig resource in your cluster:
@@ -186,7 +186,7 @@ spec:
 
 The following example configuration creates an Alertmanager resource that uses
 an AlertmanagerConfig resource to be used for the Alertmanager configuration
-instead of the `alertmanager-main` secret.
+instead of the `alertmanager-example` secret.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-alertmanager-configuration.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -197,13 +197,13 @@ metadata:
 spec:
   replicas: 3
   alertmanagerConfiguration:
-    name: example-config
+    name: config-example
 ```
 
 The AlertmanagerConfig resource named `example-config` in namespace `default`
 will be a global AlertmanagerConfig. When the operator generates the
 Alertmanager configuration from it, the namespace label will not be enforced
-for routes and inhibittion rules.
+for routes and inhibition rules.
 
 ## Exposing the Alertmanager service
 
@@ -247,6 +247,7 @@ kind: Prometheus
 metadata:
   name: example
 spec:
+  serviceAccountName: prometheus
   replicas: 2
   alerting:
     alertmanagers:
@@ -292,6 +293,7 @@ kind: Prometheus
 metadata:
   name: example
 spec:
+  serviceAccountName: prometheus
   replicas: 2
   alerting:
     alertmanagers:
