@@ -25,9 +25,11 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
@@ -361,101 +363,21 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-// validateConfigInputs runs extra validation on the Prometheus fields which can't be done at the CRD schema validation level.
-func validateConfigInputs(p *v1.Prometheus) error {
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.EnforcedBodySizeLimit != "" {
-		if err := operator.ValidateSizeField(string(p.Spec.EnforcedBodySizeLimit)); err != nil {
-			return errors.Wrap(err, "invalid enforcedBodySizeLimit value specified")
-		}
+// compareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
+func compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
+	var si, st model.Duration
+	var err error
+
+	if si, err = model.ParseDuration(string(scrapeInterval)); err != nil {
+		return errors.Wrapf(err, "invalid scrapeInterval %q", scrapeInterval)
 	}
 
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.RetentionSize != "" {
-		if err := operator.ValidateSizeField(string(p.Spec.RetentionSize)); err != nil {
-			return errors.Wrap(err, "invalid retentionSize value specified")
-		}
+	if st, err = model.ParseDuration(string(scrapeTimeout)); err != nil {
+		return errors.Wrapf(err, "invalid scrapeTimeout: %q", scrapeTimeout)
 	}
 
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(string(p.Spec.Retention)); err != nil {
-			return errors.Wrap(err, "invalid retention value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.ScrapeInterval != "" {
-		if err := operator.ValidateDurationField(string(p.Spec.ScrapeInterval)); err != nil {
-			return errors.Wrap(err, "invalid scrapeInterval value specified")
-		}
-	}
-
-	if p.Spec.ScrapeTimeout != "" {
-		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-		if err := operator.ValidateDurationField(string(p.Spec.ScrapeTimeout)); err != nil {
-			return errors.Wrap(err, "invalid scrapeTimeout value specified")
-		}
-		if err := operator.CompareScrapeTimeoutToScrapeInterval(p.Spec.ScrapeTimeout, p.Spec.ScrapeInterval); err != nil {
-			return err
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.EvaluationInterval != "" {
-		if err := operator.ValidateDurationField(string(p.Spec.EvaluationInterval)); err != nil {
-			return errors.Wrap(err, "invalid evaluationInterval value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.Thanos != nil && p.Spec.Thanos.ReadyTimeout != "" {
-		if err := operator.ValidateDurationField(string(p.Spec.Thanos.ReadyTimeout)); err != nil {
-			return errors.Wrap(err, "invalid thanos.readyTimeout value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if p.Spec.Query != nil && p.Spec.Query.Timeout != nil && *p.Spec.Query.Timeout != "" {
-		if err := operator.ValidateDurationField(string(*p.Spec.Query.Timeout)); err != nil {
-			return errors.Wrap(err, "invalid query.timeout value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	for i, rr := range p.Spec.RemoteRead {
-		if rr.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(string(rr.RemoteTimeout)); err != nil {
-				return errors.Wrapf(err, "invalid remoteRead[%d].remoteTimeout value specified", i)
-			}
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	for i, rw := range p.Spec.RemoteWrite {
-		if rw.RemoteTimeout != "" {
-			if err := operator.ValidateDurationField(string(rw.RemoteTimeout)); err != nil {
-				return errors.Wrapf(err, "invalid remoteWrite[%d].remoteTimeout value specified", i)
-			}
-		}
-
-		// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-		if rw.MetadataConfig != nil && rw.MetadataConfig.SendInterval != "" {
-			if err := operator.ValidateDurationField(string(rw.MetadataConfig.SendInterval)); err != nil {
-				return errors.Wrapf(err, "invalid remoteWrite[%d].metadataConfig.sendInterval value specified", i)
-			}
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
-	if p.Spec.Alerting != nil {
-		for i, ap := range p.Spec.Alerting.Alertmanagers {
-			if ap.Timeout != nil && *ap.Timeout != "" {
-				if err := operator.ValidateDurationField(string(*ap.Timeout)); err != nil {
-					return errors.Wrapf(err, "invalid alertmanagers[%d].timeout value specified", i)
-				}
-			}
-		}
+	if st > si {
+		return errors.Errorf("scrapeTimeout %q greater than scrapeInterval %q", scrapeTimeout, scrapeInterval)
 	}
 
 	return nil
@@ -473,30 +395,18 @@ func (cg *ConfigGenerator) Generate(
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
 ) ([]byte, error) {
-	// Validate Prometheus Config Inputs at Prometheus CRD level
-	if err := validateConfigInputs(p); err != nil {
-		return nil, err
+	// validates the value of scrapeTimeout based on scrapeInterval
+	if p.Spec.ScrapeTimeout != "" {
+		if err := compareScrapeTimeoutToScrapeInterval(p.Spec.ScrapeTimeout, p.Spec.ScrapeInterval); err != nil {
+			return nil, err
+		}
 	}
 
 	cfg := yaml.MapSlice{}
 
-	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
-	scrapeInterval := "30s"
-	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
-	if p.Spec.ScrapeInterval != "" {
-		scrapeInterval = string(p.Spec.ScrapeInterval)
-	}
-
-	// TODO(slashpai): Remove this default assignment after v0.57 since this is set at CRD level
-	evaluationInterval := "30s"
-	// TODO(slashpai): Remove this check after v0.57 since default is set at CRD level
-	if p.Spec.EvaluationInterval != "" {
-		evaluationInterval = string(p.Spec.EvaluationInterval)
-	}
-
 	globalItems := yaml.MapSlice{
-		{Key: "evaluation_interval", Value: evaluationInterval},
-		{Key: "scrape_interval", Value: scrapeInterval},
+		{Key: "evaluation_interval", Value: p.Spec.EvaluationInterval},
+		{Key: "scrape_interval", Value: p.Spec.ScrapeInterval},
 		{Key: "external_labels", Value: buildExternalLabels(p)},
 	}
 
@@ -970,12 +880,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	hTs := true
 	cfg = cg.AddHonorTimestamps(cfg, &hTs)
 
-	// TODO(slashpai): Remove this assignment after v0.60 since this is handled at CRD level
-	path := "/probe"
-	if m.Spec.ProberSpec.Path != "" {
-		path = m.Spec.ProberSpec.Path
-	}
-	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: path})
+	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: m.Spec.ProberSpec.Path})
 
 	if m.Spec.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: m.Spec.Interval})
