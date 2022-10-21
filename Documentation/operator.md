@@ -1,7 +1,7 @@
 ---
-weight: 209
+weight: 212
 toc: false
-title: CLI Flags
+title: CLI reference
 menu:
     docs:
         parent: operator
