@@ -31,9 +31,41 @@ const (
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
 	// DefaultThanosImage is a default image pulling address for the Thanos long-term prometheus storage collector
 	DefaultThanosImage = DefaultThanosBaseImage + ":" + DefaultThanosVersion
+
+	// Values below are used during Statefulset creation
+	DefaultRetention                = "24h"
+	DefaultMemoryRequestValue       = "2Gi"
+	DefaultPrometheusContainerPort  = 9090
+	DefaultPrometheusQueryLogVolume = "query-log-file"
+	DefaultPrometheusQueryLogDir    = "/var/log/prometheus"
+	DefaultPrometheusPortName       = "web"
+
+	GoverningServiceName     = "prometheus-operated"
+	StatefulSetInputHashName = "prometheus-operator-input-hash"
+
+	PrometheusConfDir              = "/etc/prometheus/config"
+	PrometheusConfOutDir           = "/etc/prometheus/config_out"
+	PrometheusConfEnvSubstFilename = "prometheus.env.yaml"
+	PrometheusConfFilename         = "prometheus.yaml.gz"
+	PrometheusStorageDir           = "/prometheus"
+	PrometheusTLSAssetsDir         = "/etc/prometheus/certs"
+	PrometheusRulesDir             = "/etc/prometheus/rules"
+	PrometheusSecretsDir           = "/etc/prometheus/secrets/"
+	PrometheusConfigmapsDir        = "/etc/prometheus/configmaps/"
+
+	shardLabelName = "prometheus.io/shard"
+
+	WebConfigDir           = "/etc/prometheus/web_config"
+	WebConfigFilename      = "web-config.yaml"
+	WebConsoleLibraryDir   = "/etc/prometheus/console_libraries"
+	WebConsoleTemplatesDir = "/etc/prometheus/consoles"
 )
 
 var (
+	MinReplicas           int32 = 1
+	DefaultMaxConcurrency int32 = 20
+	ProbeTimeoutSeconds   int32 = 3
+
 	// DefaultPrometheusVersion is a default image tag for the prometheus
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus

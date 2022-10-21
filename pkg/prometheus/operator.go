@@ -1454,18 +1454,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		//sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
-		sset, err := operator.MakePrometheusStatefulSet(logger, ssetName, operator.PrometheusServer{p}, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		//sset, err := operator.MakePrometheusStatefulSet(logger, ssetName, operator.PrometheusServer{p}, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
-		operator.SanitizeSTS(sset)
+		//operator.SanitizeSTS(sset)
 
 		if !exists {
 			level.Debug(logger).Log("msg", "no current statefulset found")
 			level.Debug(logger).Log("msg", "creating statefulset")
-			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+			/*if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return errors.Wrap(err, "creating statefulset failed")
-			}
+			}*/
 			continue
 		}
 
@@ -1480,7 +1480,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.StatefulSetInputHashName],
 		)
 
-		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
+		//err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 		sErr, ok := err.(*apierrors.StatusError)
 
 		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
@@ -1494,10 +1494,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 
-			propagationPolicy := metav1.DeletePropagationForeground
-			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			//propagationPolicy := metav1.DeletePropagationForeground
+			/*if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
-			}
+			}*/
 			continue
 		}
 

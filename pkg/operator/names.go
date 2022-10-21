@@ -16,6 +16,8 @@ package operator
 
 import (
 	"fmt"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // Nomenclator objects are used for naming Prometheus and PrometheusAgent objects
@@ -24,10 +26,11 @@ type Nomenclator struct {
 	kind   string
 	prefix string
 	name   string
+	label  string
 	shards int32
 }
 
-func NewNomenclator(kind, prefix, name string, shards *int32) *Nomenclator {
+func NewNomenclator(kind, prefix, name, label string, shards *int32) *Nomenclator {
 	nc := Nomenclator{
 		kind:   kind,
 		prefix: prefix,
@@ -51,9 +54,19 @@ func (n *Nomenclator) Kind() string {
 	return n.kind
 }
 
+// Kind returns owner object's kind name
+func (n *Nomenclator) Prefix() string {
+	return n.prefix
+}
+
 // BaseName returns owner object's name
 func (n *Nomenclator) BaseName() string {
 	return n.name
+}
+
+//
+func (n *Nomenclator) NameLabelName() string {
+	return n.label
 }
 
 // ConfigSecretName returns name of ConfigSecret owned by Nomenclator's owner
@@ -91,4 +104,13 @@ func (n *Nomenclator) ExpectedStatefulSetShardNames() []string {
 		res = append(res, n.prometheusNameByShard(i))
 	}
 	return res
+}
+
+func (n *Nomenclator) SubPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if s == nil || s.DisableMountSubPath {
+		return ""
+	}
+
+	return n.VolumeName()
 }

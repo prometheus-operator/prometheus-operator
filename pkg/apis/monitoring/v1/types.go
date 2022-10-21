@@ -336,6 +336,11 @@ type CommonPrometheusFields struct {
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 }
 
+// GetCommonFields allows to return all promoted fields as single structure
+func (cpf CommonPrometheusFields) GetCommonPrometheusFields() *CommonPrometheusFields {
+	return &cpf
+}
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="prom"
