@@ -33,7 +33,11 @@ spec:
             topologyKey: kubernetes.io/hostname
       automountServiceAccountToken: false
       containers:
-      - image: quay.io/prometheus-operator/admission-webhook:v0.60.1
+      - args:
+        - --web.enable-tls=true
+        - --web.cert-file=/etc/tls/private/tls.crt
+        - --web.key-file=/etc/tls/private/tls.key
+        image: quay.io/prometheus-operator/admission-webhook:v0.60.1
         name: prometheus-operator-admission-webhook
         ports:
         - containerPort: 8443
@@ -52,7 +56,20 @@ spec:
             - ALL
           readOnlyRootFilesystem: true
         terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/tls/private
+          name: tls-certificates
+          readOnly: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: prometheus-operator-admission-webhook
+      volumes:
+      - name: tls-certificates
+        secret:
+          items:
+          - key: tls.crt
+            path: tls.crt
+          - key: tls.key
+            path: tls.key
+          secretName: admission-webhook-certs
