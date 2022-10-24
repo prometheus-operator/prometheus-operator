@@ -27,7 +27,7 @@ require (
 	github.com/prometheus/common v0.37.0
 	// This version is replaced using replace directive below
 	github.com/prometheus/prometheus v1.99.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/thanos-io/thanos v0.28.1
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	google.golang.org/protobuf v1.28.1
