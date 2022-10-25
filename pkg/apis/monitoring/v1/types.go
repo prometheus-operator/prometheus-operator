@@ -272,6 +272,36 @@ type CommonPrometheusFields struct {
 	// Label name is this field's value.
 	// Label value is the namespace of the created object (mentioned above).
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
+	// DefaultSampleLimit defines the default limit on number of scraped
+	// samples that will be accepted. This sets the default value for
+	// SampleLimit set per ServiceMonitor or/and PodMonitor.
+	DefaultSampleLimit *uint64 `json:"defaultSampleLimit,omitempty"`
+	// DefaultTargetLimit defines the default limit on number of scraped
+	// targets  that will be accepted. This sets the default value for
+	// SampleLimit set per ServiceMonitor or/and PodMonitor.
+	DefaultTargetLimit *uint64 `json:"defaultTargetLimit,omitempty"`
+	// DefaultLabelLimit defines the default per-scrape limit on number
+	// of labels that will be accepted for a sample. This sets the default
+	// value for SampleLimit set per ServiceMonitor or/and PodMonitor.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	DefaultLabelLimit *uint64 `json:"defaultLabelLimit,omitempty"`
+	// DefaultLabelNameLengthLimit defines the default limit on length of
+	// labels name that will be accepted for a sample. This sets the default
+	// value for SampleLimit set per ServiceMonitor or/and PodMonitor.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	DefaultLabelNameLengthLimit *uint64 `json:"defaultLabelNameLengthLimit,omitempty"`
+	// DefaultLabelValueLengthLimit defines the default limit on length of
+	// labels value that will be accepted for a sample. This sets the default
+	// value for SampleLimit set per ServiceMonitor or/and PodMonitor.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	DefaultLabelValueLengthLimit *uint64 `json:"defaultLabelValueLengthLimit,omitempty"`
+	// DefaultBodySizeLimit defines the default limit of the maximum size of
+	// uncompressed response body that will be accepted by Prometheus.
+	// Targets responding with a body larger than this many bytes will cause
+	// the scrape to fail. Example: 100MB. This sets the default
+	// value for SampleLimit set per ServiceMonitor or/and PodMonitor.
+	// Only valid in Prometheus versions 2.28.0 and newer.
+	DefaultBodySizeLimit ByteSize `json:"defaultBodySizeLimit,omitempty"`
 	// EnforcedSampleLimit defines global limit on number of scraped samples
 	// that will be accepted. This overrides any SampleLimit set per
 	// ServiceMonitor or/and PodMonitor. It is meant to be used by admins to

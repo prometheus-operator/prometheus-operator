@@ -180,7 +180,12 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, defaultLimit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	// use defaultLimit if default is set and limit is 0
+	if defaultLimit != nil && limit == 0 {
+		limit = *defaultLimit
+	}
+
 	if limit == 0 && enforcedLimit == nil {
 		return cfg
 	}
@@ -937,11 +942,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.DefaultSampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.DefaultTargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.DefaultLabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.DefaultLabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.DefaultLabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
 	if cg.spec.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
@@ -996,11 +1001,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}})
 	}
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.DefaultSampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.DefaultTargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.DefaultLabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.DefaultLabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.DefaultLabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
 	if cg.spec.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
@@ -1441,11 +1446,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.DefaultSampleLimit, cg.spec.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.DefaultTargetLimit, cg.spec.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.DefaultLabelLimit, cg.spec.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.DefaultLabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.DefaultLabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
 
 	if cg.spec.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
