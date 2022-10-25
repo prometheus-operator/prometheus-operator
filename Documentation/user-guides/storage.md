@@ -165,7 +165,8 @@ issue](https://github.com/kubernetes/enhancements/issues/661)).
 
 It is still possible to fix the situation manually.
 
-First, update the storage request in the `spec.storage` field of the custom resource (assuming a Prometheus resource named `example`):
+First, update the storage request in the `spec.storage` field of the custom
+resource (assuming a Prometheus resource named `example`):
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -182,11 +183,11 @@ spec:
             storage: 10Gi
 ```
 
-Next, patch every PVC with the updated storage request:
+Next, patch every PVC with the updated storage request (10Gi in this example):
 
 ```bash
 for p in $(kubectl get pvc -l operator.prometheus.io/name=example -o jsonpath='{range .items[*]}{.metadata.name} {end}'); do \
-  kubectl patch pvc/${p} --patch '{"spec": {"resources": {"requests": {"storage":"10Gi"}}}}' \
+  kubectl patch pvc/${p} --patch '{"spec": {"resources": {"requests": {"storage":"10Gi"}}}}'; \
 done
 ```
 
