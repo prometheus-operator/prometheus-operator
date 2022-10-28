@@ -25,8 +25,7 @@ require (
 	github.com/prometheus/alertmanager v0.24.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/common v0.37.0
-	// This version is replaced using replace directive below
-	github.com/prometheus/prometheus v1.99.0
+	github.com/prometheus/prometheus v0.39.1
 	github.com/stretchr/testify v1.8.1
 	github.com/thanos-io/thanos v0.28.1
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
@@ -124,7 +123,5 @@ require (
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
-	// A replace directive is needed for github.com/prometheus/prometheus to ensure running against the latest version of prometheus.
-	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.38.1-0.20221005044927-6d7f26c46ff7
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
 )
