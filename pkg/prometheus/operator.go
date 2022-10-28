@@ -2430,5 +2430,5 @@ func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval
 	if scrapeInterval == "" {
 		scrapeInterval = p.Spec.ScrapeInterval
 	}
-	return operator.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
+	return compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }

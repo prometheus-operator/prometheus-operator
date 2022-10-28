@@ -18,47 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pkg/errors"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus/alertmanager/config"
 )
-
-// ValidateAlertmanager runs extra validation on the AlertManager fields which
-// can't be done at the CRD schema validation level.
-func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
-	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
-	if am.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(string(am.Spec.Retention)); err != nil {
-			return errors.Wrap(err, "invalid retention value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
-	if am.Spec.ClusterGossipInterval != "" {
-		if err := operator.ValidateDurationField(string(am.Spec.ClusterGossipInterval)); err != nil {
-			return errors.Wrap(err, "invalid clusterGossipInterval value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
-	if am.Spec.ClusterPushpullInterval != "" {
-		if err := operator.ValidateDurationField(string(am.Spec.ClusterPushpullInterval)); err != nil {
-			return errors.Wrap(err, "invalid clusterPushpullInterval value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this validation after v0.60 since this is handled at CRD level
-	if am.Spec.ClusterPeerTimeout != "" {
-		if err := operator.ValidateDurationField(string(am.Spec.ClusterPeerTimeout)); err != nil {
-			return errors.Wrap(err, "invalid clusterPeerTimeout value specified")
-		}
-	}
-
-	return nil
-}
-
-// ValidateAlertmanagerConfig checks that the given resource complies with the
 
 // ValidateURL against the config.URL
 // This could potentially become a regex and be validated via OpenAPI

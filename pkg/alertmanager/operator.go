@@ -812,10 +812,6 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
-	if err := validation.ValidateAlertmanager(am); err != nil {
-		return err
-	}
-
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
