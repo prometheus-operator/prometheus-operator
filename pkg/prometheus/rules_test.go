@@ -31,11 +31,9 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
 	t.Run("ShouldAcceptValidRule", shouldAcceptValidRule)
-	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
 	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
-	t.Run("shouldRejectRuleWithInvalidPartialResponseStrategyValue", shouldRejectRuleWithInvalidPartialResponseStrategyValue)
-
+	t.Run("shouldResetRuleWithPartialResponseStrategySet", shouldResetRuleWithPartialResponseStrategySet)
 }
 
 func shouldAcceptValidRule(t *testing.T) {
@@ -53,38 +51,16 @@ func shouldAcceptValidRule(t *testing.T) {
 			},
 		},
 	}}
-	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	_, err := generateRulesConfiguration(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
 	if err != nil {
 		t.Fatalf("expected no errors when parsing valid rule")
-	}
-}
-
-func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
-	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
-		{
-			Name:                    "group",
-			PartialResponseStrategy: "abort",
-			Rules: []monitoringv1.Rule{
-				{
-					Alert: "alert",
-					Expr:  intstr.FromString("vector(1)"),
-					Labels: map[string]string{
-						"valid_label": "valid_value",
-					},
-				},
-			},
-		},
-	}}
-	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
-	if err != nil {
-		t.Fatalf("expected no errors when parsing rule with valid thanos partial_response_strategy value")
 	}
 }
 
 func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 		{
-			Name: "group2",
+			Name: "group",
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: "alert",
@@ -96,7 +72,7 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 			},
 		},
 	}}
-	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	_, err := generateRulesConfiguration(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
 	if err == nil {
 		t.Fatalf("expected errors when parsing rule with invalid labels")
 	}
@@ -105,7 +81,7 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 func shouldRejectRuleWithInvalidExpression(t *testing.T) {
 	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 		{
-			Name: "group2",
+			Name: "group",
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: "alert",
@@ -114,17 +90,17 @@ func shouldRejectRuleWithInvalidExpression(t *testing.T) {
 			},
 		},
 	}}
-	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	_, err := generateRulesConfiguration(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
 	if err == nil {
 		t.Fatalf("expected errors when parsing rule with invalid expression")
 	}
 }
 
-func shouldRejectRuleWithInvalidPartialResponseStrategyValue(t *testing.T) {
+func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
 	rules := monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 		{
-			Name:                    "group2",
-			PartialResponseStrategy: "invalid",
+			Name:                    "group",
+			PartialResponseStrategy: "warn",
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: "alert",
@@ -133,9 +109,10 @@ func shouldRejectRuleWithInvalidPartialResponseStrategyValue(t *testing.T) {
 			},
 		},
 	}}
-	_, err := GenerateContent(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
-	if err == nil {
-		t.Fatalf("expected errors when parsing rule with invalid partial_response_strategy value")
+	content, _ := generateRulesConfiguration(rules, log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)))
+	if strings.Contains(content, "partial_response_strategy") {
+		t.Fatalf("expected `partial_response_strategy` removed from PrometheusRule")
+
 	}
 }
 
