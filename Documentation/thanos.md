@@ -28,18 +28,15 @@ Other Thanos components such the Querier, the Receiver, the Compactor and the St
 ## Prometheus Custom Resource with Thanos Sidecar
 
 The `Prometheus` CRD has support for adding a Thanos sidecar to the Prometheus
-Pod. To enable the sidecar, reference the following example.
-
-This is the simplest configuration change that needs to be made to your
-Prometheus resource.
+Pod. To enable the sidecar, the `thanos` section must be set to a non empty value.
+For example, the simplest configuration is to just set a valid thanos container image url.
 
 ```yaml
 ...
 spec:
   ...
   thanos:
-    baseImage: quay.io/thanos/thanos
-    version: v0.8.1
+    image: quay.io/thanos/thanos:v0.28.1
 ...
 ```
 
@@ -74,8 +71,7 @@ Then you can specify this secret inside the Thanos field of the Prometheus spec 
 spec:
   ...
   thanos:
-    baseImage: quay.io/thanos/thanos
-    version: v0.8.1
+    image: quay.io/thanos/thanos:v0.28.1
     objectStorageConfig:
       key: thanos.yaml
       name: thanos-objstore-config
