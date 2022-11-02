@@ -6,4 +6,4 @@ metadata:
 spec:
   replicas: 3
   alertmanagerConfiguration:
-    name: example-config
+    name: config-example

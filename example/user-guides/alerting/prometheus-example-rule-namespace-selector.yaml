@@ -3,6 +3,7 @@ kind: Prometheus
 metadata:
   name: example
 spec:
+  serviceAccountName: prometheus
   replicas: 2
   alerting:
     alertmanagers:

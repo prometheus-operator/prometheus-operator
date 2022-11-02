@@ -1203,7 +1203,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		existingStatefulSet := &appsv1.StatefulSet{}
 		if obj != nil {
 			existingStatefulSet = obj.(*appsv1.StatefulSet)
-			if existingStatefulSet.DeletionTimestamp != nil {
+			if c.rr.DeletionInProgress(existingStatefulSet) {
 				// We want to avoid entering a hot-loop of update/delete cycles
 				// here since the sts was marked for deletion in foreground,
 				// which means it may take some time before the finalizers
@@ -1211,11 +1211,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				// deletion timestamp will have been set when the initial
 				// delete request was issued. In that case, we avoid further
 				// processing.
-				level.Info(logger).Log(
-					"msg", "halting update of StatefulSet",
-					"reason", "resource has been marked for deletion",
-					"resource_name", existingStatefulSet.GetName(),
-				)
 				continue
 			}
 		}
@@ -1291,8 +1286,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		// Deletion already in progress.
-		if s.DeletionTimestamp != nil {
+		if c.rr.DeletionInProgress(s) {
 			return
 		}
 
@@ -1358,8 +1352,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		}
 
 		sset := obj.(*appsv1.StatefulSet)
-		if sset.DeletionTimestamp != nil {
-			level.Debug(logger).Log("msg", "deletion in progress")
+		if c.rr.DeletionInProgress(sset) {
 			continue
 		}
 
@@ -2437,5 +2430,5 @@ func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval
 	if scrapeInterval == "" {
 		scrapeInterval = p.Spec.ScrapeInterval
 	}
-	return operator.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
+	return compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }

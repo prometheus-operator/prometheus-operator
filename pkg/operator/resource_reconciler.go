@@ -133,6 +133,18 @@ func NewResourceReconciler(
 	}
 }
 
+// DeletionInProgress returns true if the object deletion has been requested.
+func (rr *ResourceReconciler) DeletionInProgress(o metav1.Object) bool {
+	if o.GetDeletionTimestamp() != nil {
+		level.Debug(rr.logger).Log(
+			"msg", "object deletion in progress",
+			"object", fmt.Sprintf("%s/%s", o.GetNamespace(), o.GetName()),
+		)
+		return true
+	}
+	return false
+}
+
 // hasObjectChanged returns true if the objects have different resource revisions.
 func (rr *ResourceReconciler) hasObjectChanged(old, cur metav1.Object) bool {
 	if old.GetResourceVersion() != cur.GetResourceVersion() {
@@ -238,6 +250,10 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		level.Error(rr.logger).Log("err", fmt.Sprintf("failed to get object meta: %s", err), "key", key)
 	}
 
+	if rr.DeletionInProgress(mCur) {
+		return
+	}
+
 	if !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
@@ -280,6 +296,10 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	level.Debug(rr.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	if rr.DeletionInProgress(cur) {
+		return
+	}
 
 	if !rr.hasObjectChanged(old, cur) {
 		return

@@ -62,6 +62,7 @@ function(params) {
       securityContext: {
         allowPrivilegeEscalation: false,
         readOnlyRootFilesystem: true,
+        capabilities: { drop: ['ALL'] },
       },
     };
     {
@@ -86,6 +87,28 @@ function(params) {
             },
             serviceAccountName: aw._config.name,
             automountServiceAccountToken: false,
+          },
+        },
+      } + if aw._config.replicas > 1 then {
+        // configure hard anti-affinity + rolling update for proper HA.
+        template+: {
+          spec+: {
+            affinity: {
+              podAntiAffinity: {
+                requiredDuringSchedulingIgnoredDuringExecution: [{
+                  namespaces: [aw._config.namespace],
+                  topologyKey: 'kubernetes.io/hostname',
+                  labelSelector: {
+                    matchLabels: aw._config.selectorLabels,
+                  },
+                }],
+              },
+            },
+          },
+        },
+        strategy: {
+          rollingUpdate: {
+            maxUnavailable: 1,
           },
         },
       },

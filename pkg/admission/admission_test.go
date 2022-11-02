@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -746,9 +746,9 @@ func sendAdmissionReview(t *testing.T, ts *httptest.Server, b []byte) *v1.Admiss
 		t.Fatalf("POST request returned an error: %s", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatalf("ioutil.ReadAll(resp.Body) returned an error: %s", err)
+		t.Fatalf("io.ReadAll(resp.Body) returned an error: %s", err)
 	}
 
 	rev := &v1.AdmissionReview{}
@@ -766,9 +766,9 @@ func sendConversionReview(t *testing.T, ts *httptest.Server, b []byte) *apiexten
 		t.Fatalf("POST request returned an error: %s", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatalf("ioutil.ReadAll(resp.Body) returned an error: %s", err)
+		t.Fatalf("io.ReadAll(resp.Body) returned an error: %s", err)
 	}
 
 	rev := &apiextensionsv1.ConversionReview{}

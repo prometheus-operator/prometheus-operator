@@ -616,12 +616,8 @@ func TestRetention(t *testing.T) {
 	for _, tc := range []struct {
 		specRetention     monitoringv1.Duration
 		expectedRetention monitoringv1.Duration
-		ok                bool
 	}{
-		{"", "24h", true},
-		{"1d", "1d", true},
-		{"1k", "", false},
-		{"somevalue", "", false},
+		{"1d", "1d"},
 	} {
 		t.Run(string(tc.specRetention), func(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -630,13 +626,6 @@ func TestRetention(t *testing.T) {
 					QueryEndpoints: emptyQueryEndpoints,
 				},
 			}, defaultTestConfig, nil, "")
-
-			if !tc.ok {
-				if err == nil {
-					t.Fatal("expecting error but got none")
-				}
-				return
-			}
 
 			if err != nil {
 				t.Fatalf("expecting no error but got %q", err)

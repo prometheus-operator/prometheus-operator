@@ -20,22 +20,22 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.5.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.60.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.60.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.60.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.60.1
 	github.com/prometheus/alertmanager v0.24.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/common v0.37.0
 	// This version is replaced using replace directive below
 	github.com/prometheus/prometheus v1.99.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/thanos-io/thanos v0.28.1
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.2
+	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.0
-	k8s.io/apimachinery v0.25.2
+	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.2
 	k8s.io/component-base v0.25.2
 	k8s.io/klog/v2 v2.80.1
@@ -108,7 +108,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/time v0.0.0-20220920022843-2ce7c2934d45 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220920201722-2b89144ce006 // indirect

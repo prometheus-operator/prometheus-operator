@@ -20,10 +20,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -62,42 +62,42 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 	var err error
 
 	if cKey.Filename != "" {
-		clientKey, err = ioutil.ReadFile(certsDir + cKey.Filename)
+		clientKey, err = os.ReadFile(certsDir + cKey.Filename)
 		if err != nil {
 			t.Fatalf("failed to load %s: %v", cKey.Filename, err)
 		}
 	}
 
 	if cCert.Filename != "" {
-		clientCert, err = ioutil.ReadFile(certsDir + cCert.Filename)
+		clientCert, err = os.ReadFile(certsDir + cCert.Filename)
 		if err != nil {
 			t.Fatalf("failed to load %s: %v", cCert.Filename, err)
 		}
 	}
 
 	if ca.Filename != "" {
-		caCert, err = ioutil.ReadFile(certsDir + ca.Filename)
+		caCert, err = os.ReadFile(certsDir + ca.Filename)
 		if err != nil {
 			t.Fatalf("failed to load %s: %v", ca.Filename, err)
 		}
 	}
 
-	serverKey, err = ioutil.ReadFile(certsDir + "ca.key")
+	serverKey, err = os.ReadFile(certsDir + "ca.key")
 	if err != nil {
 		t.Fatalf("failed to load %s: %v", "ca.key", err)
 	}
 
-	serverCert, err = ioutil.ReadFile(certsDir + "ca.crt")
+	serverCert, err = os.ReadFile(certsDir + "ca.crt")
 	if err != nil {
 		t.Fatalf("failed to load %s: %v", "ca.crt", err)
 	}
 
-	scrapingKey, err := ioutil.ReadFile(certsDir + "client.key")
+	scrapingKey, err := os.ReadFile(certsDir + "client.key")
 	if err != nil {
 		t.Fatalf("failed to load %s: %v", "client.key", err)
 	}
 
-	scrapingCert, err := ioutil.ReadFile(certsDir + "client.crt")
+	scrapingCert, err := os.ReadFile(certsDir + "client.crt")
 	if err != nil {
 		t.Fatalf("failed to load %s: %v", "client.crt", err)
 	}
@@ -3036,12 +3036,12 @@ func testPromArbitraryFSAcc(t *testing.T) {
 
 			// Create secret either used by bearer token secret key ref, tls
 			// asset key ref or tls configmap key ref.
-			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+			cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 			if err != nil {
 				t.Fatalf("failed to load cert.pem: %v", err)
 			}
 
-			key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+			key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
 			if err != nil {
 				t.Fatalf("failed to load key.pem: %v", err)
 			}
@@ -3156,12 +3156,12 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	// Setup sample app.
 	//
 
-	cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+	cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 	if err != nil {
 		t.Fatalf("failed to load cert.pem: %v", err)
 	}
 
-	key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+	key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
 	if err != nil {
 		t.Fatalf("failed to load key.pem: %v", err)
 	}
@@ -3528,12 +3528,12 @@ func testPromSecurePodMonitor(t *testing.T) {
 
 			// Create secret either used by bearer token secret key ref, tls
 			// asset key ref or tls configmap key ref.
-			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+			cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 			if err != nil {
 				t.Fatalf("failed to load cert.pem: %v", err)
 			}
 
-			key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+			key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
 			if err != nil {
 				t.Fatalf("failed to load key.pem: %v", err)
 			}
@@ -4478,6 +4478,146 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			s := framework.MakeBasicServiceMonitor(name)
 			s.Spec.Endpoints[0].RelabelConfigs = test.relabelConfigs
 			_, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{})
+
+			if err == nil {
+				if test.expectedError {
+					t.Fatal("expected error but got nil")
+				}
+				return
+			}
+
+			if !apierrors.IsInvalid(err) {
+				t.Fatalf("expected Invalid error but got %v", err)
+			}
+		})
+	}
+}
+
+func testPrometheusRuleCRDValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		promRuleSpec  monitoringv1.PrometheusRuleSpec
+		expectedError bool
+	}{
+		{
+			name: "duplicate-rule-name",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-partial-rsp",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "invalid",
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-rule-names",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:  "rule1",
+						Rules: []monitoringv1.Rule{},
+					},
+					{
+						Name:  "rule2",
+						Rules: []monitoringv1.Rule{},
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-1",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "abort",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-2",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "ABORT",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-3",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "Warn",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-4",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "WaRn",
+					},
+				},
+			},
+		},
+		{
+			name: "valid-partial-rsp-5",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name:                    "test",
+						Rules:                   []monitoringv1.Rule{},
+						PartialResponseStrategy: "",
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			promRule := framework.MakeBasicRule(ns, "prometheus-rule", test.promRuleSpec.Groups)
+			_, err := framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), promRule, metav1.CreateOptions{})
 
 			if err == nil {
 				if test.expectedError {

@@ -57,6 +57,8 @@ The `Prometheus` resource declaratively describes the desired state of a
 Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
 describe the targets to be monitored by Prometheus.
 
+<!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
+
 ![Prometheus Operator Architecture](/img/architecture.png)
 
 > Note: Check the [Alerting guide]({{< ref "alerting" >}}) for more information about the `Alertmanager` resource.

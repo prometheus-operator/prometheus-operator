@@ -693,6 +693,8 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 
 	// Only 1 replica needed for the tests.
 	deploy.Spec.Replicas = func(i int32) *int32 { return &i }(1)
+	deploy.Spec.Template.Spec.Affinity = nil
+	deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 

@@ -1646,9 +1646,9 @@ func (c *SecretOrConfigMap) Validate() error {
 // SafeTLSConfig specifies safe TLS configuration parameters.
 // +k8s:openapi-gen=true
 type SafeTLSConfig struct {
-	// Struct containing the CA cert to use for the targets.
+	// Certificate authority used when verifying server certificates.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
-	// Struct containing the client cert file for the targets.
+	// Client certificate to present when doing client-authentication.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 	// Secret containing the client key file for the targets.
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
@@ -1804,6 +1804,8 @@ type PrometheusRule struct {
 // +k8s:openapi-gen=true
 type PrometheusRuleSpec struct {
 	// Content of Prometheus rule file
+	// +listType=map
+	// +listMapKey=name
 	Groups []RuleGroup `json:"groups,omitempty"`
 }
 
@@ -1811,14 +1813,20 @@ type PrometheusRuleSpec struct {
 // upstream Prometheus struct definitions don't have json struct tags.
 
 // RuleGroup is a list of sequentially evaluated recording and alerting rules.
-// Note: PartialResponseStrategy is only used by ThanosRuler and will
-// be ignored by Prometheus instances.  Valid values for this field are 'warn'
-// or 'abort'.  More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 // +k8s:openapi-gen=true
 type RuleGroup struct {
-	Name                    string `json:"name"`
-	Interval                string `json:"interval,omitempty"`
-	Rules                   []Rule `json:"rules"`
+	// Name of the rule group.
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+	// Interval determines how often rules in the group are evaluated.
+	Interval Duration `json:"interval,omitempty"`
+	// List of alerting and recording rules.
+	Rules []Rule `json:"rules"`
+	// PartialResponseStrategy is only used by ThanosRuler and will
+	// be ignored by Prometheus instances.
+	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
+	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
+	// +kubebuilder:default:=""
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 }
 
@@ -1826,12 +1834,21 @@ type RuleGroup struct {
 // See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 // +k8s:openapi-gen=true
 type Rule struct {
-	Record      string             `json:"record,omitempty"`
-	Alert       string             `json:"alert,omitempty"`
-	Expr        intstr.IntOrString `json:"expr"`
-	For         string             `json:"for,omitempty"`
-	Labels      map[string]string  `json:"labels,omitempty"`
-	Annotations map[string]string  `json:"annotations,omitempty"`
+	// Name of the time series to output to. Must be a valid metric name.
+	// Only one of `record` and `alert` must be set.
+	Record string `json:"record,omitempty"`
+	// Name of the alert. Must be a valid label value.
+	// Only one of `record` and `alert` must be set.
+	Alert string `json:"alert,omitempty"`
+	// PromQL expression to evaluate.
+	Expr intstr.IntOrString `json:"expr"`
+	// Alerts are considered firing once they have been returned for this long.
+	For Duration `json:"for,omitempty"`
+	// Labels to add or overwrite.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Annotations to add to each alert.
+	// Only valid for alerting rules.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // +genclient
@@ -1903,10 +1920,11 @@ type AlertmanagerSpec struct {
 	//
 	// The Alertmanager configuration should be available under the
 	// `alertmanager.yaml` key. Additional keys from the original secret are
-	// copied to the generated secret.
+	// copied to the generated secret and mounted into the
+	// `/etc/alertmanager/config` directory in the `alertmanager` container.
 	//
 	// If either the secret or the `alertmanager.yaml` key is missing, the
-	// operator provisions an Alertmanager configuration with one empty
+	// operator provisions a minimal Alertmanager configuration with one empty
 	// receiver (effectively dropping alert notifications).
 	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
@@ -2225,7 +2243,7 @@ func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
-// ProbeTLSConfig specifies TLS configuration parameters.
+// ProbeTLSConfig specifies TLS configuration parameters for the prober.
 // +k8s:openapi-gen=true
 type ProbeTLSConfig struct {
 	SafeTLSConfig `json:",inline"`
