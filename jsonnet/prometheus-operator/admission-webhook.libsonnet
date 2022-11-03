@@ -4,7 +4,13 @@ local defaults = {
   namespace: error 'must provide namespace',
   version: error 'must provide version',
   image: error 'must provide admission webhook image',
-  port: 8443,
+  // The name of the Secret containing the TLS certificate and key of the admission webhook service.
+  tlsSecretName: error 'must provide tlsSecretName',
+  // The Secret's key containing the TLS certificate.
+  tlsCertRef: 'tls.crt',
+  // The Secret's key containing the TLS private key.
+  tlsPrivateKeyRef: 'tls.key',
+  port: 443,
   replicas: 2,
   resources: {
     limits: { cpu: '200m', memory: '200Mi' },
@@ -54,9 +60,14 @@ function(params) {
       name: aw._config.name,
       image: aw._config.image,
       ports: [{
-        containerPort: aw._config.port,
+        containerPort: 8443,
         name: 'https',
       }],
+      args: [
+        '--web.enable-tls=true',
+        '--web.cert-file=/etc/tls/private/tls.crt',
+        '--web.key-file=/etc/tls/private/tls.key',
+      ],
       resources: aw._config.resources,
       terminationMessagePolicy: 'FallbackToLogsOnError',
       securityContext: {
@@ -64,6 +75,13 @@ function(params) {
         readOnlyRootFilesystem: true,
         capabilities: { drop: ['ALL'] },
       },
+      volumeMounts: [
+        {
+          mountPath: '/etc/tls/private',
+          name: 'tls-certificates',
+          readOnly: true,
+        },
+      ],
     };
     {
       apiVersion: 'apps/v1',
@@ -87,8 +105,22 @@ function(params) {
             },
             serviceAccountName: aw._config.name,
             automountServiceAccountToken: false,
+            volumes: [{
+              name: 'tls-certificates',
+              secret: {
+                secretName: aw._config.tlsSecretName,
+                items: [{
+                  key: aw._config.tlsCertRef,
+                  path: 'tls.crt',
+                }, {
+                  key: aw._config.tlsPrivateKeyRef,
+                  path: 'tls.key',
+                }],
+              },
+            }],
           },
         },
+
       } + if aw._config.replicas > 1 then {
         // configure hard anti-affinity + rolling update for proper HA.
         template+: {

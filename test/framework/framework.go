@@ -50,12 +50,13 @@ import (
 )
 
 const (
-	admissionHookSecretName                 = "prometheus-operator-admission"
-	standaloneAdmissionHookSecretName       = "prometheus-operator-admission-standalone"
 	prometheusOperatorServiceDeploymentName = "prometheus-operator"
-	operatorTLSDir                          = "/etc/tls/private"
+	prometheusOperatorCertsSecretName       = "prometheus-operator-certs"
 
-	admissionWebhookServiceName = "prometheus-operator-admission-webhook"
+	admissionWebhookServiceName       = "prometheus-operator-admission-webhook"
+	standaloneAdmissionHookSecretName = "admission-webhook-certs"
+
+	operatorTLSDir = "/etc/tls/private"
 )
 
 type Framework struct {
@@ -240,15 +241,6 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		}
 	}
 
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, ns), nil, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to generate certificate and key")
-	}
-
-	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, ns, admissionHookSecretName); err != nil {
-		return nil, errors.Wrap(err, "failed to create or update admission webhook secret")
-	}
-
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
 		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(ctx, opts)
 	})
@@ -310,6 +302,15 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
+	}
+
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, ns), nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate certificate and key")
+	}
+
+	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, ns, prometheusOperatorCertsSecretName); err != nil {
+		return nil, errors.Wrap(err, "failed to create or update prometheus-operator TLS secret")
 	}
 
 	deploy, err := MakeDeployment(fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-deployment.yaml", f.exampleDir))
@@ -380,7 +381,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes,
 		v1.Volume{
 			Name:         "cert",
-			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: admissionHookSecretName}}})
+			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: prometheusOperatorCertsSecretName}}})
 
 	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
 		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
@@ -421,25 +422,25 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 
 		finalizer, err := f.createOrUpdateMutatingHook(ctx, b, ns, fmt.Sprintf("%s/prometheus-operator-mutatingwebhook.yaml", f.resourcesDir))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to create or update mutating webhook")
+			return nil, errors.Wrap(err, "failed to create or update mutating webhook for PrometheusRule objects")
 		}
 		finalizers = append(finalizers, finalizer)
 
 		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, ns, fmt.Sprintf("%s/prometheus-operator-validatingwebhook.yaml", f.resourcesDir))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to create or update validating webhook")
+			return nil, errors.Wrap(err, "failed to create or update validating webhook for PrometheusRule objects")
 		}
 		finalizers = append(finalizers, finalizer)
 
 		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, ns, fmt.Sprintf("%s/alertmanager-config-validating-webhook.yaml", f.resourcesDir))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to create or update validating webhook for AlertManagerConfigs")
+			return nil, errors.Wrap(err, "failed to create or update validating webhook for AlertManagerConfig objects")
 		}
 		finalizers = append(finalizers, finalizer)
 
 		finalizer, err = f.configureAlertmanagerConfigConversion(ctx, webhookService, b)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to configure conversion webhook for AlertManagerConfigs")
+			return nil, errors.Wrap(err, "failed to configure conversion webhook for AlertManagerConfig objects")
 		}
 		finalizers = append(finalizers, finalizer)
 	}
@@ -664,9 +665,11 @@ func (f *Framework) configureAlertmanagerConfigConversion(ctx context.Context, s
 	return finalizerFn, nil
 }
 
-// CreateAdmissionWebhookServer deploys an HTTPS server
-// Acts as a validating and mutating webhook server for PrometheusRule and AlertManagerConfig
-// Returns the CA, which can be used to access the server over TLS
+// CreateOrUpdateAdmissionWebhookServer deploys an HTTPS server which acts as a
+// validating and mutating webhook server for PrometheusRule and
+// AlertManagerConfig. It is also able to convert AlertmanagerConfig objects
+// from v1alpha1 to v1beta1.
+// Returns the service and the certificate authority which can be used to trust the TLS certificate of the server.
 func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	ctx context.Context,
 	namespace string,
@@ -691,7 +694,8 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		return nil, nil, err
 	}
 
-	// Only 1 replica needed for the tests.
+	// Deploy only 1 replica because the end-to-end environment (single node
+	// cluster) can't satisfy the anti-affinity rules.
 	deploy.Spec.Replicas = func(i int32) *int32 { return &i }(1)
 	deploy.Spec.Template.Spec.Affinity = nil
 	deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
@@ -711,14 +715,12 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		}
 	}
 
-	// Load the certificate and key from the created secret into the server
-	deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes,
-		v1.Volume{
-			Name:         "cert",
-			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: standaloneAdmissionHookSecretName}}})
-
-	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
-		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
+	// TODO(simonpasquier): remove after v0.61
+	deploy.Spec.Template.Spec.Volumes = []v1.Volume{{
+		Name:         "cert",
+		VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: standaloneAdmissionHookSecretName}}}}
+	// TODO(simonpasquier): remove after v0.61
+	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true}}
 
 	_, err = f.createOrUpdateServiceAccount(ctx, namespace, fmt.Sprintf("%s/admission-webhook/service-account.yaml", f.exampleDir))
 	if err != nil {
@@ -736,6 +738,7 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	}
 
 	service.Namespace = namespace
+	// TODO(simonpasquier): remove after v0.61
 	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
 	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, namespace, service); err != nil {
