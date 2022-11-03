@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.60.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.60.1
 	github.com/prometheus/alertmanager v0.24.0
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.13.1
 	github.com/prometheus/common v0.37.0
 	// This version is replaced using replace directive below
 	github.com/prometheus/prometheus v1.99.0
