@@ -460,6 +460,9 @@ func makeStatefulSetSpec(
 	if p.Spec.ListenLocal {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
 	} else {
+		if p.Spec.HostNetwork {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "[$(POD_IP)]:9090"})
+		}
 		ports = []v1.ContainerPort{
 			{
 				Name:          p.Spec.PortName,
@@ -956,6 +959,16 @@ func makeStatefulSetSpec(
 				AllowPrivilegeEscalation: &boolFalse,
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
+				},
+			},
+			Env: []v1.EnvVar{
+				{
+					Name: "POD_IP",
+					ValueFrom: &v1.EnvVarSource{
+						FieldRef: &v1.ObjectFieldSelector{
+							FieldPath: "status.podIP",
+						},
+					},
 				},
 			},
 		},
