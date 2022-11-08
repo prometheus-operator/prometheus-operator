@@ -1,23 +1,19 @@
 ---
-weight: 1000
+weight: 212
 toc: false
-title: Operator CLI Flags
+title: CLI reference
 menu:
     docs:
         parent: operator
+lead: Command line arguments for the operator binary
 images: []
 draft: false
-description: Lists of possible arguments passed to operator executable.
-date: "2021-12-16T11:50:00-00:00"
+description: Command line arguments for the operator binary
 ---
-
-# Operator CLI Flags
-
-This article lists arguments of operator executable.
 
 > Note this document is automatically generated from the `cmd/operator/main.go` file and shouldn't be edited directly.
 
-```$ mdox-exec="./operator --help"
+```console mdox-exec="./operator --help"
 Usage of ./operator:
   -alertmanager-config-namespaces value
     	Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.
@@ -60,7 +56,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.57.0")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.60.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

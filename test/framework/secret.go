@@ -16,7 +16,9 @@ package framework
 
 import (
 	"context"
+
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -36,10 +38,27 @@ func MakeSecretWithCert(ns, name string, keyList []string,
 	return secret
 }
 
-func (f *Framework) CreateSecretWithCert(ctx context.Context, certBytes, keyBytes []byte, ns, name string) error {
-
+func (f *Framework) CreateOrUpdateSecretWithCert(ctx context.Context, certBytes, keyBytes []byte, ns, name string) error {
 	secret := MakeSecretWithCert(ns, name, []string{"tls.key", "tls.crt"}, [][]byte{keyBytes, certBytes})
-	_, err := f.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
 
-	return err
+	_, err := f.KubeClient.CoreV1().Secrets(ns).Get(ctx, secret.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	if apierrors.IsNotFound(err) {
+		// Secret already exists -> Create
+		_, err = f.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
+	} else {
+		// Secret already exists -> Update
+		_, err = f.KubeClient.CoreV1().Secrets(ns).Update(ctx, secret, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

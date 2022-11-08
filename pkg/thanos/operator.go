@@ -40,11 +40,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -64,10 +62,10 @@ type Operator struct {
 	ruleInfs        *informers.ForResource
 	ssetInfs        *informers.ForResource
 
+	rr *operator.ResourceReconciler
+
 	nsThanosRulerInf cache.SharedIndexInformer
 	nsRuleInf        cache.SharedIndexInformer
-
-	queue workqueue.RateLimitingInterface
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -111,12 +109,14 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "can not parse thanos ruler selector value")
 	}
 
+	// All the metrics exposed by the controller get the controller="thanos" label.
+	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
+
 	o := &Operator{
 		kclient:         client,
 		mclient:         mclient,
 		logger:          logger,
-		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "thanos"),
-		metrics:         operator.NewMetrics("thanos", r),
+		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
 			Host:                   conf.Host,
@@ -132,6 +132,14 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			ThanosRulerSelector:    conf.ThanosRulerSelector,
 		},
 	}
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.metrics,
+		monitoringv1.ThanosRulerKind,
+		r,
+	)
 
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
@@ -266,11 +274,9 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (o *Operator) addHandlers() {
-	o.thanosRulerInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleThanosRulerAdd,
-		DeleteFunc: o.handleThanosRulerDelete,
-		UpdateFunc: o.handleThanosRulerUpdate,
-	})
+	o.thanosRulerInfs.AddEventHandler(o.rr)
+	o.ssetInfs.AddEventHandler(o.rr)
+
 	o.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleConfigMapAdd,
 		DeleteFunc: o.handleConfigMapDelete,
@@ -280,11 +286,6 @@ func (o *Operator) addHandlers() {
 		AddFunc:    o.handleRuleAdd,
 		DeleteFunc: o.handleRuleDelete,
 		UpdateFunc: o.handleRuleUpdate,
-	})
-	o.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleStatefulSetAdd,
-		DeleteFunc: o.handleStatefulSetDelete,
-		UpdateFunc: o.handleStatefulSetUpdate,
 	})
 
 	// The controller needs to watch the namespaces in which the rules live
@@ -299,8 +300,6 @@ func (o *Operator) addHandlers() {
 
 // Run the controller.
 func (o *Operator) Run(ctx context.Context) error {
-	defer o.queue.ShutDown()
-
 	errChan := make(chan error)
 	go func() {
 		v, err := o.kclient.Discovery().ServerVersion()
@@ -322,7 +321,8 @@ func (o *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	go o.worker(ctx)
+	go o.rr.Run(ctx)
+	defer o.rr.Stop()
 
 	go o.thanosRulerInfs.Start(ctx.Done())
 	go o.cmapInfs.Start(ctx.Done())
@@ -335,6 +335,7 @@ func (o *Operator) Run(ctx context.Context) error {
 	if err := o.waitForCacheSync(ctx); err != nil {
 		return err
 	}
+
 	o.addHandlers()
 
 	o.metrics.Ready().Set(1)
@@ -351,49 +352,12 @@ func (o *Operator) keyFunc(obj interface{}) (string, bool) {
 	return k, true
 }
 
-func (o *Operator) handleThanosRulerAdd(obj interface{}) {
-	key, ok := o.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(o.logger).Log("msg", "ThanosRuler added", "key", key)
-	o.metrics.TriggerByCounter(monitoringv1.ThanosRulerKind, "add").Inc()
-	o.enqueue(key)
-}
-
-func (o *Operator) handleThanosRulerDelete(obj interface{}) {
-	key, ok := o.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(o.logger).Log("msg", "ThanosRuler deleted", "key", key)
-	o.metrics.TriggerByCounter(monitoringv1.ThanosRulerKind, "delete").Inc()
-	o.enqueue(key)
-}
-
-func (o *Operator) handleThanosRulerUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.ThanosRuler).ResourceVersion == cur.(*monitoringv1.ThanosRuler).ResourceVersion {
-		return
-	}
-
-	key, ok := o.keyFunc(cur)
-	if !ok {
-		return
-	}
-
-	level.Debug(o.logger).Log("msg", "ThanosRuler updated", "key", key)
-	o.metrics.TriggerByCounter(monitoringv1.ThanosRulerKind, "update").Inc()
-	o.enqueue(key)
-}
-
 // TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (o *Operator) handleConfigMapAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap added")
-		o.metrics.TriggerByCounter("ConfigMap", "add").Inc()
+		o.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
 
 		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
 	}
@@ -403,7 +367,7 @@ func (o *Operator) handleConfigMapDelete(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap deleted")
-		o.metrics.TriggerByCounter("ConfigMap", "delete").Inc()
+		o.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
 
 		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
 	}
@@ -417,7 +381,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	meta, ok := o.getObjectMeta(cur)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap updated")
-		o.metrics.TriggerByCounter("ConfigMap", "update").Inc()
+		o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
 
 		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
 	}
@@ -428,7 +392,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule added")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "add").Inc()
+		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}
@@ -443,7 +407,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	meta, ok := o.getObjectMeta(cur)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule updated")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "update").Inc()
+		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}
@@ -454,14 +418,15 @@ func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule deleted")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "delete").Inc()
+		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}
 }
 
-func (o *Operator) thanosForStatefulSet(sset interface{}) *monitoringv1.ThanosRuler {
-	key, ok := o.keyFunc(sset)
+// Resolve implements the operator.Syncer interface.
+func (o *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+	key, ok := o.keyFunc(ss)
 	if !ok {
 		return nil
 	}
@@ -494,96 +459,6 @@ func thanosKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/thanos-ruler-" + keyParts[1]
 }
 
-func (o *Operator) handleStatefulSetAdd(obj interface{}) {
-	if ps := o.thanosForStatefulSet(obj); ps != nil {
-		level.Debug(o.logger).Log("msg", "StatefulSet added")
-		o.metrics.TriggerByCounter("StatefulSet", "add").Inc()
-
-		o.enqueue(ps)
-	}
-}
-
-func (o *Operator) handleStatefulSetDelete(obj interface{}) {
-	if ps := o.thanosForStatefulSet(obj); ps != nil {
-		level.Debug(o.logger).Log("msg", "StatefulSet delete")
-		o.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
-
-		o.enqueue(ps)
-	}
-}
-
-func (o *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
-	old := oldo.(*appsv1.StatefulSet)
-	cur := curo.(*appsv1.StatefulSet)
-
-	level.Debug(o.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
-
-	// Periodic resync may resend the StatefulSet without changes
-	// in-between. Also breaks loops created by updating the resource
-	// ourselves.
-	if old.ResourceVersion == cur.ResourceVersion {
-		return
-	}
-
-	if ps := o.thanosForStatefulSet(cur); ps != nil {
-		level.Debug(o.logger).Log("msg", "StatefulSet updated")
-		o.metrics.TriggerByCounter("StatefulSet", "update").Inc()
-
-		o.enqueue(ps)
-	}
-}
-
-// enqueue adds a key to the queue. If obj is a key already it gets added
-// directly. Otherwise, the key is extracted via keyFunc.
-func (o *Operator) enqueue(obj interface{}) {
-	if obj == nil {
-		return
-	}
-
-	key, ok := obj.(string)
-	if !ok {
-		key, ok = o.keyFunc(obj)
-		if !ok {
-			return
-		}
-	}
-
-	o.queue.Add(key)
-}
-
-// worker runs a worker thread that just dequeues items, processes them, and
-// marks them done. It enforces that the syncHandler is never invoked
-// concurrently with the same key.
-func (o *Operator) worker(ctx context.Context) {
-	for o.processNextWorkItem(ctx) {
-	}
-}
-
-func (o *Operator) processNextWorkItem(ctx context.Context) bool {
-	key, quit := o.queue.Get()
-	if quit {
-		return false
-	}
-	defer o.queue.Done(key)
-
-	o.metrics.ReconcileCounter().Inc()
-	startTime := time.Now()
-	err := o.sync(ctx, key.(string))
-	o.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	o.reconciliations.SetStatus(key.(string), err)
-
-	if err == nil {
-		o.queue.Forget(key)
-		return true
-	}
-
-	o.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrapf(err, "Sync %q failed", key))
-	o.queue.AddRateLimited(key)
-
-	return true
-}
-
 func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
@@ -596,7 +471,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	}
 
 	level.Debug(o.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
-	o.metrics.TriggerByCounter("Namespace", "update").Inc()
+	o.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for ThanosRuler instances selecting PrometheusRules in the namespace.
 	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
@@ -613,7 +488,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		}
 
 		if sync {
-			o.enqueue(tr)
+			o.rr.EnqueueForReconciliation(tr)
 		}
 	})
 	if err != nil {
@@ -622,6 +497,14 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 			"err", err,
 		)
 	}
+}
+
+// Sync implements the operator.Syncer interface.
+func (o *Operator) Sync(ctx context.Context, key string) error {
+	err := o.sync(ctx, key)
+	o.reconciliations.SetStatus(key, err)
+
+	return err
 }
 
 func (o *Operator) sync(ctx context.Context, key string) error {
@@ -637,8 +520,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	tr := trobj.(*monitoringv1.ThanosRuler)
 	tr = tr.DeepCopy()
-	tr.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	tr.Kind = monitoringv1.ThanosRulerKind
+	if err := k8sutil.AddTypeInformationToObject(tr); err != nil {
+		return errors.Wrap(err, "failed to set ThanosRuler type information")
+	}
 
 	if tr.Spec.Paused {
 		return nil
@@ -683,12 +567,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
 		existingStatefulSet = obj.(*appsv1.StatefulSet)
-		if existingStatefulSet.DeletionTimestamp != nil {
-			level.Info(logger).Log(
-				"msg", "halting update of StatefulSet",
-				"reason", "resource has been marked for deletion",
-				"resource_name", existingStatefulSet.GetName(),
-			)
+		if o.rr.DeletionInProgress(existingStatefulSet) {
 			return nil
 		}
 	}
@@ -734,6 +613,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "updating StatefulSet failed")
 	}
 
+	return nil
+}
+
+// UpdateStatus implements the operator.Syncer interface.
+func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
+	// FIXME(simonpasquier): implement status update logic.
 	return nil
 }
 
@@ -866,7 +751,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {
-			o.enqueue(tr)
+			o.rr.EnqueueForReconciliation(tr)
 			return
 		}
 
@@ -884,7 +769,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			o.enqueue(tr)
+			o.rr.EnqueueForReconciliation(tr)
 			return
 		}
 	})

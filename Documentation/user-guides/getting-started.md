@@ -1,36 +1,74 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.<br><br>
-This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
-</div>
+---
+weight: 151
+toc: true
+title: Getting Started
+menu:
+    docs:
+        parent: user-guides
+lead: ""
+images: []
+draft: false
+description: Getting started guide
+---
 
-# Prometheus Operator
+The Prometheus Operator's goal is to make running Prometheus on top of Kubernetes
+as easy as possible, while preserving Kubernetes-native configuration options.
 
-[Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) were introduced by CoreOS as a class of software that operates other software, putting operational knowledge collected by humans into software.
+This guide will show you how to deploy the Prometheus operator, set up a
+Prometheus instance, and configure metrics collection for a sample application.
 
-The Prometheus Operator serves to make running Prometheus on top of Kubernetes as easy as possible, while preserving Kubernetes-native configuration options.
+{{< alert icon="👉" text="Prometheus Operator requires use of Kubernetes v1.16.x and up."/>}}
 
-## Example Prometheus Operator manifest
+> Note: [Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+> were introduced by CoreOS as a class of software that operates other software,
+> putting operational knowledge collected by humans into software.
 
-To follow this getting started you will need a Kubernetes cluster you have access to. This [example](../../bundle.yaml) describes a Prometheus Operator Deployment, and its required ClusterRole, ClusterRoleBinding, Service Account and Custom Resource Definitions.
+## Pre-requisites
 
-## Related resources
+To follow this guide, you will need a Kubernetes cluster with admin permissions.
 
-The Prometheus Operator introduces additional resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
+## Installing the operator
+
+The first step is to install the operator's Custom Resource Definitions (CRDs) as well
+as the operator itself with the required RBAC resources.
+
+Run the following commands to install the CRDs and deploy the operator in the `default` namespace:
+
+```bash
+LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
+curl -sL https://github.com/prometheus-operator/prometheus-operator/releases/download/${LATEST}/bundle.yaml | kubectl create -f -
+```
+
+It can take a few minutes for the operator to be up and running. You can check for completion with the following command:
+
+```bash
+kubectl wait --for=condition=Ready pods -l  app.kubernetes.io/name=prometheus-operator -n default
+```
+
+The Prometheus Operator introduces custom resources in Kubernetes to declare
+the desired state of a Prometheus and Alertmanager cluster as well as the
+Prometheus configuration. For this guide, the resources of interest are:
 
 * `Prometheus`
-* `Alertmanager`
 * `ServiceMonitor`
+* `PodMonitor`
 
-> See the [Alerting guide](alerting.md) for more information about the `Alertmanager` resource, or the [Design document](../design.md) for an overview of all resources introduced by the Prometheus Operator.
+The `Prometheus` resource declaratively describes the desired state of a
+Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
+describe the targets to be monitored by Prometheus.
 
-The Prometheus resource declaratively describes the desired state of a Prometheus deployment, while a ServiceMonitor describes the set of targets to be monitored by Prometheus.
+<!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
-![Prometheus Operator Architecture](images/architecture.png "Prometheus Operator Architecture")
+![Prometheus Operator Architecture](/img/architecture.png)
 
-The Prometheus resource includes a field called `serviceMonitorSelector`, which defines a selection of ServiceMonitors to be used. By default and before the version `v0.19.0`, ServiceMonitors must be installed in the same namespace as the Prometheus instance. With the Prometheus Operator `v0.19.0` and above, ServiceMonitors can be selected outside the Prometheus namespace via the `serviceMonitorNamespaceSelector` field of the Prometheus resource.
+> Note: Check the [Alerting guide]({{< ref "alerting" >}}) for more information about the `Alertmanager` resource.
 
-First, deploy three instances of a simple example application, which listens and exposes metrics on port `8080`.
+> Note: Check the [Design page]({{< ref "design" >}}) for an overview of all resources introduced by the Prometheus Operator.
+
+## Deploying a sample application
+
+First, let's deploy a simple example application with 3 replicas which listens
+and exposes metrics on port `8080`.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-deployment.yaml"
 apiVersion: apps/v1
@@ -55,7 +93,9 @@ spec:
           containerPort: 8080
 ```
 
-The ServiceMonitor has a label selector to select Services and their underlying Endpoint objects. The Service object for the example application selects the Pods by the `app` label having the `example-app` value. The Service object also specifies the port on which the metrics are exposed.
+Let's expose the application with a Service object which selects all the Pods
+with the `app` label having the `example-app` value. The Service object also
+specifies the port on which the metrics are exposed.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service.yaml"
 kind: Service
@@ -72,7 +112,10 @@ spec:
     port: 8080
 ```
 
-This Service object is discovered by a ServiceMonitor, which selects in the same way. The `app` label must have the value `example-app`.
+Finally we create a ServiceMonitor object which selects all Service objects
+with the `app: example-app` label. The ServiceMonitor object also has a `team`
+label (in this case `team: frontend`) to identify which team is responsible for
+monitoring the application/service.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -89,11 +132,14 @@ spec:
   - port: web
 ```
 
-## Enable RBAC rules for Prometheus pods
+## Deploying Prometheus
 
-If [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) authorization is activated, you must create RBAC rules for both Prometheus *and* Prometheus Operator. A ClusterRole and a ClusterRoleBinding for the Prometheus Operator were created in the example Prometheus Operator manifest above. The same must be done for the Prometheus Pods.
+If
+[RBAC](https://kubernetes.io/docs/reference/access-authn-authz/authorization/)
+authorization is activated on your cluster, you must first create the RBAC rules
+for the Prometheus service account beforehand.
 
-Create a ClusterRole and ClusterRoleBinding for the Prometheus Pods:
+Apply the following manifests to create the service account and required ClusterRole/ClusterRoleBinding:
 
 ```yaml mdox-exec="cat example/rbac/prometheus/prometheus-service-account.yaml"
 apiVersion: v1
@@ -144,11 +190,18 @@ subjects:
   namespace: default
 ```
 
-For more information, see the [Prometheus Operator RBAC guide](../rbac.md).
+For more information, see the [Prometheus Operator RBAC guide]({{< ref "rbac" >}}).
 
-## Include ServiceMonitors
+The Prometheus custom resource defines the characteristics of the underlying
+concrete StatefulSet (number of replicas, resource requests/limits , ...) as
+well as which ServiceMonitors should be included with the
+`spec.serviceMonitorSelector` field.
 
-A Prometheus object defines the `serviceMonitorSelector` to specify which ServiceMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
+Previously, we have created the ServiceMonitor object with the `team: frontend`
+label and here we define that the Prometheus object should select all
+ServiceMonitors with the `team: frontend` label. This enables the frontend team
+to create new ServiceMonitors and Services without having to reconfigure the
+Prometheus object.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-service-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -166,13 +219,39 @@ spec:
   enableAdminAPI: false
 ```
 
-> If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest](../../example/rbac/prometheus/prometheus.yaml) instead.
+To verify that the instance is up and running, run:
 
-This enables the frontend team to create new ServiceMonitors and Services which allow Prometheus to be dynamically reconfigured.
+```bash
+kubectl get -n default prometheus prometheus -w
+```
 
-## Include PodMonitors
+By default, Prometheus will only pick up ServiceMonitors from the current
+namespace. To select ServiceMonitors from other namespaces, you can update the
+`spec.serviceMonitorNamespaceSelector` field of the Prometheus resource.
 
-Finally, a Prometheus object defines the `podMonitorSelector` to specify which PodMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
+## Using PodMonitors
+
+Instead of a ServiceMonitor, we can use a PodMonitor which doesn't require the
+creation of a Kubernetes Service. In practice, the `spec.selector` label tells
+Prometheus which Pods should be scraped.
+
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-pod-monitor.yaml"
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  podMetricsEndpoints:
+  - port: web
+```
+
+Similarly the Prometheus object defines which PodMonitors get selected with the
+`spec.podMonitorSelector` field.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-pod-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -190,13 +269,10 @@ spec:
   enableAdminAPI: false
 ```
 
-> If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest](../../example/rbac/prometheus/prometheus.yaml) instead.
+## Exposing the Prometheus service
 
-This enables the frontend team to create new PodMonitors which allow Prometheus to be dynamically reconfigured.
-
-## Expose the Prometheus instance
-
-To access the Prometheus instance it must be exposed to the outside. This example exposes the instance using a Service of type `NodePort`.
+To access the Prometheus interface, you have to expose the service to the outside. For
+simplicity, we use a `NodePort` Service.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-service.yaml"
 apiVersion: v1
@@ -215,18 +291,25 @@ spec:
     prometheus: prometheus
 ```
 
-Once this Service is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
+Once the Service is created, the Prometheus web server is available under the
+node's IP address on port `30900`. The Targets page in the web interface should
+show that the instances of the example application have successfully been
+discovered.
 
-> Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide](exposing-prometheus-and-alertmanager.md).
+> Note: Exposing the Prometheus web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide](exposing-prometheus-and-alertmanager.md).
 
-## Expose the Prometheus Admin API
+## Exposing the Prometheus Admin API
 
-Prometheus Admin API allows access to delete series for a certain time range, cleanup tombstones, capture snapshots, etc. More information about the admin API can be found in [Prometheus official documentation](https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis)
-This API access is disabled by default and can be toggled using this boolean flag. The following example exposes the admin API:
+Prometheus Admin API allows access to delete series for a certain time range,
+cleanup tombstones, capture snapshots, etc. More information about the admin
+API can be found in [Prometheus official
+documentation](https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis)
+This API access is disabled by default and can be toggled using this boolean
+flag. The following example exposes the admin API:
 
 > WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 > shutdown Prometheus, and more. Enabling this should be done with care and the
-> user is advised to add additional authentication authorization via a proxy to
+> user is advised to add additional authentication/authorization via a proxy to
 > ensure only clients authorized to perform these actions can do so.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-admin-api.yaml"
@@ -245,6 +328,6 @@ spec:
   enableAdminAPI: true
 ```
 
-Further reading:
+Next:
 
-* [Alerting](alerting.md) describes using the Prometheus Operator to manage Alertmanager clusters.
+* [Alerting]({{< ref "alerting" >}}) describes using the Prometheus Operator to manage Alertmanager clusters.

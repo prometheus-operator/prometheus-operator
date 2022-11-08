@@ -27,6 +27,7 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -194,6 +195,10 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		var marshalErr error
 		err := c.ruleInfs.ListAllByNamespace(ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
+			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
+				level.Error(c.logger).Log("msg", "failed to set rule type information", "namespace", ns, "err", err)
+				return
+			}
 
 			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
 				marshalErr = err
@@ -350,11 +355,13 @@ func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
 		if group.PartialResponseStrategy == "" {
 			continue
 		}
+		// TODO(slashpai): Remove this validation after v0.65 since this is handled at CRD level
 		if _, ok := thanostypes.PartialResponseStrategy_value[strings.ToUpper(group.PartialResponseStrategy)]; !ok {
 			return []error{
 				fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
 			}
 		}
+
 		// reset this as the upstream prometheus rule validator
 		// is not aware of the partial_response_strategy field
 		promRule.Groups[i].PartialResponseStrategy = ""

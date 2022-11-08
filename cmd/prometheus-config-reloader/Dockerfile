@@ -2,7 +2,7 @@ ARG ARCH="amd64"
 ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 
-ADD prometheus-config-reloader /bin/prometheus-config-reloader
+COPY prometheus-config-reloader /bin/prometheus-config-reloader
 
 USER nobody
 

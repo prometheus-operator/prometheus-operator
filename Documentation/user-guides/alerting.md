@@ -1,25 +1,52 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.<br><br>
-</div>
+---
+weight: 152
+toc: true
+title: Alerting
+menu:
+    docs:
+        parent: user-guides
+lead: ""
+images: []
+draft: false
+description: Alerting guide
+---
 
-# Alerting
+This guide assumes that you have a basic understanding of the Prometheus
+operator, and that you have already followed the [Getting Started]({{< ref
+"getting-started" >}}) guide.
 
-This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started guide](getting-started.md).
+{{< alert icon="👉" text="Prometheus Operator requires use of Kubernetes v1.16.x and up."/>}}
 
-The Prometheus Operator introduces an Alertmanager resource, which allows users to declaratively describe an Alertmanager cluster. To successfully deploy an Alertmanager cluster, it is important to understand the contract between Prometheus and Alertmanager.
+The Prometheus Operator introduces an `Alertmanager` resource, which allows
+users to declaratively describe an Alertmanager cluster. To successfully deploy
+an Alertmanager cluster, it is important to understand the contract between
+Prometheus and Alertmanager. Alertmanager is used to:
 
-The Alertmanager may be used to:
+* Deduplicate alerts received from Prometheus.
+* Silence alerts.
+* Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
 
-* Deduplicate alerts fired by Prometheus
-* Silence alerts
-* Route and send grouped notifications via providers (PagerDuty, OpsGenie, ...)
+The Prometheus Operator also introduces an `AlertmanagerConfig` resource, which
+allows users to declaratively describe Alertmanager configurations.
 
-Prometheus' configuration also includes "rule files", which contain the [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description](../high-availability.md).
+> Note: The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
 
-The Prometheus Operator also introduces an AlertmanagerConfig resource, which allows users to declaratively describe Alertmanager configurations. The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
+Prometheus' configuration also includes "rule files", which contain the
+[alerting
+rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
+When an alerting rule triggers, it fires that alert against *all* Alertmanager
+instances, on *every* rule evaluation interval. The Alertmanager instances
+communicate to each other which notifications have already been sent out. For
+more information on this system design, see the [High Availability]({{< ref "high-availability" >}})
+page.
 
-First, create an example Alertmanager cluster, with three instances.
+## Pre-requisites
+
+You have a running Prometheus operator.
+
+## Deploying Alertmanager
+
+First, let's create a Alertmanager cluster with three replicas:
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -30,13 +57,87 @@ spec:
   replicas: 3
 ```
 
-The Alertmanager instances will not be able to start up, unless a valid configuration is given. An config file Secret will be composed by taking an optional base config file Secret specified through the `configSecret` field in the Alertmanager resource Spec, and merging that with any AlertmanagerConfig resources that get matched by using the `alertmanagerConfigSelector` and `alertmanagerConfigNamespaceSelector` selectors from the `Alertmanager` resource.
+Wait for all Alertmanager pods to be ready:
 
-For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document](https://prometheus.io/docs/alerting/configuration/).
+```bash
+kubectl get pods -l alertmanager=example -w
+```
 
-## AlertmanagerConfig Resource
+## Managing Alertmanager configuration
 
-The following example configuration creates an AlertmanagerConfig resource that sends notifications to a non-existent `wechat` receiver:
+By default, the Alertmanager instances will start with a minimal configuration
+which isn't really useful since it doesn't send any notification when receiving
+alerts.
+
+You have several options to provide the [Alertmanager configuration](https://prometheus.io/docs/alerting/configuration/):
+1. You can use a native Alertmanager configuration file stored in a Kubernetes secret.
+2. You can use `spec.alertmanagerConfiguration` to reference an
+   AlertmanagerConfig object in the same namespace which defines the main
+   Alertmanager configuration.
+3. You can define `spec.alertmanagerConfigSelector` and
+   `spec.alertmanagerConfigNamespaceSelector` to tell the operator which
+   AlertmanagerConfigs objects should be selected and merged with the main
+   Alertmanager configuration.
+
+### Using a Kubernetes Secret
+
+The following native Alertmanager configuration sends notifications to a fictuous webhook service:
+
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://example.com/'
+```
+
+Save the above configuration in a file called `alertmanager.yaml` in the local directory and create a Secret from it:
+
+```bash
+kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
+```
+
+The Prometheus operator requires the Secret to be named like
+`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the
+Alertmanager is `example`, so the secret name must be `alertmanager-example`.
+The name of the key holding the configuration data in the Secret has to be
+`alertmanager.yaml`.
+
+> Note: if you want to use a different secret name, you can specify it with the `spec.configSecret` field in the Alertmanager resource.
+
+The Alertmanager configuration may reference custom templates or password files
+on disk. These can be added to the Secret along with the `alertmanager.yaml`
+configuration file. For example, provided that we have the following Secret:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-example
+data:
+  alertmanager.yaml: {BASE64_CONFIG}
+  template_1.tmpl: {BASE64_TEMPLATE_1}
+  template_2.tmpl: {BASE64_TEMPLATE_2}
+```
+
+Templates will be accessible to the Alertmanager container under the
+`/etc/alertmanager/config` directory. The Alertmanager
+configuration can reference them like this:
+
+```yaml
+templates:
+- '/etc/alertmanager/config/*.tmpl'
+```
+
+### Using AlertmanagerConfig Resources
+
+The following example configuration creates an AlertmanagerConfig resource that
+sends notifications to a fictitious webhook service.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-config-example.yaml"
 apiVersion: monitoring.coreos.com/v1alpha1
@@ -51,33 +152,23 @@ spec:
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: 'wechat-example'
+    receiver: 'webhook'
   receivers:
-  - name: 'wechat-example'
-    wechatConfigs:
-    - apiURL: 'http://wechatserver:8080/'
-      corpID: 'wechat-corpid'
-      apiSecret:
-        name: 'wechat-config'
-        key: 'apiSecret'
-
----
-apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: wechat-config
-data:
-  apiSecret: d2VjaGF0LXNlY3JldAo=
+  - name: 'webhook'
+    webhookConfigs:
+    - url: 'http://example.com/'
 ```
 
-Save the above AlertmanagerConfig in a file called `alertmanager-config.yaml` and create a resource from it using `kubectl`.
+Create the AlertmanagerConfig resource in your cluster:
 
 ```bash
-$ kubectl create -f alertmanager-config.yaml
+curl -sL https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/user-guides/alerting/alertmanager-config-example.yaml | kubectl create -f -
 ```
 
-The `alertmanagerConfigSelector` field in the Alertmanager resource Spec needs to be specified so that the operator can select such AlertmanagerConfig resources. In the previous example, the label `alertmanagerConfig: example` is added, so the Alertmanager instance should be updated, adding the `alertmanagerConfigSelector`:
+The `spec.alertmanagerConfigSelector` field in the Alertmanager resource
+needs to be updated so the operator selects AlertmanagerConfig resources. In
+the previous example, the label `alertmanagerConfig: example` is added, so the
+Alertmanager object should be updated like this:
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-selector-example.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -91,9 +182,11 @@ spec:
       alertmanagerConfig: example
 ```
 
-## Specify Global Alertmanager Config
+### Using AlertmanagerConfig for global configuration
 
-The following example configuration creates an Alertmanager resource that specify an AlertmanagerConfig resource to be global(won't force add a `namespace` label in routes and inhibitRules):
+The following example configuration creates an Alertmanager resource that uses
+an AlertmanagerConfig resource to be used for the Alertmanager configuration
+instead of the `alertmanager-example` secret.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-alertmanager-configuration.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -104,65 +197,18 @@ metadata:
 spec:
   replicas: 3
   alertmanagerConfiguration:
-    name: example-config
+    name: config-example
 ```
 
-The AlertmanagerConfig resource named `example-config` in namespace `default` will be an global AlertmanagerConfig. When generating configs in alertmanager, routes and inhibitRules in the AlertmanagerConfig will not be force add a namespace label.
+The AlertmanagerConfig resource named `example-config` in namespace `default`
+will be a global AlertmanagerConfig. When the operator generates the
+Alertmanager configuration from it, the namespace label will not be enforced
+for routes and inhibition rules.
 
-## Manually Managed Secret
+## Exposing the Alertmanager service
 
-The following example configuration sends notifications against to a `webhook`:
-
-```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
-global:
-  resolve_timeout: 5m
-route:
-  group_by: ['job']
-  group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 12h
-  receiver: 'webhook'
-receivers:
-- name: 'webhook'
-  webhook_configs:
-  - url: 'http://alertmanagerwh:30500/'
-```
-
-Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`
-
-Alertmanager instances require the secret resource naming to follow the format
-`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`. Also, the name of the secret can be set through the field `configSecret` in Alertmanager configuration, if you desire to use a different one.
-
-```bash
-$ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
-```
-
-Note that Alertmanager configurations can use templates (`.tmpl` files), which can be added on the secret along with the `alertmanager.yaml` config file. For example:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: alertmanager-example
-data:
-  alertmanager.yaml: {BASE64_CONFIG}
-  template_1.tmpl: {BASE64_TEMPLATE_1}
-  template_2.tmpl: {BASE64_TEMPLATE_2}
-  ...
-```
-
-Templates will be placed on the same path as the configuration. To load the templates, the configuration (`alertmanager.yaml`) should point to them:
-
-```yaml
-templates:
-- '*.tmpl'
-```
-
-## Expose Alertmanager
-
-Once the operator merges the optional manually specified Secret with any selected `AlertmanagerConfig` resources, a new configuration Secret is created with the name `alertmanager-<Alertmanager name>-generated`, and is mounted into Alertmanager Pods created through the Alertmanager object.
-
-To be able to view the web UI, expose it through a Service. A simple way to do this is to use a Service of type `NodePort`.
+To access the Alertmanager interface, you have to expose the service to the outside. For
+simplicity, we use a `NodePort` Service.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-service.yaml"
 apiVersion: v1
@@ -181,11 +227,19 @@ spec:
     alertmanager: example
 ```
 
-Once created it allows the web UI to be accessible via a Node's IP and the port `30903`.
+Once the Service is created, the Alertmanager web server is available under the
+node's IP address on port `30903`.
 
-## Fire Alerts
+> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide](exposing-prometheus-and-alertmanager.md).
 
-This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create Prometheus instances to fire alerts to the Alertmanagers.
+## Integrating with Prometheus
+
+### Configuring Alertmanager in Prometheus
+
+This Alertmanager cluster is now fully functional and highly available, but no
+alerts are fired against it.
+
+First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
 
 ```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -193,6 +247,7 @@ kind: Prometheus
 metadata:
   name: example
 spec:
+  serviceAccountName: prometheus
   replicas: 2
   alerting:
     alertmanagers:
@@ -208,19 +263,29 @@ spec:
       prometheus: example
 ```
 
-The above configuration specifies a `Prometheus` that finds all of the Alertmanagers behind the `Service` created with `alertmanager-example-service.yaml`. The `alertmanagers` `name` and `port` fields should match those of the `Service` to allow this to occur.
+The `Prometheus` resource discovers all of the Alertmanager instances behind
+the `Service` created before (pay attention to `name`, `namespace` and `port`
+fields which should match with the definition of the Alertmanager Service).
 
-### Rule Selection
+Open the Prometheus web interface, go to the "Status > Runtime & Build
+Information" page and check that the Prometheus has discovered 3 Alertmanager
+instances.
 
-Prometheus rule files are held in `PrometheusRule` custom resources. Use the label selector field `ruleSelector` in the Prometheus object to define the rule files that you want to be mounted into Prometheus.
+### Deploying Prometheus Rules
 
-By default, only `PrometheusRule` custom resources in the same namespace as the `Prometheus` custom resource are discovered.
+The `PrometheusRule` CRD allows to define alerting and recording rules. The
+operator knows which PrometheusRule objects to select for a given Prometheus
+based on the `spec.ruleSelector` field.
 
-This can be further controlled with the `ruleNamespaceSelector` field, which is a [`metav1.LabelSelector`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta).
+> Note: by default, `spec.ruleSelector` is nil meaning that the operator picks up no rule.
 
-To discover from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
+By default, the Prometheus resources discovers only `PrometheusRule` resources
+in the same namespace. This can be refined with the `ruleNamespaceSelector` field:
+* To discover rules from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
+* To discover rules from all namespaces matching a certain label, use the `matchLabels` field.
 
-To discover from all namespaces with a certain label, use the `matchLabels` field:
+Discover `PrometheusRule` resources with `role=alert-rules` and
+`prometheus=example` labels from all namespaces with `team=frontend` label:
 
 ```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example-rule-namespace-selector.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -228,6 +293,7 @@ kind: Prometheus
 metadata:
   name: example
 spec:
+  serviceAccountName: prometheus
   replicas: 2
   alerting:
     alertmanagers:
@@ -246,13 +312,14 @@ spec:
       team: frontend
 ```
 
-This will discover `PrometheusRule` custom resources from all namespaces with a `team=frontend` label.
+In case you want to select individual namespace by their name, you can use the
+`kubernetes.io/metadata.name` label, which gets populated automatically with
+the
+[`NamespaceDefaultLabelName`](https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name)
+feature gate.
 
-In case you want to select individual namespace by their name, you can use the `kubernetes.io/metadata.name` label, which gets populated automatically with the [`NamespaceDefaultLabelName`](https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name) feature gate.
-
-### `PrometheusRule` labelling
-
-The best practice is to label the `PrometheusRule`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
+Create a PrometheusRule object from the following manifest. Note that the
+object's labels match with the `spec.ruleSelector` of the Prometheus object.
 
 ```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example-rules.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -271,26 +338,8 @@ spec:
       expr: vector(1)
 ```
 
-The example `PrometheusRule` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
+For demonstration purposes, the PrometheusRule object always fires the
+`ExampleAlert` alert. To validate that everything is working properly, you can
+open again the Prometheus web interface and go to the Alerts page.
 
-Use kubectl's proxy functionality to view the web UI without a Service.
-
-Run:
-
-```bash
-kubectl proxy --port=8001
-```
-
-Then the web UI of each Prometheus instance can be viewed, they both have a firing alert called `ExampleAlert`, as defined in the loaded alerting rules.
-
-* http://localhost:8001/api/v1/proxy/namespaces/default/pods/prometheus-example-0:9090/alerts
-* http://localhost:8001/api/v1/proxy/namespaces/default/pods/prometheus-example-1:9090/alerts
-
-Looking at the status page for "Runtime & Build Information" on the Prometheus web UI shows the discovered and active Alertmanagers that the Prometheus instance will fire alerts against.
-
-* http://localhost:8001/api/v1/proxy/namespaces/default/pods/prometheus-example-0:9090/status
-* http://localhost:8001/api/v1/proxy/namespaces/default/pods/prometheus-example-1:9090/status
-
-These show three discovered Alertmanagers.
-
-Heading to the Alertmanager web UI now shows one active alert, although all Prometheus instances are firing it. [Configuring the Alertmanager](https://prometheus.io/docs/alerting/configuration/) further allows custom alert routing, grouping and notification mechanisms.
+Next open the Alertmanager web interface and check that it shows one active alert.

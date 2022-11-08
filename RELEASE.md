@@ -24,8 +24,13 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.54   | 2022-01-26                                 | Filip Petkovski (Github: @fpetkovski)   |
 | v0.55   | 2022-03-09                                 | Philip Gough (GitHub: @PhilipGough)     |
 | v0.56   | 2022-04-20                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.57   | 2022-06-01                                 | **searching for volunteer**             |
-| v0.58   | 2022-07-13                                 | **searching for volunteer**             |
+| v0.57   | 2022-06-01                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.58   | 2022-07-13                                 | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.59   | 2022-08-24                                 | Philip Gough (GitHub: @PhilipGough)     |
+| v0.60   | 2022-10-05                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.61   | 2022-11-16                                 | Filip Petkovski (Github: @fpetkovski)   |
+| v0.62   | 2022-12-28                                 | **searching for volunteer**             |
+| v0.63   | 2023-02-08                                 | **searching for volunteer**             |
 
 # How to cut a new release
 

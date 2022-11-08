@@ -1,31 +1,35 @@
 ---
-title: "Compatibility"
-description: "The Prometheus Operator supports a number of Kubernetes and Prometheus releases."
-lead: ""
-date: 2021-03-08T08:49:31+00:00
-draft: false
-images: []
-menu:
-  docs:
-    parent: "operator"
-weight: 200
+weight: 202
 toc: true
+title: Compatibility
+menu:
+    docs:
+        parent: operator
+lead: The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
+images: []
+draft: false
+description: The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
 ---
 
-The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
+It is recommended to use versions of the components identical or close to the versions used by the operator's end-to-end test suite (the specific version numbers are listed below).
 
 ## Kubernetes
 
-The Prometheus Operator uses client-go to communicate with Kubernetes clusters. The supported Kubernetes cluster version is determined by client-go. The compatibility matrix for client-go and Kubernetes clusters can be found [here](https://github.com/kubernetes/client-go#compatibility-matrix). All additional compatibility is only best effort, or happens to still/already be supported. The currently used client-go version is "v4.0.0-beta.0".
+Due to the use of apiextensions.k8s.io/v1 CustomResourceDefinitions, prometheus-operator requires Kubernetes >= v1.16.0.
 
-Due to the use of CustomResourceDefinitions Kubernetes >= v1.7.0 is required.
+The Prometheus Operator uses the official [Go client](https://github.com/kubernetes/client-go) for Kubernetes to communicate with the Kubernetes API. The compatibility matrix for client-go and Kubernetes clusters can be found [here](https://github.com/kubernetes/client-go#compatibility-matrix). All additional compatibility is only best effort, or happens to be still/already supported.
 
-Due to the use of apiextensions.k8s.io/v1 CustomResourceDefinitions, prometheus-operator v0.39.0 onward requires Kubernetes >= v1.16.0.
+The current version of the Prometheus operator uses the following Go client version:
+
+```$ mdox-exec="go list -m  -f '{{ .Version }}' k8s.io/client-go"
+v0.25.2
+```
 
 ## Prometheus
 
-The versions of Prometheus compatible to be run with the Prometheus Operator are:
+The versions of Prometheus compatible with the Prometheus Operator are:
 
+```$ mdox-exec="go run ./cmd/po-docgen/. compatibility"
 * v2.0.0
 * v2.2.1
 * v2.3.1
@@ -92,8 +96,34 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v2.34.0
 * v2.35.0
 * v2.36.0
+* v2.37.0
+* v2.37.1
+* v2.38.0
+* v2.39.0
+```
+
+The end-to-end tests are mostly tested against
+
+```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
+* v2.39.0
+```
 
 ## Alertmanager
 
-We only support Alertmanager v0.15 and above. Everything below v0.15 is on a
-best effort basis.
+The Prometheus Operator is compatible with Alertmanager v0.15 and above.
+
+The end-to-end tests are mostly tested against
+
+```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
+* v0.24.0
+```
+
+## Thanos
+
+The Prometheus Operator is compatible with Thanos v0.10 and above.
+
+The end-to-end tests are mostly tested against
+
+```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
+* v0.28.0
+```

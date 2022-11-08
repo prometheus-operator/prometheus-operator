@@ -1,15 +1,28 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
+---
+weight: 206
+toc: true
+title: Storage
+menu:
+    docs:
+        parent: operator
+lead: ""
+images: []
+draft: false
+description: Storage considerations
+---
 
-# Storage
+By default, the operator configures Pods to store data on `emptyDir` volumes
+which aren't persisted when the Pods are redeployed. To maintain data across
+deployments and version upgrades, you can configure persistent storage for
+Prometheus, Alertmanager and ThanosRuler resources.
 
-To maintain data across deployments and version upgrades, the data must be persisted to some volume other than `emptyDir`, allowing it to be reused by Pods after an upgrade.
+Kubernetes supports several kinds of storage volumes. The Prometheus Operator
+works with PersistentVolumeClaims, which support the underlying
+PersistentVolume to be provisioned when requested.
 
-Kubernetes supports several kinds of storage volumes. The Prometheus Operator works with PersistentVolumeClaims, which support the underlying PersistentVolume to be provisioned when requested.
-
-This document assumes a basic understanding of PersistentVolumes, PersistentVolumeClaims, and their [provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
+This document assumes a basic understanding of PersistentVolumes,
+PersistentVolumeClaims, and their
+[provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
 
 ## Storage Provisioning on AWS
 
@@ -25,11 +38,19 @@ parameters:
   type: gp2
 ```
 
-> Make sure that AWS as a cloud provider is properly configured with your cluster, or storage provisioning will not work.
+> Note: Make sure that AWS as a cloud provider is properly configured with your cluster, or storage provisioning will not work.
 
-For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws) documentation to adapt this `StorageClass` to your needs.
+For best results, use volumes that have high I/O throughput. These examples use
+SSD EBS volumes. Read the Kubernetes [Persistent
+Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws)
+documentation to adapt this `StorageClass` to your needs.
 
-The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/main/examples/prometheus-pvc.jsonnet) example).
+The `StorageClass` that was created can be specified in the `storage` section
+in the `Prometheus` resource (note that if you're using
+[kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then
+instead of making the following change to your `Prometheus` resource, see the
+[prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/main/examples/prometheus-pvc.jsonnet)
+example).
 
 ```yaml mdox-exec="cat example/storage/persisted-prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -46,17 +67,26 @@ spec:
             storage: 40Gi
 ```
 
-> The full documentation of the `storage` field can be found in the [API documentation](../api.md#storagespec).
+> The full documentation of the `storage` field can be found in the [API reference]({{< ref "api" >}}).
 
-When creating the Prometheus object, a PersistentVolumeClaim is used for each Pod in the StatefulSet, and the storage should automatically be provisioned, mounted and used.
+When creating the Prometheus object, a PersistentVolumeClaim is used for each
+Pod in the StatefulSet, and the storage should automatically be provisioned,
+mounted and used.
+
+The same approach should work with other cloud providers (GCP, Azure, ...) and
+any Kubernetes storage provider supporting dynamic provisioning.
 
 ## Manual storage provisioning
 
-The Prometheus CRD specification allows you to support arbitrary storage through a PersistentVolumeClaim.
+The Prometheus CRD specification allows you to support arbitrary storage
+through a PersistentVolumeClaim.
 
-The easiest way to use a volume that cannot be automatically provisioned (for whatever reason) is to use a label selector alongside a manually created PersistentVolume.
+The easiest way to use a volume that cannot be automatically provisioned (for
+whatever reason) is to use a label selector alongside a manually created
+PersistentVolume.
 
-For example, using an NFS volume might be accomplished with the following specifications:
+For example, using an NFS volume might be accomplished with the following
+manifests:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -66,7 +96,7 @@ metadata:
   labels:
     prometheus: example
 spec:
-  ...
+  replicas: 1
   storage:
     volumeClaimTemplate:
       spec:
@@ -76,9 +106,7 @@ spec:
         resources:
           requests:
             storage: 50Gi
-
 ---
-
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -97,11 +125,19 @@ spec:
 
 ### Disabling Default StorageClasses
 
-To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable the default StorageClass that is automatically created for certain Cloud Providers. Default StorageClasses are pre-installed on Azure, AWS, GCE, OpenStack, and vSphere.
+To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable
+the default StorageClass that is automatically created for certain Cloud
+Providers. Default StorageClasses are pre-installed on Azure, AWS, GCE,
+OpenStack, and vSphere.
 
-The default StorageClass behavior will override manual storage provisioning, preventing PersistentVolumeClaims from automatically binding to manually created PersistentVolumes.
+The default StorageClass behavior will override manual storage provisioning,
+preventing PersistentVolumeClaims from automatically binding to manually
+created PersistentVolumes.
 
-To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes) for more information.)
+To override this behavior, you must explicitly create the same resource, but
+set it to *not* be default (see the
+[changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes)
+for more information.)
 
 For example, to disable default StorageClasses on a Google Container Engine cluster, create the following StorageClass:
 
@@ -118,3 +154,49 @@ parameters:
   type: pd-ssd
   zone: us-east1-d
 ```
+
+## Resizing volumes
+
+Even if the StorageClass supports resizing, Kubernetes doesn't support (yet)
+volume expansion through StatefulSets. This means that when you update the
+storage requests in the `spec.storage` field of a custom resource, it doesn't
+get propagated to the associated PVCs (more details in the [KEP
+issue](https://github.com/kubernetes/enhancements/issues/661)).
+
+It is still possible to fix the situation manually.
+
+First, update the storage request in the `spec.storage` field of the custom
+resource (assuming a Prometheus resource named `example`):
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  replicas: 1
+  storage:
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 10Gi
+```
+
+Next, patch every PVC with the updated storage request (10Gi in this example):
+
+```bash
+for p in $(kubectl get pvc -l operator.prometheus.io/name=example -o jsonpath='{range .items[*]}{.metadata.name} {end}'); do \
+  kubectl patch pvc/${p} --patch '{"spec": {"resources": {"requests": {"storage":"10Gi"}}}}'; \
+done
+```
+
+Last, delete the underlying StatefulSet using the `orphan` deletion strategy:
+
+```bash
+kubectl delete statefulset -l operator.prometheus.io/name=example --cascade=orphan
+```
+
+The operator should recreate the StatefulSet immediately, there will be no
+service disruption thanks to the `orphan` strategy and the volumes mounted in
+the Pods should have the updated size.

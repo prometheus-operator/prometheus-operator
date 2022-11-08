@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -170,7 +171,7 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus, prwtc PromRemoteWriteTestConfig) {
 	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
 
-	p.Spec.Web = &monitoringv1.WebSpec{}
+	p.Spec.Web = &monitoringv1.PrometheusWebSpec{}
 	p.Spec.Web.TLSConfig = &monitoringv1.WebTLSConfig{
 		ClientCA: monitoringv1.SecretOrConfigMap{
 			Secret: &v1.SecretKeySelector{
@@ -405,6 +406,13 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			if cond.Type == monitoringv1.PrometheusReconciled {
 				reconciled = &cond
 			}
+			if f.operatorVersion.GTE(semver.MustParse("0.60.0")) && cond.ObservedGeneration != current.Generation {
+				pollErr = errors.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
+					cond.ObservedGeneration,
+					cond.Type,
+					current.Generation)
+				return false, nil
+			}
 		}
 
 		if reconciled == nil {
@@ -427,12 +435,12 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 			return false, nil
 		}
 
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
+		if available.Status != monitoringv1.PrometheusConditionTrue {
 			pollErr = errors.Errorf(
 				"expected Available condition to be 'True', got %q (reason %s, %q)",
-				reconciled.Status,
-				reconciled.Reason,
-				reconciled.Message,
+				available.Status,
+				available.Reason,
+				available.Message,
 			)
 			return false, nil
 		}

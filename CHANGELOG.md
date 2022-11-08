@@ -1,3 +1,50 @@
+## 0.60.1 / 2022-10-10
+
+* [BUGFIX] Fixed configuration when `spec.tsdb.outOfOrderTimeWindow` is set in the Prometheus CRD. #5078
+
+## 0.60.0 / 2022-10-06
+
+* [CHANGE] Added `filterRunning` field to the PodMonitor CRD. By default, non-running pods are dropped by the Prometheus service discovery. To preserve the old behavior and keep pods which aren't running, set `filterRunning: false`. #5049
+* [FEATURE] Added `grpcListenLocal` and `httpListenLocal` fields to the Thanos sidecar configuration of the Prometheus CRD. #5045
+* [FEATURE] Added `hostNetwork` field to the Prometheus CRD. #5010
+* [FEATURE] Added `spec.tsdb.outOfOrderTimeWindow` field to the Prometheus CRD to allow out-of-order samples in TSDB. #5071
+* [ENHANCEMENT] Added columns showing the Prometheus conditions to the output of `kubectl get prometheus`. #5055
+* [ENHANCEMENT] Added `observedGeneration` field to the Prometheus status conditions. #5005
+
+## 0.59.2 / 2022-09-20
+
+* [CHANGE/BUGFIX] Removed `FOWNER` capability from the Thanos sidecar. #5030
+
+## 0.59.1 / 2022-09-12
+
+* [BUGFIX] Fixed secret and configmap volume names that need to be mounted in additional containers. #5000
+* [BUGFIX] Removed `CAP_FOWNER` capability for the Thanos sidecar when not required. #5004
+* [BUGFIX] Removed the `CAP_` prefix of the `FOWNER` capability on Thanos sidecar. #5014
+
+## 0.59.0 / 2022-09-02
+
+* [FEATURE] Added validations for timeout and time settings of alertmanager at CRD level. #4898
+* [FEATURE] Added support for global `resolveTimeout` and `httpConfig` in Alertmanager CRD. #4622
+* [FEATURE] Added support for `additionalArgs` field to the Prometheus CRD for Prometheus, Alertmanager and Thanos sidecar. #4863
+* [ENHANCEMENT] Added `tracingConfigFile` option to ThanosRuler CRD. #4962
+* [BUGFIX] Fixed compress alertmanager secret to circumvent maximum size limit of 1048576 bytes. #4906
+* [BUGFIX] Fixed namespace enforcement exclusion on newly created Prometheus objects. #4915
+* [BUGFIX] Fixed `CAP_FOWNER` capability to Thanos sidecar container. #4931
+* [BUGFIX] Fixed `spec.query.maxSamples` and `spec.query.maxConcurrency` fields of Prometheus CRD. #4951
+* [BUGFIX] Fixed Thanos sidecar connectivity issue when Prometheus TLS is enabled. #4954
+* [BUGFIX] Fixed Prometheus and Alertmanager Pods not created when Secret name exceeds 63 characters. #4988
+
+## 0.58.0 / 2022-07-19
+
+* [FEATURE] Add validations for timeout and time settings of alertmanager at CRD level. #4827, #4881
+* [FEATURE] Extend the PrometheusSpec to allow to configure the `max_exemplars`. #4834
+* [FEATURE] Add support for web TLS configuration for Alertmanager CRD. #4868
+* [ENHANCEMENT] Add support for `uppercase`, `lowercase`, and `CamelCase` relabel actions. #4840, #4873
+* [ENHANCEMENT] Added support for `enable_http2` in endpoint scrape configuration. #4836
+* [BUGFIX] Fixed missing conversion of the `followRedirects` field in HTTP configuration for AlertmanagerConfig v1beta1. #4854
+* [BUGFIX] fix AlertmanagerConfig.Spec.Route nil panic. #4853
+* [BUGFIX] Optimise warning log message during sanitization of OpsGenie configuration. #4833
+
 ## 0.57.0 / 2022-06-02
 
 The main change introduced by this release is a new v1beta1 API version for the

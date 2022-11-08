@@ -151,10 +151,6 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 }
 
 func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
-	// Before editing 'tr' create deep copy, to prevent side effects. For more
-	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
-	tr = tr.DeepCopy()
-
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
@@ -168,30 +164,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build image path")
-	}
-
-	// TODO(slashpai): Remove this assignment after v0.57 since this is handled at CRD level
-	if tr.Spec.EvaluationInterval == "" {
-		tr.Spec.EvaluationInterval = defaultEvaluationInterval
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if tr.Spec.EvaluationInterval != "" {
-		if err := operator.ValidateDurationField(string(tr.Spec.EvaluationInterval)); err != nil {
-			return nil, errors.Wrap(err, "invalid evaluationInterval value specified")
-		}
-	}
-
-	// TODO(slashpai): Remove this assignment after v0.57 since this is handled at CRD level
-	if tr.Spec.Retention == "" {
-		tr.Spec.Retention = defaultRetention
-	}
-
-	// TODO(slashpai): Remove this validation after v0.57 since this is handled at CRD level
-	if tr.Spec.Retention != "" {
-		if err := operator.ValidateDurationField(string(tr.Spec.Retention)); err != nil {
-			return nil, errors.Wrap(err, "invalid retention value specified")
-		}
 	}
 
 	trCLIArgs := []string{
@@ -287,14 +259,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	if tr.Spec.TracingConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "TRACING_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.TracingConfig,
-			},
-		})
+	if tr.Spec.TracingConfig != nil || len(tr.Spec.TracingConfigFile) > 0 {
+		if len(tr.Spec.TracingConfigFile) > 0 {
+			trCLIArgs = append(trCLIArgs, "--tracing.config-file="+tr.Spec.TracingConfigFile)
+		} else {
+			trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
+			trEnvVars = append(trEnvVars, v1.EnvVar{
+				Name: "TRACING_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: tr.Spec.TracingConfig,
+				},
+			})
+		}
 	}
 
 	if tr.Spec.GRPCServerTLSConfig != nil {

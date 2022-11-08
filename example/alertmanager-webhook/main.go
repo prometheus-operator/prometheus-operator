@@ -19,8 +19,13 @@ import (
 	"net/http"
 )
 
+const (
+	port = "5001"
+)
+
 func main() {
-	_ = http.ListenAndServe(":5001", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Listening for Alertmanager notifications on :%s\n", port)
+	_ = http.ListenAndServe(":"+port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Alertmanager Notification Payload Received")
 	}))
 }

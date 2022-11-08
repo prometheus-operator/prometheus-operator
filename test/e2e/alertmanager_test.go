@@ -15,8 +15,11 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -25,6 +28,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"golang.org/x/net/http2"
 	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -35,11 +39,14 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+	certutil "k8s.io/client-go/util/cert"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -191,7 +198,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -233,13 +240,13 @@ func testAMClusterInitialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -268,7 +275,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -283,7 +290,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -306,7 +313,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode); err != nil {
+		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -521,7 +528,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "webhook-server",
-							Image: "quay.io/coreos/prometheus-alertmanager-test-webhook",
+							Image: "quay.io/prometheus-operator/prometheus-alertmanager-test-webhook:latest",
 							Ports: []v1.ContainerPort{
 								{
 									Name:          "web",
@@ -555,7 +562,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	if err := framework.CreateDeployment(context.Background(), ns, whdpl); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, whsvc); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, whsvc); err != nil {
 		t.Fatal(err)
 	}
 	err := framework.WaitForPodsReady(context.Background(), ns, time.Minute*5, 1,
@@ -609,11 +616,11 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -697,7 +704,7 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager.Name, int(*alertmanager.Spec.Replicas), alertmanager.Spec.ForceEnableClusterMode); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1214,8 +1221,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
 			return false, nil
 		}
 
@@ -1322,7 +1329,11 @@ mute_time_intervals:
 templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1348,8 +1359,8 @@ templates: []
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
 			return false, nil
 		}
 		expected := `global:
@@ -1370,7 +1381,11 @@ receivers:
 templates: []
 `
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1434,16 +1449,20 @@ inhibit_rules:
 		}
 
 		if cfgSecret.Data["template1.tmpl"] == nil {
-			lastErr = errors.New("'template1.yaml' key is missing")
+			lastErr = errors.New("'template1.tmpl' key is missing")
 			return false, nil
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
 			lastErr = errors.New("'alertmanager.yaml' key is missing")
 			return false, nil
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1473,13 +1492,119 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
+		Global: &monitoringv1.AlertmanagerGlobalConfig{
+			ResolveTimeout: "30s",
+			HTTPConfig: &monitoringv1.HTTPConfig{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "webhook-client-id",
+							},
+							Key: "test",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "webhook-client-secret",
+						},
+						Key: "test",
+					},
+					TokenURL: "https://test.com",
+					Scopes:   []string{"any"},
+					EndpointParams: map[string]string{
+						"some": "value",
+					},
+				},
+				FollowRedirects: toBoolPtr(true),
+			},
+		},
+		Templates: []monitoringv1.SecretOrConfigMap{
+			{
+				Secret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "template1",
+					},
+					Key: "template1.tmpl",
+				},
+			},
+			{
+				ConfigMap: &v1.ConfigMapKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "template2",
+					},
+					Key: "template2.tmpl",
+				},
+			},
+		},
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	cm := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "webhook-client-id",
+			Namespace: ns,
+		},
+		Data: map[string]string{
+			"test": "clientID",
+		},
+	}
+	sec := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "webhook-client-secret",
+			Namespace: ns,
+		},
+		Data: map[string][]byte{
+			"test": []byte("clientSecret"),
+		},
+	}
+	tpl1 := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "template1",
+		},
+		Data: map[string][]byte{
+			"template1.tmpl": []byte(`template1`),
+		},
+	}
+	tpl2 := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "template2",
+		},
+		Data: map[string]string{
+			"template2.tmpl": "template2",
+		},
+	}
+
+	ctx := context.Background()
+	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	yamlConfig := fmt.Sprintf(`route:
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlConfig := fmt.Sprintf(`global:
+  resolve_timeout: 30s
+  http_config:
+    oauth2:
+      client_id: clientID
+      client_secret: clientSecret
+      scopes:
+      - any
+      token_url: https://test.com
+      endpoint_params:
+        some: value
+    follow_redirects: true
+route:
   receiver: %[1]s
   routes:
   - receiver: %[1]s
@@ -1494,7 +1619,9 @@ inhibit_rules:
   - equalkey
 receivers:
 - name: %[1]s
-templates: []
+templates:
+- /etc/alertmanager/templates/template1.tmpl
+- /etc/alertmanager/templates/template2.tmpl
 `, fmt.Sprintf("%s/%s/null", ns, "user-amconfig"))
 
 	// Wait for the change above to take effect.
@@ -1509,12 +1636,17 @@ templates: []
 			return false, err
 		}
 
-		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing")
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing")
 			return false, nil
 		}
 
-		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), yamlConfig); diff != "" {
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
@@ -1661,12 +1793,181 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 0, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 0); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, name, 3, false); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 3); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testAMWeb(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+
+	trueVal := true
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "am-web-tls"
+
+	host := fmt.Sprintf("%s.%s.svc", name, ns)
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kubeClient := framework.KubeClient
+	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	am := framework.MakeBasicAlertmanager(name, 1)
+	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
+		WebConfigFileFields: monitoringv1.WebConfigFileFields{
+			TLSConfig: &monitoringv1.WebTLSConfig{
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "web-tls",
+					},
+					Key: "tls.key",
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "web-tls",
+						},
+						Key: "tls.crt",
+					},
+				},
+			},
+			HTTPConfig: &monitoringv1.WebHTTPConfig{
+				HTTP2: &trueVal,
+				Headers: &monitoringv1.WebHTTPHeaders{
+					ContentSecurityPolicy:   "default-src 'self'",
+					XFrameOptions:           "Deny",
+					XContentTypeOptions:     "NoSniff",
+					XXSSProtection:          "1; mode=block",
+					StrictTransportSecurity: "max-age=31536000; includeSubDomains",
+				},
+			},
+		},
+	}
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am); err != nil {
+		t.Fatalf("Creating alertmanager failed: %v", err)
+	}
+
+	var pollErr error
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(amPods.Items) == 0 {
+			pollErr = fmt.Errorf("No alertmanager pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := amPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9093", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		// The alertmanager certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the alertmanager instance is configured properly.
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		err = http2.ConfigureTransport(transport)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		httpClient := http.Client{
+			Transport: transport,
+		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if resp.ProtoMajor != 2 {
+			pollErr = fmt.Errorf("expected ProtoMajor to be 2 but got %d", resp.ProtoMajor)
+			return false, nil
+		}
+
+		receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytes, certBytes) {
+			pollErr = fmt.Errorf("certificate received from alertmanager instance does not match the one which is configured")
+			return false, nil
+		}
+
+		expectedHeaders := map[string]string{
+			"Content-Security-Policy":   "default-src 'self'",
+			"X-Frame-Options":           "deny",
+			"X-Content-Type-Options":    "nosniff",
+			"X-XSS-Protection":          "1; mode=block",
+			"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+		}
+
+		for k, v := range expectedHeaders {
+			rv := resp.Header.Get(k)
+
+			if rv != v {
+				pollErr = fmt.Errorf("expected header %s value to be %s but got %s", k, v, rv)
+				return false, nil
+			}
+		}
+
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if reloadSuccessTimestamp == 0 {
+			pollErr = fmt.Errorf("config reloader failed to reload once")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
 	}
 }
 
@@ -1711,4 +2012,122 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	if amSS.Spec.MinReadySeconds != int32(updated) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, amSS.Spec.MinReadySeconds)
 	}
+}
+
+func testAlertmanagerCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	replicas := int32(1)
+
+	tests := []struct {
+		name             string
+		alertmanagerSpec monitoringv1.AlertmanagerSpec
+		expectedError    bool
+	}{
+		//
+		// Retention Validation:
+		//
+		{
+			name: "zero-time-without-unit",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0",
+			},
+		},
+		{
+			name: "time-in-hours",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "48h",
+			},
+		},
+		{
+			name: "time-in-minutes",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "60m",
+			},
+		},
+		{
+			name: "time-in-seconds",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120s",
+			},
+		},
+		{
+			name: "time-in-milli-seconds",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120s",
+			},
+		},
+		{
+			name: "complex-time",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "1h30m15s",
+			},
+		},
+		{
+			name: "time-missing-symbols",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120",
+			},
+			expectedError: true,
+		},
+		{
+			name: "timeunit-misspelled",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "120hh",
+			},
+			expectedError: true,
+		},
+		{
+			name: "unaccepted-time",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "15d",
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			am := &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Spec: test.alertmanagerSpec,
+			}
+
+			if test.expectedError {
+				_, err := framework.MonClientV1.Alertmanagers(ns).Create(context.Background(), am, metav1.CreateOptions{})
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func toBoolPtr(in bool) *bool {
+	return &in
 }

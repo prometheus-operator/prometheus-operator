@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"fmt"
 	"reflect"
@@ -26,6 +25,7 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
@@ -40,10 +40,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/workqueue"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -78,10 +76,7 @@ type Operator struct {
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
 
-	// Queue to trigger reconciliations of Prometheus objects.
-	reconcileQueue workqueue.RateLimitingInterface
-	// Queue to trigger status updates of Prometheus objects.
-	statusQueue workqueue.RateLimitingInterface
+	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -138,18 +133,19 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletSyncEnabled = true
 	}
 
+	// All the metrics exposed by the controller get the controller="prometheus" label.
+	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
+
 	c := &Operator{
 		kclient:                client,
 		mclient:                mclient,
 		logger:                 logger,
-		reconcileQueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
-		statusQueue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus_status"),
 		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		metrics:                operator.NewMetrics("prometheus", r),
+		metrics:                operator.NewMetrics(r),
 		reconciliations:        &operator.ReconciliationTracker{},
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -169,6 +165,14 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nodeEndpointSyncs,
 		c.nodeEndpointSyncErrors,
 		c.reconciliations,
+	)
+
+	c.rr = operator.NewResourceReconciler(
+		c.logger,
+		c,
+		c.metrics,
+		monitoringv1.PrometheusesKind,
+		r,
 	)
 
 	c.promInfs, err = informers.NewInformersForResource(
@@ -372,11 +376,9 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (c *Operator) addHandlers() {
-	c.promInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handlePrometheusAdd,
-		DeleteFunc: c.handlePrometheusDelete,
-		UpdateFunc: c.handlePrometheusUpdate,
-	})
+	c.promInfs.AddEventHandler(c.rr)
+
+	c.ssetInfs.AddEventHandler(c.rr)
 
 	c.smonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSmonAdd,
@@ -409,11 +411,6 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleSecretDelete,
 		UpdateFunc: c.handleSecretUpdate,
 	})
-	c.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleStatefulSetAdd,
-		DeleteFunc: c.handleStatefulSetDelete,
-		UpdateFunc: c.handleStatefulSetUpdate,
-	})
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
@@ -427,9 +424,6 @@ func (c *Operator) addHandlers() {
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	defer c.reconcileQueue.ShutDown()
-	defer c.statusQueue.ShutDown()
-
 	errChan := make(chan error)
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
@@ -451,17 +445,8 @@ func (c *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	// Start the goroutine that reconciles the desired state of Prometheus objects.
-	go func(ctx context.Context) {
-		for c.processNextReconcileItem(ctx) {
-		}
-	}(ctx)
-
-	// Start the goroutine that reconciles the status of Prometheus objects.
-	go func(ctx context.Context) {
-		for c.processNextStatusItem(ctx) {
-		}
-	}(ctx)
+	go c.rr.Run(ctx)
+	defer c.rr.Stop()
 
 	go c.promInfs.Start(ctx.Done())
 	go c.smonInfs.Start(ctx.Done())
@@ -481,7 +466,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Prometheus objects.
 	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.addToStatusQueue(obj)
+		c.rr.EnqueueForStatus(obj.(*monitoringv1.Prometheus))
 	})
 
 	c.addHandlers()
@@ -511,7 +496,7 @@ func (c *Operator) Run(ctx context.Context) error {
 					p := o.(*monitoringv1.Prometheus)
 					for _, cond := range p.Status.Conditions {
 						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
-							c.addToStatusQueue(p)
+							c.rr.EnqueueForStatus(p)
 							break
 						}
 					}
@@ -536,98 +521,6 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	}
 
 	return k, true
-}
-
-func (c *Operator) handlePrometheusAdd(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus added", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "add").Inc()
-	checkPrometheusSpecDeprecation(key, obj.(*monitoringv1.Prometheus), c.logger)
-	c.addToReconcileQueue(key)
-}
-
-func (c *Operator) handlePrometheusDelete(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus deleted", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "delete").Inc()
-	c.addToReconcileQueue(key)
-}
-
-// hasStateChanged returns true if the 2 objects are different in a way that
-// the controller should reconcile the actual state against the desired state.
-// It helps preventing hot loops when the controller updates the status
-// subresource for instance.
-func (c *Operator) hasStateChanged(old, cur metav1.Object) bool {
-	if old.GetGeneration() != cur.GetGeneration() {
-		level.Debug(c.logger).Log(
-			"msg", "different generations",
-			"current", cur.GetGeneration(),
-			"old", old.GetGeneration(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	if !reflect.DeepEqual(old.GetLabels(), cur.GetLabels()) {
-		level.Debug(c.logger).Log(
-			"msg", "different labels",
-			"current", fmt.Sprintf("%v", cur.GetLabels()),
-			"old", fmt.Sprintf("%v", old.GetLabels()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-
-	}
-	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
-		level.Debug(c.logger).Log(
-			"msg", "different annotations",
-			"current", fmt.Sprintf("%v", cur.GetAnnotations()),
-			"old", fmt.Sprintf("%v", old.GetAnnotations()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	return false
-}
-
-// hasObjectChanged returns true if the 2 objects are different.
-func (c *Operator) hasObjectChanged(old, cur metav1.Object) bool {
-	if old.GetResourceVersion() != cur.GetResourceVersion() {
-		level.Debug(c.logger).Log(
-			"msg", "different resource versions",
-			"current", cur.GetResourceVersion(),
-			"old", old.GetResourceVersion(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
-		)
-		return true
-	}
-
-	return false
-}
-
-func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
-	if !c.hasStateChanged(&old.(*monitoringv1.Prometheus).ObjectMeta, &cur.(*monitoringv1.Prometheus).ObjectMeta) {
-		return
-	}
-
-	key, ok := c.keyFunc(cur)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Prometheus updated", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "update").Inc()
-	checkPrometheusSpecDeprecation(key, cur.(*monitoringv1.Prometheus), c.logger)
-	c.addToReconcileQueue(key)
 }
 
 func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
@@ -797,7 +690,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -812,7 +705,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -823,7 +716,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -834,7 +727,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -848,7 +741,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -859,7 +752,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -869,7 +762,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -882,7 +775,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 
 	if o, ok := c.getObject(cur); ok {
 		level.Debug(c.logger).Log("msg", "Probe updated")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "update")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -891,7 +784,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -901,7 +794,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule added")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -916,7 +809,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule updated")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -927,7 +820,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule deleted")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -938,7 +831,7 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", "delete").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -952,7 +845,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", "update").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -962,7 +855,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", "add").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -973,7 +866,7 @@ func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap added")
-		c.metrics.TriggerByCounter("ConfigMap", "add").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -983,7 +876,7 @@ func (c *Operator) handleConfigMapDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
-		c.metrics.TriggerByCounter("ConfigMap", "delete").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -997,7 +890,7 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap updated")
-		c.metrics.TriggerByCounter("ConfigMap", "update").Inc()
+		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
@@ -1015,35 +908,6 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 		return nil, false
 	}
 	return o, true
-}
-
-// addToReconcileQueue adds the object to the reconciliation queue.
-func (c *Operator) addToReconcileQueue(obj interface{}) {
-	c.addToQueue(obj, c.reconcileQueue)
-}
-
-// addToStatusQueue adds the object to the status queue.
-func (c *Operator) addToStatusQueue(obj interface{}) {
-	c.addToQueue(obj, c.statusQueue)
-}
-
-// addToQueue adds the object to the given queue.
-// If the object is a string, it gets added directly. Otherwise, the object's
-// key is extracted via keyFunc.
-func (c *Operator) addToQueue(obj interface{}, q workqueue.Interface) {
-	if obj == nil {
-		return
-	}
-
-	key, ok := obj.(string)
-	if !ok {
-		key, ok = c.keyFunc(obj)
-		if !ok {
-			return
-		}
-	}
-
-	q.Add(key)
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
@@ -1077,7 +941,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1093,7 +957,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1108,7 +972,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1123,7 +987,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -1139,7 +1003,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.addToReconcileQueue(p)
+			c.rr.EnqueueForReconciliation(p)
 			return
 		}
 	})
@@ -1152,58 +1016,9 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-// processNextReconcileItem dequeues items, processes them, and marks them done.
-// It is guaranteed that the sync() method is never invoked concurrently with
-// the same key.
-// Before returning, the object's key is automatically added to the status queue.
-func (c *Operator) processNextReconcileItem(ctx context.Context) bool {
-	item, quit := c.reconcileQueue.Get()
-	if quit {
-		return false
-	}
-	key := item.(string)
-	defer c.reconcileQueue.Done(key)
-	defer c.addToStatusQueue(key) // enqueues the object's key to update the status subresource
-
-	c.metrics.ReconcileCounter().Inc()
-	startTime := time.Now()
-	err := c.sync(ctx, key)
-	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.reconciliations.SetStatus(key, err)
-
-	if err == nil {
-		c.reconcileQueue.Forget(key)
-		return true
-	}
-
-	c.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("sync %q failed", key)))
-	c.reconcileQueue.AddRateLimited(key)
-
-	return true
-}
-
-func (c *Operator) processNextStatusItem(ctx context.Context) bool {
-	key, quit := c.statusQueue.Get()
-	if quit {
-		return false
-	}
-	defer c.statusQueue.Done(key)
-
-	err := c.status(ctx, key.(string))
-	if err == nil {
-		c.statusQueue.Forget(key)
-		return true
-	}
-
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("status %q failed", key)))
-	c.statusQueue.AddRateLimited(key)
-
-	return true
-}
-
-func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prometheus {
-	key, ok := c.keyFunc(sset)
+// Resolve implements the operator.Syncer interface.
+func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+	key, ok := c.keyFunc(ss)
 	if !ok {
 		return nil
 	}
@@ -1258,59 +1073,6 @@ func prometheusKeyToStatefulSetKey(key string, shard int) string {
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
 }
 
-func (c *Operator) handleStatefulSetDelete(obj interface{}) {
-	ps := c.prometheusForStatefulSet(obj)
-	if ps == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet delete")
-	c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
-
-	c.addToReconcileQueue(ps)
-}
-
-func (c *Operator) handleStatefulSetAdd(obj interface{}) {
-	ps := c.prometheusForStatefulSet(obj)
-	if ps == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet added")
-	c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
-
-	c.addToReconcileQueue(ps)
-}
-
-func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
-	old := oldo.(*appsv1.StatefulSet)
-	cur := curo.(*appsv1.StatefulSet)
-
-	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
-
-	if !c.hasObjectChanged(old, cur) {
-		return
-	}
-
-	p := c.prometheusForStatefulSet(cur)
-	if p == nil {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "StatefulSet updated")
-	c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
-
-	if !c.hasStateChanged(old, cur) {
-		// If the statefulset state (spec, labels or annotations) hasn't
-		// changed, the operator can only update the status subresource instead
-		// of doing a full reconciliation.
-		c.addToStatusQueue(p)
-		return
-	}
-
-	c.addToReconcileQueue(p)
-}
-
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
@@ -1324,7 +1086,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
-	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
 	// Probes and PrometheusRules in the namespace.
@@ -1350,7 +1112,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			}
 
 			if sync {
-				c.addToReconcileQueue(p)
+				c.rr.EnqueueForReconciliation(p)
 				return
 			}
 		}
@@ -1361,6 +1123,14 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			"err", err,
 		)
 	}
+}
+
+// Sync implements the operator.Syncer interface.
+func (c *Operator) Sync(ctx context.Context, key string) error {
+	err := c.sync(ctx, key)
+	c.reconciliations.SetStatus(key, err)
+
+	return err
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
@@ -1377,10 +1147,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
-	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	p.Kind = monitoringv1.PrometheusesKind
+	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
+		return errors.Wrap(err, "failed to set Prometheus type information")
+	}
 
 	logger := log.With(c.logger, "key", key)
+	logDeprecatedFields(logger, p)
+
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
 		return nil
@@ -1430,7 +1203,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		existingStatefulSet := &appsv1.StatefulSet{}
 		if obj != nil {
 			existingStatefulSet = obj.(*appsv1.StatefulSet)
-			if existingStatefulSet.DeletionTimestamp != nil {
+			if c.rr.DeletionInProgress(existingStatefulSet) {
 				// We want to avoid entering a hot-loop of update/delete cycles
 				// here since the sts was marked for deletion in foreground,
 				// which means it may take some time before the finalizers
@@ -1438,11 +1211,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				// deletion timestamp will have been set when the initial
 				// delete request was issued. In that case, we avoid further
 				// processing.
-				level.Info(logger).Log(
-					"msg", "halting update of StatefulSet",
-					"reason", "resource has been marked for deletion",
-					"resource_name", existingStatefulSet.GetName(),
-				)
 				continue
 			}
 		}
@@ -1452,7 +1220,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return err
 		}
 
-		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1518,8 +1286,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		// Deletion already in progress.
-		if s.DeletionTimestamp != nil {
+		if c.rr.DeletionInProgress(s) {
 			return
 		}
 
@@ -1535,9 +1302,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// status updates the status subresource of the object identified by the given
+// UpdateStatus updates the status subresource of the object identified by the given
 // key.
-func (c *Operator) status(ctx context.Context, key string) error {
+// UpdateStatus implements the operator.Syncer interface.
+func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -1564,6 +1332,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 			LastTransitionTime: metav1.Time{
 				Time: time.Now().UTC(),
 			},
+			ObservedGeneration: p.Generation,
 		}
 		messages []string
 	)
@@ -1583,8 +1352,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		}
 
 		sset := obj.(*appsv1.StatefulSet)
-		if sset.DeletionTimestamp != nil {
-			level.Debug(logger).Log("msg", "deletion in progress")
+		if c.rr.DeletionInProgress(sset) {
 			continue
 		}
 
@@ -1638,6 +1406,7 @@ func (c *Operator) status(ctx context.Context, key string) error {
 		LastTransitionTime: metav1.Time{
 			Time: time.Now().UTC(),
 		},
+		ObservedGeneration: p.Generation,
 	}
 	reconciliationStatus, found := c.reconciliations.GetStatus(key)
 	if !found {
@@ -1674,27 +1443,29 @@ func (c *Operator) status(ctx context.Context, key string) error {
 	return nil
 }
 
-//checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
-func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logger log.Logger) {
-	deprecationWarningf := "prometheus key=%v, field %v is deprecated, '%v' field should be used instead"
+func logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
+	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	if p.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.baseImage", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
+
 	if p.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.tag", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
+
 	if p.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.sha", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
+
 	if p.Spec.Thanos != nil {
 		if p.Spec.BaseImage != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.baseImage", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
 		if p.Spec.Tag != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.tag", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
 		if p.Spec.SHA != "" {
-			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.sha", "spec.thanos.image"))
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}
 	}
 
@@ -1704,10 +1475,16 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
+	var http2 *bool
+	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
+		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
 		PrometheusAnnotations map[string]string
 		PrometheusGeneration  int64
+		PrometheusWebHTTP2    *bool
 		Config                operator.Config
 		StatefulSetSpec       appsv1.StatefulSetSpec
 		RuleConfigMaps        []string `hash:"set"`
@@ -1716,6 +1493,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 		PrometheusLabels:      p.Labels,
 		PrometheusAnnotations: p.Annotations,
 		PrometheusGeneration:  p.Generation,
+		PrometheusWebHTTP2:    http2,
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
 		RuleConfigMaps:        ruleConfigMapNames,
@@ -1740,11 +1518,6 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 type pod v1.Pod
-
-//// Ready returns true if the pod matches with the statefulset's revision.
-//func (p *pod) Updated() bool {
-//   return p.revision == p.Labels["controller-revision-hash"]
-//}
 
 // Ready returns true if the pod is ready.
 func (p *pod) Ready() bool {
@@ -1909,15 +1682,6 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 	return nil, nil
 }
 
-func gzipConfig(buf *bytes.Buffer, conf []byte) error {
-	w := gzip.NewWriter(buf)
-	defer w.Close()
-	if _, err := w.Write(conf); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
@@ -2058,7 +1822,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
-	if err = gzipConfig(&buf, conf); err != nil {
+	if err = operator.GzipConfig(&buf, conf); err != nil {
 		return errors.Wrap(err, "couldn't gzip config")
 	}
 	s.Data[configFilename] = buf.Bytes()
@@ -2112,22 +1876,22 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
 	boolTrue := true
-	client := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	var tlsConfig *monitoringv1.WebTLSConfig
+	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
-		tlsConfig = p.Spec.Web.TLSConfig
+		fields = p.Spec.Web.WebConfigFileFields
 	}
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
-		WebConfigSecretName(p.Name),
-		tlsConfig,
+		webConfigSecretName(p.Name),
+		fields,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to initialize web config")
 	}
 
+	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	ownerReference := metav1.OwnerReference{
 		APIVersion:         p.APIVersion,
 		BlockOwnerDeletion: &boolTrue,
@@ -2136,19 +1900,13 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
-	secret, err := webConfig.MakeConfigFileSecret(secretLabels, ownerReference)
-	if err != nil {
-		return err
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 
-	err = k8sutil.CreateOrUpdateSecret(ctx, client, secret)
-	if err != nil {
-		return errors.Wrap(err, "failed to create web config for Prometheus")
-	}
-
-	return err
+	return nil
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
@@ -2182,7 +1940,12 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
+				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(svcMon); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set ServiceMonitor type information", "namespace", ns, "err", err)
+					return
+				}
+				serviceMonitors[k] = svcMon
 			}
 		})
 		if err != nil {
@@ -2235,7 +1998,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 			for _, rl := range endpoint.RelabelConfigs {
 				if rl.Action != "" {
-					if err = validateRelabelConfig(*rl); err != nil {
+					if err = validateRelabelConfig(*p, *rl); err != nil {
 						break
 					}
 				}
@@ -2243,7 +2006,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 			for _, rl := range endpoint.MetricRelabelConfigs {
 				if rl.Action != "" {
-					if err = validateRelabelConfig(*rl); err != nil {
+					if err = validateRelabelConfig(*p, *rl); err != nil {
 						break
 					}
 				}
@@ -2310,7 +2073,12 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
+				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(podMon); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set PodMonitor type information", "namespace", ns, "err", err)
+					return
+				}
+				podMonitors[k] = podMon
 			}
 		})
 		if err != nil {
@@ -2355,7 +2123,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 
 			for _, rl := range endpoint.RelabelConfigs {
 				if rl.Action != "" {
-					if err = validateRelabelConfig(*rl); err != nil {
+					if err = validateRelabelConfig(*p, *rl); err != nil {
 						break
 					}
 				}
@@ -2363,7 +2131,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 
 			for _, rl := range endpoint.MetricRelabelConfigs {
 				if rl.Action != "" {
-					if err = validateRelabelConfig(*rl); err != nil {
+					if err = validateRelabelConfig(*p, *rl); err != nil {
 						break
 					}
 				}
@@ -2429,7 +2197,12 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	for _, ns := range namespaces {
 		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				probes[k] = obj.(*monitoringv1.Probe)
+				probe := obj.(*monitoringv1.Probe).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
+					level.Error(c.logger).Log("msg", "failed to set Probe type information", "namespace", ns, "err", err)
+					return
+				}
+				probes[k] = probe
 			}
 		})
 		if err != nil {
@@ -2492,7 +2265,7 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 
 		for _, rl := range probe.Spec.MetricRelabelConfigs {
 			if rl.Action != "" {
-				if err = validateRelabelConfig(*rl); err != nil {
+				if err = validateRelabelConfig(*p, *rl); err != nil {
 					rejectFn(probe, err)
 					continue
 				}
@@ -2575,26 +2348,45 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-func validateRelabelConfig(rc monitoringv1.RelabelConfig) error {
+func validateRelabelConfig(p monitoringv1.Prometheus, rc monitoringv1.RelabelConfig) error {
 	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse Prometheus version")
+	}
+	minimumVersion := version.GTE(semver.MustParse("2.36.0"))
+
+	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !minimumVersion {
+		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
+	}
 
 	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
 		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
 	}
+
 	if rc.Modulus == 0 && rc.Action == string(relabel.HashMod) {
 		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
 	}
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod)) && rc.TargetLabel == "" {
+
+	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && rc.TargetLabel == "" {
 		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
-	if rc.Action == string(relabel.Replace) && !relabelTarget.MatchString(rc.TargetLabel) {
+
+	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
+
+	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
+		return errors.Errorf("'replacement' can not be set for %s action", rc.Action)
+	}
+
 	if rc.Action == string(relabel.LabelMap) {
 		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
 			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
 		}
 	}
+
 	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
@@ -2638,5 +2430,5 @@ func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval
 	if scrapeInterval == "" {
 		scrapeInterval = p.Spec.ScrapeInterval
 	}
-	return operator.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
+	return compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }

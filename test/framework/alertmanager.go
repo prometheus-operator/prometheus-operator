@@ -36,8 +36,6 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
-	"github.com/prometheus/prometheus/model/labels"
-	"github.com/prometheus/prometheus/model/textparse"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -194,29 +192,31 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, ns 
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ctx, ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode)
+	return a, f.WaitForAlertmanagerReady(ctx, ns, a, int(*a.Spec.Replicas))
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns, name string, replicas int, forceEnableClusterMode bool) error {
+func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns string, a *monitoringv1.Alertmanager, replicas int) error {
 	if err := f.WaitForPodsReady(
 		ctx,
 		ns,
 		5*time.Minute,
 		replicas,
-		alertmanager.ListOptions(name),
+		alertmanager.ListOptions(a.Name),
 	); err != nil {
 		return errors.Wrap(err,
 			fmt.Sprintf(
 				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
-				name, replicas,
+				a.Name, replicas,
 			))
 	}
 
+	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
+
 	for i := 0; i < replicas; i++ {
-		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitialized(ctx, ns, name, replicas, forceEnableClusterMode); err != nil {
+		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
+		if err := f.WaitForAlertmanagerPodInitialized(ctx, ns, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -272,11 +272,11 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 	return f.KubeClient.CoreV1().Secrets(ns).Delete(ctx, fmt.Sprintf("alertmanager-%s", name), metav1.DeleteOptions{})
 }
 
-func (f *Framework) WaitForAlertmanagerInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode bool) error {
+func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode, https bool) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 
-		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, name)
+		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, name, https)
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
 			return false, nil
@@ -317,9 +317,15 @@ func (f *Framework) WaitForAlertmanagerInitialized(ctx context.Context, ns, name
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerStatus(ctx context.Context, ns, n string) (models.AlertmanagerStatus, error) {
+func (f *Framework) GetAlertmanagerPodStatus(ctx context.Context, ns, n string, https bool) (models.AlertmanagerStatus, error) {
 	var amStatus models.AlertmanagerStatus
-	request := f.ProxyGetPod(ns, n, "/api/v2/status")
+
+	proxyName := n
+	if https {
+		proxyName = fmt.Sprintf("https:%v:", n)
+	}
+
+	request := f.ProxyGetPod(ns, proxyName, "/api/v2/status")
 	resp, err := request.DoRaw(ctx)
 
 	if err != nil {
@@ -330,15 +336,6 @@ func (f *Framework) GetAlertmanagerStatus(ctx context.Context, ns, n string) (mo
 		return amStatus, err
 	}
 	return amStatus, nil
-}
-
-func (f *Framework) GetAlertmanagerMetrics(ctx context.Context, ns, n string) (textparse.Parser, error) {
-	request := f.ProxyGetPod(ns, n, "/metrics")
-	resp, err := request.DoRaw(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return textparse.NewPromParser(resp), nil
 }
 
 func (f *Framework) CreateSilence(ctx context.Context, ns, n string) (string, error) {
@@ -407,7 +404,7 @@ func (f *Framework) GetSilences(ctx context.Context, ns, n string) (models.Getta
 func (f *Framework) PollAlertmanagerConfiguration(ctx context.Context, ns, amName string, conditions ...func(config string) error) error {
 	var pollError error
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		amStatus, err := f.GetAlertmanagerStatus(ctx, ns, "alertmanager-"+amName+"-0")
+		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, "alertmanager-"+amName+"-0", false)
 
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
@@ -443,34 +440,13 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ctx context.Context
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, ns, amName string, previousReloadTimestamp time.Time) error {
 	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		parser, err := f.GetAlertmanagerMetrics(ctx, ns, "alertmanager-"+amName+"-0")
+		timestampSec, err := f.GetMetricVal(ctx, ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
 		if err != nil {
 			return false, err
 		}
 
-		for {
-			entry, err := parser.Next()
-			if err != nil {
-				return false, err
-			}
-			if entry == textparse.EntryInvalid {
-				return false, fmt.Errorf("invalid prometheus metric entry")
-			}
-			if entry != textparse.EntrySeries {
-				continue
-			}
-
-			seriesLabels := labels.Labels{}
-			parser.Metric(&seriesLabels)
-
-			if seriesLabels.Get("__name__") != configReloadMetricName {
-				continue
-			}
-
-			_, _, timestampSec := parser.Series()
-			timestamp := time.Unix(int64(timestampSec), 0)
-			return timestamp.After(previousReloadTimestamp), nil
-		}
+		timestamp := time.Unix(int64(timestampSec), 0)
+		return timestamp.After(previousReloadTimestamp), nil
 	})
 
 	if err != nil {

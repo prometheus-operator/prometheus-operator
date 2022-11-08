@@ -27,10 +27,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
 	defaultTestConfig = Config{
+		LocalHost: "localhost",
 		ReloaderConfig: operator.ReloaderConfig{
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 			CPURequest:    "100m",
@@ -314,6 +316,79 @@ func TestListenLocal(t *testing.T) {
 	}
 }
 
+func TestListenTLS(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Web: &monitoringv1.AlertmanagerWebSpec{
+				WebConfigFileFields: monitoringv1.WebConfigFileFields{
+					TLSConfig: &monitoringv1.WebTLSConfig{
+						KeySecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-secret",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "some-configmap",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
+		return v1.ProbeHandler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   probePath,
+				Port:   intstr.FromString("web"),
+				Scheme: "HTTPS",
+			},
+		}
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		FailureThreshold: 10,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		ProbeHandler:        expectedProbeHandler("/-/ready"),
+		InitialDelaySeconds: 3,
+		TimeoutSeconds:      3,
+		PeriodSeconds:       5,
+		FailureThreshold:    10,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
+	}
+
+	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9093/-/reload"
+	reloadURLFound := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
+		fmt.Println(arg)
+
+		if arg == expectedConfigReloaderReloadURL {
+			reloadURLFound = true
+		}
+	}
+	if !reloadURLFound {
+		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
+	}
+}
+
 // below Alertmanager v0.13.0 all flags are with single dash.
 func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 	tests := []struct {
@@ -464,6 +539,53 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
+	replicas := int32(1)
+	a := monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas: &replicas,
+			AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+				Templates: []monitoringv1.SecretOrConfigMap{
+					{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "template1",
+							},
+							Key: "template1.tmpl",
+						},
+					},
+				},
+			},
+		},
+	}
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var foundVM, foundV bool
+	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerNotificationTemplatesDir {
+			foundVM = true
+			break
+		}
+	}
+	for _, v := range statefulSet.Template.Spec.Volumes {
+		if v.Name == "notification-templates" && v.Projected != nil {
+			for _, s := range v.Projected.Sources {
+				if s.Secret != nil && s.Secret.Name == "template1" {
+					foundV = true
+					break
+				}
+			}
+		}
+	}
+
+	if !(foundVM && foundV) {
+		t.Fatal("Notification templates were not found.")
+	}
+}
+
 func TestAdditionalSecretsMounted(t *testing.T) {
 	secrets := []string{"secret1", "secret2"}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
@@ -602,8 +724,8 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 
 func TestRetention(t *testing.T) {
 	tests := []struct {
-		specRetention     string
-		expectedRetention string
+		specRetention     monitoringv1.GoDuration
+		expectedRetention monitoringv1.GoDuration
 	}{
 		{"", "120h"},
 		{"1d", "1d"},
@@ -649,6 +771,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 	for _, v := range sset.Spec.Template.Spec.Volumes {
 		if v.Name == "configmap-test-cm1" {
 			cmVolumeFound = true
+			break
 		}
 	}
 	if !cmVolumeFound {
@@ -659,6 +782,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/alertmanager/configmaps/test-cm1" {
 			cmMounted = true
+			break
 		}
 	}
 	if !cmMounted {

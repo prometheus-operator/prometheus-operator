@@ -8,7 +8,6 @@ webhooks:
         name: prometheus-operator-admission-webhook
         namespace: default
         path: /admission-prometheusrules/mutate
-
     failurePolicy: Fail
     name: prometheusrulemutate.monitoring.coreos.com
     namespaceSelector: {}

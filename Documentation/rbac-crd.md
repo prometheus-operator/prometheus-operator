@@ -1,5 +1,5 @@
 ---
-weight: 420
+weight: 205
 toc: true
 title: RBAC for CRDs
 menu:
@@ -8,15 +8,14 @@ menu:
 lead: ""
 images: []
 draft: false
-description: Aggregate permissions on the Prometheus Operator CustomResourceDefinitions.
-date: "2021-03-08T08:49:31+00:00"
+description: Aggregated roles on the Prometheus Operator CustomResourceDefinitions.
 ---
 
 ## Aggregated ClusterRoles
 
-It can be useful to aggregate permissions on the Prometheus Operator CustomResourceDefinitions to the default user-facing roles, like `view`, `edit` and `admin`.
+It can be useful to aggregate permissions on the Prometheus Operator CustomResourceDefinitions to the default [user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#default-roles-and-role-bindings), like `view`, `edit` and `admin`.
 
-This can be achieved using ClusterRole aggregation. This lets admins include rules for custom resources, such as those served by CustomResourceDefinitions or Aggregated API servers, on the default roles.
+This can be achieved using [aggregated ClusterRoles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles). This lets admins include rules for custom resources, such as those served by CustomResourceDefinitions or Aggregated API servers, on the default roles.
 
 > Note: ClusterRole aggregation is available starting Kubernetes 1.9.
 

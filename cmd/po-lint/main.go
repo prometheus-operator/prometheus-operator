@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -44,7 +43,7 @@ func main() {
 
 	for _, filename := range files {
 		log.SetPrefix(fmt.Sprintf("%s: ", filename))
-		content, err := ioutil.ReadFile(filename)
+		content, err := os.ReadFile(filename)
 		if err != nil {
 			log.Fatal(err)
 		}

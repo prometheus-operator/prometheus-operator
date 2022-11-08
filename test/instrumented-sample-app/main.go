@@ -20,7 +20,6 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -76,7 +75,7 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, time.Now().String())
-	fmt.Fprint(w, "\nAppVersion:"+os.Getenv("VERSION"))
+	fmt.Fprint(w, "\nAppVersion: "+os.Getenv("VERSION"))
 }
 
 func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {
@@ -111,7 +110,7 @@ func checkBearerAuth(w http.ResponseWriter, r *http.Request) bool {
 
 func mTLSEndpoint() error {
 	certPool := x509.NewCertPool()
-	pem, err := ioutil.ReadFile(path.Join(*certPath, "cert.pem"))
+	pem, err := os.ReadFile(path.Join(*certPath, "cert.pem"))
 	if err != nil {
 		return fmt.Errorf("failed to load certificate authority")
 	}
@@ -124,7 +123,6 @@ func mTLSEndpoint() error {
 		ClientCAs:  certPool,
 		ClientAuth: tls.RequireAndVerifyClientCert,
 	}
-	tlsConfig.BuildNameToCertificate()
 
 	address := ":8081"
 

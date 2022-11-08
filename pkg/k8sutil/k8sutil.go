@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,13 +24,17 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/go-version"
+	"github.com/cespare/xxhash/v2"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
@@ -43,6 +48,14 @@ import (
 const KubeConfigEnv = "KUBECONFIG"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
+
+var scheme = runtime.NewScheme()
+
+func init() {
+	_ = monitoringv1.SchemeBuilder.AddToScheme(scheme)
+	_ = monitoringv1alpha1.SchemeBuilder.AddToScheme(scheme)
+	_ = monitoringv1beta1.SchemeBuilder.AddToScheme(scheme)
+}
 
 // PodRunningAndReady returns whether a pod is running and each container has
 // passed it's ready state.
@@ -201,21 +214,6 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	})
 }
 
-// GetMinorVersion returns the minor version as an integer
-func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
-	v, err := dclient.ServerVersion()
-	if err != nil {
-		return 0, err
-	}
-
-	ver, err := version.NewVersion(v.String())
-	if err != nil {
-		return 0, err
-	}
-
-	return ver.Segments()[1], nil
-}
-
 // IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
 //
 // you can exec `kubectl api-resources` to find groupVersion and resource.
@@ -236,15 +234,104 @@ func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterfac
 	return false, nil
 }
 
-// SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
-// accepted by Kubernetes.
-func SanitizeVolumeName(name string) string {
+// ResourceNamer knows how to generate valid names for various Kubernetes resources.
+type ResourceNamer struct {
+	prefix string
+}
+
+// NewResourceNamerWithPrefix returns a ResourceNamer that adds a prefix
+// followed by an hyphen character to all resource names.
+func NewResourceNamerWithPrefix(p string) ResourceNamer {
+	return ResourceNamer{prefix: p}
+}
+
+func (rn ResourceNamer) sanitizedVolumeName(name string) string {
+	if rn.prefix != "" {
+		name = strings.TrimRight(rn.prefix, "-") + "-" + name
+	}
+
 	name = strings.ToLower(name)
 	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
-	if len(name) > validation.DNS1123LabelMaxLength {
-		name = name[0:validation.DNS1123LabelMaxLength]
+	name = strings.Trim(name, "-")
+
+	return name
+}
+
+func isValidDNS1123Label(name string) error {
+	if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
+		return errors.New(strings.Join(errs, ","))
 	}
-	return strings.Trim(name, "-")
+
+	return nil
+}
+
+// UniqueVolumeName returns a volume name that is a valid DNS-1123 label.
+// The returned name has a hash-based suffix to ensure uniqueness in case the
+// input name exceeds the 63-chars limit.
+func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
+	// Hash the name and append the 8 first characters of the hash
+	// value to the resulting name to ensure that 2 names longer than
+	// DNS1123LabelMaxLength return unique volume names.
+	// E.g. long-63-chars-abc, long-63-chars-XYZ may be added to
+	// volume name since they are trimmed at long-63-chars, there will be 2
+	// volume entries with the same name.
+	// In practice, the hash is computed for the full name then trimmed to
+	// the first 8 chars and added to the end:
+	// * long-63-chars-abc -> first-54-chars-deadbeef
+	// * long-63-chars-XYZ -> first-54-chars-d3adb33f
+	xxh := xxhash.New()
+	if _, err := xxh.Write([]byte(name)); err != nil {
+		return "", err
+	}
+
+	h := fmt.Sprintf("-%x", xxh.Sum64())
+	h = h[:9]
+
+	name = rn.sanitizedVolumeName(name)
+
+	if len(name) > validation.DNS1123LabelMaxLength-9 {
+		name = name[:validation.DNS1123LabelMaxLength-9]
+	}
+
+	name = name + h
+	if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
+		return "", errors.New(strings.Join(errs, ","))
+	}
+
+	return name, isValidDNS1123Label(name)
+}
+
+// VolumeName returns a volume name that is a valid DNS-1123 label.
+func (rn ResourceNamer) VolumeName(name string) (string, error) {
+	name = rn.sanitizedVolumeName(name)
+
+	if len(name) > validation.DNS1123LabelMaxLength {
+		name = name[:validation.DNS1123LabelMaxLength]
+	}
+
+	return name, isValidDNS1123Label(name)
+}
+
+// AddTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
+// See https://github.com/kubernetes/client-go/issues/308#issuecomment-700099260
+func AddTypeInformationToObject(obj runtime.Object) error {
+	gvks, _, err := scheme.ObjectKinds(obj)
+	if err != nil {
+		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)
+	}
+
+	for _, gvk := range gvks {
+		if len(gvk.Kind) == 0 {
+			continue
+		}
+		if len(gvk.Version) == 0 || gvk.Version == runtime.APIVersionInternal {
+			continue
+		}
+		obj.GetObjectKind().SetGroupVersionKind(gvk)
+		break
+	}
+
+	return nil
 }
 
 func mergeOwnerReferences(old []metav1.OwnerReference, new []metav1.OwnerReference) []metav1.OwnerReference {

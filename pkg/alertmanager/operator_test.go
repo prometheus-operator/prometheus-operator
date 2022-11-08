@@ -23,8 +23,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -38,6 +40,167 @@ import (
 
 func strPtr(str string) *string {
 	return &str
+}
+
+func TestCreateStatefulSetInputHash(t *testing.T) {
+	falseVal := false
+
+	for _, tc := range []struct {
+		name string
+		a, b monitoringv1.Alertmanager
+
+		equal bool
+	}{
+		{
+			name: "different generations",
+			a: monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Generation: 1,
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("200Mi"),
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Generation: 2,
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("100Mi"),
+						},
+					},
+				},
+			},
+
+			equal: false,
+		},
+		{
+			// differrent resource.Quantity produce the same hash because the
+			// struct contains private fields that aren't integrated into the
+			// hash computation.
+			name: "different specs but same hash",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("200Mi"),
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("100Mi"),
+						},
+					},
+				},
+			},
+
+			equal: true,
+		},
+		{
+			name: "different labels",
+			a: monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"foo": "bar"},
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+
+			equal: false,
+		},
+		{
+			name: "different annotations",
+			a: monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"foo": "bar"},
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+
+			equal: false,
+		},
+		{
+			name: "different web http2",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					Web: &monitoringv1.AlertmanagerWebSpec{
+						WebConfigFileFields: monitoringv1.WebConfigFileFields{
+							HTTPConfig: &monitoringv1.WebHTTPConfig{
+								HTTP2: &falseVal,
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+
+			equal: false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a1Hash, err := createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			a2Hash, err := createSSetInputHash(tc.b, Config{}, nil, appsv1.StatefulSetSpec{})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !tc.equal {
+				if a1Hash == a2Hash {
+					t.Fatal("expected two different Alertmanager CRDs to produce different hashes but got equal hash")
+				}
+				return
+			}
+
+			if a1Hash != a2Hash {
+				t.Fatal("expected two Alertmanager CRDs to produce the same hash but got different hash")
+			}
+
+			a2Hash, err = createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{Replicas: func(i int32) *int32 { return &i }(2)})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if a1Hash == a2Hash {
+				t.Fatal("expected same Alertmanager CRDs with different statefulset specs to produce different hashes but got equal hash")
+			}
+		})
+	}
 }
 
 func TestCheckAlertmanagerConfig(t *testing.T) {
@@ -1058,30 +1221,6 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			ok:           true,
 			expectedKeys: []string{"key1"},
 		},
-		{
-			am: &monitoringv1.Alertmanager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "invalid cluster gossip interval",
-					Namespace: "test",
-				},
-				Spec: monitoringv1.AlertmanagerSpec{
-					ClusterGossipInterval: "30k",
-				},
-			},
-			ok: false,
-		},
-		{
-			am: &monitoringv1.Alertmanager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "correct cluster gossip interval",
-					Namespace: "test",
-				},
-				Spec: monitoringv1.AlertmanagerSpec{
-					ClusterGossipInterval: "30s",
-				},
-			},
-			ok: true,
-		},
 	} {
 		t.Run(tc.am.Name, func(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
@@ -1090,7 +1229,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				kclient: c,
 				mclient: monitoringfake.NewSimpleClientset(),
 				logger:  level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
-				metrics: operator.NewMetrics("alertmanager", prometheus.NewRegistry()),
+				metrics: operator.NewMetrics(prometheus.NewRegistry()),
 			}
 
 			err := o.bootstrap(context.Background())
@@ -1117,7 +1256,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			expected := append(tc.expectedKeys, alertmanagerConfigFile)
+			expected := append(tc.expectedKeys, alertmanagerConfigFileCompressed)
 			if len(secret.Data) != len(expected) {
 				t.Fatalf("expecting %d items to be present in the generated secret but got %d", len(expected), len(secret.Data))
 			}

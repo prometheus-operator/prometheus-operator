@@ -24,6 +24,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 
@@ -192,6 +193,10 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		var marshalErr error
 		err := o.ruleInfs.ListAllByNamespace(ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
+			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
+				level.Error(o.logger).Log("msg", "failed to set PrometheusRule type information", "namespace", ns, "err", err)
+				return
+			}
 
 			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
 				marshalErr = err

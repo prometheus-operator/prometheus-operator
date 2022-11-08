@@ -15,8 +15,10 @@
 package alertmanager
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"path"
 	"reflect"
 	"regexp"
 	"strings"
@@ -33,6 +35,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -46,10 +49,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -79,7 +80,7 @@ type Operator struct {
 	secrInfs    *informers.ForResource
 	ssetInfs    *informers.ForResource
 
-	queue workqueue.RateLimitingInterface
+	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -116,12 +117,14 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
+	// All the metrics exposed by the controller get the controller="alertmanager" label.
+	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
+
 	o := &Operator{
 		kclient:         client,
 		mclient:         mclient,
 		logger:          logger,
-		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		metrics:         operator.NewMetrics("alertmanager", r),
+		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
 			Host:                         c.Host,
@@ -135,6 +138,14 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 			SecretListWatchSelector:      c.SecretListWatchSelector,
 		},
 	}
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.metrics,
+		monitoringv1.AlertmanagersKind,
+		r,
+	)
 
 	if err := o.bootstrap(ctx); err != nil {
 		return nil, err
@@ -289,11 +300,10 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (c *Operator) addHandlers() {
-	c.alrtInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleAlertmanagerAdd,
-		DeleteFunc: c.handleAlertmanagerDelete,
-		UpdateFunc: c.handleAlertmanagerUpdate,
-	})
+	c.alrtInfs.AddEventHandler(c.rr)
+
+	c.ssetInfs.AddEventHandler(c.rr)
+
 	c.alrtCfgInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAlertmanagerConfigAdd,
 		DeleteFunc: c.handleAlertmanagerConfigDelete,
@@ -303,11 +313,6 @@ func (c *Operator) addHandlers() {
 		AddFunc:    c.handleSecretAdd,
 		DeleteFunc: c.handleSecretDelete,
 		UpdateFunc: c.handleSecretUpdate,
-	})
-	c.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleStatefulSetAdd,
-		DeleteFunc: c.handleStatefulSetDelete,
-		UpdateFunc: c.handleStatefulSetUpdate,
 	})
 
 	// The controller needs to watch the namespaces in which the
@@ -324,7 +329,7 @@ func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, "add").Inc()
+		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -338,7 +343,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, "update").Inc()
+		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -348,7 +353,7 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, "delete").Inc()
+		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -359,7 +364,7 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", "delete").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -373,7 +378,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", "update").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -383,7 +388,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", "add").Inc()
+		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -412,7 +417,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
-			c.enqueue(am)
+			c.rr.EnqueueForReconciliation(am)
 			return
 		}
 
@@ -428,7 +433,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		}
 
 		if acNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.enqueue(am)
+			c.rr.EnqueueForReconciliation(am)
 			return
 		}
 	})
@@ -442,8 +447,6 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	defer c.queue.ShutDown()
-
 	errChan := make(chan error)
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
@@ -465,7 +468,8 @@ func (c *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	go c.worker(ctx)
+	go c.rr.Run(ctx)
+	defer c.rr.Stop()
 
 	go c.alrtInfs.Start(ctx.Done())
 	go c.alrtCfgInfs.Start(ctx.Done())
@@ -508,59 +512,9 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	return o, true
 }
 
-// enqueue adds a key to the queue. If obj is a key already it gets added
-// directly. Otherwise, the key is extracted via keyFunc.
-func (c *Operator) enqueue(obj interface{}) {
-	if obj == nil {
-		return
-	}
-
-	key, ok := obj.(string)
-	if !ok {
-		key, ok = c.keyFunc(obj)
-		if !ok {
-			return
-		}
-	}
-
-	c.queue.Add(key)
-}
-
-// worker runs a worker thread that just dequeues items, processes them
-// and marks them done. It enforces that the syncHandler is never invoked
-// concurrently with the same key.
-func (c *Operator) worker(ctx context.Context) {
-	for c.processNextWorkItem(ctx) {
-	}
-}
-
-func (c *Operator) processNextWorkItem(ctx context.Context) bool {
-	key, quit := c.queue.Get()
-	if quit {
-		return false
-	}
-	defer c.queue.Done(key)
-
-	c.metrics.ReconcileCounter().Inc()
-	startTime := time.Now()
-	err := c.sync(ctx, key.(string))
-	c.metrics.ReconcileDurationHistogram().Observe(time.Since(startTime).Seconds())
-	c.reconciliations.SetStatus(key.(string), err)
-
-	if err == nil {
-		c.queue.Forget(key)
-		return true
-	}
-
-	c.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
-	c.queue.AddRateLimited(key)
-
-	return true
-}
-
-func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *monitoringv1.Alertmanager {
-	key, ok := c.keyFunc(sset)
+// Resolve implements the operator.Syncer interface.
+func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+	key, ok := c.keyFunc(ss)
 	if !ok {
 		return nil
 	}
@@ -606,84 +560,6 @@ func alertmanagerKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
 }
 
-func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Alertmanager added", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "add").Inc()
-	checkAlertmanagerSpecDeprecation(key, obj.(*monitoringv1.Alertmanager), c.logger)
-	c.enqueue(key)
-}
-
-func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Alertmanager deleted", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "delete").Inc()
-	c.enqueue(key)
-}
-
-func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.Alertmanager).ResourceVersion == cur.(*monitoringv1.Alertmanager).ResourceVersion {
-		return
-	}
-
-	key, ok := c.keyFunc(cur)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Alertmanager updated", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "update").Inc()
-	checkAlertmanagerSpecDeprecation(key, cur.(*monitoringv1.Alertmanager), c.logger)
-	c.enqueue(key)
-}
-
-func (c *Operator) handleStatefulSetDelete(obj interface{}) {
-	if a := c.alertmanagerForStatefulSet(obj); a != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet delete")
-		c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
-
-		c.enqueue(a)
-	}
-}
-
-func (c *Operator) handleStatefulSetAdd(obj interface{}) {
-	if a := c.alertmanagerForStatefulSet(obj); a != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet added")
-		c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
-
-		c.enqueue(a)
-	}
-}
-
-func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
-	old := oldo.(*appsv1.StatefulSet)
-	cur := curo.(*appsv1.StatefulSet)
-
-	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
-
-	// Periodic resync may resend the deployment without changes in-between.
-	// Also breaks loops created by updating the resource ourselves.
-	if old.ResourceVersion == cur.ResourceVersion {
-		return
-	}
-
-	// Wake up Alertmanager resource the deployment belongs to.
-	if a := c.alertmanagerForStatefulSet(cur); a != nil {
-		level.Debug(c.logger).Log("msg", "StatefulSet updated")
-		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
-
-		c.enqueue(a)
-	}
-}
-
 func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
@@ -697,7 +573,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
-	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
 	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
@@ -714,7 +590,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		}
 
 		if sync {
-			c.enqueue(a)
+			c.rr.EnqueueForReconciliation(a)
 		}
 	})
 	if err != nil {
@@ -723,6 +599,15 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 			"err", err,
 		)
 	}
+}
+
+// Sync implements the operator.Syncer interface.
+func (c *Operator) Sync(ctx context.Context, key string) error {
+	err := c.sync(ctx, key)
+	c.reconciliations.SetStatus(key, err)
+
+	return err
+
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
@@ -739,14 +624,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	am := aobj.(*monitoringv1.Alertmanager)
 	am = am.DeepCopy()
-	am.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	am.Kind = monitoringv1.AlertmanagersKind
+	if err := k8sutil.AddTypeInformationToObject(am); err != nil {
+		return errors.Wrap(err, "failed to set Alertmanager type information")
+	}
 
 	if am.Spec.Paused {
 		return nil
 	}
 
 	logger := log.With(c.logger, "key", key)
+	logDeprecatedFields(logger, am)
+
 	level.Info(logger).Log("msg", "sync alertmanager")
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
@@ -758,6 +646,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, am, assetStore)
 	if err != nil {
 		return errors.Wrap(err, "creating tls asset secrets failed")
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
 	// Create governing service if it doesn't exist.
@@ -775,12 +667,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	existingStatefulSet := &appsv1.StatefulSet{}
 	if obj != nil {
 		existingStatefulSet = obj.(*appsv1.StatefulSet)
-		if existingStatefulSet.DeletionTimestamp != nil {
-			level.Info(logger).Log(
-				"msg", "halting update of StatefulSet",
-				"reason", "resource has been marked for deletion",
-				"resource_name", existingStatefulSet.GetName(),
-			)
+		if c.rr.DeletionInProgress(existingStatefulSet) {
 			return nil
 		}
 	}
@@ -839,20 +726,39 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
+// UpdateStatus implements the operator.Syncer interface.
+func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
+	// FIXME(simonpasquier): implement status update logic.
+	return nil
+}
+
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
+	var http2 *bool
+	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
+		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+
 	hash, err := hashstructure.Hash(struct {
-		A monitoringv1.Alertmanager
-		C Config
-		S appsv1.StatefulSetSpec
-		T []string `hash:"set"`
-	}{a, c, s, tlsAssets.ShardNames()},
+		AlertmanagerLabels      map[string]string
+		AlertmanagerAnnotations map[string]string
+		AlertmanagerGeneration  int64
+		AlertmanagerWebHTTP2    *bool
+		Config                  Config
+		StatefulSetSpec         appsv1.StatefulSetSpec
+		Assets                  []string `hash:"set"`
+	}{
+		AlertmanagerLabels:      a.Labels,
+		AlertmanagerAnnotations: a.Annotations,
+		AlertmanagerGeneration:  a.Generation,
+		AlertmanagerWebHTTP2:    http2,
+		Config:                  c,
+		StatefulSetSpec:         s,
+		Assets:                  tlsAssets.ShardNames(),
+	},
 		nil,
 	)
 	if err != nil {
-		return "", errors.Wrap(
-			err,
-			"failed to calculate combined hash of Alertmanager CRD and config",
-		)
+		return "", errors.Wrap(err, "failed to calculate combined hash")
 	}
 
 	return fmt.Sprintf("%d", hash), nil
@@ -906,10 +812,6 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
-	if err := validation.ValidateAlertmanager(am); err != nil {
-		return err
-	}
-
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
@@ -954,9 +856,19 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return errors.Wrap(err, "failed to get global AlertmanagerConfig")
 		}
 
-		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, globalAmConfig)
+		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize from global AlertmangerConfig")
+		}
+
+		// set templates
+		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
+			if v.ConfigMap != nil {
+				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerNotificationTemplatesDir, v.ConfigMap.Key))
+			}
+			if v.Secret != nil {
+				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerNotificationTemplatesDir, v.Secret.Key))
+			}
 		}
 	} else {
 		// Load the base configuration from the referenced secret.
@@ -1018,7 +930,12 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	for k, v := range additionalData {
 		generatedConfigSecret.Data[k] = v
 	}
-	generatedConfigSecret.Data[alertmanagerConfigFile] = conf
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, conf); err != nil {
+		return errors.Wrap(err, "couldnt gzip config")
+	}
+	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
 	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
@@ -1647,17 +1564,54 @@ func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) 
 	}
 }
 
-//checkAlertmanagerSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
-func checkAlertmanagerSpecDeprecation(key string, a *monitoringv1.Alertmanager, logger log.Logger) {
-	deprecationWarningf := "alertmanager key=%v, field %v is deprecated, '%v' field should be used instead"
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	boolTrue := true
+
+	var fields monitoringv1.WebConfigFileFields
+	if a.Spec.Web != nil {
+		fields = a.Spec.Web.WebConfigFileFields
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(a.Name),
+		fields,
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize web config")
+	}
+
+	secretClient := c.kclient.CoreV1().Secrets(a.Namespace)
+	ownerReference := metav1.OwnerReference{
+		APIVersion:         a.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               a.Kind,
+		Name:               a.Name,
+		UID:                a.UID,
+	}
+	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
+	}
+
+	return nil
+}
+
+func logDeprecatedFields(logger log.Logger, a *monitoringv1.Alertmanager) {
+	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+
 	if a.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.baseImage", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
+
 	if a.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.tag", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
+
 	if a.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.sha", "spec.image"))
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 }
 

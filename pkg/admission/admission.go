@@ -17,7 +17,7 @@ package admission
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -164,7 +164,7 @@ func toAdmissionResponseFailure(message, resource string, errors []error) *v1.Ad
 func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	var body []byte
 	if r.Body != nil {
-		if data, err := ioutil.ReadAll(r.Body); err == nil {
+		if data, err := io.ReadAll(r.Body); err == nil {
 			body = data
 		}
 	}
@@ -329,10 +329,10 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 }
 
 // TODO (PhilipGough) - this can be removed when the following deprecated metrics are removed
-//  -  prometheus_operator_rule_validation_triggered_total
-//  -  prometheus_operator_rule_validation_errors_total
-//  -  prometheus_operator_alertmanager_config_validation_errors_total
-//  -  prometheus_operator_alertmanager_config_validation_triggered_total
+//   - prometheus_operator_rule_validation_triggered_total
+//   - prometheus_operator_rule_validation_errors_total
+//   - prometheus_operator_alertmanager_config_validation_errors_total
+//   - prometheus_operator_alertmanager_config_validation_triggered_total
 func (a *Admission) incrementCounter(counter prometheus.Counter) {
 	if counter != nil {
 		counter.Inc()

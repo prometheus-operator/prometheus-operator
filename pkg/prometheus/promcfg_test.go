@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -97,72 +96,18 @@ func TestGlobalSettings(t *testing.T) {
 		ExpectError        bool
 	}{
 		{
-			Scenario: "valid config",
-			Version:  "v2.15.2",
+			Scenario:           "valid config",
+			Version:            "v2.15.2",
+			ScrapeInterval:     "15s",
+			EvaluationInterval: "30s",
 			Expected: `global:
   evaluation_interval: 30s
-  scrape_interval: 30s
+  scrape_interval: 15s
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
 scrape_configs: []
 `,
-		},
-		{
-			Scenario:           "valid evaluation interval specified",
-			Version:            "v2.15.2",
-			EvaluationInterval: "60s",
-			Expected: `global:
-  evaluation_interval: 60s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
-		},
-		{
-			Scenario:           "invalid evaluation interval specified #1",
-			Version:            "v2.15.2",
-			EvaluationInterval: "60 s",
-			ExpectError:        true,
-		},
-		{
-			Scenario:           "invalid evaluation interval specified #2",
-			Version:            "v2.28.0",
-			EvaluationInterval: "randomvalue",
-			ExpectError:        true,
-		},
-		{
-			Scenario:       "valid scrape interval",
-			Version:        "v2.15.2",
-			ScrapeInterval: "60s",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 60s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
-		},
-		{
-			Scenario:       "invalid scrape interval",
-			Version:        "v2.28.0",
-			ScrapeInterval: "30 k",
-			ExpectError:    true,
-		},
-		{
-			Scenario:      "invalid scrape timeout",
-			Version:       "v2.29.0",
-			ScrapeTimeout: "some value",
-			ExpectError:   true,
-		},
-		{
-			Scenario:      "invalid scrape timeout specified when scrape interval not specified to compare with default value",
-			Version:       "v2.30.0",
-			ScrapeTimeout: "120s",
-			ExpectError:   true,
 		},
 		{
 			Scenario:       "invalid scrape timeout specified when scrape interval specified",
@@ -172,10 +117,11 @@ scrape_configs: []
 			ExpectError:    true,
 		},
 		{
-			Scenario:       "valid scrape timeout along with valid scrape interval specified",
-			Version:        "v2.15.2",
-			ScrapeInterval: "60s",
-			ScrapeTimeout:  "10s",
+			Scenario:           "valid scrape timeout along with valid scrape interval specified",
+			Version:            "v2.15.2",
+			ScrapeInterval:     "60s",
+			ScrapeTimeout:      "10s",
+			EvaluationInterval: "30s",
 			Expected: `global:
   evaluation_interval: 30s
   scrape_interval: 60s
@@ -187,8 +133,10 @@ scrape_configs: []
 `,
 		},
 		{
-			Scenario: "external label specified",
-			Version:  "v2.15.2",
+			Scenario:           "external label specified",
+			Version:            "v2.15.2",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
 			ExternalLabels: map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -205,9 +153,11 @@ scrape_configs: []
 `,
 		},
 		{
-			Scenario:     "query log file",
-			Version:      "v2.16.0",
-			QueryLogFile: "test.log",
+			Scenario:           "query log file",
+			Version:            "v2.16.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			QueryLogFile:       "test.log",
 			Expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -224,13 +174,13 @@ scrape_configs: []
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					EvaluationInterval: tc.EvaluationInterval,
-					ScrapeInterval:     tc.ScrapeInterval,
-					ScrapeTimeout:      tc.ScrapeTimeout,
-					ExternalLabels:     tc.ExternalLabels,
-					Version:            tc.Version,
+					ScrapeInterval: tc.ScrapeInterval,
+					ScrapeTimeout:  tc.ScrapeTimeout,
+					ExternalLabels: tc.ExternalLabels,
+					Version:        tc.Version,
 				},
-				QueryLogFile: tc.QueryLogFile,
+				EvaluationInterval: tc.EvaluationInterval,
+				QueryLogFile:       tc.QueryLogFile,
 			},
 		}
 
@@ -459,8 +409,10 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -579,8 +531,10 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -699,8 +653,10 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -805,8 +761,10 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -907,8 +865,10 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -1053,9 +1013,11 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
-				Shards:  pointer.Int32Ptr(2),
+				Version:        operator.DefaultPrometheusVersion,
+				Shards:         pointer.Int32Ptr(2),
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -1200,8 +1162,10 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				Version: operator.DefaultPrometheusVersion,
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -1439,6 +1403,10 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1519,8 +1487,10 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Version: "v2.11.0",
+				Version:        "v2.11.0",
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1599,8 +1569,10 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Version: "v2.11.0",
+				Version:        "v2.11.0",
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1608,7 +1580,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 						Namespace:  "default",
 						Port:       intstr.FromString("web"),
 						APIVersion: "v2",
-						Timeout:    pointer.StringPtr("60s"),
+						Timeout:    (*monitoringv1.Duration)(pointer.StringPtr("60s")),
 					},
 				},
 			},
@@ -1685,8 +1657,10 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Shards: shards,
+					Shards:         shards,
+					ScrapeInterval: "30s",
 				},
+				EvaluationInterval: "30s",
 			},
 		}
 
@@ -1700,8 +1674,10 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Shards: shards,
+						Shards:         shards,
+						ScrapeInterval: "30s",
 					},
+					EvaluationInterval: "30s",
 				},
 			},
 			nil,
@@ -1860,6 +1836,10 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -1941,7 +1921,12 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			Name:      "test",
 			Namespace: "ns-value",
 		},
-		Spec: monitoringv1.PrometheusSpec{},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
 	}
 
 	cg := mustNewConfigGenerator(t, p)
@@ -2104,7 +2089,9 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
+				ScrapeInterval:         "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -2276,7 +2263,9 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
+				ScrapeInterval:         "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -2351,6 +2340,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -2420,15 +2413,17 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
-			},
-			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
-				{
-					Namespace: "pod-monitor-ns",
-					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.PodMonitorName,
-					Name:      "testpodmonitor1",
+				ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+					{
+						Namespace: "pod-monitor-ns",
+						Group:     monitoring.GroupName,
+						Resource:  monitoringv1.PodMonitorName,
+						Name:      "testpodmonitor1",
+					},
 				},
+				ScrapeInterval: "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 	cg := mustNewConfigGenerator(t, p)
@@ -2506,6 +2501,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -2571,7 +2570,9 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				EnforcedNamespaceLabel: "ns-key",
+				ScrapeInterval:         "30s",
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -2741,16 +2742,18 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval:         "30s",
 				EnforcedNamespaceLabel: "ns-key",
-			},
-			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
-				{
-					Namespace: "service-monitor-ns",
-					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.ServiceMonitorName,
-					Name:      "", // exclude all servicemonitors in this namespace
+				ExcludedFromEnforcement: []monitoringv1.ObjectReference{
+					{
+						Namespace: "service-monitor-ns",
+						Group:     monitoring.GroupName,
+						Resource:  monitoringv1.ServiceMonitorName,
+						Name:      "", // exclude all servicemonitors in this namespace
+					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 	cg := mustNewConfigGenerator(t, p)
@@ -2909,6 +2912,10 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
 			Alerting: &monitoringv1.AlertingSpec{
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
@@ -2990,13 +2997,15 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Version: "v2.9.0",
+				Version:        "v2.9.0",
+				ScrapeInterval: "30s",
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 	cg := mustNewConfigGenerator(t, p)
@@ -3129,13 +3138,15 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Version: "v2.9.0",
+				Version:        "v2.9.0",
+				ScrapeInterval: "30s",
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 	cg := mustNewConfigGenerator(t, p)
@@ -3194,6 +3205,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -3250,6 +3265,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Version:                 "v2.9.0",
+				ScrapeInterval:          "30s",
 				OverrideHonorTimestamps: true,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
@@ -3257,6 +3273,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -3390,12 +3407,14 @@ func TestSettingHonorLabels(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -3529,6 +3548,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval:      "30s",
 				OverrideHonorLabels: true,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
@@ -3536,6 +3556,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 	cg := mustNewConfigGenerator(t, p)
@@ -3668,6 +3689,7 @@ func TestTargetLabels(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval:      "30s",
 				OverrideHonorLabels: false,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
@@ -3675,6 +3697,7 @@ func TestTargetLabels(t *testing.T) {
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -4024,12 +4047,14 @@ func TestPodTargetLabels(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -4162,12 +4187,14 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
 			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -4226,6 +4253,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -4278,6 +4309,12 @@ func TestEmptyEndointPorts(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -5052,13 +5089,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: "v2.20.0",
+						Version:        "v2.20.0",
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 			if tc.enforcedLimit >= 0 {
@@ -5107,8 +5146,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -5314,13 +5353,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 			if tc.enforcedLimit >= 0 {
@@ -5368,8 +5409,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -5463,19 +5504,6 @@ remote_read:
     credentials: secret
 `,
 		},
-		{
-			version: "v2.26.0",
-			remoteRead: monitoringv1.RemoteReadSpec{
-				URL: "http://example.com",
-				OAuth2: &monitoringv1.OAuth2{
-					TokenURL:       "http://token-url",
-					Scopes:         []string{"scope1"},
-					EndpointParams: map[string]string{"param": "value"},
-				},
-				RemoteTimeout: "30 g",
-			},
-			expectedErr: errors.New("invalid remoteRead[0].remoteTimeout value specified: not a valid duration string: \"30 g\""),
-		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			prometheus := monitoringv1.Prometheus{
@@ -5485,14 +5513,16 @@ remote_read:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
-					RemoteRead: []monitoringv1.RemoteReadSpec{tc.remoteRead},
+					EvaluationInterval: "30s",
+					RemoteRead:         []monitoringv1.RemoteReadSpec{tc.remoteRead},
 				},
 			}
 
@@ -5527,8 +5557,8 @@ remote_read:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 
@@ -5867,30 +5897,6 @@ remote_write:
 `,
 		},
 		{
-			version: "v2.27.1",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				OAuth2: &monitoringv1.OAuth2{
-					TokenURL:       "http://token-url",
-					Scopes:         []string{"scope1"},
-					EndpointParams: map[string]string{"param": "value"},
-				},
-				RemoteTimeout: "30ss",
-			},
-			expectedErr: errors.New("invalid remoteWrite[0].remoteTimeout value specified: not a valid duration string: \"30ss\""),
-		},
-		{
-			version: "v2.26.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				MetadataConfig: &monitoringv1.MetadataConfig{
-					Send:         false,
-					SendInterval: "1p",
-				},
-			},
-			expectedErr: errors.New("invalid remoteWrite[0].metadataConfig.sendInterval value specified: not a valid duration string: \"1p\""),
-		},
-		{
 			version: "v2.30.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
@@ -5936,7 +5942,8 @@ remote_write:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
@@ -5945,6 +5952,7 @@ remote_write:
 						RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
 						Secrets:     []string{"sigv4-secret"},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
@@ -5987,8 +5995,8 @@ remote_write:
 				return
 			}
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 
@@ -6195,13 +6203,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
@@ -6251,8 +6261,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6279,6 +6289,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -6327,6 +6341,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -6420,13 +6438,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
@@ -6475,8 +6495,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6622,13 +6642,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 			if tc.enforcedLabelValueLengthLimit >= 0 {
@@ -6688,8 +6710,8 @@ scrape_configs:
 			}
 
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6853,26 +6875,6 @@ scrape_configs:
 			enforcedBodySizeLimit: "",
 			expected:              expectNoLimit,
 		},
-		{
-			version:               "v2.28.0",
-			enforcedBodySizeLimit: "100",
-			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit  in 100"),
-		},
-		{
-			version:               "v2.28.0",
-			enforcedBodySizeLimit: "200kb",
-			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit kb in 200kb"),
-		},
-		{
-			version:               "v2.28.0",
-			enforcedBodySizeLimit: "300 MB",
-			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit  MB in 300 MB"),
-		},
-		{
-			version:               "v2.28.0",
-			enforcedBodySizeLimit: "150M",
-			expectedErr:           errors.New("invalid enforcedBodySizeLimit value specified: units: unknown unit M in 150M"),
-		},
 	} {
 		t.Run(fmt.Sprintf("%s enforcedBodySizeLimit(%s)", tc.version, tc.enforcedBodySizeLimit), func(t *testing.T) {
 			prometheus := monitoringv1.Prometheus{
@@ -6882,13 +6884,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 			if tc.enforcedBodySizeLimit != "" {
@@ -6937,8 +6941,8 @@ scrape_configs:
 				return
 			}
 			result := string(cfg)
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -6950,6 +6954,12 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "ns-value",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
 		},
 	}
 
@@ -7310,13 +7320,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
@@ -7381,8 +7393,8 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
@@ -7409,6 +7421,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7458,6 +7474,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7506,6 +7526,10 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -7569,13 +7593,15 @@ scrape_configs:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version: tc.version,
+						Version:        tc.version,
+						ScrapeInterval: "30s",
 						ServiceMonitorSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"group": "group1",
 							},
 						},
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
@@ -7640,10 +7666,1115 @@ scrape_configs:
 
 			result := string(cfg)
 
-			if tc.expected != result {
-				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
 		})
 	}
+}
+
+func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
+	expectedWithHTTP2Unsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	expectedWithHTTP2Disabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  enable_http2: false
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+	expectedWithHTTP2Enabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  enable_http2: true
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	for _, tc := range []struct {
+		version     string
+		expected    string
+		enableHTTP2 bool
+	}{
+		{
+			version:     "v2.34.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.34.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Enabled,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Disabled,
+		},
+	} {
+		t.Run(fmt.Sprintf("%s TestServiceMonitorEndpointEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        tc.version,
+						ScrapeInterval: "30s",
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
+						},
+					},
+					EvaluationInterval: "30s",
+				},
+			}
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:        "web",
+							Interval:    "30s",
+							EnableHttp2: swag.Bool(true),
+						},
+					},
+				},
+			}
+
+			if !tc.enableHTTP2 {
+				serviceMonitor = monitoringv1.ServiceMonitor{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:        "web",
+								Interval:    "30s",
+								EnableHttp2: swag.Bool(false),
+							},
+						},
+					},
+				}
+			}
+
+			cg := mustNewConfigGenerator(t, &prometheus)
+
+			cfg, err := cg.Generate(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestPodMonitorPhaseFilter(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:        "v2.9.0",
+				ScrapeInterval: "30s",
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.Generate(
+		p,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							FilterRunning: swag.Bool(false),
+							Port:          "test",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/default/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: test
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: default/testpodmonitor1
+  - target_label: endpoint
+    replacement: test
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	result := string(cfg)
+
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Logf("\n%s", diff)
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
+	expectedWithHTTP2Unsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - pod-monitor-ns
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: pod-monitor-ns/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	expectedWithHTTP2Disabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - pod-monitor-ns
+  scrape_interval: 30s
+  enable_http2: false
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: pod-monitor-ns/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+	expectedWithHTTP2Enabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - pod-monitor-ns
+  scrape_interval: 30s
+  enable_http2: true
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: pod-monitor-ns/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`
+
+	for _, tc := range []struct {
+		version     string
+		expected    string
+		enableHTTP2 bool
+	}{
+		{
+			version:     "v2.34.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.34.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Enabled,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Disabled,
+		},
+	} {
+		t.Run(fmt.Sprintf("%s TestServiceMonitorEndpointEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        tc.version,
+						ScrapeInterval: "30s",
+						ServiceMonitorSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"group": "group1",
+							},
+						},
+					},
+					EvaluationInterval: "30s",
+				},
+			}
+
+			podMonitor := monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "pod-monitor-ns",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:        "web",
+							Interval:    "30s",
+							EnableHttp2: swag.Bool(true),
+						},
+					},
+				},
+			}
+
+			if !tc.enableHTTP2 {
+				podMonitor = monitoringv1.PodMonitor{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "pod-monitor-ns",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:        "web",
+								Interval:    "30s",
+								EnableHttp2: swag.Bool(false),
+							},
+						},
+					},
+				}
+			}
+
+			cg := mustNewConfigGenerator(t, &prometheus)
+
+			cfg, err := cg.Generate(
+				&prometheus,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": &podMonitor,
+				},
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestStorageSettingMaxExemplars(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario       string
+		Prometheus     *monitoringv1.Prometheus
+		ExpectedConfig string
+	}{
+		{
+			Scenario: "Exemplars maxSize is set to 5000000",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Exemplars: &monitoringv1.Exemplars{
+						MaxSize: getInt64Pointer(5000000),
+					},
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+storage:
+  exemplars:
+    max_exemplars: 5000000
+`,
+		},
+		{
+			Scenario: "max_exemplars is not set if version is less than v2.29.0",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        "v2.28.0",
+						ScrapeInterval: "30s",
+					},
+					Exemplars: &monitoringv1.Exemplars{
+						MaxSize: getInt64Pointer(5000000),
+					},
+					EvaluationInterval: "30s",
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			Scenario: "Exemplars maxSize is not set",
+			Prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval: "30s",
+						EnableFeatures: []string{"exemplar-storage"},
+					},
+					EvaluationInterval: "30s",
+				},
+			},
+			ExpectedConfig: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tc.Prometheus)
+
+			cfg, err := cg.Generate(
+				tc.Prometheus,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actualConfig := string(cfg)
+
+			if tc.ExpectedConfig != actualConfig {
+				t.Logf("\n%s", pretty.Compare(tc.ExpectedConfig, actualConfig))
+				t.Fatal("expected prometheus configuration with storage and actual configuration do not match")
+			}
+		})
+	}
+}
+func TestTSDBConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		p        *monitoringv1.Prometheus
+		expected string
+	}{
+		{
+			name: "no TSDB config",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			name: "TSDB config < v2.39.0",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        "v2.38.0",
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+					TSDB: monitoringv1.TSDBSpec{
+						OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+`,
+		},
+		{
+			name: "TSDB config >= v2.39.0",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        "v2.39.0",
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+					TSDB: monitoringv1.TSDBSpec{
+						OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+storage:
+  tsdb:
+    out_of_order_time_window: 10m
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tc.p)
+
+			cfg, err := cg.Generate(
+				tc.p,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actualConfig := string(cfg)
+
+			if tc.expected != actualConfig {
+				t.Logf("\n%s", pretty.Compare(tc.expected, actualConfig))
+				t.Fatal("expected TSDB configuration doesn't match with actual configuration")
+			}
+		})
+	}
+}
+
+func TestGenerateRelabelConfig(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "test-relabel",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.Generate(
+		p,
+		map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "https-metrics",
+							Interval: "30s",
+							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "Drop",
+									Regex:        "container_fs*",
+									SourceLabels: []monitoringv1.LabelName{"__name__"},
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "Uppercase",
+									SourceLabels: []monitoringv1.LabelName{"instance"},
+									TargetLabel:  "instance",
+								},
+								{
+									Action:       "Replace",
+									Regex:        "(.+)(?::d+)",
+									Replacement:  "$1:9537",
+									SourceLabels: []monitoringv1.LabelName{"__address__"},
+									TargetLabel:  "__address__",
+								},
+								{
+									Action:      "Replace",
+									Replacement: "crio",
+									TargetLabel: "job",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: test-relabel/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: serviceMonitor/default/test/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_foo
+    - __meta_kubernetes_service_labelpresent_foo
+    regex: (bar);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: https-metrics
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: https-metrics
+  - source_labels:
+    - instance
+    target_label: instance
+    action: uppercase
+  - source_labels:
+    - __address__
+    target_label: __address__
+    regex: (.+)(?::d+)
+    replacement: $1:9537
+    action: replace
+  - target_label: job
+    replacement: crio
+    action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs:
+  - source_labels:
+    - __name__
+    regex: container_fs*
+    action: drop
+`
+
+	result := string(cfg)
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func getInt64Pointer(i int64) *int64 {
+	return &i
 }

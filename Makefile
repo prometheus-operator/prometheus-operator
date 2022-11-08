@@ -8,6 +8,8 @@ else
 	ARCH=$(GOARCH)
 endif
 
+CONTAINER_CLI ?= docker
+
 GO_PKG=github.com/prometheus-operator/prometheus-operator
 IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
 IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
@@ -24,7 +26,6 @@ TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
 
-PO_DOCGEN_BINARY:=$(TOOLS_BIN_DIR)/po-docgen
 CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)/controller-gen
 JB_BINARY=$(TOOLS_BIN_DIR)/jb
 GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
@@ -34,9 +35,10 @@ SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY)
+API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
 
-K8S_GEN_VERSION:=release-1.14
+
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
@@ -120,38 +122,36 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 	cd ./pkg/apis/monitoring/v1beta1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
 		paths=.
 
-CLIENT_TARGET := pkg/client/versioned/clientset.go
-$(CLIENT_TARGET): $(K8S_GEN_DEPS)
+.PHONY: k8s-client-gen
+k8s-client-gen: $(K8S_GEN_DEPS)
+	rm -rf pkg/client/{versioned,informers,listers}
+	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-base     "" \
-	--clientset-name "versioned" \
-	--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package "$(GO_PKG)/pkg/client"
-
-LISTER_TARGETS := pkg/client/listers/monitoring/v1/interface.go pkg/client/listers/monitoring/v1alpha1/interface.go pkg/client/listers/monitoring/v1beta1/interface.go
-$(LISTER_TARGETS): $(K8S_GEN_DEPS)
+		$(K8S_GEN_ARGS) \
+		--input-base     "" \
+		--clientset-name "versioned" \
+		--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package "$(GO_PKG)/pkg/client" \
+		--output-base    "."
+	@echo ">> generating pkg/client/listers..."
 	$(LISTER_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package "$(GO_PKG)/pkg/client/listers"
-
-INFORMER_TARGETS := pkg/client/informers/externalversions/monitoring/v1/interface.go pkg/client/informers/externalversions/monitoring/v1alpha1/interface.go pkg/client/informers/externalversions/monitoring/v1beta1/interface.go
-$(INFORMER_TARGETS): $(K8S_GEN_DEPS) $(LISTER_TARGETS) $(CLIENT_TARGET)
+		$(K8S_GEN_ARGS) \
+		--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package "$(GO_PKG)/pkg/client/listers" \
+		--output-base    "."
+	@echo ">> generating pkg/client/informers..."
 	$(INFORMER_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
-	--listers-package "$(GO_PKG)/pkg/client/listers" \
-	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-	--output-package  "$(GO_PKG)/pkg/client/informers"
+		$(K8S_GEN_ARGS) \
+		--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
+		--listers-package "$(GO_PKG)/pkg/client/listers" \
+		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package  "$(GO_PKG)/pkg/client/informers" \
+		--output-base    "."
+	mv $(GO_PKG)/pkg/client/{versioned,informers,listers} pkg/client
+	rm -r github.com
 
 .PHONY: k8s-gen
-k8s-gen: \
-	$(DEEPCOPY_TARGETS) \
-	$(CLIENT_TARGET) \
-	$(LISTER_TARGETS) \
-	$(INFORMER_TARGETS) \
-	$(OPENAPI_TARGET)
+k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
@@ -161,27 +161,27 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admissi
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
 .hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
 .hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 	touch $@
 
 .PHONY: update-go-deps
 update-go-deps:
 	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
-		go get $$m; \
+		go get -d $$m; \
 	done
 	(cd pkg/client && go get -u ./...)
 	(cd pkg/apis/monitoring && go get -u ./...)
@@ -194,12 +194,12 @@ update-go-deps:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
-	cd pkg/client && go mod tidy -v -modfile=go.mod
-	cd scripts && go mod tidy -v -modfile=go.mod
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd pkg/client && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
+generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -211,7 +211,8 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=./v1/. paths=./v1alpha1/. output:crd:dir=$(PWD)/example/prometheus-operator-crd/
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) crd:crdVersions=v1 paths=./... output:crd:dir=$(PWD)/example/prometheus-operator-crd-full
-	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
+	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
+	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - >> $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 
 .PHONY: generate-remote-write-certs
 generate-remote-write-certs:
@@ -223,6 +224,15 @@ generate-docs: $(shell find Documentation -type f)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
+
+# stripped-down-crds.yaml is a version of the Prometheus Operator CRDs with all
+# description fields being removed. It is meant as a workaround for the issue
+# that `kubectl apply -f ...` might fail with the full version of the CRDs
+# because of too long annotations field.
+# See https://github.com/prometheus-operator/prometheus-operator/issues/4355
+stripped-down-crds.yaml: $(shell find example/prometheus-operator-crd/*.yaml -type f) $(GOJSONTOYAML_BINARY)
+	: > $@
+	for f in example/prometheus-operator-crd/*.yaml; do echo '---' >> $@; $(GOJSONTOYAML_BINARY) -yamltojson < $$f | jq 'walk(if type == "object" then with_entries(select(.key | test("description") | not)) else . end)' | $(GOJSONTOYAML_BINARY) >> $@; done
 
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
 	cd scripts/generate; $(JB_BINARY) install;
@@ -248,19 +258,15 @@ example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/co
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
-TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
 Documentation/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
-# For now, the v1beta1 CRDs aren't part of the default bundle because they
-# require to deploy/run the conversion webhook. As a consequence, they are not
-# yet included in the API documentation.
-Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
-	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
+Documentation/compatibility.md: pkg/operator/defaults.go
+	$(MDOX_BINARY) fmt $@
 
-Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
-	$(PO_DOCGEN_BINARY) compatibility > $@
+Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
+	$(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api.md"
 
 ##############
 # Formatting #
@@ -361,7 +367,7 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(TOOLS_BIN_DIR)/$(1)
 
 $(TOOLS_BIN_DIR)/$(1):
-	@go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
+	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
 
 endef
 
