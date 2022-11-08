@@ -473,13 +473,10 @@ func TestAlertRelabelFile(t *testing.T) {
 }
 
 func TestRemoteWriteConfigFile(t *testing.T) {
-	testPath := "/vault/secret/config.yaml"
-
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints:        emptyQueryEndpoints,
-			RemoteWriteConfigFile: &testPath,
+			QueryEndpoints: emptyQueryEndpoints,
 			RemoteWriteConfig: []monitoringv1.RemoteWriteSpec{
 				{
 					URL: "http://example.com",
@@ -502,23 +499,16 @@ func TestRemoteWriteConfigFile(t *testing.T) {
 	}
 
 	{
-		var containsArgConfigFile, containsArgConfigs bool
-		expectedArgConfigFile := "--remote-write.config-file=" + testPath
+		var containsArgConfigs bool
 		expectedArgConfigs := "--remote-write.config=$(REMOTE_WRITE_CONFIG)"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
-					if arg == expectedArgConfigFile {
-						containsArgConfigFile = true
-					}
 					if arg == expectedArgConfigs {
 						containsArgConfigs = true
 					}
 				}
 			}
-		}
-		if !containsArgConfigFile {
-			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArgConfigFile)
 		}
 		if containsArgConfigs {
 			t.Fatalf("Thanos ruler should not contain argument: %s", expectedArgConfigs)
