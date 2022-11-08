@@ -17253,6 +17253,10 @@ spec:
                     bearerTokenFile:
                       description: File to read bearer token for remote read.
                       type: string
+                    filterExternalLabels:
+                      description: Optional FilterExternalLabels. This translates
+                        in filter_external_labels in prometheus.yaml configuration.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string

@@ -9868,6 +9868,18 @@ string
 <p>Optional ProxyURL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>filterExternalLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Optional FilterExternalLabels. This translates in filter_external_labels
+in prometheus.yaml configuration.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec

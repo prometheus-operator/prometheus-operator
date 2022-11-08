@@ -5452,6 +5452,7 @@ remote_read:
     - scope1
     endpoint_params:
       param: value
+  filter_external_labels: false
 `,
 		},
 		{
@@ -5474,6 +5475,26 @@ scrape_configs: []
 remote_read:
 - url: http://example.com
   remote_timeout: 30s
+  filter_external_labels: false
+`,
+		},
+		{
+			version: "v2.26.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:                  "http://example.com",
+				FilterExternalLabels: false,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+  filter_external_labels: false
 `,
 		},
 		{
@@ -5502,6 +5523,7 @@ remote_read:
   authorization:
     type: Bearer
     credentials: secret
+  filter_external_labels: false
 `,
 		},
 	} {
