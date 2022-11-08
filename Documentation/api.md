@@ -3431,6 +3431,22 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 <p>Pods&rsquo; hostAliases configuration</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RemoteWriteConfig configures stateless mode in ThanosRuler.
+RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
+<a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a></p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -9873,7 +9889,7 @@ string
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 <p>RemoteWriteSpec defines the configuration to write samples from Prometheus
@@ -11704,6 +11720,22 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RemoteWriteConfig configures stateless mode in ThanosRuler.
+RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
+<a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a></p>
 </td>
 </tr>
 </tbody>

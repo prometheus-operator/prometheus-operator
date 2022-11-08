@@ -310,9 +310,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	if tr.Spec.RemoteWriteConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
-	} else if tr.Spec.RemoteWriteConfig != nil {
+	if tr.Spec.RemoteWriteConfig != nil {
 		remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate remote write spec")
