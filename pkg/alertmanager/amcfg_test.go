@@ -1308,7 +1308,7 @@ templates: []
 		},
 		{
 
-			name: "CR with SNS Receiver",
+			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1379,6 +1379,71 @@ receivers:
       region: us-east-2
       access_key: xyz
       secret_key: "123"
+    topic_arn: test-topicARN
+templates: []
+`,
+		},
+		{
+
+			name: "CR with SNS Receiver with roleARN",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: "https://sns.us-east-2.amazonaws.com",
+									Sigv4: &monitoringingv1.Sigv4{
+										Region:  "us-east-2",
+										RoleArn: "test-roleARN",
+									},
+									TopicARN: "test-topicARN",
+								},
+							},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  sns_configs:
+  - api_url: https://sns.us-east-2.amazonaws.com
+    sigv4:
+      region: us-east-2
+      role_arn: test-roleARN
     topic_arn: test-topicARN
 templates: []
 `,

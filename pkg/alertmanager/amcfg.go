@@ -1049,23 +1049,25 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	}
 
 	if in.Sigv4 != nil {
-		accessKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get access key")
-		}
-
-		secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get AWS secret key")
-
-		}
-
 		out.Sigv4 = sigV4Config{
-			Region:    in.Sigv4.Region,
-			AccessKey: accessKey,
-			SecretKey: secretKey,
-			Profile:   in.Sigv4.Profile,
-			RoleARN:   in.Sigv4.RoleArn,
+			Region:  in.Sigv4.Region,
+			Profile: in.Sigv4.Profile,
+			RoleARN: in.Sigv4.RoleArn,
+		}
+
+		if in.Sigv4.AccessKey != nil && in.Sigv4.SecretKey != nil {
+			accessKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get access key")
+			}
+
+			secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get AWS secret key")
+
+			}
+			out.Sigv4.AccessKey = accessKey
+			out.Sigv4.SecretKey = secretKey
 		}
 	}
 
