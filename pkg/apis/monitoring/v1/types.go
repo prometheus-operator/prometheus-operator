@@ -1124,7 +1124,7 @@ type RemoteReadSpec struct {
 	ProxyURL string `json:"proxyUrl,omitempty"`
 	// Whether to use the external labels as selectors for the remote read endpoint.
 	// Requires Prometheus v2.34.0 and above.
-	FilterExternalLabels bool `json:"filterExternalLabels,omitempty"`
+	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`
 }
 
 // LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.
