@@ -99,6 +99,21 @@ func (c alertmanagerConfig) String() string {
 	return string(b)
 }
 
+type enforcer interface {
+	processRoute(*route) *route
+	processInhibitRule(*inhibitRule) *inhibitRule
+	updateNamespace(namespace string)
+}
+
+// No enforcement
+type noopEnforcer struct{}
+
+// Enforcing the namespace label
+type namespaceEnforcer struct {
+	namespace         string
+	matchersV2Allowed bool
+}
+
 // configBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
 type configBuilder struct {
@@ -106,15 +121,26 @@ type configBuilder struct {
 	logger    log.Logger
 	amVersion semver.Version
 	store     *assets.Store
+	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy *monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
+		enforcer:  getEnforcer(matcherStrategy, amVersion),
 	}
 	return cg
+}
+
+func getEnforcer(matcherStrategy *monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+	if matcherStrategy != nil && matcherStrategy.Type == "None" {
+		return &noopEnforcer{}
+	}
+	return &namespaceEnforcer{
+		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+	}
 }
 
 func (cb *configBuilder) marshalJSON() ([]byte, error) {
@@ -184,7 +210,7 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 }
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
-func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig, namespaceMatcher bool) error {
+func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
 	// same order.
@@ -203,14 +229,16 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
 		}
 
+		// If we use the namespaceEnforcer we need to update the namespace field
+		cb.enforcer.updateNamespace(crKey.Namespace)
+
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
 			cb.cfg.InhibitRules = append(cb.cfg.InhibitRules,
-				cb.enforceNamespaceForInhibitRule(
+				cb.enforcer.processInhibitRule(
 					cb.convertInhibitRule(
 						&inhibitRule,
 					),
-					crKey.Namespace,
 				),
 			)
 		}
@@ -221,13 +249,11 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		}
 
 		subRoutes = append(subRoutes,
-			cb.enforceNamespaceForRoute(
+			cb.enforcer.processRoute(
 				cb.convertRoute(
 					amConfigs[amConfigIdentifier].Spec.Route,
 					crKey,
 				),
-				amConfigs[amConfigIdentifier].Namespace,
-				namespaceMatcher,
 			),
 		)
 
@@ -261,26 +287,30 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return nil
 }
 
-// enforceNamespaceForInhibitRule modifies the inhibition rule to match alerts
-// originating only from the given namespace.
-func (cb *configBuilder) enforceNamespaceForInhibitRule(ir *inhibitRule, namespace string) *inhibitRule {
-	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
+func (ne *noopEnforcer) updateNamespace(namespace string) {}
 
+func (ne *namespaceEnforcer) updateNamespace(namespace string) { ne.namespace = namespace }
+
+func (ne *noopEnforcer) processInhibitRule(ir *inhibitRule) *inhibitRule { return ir }
+
+// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processInhibitRule(ir *inhibitRule) *inhibitRule {
 	// Inhibition rule created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
 	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
 	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
 
-	if !matchersV2Allowed {
-		ir.SourceMatch[inhibitRuleNamespaceKey] = namespace
-		ir.TargetMatch[inhibitRuleNamespaceKey] = namespace
+	if !ne.matchersV2Allowed {
+		ir.SourceMatch[inhibitRuleNamespaceKey] = ne.namespace
+		ir.TargetMatch[inhibitRuleNamespaceKey] = ne.namespace
 
 		return ir
 	}
 
 	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
 		Name:      inhibitRuleNamespaceKey,
-		Value:     namespace,
+		Value:     ne.namespace,
 		MatchType: monitoringv1alpha1.MatchEqual,
 	}.String()
 
@@ -297,30 +327,25 @@ func (cb *configBuilder) enforceNamespaceForInhibitRule(ir *inhibitRule, namespa
 	return ir
 }
 
-// enforceNamespaceForRoute modifies the route configuration to match alerts
-// originating only from the given namespace.
-func (cb *configBuilder) enforceNamespaceForRoute(r *route, namespace string, enabled bool) *route {
-	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
-
-	// Alerts should still be evaluated by the following routes.
+func (ne *noopEnforcer) processRoute(r *route) *route {
 	r.Continue = true
+	return r
+}
 
-	// If enabled is false then namespace matching is skipped.
-	if !enabled {
-		return r
-	}
+// processRoute on namespaceEnforcer modifies the route configuration to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processRoute(r *route) *route {
 	// Routes created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
-	if matchersV2Allowed {
+	if ne.matchersV2Allowed {
 		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
 			Name:      "namespace",
-			Value:     namespace,
+			Value:     ne.namespace,
 			MatchType: monitoringv1alpha1.MatchEqual,
 		}.String())
 	} else {
-		r.Match["namespace"] = namespace
+		r.Match["namespace"] = ne.namespace
 	}
-
 	// Alerts should still be evaluated by the following routes.
 	r.Continue = true
 
@@ -411,7 +436,6 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 			prefixedMuteTimeIntervals = append(prefixedMuteTimeIntervals, makeNamespacedString(mti, crKey))
 		}
 	}
-
 	return &route{
 		Receiver:          receiver,
 		GroupByStr:        in.GroupBy,

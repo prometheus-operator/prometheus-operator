@@ -845,7 +845,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store)
+		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {
@@ -888,7 +888,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs, am.Spec.AlertmanagerConfigNamespaceMatcher); err != nil {
+	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
 		return errors.Wrap(err, "failed to generate Alertmanager configuration")
 	}
 

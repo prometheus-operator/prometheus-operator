@@ -623,13 +623,16 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigNamespaceMatcher</code><br/>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
 <em>
-bool
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
 </em>
 </td>
 <td>
-<p>If set to false namespace matchers will not be added to the routes. Default is <code>true</code>.</p>
+<p>The AlertmanagerConfigMatcherStrategy defines how to add additional matchers to the AlertmanagerConfigs.
+In the future more options may be added.</p>
 </td>
 </tr>
 <tr>
@@ -3586,6 +3589,37 @@ Authorization
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerConfigMatcherStrategy defines the strategy that is used to match AlertmanagerConfigs.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>If set to <code>OnNamespace</code> namespace matchers will be added to the routes.
+<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig
+Default is <code>OnNamespace</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
 <p>
@@ -4375,13 +4409,16 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigNamespaceMatcher</code><br/>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
 <em>
-bool
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
 </em>
 </td>
 <td>
-<p>If set to false namespace matchers will not be added to the routes. Default is <code>true</code>.</p>
+<p>The AlertmanagerConfigMatcherStrategy defines how to add additional matchers to the AlertmanagerConfigs.
+In the future more options may be added.</p>
 </td>
 </tr>
 <tr>

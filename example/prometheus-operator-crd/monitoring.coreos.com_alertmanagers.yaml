@@ -891,11 +891,22 @@ spec:
                         type: array
                     type: object
                 type: object
-              alertmanagerConfigNamespaceMatcher:
-                default: true
-                description: If set to false namespace matchers will not be added
-                  to the routes. Default is `true`.
-                type: boolean
+              alertmanagerConfigMatcherStrategy:
+                description: The AlertmanagerConfigMatcherStrategy defines how to
+                  add additional matchers to the AlertmanagerConfigs. In the future
+                  more options may be added.
+                properties:
+                  type:
+                    default: OnNamespace
+                    description: If set to `OnNamespace` namespace matchers will be
+                      added to the routes. `None` will not add any additional matchers
+                      other than the ones specified in the AlertmanagerConfig Default
+                      is `OnNamespace`.
+                    enum:
+                    - OnNamespace
+                    - None
+                    type: string
+                type: object
               alertmanagerConfigNamespaceSelector:
                 description: Namespaces to be selected for AlertmanagerConfig discovery.
                   If nil, only check own namespace.

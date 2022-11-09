@@ -55,11 +55,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	myrouteJSON, _ := json.Marshal(myroute)
 
 	tests := []struct {
-		name         string
-		globalConfig *monitoringingv1.AlertmanagerGlobalConfig
-		amConfig     *monitoringv1alpha1.AlertmanagerConfig
-		want         *alertmanagerConfig
-		wantErr      bool
+		name            string
+		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
+		matcherStrategy *monitoringingv1.AlertmanagerConfigMatcherStrategy
+		amConfig        *monitoringv1alpha1.AlertmanagerConfig
+		want            *alertmanagerConfig
+		wantErr         bool
 	}{
 		{
 			name: "valid global config",
@@ -110,6 +111,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 					},
 				},
+			},
+			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -179,6 +183,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
+			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
@@ -226,6 +233,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			log.NewNopLogger(),
 			version,
 			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+			tt.matcherStrategy,
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
@@ -243,13 +251,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
-		name             string
-		kclient          kubernetes.Interface
-		baseConfig       alertmanagerConfig
-		amVersion        *semver.Version
-		namespaceMatcher bool
-		amConfigs        map[string]*monitoringv1alpha1.AlertmanagerConfig
-		expected         string
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy *monitoringingv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		expected        string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	if err != nil {
@@ -269,8 +277,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
 receivers:
@@ -288,8 +295,7 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   resolve_timeout: 1m
 route:
@@ -309,8 +315,7 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   smtp_require_tls: false
 route:
@@ -330,8 +335,7 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   smtp_require_tls: true
 route:
@@ -354,8 +358,7 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
 inhibit_rules:
@@ -386,8 +389,7 @@ templates: []
 					{Name: "custom"},
 				},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
   routes:
@@ -450,8 +452,7 @@ templates: []
 					},
 				},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: "null"
 receivers:
@@ -494,8 +495,7 @@ templates: []
 					},
 				},
 			},
-			namespaceMatcher: true,
-			amConfigs:        map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `route:
   receiver: sns-test
 receivers:
@@ -522,7 +522,6 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -560,7 +559,9 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: false,
+			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "None",
+			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -600,7 +601,6 @@ templates: []
 				Major: 0,
 				Minor: 20,
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -651,7 +651,6 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -703,7 +702,6 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -759,7 +757,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -807,7 +804,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -895,7 +891,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -985,7 +980,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1044,7 +1038,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1110,7 +1103,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1173,7 +1165,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1231,7 +1222,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1304,7 +1294,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1384,7 +1373,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1455,7 +1443,6 @@ templates: []
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			namespaceMatcher: true,
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
 				"mynamespace": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -1574,10 +1561,10 @@ templates: []
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store)
+			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
-			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs, tc.namespaceMatcher); err != nil {
+			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {
 				t.Fatal(err)
 			}
 
