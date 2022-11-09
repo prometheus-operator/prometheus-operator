@@ -1691,7 +1691,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		cfg = append(cfg, yaml.MapItem{Key: "filter_external_labels", Value: spec.FilterExternalLabels})
+		cfg = cg.WithMinimumVersion("2.34.0").AppendMapItem(cfg, yaml.MapItem{Key: "filter_external_labels", Value: spec.FilterExternalLabels})
 
 		cfgs = append(cfgs, cfg)
 	}
