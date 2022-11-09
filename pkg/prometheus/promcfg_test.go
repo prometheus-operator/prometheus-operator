@@ -239,6 +239,9 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 					NamespaceSelector: monitoringv1.NamespaceSelector{
 						MatchNames: []string{"test1", "test2"},
 					},
+					AttachMetadata: &monitoringv1.AttachMetadata{
+						Node: true,
+					},
 				},
 			},
 			IgnoreNamespaceSelectors: false,
@@ -248,6 +251,8 @@ func TestNamespaceSetCorrectly(t *testing.T) {
     names:
     - test1
     - test2
+  attach_metadata:
+    node: true
 `,
 		},
 		// Test that 'Any' returns an empty list instead of the current namespace
@@ -332,7 +337,15 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			},
 		)
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, nil)
+		var attachMetaConfig *attachMetadataConfig
+		if tc.ServiceMonitor.Spec.AttachMetadata != nil {
+			attachMetaConfig = &attachMetadataConfig{
+				MinimumVersion: "2.37.0",
+				AttachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
+			}
+		}
+
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -374,7 +387,11 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		},
 	)
 
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, pm.Spec.AttachMetadata)
+	attachMetadataConfig := &attachMetadataConfig{
+		MinimumVersion: "2.35.0",
+		AttachMetadata: pm.Spec.AttachMetadata,
+	}
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, attachMetadataConfig)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
@@ -1377,12 +1394,20 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 		)
 
+		var attachMetaConfig *attachMetadataConfig
+		if sm.Spec.AttachMetadata != nil {
+			attachMetaConfig = &attachMetadataConfig{
+				MinimumVersion: "2.37.0",
+				AttachMetadata: sm.Spec.AttachMetadata,
+			}
+		}
 		c := cg.generateK8SSDConfig(
 			sm.Spec.NamespaceSelector,
 			sm.Namespace,
 			tc.apiserverConfig,
 			tc.store,
-			kubernetesSDRoleEndpoint, nil,
+			kubernetesSDRoleEndpoint,
+			attachMetaConfig,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
