@@ -9876,8 +9876,8 @@ bool
 </em>
 </td>
 <td>
-<p>Optional FilterExternalLabels. This translates in filter_external_labels
-in prometheus.yaml configuration.</p>
+<p>Whether to use the external labels as selectors for the remote read endpoint.
+Requires Prometheus v2.34.0 and above.</p>
 </td>
 </tr>
 </tbody>
