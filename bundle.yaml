@@ -21805,6 +21805,10 @@ spec:
                     enableHttp2:
                       description: Whether to enable HTTP2.
                       type: boolean
+                    filterRunning:
+                      description: 'Drop pods that are not running. (Failed, Succeeded).
+                        Enabled by default. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase'
+                      type: boolean
                     followRedirects:
                       description: FollowRedirects configures whether scrape requests
                         follow HTTP 3xx redirects.

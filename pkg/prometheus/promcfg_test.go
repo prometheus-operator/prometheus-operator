@@ -2042,6 +2042,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2215,6 +2219,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2695,6 +2703,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2870,6 +2882,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3094,6 +3110,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3363,6 +3383,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3504,6 +3528,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3645,6 +3673,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3786,6 +3818,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -4143,6 +4179,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_pod_label_example
     target_label: example
@@ -4405,6 +4445,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -4969,6 +5013,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5036,6 +5084,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5204,6 +5256,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5271,6 +5327,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6054,6 +6114,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6121,6 +6185,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6768,6 +6836,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6835,6 +6907,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7058,6 +7134,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7133,6 +7213,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7201,6 +7285,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7268,6 +7356,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7724,6 +7816,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7792,6 +7888,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7859,6 +7959,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -8733,6 +8837,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
