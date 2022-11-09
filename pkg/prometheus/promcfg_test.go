@@ -5418,8 +5418,8 @@ scrape_configs:
 }
 
 func TestRemoteReadConfig(t *testing.T) {
-	bool_true := true
-	bool_false := false
+	boolTrue := true
+	boolFalse := false
 
 	for _, tc := range []struct {
 		version     string
@@ -5483,7 +5483,7 @@ remote_read:
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: &bool_true,
+				FilterExternalLabels: &boolTrue,
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5518,7 +5518,7 @@ remote_read:
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: &bool_false,
+				FilterExternalLabels: &boolFalse,
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5537,7 +5537,7 @@ remote_read:
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: &bool_true,
+				FilterExternalLabels: &boolTrue,
 			},
 			expected: `global:
   evaluation_interval: 30s
