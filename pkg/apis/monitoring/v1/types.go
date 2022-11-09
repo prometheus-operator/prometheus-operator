@@ -1122,8 +1122,8 @@ type RemoteReadSpec struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
-	// Optional FilterExternalLabels. This translates in filter_external_labels
-	// in prometheus.yaml configuration.
+	// Whether to use the external labels as selectors for the remote read endpoint.
+	// Requires Prometheus v2.34.0 and above.
 	FilterExternalLabels bool `json:"filterExternalLabels,omitempty"`
 }
 
