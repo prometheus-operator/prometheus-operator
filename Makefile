@@ -1,7 +1,7 @@
 SHELL=/usr/bin/env bash -o pipefail
 
 GOOS?=$(shell go env GOOS)
-GOARCH?=amd64
+GOARCH?=$(shell go env GOARCH)
 ifeq ($(GOARCH),arm)
 	ARCH=armv7
 else
