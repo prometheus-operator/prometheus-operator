@@ -9868,6 +9868,18 @@ string
 <p>Optional ProxyURL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>filterExternalLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Whether to use the external labels as selectors for the remote read endpoint.
+Requires Prometheus v2.34.0 and above.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec

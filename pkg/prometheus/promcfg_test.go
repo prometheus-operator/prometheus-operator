@@ -5418,6 +5418,9 @@ scrape_configs:
 }
 
 func TestRemoteReadConfig(t *testing.T) {
+	boolTrue := true
+	boolFalse := false
+
 	for _, tc := range []struct {
 		version     string
 		remoteRead  monitoringv1.RemoteReadSpec
@@ -5474,6 +5477,79 @@ scrape_configs: []
 remote_read:
 - url: http://example.com
   remote_timeout: 30s
+`,
+		},
+		{
+			version: "v2.26.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:                  "http://example.com",
+				FilterExternalLabels: &boolTrue,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+`,
+		},
+		{
+			version: "v2.34.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL: "http://example.com",
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+`,
+		},
+		{
+			version: "v2.34.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:                  "http://example.com",
+				FilterExternalLabels: &boolFalse,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+  filter_external_labels: false
+`,
+		},
+		{
+			version: "v2.34.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:                  "http://example.com",
+				FilterExternalLabels: &boolTrue,
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+  filter_external_labels: true
 `,
 		},
 		{

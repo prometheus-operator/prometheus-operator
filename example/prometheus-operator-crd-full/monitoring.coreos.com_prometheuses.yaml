@@ -4572,6 +4572,11 @@ spec:
                     bearerTokenFile:
                       description: File to read bearer token for remote read.
                       type: string
+                    filterExternalLabels:
+                      description: Whether to use the external labels as selectors
+                        for the remote read endpoint. Requires Prometheus v2.34.0
+                        and above.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
