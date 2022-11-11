@@ -3699,6 +3699,17 @@ string
 </tr>
 <tr>
 <td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Whether to enable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>pathPrefix</code><br/>
 <em>
 string

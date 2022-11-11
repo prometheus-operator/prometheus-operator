@@ -1201,6 +1201,8 @@ type AlertmanagerEndpoints struct {
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
 	Timeout *Duration `json:"timeout,omitempty"`
+	// Whether to enable HTTP2.
+	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 }
 
 // +genclient

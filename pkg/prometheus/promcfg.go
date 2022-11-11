@@ -1541,6 +1541,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
 		}
 
+		if am.EnableHttp2 != nil {
+			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
+		}
+
 		// TODO: If we want to support secret refs for alertmanager config tls
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
