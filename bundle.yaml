@@ -13734,6 +13734,9 @@ spec:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
                           type: string
+                        enableHttp2:
+                          description: Whether to enable HTTP2.
+                          type: boolean
                         name:
                           description: Name of Endpoints object in Namespace.
                           type: string
