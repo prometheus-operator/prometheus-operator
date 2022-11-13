@@ -198,7 +198,7 @@ spec:
   type: ClusterIP
   ports:
   - name: web
-    port: 9090
+    port: 9093
     protocol: TCP
     targetPort: web
   selector:
