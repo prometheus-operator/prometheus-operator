@@ -17007,6 +17007,9 @@ spec:
                 description: Port name used for the pods and governing service. This
                   defaults to web
                 type: string
+              preProvisionRuleConfigMapNumber:
+                description: pre-provision rule number
+                type: integer
               priorityClassName:
                 description: Priority class assigned to the Pods
                 type: string
@@ -21418,6 +21421,8 @@ spec:
                     - keySecret
                     type: object
                 type: object
+            required:
+            - preProvisionRuleConfigMapNumber
             type: object
           status:
             description: 'Most recent observed status of the Prometheus cluster. Read-only.
@@ -26075,6 +26080,9 @@ spec:
                 description: Port name used for the pods and governing service. This
                   defaults to web
                 type: string
+              preProvisionRuleConfigMapNumber:
+                description: pre-provision rule number
+                type: integer
               priorityClassName:
                 description: Priority class assigned to the Pods
                 type: string
@@ -28738,6 +28746,8 @@ spec:
                   - name
                   type: object
                 type: array
+            required:
+            - preProvisionRuleConfigMapNumber
             type: object
           status:
             description: 'Most recent observed status of the ThanosRuler cluster.

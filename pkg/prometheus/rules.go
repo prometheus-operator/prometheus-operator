@@ -110,9 +110,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return newConfigMapNames, nil
 	}
 
-	// Simply deleting old ConfigMaps and creating new ones for now. Could be
-	// replaced by logic that only deletes obsolete ConfigMaps in the future.
-	for _, cm := range currentConfigMaps {
+	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, p.Spec.PreProvisionRuleConfigMapNumber)
+
+	// replaced by logic that only deletes obsolete ConfigMaps.
+	for _, cm := range deleteConfigMaps {
 		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to delete current ConfigMap '%v'", cm.Name)
@@ -124,10 +125,17 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
-	for _, cm := range newConfigMaps {
+	for _, cm := range createConfigMaps {
 		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
+		}
+	}
+
+	for _, cm := range updateConfigMaps {
+		_, err = cClient.Update(ctx, &cm, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to update ConfigMap '%v'", cm.Name)
 		}
 	}
 
@@ -286,6 +294,17 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 		cm := makeRulesConfigMap(p, bucket)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
+	}
+
+	if p.Spec.PreProvisionRuleConfigMapNumber != nil {
+		// if real cm number less than excepted number
+		if len(buckets) < *p.Spec.PreProvisionRuleConfigMapNumber {
+			for i := len(buckets); i < *p.Spec.PreProvisionRuleConfigMapNumber; i++ {
+				cm := makeRulesConfigMap(p, nil)
+				cm.Name = cm.Name + "-" + strconv.Itoa(i)
+				ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
+			}
+		}
 	}
 
 	return ruleFileConfigMaps, nil

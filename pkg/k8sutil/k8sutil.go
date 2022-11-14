@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
@@ -382,4 +383,31 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 	}
 
 	return to
+}
+
+// DiffRulerConfigMap preProvisionRuleConfigMapNumber can't less than newConfigMaps number.
+func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap, preProvisionRuleConfigMapNumber *int) (deleteConfigMaps []v1.ConfigMap, createConfigMaps []v1.ConfigMap, updateConfigMaps []v1.ConfigMap) {
+	sort.Slice(newConfigMaps, func(i, j int) bool {
+		return newConfigMaps[i].Name < newConfigMaps[j].Name
+	})
+
+	sort.Slice(currentConfigMaps, func(i, j int) bool {
+		return currentConfigMaps[i].Name < currentConfigMaps[j].Name
+	})
+	currentConfigMapsNum := len(currentConfigMaps)
+	newConfigMapsNum := len(newConfigMaps)
+	if newConfigMapsNum > currentConfigMapsNum {
+		createConfigMaps = newConfigMaps[currentConfigMapsNum:newConfigMapsNum]
+		updateConfigMaps = newConfigMaps[0:currentConfigMapsNum]
+	}
+
+	if newConfigMapsNum < currentConfigMapsNum {
+		if preProvisionRuleConfigMapNumber != nil {
+			deleteConfigMaps = currentConfigMaps[*preProvisionRuleConfigMapNumber:currentConfigMapsNum]
+		} else {
+			deleteConfigMaps = currentConfigMaps[newConfigMapsNum:currentConfigMapsNum]
+		}
+		updateConfigMaps = newConfigMaps
+	}
+	return deleteConfigMaps, createConfigMaps, updateConfigMaps
 }

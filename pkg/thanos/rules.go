@@ -108,9 +108,10 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return newConfigMapNames, nil
 	}
 
-	// Simply deleting old ConfigMaps and creating new ones for now. Could be
-	// replaced by logic that only deletes obsolete ConfigMaps in the future.
-	for _, cm := range currentConfigMaps {
+	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, t.Spec.PreProvisionRuleConfigMapNumber)
+
+	// replaced by logic that only deletes obsolete ConfigMaps.
+	for _, cm := range deleteConfigMaps {
 		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to delete current ConfigMap '%v'", cm.Name)
@@ -122,10 +123,16 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		"namespace", t.Namespace,
 		"thanos", t.Name,
 	)
-	for _, cm := range newConfigMaps {
+	for _, cm := range createConfigMaps {
 		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
+		}
+	}
+	for _, cm := range updateConfigMaps {
+		_, err = cClient.Update(ctx, &cm, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to update new ConfigMap '%v'", cm.Name)
 		}
 	}
 
@@ -283,6 +290,17 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 		cm := makeRulesConfigMap(t, bucket)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
+	}
+
+	if t.Spec.PreProvisionRuleConfigMapNumber != nil {
+		// if real cm number less than excepted number
+		if len(buckets) < *t.Spec.PreProvisionRuleConfigMapNumber {
+			for i := len(buckets); i < *t.Spec.PreProvisionRuleConfigMapNumber; i++ {
+				cm := makeRulesConfigMap(t, nil)
+				cm.Name = cm.Name + "-" + strconv.Itoa(i)
+				ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
+			}
+		}
 	}
 
 	return ruleFileConfigMaps, nil
