@@ -1307,6 +1307,9 @@ type Endpoint struct {
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to enable HTTP2.
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+	// Drop pods that are not running. (Failed, Succeeded). Enabled by default.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+	FilterRunning *bool `json:"filterRunning,omitempty"`
 }
 
 // +genclient

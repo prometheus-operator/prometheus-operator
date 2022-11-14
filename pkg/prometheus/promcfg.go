@@ -706,11 +706,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	relabelings := initRelabelings()
 
 	if ep.FilterRunning == nil || *ep.FilterRunning {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "drop"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
-			{Key: "regex", Value: "(Failed|Succeeded)"},
-		})
+		relabelings = append(relabelings, generateRunningFilter())
 	}
 
 	var labelKeys []string
@@ -1289,6 +1285,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		},
 	}...)
 
+	if ep.FilterRunning == nil || *ep.FilterRunning {
+		relabelings = append(relabelings, generateRunningFilter())
+	}
+
 	// Relabel targetLabels from Service onto target.
 	for _, l := range m.Spec.TargetLabels {
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1359,6 +1359,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
+}
+
+func generateRunningFilter() yaml.MapSlice {
+	return yaml.MapSlice{
+		{Key: "action", Value: "drop"},
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
+		{Key: "regex", Value: "(Failed|Succeeded)"},
+	}
 }
 
 func getLimit(user uint64, enforced *uint64) uint64 {
