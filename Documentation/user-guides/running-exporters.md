@@ -68,6 +68,47 @@ spec:
     interval: 15s
 ```
 
+## Default Labels
+
+By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metadata in the scraped results.
+
+### PodMonitors
+
+| Target Label | Source Label                         | Description                                                                                     |
+|--------------|--------------------------------------|-------------------------------------------------------------------------------------------------|
+| instance     | __param_target                       | The address of the scraped target                                                               |
+| job          | -                                    | `{metadata.namespace}/{metadata.name}` of the `PodMonitor` or read from `jobLabel` if specified |
+| namespace    | __meta_kubernetes_namespace          | `{metadata.namespace}` of the scraped pod                                                       |
+| container    | __meta_kubernetes_pod_container_name | `{name}` of the container in the scraped pod                                                    |
+| pod          | __meta_kubernetes_pod_name           | `{metadata.name}` of the scraped pod                                                            |
+| endpoint     | -                                    | `{spec.Port}` or `{spec.TargetPort}` if specified                                               |
+
+### ServiceMonitors
+
+| Target Label | Source Label                         | Description                                                                   |
+|--------------|--------------------------------------|-------------------------------------------------------------------------------|
+| instance     | __param_target                       | The address of the scraped target                                             |
+| job          | -                                    | `{metadata.name}` of the scraped service or read from `jobLabel` if specified |
+| node/pod     | -                                    | Set depending on the endpoint responding to service request                   |
+| namespace    | __meta_kubernetes_namespace          | `{metadata.namespace}` of the scraped pod                                     |
+| service      |                                      | `{metadata.name}` of the scraped service                                      |
+| pod          | __meta_kubernetes_pod_name           | `{metadata.name}` of the scraped pod                                          |
+| container    | __meta_kubernetes_pod_container_name | `{name}` of the container in the scraped pod                                  |
+| endpoint     | -                                    | `{spec.Port}` or `{spec.TargetPort}` if specified                             |
+
+### Configuration
+
+These labels can be modified or disabled using the `relabelings` and `metricRelabelings` settings of the `PodMonitor` and `ServiceMonitor` specifications. The configuration below will drop all of the labels before being loaded into Prometheus.
+
+```
+relabelings:
+- action: labeldrop
+  regex: (container|endpoint|job|namespace|node|pod|service)
+metricRelabelings:
+- action: labeldrop
+  regex: instance
+```
+
 ## Troubleshooting
 
 ### Namespace "limits"/things to keep in mind
