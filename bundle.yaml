@@ -11351,8 +11351,8 @@ spec:
               by Prometheus.
             properties:
               attachMetadata:
-                description: 'Attaches node metadata to discovered targets. Only valid
-                  for role: pod. Only valid in Prometheus versions 2.35.0 and newer.'
+                description: Attaches node metadata to discovered targets. Requires
+                  Prometheus v2.35.0 and above.
                 properties:
                   node:
                     description: When set to true, Prometheus must have permissions
@@ -21704,6 +21704,15 @@ spec:
             description: Specification of desired Service selection for target discovery
               by Prometheus.
             properties:
+              attachMetadata:
+                description: Attaches node metadata to discovered targets. Requires
+                  Prometheus v2.37.0 and above.
+                properties:
+                  node:
+                    description: When set to true, Prometheus must have permissions
+                      to get Nodes.
+                    type: boolean
+                type: object
               endpoints:
                 description: A list of endpoints allowed as part of this ServiceMonitor.
                 items:

@@ -899,8 +899,8 @@ AttachMetadata
 </em>
 </td>
 <td>
-<p>Attaches node metadata to discovered targets. Only valid for role: pod.
-Only valid in Prometheus versions 2.35.0 and newer.</p>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.35.0 and above.</p>
 </td>
 </tr>
 </table>
@@ -2752,6 +2752,20 @@ uint64
 <td>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.37.0 and above.</p>
 </td>
 </tr>
 </table>
@@ -4636,7 +4650,7 @@ string
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 </div>
@@ -7215,8 +7229,8 @@ AttachMetadata
 </em>
 </td>
 <td>
-<p>Attaches node metadata to discovered targets. Only valid for role: pod.
-Only valid in Prometheus versions 2.35.0 and newer.</p>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.35.0 and above.</p>
 </td>
 </tr>
 </tbody>
@@ -10697,6 +10711,20 @@ uint64
 <td>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.37.0 and above.</p>
 </td>
 </tr>
 </tbody>
