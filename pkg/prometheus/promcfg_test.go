@@ -26,16 +26,17 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
@@ -1031,7 +1032,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 					},
 				},
 				Version:        operator.DefaultPrometheusVersion,
-				Shards:         pointer.Int32Ptr(2),
+				Shards:         pointer.Int32(2),
 				ScrapeInterval: "30s",
 			},
 			EvaluationInterval: "30s",
@@ -1605,7 +1606,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 						Namespace:  "default",
 						Port:       intstr.FromString("web"),
 						APIVersion: "v2",
-						Timeout:    (*monitoringv1.Duration)(pointer.StringPtr("60s")),
+						Timeout:    (*monitoringv1.Duration)(pointer.String("60s")),
 					},
 				},
 			},
