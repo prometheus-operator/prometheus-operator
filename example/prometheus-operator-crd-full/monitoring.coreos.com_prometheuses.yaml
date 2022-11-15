@@ -5836,7 +5836,7 @@ spec:
                       allows to remove any subPath usage in volume mounts.'
                     type: boolean
                   emptyDir:
-                    description: 'EmptyDirVolumeSource to be used by the Prometheus
+                    description: 'EmptyDirVolumeSource to be used by the Prometheus/Alertmanager
                       StatefulSets. If specified, used in place of any volumeClaimTemplate.
                       More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
                     properties:
@@ -5861,7 +5861,7 @@ spec:
                         x-kubernetes-int-or-string: true
                     type: object
                   ephemeral:
-                    description: 'EphemeralVolumeSource to be used by the Prometheus
+                    description: 'EphemeralVolumeSource to be used by the Prometheus/Alertmanager
                       StatefulSets. This is a beta field in k8s 1.21, for lower versions,
                       starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
                       feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
@@ -6080,7 +6080,10 @@ spec:
                         type: object
                     type: object
                   volumeClaimTemplate:
-                    description: A PVC spec to be used by the Prometheus StatefulSets.
+                    description: A PVC spec to be used by the Prometheus/Alertmanager
+                      StatefulSets. The easiest way to use a volume that cannot be
+                      automatically provisioned (for whatever reason) is to use a
+                      label selector alongside a manually created PersistentVolume.
                     properties:
                       apiVersion:
                         description: 'APIVersion defines the versioned schema of this
