@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 	"net/url"
 	"path"
 	"strings"
@@ -394,6 +395,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
+					Optional: pointer.Bool(true),
 				},
 			},
 		})

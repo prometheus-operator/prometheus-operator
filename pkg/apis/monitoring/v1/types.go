@@ -516,9 +516,6 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
-	// pre-provision rule number
-	// +optional
-	PreProvisionRuleConfigMapNumber *int `json:"preProvisionRuleConfigMapNumber"`
 }
 
 type TSDBSpec struct {

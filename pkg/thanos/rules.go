@@ -43,6 +43,8 @@ const labelThanosRulerName = "thanos-ruler-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+var defaultOptionalConfigMaps = 3
+
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
 
@@ -108,7 +110,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return newConfigMapNames, nil
 	}
 
-	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, t.Spec.PreProvisionRuleConfigMapNumber)
+	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, defaultOptionalConfigMaps)
 
 	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
@@ -292,14 +294,12 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
 
-	if t.Spec.PreProvisionRuleConfigMapNumber != nil {
-		// if real cm number less than excepted number
-		if len(buckets) < *t.Spec.PreProvisionRuleConfigMapNumber {
-			for i := len(buckets); i < *t.Spec.PreProvisionRuleConfigMapNumber; i++ {
-				cm := makeRulesConfigMap(t, nil)
-				cm.Name = cm.Name + "-" + strconv.Itoa(i)
-				ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-			}
+	// if real cm number less than excepted number
+	if len(buckets) < defaultOptionalConfigMaps {
+		for i := len(buckets); i < defaultOptionalConfigMaps; i++ {
+			cm := makeRulesConfigMap(t, nil)
+			cm.Name = cm.Name + "-" + strconv.Itoa(i)
+			ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 		}
 	}
 

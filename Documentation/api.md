@@ -2465,18 +2465,6 @@ TSDBSpec
 (TSDB).</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>preProvisionRuleConfigMapNumber</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>pre-provision rule number</p>
-</td>
-</tr>
 </table>
 </td>
 </tr>
@@ -3441,18 +3429,6 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preProvisionRuleConfigMapNumber</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>pre-provision rule number</p>
 </td>
 </tr>
 </table>
@@ -9265,18 +9241,6 @@ TSDBSpec
 (TSDB).</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>preProvisionRuleConfigMapNumber</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>pre-provision rule number</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus
@@ -11752,18 +11716,6 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preProvisionRuleConfigMapNumber</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>pre-provision rule number</p>
 </td>
 </tr>
 </tbody>

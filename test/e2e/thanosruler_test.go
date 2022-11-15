@@ -17,7 +17,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"k8s.io/utils/pointer"
 	"testing"
 	"time"
 
@@ -257,34 +256,5 @@ func testTRMinReadySeconds(t *testing.T) {
 
 	if trSS.Spec.MinReadySeconds != int32(updated) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, trSS.Spec.MinReadySeconds)
-	}
-}
-
-func testThanosRulerWithPreProvisionRuleConfigMapNumber(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-	name := "test"
-	thanosRuler := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
-	thanosRuler.Spec.PreProvisionRuleConfigMapNumber = pointer.Int(3)
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler); err != nil {
-		t.Fatal(err)
-	}
-
-	kubeClient := framework.KubeClient
-	cmList, err := kubeClient.CoreV1().ConfigMaps(ns).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(cmList.Items) != *thanosRuler.Spec.PreProvisionRuleConfigMapNumber {
-		t.Fatalf("expected cm number to be %d but got %d", *thanosRuler.Spec.PreProvisionRuleConfigMapNumber, len(cmList.Items))
-	}
-
-	if err := framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
 	}
 }

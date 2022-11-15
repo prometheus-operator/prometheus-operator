@@ -219,9 +219,6 @@ type ThanosRulerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
-	// pre-provision rule number
-	// +optional
-	PreProvisionRuleConfigMapNumber *int `json:"preProvisionRuleConfigMapNumber"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

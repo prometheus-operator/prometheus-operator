@@ -45,6 +45,8 @@ const labelPrometheusName = "prometheus-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+var defaultOptionalConfigMaps = 3
+
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
@@ -110,7 +112,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return newConfigMapNames, nil
 	}
 
-	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, p.Spec.PreProvisionRuleConfigMapNumber)
+	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps, defaultOptionalConfigMaps)
 
 	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
@@ -296,14 +298,12 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
 
-	if p.Spec.PreProvisionRuleConfigMapNumber != nil {
-		// if real cm number less than excepted number
-		if len(buckets) < *p.Spec.PreProvisionRuleConfigMapNumber {
-			for i := len(buckets); i < *p.Spec.PreProvisionRuleConfigMapNumber; i++ {
-				cm := makeRulesConfigMap(p, nil)
-				cm.Name = cm.Name + "-" + strconv.Itoa(i)
-				ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-			}
+	// if real cm number less than excepted number
+	if len(buckets) < 3 {
+		for i := len(buckets); i < 3; i++ {
+			cm := makeRulesConfigMap(p, nil)
+			cm.Name = cm.Name + "-" + strconv.Itoa(i)
+			ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 		}
 	}
 
