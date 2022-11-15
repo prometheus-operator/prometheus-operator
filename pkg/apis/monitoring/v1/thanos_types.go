@@ -220,6 +220,7 @@ type ThanosRulerSpec struct {
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// pre-provision rule number
+	// +optional
 	PreProvisionRuleConfigMapNumber *int `json:"preProvisionRuleConfigMapNumber"`
 }
 

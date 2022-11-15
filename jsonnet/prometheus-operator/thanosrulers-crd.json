@@ -5660,9 +5660,6 @@
                     "type": "array"
                   }
                 },
-                "required": [
-                  "preProvisionRuleConfigMapNumber"
-                ],
                 "type": "object"
               },
               "status": {

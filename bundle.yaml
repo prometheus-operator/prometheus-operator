@@ -21421,8 +21421,6 @@ spec:
                     - keySecret
                     type: object
                 type: object
-            required:
-            - preProvisionRuleConfigMapNumber
             type: object
           status:
             description: 'Most recent observed status of the Prometheus cluster. Read-only.
@@ -28746,8 +28744,6 @@ spec:
                   - name
                   type: object
                 type: array
-            required:
-            - preProvisionRuleConfigMapNumber
             type: object
           status:
             description: 'Most recent observed status of the ThanosRuler cluster.

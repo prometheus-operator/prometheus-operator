@@ -8033,9 +8033,6 @@
                     "type": "object"
                   }
                 },
-                "required": [
-                  "preProvisionRuleConfigMapNumber"
-                ],
                 "type": "object"
               },
               "status": {

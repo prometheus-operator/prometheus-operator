@@ -6394,8 +6394,6 @@ spec:
                   - name
                   type: object
                 type: array
-            required:
-            - preProvisionRuleConfigMapNumber
             type: object
           status:
             description: 'Most recent observed status of the ThanosRuler cluster.

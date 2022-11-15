@@ -517,6 +517,7 @@ type PrometheusSpec struct {
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
 	// pre-provision rule number
+	// +optional
 	PreProvisionRuleConfigMapNumber *int `json:"preProvisionRuleConfigMapNumber"`
 }
 
