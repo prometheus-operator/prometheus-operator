@@ -298,10 +298,11 @@ func testAllNSPrometheus(t *testing.T) {
 func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
-		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
-		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
-		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
+		"ThanosRulerCreateDeleteCluster":                 testThanosRulerCreateDeleteCluster,
+		"ThanosRulerPrometheusRuleInDifferentNamespace":  testThanosRulerPrometheusRuleInDifferentNamespace,
+		"ThanosRulerPreserveUserAddedMetadata":           testTRPreserveUserAddedMetadata,
+		"ThanosRulerMinReadySeconds":                     testTRMinReadySeconds,
+		"ThanosRulerWithPreProvisionRuleConfigMapNumber": testThanosRulerWithPreProvisionRuleConfigMapNumber,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
