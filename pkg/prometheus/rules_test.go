@@ -152,7 +152,7 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 		t.Fatalf("expected no error but got: %v", err.Error())
 	}
 
-	if len(configMaps) != 1 {
+	if len(configMaps) != 3 {
 		t.Fatalf("expected one ConfigMaps but got %v", len(configMaps))
 	}
 }
@@ -182,7 +182,7 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 		t.Fatalf("expected no error but got: %v", err)
 	}
 
-	if len(configMaps) != 2 {
+	if len(configMaps) != 3 {
 		t.Fatalf("expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 

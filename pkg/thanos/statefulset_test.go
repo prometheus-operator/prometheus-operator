@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 	"reflect"
 	"sort"
 	"strings"
@@ -165,6 +166,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
+									Optional: pointer.Bool(true),
 								},
 							},
 						},
