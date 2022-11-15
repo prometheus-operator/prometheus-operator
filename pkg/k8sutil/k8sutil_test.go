@@ -16,8 +16,6 @@ package k8sutil
 
 import (
 	"context"
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/stretchr/testify/require"
 	"k8s.io/utils/pointer"
 	"reflect"
 	"strings"
@@ -29,6 +27,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
