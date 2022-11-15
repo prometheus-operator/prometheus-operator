@@ -3785,6 +3785,17 @@ Duration
 <p>Timeout is a per-target Alertmanager timeout when pushing alerts.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Whether to enable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig

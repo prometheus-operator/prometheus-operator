@@ -1670,6 +1670,182 @@ alerting:
 	}
 }
 
+func TestAlertmanagerEnableHttp2(t *testing.T) {
+	expectedWithHTTP2Unsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	expectedWithHTTP2Disabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    enable_http2: false
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	expectedWithHTTP2Enabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    enable_http2: true
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	for _, tc := range []struct {
+		version     string
+		expected    string
+		enableHTTP2 bool
+	}{
+		{
+			version:     "v2.34.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.34.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Enabled,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Disabled,
+		},
+	} {
+		t.Run(fmt.Sprintf("%s TestAlertmanagerEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
+
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        tc.version,
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+					Alerting: &monitoringv1.AlertingSpec{
+						Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+							{
+								Name:        "alertmanager-main",
+								Namespace:   "default",
+								Port:        intstr.FromString("web"),
+								APIVersion:  "v2",
+								EnableHttp2: swag.Bool(tc.enableHTTP2),
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.Generate(
+				p,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
 func TestAdditionalScrapeConfigs(t *testing.T) {
 	int32Ptr := func(i int32) *int32 {
 		return &i
@@ -7538,31 +7714,10 @@ scrape_configs:
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(true),
+							FollowRedirects: swag.Bool(tc.followRedirects),
 						},
 					},
 				},
-			}
-
-			if !tc.followRedirects {
-				serviceMonitor = monitoringv1.ServiceMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testservicemonitor1",
-						Namespace: "default",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.ServiceMonitorSpec{
-						Endpoints: []monitoringv1.Endpoint{
-							{
-								Port:            "web",
-								Interval:        "30s",
-								FollowRedirects: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -7811,31 +7966,10 @@ scrape_configs:
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(true),
+							FollowRedirects: swag.Bool(tc.followRedirects),
 						},
 					},
 				},
-			}
-
-			if !tc.followRedirects {
-				podMonitor = monitoringv1.PodMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testpodmonitor1",
-						Namespace: "pod-monitor-ns",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.PodMonitorSpec{
-						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-							{
-								Port:            "web",
-								Interval:        "30s",
-								FollowRedirects: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -8141,31 +8275,10 @@ scrape_configs:
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(true),
+							EnableHttp2: swag.Bool(tc.enableHTTP2),
 						},
 					},
 				},
-			}
-
-			if !tc.enableHTTP2 {
-				serviceMonitor = monitoringv1.ServiceMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testservicemonitor1",
-						Namespace: "default",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.ServiceMonitorSpec{
-						Endpoints: []monitoringv1.Endpoint{
-							{
-								Port:        "web",
-								Interval:    "30s",
-								EnableHttp2: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -8522,31 +8635,10 @@ scrape_configs:
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(true),
+							EnableHttp2: swag.Bool(tc.enableHTTP2),
 						},
 					},
 				},
-			}
-
-			if !tc.enableHTTP2 {
-				podMonitor = monitoringv1.PodMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testpodmonitor1",
-						Namespace: "pod-monitor-ns",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.PodMonitorSpec{
-						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-							{
-								Port:        "web",
-								Interval:    "30s",
-								EnableHttp2: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
