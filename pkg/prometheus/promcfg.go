@@ -286,6 +286,23 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 	return cfg
 }
 
+func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
+	assetStoreKey string,
+	store *assets.Store,
+	basicAuth *v1.BasicAuth,
+) yaml.MapSlice {
+	if basicAuth == nil {
+		return cfg
+	}
+
+	var authCfg assets.BasicAuthCredentials
+	if s, ok := store.BasicAuthAssets[assetStoreKey]; ok {
+		authCfg = s
+	}
+
+	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
+}
+
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
@@ -1583,6 +1600,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
+
+		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.BasicAuth)
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
