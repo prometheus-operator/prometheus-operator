@@ -118,7 +118,6 @@ func (ne *noopEnforcer) processRoute(crKey types.NamespacedName, r *route) *rout
 
 // Enforcing the namespace label
 type namespaceEnforcer struct {
-	namespace         string
 	matchersV2Allowed bool
 }
 
