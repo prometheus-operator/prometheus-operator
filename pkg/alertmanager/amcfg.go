@@ -100,18 +100,80 @@ func (c alertmanagerConfig) String() string {
 }
 
 type enforcer interface {
-	processRoute(*route) *route
-	processInhibitRule(*inhibitRule) *inhibitRule
-	updateNamespace(namespace string)
+	processRoute(types.NamespacedName, *route) *route
+	processInhibitRule(types.NamespacedName, *inhibitRule) *inhibitRule
 }
 
 // No enforcement
 type noopEnforcer struct{}
 
+func (ne *noopEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	return ir
+}
+
+func (ne *noopEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	r.Continue = true
+	return r
+}
+
 // Enforcing the namespace label
 type namespaceEnforcer struct {
 	namespace         string
 	matchersV2Allowed bool
+}
+
+// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	// Inhibition rule created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
+
+	if !ne.matchersV2Allowed {
+		ir.SourceMatch[inhibitRuleNamespaceKey] = crKey.Namespace
+		ir.TargetMatch[inhibitRuleNamespaceKey] = crKey.Namespace
+
+		return ir
+	}
+
+	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
+		Name:      inhibitRuleNamespaceKey,
+		Value:     crKey.Namespace,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+
+	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
+		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
+	}
+	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
+		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
+	}
+
+	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
+
+	return ir
+}
+
+// processRoute on namespaceEnforcer modifies the route configuration to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	// Routes created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	if ne.matchersV2Allowed {
+		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
+			Name:      "namespace",
+			Value:     crKey.Namespace,
+			MatchType: monitoringv1alpha1.MatchEqual,
+		}.String())
+	} else {
+		r.Match["namespace"] = crKey.Namespace
+	}
+	// Alerts should still be evaluated by the following routes.
+	r.Continue = true
+
+	return r
 }
 
 // configBuilder knows how to build an Alertmanager configuration from a raw
@@ -229,13 +291,11 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
 		}
 
-		// If we use the namespaceEnforcer we need to update the namespace field
-		cb.enforcer.updateNamespace(crKey.Namespace)
-
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
 			cb.cfg.InhibitRules = append(cb.cfg.InhibitRules,
 				cb.enforcer.processInhibitRule(
+					crKey,
 					cb.convertInhibitRule(
 						&inhibitRule,
 					),
@@ -250,6 +310,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 
 		subRoutes = append(subRoutes,
 			cb.enforcer.processRoute(
+				crKey,
 				cb.convertRoute(
 					amConfigs[amConfigIdentifier].Spec.Route,
 					crKey,
@@ -285,71 +346,6 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 	}
 
 	return nil
-}
-
-func (ne *noopEnforcer) updateNamespace(namespace string) {}
-
-func (ne *namespaceEnforcer) updateNamespace(namespace string) { ne.namespace = namespace }
-
-func (ne *noopEnforcer) processInhibitRule(ir *inhibitRule) *inhibitRule { return ir }
-
-// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
-// originating only from the given namespace.
-func (ne *namespaceEnforcer) processInhibitRule(ir *inhibitRule) *inhibitRule {
-	// Inhibition rule created from AlertmanagerConfig resources should only match
-	// alerts that come from the same namespace.
-	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
-	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
-
-	if !ne.matchersV2Allowed {
-		ir.SourceMatch[inhibitRuleNamespaceKey] = ne.namespace
-		ir.TargetMatch[inhibitRuleNamespaceKey] = ne.namespace
-
-		return ir
-	}
-
-	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
-		Name:      inhibitRuleNamespaceKey,
-		Value:     ne.namespace,
-		MatchType: monitoringv1alpha1.MatchEqual,
-	}.String()
-
-	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
-		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
-	}
-	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
-		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
-	}
-
-	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
-	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
-
-	return ir
-}
-
-func (ne *noopEnforcer) processRoute(r *route) *route {
-	r.Continue = true
-	return r
-}
-
-// processRoute on namespaceEnforcer modifies the route configuration to match alerts
-// originating only from the given namespace.
-func (ne *namespaceEnforcer) processRoute(r *route) *route {
-	// Routes created from AlertmanagerConfig resources should only match
-	// alerts that come from the same namespace.
-	if ne.matchersV2Allowed {
-		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
-			Name:      "namespace",
-			Value:     ne.namespace,
-			MatchType: monitoringv1alpha1.MatchEqual,
-		}.String())
-	} else {
-		r.Match["namespace"] = ne.namespace
-	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
-
-	return r
 }
 
 func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {

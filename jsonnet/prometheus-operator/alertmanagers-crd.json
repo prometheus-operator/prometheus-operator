@@ -735,11 +735,11 @@
                     "type": "object"
                   },
                   "alertmanagerConfigMatcherStrategy": {
-                    "description": "The AlertmanagerConfigMatcherStrategy defines how to add additional matchers to the AlertmanagerConfigs. In the future more options may be added.",
+                    "description": "The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts. In the future more options may be added.",
                     "properties": {
                       "type": {
                         "default": "OnNamespace",
-                        "description": "If set to `OnNamespace` namespace matchers will be added to the routes. `None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig Default is `OnNamespace`.",
+                        "description": "If set to `OnNamespace`, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules. `None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig. Default is `OnNamespace`.",
                         "enum": [
                           "OnNamespace",
                           "None"

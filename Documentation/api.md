@@ -631,7 +631,7 @@ AlertmanagerConfigMatcherStrategy
 </em>
 </td>
 <td>
-<p>The AlertmanagerConfigMatcherStrategy defines how to add additional matchers to the AlertmanagerConfigs.
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
 In the future more options may be added.</p>
 </td>
 </tr>
@@ -3595,7 +3595,7 @@ Authorization
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
-<p>AlertmanagerConfigMatcherStrategy defines the strategy that is used to match AlertmanagerConfigs.</p>
+<p>AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.</p>
 </div>
 <table>
 <thead>
@@ -3613,8 +3613,8 @@ string
 </em>
 </td>
 <td>
-<p>If set to <code>OnNamespace</code> namespace matchers will be added to the routes.
-<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig
+<p>If set to <code>OnNamespace</code>, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
+<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
 Default is <code>OnNamespace</code>.</p>
 </td>
 </tr>
@@ -4417,7 +4417,7 @@ AlertmanagerConfigMatcherStrategy
 </em>
 </td>
 <td>
-<p>The AlertmanagerConfigMatcherStrategy defines how to add additional matchers to the AlertmanagerConfigs.
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
 In the future more options may be added.</p>
 </td>
 </tr>
