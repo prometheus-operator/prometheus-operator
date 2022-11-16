@@ -1,7 +1,7 @@
 ## 0.61.1 / 2022-11-16
 
 * [CHANGE] Updated `RuleGroup` description and add validation for the CRD. #5072
-* [CHANGE] Removed validations in the operatior that are already covered at the CRD level. #5108
+* [CHANGE] Removed validations in the operator that are already covered at the CRD level. #5108
 * [CHANGE] jsonnet: Enforced existence of the TLS secret for the admission webhook deployment. #5112
 * [CHANGE] jsonnet: Changed default port of the admission webhook service from 8443 to 443. #5112
 * [CHANGE] Added a filter for non-running pods in the `ServiceMonitor` CRD. #5149
