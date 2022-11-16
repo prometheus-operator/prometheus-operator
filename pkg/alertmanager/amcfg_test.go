@@ -507,6 +507,52 @@ templates: []
 `,
 		},
 		{
+			name:      "skeleton base with active_time_intervals, no CRs",
+			amVersion: &version24,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+					Routes: []*route{
+						{
+							Receiver:            "null",
+							ActiveTimeIntervals: []string{"workdays"},
+						},
+					},
+				},
+				Receivers: []*receiver{{Name: "null"}},
+				TimeIntervals: []*timeInterval{
+					{
+						Name: "workdays",
+						TimeIntervals: []timeinterval.TimeInterval{
+							{
+								Weekdays: []timeinterval.WeekdayRange{
+									{
+										InclusiveRange: timeinterval.InclusiveRange{Begin: 1, End: 5},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: "null"
+    active_time_intervals:
+    - workdays
+receivers:
+- name: "null"
+time_intervals:
+- name: workdays
+  time_intervals:
+  - weekdays: ['monday:friday']
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -1618,6 +1664,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
 	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
+
+	versionTimeIntervalsAllowed := semver.Version{Major: 0, Minor: 24}
+	versionTimeIntervalsNotAllowed := semver.Version{Major: 0, Minor: 23}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -1973,6 +2022,69 @@ func TestSanitizeConfig(t *testing.T) {
 						OpsgenieConfigs: []*opsgenieConfig{{}},
 					},
 				},
+			},
+		},
+		{
+			name:           "time_intervals and active_time_intervals in Route config",
+			againstVersion: versionTimeIntervalsAllowed,
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+		},
+		{
+			name:           "time_intervals is dropped for unsupported versions",
+			againstVersion: versionTimeIntervalsNotAllowed,
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+			},
+			expect: alertmanagerConfig{},
+		},
+		{
+			name:           "active_time_intervals is dropped for unsupported versions",
+			againstVersion: versionTimeIntervalsNotAllowed,
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Route: &route{},
 			},
 		},
 	} {

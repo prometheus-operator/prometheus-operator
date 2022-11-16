@@ -33,6 +33,7 @@ type alertmanagerConfig struct {
 	InhibitRules      []*inhibitRule      `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
 	Receivers         []*receiver         `yaml:"receivers,omitempty" json:"receivers,omitempty"`
 	MuteTimeIntervals []*muteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
+	TimeIntervals     []*timeInterval     `yaml:"time_intervals,omitempty" json:"time_intervals,omitempty"`
 	Templates         []string            `yaml:"templates" json:"templates"`
 }
 
@@ -68,17 +69,18 @@ type globalConfig struct {
 }
 
 type route struct {
-	Receiver          string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
-	GroupByStr        []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
-	Match             map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
-	MatchRE           map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
-	Matchers          []string          `yaml:"matchers,omitempty" json:"matchers,omitempty"`
-	Continue          bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
-	Routes            []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
-	GroupWait         string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
-	GroupInterval     string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
-	RepeatInterval    string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
-	MuteTimeIntervals []string          `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
+	Receiver            string            `yaml:"receiver,omitempty" json:"receiver,omitempty"`
+	GroupByStr          []string          `yaml:"group_by,omitempty" json:"group_by,omitempty"`
+	Match               map[string]string `yaml:"match,omitempty" json:"match,omitempty"`
+	MatchRE             map[string]string `yaml:"match_re,omitempty" json:"match_re,omitempty"`
+	Matchers            []string          `yaml:"matchers,omitempty" json:"matchers,omitempty"`
+	Continue            bool              `yaml:"continue,omitempty" json:"continue,omitempty"`
+	Routes              []*route          `yaml:"routes,omitempty" json:"routes,omitempty"`
+	GroupWait           string            `yaml:"group_wait,omitempty" json:"group_wait,omitempty"`
+	GroupInterval       string            `yaml:"group_interval,omitempty" json:"group_interval,omitempty"`
+	RepeatInterval      string            `yaml:"repeat_interval,omitempty" json:"repeat_interval,omitempty"`
+	MuteTimeIntervals   []string          `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
+	ActiveTimeIntervals []string          `yaml:"active_time_intervals,omitempty" json:"active_time_intervals,omitempty"`
 }
 
 type inhibitRule struct {
@@ -364,4 +366,7 @@ type victorOpsConfig struct {
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
 }
 
-type muteTimeInterval config.MuteTimeInterval
+type (
+	muteTimeInterval config.MuteTimeInterval
+	timeInterval     config.TimeInterval
+)

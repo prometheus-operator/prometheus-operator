@@ -1355,6 +1355,14 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		c.MuteTimeIntervals = nil
 	}
 
+	if len(c.TimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.24.0")) {
+		// time intervals are unsupported < 0.24.0, report and set to nil
+		withLogger := log.With(logger, "component", "alertmanager")
+		msg := "time_intervals is supported in Alertmanager >= 0.24.0 only - dropping config"
+		level.Warn(withLogger).Log("msg", msg, "time_intervals", c.TimeIntervals)
+		c.TimeIntervals = nil
+	}
+
 	return c.Route.sanitize(amVersion, logger)
 }
 
@@ -1647,6 +1655,7 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	muteTimeIntervalsAllowed := matchersV2Allowed
+	activeTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
 	withLogger := log.With(logger, "receiver", r.Receiver)
 
 	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
@@ -1662,6 +1671,12 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 		msg := "named mute time intervals in route is supported in Alertmanager >= 0.22.0 only - dropping config"
 		level.Warn(withLogger).Log("msg", msg, "mute_time_intervals", r.MuteTimeIntervals)
 		r.MuteTimeIntervals = nil
+	}
+
+	if !activeTimeIntervalsAllowed {
+		msg := "active time intervals in route is supported in Alertmanager >= 0.24.0 only - dropping config"
+		level.Warn(withLogger).Log("msg", msg, "active_time_intervals", r.ActiveTimeIntervals)
+		r.ActiveTimeIntervals = nil
 	}
 
 	for i, child := range r.Routes {
