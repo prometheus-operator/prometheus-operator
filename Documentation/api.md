@@ -10932,7 +10932,7 @@ Kubernetes core/v1.EmptyDirVolumeSource
 </em>
 </td>
 <td>
-<p>EmptyDirVolumeSource to be used by the Prometheus/Alertmanager StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+<p>EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
 info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
 </td>
 </tr>
@@ -10946,7 +10946,7 @@ Kubernetes core/v1.EphemeralVolumeSource
 </em>
 </td>
 <td>
-<p>EphemeralVolumeSource to be used by the Prometheus/Alertmanager StatefulSets.
+<p>EphemeralVolumeSource to be used by the StatefulSet.
 This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes">https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes</a></p>
 </td>
@@ -10961,8 +10961,8 @@ EmbeddedPersistentVolumeClaim
 </em>
 </td>
 <td>
-<p>A PVC spec to be used by the Prometheus/Alertmanager StatefulSets. The easiest way to use a volume that cannot be automatically provisioned
-(for whatever reason) is to use a label selector alongside a manually created PersistentVolume.</p>
+<p>A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
+(for whatever reason) is to use a label selector alongside manually created PersistentVolumes.</p>
 </td>
 </tr>
 </tbody>
