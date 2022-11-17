@@ -2033,6 +2033,9 @@ type AlertmanagerSpec struct {
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 	// AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.
 	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
+	// The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+	// In the future more options may be added.
+	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 	// check own namespace.
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
@@ -2052,6 +2055,16 @@ type AlertmanagerSpec struct {
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
+}
+
+// AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.
+type AlertmanagerConfigMatcherStrategy struct {
+	// If set to `OnNamespace`, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
+	// `None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
+	// Default is `OnNamespace`.
+	// +kubebuilder:validation:Enum="OnNamespace";"None"
+	// +kubebuilder:default:="OnNamespace"
+	Type string `json:"type,omitempty"`
 }
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.

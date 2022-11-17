@@ -623,6 +623,20 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+In the future more options may be added.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -3589,6 +3603,37 @@ Authorization
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>If set to <code>OnNamespace</code>, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
+<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
+Default is <code>OnNamespace</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
 <p>
@@ -4385,6 +4430,20 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+In the future more options may be added.</p>
 </td>
 </tr>
 <tr>
