@@ -185,7 +185,7 @@ type configBuilder struct {
 	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy *monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
@@ -195,8 +195,8 @@ func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets
 	return cg
 }
 
-func getEnforcer(matcherStrategy *monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
-	if matcherStrategy != nil && matcherStrategy.Type == "None" {
+func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+	if matcherStrategy.Type == "None" {
 		return &noopEnforcer{}
 	}
 	return &namespaceEnforcer{

@@ -325,11 +325,7 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.AlertmanagerConfigMatcherStrategy != nil {
-		in, out := &in.AlertmanagerConfigMatcherStrategy, &out.AlertmanagerConfigMatcherStrategy
-		*out = new(AlertmanagerConfigMatcherStrategy)
-		**out = **in
-	}
+	out.AlertmanagerConfigMatcherStrategy = in.AlertmanagerConfigMatcherStrategy
 	if in.AlertmanagerConfigNamespaceSelector != nil {
 		in, out := &in.AlertmanagerConfigNamespaceSelector, &out.AlertmanagerConfigNamespaceSelector
 		*out = new(metav1.LabelSelector)
