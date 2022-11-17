@@ -757,7 +757,6 @@ func TestDiffRulerConfigMap(t *testing.T) {
 		}
 
 	})
-
 	t.Run("diff ruler configmap, currentConfigMaps is nil ", func(t *testing.T) {
 		currentConfigMaps := []corev1.ConfigMap{}
 
