@@ -57,7 +57,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	tests := []struct {
 		name            string
 		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
-		matcherStrategy *monitoringingv1.AlertmanagerConfigMatcherStrategy
+		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
 		want            *alertmanagerConfig
 		wantErr         bool
@@ -112,7 +112,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -183,7 +183,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -255,7 +255,7 @@ func TestGenerateConfig(t *testing.T) {
 		kclient         kubernetes.Interface
 		baseConfig      alertmanagerConfig
 		amVersion       *semver.Version
-		matcherStrategy *monitoringingv1.AlertmanagerConfigMatcherStrategy
+		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
 		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
 		expected        string
 	}
@@ -559,7 +559,7 @@ templates: []
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			matcherStrategy: &monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
 				Type: "None",
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
