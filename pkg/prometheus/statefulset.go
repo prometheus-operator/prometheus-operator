@@ -105,12 +105,6 @@ func makeStatefulSet(
 	shard int32,
 	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSet, error) {
-	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
-	parsedVersion, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse prometheus version")
-	}
-
 	if p.Spec.PortName == "" {
 		p.Spec.PortName = defaultPortName
 	}
@@ -123,7 +117,7 @@ func makeStatefulSet(
 		p.Spec.Replicas = &intZero
 	}
 
-	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets, parsedVersion)
+	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -310,21 +304,26 @@ func makeStatefulSetSpec(
 	shard int32,
 	ruleConfigMapNames []string,
 	tlsAssetSecrets []string,
-	version semver.Version,
 ) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	prometheusImagePath, err := operator.BuildImagePath(
+	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
+	pImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(p.Spec.Image, ""),
 		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
-		p.Spec.Version,
-		p.Spec.Tag,
-		p.Spec.SHA,
+		promVersion,
+		operator.StringValOrDefault(p.Spec.Tag, ""),
+		operator.StringValOrDefault(p.Spec.SHA, ""),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse prometheus version")
 	}
 
 	if version.Major != 2 {
@@ -942,7 +941,7 @@ func makeStatefulSetSpec(
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
-			Image:                    prometheusImagePath,
+			Image:                    pImagePath,
 			Ports:                    ports,
 			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
