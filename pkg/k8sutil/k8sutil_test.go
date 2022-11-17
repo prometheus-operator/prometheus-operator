@@ -618,7 +618,7 @@ func TestDiffRulerConfigMap(t *testing.T) {
 			},
 		}
 
-		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps, 3)
+		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 		diff := pretty.Compare(deleteConfigMaps, []corev1.ConfigMap{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -712,7 +712,7 @@ func TestDiffRulerConfigMap(t *testing.T) {
 			},
 		}
 
-		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps, 3)
+		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 		diff := pretty.Compare(createConfigMaps, []corev1.ConfigMap{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -755,6 +755,84 @@ func TestDiffRulerConfigMap(t *testing.T) {
 		if diff != "" {
 			t.Fatalf("patch result did not match. diff:\n%s", diff)
 		}
+
+	})
+
+	t.Run("diff ruler configmap, currentConfigMaps is nil ", func(t *testing.T) {
+		currentConfigMaps := []corev1.ConfigMap{}
+
+		newConfigMaps := []corev1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-1",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-0",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-2",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-3",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-4",
+				},
+				Data: nil,
+			},
+		}
+
+		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
+		diff := pretty.Compare(createConfigMaps, []corev1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-0",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-1",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-2",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-3",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-4",
+				},
+				Data: nil,
+			},
+		})
+		if diff != "" {
+			t.Fatalf("patch result did not match. diff:\n%s", diff)
+		}
+
+		require.Len(t, deleteConfigMaps, 0)
+		require.Len(t, updateConfigMaps, 0)
 
 	})
 }

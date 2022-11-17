@@ -386,7 +386,7 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 }
 
 // DiffRulerConfigMap preProvisionRuleConfigMapNumber can't less than newConfigMaps number.
-func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap, defaultOptionalConfigMaps int) (deleteConfigMaps []v1.ConfigMap, createConfigMaps []v1.ConfigMap, updateConfigMaps []v1.ConfigMap) {
+func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap) (deleteConfigMaps []v1.ConfigMap, createConfigMaps []v1.ConfigMap, updateConfigMaps []v1.ConfigMap) {
 	sort.Slice(newConfigMaps, func(i, j int) bool {
 		return newConfigMaps[i].Name < newConfigMaps[j].Name
 	})
@@ -402,7 +402,7 @@ func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.Con
 	}
 
 	if newConfigMapsNum < currentConfigMapsNum {
-		deleteConfigMaps = currentConfigMaps[defaultOptionalConfigMaps:currentConfigMapsNum]
+		deleteConfigMaps = currentConfigMaps[newConfigMapsNum:currentConfigMapsNum]
 		updateConfigMaps = newConfigMaps
 	}
 	return deleteConfigMaps, createConfigMaps, updateConfigMaps
