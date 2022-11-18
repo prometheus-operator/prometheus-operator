@@ -17242,6 +17242,7 @@ spec:
                   maxConcurrency:
                     description: Number of concurrent queries that can be run at once.
                     format: int32
+                    minimum: 1
                     type: integer
                   maxSamples:
                     description: Maximum number of samples a single query can load
@@ -21371,6 +21372,13 @@ spec:
                           a rolling update will be triggered.
                         type: boolean
                     type: object
+                  maxConnections:
+                    description: Defines the maximum number of simultaneous connections
+                      A zero value means that Prometheus doesn't accept any incoming
+                      connection.
+                    format: int32
+                    minimum: 0
+                    type: integer
                   pageTitle:
                     description: The prometheus web page title
                     type: string

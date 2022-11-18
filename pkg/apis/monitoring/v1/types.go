@@ -790,6 +790,7 @@ type QuerySpec struct {
 	// The delta difference allowed for retrieving metrics during expression evaluations.
 	LookbackDelta *string `json:"lookbackDelta,omitempty"`
 	// Number of concurrent queries that can be run at once.
+	// +kubebuilder:validation:Minimum:=1
 	MaxConcurrency *int32 `json:"maxConcurrency,omitempty"`
 	// Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.
 	MaxSamples *int32 `json:"maxSamples,omitempty"`
@@ -803,6 +804,10 @@ type PrometheusWebSpec struct {
 	WebConfigFileFields `json:",inline"`
 	// The prometheus web page title
 	PageTitle *string `json:"pageTitle,omitempty"`
+	// Defines the maximum number of simultaneous connections
+	// A zero value means that Prometheus doesn't accept any incoming connection.
+	// +kubebuilder:validation:Minimum:=0
+	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
 
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.

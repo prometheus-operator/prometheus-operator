@@ -9640,6 +9640,18 @@ string
 <p>The prometheus web page title</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>maxConnections</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Defines the maximum number of simultaneous connections
+A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.QuerySpec">QuerySpec

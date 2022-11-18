@@ -385,8 +385,14 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
-		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+	if p.Spec.Web != nil {
+		if p.Spec.Web.PageTitle != nil {
+			promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+		}
+
+		if p.Spec.Web.MaxConnections != nil {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.max-connections", Value: fmt.Sprintf("%d", *p.Spec.Web.MaxConnections)})
+		}
 	}
 
 	if p.Spec.EnableAdminAPI {
