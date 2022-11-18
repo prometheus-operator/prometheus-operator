@@ -403,9 +403,12 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	// TODO(simonpasquier): check that the Prometheus version supports the flag.
 	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+		if version.GTE(semver.MustParse("2.6.0")) {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+		} else {
+			level.Warn(logger).Log("msg", "ignoring 'pageTitle' not supported by Prometheus", "version", version, "minimum_version", "2.6.0")
+		}
 	}
 
 	if p.Spec.EnableAdminAPI {
