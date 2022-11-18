@@ -11,6 +11,7 @@
 * [ENHANCEMENT] Added the `filterExternalLabels` field to the remote read configuration of the `Prometheus` CRD. #5142
 * [ENHANCEMENT] Added `enableHttp2` field to `AlertingEndpoints` #5152
 * [ENHANCEMENT] Updated `ThanosRuler` arguments (`QueryConfig`, `AlertManagerConfig`, `ObjectStorageConfig` and `TracingConfig`) to be directly read from secrets instead of using ENV vars. #5122
+* [ENHANCEMENT] Add `alertmanagerConfigMatcherStrategy` to `Alertmanager` CRD in order to disable auto-generated namespace matchers. #5084
 * [BUGFIX] Ignore `PartialResponseStrategy` in the `Prometheus` CRD. This field is only applicable for the Thanos Ruler. #5125
 
 ## 0.60.1 / 2022-10-10
