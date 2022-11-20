@@ -297,8 +297,8 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 	}
 
 	// if real cm number less than excepted number
-	if len(buckets) < 3 {
-		for i := len(buckets); i < 3; i++ {
+	if len(buckets) < defaultOptionalConfigMaps {
+		for i := len(buckets); i < defaultOptionalConfigMaps; i++ {
 			cm := makeRulesConfigMap(p, nil)
 			cm.Name = cm.Name + "-" + strconv.Itoa(i)
 			ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
