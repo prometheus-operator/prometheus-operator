@@ -26,16 +26,17 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
@@ -239,6 +240,9 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 					NamespaceSelector: monitoringv1.NamespaceSelector{
 						MatchNames: []string{"test1", "test2"},
 					},
+					AttachMetadata: &monitoringv1.AttachMetadata{
+						Node: true,
+					},
 				},
 			},
 			IgnoreNamespaceSelectors: false,
@@ -248,6 +252,8 @@ func TestNamespaceSetCorrectly(t *testing.T) {
     names:
     - test1
     - test2
+  attach_metadata:
+    node: true
 `,
 		},
 		// Test that 'Any' returns an empty list instead of the current namespace
@@ -332,7 +338,15 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			},
 		)
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, nil)
+		var attachMetaConfig *attachMetadataConfig
+		if tc.ServiceMonitor.Spec.AttachMetadata != nil {
+			attachMetaConfig = &attachMetadataConfig{
+				MinimumVersion: "2.37.0",
+				AttachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
+			}
+		}
+
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -374,7 +388,11 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		},
 	)
 
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, pm.Spec.AttachMetadata)
+	attachMetadataConfig := &attachMetadataConfig{
+		MinimumVersion: "2.35.0",
+		AttachMetadata: pm.Spec.AttachMetadata,
+	}
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, attachMetadataConfig)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
@@ -1014,7 +1032,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 					},
 				},
 				Version:        operator.DefaultPrometheusVersion,
-				Shards:         pointer.Int32Ptr(2),
+				Shards:         pointer.Int32(2),
 				ScrapeInterval: "30s",
 			},
 			EvaluationInterval: "30s",
@@ -1377,12 +1395,20 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 		)
 
+		var attachMetaConfig *attachMetadataConfig
+		if sm.Spec.AttachMetadata != nil {
+			attachMetaConfig = &attachMetadataConfig{
+				MinimumVersion: "2.37.0",
+				AttachMetadata: sm.Spec.AttachMetadata,
+			}
+		}
 		c := cg.generateK8SSDConfig(
 			sm.Spec.NamespaceSelector,
 			sm.Namespace,
 			tc.apiserverConfig,
 			tc.store,
-			kubernetesSDRoleEndpoint, nil,
+			kubernetesSDRoleEndpoint,
+			attachMetaConfig,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
@@ -1580,7 +1606,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 						Namespace:  "default",
 						Port:       intstr.FromString("web"),
 						APIVersion: "v2",
-						Timeout:    (*monitoringv1.Duration)(pointer.StringPtr("60s")),
+						Timeout:    (*monitoringv1.Duration)(pointer.String("60s")),
 					},
 				},
 			},
@@ -1642,6 +1668,182 @@ alerting:
 	if expected != result {
 		fmt.Println(pretty.Compare(expected, result))
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
+func TestAlertmanagerEnableHttp2(t *testing.T) {
+	expectedWithHTTP2Unsupported := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	expectedWithHTTP2Disabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    enable_http2: false
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	expectedWithHTTP2Enabled := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    enable_http2: true
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	for _, tc := range []struct {
+		version     string
+		expected    string
+		enableHTTP2 bool
+	}{
+		{
+			version:     "v2.34.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.34.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Unsupported,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: true,
+			expected:    expectedWithHTTP2Enabled,
+		},
+		{
+			version:     "v2.35.0",
+			enableHTTP2: false,
+			expected:    expectedWithHTTP2Disabled,
+		},
+	} {
+		t.Run(fmt.Sprintf("%s TestAlertmanagerEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
+
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        tc.version,
+						ScrapeInterval: "30s",
+					},
+					EvaluationInterval: "30s",
+					Alerting: &monitoringv1.AlertingSpec{
+						Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+							{
+								Name:        "alertmanager-main",
+								Namespace:   "default",
+								Port:        intstr.FromString("web"),
+								APIVersion:  "v2",
+								EnableHttp2: swag.Bool(tc.enableHTTP2),
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.Generate(
+				p,
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Logf("\n%s", diff)
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
 	}
 }
 
@@ -2042,6 +2244,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2215,6 +2421,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2695,6 +2905,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2870,6 +3084,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3094,6 +3312,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3363,6 +3585,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3504,6 +3730,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3645,6 +3875,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -3786,6 +4020,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -4143,6 +4381,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_pod_label_example
     target_label: example
@@ -4405,6 +4647,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -4969,6 +5215,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5036,6 +5286,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5204,6 +5458,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -5271,6 +5529,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6130,6 +6392,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6197,6 +6463,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6844,6 +7114,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -6911,6 +7185,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7134,6 +7412,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7209,6 +7491,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7277,6 +7563,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7344,6 +7634,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7421,31 +7715,10 @@ scrape_configs:
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(true),
+							FollowRedirects: swag.Bool(tc.followRedirects),
 						},
 					},
 				},
-			}
-
-			if !tc.followRedirects {
-				serviceMonitor = monitoringv1.ServiceMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testservicemonitor1",
-						Namespace: "default",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.ServiceMonitorSpec{
-						Endpoints: []monitoringv1.Endpoint{
-							{
-								Port:            "web",
-								Interval:        "30s",
-								FollowRedirects: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -7694,31 +7967,10 @@ scrape_configs:
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(true),
+							FollowRedirects: swag.Bool(tc.followRedirects),
 						},
 					},
 				},
-			}
-
-			if !tc.followRedirects {
-				podMonitor = monitoringv1.PodMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testpodmonitor1",
-						Namespace: "pod-monitor-ns",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.PodMonitorSpec{
-						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-							{
-								Port:            "web",
-								Interval:        "30s",
-								FollowRedirects: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -7800,6 +8052,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7868,6 +8124,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -7935,6 +8195,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -8012,31 +8276,10 @@ scrape_configs:
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(true),
+							EnableHttp2: swag.Bool(tc.enableHTTP2),
 						},
 					},
 				},
-			}
-
-			if !tc.enableHTTP2 {
-				serviceMonitor = monitoringv1.ServiceMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testservicemonitor1",
-						Namespace: "default",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.ServiceMonitorSpec{
-						Endpoints: []monitoringv1.Endpoint{
-							{
-								Port:        "web",
-								Interval:    "30s",
-								EnableHttp2: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -8393,31 +8636,10 @@ scrape_configs:
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(true),
+							EnableHttp2: swag.Bool(tc.enableHTTP2),
 						},
 					},
 				},
-			}
-
-			if !tc.enableHTTP2 {
-				podMonitor = monitoringv1.PodMonitor{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "testpodmonitor1",
-						Namespace: "pod-monitor-ns",
-						Labels: map[string]string{
-							"group": "group1",
-						},
-					},
-					Spec: monitoringv1.PodMonitorSpec{
-						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-							{
-								Port:        "web",
-								Interval:    "30s",
-								EnableHttp2: swag.Bool(false),
-							},
-						},
-					},
-				}
 			}
 
 			cg := mustNewConfigGenerator(t, &prometheus)
@@ -8809,6 +9031,10 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job

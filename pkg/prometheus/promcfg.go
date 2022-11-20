@@ -651,7 +651,15 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, m.Spec.AttachMetadata))
+	var attachMetaConfig *attachMetadataConfig
+	if m.Spec.AttachMetadata != nil {
+		attachMetaConfig = &attachMetadataConfig{
+			MinimumVersion: "2.35.0",
+			AttachMetadata: m.Spec.AttachMetadata,
+		}
+	}
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -706,11 +714,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	relabelings := initRelabelings()
 
 	if ep.FilterRunning == nil || *ep.FilterRunning {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "drop"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
-			{Key: "regex", Value: "(Failed|Succeeded)"},
-		})
+		relabelings = append(relabelings, generateRunningFilter())
 	}
 
 	var labelKeys []string
@@ -1120,7 +1124,15 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		role = kubernetesSDRoleEndpointSlice
 	}
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, nil))
+	var attachMetaConfig *attachMetadataConfig
+	if m.Spec.AttachMetadata != nil {
+		attachMetaConfig = &attachMetadataConfig{
+			MinimumVersion: "2.37.0",
+			AttachMetadata: m.Spec.AttachMetadata,
+		}
+	}
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1289,6 +1301,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		},
 	}...)
 
+	if ep.FilterRunning == nil || *ep.FilterRunning {
+		relabelings = append(relabelings, generateRunningFilter())
+	}
+
 	// Relabel targetLabels from Service onto target.
 	for _, l := range m.Spec.TargetLabels {
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1359,6 +1375,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
+}
+
+func generateRunningFilter() yaml.MapSlice {
+	return yaml.MapSlice{
+		{Key: "action", Value: "drop"},
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
+		{Key: "regex", Value: "(Failed|Succeeded)"},
+	}
 }
 
 func getLimit(user uint64, enforced *uint64) uint64 {
@@ -1444,6 +1468,11 @@ func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceS
 	return nsel.MatchNames
 }
 
+type attachMetadataConfig struct {
+	MinimumVersion string
+	AttachMetadata *v1.AttachMetadata
+}
+
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
 func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector v1.NamespaceSelector,
@@ -1451,7 +1480,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
 	role string,
-	attachMetadata *v1.AttachMetadata,
+	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
@@ -1503,9 +1532,9 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		// config as well, make sure to path the right namespace here.
 		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
 	}
-	if attachMetadata != nil {
-		k8sSDConfig = cg.WithMinimumVersion("2.35.0").AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
-			{Key: "node", Value: attachMetadata.Node},
+	if attachMetadataConfig != nil {
+		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
+			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
 		})
 	}
 
@@ -1539,6 +1568,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 
 		if am.Timeout != nil {
 			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
+		}
+
+		if am.EnableHttp2 != nil {
+			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
 		}
 
 		// TODO: If we want to support secret refs for alertmanager config tls
