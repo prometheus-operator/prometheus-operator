@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
@@ -516,6 +517,7 @@ func makeStatefulSetSpec(
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
+					Optional: pointer.Bool(true),
 				},
 			},
 		})

@@ -28908,8 +28908,8 @@ spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.60.1
-        image: quay.io/prometheus-operator/prometheus-operator:v0.60.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:18c41108f
+        image: quay.io/prometheus-operator/prometheus-operator:18c41108f
         name: prometheus-operator
         ports:
         - containerPort: 8080
