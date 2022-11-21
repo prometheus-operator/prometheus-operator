@@ -111,19 +111,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
-	level.Info(o.logger).Log(
-		"msg", "xx updating PrometheusRule",
-		"deleteConfigMaps", len(deleteConfigMaps),
-		"createConfigMaps", len(createConfigMaps),
-		"updateConfigMaps", len(updateConfigMaps),
-	)
-	for index, cm := range updateConfigMaps {
-		level.Info(o.logger).Log(
-			"msg", "updateConfigMaps",
-			"index", index,
-			"cm", fmt.Sprintf("Map: %v", cm.Data),
-		)
-	}
+
 	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
 		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})

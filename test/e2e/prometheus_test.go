@@ -1536,7 +1536,11 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = framework.WaitForConfigMapNotExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1")
+	_, err = framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-2")
 	if err != nil {
 		t.Fatal(err)
 	}
