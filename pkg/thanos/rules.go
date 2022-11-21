@@ -121,7 +121,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		level.Info(o.logger).Log(
 			"msg", "updateConfigMaps",
 			"index", index,
-			"cm", cm.Data,
+			"cm", fmt.Sprintf("Map: %v", cm.Data),
 		)
 	}
 	// replaced by logic that only deletes obsolete ConfigMaps.
