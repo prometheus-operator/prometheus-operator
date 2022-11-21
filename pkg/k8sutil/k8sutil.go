@@ -396,7 +396,7 @@ func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.Con
 	})
 	currentConfigMapsNum := len(currentConfigMaps)
 	newConfigMapsNum := len(newConfigMaps)
-	if newConfigMapsNum > currentConfigMapsNum {
+	if newConfigMapsNum >= currentConfigMapsNum {
 		createConfigMaps = newConfigMaps[currentConfigMapsNum:newConfigMapsNum]
 		updateConfigMaps = newConfigMaps[0:currentConfigMapsNum]
 	}
@@ -405,5 +405,6 @@ func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.Con
 		deleteConfigMaps = currentConfigMaps[newConfigMapsNum:currentConfigMapsNum]
 		updateConfigMaps = newConfigMaps
 	}
+
 	return deleteConfigMaps, createConfigMaps, updateConfigMaps
 }

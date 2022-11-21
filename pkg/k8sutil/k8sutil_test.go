@@ -834,4 +834,76 @@ func TestDiffRulerConfigMap(t *testing.T) {
 		require.Len(t, updateConfigMaps, 0)
 
 	})
+	t.Run("diff ruler configmap, currentConfigMaps number is equal to newConfigMaps number", func(t *testing.T) {
+		currentConfigMaps := []corev1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-1",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-0",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-2",
+				},
+				Data: nil,
+			},
+		}
+
+		newConfigMaps := []corev1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-1",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-0",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-2",
+				},
+				Data: nil,
+			},
+		}
+
+		deleteConfigMaps, createConfigMaps, updateConfigMaps := DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
+		diff := pretty.Compare(updateConfigMaps, []corev1.ConfigMap{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-0",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-1",
+				},
+				Data: nil,
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-2",
+				},
+				Data: nil,
+			},
+		})
+		if diff != "" {
+			t.Fatalf("patch result did not match. diff:\n%s", diff)
+		}
+
+		require.Len(t, createConfigMaps, 0)
+		require.Len(t, deleteConfigMaps, 0)
+
+	})
 }
