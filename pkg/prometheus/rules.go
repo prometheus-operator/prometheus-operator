@@ -125,6 +125,11 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 			"cm", fmt.Sprintf("Map: %v", cm.Data),
 		)
 	}
+	level.Info(c.logger).Log(
+		"msg", "xxss DiffRulerConfigMap",
+		"currentConfigMaps", len(currentConfigMaps),
+		"newConfigMaps", len(newConfigMaps),
+	)
 
 	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 	level.Info(c.logger).Log(
