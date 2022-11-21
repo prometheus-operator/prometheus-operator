@@ -121,7 +121,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		level.Info(c.logger).Log(
 			"msg", "updateConfigMaps",
 			"index", index,
-			"cm", cm.Data,
+			"cm", len(cm.Data),
 		)
 	}
 
