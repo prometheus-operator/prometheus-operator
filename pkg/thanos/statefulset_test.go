@@ -1253,3 +1253,38 @@ func TestStatefulSetEphemeral(t *testing.T) {
 		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
 	}
 }
+
+func TestThanosVersion(t *testing.T) {
+	thanosBaseImage := defaultTestConfig.ThanosDefaultBaseImage
+	for _, tc := range []struct {
+		version       string
+		expectedImage string
+		expectedError bool
+	}{
+		{"v0.29.0", thanosBaseImage + ":" + "v0.29.0", false},
+		{"0.29.0", thanosBaseImage + ":" + "0.29.0", false},
+		{"", thanosBaseImage + ":" + operator.DefaultThanosVersion, false},
+		{"0.29.0-0123", "", true},
+		{"0.29.0.DEV", "", true},
+	} {
+		t.Run(string(tc.version), func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					QueryEndpoints: emptyQueryEndpoints,
+					Version:        tc.version,
+				},
+			}, defaultTestConfig, nil, "")
+
+			if tc.expectedError && err == nil {
+				t.Fatal("expected error but got nil")
+			}
+
+			if !tc.expectedError {
+				image := sset.Spec.Template.Spec.Containers[0].Image
+				if image != tc.expectedImage {
+					t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", tc.expectedImage, image)
+				}
+			}
+		})
+	}
+}

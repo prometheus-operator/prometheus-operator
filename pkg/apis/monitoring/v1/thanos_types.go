@@ -62,6 +62,8 @@ type ThanosRulerList struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ThanosRulerSpec struct {
+	// Version of Thanos to be deployed.
+	Version string `json:"version,omitempty"`
 	// PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// Thanos container image URL.
