@@ -112,7 +112,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 
 	for index, cm := range currentConfigMaps {
 		level.Info(c.logger).Log(
-			"msg", "xxss currentConfigMaps",
+			"msg", "prometheus currentConfigMaps",
 			"index", index,
 			"cm", fmt.Sprintf("Map: %v", cm.Data),
 		)
@@ -120,27 +120,27 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 
 	for index, cm := range newConfigMaps {
 		level.Info(c.logger).Log(
-			"msg", "xxss newConfigMaps",
+			"msg", "prometheus newConfigMaps",
 			"index", index,
 			"cm", fmt.Sprintf("Map: %v", cm.Data),
 		)
 	}
 	level.Info(c.logger).Log(
-		"msg", "xxss DiffRulerConfigMap",
+		"msg", "prometheus DiffRulerConfigMap",
 		"currentConfigMaps", len(currentConfigMaps),
 		"newConfigMaps", len(newConfigMaps),
 	)
 
 	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 	level.Info(c.logger).Log(
-		"msg", "updating PrometheusRule",
+		"msg", "prometheus updating PrometheusRule",
 		"deleteConfigMaps", len(deleteConfigMaps),
 		"createConfigMaps", len(createConfigMaps),
 		"updateConfigMaps", len(updateConfigMaps),
 	)
 	for index, cm := range updateConfigMaps {
 		level.Info(c.logger).Log(
-			"msg", "updateConfigMaps",
+			"msg", "prometheus updateConfigMaps",
 			"index", index,
 			"cm", fmt.Sprintf("Map: %v", cm.Data),
 		)
