@@ -1,3 +1,19 @@
+## 0.61.1 / 2022-11-16
+
+* [CHANGE] Updated `RuleGroup` description and add validation for the CRD. #5072
+* [CHANGE] Removed validations in the operator that are already covered at the CRD level. #5108
+* [CHANGE] jsonnet: Enforced existence of the TLS secret for the admission webhook deployment. #5112
+* [CHANGE] jsonnet: Changed default port of the admission webhook service from 8443 to 443. #5112
+* [CHANGE] Added a filter for non-running pods in the `ServiceMonitor` CRD. #5149
+* [FEATURE] Added `spec.attachMetadata.node` in the `ServiceMonitor` CRD. #5147
+* [ENHANCEMENT] Updated `ProbeTLSConfig` and `SafeTLSConfig` description. #5081
+* [ENHANCEMENT] Updated admission webhook deployment's jsonnet to avoid down-time on updates. #5099
+* [ENHANCEMENT] Added the `filterExternalLabels` field to the remote read configuration of the `Prometheus` CRD. #5142
+* [ENHANCEMENT] Added `enableHttp2` field to `AlertingEndpoints` #5152
+* [ENHANCEMENT] Updated `ThanosRuler` arguments (`QueryConfig`, `AlertManagerConfig`, `ObjectStorageConfig` and `TracingConfig`) to be directly read from secrets instead of using ENV vars. #5122
+* [ENHANCEMENT] Add `alertmanagerConfigMatcherStrategy` to `Alertmanager` CRD in order to disable auto-generated namespace matchers. #5084
+* [BUGFIX] Ignore `PartialResponseStrategy` in the `Prometheus` CRD. This field is only applicable for the Thanos Ruler. #5125
+
 ## 0.60.1 / 2022-10-10
 
 * [BUGFIX] Fixed configuration when `spec.tsdb.outOfOrderTimeWindow` is set in the Prometheus CRD. #5078
