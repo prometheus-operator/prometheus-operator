@@ -110,6 +110,22 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return newConfigMapNames, nil
 	}
 
+	for index, cm := range currentConfigMaps {
+		level.Info(c.logger).Log(
+			"msg", "xxss currentConfigMaps",
+			"index", index,
+			"cm", fmt.Sprintf("Map: %v", cm.Data),
+		)
+	}
+
+	for index, cm := range newConfigMaps {
+		level.Info(c.logger).Log(
+			"msg", "xxss newConfigMaps",
+			"index", index,
+			"cm", fmt.Sprintf("Map: %v", cm.Data),
+		)
+	}
+
 	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 	level.Info(c.logger).Log(
 		"msg", "updating PrometheusRule",
