@@ -20,6 +20,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -155,10 +156,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
+	thanosVersion := operator.StringValOrDefault(tr.Spec.Version, operator.DefaultThanosVersion)
+	if _, err := semver.ParseTolerant(thanosVersion); err != nil {
+		return nil, errors.Wrap(err, "failed to parse Thanos version")
+
+	}
+
 	trImagePath, err := operator.BuildImagePath(
 		tr.Spec.Image,
 		operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage),
-		operator.DefaultThanosVersion,
+		thanosVersion,
 		"",
 		"",
 	)

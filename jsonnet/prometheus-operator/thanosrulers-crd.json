@@ -4352,6 +4352,10 @@
                     "description": "TracingConfig specifies the path of the tracing configuration file. When used alongside with TracingConfig, TracingConfigFile takes precedence.",
                     "type": "string"
                   },
+                  "version": {
+                    "description": "Version of Thanos to be deployed.",
+                    "type": "string"
+                  },
                   "volumes": {
                     "description": "Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects.",
                     "items": {

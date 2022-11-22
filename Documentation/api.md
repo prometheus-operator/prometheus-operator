@@ -2848,6 +2848,17 @@ ThanosRulerSpec
 <table>
 <tr>
 <td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>podMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
@@ -11215,6 +11226,17 @@ Prometheus &gt;= v2.39.0.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>podMetadata</code><br/>
