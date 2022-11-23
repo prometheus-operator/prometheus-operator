@@ -537,15 +537,13 @@ func volumeName(name string) string {
 func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {
 	cfgs := []yaml.MapSlice{}
 	for _, spec := range remoteWrites {
-		//defaults
-		if spec.RemoteTimeout == "" {
-			spec.RemoteTimeout = "30s"
-		}
-
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
-			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 			{Key: "name", Value: spec.Name},
+		}
+		
+		if spec.RemoteTimeout != "" {
+			cfg = append(cfg, {Key: "remote_timeout", Value: spec.RemoteTimeout}}
 		}
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}
