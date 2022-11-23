@@ -294,23 +294,23 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
 	}
 
-	version, err := semver.ParseTolerant(tr.Spec.Version)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse thanos ruler version")
-	}
-
-	if version.GTE(semver.MustParse("2.6.0")) {
-		if tr.Spec.RemoteWriteConfigFile != nil {
-			trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
-		} else if tr.Spec.RemoteWriteConfig != nil {
-			remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to generate remote write spec")
+	if len(tr.Spec.Version) > 0 {
+		version, err := semver.ParseTolerant(tr.Spec.Version)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse thanos ruler version")
+		}
+		if version.GTE(semver.MustParse("2.6.0")) {
+			if tr.Spec.RemoteWriteConfigFile != nil {
+				trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
+			} else if tr.Spec.RemoteWriteConfig != nil {
+				remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to generate remote write spec")
+				}
+				trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
 			}
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
 		}
 	}
-
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
