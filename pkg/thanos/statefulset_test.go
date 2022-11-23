@@ -538,7 +538,7 @@ func TestRemoteWriteConfigFile(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			RemoteWriteConfig: []monitoringv1.RemoteWriteSpec{
+			RemoteWriteConfig: []monitoringv1.RemoteWriteSpecV2{
 				{
 					URL: "http://example.com",
 					QueueConfig: &monitoringv1.QueueConfig{
@@ -582,7 +582,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			RemoteWriteConfig: []monitoringv1.RemoteWriteSpec{
+			RemoteWriteConfig: []monitoringv1.RemoteWriteSpecV2{
 				{
 					URL: "http://example.com",
 					QueueConfig: &monitoringv1.QueueConfig{
