@@ -4924,6 +4924,10 @@ spec:
                     bearerTokenFile:
                       description: File to read bearer token for remote write.
                       type: string
+                    follow_redirects:
+                      description: Configure whether HTTP requests follow HTTP 3xx
+                        redirects.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
@@ -5280,7 +5284,9 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: The URL of the endpoint to send samples to.
+                      description: contains all the fields from RemoteWriteSpec except
+                        BearerToken and BearerTokenFile The URL of the endpoint to
+                        send samples to.
                       type: string
                     writeRelabelConfigs:
                       description: The list of remote write relabel configurations.

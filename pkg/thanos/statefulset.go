@@ -294,13 +294,23 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
 	}
 
-	if tr.Spec.RemoteWriteConfig != nil {
-		remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate remote write spec")
-		}
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
+	version, err := semver.ParseTolerant(tr.Spec.Version)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse thanos ruler version")
 	}
+
+	if version.GTE(semver.MustParse("2.6.0")) {
+		if tr.Spec.RemoteWriteConfigFile != nil {
+			trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
+		} else if tr.Spec.RemoteWriteConfig != nil {
+			remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to generate remote write spec")
+			}
+			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
+		}
+	}
+
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
@@ -536,16 +546,17 @@ func mountSecret(secretSelector *v1.SecretKeySelector, volumeName string, trVolu
 	return mountpath
 }
 
-func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {
+func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpecV2) yaml.MapSlice {
 	cfgs := []yaml.MapSlice{}
 	for _, spec := range remoteWrites {
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 			{Key: "name", Value: spec.Name},
+			{Key: "follow_redirects", Value: spec},
 		}
-		
+
 		if spec.RemoteTimeout != "" {
-			cfg = append(cfg, {Key: "remote_timeout", Value: spec.RemoteTimeout}}
+			cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: spec.RemoteTimeout})
 		}
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}

@@ -1004,19 +1004,12 @@ type ThanosSpec struct {
 // to a remote endpoint.
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
-	// The URL of the endpoint to send samples to.
-	URL string `json:"url"`
-	// The name of the remote write queue, it must be unique if specified. The
-	// name is used in metrics and logging in order to differentiate queues.
-	// Only valid in Prometheus versions 2.15.0 and newer.
-	Name string `json:"name,omitempty"`
+	RemoteWriteSpecV2 `json:",inline"`
 	// Enables sending of exemplars over remote write. Note that
 	// exemplar-storage itself must be enabled using the enableFeature option
 	// for exemplars to be scraped in the first place.  Only valid in
 	// Prometheus versions 2.27.0 and newer.
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
-	// Timeout for requests to the remote write endpoint.
-	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote write request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.25.0 and newer.
@@ -1039,10 +1032,25 @@ type RemoteWriteSpec struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
-	// QueueConfig allows tuning of the remote write queue parameters.
-	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
 	// MetadataConfig configures the sending of series metadata to the remote storage.
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
+}
+
+// RemoteWriteSpecV2 thanos ruler remote write spec
+type RemoteWriteSpecV2 struct {
+	// contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
+	// The URL of the endpoint to send samples to.
+	URL string `json:"url"`
+	// The name of the remote write queue, it must be unique if specified. The
+	// name is used in metrics and logging in order to differentiate queues.
+	// Only valid in Prometheus versions 2.15.0 and newer.
+	Name string `json:"name,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects bool `json:"follow_redirects,omitempty"`
+	// Timeout for requests to the remote write endpoint.
+	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
+	// QueueConfig allows tuning of the remote write queue parameters.
+	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
 }
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.

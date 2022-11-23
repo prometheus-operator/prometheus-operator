@@ -3474,16 +3474,29 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 <td>
 <code>remoteWrite</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
-[]RemoteWriteSpec
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpecV2">
+[]RemoteWriteSpecV2
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>RemoteWriteConfig configures stateless mode in ThanosRuler.
-RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
-<a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a></p>
+<p>RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+If the list is not empty, Thanos Ruler doesn&rsquo;t expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
+Note that Thanos Ruler ignores metadata configuration.
+See <a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteConfigFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>RemoteWriteConfigFile specifies the path of the remote write file.
+When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence.</p>
 </td>
 </tr>
 </table>
@@ -5817,7 +5830,7 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpecV2">RemoteWriteSpecV2</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -9595,7 +9608,7 @@ Duration
 <h3 id="monitoring.coreos.com/v1.QueueConfig">QueueConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpecV2">RemoteWriteSpecV2</a>)
 </p>
 <div>
 <p>QueueConfig allows the tuning of remote write&rsquo;s queue_config parameters.
@@ -10008,7 +10021,7 @@ Requires Prometheus v2.34.0 and above.</p>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 <p>RemoteWriteSpec defines the configuration to write samples from Prometheus
@@ -10030,7 +10043,8 @@ string
 </em>
 </td>
 <td>
-<p>The URL of the endpoint to send samples to.</p>
+<p>contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
+The URL of the endpoint to send samples to.</p>
 </td>
 </tr>
 <tr>
@@ -10048,16 +10062,13 @@ Only valid in Prometheus versions 2.15.0 and newer.</p>
 </tr>
 <tr>
 <td>
-<code>sendExemplars</code><br/>
+<code>follow_redirects</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
-<p>Enables sending of exemplars over remote write. Note that
-exemplar-storage itself must be enabled using the enableFeature option
-for exemplars to be scraped in the first place.  Only valid in
-Prometheus versions 2.27.0 and newer.</p>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
 </td>
 </tr>
 <tr>
@@ -10071,6 +10082,33 @@ Duration
 </td>
 <td>
 <p>Timeout for requests to the remote write endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>queueConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QueueConfig">
+QueueConfig
+</a>
+</em>
+</td>
+<td>
+<p>QueueConfig allows tuning of the remote write queue parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendExemplars</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enables sending of exemplars over remote write. Note that
+exemplar-storage itself must be enabled using the enableFeature option
+for exemplars to be scraped in the first place.  Only valid in
+Prometheus versions 2.27.0 and newer.</p>
 </td>
 </tr>
 <tr>
@@ -10199,19 +10237,6 @@ string
 </tr>
 <tr>
 <td>
-<code>queueConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QueueConfig">
-QueueConfig
-</a>
-</em>
-</td>
-<td>
-<p>QueueConfig allows tuning of the remote write queue parameters.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>metadataConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.MetadataConfig">
@@ -10221,6 +10246,86 @@ MetadataConfig
 </td>
 <td>
 <p>MetadataConfig configures the sending of series metadata to the remote storage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.RemoteWriteSpecV2">RemoteWriteSpecV2
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>RemoteWriteSpecV2 thanos ruler remote write spec</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>url</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
+The URL of the endpoint to send samples to.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the remote write queue, it must be unique if specified. The
+name is used in metrics and logging in order to differentiate queues.
+Only valid in Prometheus versions 2.15.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>follow_redirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Timeout for requests to the remote write endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>queueConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QueueConfig">
+QueueConfig
+</a>
+</em>
+</td>
+<td>
+<p>QueueConfig allows tuning of the remote write queue parameters.</p>
 </td>
 </tr>
 </tbody>
@@ -11870,16 +11975,29 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 <td>
 <code>remoteWrite</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
-[]RemoteWriteSpec
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpecV2">
+[]RemoteWriteSpecV2
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>RemoteWriteConfig configures stateless mode in ThanosRuler.
-RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
-<a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a></p>
+<p>RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+If the list is not empty, Thanos Ruler doesn&rsquo;t expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
+Note that Thanos Ruler ignores metadata configuration.
+See <a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteConfigFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>RemoteWriteConfigFile specifies the path of the remote write file.
+When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence.</p>
 </td>
 </tr>
 </tbody>
