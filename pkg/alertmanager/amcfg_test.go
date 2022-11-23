@@ -55,11 +55,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	myrouteJSON, _ := json.Marshal(myroute)
 
 	tests := []struct {
-		name         string
-		globalConfig *monitoringingv1.AlertmanagerGlobalConfig
-		amConfig     *monitoringv1alpha1.AlertmanagerConfig
-		want         *alertmanagerConfig
-		wantErr      bool
+		name            string
+		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
+		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
+		amConfig        *monitoringv1alpha1.AlertmanagerConfig
+		want            *alertmanagerConfig
+		wantErr         bool
 	}{
 		{
 			name: "valid global config",
@@ -110,6 +111,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 					},
 				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -179,6 +183,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
@@ -226,6 +233,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			log.NewNopLogger(),
 			version,
 			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+			tt.matcherStrategy,
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
@@ -243,12 +251,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
-		name       string
-		kclient    kubernetes.Interface
-		baseConfig alertmanagerConfig
-		amVersion  *semver.Version
-		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
-		expected   string
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		expected        string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	if err != nil {
@@ -536,6 +545,44 @@ templates: []
     - job
     matchers:
     - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, simple CR with namespaceMatcher disabled",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "None",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    group_by:
+    - job
     continue: true
 receivers:
 - name: "null"
@@ -1308,7 +1355,7 @@ templates: []
 		},
 		{
 
-			name: "CR with SNS Receiver",
+			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1379,6 +1426,71 @@ receivers:
       region: us-east-2
       access_key: xyz
       secret_key: "123"
+    topic_arn: test-topicARN
+templates: []
+`,
+		},
+		{
+
+			name: "CR with SNS Receiver with roleARN",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: "https://sns.us-east-2.amazonaws.com",
+									Sigv4: &monitoringingv1.Sigv4{
+										Region:  "us-east-2",
+										RoleArn: "test-roleARN",
+									},
+									TopicARN: "test-topicARN",
+								},
+							},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  sns_configs:
+  - api_url: https://sns.us-east-2.amazonaws.com
+    sigv4:
+      region: us-east-2
+      role_arn: test-roleARN
     topic_arn: test-topicARN
 templates: []
 `,
@@ -1514,7 +1626,7 @@ templates: []
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store)
+			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
 			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {

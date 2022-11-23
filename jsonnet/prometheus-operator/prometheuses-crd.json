@@ -879,6 +879,10 @@
                               "description": "BearerTokenFile to read from filesystem to use when authenticating to Alertmanager.",
                               "type": "string"
                             },
+                            "enableHttp2": {
+                              "description": "Whether to enable HTTP2.",
+                              "type": "boolean"
+                            },
                             "name": {
                               "description": "Name of Endpoints object in Namespace.",
                               "type": "string"
@@ -4198,6 +4202,10 @@
                         "bearerTokenFile": {
                           "description": "File to read bearer token for remote read.",
                           "type": "string"
+                        },
+                        "filterExternalLabels": {
+                          "description": "Whether to use the external labels as selectors for the remote read endpoint. Requires Prometheus v2.34.0 and above.",
+                          "type": "boolean"
                         },
                         "headers": {
                           "additionalProperties": {

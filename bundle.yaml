@@ -5366,6 +5366,22 @@ spec:
                         type: array
                     type: object
                 type: object
+              alertmanagerConfigMatcherStrategy:
+                description: The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig
+                  objects match the alerts. In the future more options may be added.
+                properties:
+                  type:
+                    default: OnNamespace
+                    description: If set to `OnNamespace`, the operator injects a label
+                      matcher matching the namespace of the AlertmanagerConfig object
+                      for all its routes and inhibition rules. `None` will not add
+                      any additional matchers other than the ones specified in the
+                      AlertmanagerConfig. Default is `OnNamespace`.
+                    enum:
+                    - OnNamespace
+                    - None
+                    type: string
+                type: object
               alertmanagerConfigNamespaceSelector:
                 description: Namespaces to be selected for AlertmanagerConfig discovery.
                   If nil, only check own namespace.
@@ -11351,8 +11367,8 @@ spec:
               by Prometheus.
             properties:
               attachMetadata:
-                description: 'Attaches node metadata to discovered targets. Only valid
-                  for role: pod. Only valid in Prometheus versions 2.35.0 and newer.'
+                description: Attaches node metadata to discovered targets. Requires
+                  Prometheus v2.35.0 and above.
                 properties:
                   node:
                     description: When set to true, Prometheus must have permissions
@@ -13734,6 +13750,9 @@ spec:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
                           type: string
+                        enableHttp2:
+                          description: Whether to enable HTTP2.
+                          type: boolean
                         name:
                           description: Name of Endpoints object in Namespace.
                           type: string
@@ -17253,6 +17272,11 @@ spec:
                     bearerTokenFile:
                       description: File to read bearer token for remote read.
                       type: string
+                    filterExternalLabels:
+                      description: Whether to use the external labels as selectors
+                        for the remote read endpoint. Requires Prometheus v2.34.0
+                        and above.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
@@ -21699,6 +21723,15 @@ spec:
             description: Specification of desired Service selection for target discovery
               by Prometheus.
             properties:
+              attachMetadata:
+                description: Attaches node metadata to discovered targets. Requires
+                  Prometheus v2.37.0 and above.
+                properties:
+                  node:
+                    description: When set to true, Prometheus must have permissions
+                      to get Nodes.
+                    type: boolean
+                type: object
               endpoints:
                 description: A list of endpoints allowed as part of this ServiceMonitor.
                 items:
@@ -21804,6 +21837,10 @@ spec:
                       x-kubernetes-map-type: atomic
                     enableHttp2:
                       description: Whether to enable HTTP2.
+                      type: boolean
+                    filterRunning:
+                      description: 'Drop pods that are not running. (Failed, Succeeded).
+                        Enabled by default. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase'
                       type: boolean
                     followRedirects:
                       description: FollowRedirects configures whether scrape requests
@@ -27740,6 +27777,9 @@ spec:
                   file. When used alongside with TracingConfig, TracingConfigFile
                   takes precedence.
                 type: string
+              version:
+                description: Version of Thanos to be deployed.
+                type: string
               volumes:
                 description: Volumes allows configuration of additional volumes on
                   the output StatefulSet definition. Volumes specified will be appended
@@ -29305,7 +29345,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.61.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -29322,7 +29362,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.61.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -29403,7 +29443,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.61.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -29419,14 +29459,14 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.60.1
+        app.kubernetes.io/version: 0.61.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.60.1
-        image: quay.io/prometheus-operator/prometheus-operator:v0.60.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.61.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.61.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -29458,7 +29498,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.61.0
   name: prometheus-operator
   namespace: default
 ---
@@ -29468,7 +29508,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.61.0
   name: prometheus-operator
   namespace: default
 spec:

@@ -623,6 +623,20 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+In the future more options may be added.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -899,8 +913,8 @@ AttachMetadata
 </em>
 </td>
 <td>
-<p>Attaches node metadata to discovered targets. Only valid for role: pod.
-Only valid in Prometheus versions 2.35.0 and newer.</p>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.35.0 and above.</p>
 </td>
 </tr>
 </table>
@@ -2754,6 +2768,20 @@ uint64
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.37.0 and above.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -2818,6 +2846,17 @@ ThanosRulerSpec
 <br/>
 <br/>
 <table>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>podMetadata</code><br/>
@@ -3591,6 +3630,37 @@ Authorization
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>If set to <code>OnNamespace</code>, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
+<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
+Default is <code>OnNamespace</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
 <p>
@@ -3785,6 +3855,17 @@ Duration
 </td>
 <td>
 <p>Timeout is a per-target Alertmanager timeout when pushing alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -4380,6 +4461,20 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+In the future more options may be added.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -4652,7 +4747,7 @@ string
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 </div>
@@ -6264,6 +6359,18 @@ bool
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>filterRunning</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Drop pods that are not running. (Failed, Succeeded). Enabled by default.
+More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Exemplars">Exemplars
@@ -7219,8 +7326,8 @@ AttachMetadata
 </em>
 </td>
 <td>
-<p>Attaches node metadata to discovered targets. Only valid for role: pod.
-Only valid in Prometheus versions 2.35.0 and newer.</p>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.35.0 and above.</p>
 </td>
 </tr>
 </tbody>
@@ -9884,6 +9991,18 @@ string
 <p>Optional ProxyURL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>filterExternalLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Whether to use the external labels as selectors for the remote read endpoint.
+Requires Prometheus v2.34.0 and above.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
@@ -10691,6 +10810,20 @@ uint64
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<p>Attaches node metadata to discovered targets.
+Requires Prometheus v2.37.0 and above.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
@@ -11109,6 +11242,17 @@ Prometheus &gt;= v2.39.0.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>podMetadata</code><br/>

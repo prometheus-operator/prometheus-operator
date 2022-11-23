@@ -32,6 +32,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	containerName = "thanos-ruler"
+)
+
 var (
 	defaultTestConfig = Config{
 		ReloaderConfig: operator.ReloaderConfig{
@@ -200,14 +204,22 @@ func TestStatefulSetVolumes(t *testing.T) {
 }
 
 func TestTracing(t *testing.T) {
-	testKey := "thanos-tracing-config-secret"
+	const (
+		secretName = "thanos-tracing-config-secret"
+		secretKey  = "config.yaml"
+		volumeName = "tracing-config"
+		mountPath  = "/etc/thanos/config/tracing-config.yaml"
+	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			TracingConfig: &v1.SecretKeySelector{
-				Key: testKey,
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: secretKey,
 			},
 		},
 	}, defaultTestConfig, nil, "")
@@ -215,26 +227,37 @@ func TestTracing(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+	if sset.Spec.Template.Spec.Containers[0].Name != containerName {
 		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
 	}
-
-	var containsEnvVar bool
-	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
-		if env.Name == "TRACING_CONFIG" {
-			if env.ValueFrom.SecretKeyRef.Key == testKey {
-				containsEnvVar = true
-				break
+	{
+		var containsVolume bool
+		for _, volume := range sset.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+					containsVolume = true
+					break
+				}
 			}
 		}
+		if !containsVolume {
+			t.Fatalf("Thanos ruler is missing tracing-config volume with correct secret name and key")
+		}
 	}
-	if !containsEnvVar {
-		t.Fatalf("Thanos ruler is missing expected TRACING_CONFIG env var with correct value")
-	}
-
 	{
+		var containsVolumeMount bool
+		for _, volumeMount := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+			if volumeMount.Name == volumeName && volumeMount.MountPath == mountPath {
+				containsVolumeMount = true
+			}
+		}
+		if !containsVolumeMount {
+			t.Fatalf("Thanos ruler is missing tracing-config volume mount with correct name and mountPath")
+		}
+	}
+	{
+		const expectedArg = "--tracing.config-file=" + mountPath
 		var containsArg bool
-		const expectedArg = "--tracing.config=$(TRACING_CONFIG)"
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
 				containsArg = true
@@ -291,14 +314,22 @@ func TestTracingFile(t *testing.T) {
 }
 
 func TestObjectStorage(t *testing.T) {
-	testKey := "thanos-objstore-config-secret"
+	const (
+		secretName = "thanos-objstore-config-secret"
+		secretKey  = "config.yaml"
+		volumeName = "objstorage-config"
+		mountPath  = "/etc/thanos/config/objstorage-config.yaml"
+	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			ObjectStorageConfig: &v1.SecretKeySelector{
-				Key: testKey,
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: secretKey,
 			},
 		},
 	}, defaultTestConfig, nil, "")
@@ -306,26 +337,37 @@ func TestObjectStorage(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+	if sset.Spec.Template.Spec.Containers[0].Name != containerName {
 		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
 	}
-
-	var containsEnvVar bool
-	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
-		if env.Name == "OBJSTORE_CONFIG" {
-			if env.ValueFrom.SecretKeyRef.Key == testKey {
-				containsEnvVar = true
-				break
+	{
+		var containsVolume bool
+		for _, volume := range sset.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+					containsVolume = true
+					break
+				}
 			}
 		}
+		if !containsVolume {
+			t.Fatalf("Thanos ruler is missing objstorage-config volume with correct secret name and key")
+		}
 	}
-	if !containsEnvVar {
-		t.Fatalf("Thanos ruler is missing expected OBJSTORE_CONFIG env var with correct value")
-	}
-
 	{
+		var containsVolumeMount bool
+		for _, volumeMount := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+			if volumeMount.Name == volumeName && volumeMount.MountPath == mountPath {
+				containsVolumeMount = true
+			}
+		}
+		if !containsVolumeMount {
+			t.Fatalf("Thanos ruler is missing objstorage-config volume mount with correct name and mountPath")
+		}
+	}
+	{
+		const expectedArg = "--objstore.config-file=" + mountPath
 		var containsArg bool
-		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
 				containsArg = true
@@ -382,14 +424,22 @@ func TestObjectStorageFile(t *testing.T) {
 }
 
 func TestAlertRelabel(t *testing.T) {
-	testKey := "thanos-alertrelabel-config-secret"
+	const (
+		secretName = "thanos-alertrelabel-config-secret"
+		secretKey  = "config.yaml"
+		volumeName = "alertrelabel-config"
+		mountPath  = "/etc/thanos/config/alertrelabel-config.yaml"
+	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			AlertRelabelConfigs: &v1.SecretKeySelector{
-				Key: testKey,
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: secretKey,
 			},
 		},
 	}, defaultTestConfig, nil, "")
@@ -397,26 +447,37 @@ func TestAlertRelabel(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+	if sset.Spec.Template.Spec.Containers[0].Name != containerName {
 		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
 	}
-
-	var containsEnvVar bool
-	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
-		if env.Name == "ALERT_RELABEL_CONFIG" {
-			if env.ValueFrom.SecretKeyRef.Key == testKey {
-				containsEnvVar = true
-				break
+	{
+		var containsVolume bool
+		for _, volume := range sset.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+					containsVolume = true
+					break
+				}
 			}
 		}
+		if !containsVolume {
+			t.Fatalf("Thanos ruler is missing alertrelabel-config volume with correct secret name and key")
+		}
 	}
-	if !containsEnvVar {
-		t.Fatalf("Thanos ruler is missing expected ALERT_RELABEL_CONFIG env var with correct value")
-	}
-
 	{
+		var containsVolumeMount bool
+		for _, volumeMount := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+			if volumeMount.Name == volumeName && volumeMount.MountPath == mountPath {
+				containsVolumeMount = true
+			}
+		}
+		if !containsVolumeMount {
+			t.Fatalf("Thanos ruler is missing alertrelabel-config volume mount with correct name and mountPath")
+		}
+	}
+	{
+		const expectedArg = "--alert.relabel-config-file=" + mountPath
 		var containsArg bool
-		const expectedArg = "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)"
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
 				containsArg = true
@@ -832,7 +893,7 @@ func TestExternalQueryURL(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+	if sset.Spec.Template.Spec.Containers[0].Name != containerName {
 		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
 	}
 
@@ -1277,5 +1338,40 @@ func TestStatefulSetEphemeral(t *testing.T) {
 	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
 		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
 		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
+	}
+}
+
+func TestThanosVersion(t *testing.T) {
+	thanosBaseImage := defaultTestConfig.ThanosDefaultBaseImage
+	for _, tc := range []struct {
+		version       string
+		expectedImage string
+		expectedError bool
+	}{
+		{"v0.29.0", thanosBaseImage + ":" + "v0.29.0", false},
+		{"0.29.0", thanosBaseImage + ":" + "0.29.0", false},
+		{"", thanosBaseImage + ":" + operator.DefaultThanosVersion, false},
+		{"0.29.0-0123", "", true},
+		{"0.29.0.DEV", "", true},
+	} {
+		t.Run(string(tc.version), func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					QueryEndpoints: emptyQueryEndpoints,
+					Version:        tc.version,
+				},
+			}, defaultTestConfig, nil, "")
+
+			if tc.expectedError && err == nil {
+				t.Fatal("expected error but got nil")
+			}
+
+			if !tc.expectedError {
+				image := sset.Spec.Template.Spec.Containers[0].Image
+				if image != tc.expectedImage {
+					t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", tc.expectedImage, image)
+				}
+			}
+		})
 	}
 }

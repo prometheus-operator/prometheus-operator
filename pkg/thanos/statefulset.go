@@ -20,6 +20,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -34,6 +35,7 @@ import (
 
 const (
 	rulesDir                  = "/etc/thanos/rules"
+	configDir                 = "/etc/thanos/config"
 	storageDir                = "/thanos/data"
 	governingServiceName      = "thanos-ruler-operated"
 	defaultPortName           = "web"
@@ -155,10 +157,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
+	thanosVersion := operator.StringValOrDefault(tr.Spec.Version, operator.DefaultThanosVersion)
+	if _, err := semver.ParseTolerant(thanosVersion); err != nil {
+		return nil, errors.Wrap(err, "failed to parse Thanos version")
+
+	}
+
 	trImagePath, err := operator.BuildImagePath(
 		tr.Spec.Image,
 		operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage),
-		operator.DefaultThanosVersion,
+		thanosVersion,
 		"",
 		"",
 	)
@@ -180,6 +188,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			},
 		},
 	}
+
+	trVolumes := []v1.Volume{}
+	trVolumeMounts := []v1.VolumeMount{}
 
 	trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
 	for k, v := range tr.Spec.Labels {
@@ -216,31 +227,21 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.format=%s", tr.Spec.LogFormat))
 	}
 
+	rulePath := rulesDir + "/*/*.yaml"
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--rule-file=%s", rulePath))
+
 	if tr.Spec.QueryConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--query.config=$(QUERY_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "QUERY_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.QueryConfig,
-			},
-		})
+		mountPath := mountSecret(tr.Spec.QueryConfig, "query-config", &trVolumes, &trVolumeMounts)
+		trCLIArgs = append(trCLIArgs, "--query.config-file="+mountPath)
 	} else if len(tr.Spec.QueryEndpoints) > 0 {
 		for _, endpoint := range tr.Spec.QueryEndpoints {
 			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--query=%s", endpoint))
 		}
 	}
 
-	rulePath := rulesDir + "/*/*.yaml"
-	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--rule-file=%s", rulePath))
-
 	if tr.Spec.AlertManagersConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--alertmanagers.config=$(ALERTMANAGERS_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "ALERTMANAGERS_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.AlertManagersConfig,
-			},
-		})
+		mountPath := mountSecret(tr.Spec.AlertManagersConfig, "alertmanager-config", &trVolumes, &trVolumeMounts)
+		trCLIArgs = append(trCLIArgs, "--alertmanagers.config-file="+mountPath)
 	} else if len(tr.Spec.AlertManagersURL) > 0 {
 		for _, url := range tr.Spec.AlertManagersURL {
 			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alertmanagers.url=%s", url))
@@ -250,27 +251,22 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.ObjectStorageConfigFile != nil {
 		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
 	} else if tr.Spec.ObjectStorageConfig != nil {
-		trCLIArgs = append(trCLIArgs, "--objstore.config=$(OBJSTORE_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "OBJSTORE_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.ObjectStorageConfig,
-			},
-		})
+		mountPath := mountSecret(tr.Spec.ObjectStorageConfig, "objstorage-config", &trVolumes, &trVolumeMounts)
+		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+mountPath)
 	}
 
-	if tr.Spec.TracingConfig != nil || len(tr.Spec.TracingConfigFile) > 0 {
-		if len(tr.Spec.TracingConfigFile) > 0 {
-			trCLIArgs = append(trCLIArgs, "--tracing.config-file="+tr.Spec.TracingConfigFile)
-		} else {
-			trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
-			trEnvVars = append(trEnvVars, v1.EnvVar{
-				Name: "TRACING_CONFIG",
-				ValueFrom: &v1.EnvVarSource{
-					SecretKeyRef: tr.Spec.TracingConfig,
-				},
-			})
-		}
+	if tr.Spec.TracingConfigFile != "" {
+		trCLIArgs = append(trCLIArgs, "--tracing.config-file="+tr.Spec.TracingConfigFile)
+	} else if tr.Spec.TracingConfig != nil {
+		mountPath := mountSecret(tr.Spec.TracingConfig, "tracing-config", &trVolumes, &trVolumeMounts)
+		trCLIArgs = append(trCLIArgs, "--tracing.config-file="+mountPath)
+	}
+
+	if tr.Spec.AlertRelabelConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+*tr.Spec.AlertRelabelConfigFile)
+	} else if tr.Spec.AlertRelabelConfigs != nil {
+		mountPath := mountSecret(tr.Spec.AlertRelabelConfigs, "alertrelabel-config", &trVolumes, &trVolumeMounts)
+		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+mountPath)
 	}
 
 	if tr.Spec.GRPCServerTLSConfig != nil {
@@ -298,18 +294,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
 	}
 
-	if tr.Spec.AlertRelabelConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+*tr.Spec.AlertRelabelConfigFile)
-	} else if tr.Spec.AlertRelabelConfigs != nil {
-		trCLIArgs = append(trCLIArgs, "--alert.relabel-config=$(ALERT_RELABEL_CONFIG)")
-		trEnvVars = append(trEnvVars, v1.EnvVar{
-			Name: "ALERT_RELABEL_CONFIG",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: tr.Spec.AlertRelabelConfigs,
-			},
-		})
-	}
-
 	if tr.Spec.RemoteWriteConfig != nil {
 		remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
 		if err != nil {
@@ -317,7 +301,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		}
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
 	}
-
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
@@ -387,13 +370,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			storageVolName = tr.Spec.Storage.VolumeClaimTemplate.Name
 		}
 	}
-	trVolumes := []v1.Volume{}
-	trVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      storageVolName,
-			MountPath: storageDir,
-		},
-	}
+	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+		Name:      storageVolName,
+		MountPath: storageDir,
+	})
 
 	for _, name := range ruleConfigMapNames {
 		trVolumes = append(trVolumes, v1.Volume{
@@ -532,6 +512,28 @@ func prefixedName(name string) string {
 
 func volumeName(name string) string {
 	return fmt.Sprintf("%s-data", prefixedName(name))
+}
+
+func mountSecret(secretSelector *v1.SecretKeySelector, volumeName string, trVolumes *[]v1.Volume, trVolumeMounts *[]v1.VolumeMount) string {
+	*trVolumes = append(*trVolumes, v1.Volume{
+		Name: volumeName,
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: secretSelector.Name,
+				Items: []v1.KeyToPath{
+					{
+						Key: secretSelector.Key,
+					},
+				},
+			},
+		},
+	})
+	mountpath := configDir + "/" + volumeName + ".yaml"
+	*trVolumeMounts = append(*trVolumeMounts, v1.VolumeMount{
+		Name:      volumeName,
+		MountPath: mountpath,
+	})
+	return mountpath
 }
 
 func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {

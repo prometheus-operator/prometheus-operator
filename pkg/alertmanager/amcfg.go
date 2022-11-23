@@ -99,6 +99,82 @@ func (c alertmanagerConfig) String() string {
 	return string(b)
 }
 
+type enforcer interface {
+	processRoute(types.NamespacedName, *route) *route
+	processInhibitRule(types.NamespacedName, *inhibitRule) *inhibitRule
+}
+
+// No enforcement
+type noopEnforcer struct{}
+
+func (ne *noopEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	return ir
+}
+
+func (ne *noopEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	r.Continue = true
+	return r
+}
+
+// Enforcing the namespace label
+type namespaceEnforcer struct {
+	matchersV2Allowed bool
+}
+
+// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	// Inhibition rule created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
+
+	if !ne.matchersV2Allowed {
+		ir.SourceMatch[inhibitRuleNamespaceKey] = crKey.Namespace
+		ir.TargetMatch[inhibitRuleNamespaceKey] = crKey.Namespace
+
+		return ir
+	}
+
+	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
+		Name:      inhibitRuleNamespaceKey,
+		Value:     crKey.Namespace,
+		MatchType: monitoringv1alpha1.MatchEqual,
+	}.String()
+
+	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
+		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
+	}
+	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
+		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
+	}
+
+	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
+	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
+
+	return ir
+}
+
+// processRoute on namespaceEnforcer modifies the route configuration to match alerts
+// originating only from the given namespace.
+func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	// Routes created from AlertmanagerConfig resources should only match
+	// alerts that come from the same namespace.
+	if ne.matchersV2Allowed {
+		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
+			Name:      "namespace",
+			Value:     crKey.Namespace,
+			MatchType: monitoringv1alpha1.MatchEqual,
+		}.String())
+	} else {
+		r.Match["namespace"] = crKey.Namespace
+	}
+	// Alerts should still be evaluated by the following routes.
+	r.Continue = true
+
+	return r
+}
+
 // configBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
 type configBuilder struct {
@@ -106,15 +182,26 @@ type configBuilder struct {
 	logger    log.Logger
 	amVersion semver.Version
 	store     *assets.Store
+	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
+		enforcer:  getEnforcer(matcherStrategy, amVersion),
 	}
 	return cg
+}
+
+func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+	if matcherStrategy.Type == "None" {
+		return &noopEnforcer{}
+	}
+	return &namespaceEnforcer{
+		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+	}
 }
 
 func (cb *configBuilder) marshalJSON() ([]byte, error) {
@@ -206,11 +293,11 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		// Add inhibitRules to baseConfig.InhibitRules.
 		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
 			cb.cfg.InhibitRules = append(cb.cfg.InhibitRules,
-				cb.enforceNamespaceForInhibitRule(
+				cb.enforcer.processInhibitRule(
+					crKey,
 					cb.convertInhibitRule(
 						&inhibitRule,
 					),
-					crKey.Namespace,
 				),
 			)
 		}
@@ -221,12 +308,12 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		}
 
 		subRoutes = append(subRoutes,
-			cb.enforceNamespaceForRoute(
+			cb.enforcer.processRoute(
+				crKey,
 				cb.convertRoute(
 					amConfigs[amConfigIdentifier].Spec.Route,
 					crKey,
 				),
-				amConfigs[amConfigIdentifier].Namespace,
 			),
 		)
 
@@ -258,65 +345,6 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 	}
 
 	return nil
-}
-
-// enforceNamespaceForInhibitRule modifies the inhibition rule to match alerts
-// originating only from the given namespace.
-func (cb *configBuilder) enforceNamespaceForInhibitRule(ir *inhibitRule, namespace string) *inhibitRule {
-	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
-
-	// Inhibition rule created from AlertmanagerConfig resources should only match
-	// alerts that come from the same namespace.
-	delete(ir.SourceMatchRE, inhibitRuleNamespaceKey)
-	delete(ir.TargetMatchRE, inhibitRuleNamespaceKey)
-
-	if !matchersV2Allowed {
-		ir.SourceMatch[inhibitRuleNamespaceKey] = namespace
-		ir.TargetMatch[inhibitRuleNamespaceKey] = namespace
-
-		return ir
-	}
-
-	v2NamespaceMatcher := monitoringv1alpha1.Matcher{
-		Name:      inhibitRuleNamespaceKey,
-		Value:     namespace,
-		MatchType: monitoringv1alpha1.MatchEqual,
-	}.String()
-
-	if !contains(v2NamespaceMatcher, ir.SourceMatchers) {
-		ir.SourceMatchers = append(ir.SourceMatchers, v2NamespaceMatcher)
-	}
-	if !contains(v2NamespaceMatcher, ir.TargetMatchers) {
-		ir.TargetMatchers = append(ir.TargetMatchers, v2NamespaceMatcher)
-	}
-
-	delete(ir.SourceMatch, inhibitRuleNamespaceKey)
-	delete(ir.TargetMatch, inhibitRuleNamespaceKey)
-
-	return ir
-}
-
-// enforceNamespaceForRoute modifies the route configuration to match alerts
-// originating only from the given namespace.
-func (cb *configBuilder) enforceNamespaceForRoute(r *route, namespace string) *route {
-	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
-
-	// Routes created from AlertmanagerConfig resources should only match
-	// alerts that come from the same namespace.
-	if matchersV2Allowed {
-		r.Matchers = append(r.Matchers, monitoringv1alpha1.Matcher{
-			Name:      "namespace",
-			Value:     namespace,
-			MatchType: monitoringv1alpha1.MatchEqual,
-		}.String())
-	} else {
-		r.Match["namespace"] = namespace
-	}
-
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
-
-	return r
 }
 
 func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
@@ -403,7 +431,6 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 			prefixedMuteTimeIntervals = append(prefixedMuteTimeIntervals, makeNamespacedString(mti, crKey))
 		}
 	}
-
 	return &route{
 		Receiver:          receiver,
 		GroupByStr:        in.GroupBy,
@@ -1049,23 +1076,25 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	}
 
 	if in.Sigv4 != nil {
-		accessKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get access key")
-		}
-
-		secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get AWS secret key")
-
-		}
-
 		out.Sigv4 = sigV4Config{
-			Region:    in.Sigv4.Region,
-			AccessKey: accessKey,
-			SecretKey: secretKey,
-			Profile:   in.Sigv4.Profile,
-			RoleARN:   in.Sigv4.RoleArn,
+			Region:  in.Sigv4.Region,
+			Profile: in.Sigv4.Profile,
+			RoleARN: in.Sigv4.RoleArn,
+		}
+
+		if in.Sigv4.AccessKey != nil && in.Sigv4.SecretKey != nil {
+			accessKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.AccessKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get access key")
+			}
+
+			secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get AWS secret key")
+
+			}
+			out.Sigv4.AccessKey = accessKey
+			out.Sigv4.SecretKey = secretKey
 		}
 	}
 
