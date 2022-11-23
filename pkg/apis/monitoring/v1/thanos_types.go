@@ -219,7 +219,10 @@ type ThanosRulerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
-	// RemoteWriteConfig configures stateless mode in ThanosRuler.
+	// RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+	// If the list is not empty, Thanos Ruler doesn't expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
+	// Note that Thanos Ruler ignores metadata configuration.
+	// See https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write for more details.
 	// RemoteWriteConfig configurations must have the form as specified in the official Prometheus documentation:
 	// https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write
 	// +optional
