@@ -509,7 +509,13 @@ func makeStatefulSetSpec(
 		volumes = append(volumes, volume)
 	}
 
-	for _, name := range ruleConfigMapNames {
+	for index, name := range ruleConfigMapNames {
+		var optional *bool
+		if index == 0 {
+			optional = pointer.Bool(false)
+		} else {
+			optional = pointer.Bool(true)
+		}
 		volumes = append(volumes, v1.Volume{
 			Name: name,
 			VolumeSource: v1.VolumeSource{
@@ -517,7 +523,7 @@ func makeStatefulSetSpec(
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
-					Optional: pointer.Bool(true),
+					Optional: optional,
 				},
 			},
 		})

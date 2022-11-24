@@ -37,13 +37,13 @@ import (
 
 const labelThanosRulerName = "thanos-ruler-name"
 
+var defaultOptionalConfigMaps = 3
+
 // The maximum `Data` size of a ConfigMap seems to differ between
 // environments. This is probably due to different meta data sizes which count
 // into the overall maximum size of a ConfigMap. Thereby lets leave a
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
-
-var defaultOptionalConfigMaps = 3
 
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
@@ -110,7 +110,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return newConfigMapNames, nil
 	}
 
-	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
+	createOrUpdateConfigMaps, deleteConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 
 	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
@@ -125,16 +125,19 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		"namespace", t.Namespace,
 		"thanos", t.Name,
 	)
-	for _, cm := range createConfigMaps {
-		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
+	for _, cm := range createOrUpdateConfigMaps {
+		err = k8sutil.CreateOrUpdateConfigMap(ctx, cClient, &cm)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
+			return nil, errors.Wrapf(err, "failed to createOrUpdate ConfigMap '%v'", cm.Name)
 		}
 	}
-	for _, cm := range updateConfigMaps {
-		_, err = cClient.Update(ctx, &cm, metav1.UpdateOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to update new ConfigMap '%v'", cm.Name)
+
+	// supple configmap number
+	if len(newConfigMaps) < defaultOptionalConfigMaps {
+		for i := len(newConfigMaps); i < defaultOptionalConfigMaps; i++ {
+			name := thanosRuleConfigMapName(t.Name)
+			name = name + "-" + strconv.Itoa(i)
+			newConfigMapNames = append(newConfigMapNames, name)
 		}
 	}
 
@@ -292,15 +295,6 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 		cm := makeRulesConfigMap(t, bucket)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-	}
-
-	// if real cm number less than excepted number
-	if len(buckets) < defaultOptionalConfigMaps {
-		for i := len(buckets); i < defaultOptionalConfigMaps; i++ {
-			cm := makeRulesConfigMap(t, nil)
-			cm.Name = cm.Name + "-" + strconv.Itoa(i)
-			ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-		}
 	}
 
 	return ruleFileConfigMaps, nil

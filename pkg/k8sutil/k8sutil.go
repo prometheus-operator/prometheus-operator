@@ -30,6 +30,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promversion "github.com/prometheus/common/version"
+	errors2 "github.com/thanos-io/thanos/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -386,7 +387,7 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 }
 
 // DiffRulerConfigMap preProvisionRuleConfigMapNumber can't less than newConfigMaps number.
-func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap) (deleteConfigMaps []v1.ConfigMap, createConfigMaps []v1.ConfigMap, updateConfigMaps []v1.ConfigMap) {
+func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap) (createOrUpdateConfigMaps []v1.ConfigMap, deleteConfigMaps []v1.ConfigMap) {
 	sort.Slice(newConfigMaps, func(i, j int) bool {
 		return newConfigMaps[i].Name < newConfigMaps[j].Name
 	})
@@ -397,14 +398,34 @@ func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.Con
 	currentConfigMapsNum := len(currentConfigMaps)
 	newConfigMapsNum := len(newConfigMaps)
 	if newConfigMapsNum >= currentConfigMapsNum {
-		createConfigMaps = newConfigMaps[currentConfigMapsNum:newConfigMapsNum]
-		updateConfigMaps = newConfigMaps[0:currentConfigMapsNum]
+		createOrUpdateConfigMaps = newConfigMaps[0:newConfigMapsNum]
 	}
 
 	if newConfigMapsNum < currentConfigMapsNum {
 		deleteConfigMaps = currentConfigMaps[newConfigMapsNum:currentConfigMapsNum]
-		updateConfigMaps = newConfigMaps
+		createOrUpdateConfigMaps = newConfigMaps
 	}
 
-	return deleteConfigMaps, createConfigMaps, updateConfigMaps
+	return createOrUpdateConfigMaps, deleteConfigMaps
+}
+
+func CreateOrUpdateConfigMap(ctx context.Context, client clientv1.ConfigMapInterface, configMap *v1.ConfigMap) error {
+	cm, err := client.Get(ctx, configMap.Name, metav1.GetOptions{})
+	if err != nil {
+		if IsResourceNotFoundError(err) {
+			_, err = client.Update(ctx, configMap, metav1.UpdateOptions{})
+			if err != nil {
+				return errors2.Wrapf(err, "failed to update ConfigMap '%v'", cm.Name)
+			}
+			return nil
+		} else {
+			return err
+		}
+	}
+	_, err = client.Create(ctx, configMap, metav1.CreateOptions{})
+	if err != nil {
+		return errors2.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
+	}
+	return nil
+
 }

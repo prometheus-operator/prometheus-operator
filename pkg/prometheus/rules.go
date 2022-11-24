@@ -110,7 +110,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return newConfigMapNames, nil
 	}
 
-	deleteConfigMaps, createConfigMaps, updateConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
+	createOrUpdateConfigMaps, deleteConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 
 	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
@@ -125,20 +125,21 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
-	for _, cm := range createConfigMaps {
-		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
+	for _, cm := range createOrUpdateConfigMaps {
+		err = k8sutil.CreateOrUpdateConfigMap(ctx, cClient, &cm)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
+			return nil, errors.Wrapf(err, "failed to createOrUpdate ConfigMap '%v'", cm.Name)
 		}
 	}
 
-	for _, cm := range updateConfigMaps {
-		_, err = cClient.Update(ctx, &cm, metav1.UpdateOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to update ConfigMap '%v'", cm.Name)
+	// supple configmap number
+	if len(newConfigMaps) < defaultOptionalConfigMaps {
+		for i := len(newConfigMaps); i < defaultOptionalConfigMaps; i++ {
+			name := prometheusRuleConfigMapName(p.Name)
+			name = name + "-" + strconv.Itoa(i)
+			newConfigMapNames = append(newConfigMapNames, name)
 		}
 	}
-
 	return newConfigMapNames, nil
 }
 
@@ -294,15 +295,6 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 		cm := makeRulesConfigMap(p, bucket)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-	}
-
-	// if real cm number less than excepted number
-	if len(buckets) < defaultOptionalConfigMaps {
-		for i := len(buckets); i < defaultOptionalConfigMaps; i++ {
-			cm := makeRulesConfigMap(p, nil)
-			cm.Name = cm.Name + "-" + strconv.Itoa(i)
-			ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
-		}
 	}
 
 	return ruleFileConfigMaps, nil
