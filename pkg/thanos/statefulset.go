@@ -552,7 +552,7 @@ func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpecV2
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 			{Key: "name", Value: spec.Name},
-			{Key: "follow_redirects", Value: spec},
+			{Key: "follow_redirects", Value: spec.FollowRedirects},
 		}
 
 		if spec.RemoteTimeout != "" {

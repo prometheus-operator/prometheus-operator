@@ -581,6 +581,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
+			Version:        "2.6.0",
 			QueryEndpoints: emptyQueryEndpoints,
 			RemoteWriteConfig: []monitoringv1.RemoteWriteSpecV2{
 				{
@@ -605,7 +606,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 
 	{
 		var containsArgConfigs bool
-		expectedArgConfigs := "--remote-write.config=remote_write:\n- url: http://example.com\n  remote_timeout: 30s\n  name: \"\"\n  queue_config:\n    capacity: 1000\n    min_shards: 1\n    max_shards: 10\n    max_samples_per_send: 100\n    batch_send_deadline: 20s\n    min_backoff: 1s\n    max_backoff: 10s\n"
+		expectedArgConfigs := "--remote-write.config=remote_write:\n- url: http://example.com\n  name: \"\"\n  follow_redirects: false\n  queue_config:\n    capacity: 1000\n    min_shards: 1\n    max_shards: 10\n    max_samples_per_send: 100\n    batch_send_deadline: 20s\n    min_backoff: 1s\n    max_backoff: 10s\n"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
