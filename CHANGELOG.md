@@ -1,4 +1,8 @@
-## 0.61.1 / 2022-11-16
+## 0.61.1 / 2022-11-24
+
+* [BUGFIX] Fixed a regression that caused the ThanosRuler statefulsets to be stuck after upgrading the operator to v0.61.0. #5183
+
+## 0.61.0 / 2022-11-16
 
 * [CHANGE] Updated `RuleGroup` description and add validation for the CRD. #5072
 * [CHANGE] Removed validations in the operator that are already covered at the CRD level. #5108
