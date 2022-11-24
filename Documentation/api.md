@@ -10043,8 +10043,7 @@ string
 </em>
 </td>
 <td>
-<p>contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
-The URL of the endpoint to send samples to.</p>
+<p>The URL of the endpoint to send samples to.</p>
 </td>
 </tr>
 <tr>
@@ -10274,8 +10273,7 @@ string
 </em>
 </td>
 <td>
-<p>contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
-The URL of the endpoint to send samples to.</p>
+<p>The URL of the endpoint to send samples to.</p>
 </td>
 </tr>
 <tr>

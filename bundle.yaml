@@ -17981,9 +17981,7 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: contains all the fields from RemoteWriteSpec except
-                        BearerToken and BearerTokenFile The URL of the endpoint to
-                        send samples to.
+                      description: The URL of the endpoint to send samples to.
                       type: string
                     writeRelabelConfigs:
                       description: The list of remote write relabel configurations.
@@ -26232,9 +26230,7 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     url:
-                      description: contains all the fields from RemoteWriteSpec except
-                        BearerToken and BearerTokenFile The URL of the endpoint to
-                        send samples to.
+                      description: The URL of the endpoint to send samples to.
                       type: string
                   required:
                   - url

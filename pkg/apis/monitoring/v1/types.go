@@ -1038,7 +1038,6 @@ type RemoteWriteSpec struct {
 
 // RemoteWriteSpecV2 thanos ruler remote write spec
 type RemoteWriteSpecV2 struct {
-	// contains all the fields from RemoteWriteSpec except BearerToken and BearerTokenFile
 	// The URL of the endpoint to send samples to.
 	URL string `json:"url"`
 	// The name of the remote write queue, it must be unique if specified. The
