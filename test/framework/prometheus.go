@@ -108,7 +108,9 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 	url string, prwtc PromRemoteWriteTestConfig) {
 
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL: url,
+		RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
+			URL: url,
+		},
 	}}
 
 	if (prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "") || prwtc.CA.ResourceName != "" {
