@@ -1775,8 +1775,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 	if p.Spec.Alerting != nil {
 		for i, am := range p.Spec.Alerting.Alertmanagers {
+			if err := store.AddBasicAuth(ctx, p.GetNamespace(), am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+				return errors.Wrapf(err, "alerting")
+			}
 			if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
-				return errors.Wrapf(err, "apiserver config")
+				return errors.Wrapf(err, "alerting")
 			}
 		}
 	}
