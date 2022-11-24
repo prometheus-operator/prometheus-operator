@@ -130,7 +130,7 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	}
 
 	if len(configMaps) != 3 {
-		t.Fatalf("expected one ConfigMaps but got %v", len(configMaps))
+		t.Fatalf("expected three ConfigMaps but got %v", len(configMaps))
 	}
 }
 
