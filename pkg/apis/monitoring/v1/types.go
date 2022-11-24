@@ -719,14 +719,15 @@ type StorageSpec struct {
 	// Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary.
 	// DisableMountSubPath allows to remove any subPath usage in volume mounts.
 	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
-	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+	// EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
 	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
-	// EphemeralVolumeSource to be used by the Prometheus StatefulSets.
+	// EphemeralVolumeSource to be used by the StatefulSet.
 	// This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 	// More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes
 	Ephemeral *v1.EphemeralVolumeSource `json:"ephemeral,omitempty"`
-	// A PVC spec to be used by the Prometheus StatefulSets.
+	// A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
+	// (for whatever reason) is to use a label selector alongside manually created PersistentVolumes.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
