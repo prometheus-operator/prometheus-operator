@@ -56,7 +56,9 @@ automatic injection of the CA bundle).
 While installing cert-manager is beyond the scope of this guide, below is an
 example of a `Certificate` object which triggers the creation of the
 `admission-webhook-certs` secret using a [SelfSigned
-issuer](https://cert-manager.io/docs/configuration/selfsigned/).
+issuer](https://cert-manager.io/docs/configuration/selfsigned/). The
+certificate is valid for the Kubernetes service
+`prometheus-operator-admission-webhook` in the `default` namespace.
 
 ```yaml
 apiVersion: cert-manager.io/v1
