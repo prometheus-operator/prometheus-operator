@@ -17,7 +17,7 @@ The admission webhook service is able to
 * Validate requests ensuring that `PrometheusRule` and `AlertmanagerConfig` objects
   are semantically valid.
 * Mutate requests enforcing that all annotations of `PrometheusRule` objects are
-  coerced into string values (.
+  coerced into string values.
 * Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
 
 This guide assumes that you have already [deployed the Prometheus
