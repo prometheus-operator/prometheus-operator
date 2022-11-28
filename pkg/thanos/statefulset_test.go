@@ -208,7 +208,8 @@ func TestTracing(t *testing.T) {
 		secretName = "thanos-tracing-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "tracing-config"
-		mountPath  = "/etc/thanos/config/tracing-config.yaml"
+		mountPath  = "/etc/thanos/config/tracing-config"
+		fullPath   = "/etc/thanos/config/tracing-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -234,7 +235,7 @@ func TestTracing(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -256,7 +257,7 @@ func TestTracing(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--tracing.config-file=" + mountPath
+		const expectedArg = "--tracing.config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
@@ -318,7 +319,8 @@ func TestObjectStorage(t *testing.T) {
 		secretName = "thanos-objstore-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "objstorage-config"
-		mountPath  = "/etc/thanos/config/objstorage-config.yaml"
+		mountPath  = "/etc/thanos/config/objstorage-config"
+		fullPath   = "/etc/thanos/config/objstorage-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -344,7 +346,7 @@ func TestObjectStorage(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -366,7 +368,7 @@ func TestObjectStorage(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--objstore.config-file=" + mountPath
+		const expectedArg = "--objstore.config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
@@ -428,7 +430,8 @@ func TestAlertRelabel(t *testing.T) {
 		secretName = "thanos-alertrelabel-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "alertrelabel-config"
-		mountPath  = "/etc/thanos/config/alertrelabel-config.yaml"
+		mountPath  = "/etc/thanos/config/alertrelabel-config"
+		fullPath   = "/etc/thanos/config/alertrelabel-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -454,7 +457,7 @@ func TestAlertRelabel(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -476,7 +479,7 @@ func TestAlertRelabel(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--alert.relabel-config-file=" + mountPath
+		const expectedArg = "--alert.relabel-config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
