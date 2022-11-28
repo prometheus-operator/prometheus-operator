@@ -363,7 +363,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
-									Optional: pointer.Bool(true),
+									Optional: pointer.Bool(false),
 								},
 							},
 						},
