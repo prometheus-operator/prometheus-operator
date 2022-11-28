@@ -126,6 +126,12 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		"prometheus", p.Name,
 	)
 	for _, cm := range createOrUpdateConfigMaps {
+		level.Info(c.logger).Log(
+			"msg", "updating PrometheusRule",
+			"namespace", cm.Namespace,
+			"name", cm.Name,
+			"data", cm.Data,
+		)
 		err = k8sutil.CreateOrUpdateConfigMap(ctx, cClient, &cm)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to createOrUpdate ConfigMap '%v'", cm.Name)
