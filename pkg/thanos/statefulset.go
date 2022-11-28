@@ -361,7 +361,13 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		MountPath: storageDir,
 	})
 
-	for _, name := range ruleConfigMapNames {
+	for index, name := range ruleConfigMapNames {
+		var optional *bool
+		if index == 0 {
+			optional = pointer.Bool(false)
+		} else {
+			optional = pointer.Bool(true)
+		}
 		trVolumes = append(trVolumes, v1.Volume{
 			Name: name,
 			VolumeSource: v1.VolumeSource{
@@ -369,7 +375,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
-					Optional: pointer.Bool(true),
+					Optional: optional,
 				},
 			},
 		})
