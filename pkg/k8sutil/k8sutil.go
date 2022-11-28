@@ -413,7 +413,7 @@ func CreateOrUpdateConfigMap(ctx context.Context, client clientv1.ConfigMapInter
 	cm, err := client.Get(ctx, configMap.Name, metav1.GetOptions{})
 	if err != nil {
 		if IsResourceNotFoundError(err) {
-			_, err = client.Update(ctx, configMap, metav1.UpdateOptions{})
+			_, err = client.Create(ctx, configMap, metav1.CreateOptions{})
 			if err != nil {
 				return errors2.Wrapf(err, "failed to update ConfigMap '%v'", cm.Name)
 			}
@@ -421,7 +421,7 @@ func CreateOrUpdateConfigMap(ctx context.Context, client clientv1.ConfigMapInter
 		}
 		return err
 	}
-	_, err = client.Create(ctx, configMap, metav1.CreateOptions{})
+	_, err = client.Update(ctx, configMap, metav1.UpdateOptions{})
 	if err != nil {
 		return errors2.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
 	}

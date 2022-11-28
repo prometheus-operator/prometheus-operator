@@ -130,7 +130,7 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 		t.Fatalf("expected no error but got: %v", err.Error())
 	}
 
-	if len(configMaps) != 3 {
+	if len(configMaps) != 1 {
 		t.Fatalf("expected three ConfigMaps but got %v", len(configMaps))
 	}
 }
@@ -160,11 +160,11 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 		t.Fatalf("expected no error but got: %v", err)
 	}
 
-	if len(configMaps) != 3 {
+	if len(configMaps) != 2 {
 		t.Fatalf("expected rule files to be split up into three ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 
-	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] || len(configMaps[2].Data) != 0 {
+	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
 		t.Fatal("expected ConfigMap data to match rule file content")
 	}
 }
@@ -187,7 +187,7 @@ func shouldSplitUpLargeSmallIntoFour(t *testing.T) {
 		t.Fatalf("expected rule files to be split up into three ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 
-	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] || configMaps[0].Data["three"] != ruleFiles["three"] || configMaps[0].Data["four"] != ruleFiles["four"] {
+	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[2].Data["second"] != ruleFiles["second"] || configMaps[3].Data["three"] != ruleFiles["three"] || configMaps[1].Data["four"] != ruleFiles["four"] {
 		t.Fatal("expected ConfigMap data to match rule file content")
 	}
 }
