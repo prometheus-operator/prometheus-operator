@@ -418,14 +418,12 @@ func CreateOrUpdateConfigMap(ctx context.Context, client clientv1.ConfigMapInter
 				return errors2.Wrapf(err, "failed to update ConfigMap '%v'", cm.Name)
 			}
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 	_, err = client.Create(ctx, configMap, metav1.CreateOptions{})
 	if err != nil {
 		return errors2.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
 	}
 	return nil
-
 }
