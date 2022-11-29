@@ -140,7 +140,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 // the updated slice.
 func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
 	if cg.notCompatible {
-		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", k))
+		cg.Warn(k)
 		return m
 	}
 
@@ -159,13 +159,13 @@ func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, 
 }
 
 // IsCompatible return true or false depending if the version being used is compatible
-func (cg *ConfigGenerator) IsCompatible(name string) bool {
-	if cg.notCompatible {
-		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", name))
-		return false
-	}
+func (cg *ConfigGenerator) IsCompatible() bool {
+	return !cg.notCompatible
+}
 
-	return true
+// Warn logs a warning.
+func (cg *ConfigGenerator) Warn(field string) {
+	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
 }
 
 type limitKey struct {

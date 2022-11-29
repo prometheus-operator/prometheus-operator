@@ -28,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/pkg/errors"
 
@@ -99,6 +98,7 @@ func makeStatefulSet(
 	name string,
 	p monitoringv1.Prometheus,
 	config *operator.Config,
+	cg *ConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
@@ -116,7 +116,7 @@ func makeStatefulSet(
 		p.Spec.Replicas = &intZero
 	}
 
-	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(logger, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -300,6 +300,7 @@ func makeStatefulSetSpec(
 	logger log.Logger,
 	p monitoringv1.Prometheus,
 	c *operator.Config,
+	cg *ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
 	tlsAssetSecrets []string,
@@ -307,10 +308,6 @@ func makeStatefulSetSpec(
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
-	cg, err := NewConfigGenerator(logger, &p, false)
-	if err != nil {
-		return nil, err
-	}
 
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
 	pImagePath, err := operator.BuildImagePath(
@@ -324,13 +321,8 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse prometheus version")
-	}
-
-	if version.Major != 2 {
-		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
+	if cg.version.Major != 2 {
+		return nil, errors.Errorf("unsupported Prometheus major version %s", cg.version)
 	}
 
 	promArgs := []monitoringv1.Argument{
@@ -338,15 +330,22 @@ func makeStatefulSetSpec(
 		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
 	}
 
-	retentionTimeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention", Value: defaultRetention}
-	if version.GTE(semver.MustParse("2.7.0")) {
-		retentionTimeFlag.Name = "storage.tsdb.retention.time"
+	var (
+		retentionTimeFlagName  = "storage.tsdb.retention.time"
+		retentionTimeFlagValue = string(p.Spec.Retention)
+	)
+	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
+		retentionTimeFlagName = "storage.tsdb.retention"
+		if p.Spec.Retention == "" {
+			retentionTimeFlagValue = defaultRetention
+		}
+	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+		retentionTimeFlagValue = defaultRetention
 	}
-	if p.Spec.Retention != "" {
-		retentionTimeFlag.Value = string(p.Spec.Retention)
-	}
-	promArgs = append(promArgs, retentionTimeFlag)
 
+	if retentionTimeFlagValue != "" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
+	}
 	if p.Spec.RetentionSize != "" {
 		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
@@ -421,15 +420,15 @@ func makeStatefulSetSpec(
 	}
 
 	if p.Spec.WALCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
 		if *p.Spec.WALCompression {
-			promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.wal-compression"})
-		} else {
-			promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"})
+			arg.Name = "storage.tsdb.wal-compression"
 		}
+		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
 
 	if p.Spec.AllowOverlappingBlocks {
-		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
+		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
 	}
 
 	var ports []v1.ContainerPort
@@ -534,16 +533,17 @@ func makeStatefulSetSpec(
 		promVolumeMounts = append(promVolumeMounts, vmount)
 	}
 
-	var fields monitoringv1.WebConfigFileFields
-	if p.Spec.Web != nil && cg.WithMinimumVersion("2.24.0").IsCompatible("web.config.file") {
-		fields = p.Spec.Web.WebConfigFileFields
-	}
-
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 2.24.0.
 	// With this we avoid redeploying prometheus when reconfiguring between
 	// HTTP and HTTPS and vice-versa.
-	if version.GTE(semver.MustParse("2.24.0")) {
+	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
+	if webConfigGenerator.IsCompatible() {
+		var fields monitoringv1.WebConfigFileFields
+		if p.Spec.Web != nil {
+			fields = p.Spec.Web.WebConfigFileFields
+		}
+
 		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), fields)
 		if err != nil {
 			return nil, err
@@ -556,6 +556,8 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
+	} else if p.Spec.Web != nil {
+		webConfigGenerator.Warn("web.config.file")
 	}
 
 	// Mount related secrets
@@ -632,7 +634,7 @@ func makeStatefulSetSpec(
 			Path: probePath,
 			Port: intstr.FromString(p.Spec.PortName),
 		}
-		if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+		if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && webConfigGenerator.IsCompatible() {
 			handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 		}
 		return handler
@@ -668,7 +670,7 @@ func makeStatefulSetSpec(
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": version.String(),
+		"app.kubernetes.io/version": cg.version.String(),
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing

@@ -1166,8 +1166,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	if err != nil {
+		return err
+	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, p, ruleConfigMapNames, assetStore); err != nil {
+	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, ruleConfigMapNames, assetStore); err != nil {
 		return errors.Wrap(err, "creating config failed")
 	}
 
@@ -1220,7 +1224,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return err
 		}
 
-		sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, cg, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1682,7 +1686,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 	return nil, nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assets.Store) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *ConfigGenerator, ruleConfigMapNames []string, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1795,11 +1799,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	additionalAlertManagerConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
-	}
-
-	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
-	if err != nil {
-		return err
 	}
 
 	// Update secret based on the most recent configuration.
