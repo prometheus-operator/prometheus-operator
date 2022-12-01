@@ -88,6 +88,10 @@ func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
 		return errors.New("'mute_time_intervals' not permitted on root route")
 	}
 
+	if len(rootRoute.ActiveTimeIntervals) > 0 {
+		return errors.New("'active_time_intervals' not permitted on root route")
+	}
+
 	return nil
 }
 
@@ -431,18 +435,27 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 			prefixedMuteTimeIntervals = append(prefixedMuteTimeIntervals, makeNamespacedString(mti, crKey))
 		}
 	}
+
+	var prefixedActiveTimeIntervals []string
+	if len(in.ActiveTimeIntervals) > 0 {
+		for _, ati := range in.ActiveTimeIntervals {
+			prefixedActiveTimeIntervals = append(prefixedActiveTimeIntervals, makeNamespacedString(ati, crKey))
+		}
+	}
+
 	return &route{
-		Receiver:          receiver,
-		GroupByStr:        in.GroupBy,
-		GroupWait:         in.GroupWait,
-		GroupInterval:     in.GroupInterval,
-		RepeatInterval:    in.RepeatInterval,
-		Continue:          in.Continue,
-		Match:             match,
-		MatchRE:           matchRE,
-		Matchers:          matchers,
-		Routes:            routes,
-		MuteTimeIntervals: prefixedMuteTimeIntervals,
+		Receiver:            receiver,
+		GroupByStr:          in.GroupBy,
+		GroupWait:           in.GroupWait,
+		GroupInterval:       in.GroupInterval,
+		RepeatInterval:      in.RepeatInterval,
+		Continue:            in.Continue,
+		Match:               match,
+		MatchRE:             matchRE,
+		Matchers:            matchers,
+		Routes:              routes,
+		MuteTimeIntervals:   prefixedMuteTimeIntervals,
+		ActiveTimeIntervals: prefixedActiveTimeIntervals,
 	}
 }
 
@@ -662,7 +675,6 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 			}
 
 			if a.ConfirmField != nil {
-
 				action.ConfirmField = &slackConfirmationField{
 					Text:        a.ConfirmField.Text,
 					Title:       a.ConfirmField.Title,
@@ -836,7 +848,6 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 }
 
 func (cb *configBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
-
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
 		APIURL:        in.APIURL,
@@ -1100,6 +1111,7 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 
 	return out, nil
 }
+
 func (cb *configBuilder) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) *inhibitRule {
 	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
 	var sourceMatchers []string
@@ -1578,7 +1590,6 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	return poc.HTTPConfig.sanitize(amVersion, logger)
-
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) error {

@@ -662,7 +662,6 @@ inhibit_rules:
 				case <-done:
 					return
 				}
-
 			}
 		}()
 	}
@@ -1016,7 +1015,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 							},
 						},
 						TopicARN: "test-topicARN",
-					}},
+					},
+				},
 			}},
 		},
 	}
@@ -1107,6 +1107,46 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 							},
 							Years: []monitoringv1alpha1.YearRange{
 								"2030:2050",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	// A valid AlertmanagerConfig resource with active time intervals.
+	configCR = &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "e2e-test-amconfig-active-ti",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver:            "e2e",
+				Matchers:            []monitoringv1alpha1.Matcher{},
+				ActiveTimeIntervals: []string{"weekend"},
+				Continue:            true,
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+					URL: func(s string) *string {
+						return &s
+					}("http://test.url"),
+				}},
+			}},
+			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+				{
+					Name: "weekend",
+					TimeIntervals: []monitoringv1alpha1.TimeInterval{
+						{
+							Weekdays: []monitoringv1alpha1.WeekdayRange{
+								"Saturday",
+								"Sunday",
 							},
 						},
 					},
@@ -1233,6 +1273,12 @@ route:
   group_by:
   - job
   routes:
+  - receiver: %s/e2e-test-amconfig-active-ti/e2e
+    matchers:
+    - namespace="%s"
+    continue: true
+    active_time_intervals:
+    - %s/e2e-test-amconfig-active-ti/weekend
   - receiver: %s/e2e-test-amconfig-many-receivers/e2e
     matchers:
     - namespace="%s"
@@ -1267,6 +1313,9 @@ route:
   repeat_interval: 12h
 receivers:
 - name: "null"
+- name: %s/e2e-test-amconfig-active-ti/e2e
+  webhook_configs:
+  - url: http://test.url
 - name: %v/e2e-test-amconfig-many-receivers/e2e
   opsgenie_configs:
   - api_key: 1234abc
@@ -1317,6 +1366,9 @@ receivers:
   webhook_configs:
   - url: http://test.url
 mute_time_intervals:
+- name: %s/e2e-test-amconfig-active-ti/weekend
+  time_intervals:
+  - weekdays: [saturday, sunday]
 - name: %s/e2e-test-amconfig-sub-routes/test
   time_intervals:
   - times:
@@ -1327,7 +1379,7 @@ mute_time_intervals:
     months: ["1:3"]
     years: ['2030:2050']
 templates: []
-`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
+`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
 		if err != nil {
@@ -1469,7 +1521,6 @@ inhibit_rules:
 
 		return true, nil
 	})
-
 	if err != nil {
 		t.Fatalf("%v: %v", err, lastErr)
 	}
