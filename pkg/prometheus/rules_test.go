@@ -130,7 +130,7 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	}
 
 	if len(configMaps) != 1 {
-		t.Fatalf("expected three ConfigMaps but got %v", len(configMaps))
+		t.Fatalf("expected one ConfigMaps but got %v", len(configMaps))
 	}
 }
 
@@ -160,7 +160,7 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	}
 
 	if len(configMaps) != 2 {
-		t.Fatalf("expected rule files to be split up into three ConfigMaps, but got '%v' instead", len(configMaps))
+		t.Fatalf("expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 
 	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
