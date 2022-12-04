@@ -781,6 +781,7 @@ func makeStatefulSetSpec(
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
+			ImagePullPolicy:          p.Spec.ImagePullPolicy,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: &boolFalse,
@@ -922,6 +923,7 @@ func makeStatefulSetSpec(
 			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.Shard(shard),
+			operator.ImagePullPolicy(p.Spec.ImagePullPolicy),
 		),
 	)
 
@@ -942,6 +944,7 @@ func makeStatefulSetSpec(
 		{
 			Name:                     "prometheus",
 			Image:                    pImagePath,
+			ImagePullPolicy:          p.Spec.ImagePullPolicy,
 			Ports:                    ports,
 			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
@@ -974,6 +977,7 @@ func makeStatefulSetSpec(
 			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(shard),
+			operator.ImagePullPolicy(p.Spec.ImagePullPolicy),
 		),
 	}, additionalContainers...)
 

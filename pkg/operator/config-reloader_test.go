@@ -22,11 +22,12 @@ import (
 )
 
 var reloaderConfig = ReloaderConfig{
-	CPURequest:    "100m",
-	CPULimit:      "100m",
-	MemoryRequest: "50Mi",
-	MemoryLimit:   "50Mi",
-	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+	CPURequest:      "100m",
+	CPULimit:        "100m",
+	MemoryRequest:   "50Mi",
+	MemoryLimit:     "50Mi",
+	Image:           "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+	ImagePullPolicy: "Always",
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
@@ -40,6 +41,9 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	}
 	if !contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
+	}
+	if container.ImagePullPolicy != "Always" {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", reloaderConfig.ImagePullPolicy, container.ImagePullPolicy)
 	}
 }
 

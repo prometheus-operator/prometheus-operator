@@ -68,6 +68,10 @@ type ThanosRulerSpec struct {
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// Thanos container image URL.
 	Image string `json:"image,omitempty"`
+	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling thanos images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod

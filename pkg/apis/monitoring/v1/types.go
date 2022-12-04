@@ -96,6 +96,10 @@ type CommonPrometheusFields struct {
 	// Prometheus Operator knows what version of Prometheus is being
 	// configured.
 	Image *string `json:"image,omitempty"`
+	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -1897,6 +1901,10 @@ type AlertmanagerSpec struct {
 	// Prometheus Operator knows what version of Alertmanager is being
 	// configured.
 	Image *string `json:"image,omitempty"`
+	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.

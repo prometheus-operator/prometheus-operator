@@ -7195,6 +7195,16 @@ spec:
                   to ensure the Prometheus Operator knows what version of Alertmanager
                   is being configured.
                 type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'prometheus', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
+                type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
                   namespace to use for pulling prometheus and alertmanager images
@@ -15655,6 +15665,16 @@ spec:
                   and sha combinations. Specifying the version is still necessary
                   to ensure the Prometheus Operator knows what version of Prometheus
                   is being configured.
+                type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'prometheus', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
                 type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
@@ -24814,6 +24834,16 @@ spec:
                 x-kubernetes-list-type: map
               image:
                 description: Thanos container image URL.
+                type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'prometheus', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
                 type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same

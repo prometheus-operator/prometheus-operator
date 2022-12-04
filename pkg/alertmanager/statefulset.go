@@ -652,14 +652,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	defaultContainers := []v1.Container{
 		{
-			Args:           amArgs,
-			Name:           "alertmanager",
-			Image:          amImagePath,
-			Ports:          ports,
-			VolumeMounts:   amVolumeMounts,
-			LivenessProbe:  livenessProbe,
-			ReadinessProbe: readinessProbe,
-			Resources:      a.Spec.Resources,
+			Args:            amArgs,
+			Name:            "alertmanager",
+			Image:           amImagePath,
+			ImagePullPolicy: a.Spec.ImagePullPolicy,
+			Ports:           ports,
+			VolumeMounts:    amVolumeMounts,
+			LivenessProbe:   livenessProbe,
+			ReadinessProbe:  readinessProbe,
+			Resources:       a.Spec.Resources,
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
