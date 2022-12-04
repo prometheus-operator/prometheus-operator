@@ -386,7 +386,7 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 	return to
 }
 
-// DiffRulerConfigMap preProvisionRuleConfigMapNumber can't less than newConfigMaps number.
+// DiffRulerConfigMap find difference between currentConfigMaps and newConfigMaps.
 func DiffRulerConfigMap(currentConfigMaps []v1.ConfigMap, newConfigMaps []v1.ConfigMap) (createOrUpdateConfigMaps []v1.ConfigMap, deleteConfigMaps []v1.ConfigMap) {
 	sort.Slice(newConfigMaps, func(i, j int) bool {
 		return newConfigMaps[i].Name < newConfigMaps[j].Name

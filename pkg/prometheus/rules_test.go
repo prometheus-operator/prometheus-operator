@@ -30,7 +30,6 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldReturnAtLeastOneConfigMap", shouldReturnAtLeastOneConfigMap)
 	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
-	t.Run("ShouldSplitUpLargeSmallIntoFour", shouldSplitUpLargeSmallIntoFour)
 	t.Run("ShouldAcceptValidRule", shouldAcceptValidRule)
 	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
@@ -165,29 +164,6 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	}
 
 	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
-		t.Fatal("expected ConfigMap data to match rule file content")
-	}
-}
-
-func shouldSplitUpLargeSmallIntoFour(t *testing.T) {
-	p := &monitoringv1.Prometheus{}
-	ruleFiles := map[string]string{}
-
-	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
-	ruleFiles["second"] = strings.Repeat("a", maxConfigMapDataSize)
-	ruleFiles["three"] = strings.Repeat("a", maxConfigMapDataSize)
-	ruleFiles["four"] = "a"
-
-	configMaps, err := makeRulesConfigMaps(p, ruleFiles)
-	if err != nil {
-		t.Fatalf("expected no error but got: %v", err)
-	}
-
-	if len(configMaps) != 4 {
-		t.Fatalf("expected rule files to be split up into three ConfigMaps, but got '%v' instead", len(configMaps))
-	}
-
-	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[2].Data["second"] != ruleFiles["second"] || configMaps[3].Data["three"] != ruleFiles["three"] || configMaps[1].Data["four"] != ruleFiles["four"] {
 		t.Fatal("expected ConfigMap data to match rule file content")
 	}
 }
