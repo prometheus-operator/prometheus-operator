@@ -132,7 +132,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		}
 	}
 
-	// supple configmap volumemount, at least `default` number of rule configmaps.
+	// supple configmap volumeMount number, at least `default` number of rule configmaps mount.
 	if len(newConfigMaps) < defaultOptionalConfigMaps {
 		for i := len(newConfigMaps); i < defaultOptionalConfigMaps; i++ {
 			name := prometheusRuleConfigMapName(p.Name)

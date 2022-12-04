@@ -112,7 +112,6 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 
 	createOrUpdateConfigMaps, deleteConfigMaps := k8sutil.DiffRulerConfigMap(currentConfigMaps, newConfigMaps)
 
-	// replaced by logic that only deletes obsolete ConfigMaps.
 	for _, cm := range deleteConfigMaps {
 		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
 		if err != nil {
@@ -132,7 +131,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		}
 	}
 
-	// supple configmap number
+	// supple configmap volumeMount number, at least `default` number of rule configmaps mount.
 	if len(newConfigMaps) < defaultOptionalConfigMaps {
 		for i := len(newConfigMaps); i < defaultOptionalConfigMaps; i++ {
 			name := thanosRuleConfigMapName(t.Name)
