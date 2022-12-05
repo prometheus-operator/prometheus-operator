@@ -813,7 +813,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.GlobalPodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -1305,7 +1305,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.GlobalPodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
