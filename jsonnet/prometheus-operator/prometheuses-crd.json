@@ -2661,6 +2661,13 @@
                     "description": "The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name.",
                     "type": "string"
                   },
+                  "globalPodTargetLabels": {
+                    "description": "GlobalPodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "hostAliases": {
                     "description": "Pods' hostAliases configuration",
                     "items": {

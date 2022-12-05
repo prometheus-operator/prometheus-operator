@@ -213,7 +213,6 @@ scrape_configs: []
 				t.Log(pretty.Compare(tc.Expected, result))
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -484,7 +483,6 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -605,7 +603,6 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -718,7 +715,6 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -825,7 +821,6 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -940,7 +935,6 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1089,7 +1083,6 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1166,6 +1159,7 @@ scrape_configs:
 		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
 	}
 }
+
 func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1237,7 +1231,6 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1730,7 +1723,6 @@ alerting:
 		fmt.Println(pretty.Compare(expected, result))
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
-
 }
 
 func TestAlertmanagerTimeoutConfig(t *testing.T) {
@@ -1940,7 +1932,6 @@ alerting:
 		},
 	} {
 		t.Run(fmt.Sprintf("%s TestAlertmanagerEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
-
 			p := &monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -6094,7 +6085,8 @@ remote_read:
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key"},
+								Name: "key",
+							},
 						},
 					},
 				},
@@ -6152,7 +6144,8 @@ remote_read:
 					},
 					TokenAssets: map[string]assets.Token{
 						"remoteRead/auth/0": assets.Token("secret"),
-					}},
+					},
+				},
 				nil,
 				nil,
 				nil,
@@ -6171,7 +6164,6 @@ remote_read:
 				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -6383,7 +6375,8 @@ remote_write:
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key"},
+								Name: "key",
+							},
 						},
 					},
 				},
@@ -6467,7 +6460,8 @@ remote_write:
     send: false
     send_interval: 1m
 `,
-		}, {
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
@@ -6576,7 +6570,8 @@ remote_write:
 				},
 				TokenAssets: map[string]assets.Token{
 					"remoteWrite/auth/0": assets.Token("secret"),
-				}}
+				},
+			}
 			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
 				store.SigV4Assets = map[string]assets.SigV4Credentials{
 					"remoteWrite/0": {
@@ -6609,7 +6604,6 @@ remote_write:
 				t.Logf("\n%s", diff)
 				t.Fatal("expected Prometheus configuration and actual configuration do not match")
 			}
-
 		})
 	}
 }
@@ -9057,6 +9051,7 @@ scrape_configs: []
 		})
 	}
 }
+
 func TestTSDBConfig(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
