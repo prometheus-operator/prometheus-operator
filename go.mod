@@ -43,7 +43,7 @@ require (
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.1.2
+	github.com/cespare/xxhash/v2 v2.2.0
 	golang.org/x/net v0.2.0
 )
 
