@@ -513,7 +513,7 @@ func makeStatefulSetSpec(
 		optional := pointer.Bool(true)
 		if index == 0 {
 			optional = pointer.Bool(false)
-		} 
+		}
 		volumes = append(volumes, v1.Volume{
 			Name: name,
 			VolumeSource: v1.VolumeSource{
