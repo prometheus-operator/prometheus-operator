@@ -1189,7 +1189,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
-	expected := expectedStatefulSetShardNames(p)
+	expected := expectedStatefulSetShardNames(p, c.config)
 	for shard, ssetName := range expected {
 		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		level.Debug(logger).Log("msg", "reconciling statefulset")
@@ -1337,7 +1337,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		messages []string
 	)
 
-	for shard := range expectedStatefulSetShardNames(p) {
+	for shard := range expectedStatefulSetShardNames(p, c.config) {
 		ssetName := prometheusKeyToStatefulSetKey(key, shard)
 		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
 
@@ -1629,11 +1629,11 @@ func newStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, s
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
 // TODO(simonpasquier): remove once the status subresource is considered stable.
-func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (monitoringv1.PrometheusStatus, []v1.Pod, error) {
+func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus, config operator.Config) (monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	var oldPods []v1.Pod
-	for _, ssetName := range expectedStatefulSetShardNames(p) {
+	for _, ssetName := range expectedStatefulSetShardNames(p, config) {
 		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
 		if err != nil {
 			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
@@ -1837,9 +1837,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (*operator.ShardedSecret, error) {
 	labels := c.config.Labels.Merge(managedByOperatorLabels)
-	template := newTLSAssetSecret(p, labels)
+	template := newTLSAssetSecret(p, labels, c.config)
 
-	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(p.Name))
+	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(p.Name, c.config))
 
 	for k, v := range store.TLSAssets {
 		sSecret.AppendData(k.String(), []byte(v))
@@ -1856,11 +1856,11 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitor
 	return sSecret, nil
 }
 
-func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1.Secret {
+func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string, config operator.Config) *v1.Secret {
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   tlsAssetsSecretName(p.Name),
+			Name:   tlsAssetsSecretName(p.Name, config),
 			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -1887,7 +1887,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	webConfig, err := webconfig.New(
 		webConfigDir,
-		webConfigSecretName(p.Name),
+		webConfigSecretName(p.Name, c.config),
 		fields,
 	)
 	if err != nil {

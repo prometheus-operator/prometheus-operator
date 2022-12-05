@@ -329,7 +329,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							Name: "config",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName: configSecretName("volume-init-test"),
+									SecretName: configSecretName("volume-init-test", operator.Config{}),
 								},
 							},
 						},
@@ -341,7 +341,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 										{
 											Secret: &v1.SecretProjection{
 												LocalObjectReference: v1.LocalObjectReference{
-													Name: tlsAssetsSecretName("volume-init-test") + "-0",
+													Name: tlsAssetsSecretName("volume-init-test", operator.Config{}) + "-0",
 												},
 											},
 										},
@@ -404,7 +404,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, []string{"rules-configmap-one"}, "", 0, []string{tlsAssetsSecretName("volume-init-test") + "-0"})
+	}, defaultTestConfig, []string{"rules-configmap-one"}, "", 0, []string{tlsAssetsSecretName("volume-init-test", operator.Config{}) + "-0"})
 
 	require.NoError(t, err)
 
@@ -2026,7 +2026,7 @@ func TestExpectedStatefulSetShardNames(t *testing.T) {
 				Replicas: &replicas,
 			},
 		},
-	})
+	}, operator.Config{})
 
 	expected := []string{
 		"prometheus-test",

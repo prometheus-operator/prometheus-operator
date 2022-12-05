@@ -35,6 +35,7 @@ type API struct {
 	kclient *kubernetes.Clientset
 	mclient monitoringclient.Interface
 	logger  log.Logger
+	config  operator.Config
 }
 
 func New(conf operator.Config, l log.Logger) (*API, error) {
@@ -57,6 +58,7 @@ func New(conf operator.Config, l log.Logger) (*API, error) {
 		kclient: kclient,
 		mclient: mclient,
 		logger:  l,
+		config:  conf,
 	}, nil
 }
 
@@ -114,7 +116,7 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.Status, _, err = prometheus.Status(req.Context(), api.kclient, p)
+	p.Status, _, err = prometheus.Status(req.Context(), api.kclient, p, api.config)
 	if err != nil {
 		api.logger.Log("error", err)
 	}

@@ -175,6 +175,8 @@ func init() {
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	flagset.StringVar(&cfg.SecretListWatchSelector, "secret-field-selector", "", "Field selector to filter Secrets to watch")
+	flagset.BoolVar(&cfg.ResourceNaming.Prefix, "resource-naming-prefix", true, "Activate adding prefix to resources")
+	flagset.BoolVar(&cfg.ResourceNaming.Suffix, "resource-naming-suffix", false, "Activate adding suffix to resources")
 }
 
 func Main() int {

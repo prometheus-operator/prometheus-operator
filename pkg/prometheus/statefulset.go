@@ -73,6 +73,7 @@ var (
 
 func expectedStatefulSetShardNames(
 	p *monitoringv1.Prometheus,
+	config operator.Config,
 ) []string {
 	res := []string{}
 	shards := minShards
@@ -81,14 +82,14 @@ func expectedStatefulSetShardNames(
 	}
 
 	for i := int32(0); i < shards; i++ {
-		res = append(res, prometheusNameByShard(p.Name, i))
+		res = append(res, prometheusNameByShard(p.Name, i, config))
 	}
 
 	return res
 }
 
-func prometheusNameByShard(name string, shard int32) string {
-	base := prefixedName(name)
+func prometheusNameByShard(name string, shard int32, config operator.Config) string {
+	base := affixedName(name, config)
 	if shard == 0 {
 		return base
 	}
@@ -177,7 +178,7 @@ func makeStatefulSet(
 	storageSpec := p.Spec.Storage
 	if storageSpec == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(p.Name),
+			Name: volumeName(p.Name, *config),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -185,7 +186,7 @@ func makeStatefulSet(
 	} else if storageSpec.EmptyDir != nil {
 		emptyDir := storageSpec.EmptyDir
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(p.Name),
+			Name: volumeName(p.Name, *config),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: emptyDir,
 			},
@@ -193,7 +194,7 @@ func makeStatefulSet(
 	} else if storageSpec.Ephemeral != nil {
 		ephemeral := storageSpec.Ephemeral
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(p.Name),
+			Name: volumeName(p.Name, *config),
 			VolumeSource: v1.VolumeSource{
 				Ephemeral: ephemeral,
 			},
@@ -201,7 +202,7 @@ func makeStatefulSet(
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = volumeName(p.Name)
+			pvcTemplate.Name = volumeName(p.Name, *config)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
 			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
@@ -236,7 +237,7 @@ func makeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Se
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   configSecretName(p.Name),
+			Name:   configSecretName(p.Name, config),
 			Labels: config.Labels.Merge(managedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -491,7 +492,7 @@ func makeStatefulSetSpec(
 			Name: "config",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: configSecretName(p.Name),
+					SecretName: configSecretName(p.Name, *c),
 				},
 			},
 		},
@@ -521,7 +522,7 @@ func makeStatefulSetSpec(
 		})
 	}
 
-	volName := volumeName(p.Name)
+	volName := volumeName(p.Name, *c)
 	if p.Spec.Storage != nil {
 		if p.Spec.Storage.VolumeClaimTemplate.Name != "" {
 			volName = p.Spec.Storage.VolumeClaimTemplate.Name
@@ -568,7 +569,7 @@ func makeStatefulSetSpec(
 			fields = p.Spec.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name), fields)
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(p.Name, *c), fields)
 		if err != nil {
 			return nil, err
 		}
@@ -1021,24 +1022,31 @@ func makeStatefulSetSpec(
 	}, nil
 }
 
-func configSecretName(name string) string {
-	return prefixedName(name)
+func configSecretName(name string, config operator.Config) string {
+	return affixedName(name, config)
 }
 
-func tlsAssetsSecretName(name string) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+func tlsAssetsSecretName(name string, config operator.Config) string {
+	return fmt.Sprintf("%s-tls-assets", affixedName(name, config))
 }
 
-func webConfigSecretName(name string) string {
-	return fmt.Sprintf("%s-web-config", prefixedName(name))
+func webConfigSecretName(name string, config operator.Config) string {
+	return fmt.Sprintf("%s-web-config", affixedName(name, config))
 }
 
-func volumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
+func volumeName(name string, config operator.Config) string {
+	return fmt.Sprintf("%s-db", affixedName(name, config))
 }
 
-func prefixedName(name string) string {
-	return fmt.Sprintf("prometheus-%s", name)
+func affixedName(name string, config operator.Config) string {
+    const affix = "prometheus"
+    if config.ResourceNaming.Prefix {
+        name = affix+"-"+name
+    }
+    if config.ResourceNaming.Suffix {
+        name += "-"+affix
+    }
+    return name
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {

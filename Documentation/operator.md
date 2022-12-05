@@ -63,6 +63,10 @@ Usage of ./operator:
     	Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
   -prometheus-instance-selector string
     	Label selector to filter Prometheus Custom Resources to watch.
+  -resource-naming-prefix
+    	Activate adding prefix to resources (default true)
+  -resource-naming-suffix
+    	Activate adding suffix to resources
   -secret-field-selector string
     	Field selector to filter Secrets to watch
   -short-version

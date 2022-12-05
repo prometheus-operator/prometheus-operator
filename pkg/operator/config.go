@@ -44,6 +44,7 @@ type Config struct {
 	AlertManagerSelector         string
 	ThanosRulerSelector          string
 	SecretListWatchSelector      string
+	ResourceNaming               ResourceNaming
 }
 
 type ReloaderConfig struct {
@@ -98,4 +99,9 @@ type Namespaces struct {
 	AllowList, DenyList map[string]struct{}
 	// Allow list for prometheus/alertmanager custom resources.
 	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
+}
+
+type ResourceNaming struct {
+	Prefix bool
+	Suffix bool
 }
