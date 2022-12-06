@@ -16,6 +16,7 @@ package operator
 
 import (
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"net/url"
 	"strconv"
 	"testing"
@@ -27,7 +28,7 @@ var reloaderConfig = ReloaderConfig{
 	MemoryRequest:   "50Mi",
 	MemoryLimit:     "50Mi",
 	Image:           "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-	ImagePullPolicy: "Always",
+	ImagePullPolicy: v1.PullAlways,
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
@@ -35,14 +36,16 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	var container = CreateConfigReloader(
 		initContainerName,
 		ReloaderResources(reloaderConfig),
-		ReloaderRunOnce())
+		ReloaderRunOnce(),
+		ImagePullPolicy(v1.PullAlways),
+	)
 	if container.Name != "init-config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
 	}
 	if !contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
 	}
-	if container.ImagePullPolicy != "Always" {
+	if container.ImagePullPolicy != reloaderConfig.ImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", reloaderConfig.ImagePullPolicy, container.ImagePullPolicy)
 	}
 }
@@ -107,6 +110,10 @@ func TestCreateConfigReloader(t *testing.T) {
 	}
 	if !flag {
 		t.Errorf("Expected shard value '%d' not found in %s", shard, container.Env)
+	}
+
+	if container.ImagePullPolicy != v1.PullAlways {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", v1.PullAlways, container.ImagePullPolicy)
 	}
 }
 

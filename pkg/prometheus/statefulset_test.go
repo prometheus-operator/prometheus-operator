@@ -2317,6 +2317,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			IP:        "1.1.1.1",
 		},
 	}
+	imagePullPolicy := v1.PullAlways
 	imagePullSecrets := []v1.LocalObjectReference{
 		{
 			Name: "registry-secret",
@@ -2336,6 +2337,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				PriorityClassName:  priorityClassName,
 				ServiceAccountName: serviceAccountName,
 				HostAliases:        hostAliases,
+				ImagePullPolicy:    imagePullPolicy,
 				ImagePullSecrets:   imagePullSecrets,
 				HostNetwork:        hostNetwork,
 			},
@@ -2365,6 +2367,16 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if len(sset.Spec.Template.Spec.HostAliases) != len(hostAliases) {
 		t.Fatalf("expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
+	}
+	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
+		if !reflect.DeepEqual(initContainer.ImagePullPolicy, imagePullPolicy) {
+			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
+		}
+	}
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if !reflect.DeepEqual(container.ImagePullPolicy, imagePullPolicy) {
+			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
+		}
 	}
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)

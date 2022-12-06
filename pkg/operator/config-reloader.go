@@ -32,7 +32,6 @@ type ConfigReloader struct {
 	config             ReloaderConfig
 	configFile         string
 	configEnvsubstFile string
-	imagePullPolicy    v1.PullPolicy
 	listenLocal        bool
 	localHost          string
 	logFormat          string
@@ -133,7 +132,7 @@ func Shard(shard int32) ReloaderOption {
 // ImagePullPolicy sets the imagePullPolicy option for the config-reloader container
 func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.imagePullPolicy = imagePullPolicy
+		c.config.ImagePullPolicy = imagePullPolicy
 	}
 }
 
