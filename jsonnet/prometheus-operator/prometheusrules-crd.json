@@ -60,7 +60,6 @@
                           "type": "string"
                         },
                         "partial_response_strategy": {
-                          "default": "",
                           "description": "PartialResponseStrategy is only used by ThanosRuler and will be ignored by Prometheus instances. More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response",
                           "pattern": "^(?i)(abort|warn)?$",
                           "type": "string"

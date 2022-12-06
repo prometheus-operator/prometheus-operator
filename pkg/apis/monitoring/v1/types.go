@@ -1840,7 +1840,6 @@ type RuleGroup struct {
 	// be ignored by Prometheus instances.
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
-	// +kubebuilder:default:=""
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 }
 
