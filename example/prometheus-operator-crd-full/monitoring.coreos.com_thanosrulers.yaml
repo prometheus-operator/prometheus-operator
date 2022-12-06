@@ -2383,7 +2383,7 @@ spec:
                 description: Thanos container image URL.
                 type: string
               imagePullPolicy:
-                description: Image pull policy for the 'prometheus', 'init-config-reloader'
+                description: Image pull policy for the 'thanos', 'init-config-reloader'
                   and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
                   for more details.
                 enum:
