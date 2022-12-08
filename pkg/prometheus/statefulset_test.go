@@ -832,7 +832,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 }
 
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
-	prometheusBaseImageConfig := &operator.Config{
+	operatorConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
 			CPURequest:    "100m",
 			CPULimit:      "100m",
@@ -855,12 +855,12 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, prometheusBaseImageConfig, nil, "", 0, nil)
+	}, operatorConfig, nil, "", 0, nil)
 
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
-	expected := "nondefaultuseflag/quay.io/prometheus/prometheus"
+	expected := "nondefaultuseflag/quay.io/prometheus/prometheus" + ":" + operator.DefaultPrometheusVersion
 	if image != expected {
 		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}

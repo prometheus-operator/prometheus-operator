@@ -27,33 +27,33 @@ import (
 // If image contains a tag or digest then image will be returned.
 // Otherwise, return image suffixed by either SHA, tag or version(in that order).
 // Inspired by kubernetes code handling of image building.
-func BuildImagePath(specImage, image, version, tag, sha string) (string, error) {
+func BuildImagePath(specImage, baseImage, version, tag, sha string) (string, error) {
 	if strings.TrimSpace(specImage) != "" {
 		return specImage, nil
 	}
-	named, err := dockerref.ParseNormalizedNamed(image)
+	named, err := dockerref.ParseNormalizedNamed(baseImage)
 	if err != nil {
-		return "", fmt.Errorf("couldn't parse image reference %q: %v", image, err)
+		return "", fmt.Errorf("couldn't parse image reference %q: %v", baseImage, err)
 	}
 	_, isTagged := named.(dockerref.Tagged)
 	_, isDigested := named.(dockerref.Digested)
 	if isTagged || isDigested {
-		return image, nil
+		return baseImage, nil
 	}
 
 	if sha != "" {
-		return fmt.Sprintf("%s@sha256:%s", image, sha), nil
+		return fmt.Sprintf("%s@sha256:%s", baseImage, sha), nil
 	} else if tag != "" {
 		imageTag, err := dockerref.WithTag(named, tag)
 		if err != nil {
 			return "", err
 		}
 		return imageTag.String(), nil
-	} else if version != "" {
-		return image + ":" + version, nil
 	}
-
-	return image, nil
+	if version == "" {
+		return "", fmt.Errorf("couldn't generate an image reference since version is empty")
+	}
+	return baseImage + ":" + version, nil
 }
 
 // StringValOrDefault returns the default val if the
