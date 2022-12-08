@@ -16,23 +16,24 @@ package operator
 
 import (
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	"net/url"
 	"strconv"
 	"testing"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 var reloaderConfig = ReloaderConfig{
-	CPURequest:      "100m",
-	CPULimit:        "100m",
-	MemoryRequest:   "50Mi",
-	MemoryLimit:     "50Mi",
-	Image:           "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-	ImagePullPolicy: v1.PullAlways,
+	CPURequest:    "100m",
+	CPULimit:      "100m",
+	MemoryRequest: "50Mi",
+	MemoryLimit:   "50Mi",
+	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
 	initContainerName := "init-config-reloader"
+	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		initContainerName,
 		ReloaderResources(reloaderConfig),
@@ -45,8 +46,8 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	if !contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
 	}
-	if container.ImagePullPolicy != reloaderConfig.ImagePullPolicy {
-		t.Errorf("Expected imagePullPolicy %s, but found %s", reloaderConfig.ImagePullPolicy, container.ImagePullPolicy)
+	if container.ImagePullPolicy != expectedImagePullPolicy {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 }
 
@@ -58,6 +59,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	configEnvsubstFile := "configEnvsubstFile"
 	watchedDirectories := []string{"directory1", "directory2"}
 	shard := int32(1)
+	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderResources(reloaderConfig),
@@ -74,6 +76,7 @@ func TestCreateConfigReloader(t *testing.T) {
 		ConfigEnvsubstFile(configEnvsubstFile),
 		WatchedDirectories(watchedDirectories),
 		Shard(shard),
+		ImagePullPolicy(expectedImagePullPolicy),
 	)
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
@@ -112,8 +115,8 @@ func TestCreateConfigReloader(t *testing.T) {
 		t.Errorf("Expected shard value '%d' not found in %s", shard, container.Env)
 	}
 
-	if container.ImagePullPolicy != v1.PullAlways {
-		t.Errorf("Expected imagePullPolicy %s, but found %s", v1.PullAlways, container.ImagePullPolicy)
+	if container.ImagePullPolicy != expectedImagePullPolicy {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 }
 
