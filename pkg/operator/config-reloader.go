@@ -32,6 +32,7 @@ type ConfigReloader struct {
 	config             ReloaderConfig
 	configFile         string
 	configEnvsubstFile string
+	imagePullPolicy    v1.PullPolicy
 	listenLocal        bool
 	localHost          string
 	logFormat          string
@@ -132,7 +133,7 @@ func Shard(shard int32) ReloaderOption {
 // ImagePullPolicy sets the imagePullPolicy option for the config-reloader container
 func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.config.ImagePullPolicy = imagePullPolicy
+		c.imagePullPolicy = imagePullPolicy
 	}
 }
 
@@ -232,7 +233,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	return v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
-		ImagePullPolicy:          configReloader.config.ImagePullPolicy,
+		ImagePullPolicy:          configReloader.imagePullPolicy,
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		Env:                      envVars,
 		Command:                  []string{"/bin/prometheus-config-reloader"},

@@ -17,7 +17,6 @@ package operator
 import (
 	"strings"
 
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -48,12 +47,11 @@ type Config struct {
 }
 
 type ReloaderConfig struct {
-	CPURequest      string
-	CPULimit        string
-	MemoryRequest   string
-	MemoryLimit     string
-	Image           string
-	ImagePullPolicy v1.PullPolicy
+	CPURequest    string
+	CPULimit      string
+	MemoryRequest string
+	MemoryLimit   string
+	Image         string
 }
 
 type Labels struct {
