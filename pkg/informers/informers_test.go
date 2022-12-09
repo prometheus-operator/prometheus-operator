@@ -33,7 +33,7 @@ import (
 )
 
 type mockFactory struct {
-	namespaces sets.String
+	namespaces sets.Set[string]
 	objects    map[string]runtime.Object
 }
 
@@ -65,7 +65,7 @@ func (m *mockFactory) ForResource(namespace string, resource schema.GroupVersion
 	return m, nil
 }
 
-func (m *mockFactory) Namespaces() sets.String {
+func (m *mockFactory) Namespaces() sets.Set[string] {
 	return m.namespaces
 }
 
@@ -73,7 +73,7 @@ func TestInformers(t *testing.T) {
 	t.Run("TestGet", func(t *testing.T) {
 		ifs, err := NewInformersForResource(
 			&mockFactory{
-				namespaces: sets.NewString("foo", "bar"),
+				namespaces: sets.New[string]("foo", "bar"),
 				objects: map[string]runtime.Object{
 					"foo": &monitoringv1.Prometheus{
 						ObjectMeta: metav1.ObjectMeta{

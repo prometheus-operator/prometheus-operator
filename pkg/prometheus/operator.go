@@ -417,7 +417,7 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
 }

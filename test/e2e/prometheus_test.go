@@ -2171,7 +2171,7 @@ func testShardingProvisioning(t *testing.T) {
 	}
 
 	for _, p := range pods {
-		stdout, _, err := framework.ExecWithOptions(testFramework.ExecOptions{
+		stdout, _, err := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
 			Command: []string{
 				"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml",
 			},

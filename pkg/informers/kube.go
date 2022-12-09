@@ -50,8 +50,8 @@ func NewKubeInformerFactories(
 
 type kubeInformersForNamespaces map[string]informers.SharedInformerFactory
 
-func (i kubeInformersForNamespaces) Namespaces() sets.String {
-	return sets.StringKeySet(i)
+func (i kubeInformersForNamespaces) Namespaces() sets.Set[string] {
+	return sets.KeySet(i)
 }
 
 func (i kubeInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {

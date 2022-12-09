@@ -320,7 +320,7 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on alertmanagerconfigs.
-	c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleNamespaceUpdate,
 	})
 }
