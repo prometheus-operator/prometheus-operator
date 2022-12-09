@@ -340,8 +340,8 @@ type CommonPrometheusFields struct {
 	// Make sure to understand the security implications if you want to enable it.
 	// When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.
 	HostNetwork bool `json:"hostNetwork,omitempty"`
-	// GlobalPodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
-	GlobalPodTargetLabels []string `json:"globalPodTargetLabels,omitempty"`
+	// EnforcedPodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
+	EnforcedPodTargetLabels []string `json:"enforcedPodTargetLabels,omitempty"`
 }
 
 // +genclient

@@ -4697,7 +4697,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				GlobalPodTargetLabels: []string{"global"},
+				EnforcedPodTargetLabels: []string{"global"},
 			},
 			EvaluationInterval: "30s",
 		},
@@ -4809,7 +4809,7 @@ scrape_configs:
 	}
 }
 
-func TestEmptyEndointPorts(t *testing.T) {
+func TestEmptyEndpointPorts(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",

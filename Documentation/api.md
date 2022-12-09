@@ -2151,13 +2151,13 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
-<code>globalPodTargetLabels</code><br/>
+<code>enforcedPodTargetLabels</code><br/>
 <em>
 []string
 </em>
 </td>
 <td>
-<p>GlobalPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<p>EnforcedPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 <tr>
@@ -5822,13 +5822,13 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
-<code>globalPodTargetLabels</code><br/>
+<code>enforcedPodTargetLabels</code><br/>
 <em>
 []string
 </em>
 </td>
 <td>
-<p>GlobalPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<p>EnforcedPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 </tbody>
@@ -9055,13 +9055,13 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
-<code>globalPodTargetLabels</code><br/>
+<code>enforcedPodTargetLabels</code><br/>
 <em>
 []string
 </em>
 </td>
 <td>
-<p>GlobalPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<p>EnforcedPodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 <tr>

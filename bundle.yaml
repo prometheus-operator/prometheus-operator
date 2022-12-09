@@ -15533,6 +15533,12 @@ spec:
                   (`expr`). \n Label name is this field's value. Label value is the
                   namespace of the created object (mentioned above)."
                 type: string
+              enforcedPodTargetLabels:
+                description: EnforcedPodTargetLabels are added to all Pod/ServiceMonitors'
+                  podTargetLabels
+                items:
+                  type: string
+                type: array
               enforcedSampleLimit:
                 description: EnforcedSampleLimit defines global limit on number of
                   scraped samples that will be accepted. This overrides any SampleLimit
@@ -15616,12 +15622,6 @@ spec:
                   under. This is necessary to generate correct URLs. This is necessary
                   if Prometheus is not served from root of a DNS name.
                 type: string
-              globalPodTargetLabels:
-                description: GlobalPodTargetLabels are added to all Pod/ServiceMonitors'
-                  podTargetLabels
-                items:
-                  type: string
-                type: array
               hostAliases:
                 description: Pods' hostAliases configuration
                 items:

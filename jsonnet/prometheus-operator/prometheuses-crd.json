@@ -2582,6 +2582,13 @@
                     "description": "EnforcedNamespaceLabel If set, a label will be added to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `Probe` objects) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to * alerting & recording rules and * the metrics used in their expressions (`expr`). \n Label name is this field's value. Label value is the namespace of the created object (mentioned above).",
                     "type": "string"
                   },
+                  "enforcedPodTargetLabels": {
+                    "description": "EnforcedPodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "enforcedSampleLimit": {
                     "description": "EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead.",
                     "format": "int64",
@@ -2660,13 +2667,6 @@
                   "externalUrl": {
                     "description": "The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name.",
                     "type": "string"
-                  },
-                  "globalPodTargetLabels": {
-                    "description": "GlobalPodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels",
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
                   },
                   "hostAliases": {
                     "description": "Pods' hostAliases configuration",
