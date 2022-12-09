@@ -390,6 +390,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		{
 			Name:                     "thanos-ruler",
 			Image:                    trImagePath,
+			ImagePullPolicy:          tr.Spec.ImagePullPolicy,
 			Args:                     trCLIArgs,
 			Env:                      trEnvVars,
 			VolumeMounts:             trVolumeMounts,
