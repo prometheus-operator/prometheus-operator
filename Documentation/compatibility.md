@@ -98,18 +98,25 @@ The versions of Prometheus compatible with the Prometheus Operator are:
 * v2.36.0
 * v2.37.0
 * v2.37.1
+* v2.37.2
+* v2.37.3
+* v2.37.4
 * v2.38.0
 * v2.39.0
 * v2.39.1
 * v2.39.2
 * v2.40.0
 * v2.40.1
+* v2.40.2
+* v2.40.3
+* v2.40.4
+* v2.40.5
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v2.40.1
+* v2.40.5
 ```
 
 ## Alertmanager
