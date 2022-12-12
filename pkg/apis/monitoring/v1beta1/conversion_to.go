@@ -31,13 +31,14 @@ func convertRouteTo(in *Route) (*v1alpha1.Route, error) {
 	}
 
 	out := &v1alpha1.Route{
-		Receiver:          in.Receiver,
-		GroupBy:           in.GroupBy,
-		GroupWait:         in.GroupWait,
-		GroupInterval:     in.GroupInterval,
-		RepeatInterval:    in.RepeatInterval,
-		Matchers:          convertMatchersTo(in.Matchers),
-		MuteTimeIntervals: in.MuteTimeIntervals,
+		Receiver:            in.Receiver,
+		GroupBy:             in.GroupBy,
+		GroupWait:           in.GroupWait,
+		GroupInterval:       in.GroupInterval,
+		RepeatInterval:      in.RepeatInterval,
+		Matchers:            convertMatchersTo(in.Matchers),
+		MuteTimeIntervals:   in.MuteTimeIntervals,
+		ActiveTimeIntervals: in.ActiveTimeIntervals,
 	}
 
 	// Deserialize child routes to convert them to v1alpha1 and serialize back.

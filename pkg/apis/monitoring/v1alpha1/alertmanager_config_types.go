@@ -131,6 +131,9 @@ type Route struct {
 	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
+	// ActiveTimeIntervals is a list of MuteTimeInterval names when this route should be active.
+	// +optional
+	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.

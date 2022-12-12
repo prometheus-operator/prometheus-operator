@@ -4382,6 +4382,12 @@ spec:
                   the resource's namespace. If present, it will be added to the generated
                   Alertmanager configuration as a first-level route.
                 properties:
+                  activeTimeIntervals:
+                    description: ActiveTimeIntervals is a list of MuteTimeInterval
+                      names when this route should be active.
+                    items:
+                      type: string
+                    type: array
                   continue:
                     description: Boolean indicating whether an alert should continue
                       matching subsequent sibling nodes. It will always be overridden

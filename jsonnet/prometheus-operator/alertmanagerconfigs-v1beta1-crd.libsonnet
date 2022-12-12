@@ -4451,6 +4451,13 @@
               route: {
                 description: "The Alertmanager route definition for alerts matching the resource's namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route.",
                 properties: {
+                  activeTimeIntervals: {
+                    description: 'ActiveTimeIntervals is a list of TimeInterval names when this route should be active.',
+                    items: {
+                      type: 'string',
+                    },
+                    type: 'array',
+                  },
                   continue: {
                     description: 'Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.',
                     type: 'boolean',
@@ -4503,7 +4510,7 @@
                     type: 'array',
                   },
                   muteTimeIntervals: {
-                    description: "Note: this comment applies to the field definition above but appears below otherwise it gets included in the generated manifest. CRD schema doesn't support self-referential types for now (see https://github.com/kubernetes/kubernetes/issues/62872). We have to use an alternative type to circumvent the limitation. The downside is that the Kube API can't validate the data beyond the fact that it is a valid JSON representation. MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,",
+                    description: "Note: this comment applies to the field definition above but appears below otherwise it gets included in the generated manifest. CRD schema doesn't support self-referential types for now (see https://github.com/kubernetes/kubernetes/issues/62872). We have to use an alternative type to circumvent the limitation. The downside is that the Kube API can't validate the data beyond the fact that it is a valid JSON representation. MuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.",
                     items: {
                       type: 'string',
                     },
