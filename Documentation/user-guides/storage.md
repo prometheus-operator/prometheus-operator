@@ -112,7 +112,7 @@ kind: PersistentVolume
 metadata:
   name: my-pv-name
   labels:
-    app: my-example-prometheus
+    app.kubernetes.io/name: my-example-prometheus
 spec:
   capacity:
     storage: 50Gi
