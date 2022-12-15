@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,7 +66,6 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
-	thanos.Spec.RuleSelector = &metav1.LabelSelector{}
 	thanos.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"monitored": "true",
@@ -257,4 +257,80 @@ func testTRMinReadySeconds(t *testing.T) {
 	if trSS.Spec.MinReadySeconds != int32(updated) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, trSS.Spec.MinReadySeconds)
 	}
+}
+
+// Tests Thanos ruler -> Alertmanger path
+// This is done by creating a firing rule that will be picked up by
+// Thanos Ruler which will send it to Alertmanager, finally we will
+// use the Alertmanager API to validate that the alert is there
+func testTRAlertmanagerConfig(t *testing.T) {
+	const (
+		name       = "test"
+		group      = "thanos-alertmanager-test"
+		secretName = "thanos-ruler-alertmanagers-config"
+		configKey  = "alertmanagers.yaml"
+		testAlert  = "alert1"
+	)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	// Create Alertmanager resource and service
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 1))
+	assert.NoError(t, err)
+
+	amSVC := framework.MakeAlertmanagerService(alertmanager.Name, group, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amSVC)
+	assert.NoError(t, err)
+
+	// Create a Prometheus resource because Thanos ruler needs a query API.
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	assert.NoError(t, err)
+
+	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+	assert.NoError(t, err)
+
+	// Create Secret with Alermanager config,
+	trAmConfigSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			configKey: []byte(fmt.Sprintf(`
+alertmanagers:
+- scheme: http
+  api_version: v2
+  static_configs:
+    - dnssrv+_web._tcp.%s.%s.svc.cluster.local
+`, amSVC.Name, ns)),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trAmConfigSecret, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	// Create Thanos ruler resource and service
+	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
+	thanos.Spec.EvaluationInterval = "1s"
+	thanos.Spec.AlertManagersConfig = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: secretName,
+		},
+		Key: configKey,
+	}
+
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
+	assert.NoError(t, err)
+
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP))
+	assert.NoError(t, err)
+
+	// Create firing rule
+	_, err = framework.MakeAndCreateFiringRule(context.Background(), ns, "rule1", testAlert)
+	assert.NoError(t, err)
+
+	err = framework.WaitForAlertmanagerFiringAlert(context.Background(), ns, amSVC.Name, testAlert)
+	assert.NoError(t, err)
 }
