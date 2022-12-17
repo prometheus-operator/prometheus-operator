@@ -131,6 +131,8 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	}
 
 	// supple configmap volumeMount number, at least `default` number of rule configmaps mount.
+	// this is to prevent the StatefulSet Pods from being frequently redeployed when the size of the
+	// configuration can easily fluctuate between the maximum size of a single ConfigMaps or not.
 	if len(newConfigMaps) < defaultOptionalConfigMaps {
 		for i := len(newConfigMaps); i < defaultOptionalConfigMaps; i++ {
 			name := prometheusRuleConfigMapName(p.Name)
