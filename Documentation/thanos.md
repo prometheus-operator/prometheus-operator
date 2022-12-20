@@ -98,7 +98,7 @@ metadata:
     example: thanos-ruler
   namespace: monitoring
 spec:
-  image: quay.io/thanos/thanos
+  image: quay.io/thanos/thanos:v0.28.1
   ruleSelector:
     matchLabels:
       role: my-thanos-rules
