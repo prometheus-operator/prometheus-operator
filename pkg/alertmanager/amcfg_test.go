@@ -38,6 +38,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/pointer"
 )
 
 func TestInitializeFromAlertmanagerConfig(t *testing.T) {
@@ -88,7 +89,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							"some": "value",
 						},
 					},
-					FollowRedirects: toBoolPtr(true),
+					FollowRedirects: pointer.Bool(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -128,7 +129,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								"some": "value",
 							},
 						},
-						FollowRedirects: toBoolPtr(true),
+						FollowRedirects: pointer.Bool(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -164,7 +165,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name: "globalConfig has null resolve timeout",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringingv1.HTTPConfig{
-					FollowRedirects: toBoolPtr(true),
+					FollowRedirects: pointer.Bool(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -189,7 +190,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
-						FollowRedirects: toBoolPtr(true),
+						FollowRedirects: pointer.Bool(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -975,7 +976,7 @@ templates: []
 											"some": "value",
 										},
 									},
-									FollowRedirects: toBoolPtr(true),
+									FollowRedirects: pointer.Bool(true),
 								},
 							}},
 						}},
@@ -2567,8 +2568,4 @@ templates: []
 			}
 		})
 	}
-}
-
-func toBoolPtr(in bool) *bool {
-	return &in
 }

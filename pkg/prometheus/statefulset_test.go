@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 )
 
 var (
@@ -2624,8 +2625,6 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 }
 
 func TestPrometheusQuerySpec(t *testing.T) {
-	int32Ptr := func(i int32) *int32 { return &i }
-	stringPtr := func(s string) *string { return &s }
 	durationPtr := func(s string) *monitoringv1.Duration { d := monitoringv1.Duration(s); return &d }
 
 	for _, tc := range []struct {
@@ -2645,9 +2644,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "all values provided",
-			lookbackDelta:  stringPtr("2m"),
-			maxConcurrency: int32Ptr(10),
-			maxSamples:     int32Ptr(10000),
+			lookbackDelta:  pointer.String("2m"),
+			maxConcurrency: pointer.Int32(10),
+			maxSamples:     pointer.Int32(10000),
 			timeout:        durationPtr("1m"),
 
 			expected: []string{
@@ -2659,9 +2658,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "zero values are skipped",
-			lookbackDelta:  stringPtr("2m"),
-			maxConcurrency: int32Ptr(0),
-			maxSamples:     int32Ptr(0),
+			lookbackDelta:  pointer.String("2m"),
+			maxConcurrency: pointer.Int32(0),
+			maxSamples:     pointer.Int32(0),
 			timeout:        durationPtr("1m"),
 
 			expected: []string{
@@ -2671,9 +2670,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples skipped if version < 2.5",
-			lookbackDelta:  stringPtr("2m"),
-			maxConcurrency: int32Ptr(10),
-			maxSamples:     int32Ptr(10000),
+			lookbackDelta:  pointer.String("2m"),
+			maxConcurrency: pointer.Int32(10),
+			maxSamples:     pointer.Int32(10000),
 			timeout:        durationPtr("1m"),
 			version:        "v2.4.0",
 
@@ -2685,9 +2684,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples not skipped if version > 2.5",
-			lookbackDelta:  stringPtr("2m"),
-			maxConcurrency: int32Ptr(10),
-			maxSamples:     int32Ptr(10000),
+			lookbackDelta:  pointer.String("2m"),
+			maxConcurrency: pointer.Int32(10),
+			maxSamples:     pointer.Int32(10000),
 			timeout:        durationPtr("1m"),
 			version:        "v2.5.0",
 

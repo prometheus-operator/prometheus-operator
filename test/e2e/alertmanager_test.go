@@ -47,6 +47,7 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
+	"k8s.io/utils/pointer"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -1567,7 +1568,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 						"some": "value",
 					},
 				},
-				FollowRedirects: toBoolPtr(true),
+				FollowRedirects: pointer.Bool(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
@@ -2177,8 +2178,4 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			}
 		})
 	}
-}
-
-func toBoolPtr(in bool) *bool {
-	return &in
 }
