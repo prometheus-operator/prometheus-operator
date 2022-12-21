@@ -40,6 +40,7 @@ func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpo
 			Replicas:       &replicas,
 			QueryEndpoints: []string{queryEndpoint},
 			LogLevel:       "debug",
+			RuleSelector:   &metav1.LabelSelector{},
 		},
 	}
 }

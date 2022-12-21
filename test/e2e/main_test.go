@@ -302,6 +302,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
+		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
