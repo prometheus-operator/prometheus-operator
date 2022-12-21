@@ -1994,9 +1994,6 @@ alerting:
 }
 
 func TestAdditionalScrapeConfigs(t *testing.T) {
-	int32Ptr := func(i int32) *int32 {
-		return &i
-	}
 	getCfg := func(shards *int32) string {
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2091,7 +2088,7 @@ scrape_configs:
 		},
 		{
 			name:   "one prometheus shard",
-			result: getCfg(int32Ptr(1)),
+			result: getCfg(pointer.Int32(1)),
 			expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -2118,7 +2115,7 @@ scrape_configs:
 		},
 		{
 			name:   "sharded prometheus",
-			result: getCfg(int32Ptr(3)),
+			result: getCfg(pointer.Int32(3)),
 			expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s

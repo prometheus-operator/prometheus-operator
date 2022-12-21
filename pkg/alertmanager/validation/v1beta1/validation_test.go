@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	"k8s.io/utils/pointer"
 )
 
 func TestValidateAlertmanagerConfig(t *testing.T) {
@@ -380,7 +381,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: strToPtr("https://www.test.com"),
+									URL: pointer.String("https://www.test.com"),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -470,8 +471,4 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			}
 		})
 	}
-}
-
-func strToPtr(s string) *string {
-	return &s
 }
