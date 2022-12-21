@@ -39,7 +39,7 @@ API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
 
 
-K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
+K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
@@ -124,15 +124,23 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 
 .PHONY: k8s-client-gen
 k8s-client-gen: $(K8S_GEN_DEPS)
-	rm -rf pkg/client/{versioned,informers,listers}
+	rm -rf pkg/client/{versioned,informers,listers,applyconfiguration}
+	@echo ">> generating pkg/client/applyconfiguration..."
+	$(APPLYCONFIGURATION_GEN_BINARY) \
+		$(K8S_GEN_ARGS) \
+		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package  "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--output-base    "."
+	mv $(GO_PKG)/pkg/client/applyconfiguration pkg/client
 	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
-		--input-base     "" \
-		--clientset-name "versioned" \
-		--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package "$(GO_PKG)/pkg/client" \
-		--output-base    "."
+		--input-base                  "" \
+		--apply-configuration-package "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--clientset-name              "versioned" \
+		--input                       "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package              "$(GO_PKG)/pkg/client" \
+		--output-base                 "."
 	@echo ">> generating pkg/client/listers..."
 	$(LISTER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \

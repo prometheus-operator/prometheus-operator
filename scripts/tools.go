@@ -28,6 +28,7 @@ import (
 	_ "github.com/google/go-jsonnet/cmd/jsonnetfmt"
 	_ "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"
 	_ "github.com/yeya24/promlinter/cmd/promlinter"
+	_ "k8s.io/code-generator/cmd/applyconfiguration-gen"
 	_ "k8s.io/code-generator/cmd/client-gen"
 	_ "k8s.io/code-generator/cmd/informer-gen"
 	_ "k8s.io/code-generator/cmd/lister-gen"
