@@ -729,8 +729,8 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = make([]ObjectReference, len(*in))
 		copy(*out, *in)
 	}
-	if in.EnforcedPodTargetLabels != nil {
-		in, out := &in.EnforcedPodTargetLabels, &out.EnforcedPodTargetLabels
+	if in.PodTargetLabels != nil {
+		in, out := &in.PodTargetLabels, &out.PodTargetLabels
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

@@ -4697,7 +4697,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 						"group": "group1",
 					},
 				},
-				EnforcedPodTargetLabels: []string{"global"},
+				PodTargetLabels: []string{"global"},
 			},
 			EvaluationInterval: "30s",
 		},
