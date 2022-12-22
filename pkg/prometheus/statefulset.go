@@ -28,9 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -100,6 +98,7 @@ func makeStatefulSet(
 	name string,
 	p monitoringv1.Prometheus,
 	config *operator.Config,
+	cg *ConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
@@ -117,7 +116,7 @@ func makeStatefulSet(
 		p.Spec.Replicas = &intZero
 	}
 
-	spec, err := makeStatefulSetSpec(logger, p, config, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(logger, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -301,6 +300,7 @@ func makeStatefulSetSpec(
 	logger log.Logger,
 	p monitoringv1.Prometheus,
 	c *operator.Config,
+	cg *ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
 	tlsAssetSecrets []string,
@@ -321,13 +321,8 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse prometheus version")
-	}
-
-	if version.Major != 2 {
-		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
+	if cg.version.Major != 2 {
+		return nil, errors.Errorf("unsupported Prometheus major version %s", cg.version)
 	}
 
 	promArgs := []monitoringv1.Argument{
@@ -335,34 +330,25 @@ func makeStatefulSetSpec(
 		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
 	}
 
-	// TODO(simonpasquier): log a warning message if the Prometheus version
-	// doesn't support the flag (do it everywhere it needs to be, not only for
-	// this block).
-	retentionTimeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention"}
-	if version.GTE(semver.MustParse("2.7.0")) {
-		retentionTimeFlag = monitoringv1.Argument{Name: "storage.tsdb.retention.time"}
-		if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
-			retentionTimeFlag.Value = defaultRetention
-			promArgs = append(promArgs, retentionTimeFlag)
-		} else {
-			if p.Spec.Retention != "" {
-				retentionTimeFlag.Value = string(p.Spec.Retention)
-				promArgs = append(promArgs, retentionTimeFlag)
-			}
-
-			if p.Spec.RetentionSize != "" {
-				retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
-				promArgs = append(promArgs, retentionSizeFlag)
-			}
-		}
-	} else {
+	var (
+		retentionTimeFlagName  = "storage.tsdb.retention.time"
+		retentionTimeFlagValue = string(p.Spec.Retention)
+	)
+	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
+		retentionTimeFlagName = "storage.tsdb.retention"
 		if p.Spec.Retention == "" {
-			retentionTimeFlag.Value = defaultRetention
-			promArgs = append(promArgs, retentionTimeFlag)
-		} else {
-			retentionTimeFlag.Value = string(p.Spec.Retention)
-			promArgs = append(promArgs, retentionTimeFlag)
+			retentionTimeFlagValue = defaultRetention
 		}
+	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
+		retentionTimeFlagValue = defaultRetention
+	}
+
+	if retentionTimeFlagValue != "" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
+	}
+	if p.Spec.RetentionSize != "" {
+		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
+		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
 
 	promArgs = append(promArgs,
@@ -371,16 +357,14 @@ func makeStatefulSetSpec(
 		monitoringv1.Argument{Name: "web.enable-lifecycle"},
 	)
 
-	if version.Minor >= 4 {
-		if p.Spec.Rules.Alert.ForOutageTolerance != "" {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: p.Spec.Rules.Alert.ForOutageTolerance})
-		}
-		if p.Spec.Rules.Alert.ForGracePeriod != "" {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.for-grace-period", Value: p.Spec.Rules.Alert.ForGracePeriod})
-		}
-		if p.Spec.Rules.Alert.ResendDelay != "" {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "rules.alert.resend-delay", Value: p.Spec.Rules.Alert.ResendDelay})
-		}
+	if p.Spec.Rules.Alert.ForOutageTolerance != "" {
+		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: p.Spec.Rules.Alert.ForOutageTolerance})
+	}
+	if p.Spec.Rules.Alert.ForGracePeriod != "" {
+		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.for-grace-period", Value: p.Spec.Rules.Alert.ForGracePeriod})
+	}
+	if p.Spec.Rules.Alert.ResendDelay != "" {
+		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.resend-delay", Value: p.Spec.Rules.Alert.ResendDelay})
 	}
 
 	if p.Spec.Query != nil {
@@ -388,10 +372,8 @@ func makeStatefulSetSpec(
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *p.Spec.Query.LookbackDelta})
 		}
 
-		if version.Minor >= 5 {
-			if p.Spec.Query.MaxSamples != nil && *p.Spec.Query.MaxSamples > 0 {
-				promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: fmt.Sprintf("%d", *p.Spec.Query.MaxSamples)})
-			}
+		if p.Spec.Query.MaxSamples != nil && *p.Spec.Query.MaxSamples > 0 {
+			promArgs = cg.WithMinimumVersion("2.5.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: fmt.Sprintf("%d", *p.Spec.Query.MaxSamples)})
 		}
 
 		if p.Spec.Query.MaxConcurrency != nil && *p.Spec.Query.MaxConcurrency > 1 {
@@ -403,9 +385,8 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	// TODO(simonpasquier): check that the Prometheus version supports the flag.
 	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
 	}
 
 	if p.Spec.EnableAdminAPI {
@@ -413,15 +394,11 @@ func makeStatefulSetSpec(
 	}
 
 	if p.Spec.EnableRemoteWriteReceiver {
-		if version.GTE(semver.MustParse("2.33.0")) {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
-		} else {
-			level.Warn(logger).Log("msg", "ignoring 'enableRemoteWriteReceiver' not supported by Prometheus", "version", version, "minimum_version", "2.33.0")
-		}
+		promArgs = cg.WithMinimumVersion("2.33.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
 	}
 
 	if len(p.Spec.EnableFeatures) > 0 {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(p.Spec.EnableFeatures[:], ",")})
+		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(p.Spec.EnableFeatures[:], ",")})
 	}
 
 	if p.Spec.ExternalURL != "" {
@@ -437,22 +414,21 @@ func makeStatefulSetSpec(
 	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: p.Spec.LogLevel})
 	}
-	if version.GTE(semver.MustParse("2.6.0")) {
-		if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "log.format", Value: p.Spec.LogFormat})
-		}
+
+	if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
+		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: p.Spec.LogFormat})
 	}
 
-	if version.GTE(semver.MustParse("2.11.0")) && p.Spec.WALCompression != nil {
+	if p.Spec.WALCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
 		if *p.Spec.WALCompression {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.wal-compression"})
-		} else {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"})
+			arg.Name = "storage.tsdb.wal-compression"
 		}
+		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
 
-	if version.GTE(semver.MustParse("2.8.0")) && p.Spec.AllowOverlappingBlocks {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
+	if p.Spec.AllowOverlappingBlocks {
+		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
 	}
 
 	var ports []v1.ContainerPort
@@ -561,7 +537,8 @@ func makeStatefulSetSpec(
 	// We always mount the web config file for versions greater than 2.24.0.
 	// With this we avoid redeploying prometheus when reconfiguring between
 	// HTTP and HTTPS and vice-versa.
-	if version.GTE(semver.MustParse("2.24.0")) {
+	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
+	if webConfigGenerator.IsCompatible() {
 		var fields monitoringv1.WebConfigFileFields
 		if p.Spec.Web != nil {
 			fields = p.Spec.Web.WebConfigFileFields
@@ -579,10 +556,11 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
+	} else if p.Spec.Web != nil {
+		webConfigGenerator.Warn("web.config.file")
 	}
 
 	// Mount related secrets
-
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range p.Spec.Secrets {
 		name, err := rn.VolumeName(s)
@@ -656,7 +634,7 @@ func makeStatefulSetSpec(
 			Path: probePath,
 			Port: intstr.FromString(p.Spec.PortName),
 		}
-		if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+		if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && webConfigGenerator.IsCompatible() {
 			handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 		}
 		return handler
@@ -692,7 +670,7 @@ func makeStatefulSetSpec(
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": version.String(),
+		"app.kubernetes.io/version": cg.version.String(),
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing

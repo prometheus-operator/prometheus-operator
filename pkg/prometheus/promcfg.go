@@ -140,11 +140,32 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 // the updated slice.
 func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
 	if cg.notCompatible {
-		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", k))
+		cg.Warn(k)
 		return m
 	}
 
 	return append(m, yaml.MapItem{Key: k, Value: v})
+}
+
+// AppendCommandlineArgument appends the name/v argument to the given []monitoringv1.Argument and returns
+// the updated slice.
+func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
+	if cg.notCompatible {
+		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
+		return m
+	}
+
+	return append(m, argument)
+}
+
+// IsCompatible return true or false depending if the version being used is compatible
+func (cg *ConfigGenerator) IsCompatible() bool {
+	return !cg.notCompatible
+}
+
+// Warn logs a warning.
+func (cg *ConfigGenerator) Warn(field string) {
+	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
 }
 
 type limitKey struct {
