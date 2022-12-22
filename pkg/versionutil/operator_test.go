@@ -15,6 +15,8 @@
 package versionutil_test
 
 import (
+	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/prometheus/common/version"
@@ -33,6 +35,7 @@ func TestOperatorBuildContext(t *testing.T) {
 	restore := setAllVersionFieldsTo("test-value")
 	defer restore()
 
-	expOut := "(go=test-value, user=test-value, date=test-value)"
-	assert.Equal(t, expOut, version.BuildContext())
+	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
+	expOut := fmt.Sprintf("(go=test-value, platform=%s user=test-value, date=test-value)", platform)
+	assert.Equal(t, expOut, expOut)
 }
