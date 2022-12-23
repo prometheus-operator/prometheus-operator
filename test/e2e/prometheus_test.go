@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/utils/pointer"
 
 	"google.golang.org/protobuf/proto"
 
@@ -4347,6 +4348,80 @@ func testPrometheusCRDValidation(t *testing.T) {
 						},
 					},
 					ScrapeInterval: "60ss",
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "max-connections",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					Web: &monitoringv1.PrometheusWebSpec{
+						MaxConnections: proto.Int32(100),
+					},
+				},
+			},
+		},
+		{
+			name: "max-connections-negative-value",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					Web: &monitoringv1.PrometheusWebSpec{
+						MaxConnections: proto.Int32(-1),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "max-concurrency",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Query: &monitoringv1.QuerySpec{
+					MaxConcurrency: pointer.Int32(100),
+				},
+			},
+		},
+		{
+			name: "max-concurrency-zero-value",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Query: &monitoringv1.QuerySpec{
+					MaxConcurrency: pointer.Int32(0),
 				},
 			},
 			expectedError: true,
