@@ -1376,11 +1376,11 @@ mute_time_intervals:
   - times:
     - start_time: "08:00"
       end_time: "17:00"
-    location: UTC
     weekdays: [saturday, sunday]
     days_of_month: ["1:10"]
     months: ["1:3"]
     years: ['2030:2050']
+    location: UTC
 templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
