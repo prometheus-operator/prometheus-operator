@@ -1198,6 +1198,14 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 			})
 		}
 
+		if timeInterval.Location != "" {
+			tz, err := time.LoadLocation(fmt.Sprintf("%s", timeInterval.Location))
+			if err != nil {
+				return nil, err
+			}
+			ti.Location = &timeinterval.Location{tz}
+		}
+
 		for _, wd := range timeInterval.Weekdays {
 			parsedWeekday, err := wd.Parse()
 			if err != nil {

@@ -185,6 +185,10 @@ spec:
                                   type: string
                               type: object
                             type: array
+                          location:
+                            description: Timezone of times. A string that matches a location in the IANA time zone database
+                              (i.e. 'Australia/Sydney'), 'Local', or 'UTC'
+                            type: string
                           weekdays:
                             description: Weekdays is a list of WeekdayRange
                             items:
@@ -8862,6 +8866,10 @@ spec:
                                   type: string
                               type: object
                             type: array
+                          location:
+                            description: Timezone of times. A string that matches a location in the IANA time zone database
+                              (i.e. 'Australia/Sydney'), 'Local', or 'UTC'
+                            type: string
                           weekdays:
                             description: Weekdays is a list of WeekdayRange
                             items:

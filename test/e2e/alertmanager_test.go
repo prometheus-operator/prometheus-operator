@@ -1093,6 +1093,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 									EndTime:   "17:00",
 								},
 							},
+							Location: monitoringv1alpha1.Location("UTC"),
 							Weekdays: []monitoringv1alpha1.WeekdayRange{
 								"Saturday",
 								"Sunday",
@@ -1375,6 +1376,7 @@ mute_time_intervals:
   - times:
     - start_time: "08:00"
       end_time: "17:00"
+    location: UTC
     weekdays: [saturday, sunday]
     days_of_month: ["1:10"]
     months: ["1:3"]

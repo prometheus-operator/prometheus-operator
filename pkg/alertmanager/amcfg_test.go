@@ -1577,6 +1577,7 @@ templates: []
 												EndTime:   "17:00",
 											},
 										},
+										Location: monitoringv1alpha1.Location("UTC"),
 										Weekdays: []monitoringv1alpha1.WeekdayRange{
 											monitoringv1alpha1.WeekdayRange("Saturday"),
 											monitoringv1alpha1.WeekdayRange("Sunday"),
@@ -1655,6 +1656,7 @@ mute_time_intervals:
     days_of_month: ["1:10"]
     months: ["1:3"]
     years: ['2030:2050']
+    location: UTC
 templates: []
 `,
 		},
@@ -1693,6 +1695,7 @@ templates: []
 												EndTime:   "17:00",
 											},
 										},
+										Location: monitoringv1alpha1.Location("UTC"),
 										Weekdays: []monitoringv1alpha1.WeekdayRange{
 											monitoringv1alpha1.WeekdayRange("Saturday"),
 											monitoringv1alpha1.WeekdayRange("Sunday"),
@@ -1771,6 +1774,7 @@ mute_time_intervals:
     days_of_month: ["1:10"]
     months: ["1:3"]
     years: ['2030:2050']
+    location: UTC
 templates: []
 `,
 		},
@@ -1803,7 +1807,8 @@ templates: []
 
 			// Verify the generated yaml is as expected
 			if diff := cmp.Diff(tc.expected, string(cfgBytes)); diff != "" {
-				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				//t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				t.Errorf("%+v", cb.cfg)
 			}
 
 			// Verify the generated config is something that Alertmanager will be happy with

@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (hc *HTTPConfig) Validate() error {
@@ -76,6 +77,11 @@ func (ti TimeInterval) Validate() error {
 				return fmt.Errorf("time range at %d is invalid: %w", i, err)
 			}
 		}
+		if ti.Location != "" {
+			if err := ti.Location.Validate(); err != nil {
+				return fmt.Errorf("location at %d is invalid: %w", i, err)
+			}
+		}
 		for _, weekday := range ti.Weekdays {
 			if err := weekday.Validate(); err != nil {
 				return fmt.Errorf("weekday range at %d is invalid: %w", i, err)
@@ -130,6 +136,18 @@ func (tr TimeRange) Parse() (*ParsedRange, error) {
 		Start: start,
 		End:   end,
 	}, nil
+}
+
+// Validate the Location
+func (tz Location) Validate() error {
+	_, err := tz.Parse()
+	return err
+}
+
+// Parse returns a Location on a vaild timezone.
+func (tz Location) Parse() (Location, error) {
+	_, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+	return tz, err
 }
 
 // Validate the WeekdayRange

@@ -125,6 +125,7 @@ func convertTimeIntervalsFrom(in []v1alpha1.TimeInterval) []TimePeriod {
 			out,
 			TimePeriod{
 				Times:       trs,
+				Location:    Location(ti.Location),
 				Weekdays:    wds,
 				DaysOfMonth: doms,
 				Months:      mrs,

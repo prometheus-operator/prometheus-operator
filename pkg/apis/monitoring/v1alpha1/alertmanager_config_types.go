@@ -943,6 +943,9 @@ type TimeInterval struct {
 	// Times is a list of TimeRange
 	// +optional
 	Times []TimeRange `json:"times,omitempty"`
+	// Location is a Timezone Location
+	// +optional
+	Location Location `json:"location,omitempty"`
 	// Weekdays is a list of WeekdayRange
 	// +optional
 	Weekdays []WeekdayRange `json:"weekdays,omitempty"`
@@ -968,6 +971,9 @@ type TimeRange struct {
 	// EndTime is the end time in 24hr format.
 	EndTime Time `json:"endTime,omitempty"`
 }
+
+// Location defines an IANA Timezone
+type Location string
 
 // WeekdayRange is an inclusive range of days of the week beginning on Sunday
 // Days can be specified by name (e.g 'Sunday') or as an inclusive range (e.g 'Monday:Friday')
