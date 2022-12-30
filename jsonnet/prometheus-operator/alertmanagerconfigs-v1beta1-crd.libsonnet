@@ -4570,6 +4570,10 @@
                             },
                             type: 'array',
                           },
+                          location: {
+                            description: 'Location is a Timezone Location',
+                            type: 'string',
+                          },
                           months: {
                             description: 'Months is a list of MonthRange',
                             items: {

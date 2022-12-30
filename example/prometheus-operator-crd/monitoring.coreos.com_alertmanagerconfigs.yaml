@@ -157,6 +157,9 @@ spec:
                                   type: integer
                               type: object
                             type: array
+                          location:
+                            description: Location is a Timezone Location
+                            type: string
                           months:
                             description: Months is a list of MonthRange
                             items:
@@ -185,10 +188,6 @@ spec:
                                   type: string
                               type: object
                             type: array
-                          location:
-                            description: Timezone of times. A string that matches a location in the IANA time zone database
-                              (i.e. 'Australia/Sydney'), 'Local', or 'UTC'
-                            type: string
                           weekdays:
                             description: Weekdays is a list of WeekdayRange
                             items:
