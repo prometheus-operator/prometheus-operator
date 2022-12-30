@@ -1412,12 +1412,14 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 
 	if len(c.TimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.25.0")) {
 		// time interval locations are unsupported < 0.25.0, report and set to nil
-		for i, ti := range c.TimeIntervals {
-			if ti.Location != nil {
-				withLogger := log.With(logger, "component", "alertmanager")
-				msg := "time_interval location is supported in Alertmanager >= 0.25.0 only - dropping config"
-				level.Warn(withLogger).Log("msg", msg, "time_interval", ti)
-				ti.Location = nil
+		withLogger := log.With(logger, "component", "alertmanager")
+		for _, tip := range c.TimeIntervals {
+			for _, tic := range tip.TimeIntervals {
+				if tic.Location != nil {
+					msg := "time_interval location is supported in Alertmanager >= 0.25.0 only - dropping config"
+					level.Warn(withLogger).Log("msg", msg, "time_interval", tic)
+					tic.Location = nil
+				}
 			}
 		}
 	}
