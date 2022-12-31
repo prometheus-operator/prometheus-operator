@@ -13321,6 +13321,14 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Location">Location
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.TimeInterval">TimeInterval</a>)
+</p>
+<div>
+<p>Location defines an IANA Timezone</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.MatchType">MatchType
 (<code>string</code> alias)</h3>
 <p>
@@ -15436,6 +15444,20 @@ HTTPConfig
 </tr>
 <tr>
 <td>
+<code>location</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.Location">
+Location
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Location is a Timezone Location</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>weekdays</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.WeekdayRange">
@@ -16630,6 +16652,14 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1beta1.Location">Location
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.TimePeriod">TimePeriod</a>)
+</p>
+<div>
+<p>Location defines an IANA Timezone</p>
+</div>
 <h3 id="monitoring.coreos.com/v1beta1.MatchType">MatchType
 (<code>string</code> alias)</h3>
 <p>
@@ -18755,6 +18785,20 @@ string
 <td>
 <em>(Optional)</em>
 <p>Times is a list of TimeRange</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>location</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.Location">
+Location
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Location is a Timezone Location</p>
 </td>
 </tr>
 <tr>
