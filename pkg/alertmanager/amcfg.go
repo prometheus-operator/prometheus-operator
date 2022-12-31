@@ -1199,7 +1199,7 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 		}
 
 		if timeInterval.Location != "" {
-			tz, err := time.LoadLocation(fmt.Sprintf("%s", timeInterval.Location))
+			tz, err := time.LoadLocation(string(timeInterval.Location))
 			if err != nil {
 				return nil, err
 			}

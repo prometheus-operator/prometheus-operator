@@ -146,7 +146,7 @@ func (tz Location) Validate() error {
 
 // Parse returns a Location on a vaild timezone.
 func (tz Location) Parse() (Location, error) {
-	_, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+	_, err := time.LoadLocation(string(tz))
 	return tz, err
 }
 
