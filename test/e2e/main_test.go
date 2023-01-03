@@ -285,6 +285,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromNamespaceEnforcementExclusion":      testPromNamespaceEnforcementExclusion,
 		"PromQueryLogFile":                       testPromQueryLogFile,
 		"PromDegradedCondition":                  testPromDegradedConditionStatus,
+		"PromUnavailableCondition":               testPromUnavailableConditionStatus,
 		"PromStrategicMergePatch":                testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":             testRelabelConfigCRDValidation,
 	}

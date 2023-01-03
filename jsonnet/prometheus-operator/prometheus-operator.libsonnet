@@ -72,6 +72,7 @@ function(params) {
         resources: [
           'alertmanagers',
           'alertmanagers/finalizers',
+          'alertmanagers/status',
           'alertmanagerconfigs',
           'prometheuses',
           'prometheuses/finalizers',

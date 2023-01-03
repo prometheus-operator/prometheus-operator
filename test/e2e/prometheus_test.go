@@ -31,7 +31,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
+	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,16 +46,11 @@ import (
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/pointer"
 
-	"google.golang.org/protobuf/proto"
-
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -2315,7 +2314,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatalf("Generated Secret could not be retrieved: %v", err)
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -4582,6 +4581,64 @@ func testPromQueryLogFile(t *testing.T) {
 	}
 }
 
+func testPromUnavailableConditionStatus(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, "test", "", 2)
+	// A non-existing service account prevents the creation of the statefulset's pods.
+	p.Spec.ServiceAccountName = "does-not-exist"
+
+	_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), p, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	var pollErr error
+	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		if pollErr != nil {
+			return false, nil
+		}
+
+		for _, cond := range current.Status.Conditions {
+			if cond.Type != monitoringv1.Available {
+				continue
+			}
+
+			if cond.Status != monitoringv1.ConditionFalse {
+				pollErr = errors.Errorf(
+					"expected Available condition to be 'False', got %q (reason %s, %q)",
+					cond.Status,
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if cond.Reason != "NoPodReady" {
+				pollErr = errors.Errorf(
+					"expected Available condition's reason to be 'NoPodReady',  got %s (message %q)",
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		pollErr = errors.Errorf("failed to find Available condition in status subresource")
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for Prometheus %v/%v: %v: %v", p.Namespace, p.Name, err, pollErr)
+	}
+}
+
 func testPromDegradedConditionStatus(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -4594,7 +4651,9 @@ func testPromDegradedConditionStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Roll out a new version of the Prometheus object that triggers an error.
+	// Roll out a new version of the Prometheus object that references a
+	// non-existing container image which should trigger the
+	// "Available=Degraded" condition.
 	p, err := framework.PatchPrometheus(
 		context.Background(),
 		p.Name,
@@ -4621,11 +4680,11 @@ func testPromDegradedConditionStatus(t *testing.T) {
 		}
 
 		for _, cond := range current.Status.Conditions {
-			if cond.Type != monitoringv1.PrometheusAvailable {
+			if cond.Type != monitoringv1.Available {
 				continue
 			}
 
-			if cond.Status != monitoringv1.PrometheusConditionDegraded {
+			if cond.Status != monitoringv1.ConditionDegraded {
 				pollErr = errors.Errorf(
 					"expected Available condition to be 'Degraded', got %q (reason %s, %q)",
 					cond.Status,

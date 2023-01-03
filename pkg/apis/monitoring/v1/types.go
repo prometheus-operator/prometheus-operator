@@ -633,7 +633,7 @@ type PrometheusStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []PrometheusCondition `json:"conditions,omitempty"`
+	Conditions []Condition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
 	// +listType=map
 	// +listMapKey=shardID
@@ -641,15 +641,15 @@ type PrometheusStatus struct {
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 }
 
-// PrometheusCondition represents the state of the resources associated with the Prometheus resource.
+// Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.
 // +k8s:deepcopy-gen=true
-type PrometheusCondition struct {
+type Condition struct {
 	// Type of the condition being reported.
 	// +required
-	Type PrometheusConditionType `json:"type"`
-	// status of the condition.
+	Type ConditionType `json:"type"`
+	// Status of the condition.
 	// +required
-	Status PrometheusConditionStatus `json:"status"`
+	Status ConditionStatus `json:"status"`
 	// lastTransitionTime is the time of the last update to the current status property.
 	// +required
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
@@ -659,39 +659,41 @@ type PrometheusCondition struct {
 	// Human-readable message indicating details for the condition's last transition.
 	// +optional
 	Message string `json:"message,omitempty"`
-	// ObservedGeneration represents the .metadata.generation that the condition was set based upon.
-	// For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-	// with respect to the current state of the instance.
+	// ObservedGeneration represents the .metadata.generation that the
+	// condition was set based upon. For instance, if `.metadata.generation` is
+	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+	// condition is out of date with respect to the current state of the
+	// instance.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
-type PrometheusConditionType string
+type ConditionType string
 
 const (
-	// Available indicates whether enough Prometheus pods are ready to provide
-	// the service.
+	// Available indicates whether enough pods are ready to provide the
+	// service.
 	// The possible status values for this condition type are:
 	// - True: all pods are running and ready, the service is fully available.
 	// - Degraded: some pods aren't ready, the service is partially available.
 	// - False: no pods are running, the service is totally unavailable.
 	// - Unknown: the operator couldn't determine the condition status.
-	PrometheusAvailable PrometheusConditionType = "Available"
+	Available ConditionType = "Available"
 	// Reconciled indicates whether the operator has reconciled the state of
-	// the underlying resources with the Prometheus object spec.
+	// the underlying resources with the object's spec.
 	// The possible status values for this condition type are:
 	// - True: the reconciliation was successful.
 	// - False: the reconciliation failed.
 	// - Unknown: the operator couldn't determine the condition status.
-	PrometheusReconciled PrometheusConditionType = "Reconciled"
+	Reconciled ConditionType = "Reconciled"
 )
 
-type PrometheusConditionStatus string
+type ConditionStatus string
 
 const (
-	PrometheusConditionTrue     PrometheusConditionStatus = "True"
-	PrometheusConditionDegraded PrometheusConditionStatus = "Degraded"
-	PrometheusConditionFalse    PrometheusConditionStatus = "False"
-	PrometheusConditionUnknown  PrometheusConditionStatus = "Unknown"
+	ConditionTrue     ConditionStatus = "True"
+	ConditionDegraded ConditionStatus = "Degraded"
+	ConditionFalse    ConditionStatus = "False"
+	ConditionUnknown  ConditionStatus = "Unknown"
 )
 
 type ShardStatus struct {
@@ -1880,8 +1882,12 @@ type Rule struct {
 // +kubebuilder:resource:categories="prometheus-operator",shortName="am"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Alertmanager"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The number of desired replicas"
+// +kubebuilder:printcolumn:name="Ready",type="integer",JSONPath=".status.availableReplicas",description="The number of ready replicas"
+// +kubebuilder:printcolumn:name="Reconciled",type="string",JSONPath=".status.conditions[?(@.type == 'Reconciled')].status"
+// +kubebuilder:printcolumn:name="Available",type="string",JSONPath=".status.conditions[?(@.type == 'Available')].status"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
+// +kubebuilder:subresource:status
 
 // Alertmanager describes an Alertmanager cluster.
 type Alertmanager struct {
@@ -1890,11 +1896,10 @@ type Alertmanager struct {
 	// Specification of the desired behavior of the Alertmanager cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Spec AlertmanagerSpec `json:"spec"`
-	// Most recent observed status of the Alertmanager cluster. Read-only. Not
-	// included when requesting from the apiserver, only from the Prometheus
-	// Operator API itself. More info:
+	// Most recent observed status of the Alertmanager cluster. Read-only.
+	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-	Status *AlertmanagerStatus `json:"status,omitempty"`
+	Status AlertmanagerStatus `json:"status,omitempty"`
 }
 
 // AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
@@ -2163,9 +2168,8 @@ type MetadataConfig struct {
 	SendInterval Duration `json:"sendInterval,omitempty"`
 }
 
-// AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
-// included when requesting from the apiserver, only from the Prometheus
-// Operator API itself. More info:
+// AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
+// More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerStatus struct {
@@ -2173,16 +2177,21 @@ type AlertmanagerStatus struct {
 	// being performed. Only delete actions will be performed.
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Alertmanager
-	// cluster (their labels match the selector).
+	// object (their labels match the selector).
 	Replicas int32 `json:"replicas"`
 	// Total number of non-terminated pods targeted by this Alertmanager
-	// cluster that have the desired version spec.
+	// object that have the desired version spec.
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Alertmanager cluster.
 	AvailableReplicas int32 `json:"availableReplicas"`
-	// Total number of unavailable pods targeted by this Alertmanager cluster.
+	// Total number of unavailable pods targeted by this Alertmanager object.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// The current state of the Alertmanager object.
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []Condition `json:"conditions,omitempty"`
 }
 
 // NamespaceSelector is a selector for selecting either all namespaces or a

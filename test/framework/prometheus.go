@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -383,72 +382,23 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 		expected = expected * *p.Spec.Shards
 	}
 
-	var pollErr error
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
-		var current *monitoringv1.Prometheus
-		current, pollErr = f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
-		if pollErr != nil {
-			return false, nil
-		}
-
-		status := current.Status
-
-		if status.UpdatedReplicas != expected {
-			pollErr = errors.Errorf("expected %d updated replicas, got %d", expected, status.UpdatedReplicas)
-			return false, nil
-		}
-
-		var reconciled, available *monitoringv1.PrometheusCondition
-		for _, cond := range status.Conditions {
-			if cond.Type == monitoringv1.PrometheusAvailable {
-				available = &cond
+	if err := f.WaitForResourceAvailable(
+		ctx,
+		func() (resourceStatus, error) {
+			current, err := f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
+			if err != nil {
+				return resourceStatus{}, err
 			}
-			if cond.Type == monitoringv1.PrometheusReconciled {
-				reconciled = &cond
-			}
-			if f.operatorVersion.GTE(semver.MustParse("0.60.0")) && cond.ObservedGeneration != current.Generation {
-				pollErr = errors.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
-					cond.ObservedGeneration,
-					cond.Type,
-					current.Generation)
-				return false, nil
-			}
-		}
-
-		if reconciled == nil {
-			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
-			return false, nil
-		}
-
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
-			pollErr = errors.Errorf(
-				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
-				reconciled.Status,
-				reconciled.Reason,
-				reconciled.Message,
-			)
-			return false, nil
-		}
-
-		if available == nil {
-			pollErr = errors.Errorf("failed to find Available condition in status subresource")
-			return false, nil
-		}
-
-		if available.Status != monitoringv1.PrometheusConditionTrue {
-			pollErr = errors.Errorf(
-				"expected Available condition to be 'True', got %q (reason %s, %q)",
-				available.Status,
-				available.Reason,
-				available.Message,
-			)
-			return false, nil
-		}
-		return true, nil
-	})
-
-	if err != nil {
-		return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+			return resourceStatus{
+				expectedReplicas: expected,
+				generation:       current.Generation,
+				replicas:         current.Status.UpdatedReplicas,
+				conditions:       current.Status.Conditions,
+			}, nil
+		},
+		timeout,
+	); err != nil {
+		return errors.Wrapf(err, "prometheus %v/%v failed to become available", p.Namespace, p.Name)
 	}
 
 	return nil

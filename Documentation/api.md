@@ -732,9 +732,8 @@ AlertmanagerStatus
 </em>
 </td>
 <td>
-<p>Most recent observed status of the Alertmanager cluster. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>Most recent observed status of the Alertmanager cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
@@ -4615,9 +4614,8 @@ This field may change in future releases.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Alertmanager">Alertmanager</a>)
 </p>
 <div>
-<p>AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </div>
 <table>
@@ -4649,7 +4647,7 @@ int32
 </td>
 <td>
 <p>Total number of non-terminated pods targeted by this Alertmanager
-cluster (their labels match the selector).</p>
+object (their labels match the selector).</p>
 </td>
 </tr>
 <tr>
@@ -4661,7 +4659,7 @@ int32
 </td>
 <td>
 <p>Total number of non-terminated pods targeted by this Alertmanager
-cluster that have the desired version spec.</p>
+object that have the desired version spec.</p>
 </td>
 </tr>
 <tr>
@@ -4684,7 +4682,21 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of unavailable pods targeted by this Alertmanager cluster.</p>
+<p>Total number of unavailable pods targeted by this Alertmanager object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the Alertmanager object.</p>
 </td>
 </tr>
 </tbody>
@@ -5902,6 +5914,159 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.Condition">Condition
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
+</p>
+<div>
+<p>Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionType">
+ConditionType
+</a>
+</em>
+</td>
+<td>
+<p>Type of the condition being reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionStatus">
+ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>lastTransitionTime is the time of the last update to the current status property.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Reason for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>observedGeneration</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>ObservedGeneration represents the .metadata.generation that the
+condition was set based upon. For instance, if <code>.metadata.generation</code> is
+currently 12, but the <code>.status.conditions[].observedGeneration</code> is 9, the
+condition is out of date with respect to the current state of the
+instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConditionStatus">ConditionStatus
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Degraded&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;False&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;True&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Unknown&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConditionType">ConditionType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Available&#34;</p></td>
+<td><p>Available indicates whether enough pods are ready to provide the
+service.
+The possible status values for this condition type are:
+- True: all pods are running and ready, the service is fully available.
+- Degraded: some pods aren&rsquo;t ready, the service is partially available.
+- False: no pods are running, the service is totally unavailable.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
+</td>
+</tr><tr><td><p>&#34;Reconciled&#34;</p></td>
+<td><p>Reconciled indicates whether the operator has reconciled the state of
+the underlying resources with the object&rsquo;s spec.
+The possible status values for this condition type are:
+- True: the reconciliation was successful.
+- False: the reconciliation failed.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
@@ -7996,157 +8161,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
-</p>
-<div>
-<p>PrometheusCondition represents the state of the resources associated with the Prometheus resource.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionType">
-PrometheusConditionType
-</a>
-</em>
-</td>
-<td>
-<p>Type of the condition being reported.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionStatus">
-PrometheusConditionStatus
-</a>
-</em>
-</td>
-<td>
-<p>status of the condition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>lastTransitionTime</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<p>lastTransitionTime is the time of the last update to the current status property.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>reason</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Reason for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>message</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>observedGeneration</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<p>ObservedGeneration represents the .metadata.generation that the condition was set based upon.
-For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-with respect to the current state of the instance.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionStatus">PrometheusConditionStatus
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Degraded&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;False&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;True&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Unknown&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionType">PrometheusConditionType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Available&#34;</p></td>
-<td><p>Available indicates whether enough Prometheus pods are ready to provide
-the service.
-The possible status values for this condition type are:
-- True: all pods are running and ready, the service is fully available.
-- Degraded: some pods aren&rsquo;t ready, the service is partially available.
-- False: no pods are running, the service is totally unavailable.
-- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
-</td>
-</tr><tr><td><p>&#34;Reconciled&#34;</p></td>
-<td><p>Reconciled indicates whether the operator has reconciled the state of
-the underlying resources with the Prometheus object spec.
-The possible status values for this condition type are:
-- True: the reconciliation was successful.
-- False: the reconciliation failed.
-- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
-</td>
-</tr></tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
 <p>
@@ -9561,8 +9575,8 @@ int32
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PrometheusCondition">
-[]PrometheusCondition
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
 </a>
 </em>
 </td>
