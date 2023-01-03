@@ -25,9 +25,9 @@ require (
 	github.com/prometheus/alertmanager v0.25.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.38.0
-	github.com/prometheus/prometheus v0.40.5
+	github.com/prometheus/prometheus v0.40.7
 	github.com/stretchr/testify v1.8.1
-	github.com/thanos-io/thanos v0.29.0
+	github.com/thanos-io/thanos v0.30.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
