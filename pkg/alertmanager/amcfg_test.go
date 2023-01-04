@@ -19,26 +19,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/google/go-cmp/cmp"
-	monitoringingv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
-
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/pointer"
+
+	monitoringingv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
 func TestInitializeFromAlertmanagerConfig(t *testing.T) {
@@ -243,9 +243,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(cb.cfg, tt.want) {
-				t.Errorf("initializeFromAlertmanagerConfig() = %v, want %v", cb.cfg, tt.want)
-			}
+			require.Equal(t, tt.want, cb.cfg)
 		})
 	}
 }
@@ -1820,9 +1818,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
 	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
 
-	versionAuthzAllowed := semver.Version{Major: 0, Minor: 22}
-	versionAuthzNotAllowed := semver.Version{Major: 0, Minor: 21}
-
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
@@ -1831,6 +1826,13 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionTimeIntervalsAllowed := semver.Version{Major: 0, Minor: 24}
 	versionTimeIntervalsNotAllowed := semver.Version{Major: 0, Minor: 23}
+
+	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
+	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
+
+	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
+	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -1929,39 +1931,6 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-			name:           "Test authorization causes error for unsupported versions",
-			againstVersion: versionAuthzNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/drop",
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test oauth2 causes error for unsupported versions",
-			againstVersion: versionAuthzNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						OAuth2: &oauth2{
-							ClientID:         "a",
-							ClientSecret:     "b",
-							ClientSecretFile: "c",
-							TokenURL:         "d",
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name:           "Test slack config happy path",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
@@ -1988,32 +1957,6 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								APIURLFile: "/test/case",
 							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name:           "Test http config happy path",
-			againstVersion: versionAuthzAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/keep",
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						Authorization: &authorization{
-							Type:            "any",
-							Credentials:     "some",
-							CredentialsFile: "/must/keep",
 						},
 					},
 				},
@@ -2251,6 +2194,108 @@ func TestSanitizeConfig(t *testing.T) {
 				Route: &route{},
 			},
 		},
+		{
+			name:           "discord_config for supported versions",
+			againstVersion: versionDiscordAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "discord_config returns error for unsupported versions",
+			againstVersion: versionDiscordNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "webex_config for supported versions",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "http://example.com",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "http://example.com",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "webex_config returns error for unsupported versions",
+			againstVersion: versionWebexNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "webex_config returns error for missing mandatory field",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -2260,12 +2305,24 @@ func TestSanitizeConfig(t *testing.T) {
 				}
 				return
 			}
-			out := *tc.in
-			if !reflect.DeepEqual(out, tc.expect) {
-				t.Fatalf("wanted %v but got %v", tc.expect, out)
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
 			}
+
+			require.Equal(t, tc.expect, *tc.in)
 		})
 	}
+}
+
+func TestHTTPClientConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	httpConfigV25Allowed := semver.Version{Major: 0, Minor: 25}
+	httpConfigV25NotAllowed := semver.Version{Major: 0, Minor: 24}
+
+	versionAuthzAllowed := semver.Version{Major: 0, Minor: 22}
+	versionAuthzNotAllowed := semver.Version{Major: 0, Minor: 21}
 
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
@@ -2273,6 +2330,7 @@ func TestSanitizeConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *httpClientConfig
 		expect         httpClientConfig
+		expectErr      bool
 	}{
 		{
 			name: "Test happy path",
@@ -2292,16 +2350,567 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "HTTP client config fields preserved with v0.25.0",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+		},
+		{
+			name:           "Test authorization causes error for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &httpClientConfig{
+				Authorization: &authorization{
+					Type:            "any",
+					Credentials:     "some",
+					CredentialsFile: "/must/drop",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test oauth2 causes error for unsupported versions",
+			againstVersion: versionAuthzNotAllowed,
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "HTTP client config with min TLS version only",
+			in: &httpClientConfig{
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+				},
+			},
+		},
+		{
+			name: "HTTP client config with max TLS version only",
+			in: &httpClientConfig{
+				TLSConfig: &tlsConfig{
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				TLSConfig: &tlsConfig{
+					MaxVersion: "TLS12",
+				},
+			},
+		},
+		{
+			name: "HTTP client config TLS min version > max version",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS13",
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "HTTP client config TLS min version unknown",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS14",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "HTTP client config TLS max version unknown",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MaxVersion: "TLS14",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "Test HTTP client config fields dropped before v0.25.0",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					ProxyURL:         "http://example.com/",
+				},
+				EnableHTTP2: pointer.Bool(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25NotAllowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+				},
+				TLSConfig: &tlsConfig{},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.in.sanitize(tc.againstVersion, logger)
-			out := *tc.in
-			if !reflect.DeepEqual(out, tc.expect) {
-				t.Fatalf("wanted %v but got %v", tc.expect, out)
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
 			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expect, *tc.in)
 		})
 	}
+}
 
+func TestSanitizeEmailConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test smtp_auth_password takes precedence in global config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthPassword:     "foo",
+					SMTPAuthPasswordFile: "bar",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthPassword: "foo",
+				},
+			},
+		},
+		{
+			name:           "Test smtp_auth_password_file is dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthPasswordFile: "bar",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthPasswordFile: "",
+				},
+			},
+		},
+		{
+			name:           "Test smtp_auth_password takes precedence in email config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPassword:     "foo",
+								AuthPasswordFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPassword: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test smtp_auth_password_file is dropped in slack config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPasswordFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPasswordFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
+func TestSanitizeVictorOpsConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test victorops_api_key takes precedence in global config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					VictorOpsAPIKey:     "foo",
+					VictorOpsAPIKeyFile: "bar",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					VictorOpsAPIKey: "foo",
+				},
+			},
+		},
+		{
+			name:           "Test victorops_api_key_file is dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					VictorOpsAPIKeyFile: "bar",
+				},
+			},
+			expect: alertmanagerConfig{
+				Global: &globalConfig{
+					VictorOpsAPIKeyFile: "",
+				},
+			},
+		},
+		{
+			name:           "Test api_key takes precedence in victorops config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIKey:     "foo",
+								APIKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIKey: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test api_key_file is dropped in victorops config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIKeyFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
+func TestSanitizePagerDutyConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test routing_key takes precedence in pagerduty config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								RoutingKey:     "foo",
+								RoutingKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								RoutingKey: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test routing_key_file is dropped in pagerduty config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								RoutingKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								RoutingKeyFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test service_key takes precedence in pagerduty config",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ServiceKey:     "foo",
+								ServiceKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ServiceKey: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test service_key_file is dropped in pagerduty config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ServiceKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ServiceKeyFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test source is dropped in pagerduty config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
 }
 
 func TestSanitizeRoute(t *testing.T) {
@@ -2410,10 +3019,7 @@ func TestSanitizeRoute(t *testing.T) {
 				t.Fatalf("wanted %v but got error %s", tc.expect, err.Error())
 			}
 
-			out := *tc.in
-			if !reflect.DeepEqual(out, tc.expect) {
-				t.Fatalf("wanted %v but got %v", tc.expect, out)
-			}
+			require.Equal(t, tc.expect, *tc.in)
 		})
 	}
 }
@@ -2563,9 +3169,7 @@ templates: []
 			if err != nil {
 				t.Fatalf("expecing no error, got %v", err)
 			}
-			if !reflect.DeepEqual(ac, tc.expected) {
-				t.Fatalf("got:\n%v\nbut wanted:\n%v", ac, tc.expected)
-			}
+			require.Equal(t, tc.expected, ac)
 		})
 	}
 }
