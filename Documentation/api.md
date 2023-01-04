@@ -7018,6 +7018,17 @@ PodMetricsEndpointTLSConfig
 </tr>
 <tr>
 <td>
+<code>bearerTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>File to read bearer token for scraping targets.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>bearerTokenSecret</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">

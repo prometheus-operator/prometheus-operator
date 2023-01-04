@@ -1394,6 +1394,8 @@ type PodMetricsEndpoint struct {
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
+	// File to read bearer token for scraping targets.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the pod monitor and accessible by
 	// the Prometheus Operator.

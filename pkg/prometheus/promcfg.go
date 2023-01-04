@@ -727,6 +727,10 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
 	}
 
+	if ep.BearerTokenFile != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
+	}
+
 	if ep.BearerTokenSecret.Name != "" {
 		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})

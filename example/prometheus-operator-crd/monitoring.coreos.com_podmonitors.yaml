@@ -162,6 +162,9 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                       type: object
+                    bearerTokenFile:
+                      description: File to read bearer token for scraping targets.
+                      type: string
                     bearerTokenSecret:
                       description: Secret to mount to read bearer token for scraping
                         targets. The secret needs to be in the same namespace as the
