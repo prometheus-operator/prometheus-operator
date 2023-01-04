@@ -1182,8 +1182,8 @@ func (cb *configBuilder) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) 
 	}
 }
 
-func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey types.NamespacedName) (*muteTimeInterval, error) {
-	muteTimeInterval := &muteTimeInterval{}
+func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey types.NamespacedName) (*timeInterval, error) {
+	muteTimeInterval := &timeInterval{}
 
 	for _, timeInterval := range in.TimeIntervals {
 		ti := timeinterval.TimeInterval{}
@@ -1389,18 +1389,28 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		}
 	}
 
-	if len(c.MuteTimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.22.0")) {
+	if len(c.MuteTimeIntervals) > 0 && amVersion.LT(semver.MustParse("0.22.0")) {
 		// mute time intervals are unsupported < 0.22.0, and we already log the situation
 		// when handling the routes so just set to nil
 		c.MuteTimeIntervals = nil
 	}
 
-	if len(c.TimeIntervals) > 0 && !amVersion.GTE(semver.MustParse("0.24.0")) {
-		// time intervals are unsupported < 0.24.0, report and set to nil
-		withLogger := log.With(logger, "component", "alertmanager")
-		msg := "time_intervals is supported in Alertmanager >= 0.24.0 only - dropping config"
-		level.Warn(withLogger).Log("msg", msg, "time_intervals", c.TimeIntervals)
+	if len(c.TimeIntervals) > 0 && amVersion.LT(semver.MustParse("0.24.0")) {
+		// time intervals are unsupported < 0.24.0, and we already log the situation
+		// when handling the routes so just set to nil
 		c.TimeIntervals = nil
+	}
+
+	for _, ti := range c.MuteTimeIntervals {
+		if err := ti.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "mute_time_intervals[%s]", ti.Name)
+		}
+	}
+
+	for _, ti := range c.TimeIntervals {
+		if err := ti.sanitize(amVersion, logger); err != nil {
+			return errors.Wrapf(err, "time_intervals[%s]", ti.Name)
+		}
 	}
 
 	return c.Route.sanitize(amVersion, logger)
@@ -1870,6 +1880,21 @@ func (ir *inhibitRule) sanitize(amVersion semver.Version, logger log.Logger) err
 	ir.TargetMatchers = convertSliceToNilIfEmpty(ir.TargetMatchers)
 	ir.SourceMatchers = convertSliceToNilIfEmpty(ir.SourceMatchers)
 	ir.Equal = convertSliceToNilIfEmpty(ir.Equal)
+
+	return nil
+}
+
+func (ti *timeInterval) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if amVersion.GTE(semver.MustParse("0.25.0")) {
+		return nil
+	}
+
+	for i, tis := range ti.TimeIntervals {
+		if tis.Location != nil {
+			level.Warn(logger).Log("msg", "time_interval location is supported in Alertmanager >= 0.25.0 only - dropping config")
+			ti.TimeIntervals[i].Location = nil
+		}
+	}
 
 	return nil
 }
