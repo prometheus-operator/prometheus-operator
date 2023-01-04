@@ -4015,6 +4015,13 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "podTargetLabels": {
+                    "description": "PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "portName": {
                     "description": "Port name used for the pods and governing service. This defaults to web",
                     "type": "string"

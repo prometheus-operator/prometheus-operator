@@ -2179,6 +2179,17 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -5879,6 +5890,17 @@ Make sure to understand the security implications if you want to enable it.
 When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
@@ -9113,6 +9135,17 @@ bool
 <p>Use the host&rsquo;s network namespace if true.
 Make sure to understand the security implications if you want to enable it.
 When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 <tr>

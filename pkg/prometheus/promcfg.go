@@ -43,9 +43,7 @@ const (
 	kubernetesSDRoleIngress       = "ingress"
 )
 
-var (
-	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
-)
+var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
@@ -834,7 +832,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -901,7 +899,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -1326,7 +1323,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -1673,7 +1670,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteRead {
-		//defaults
+		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
 		}
@@ -1768,11 +1765,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 	p *v1.Prometheus,
 	store *assets.Store,
 ) yaml.MapItem {
-
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteWrite {
-		//defaults
+		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
 		}
