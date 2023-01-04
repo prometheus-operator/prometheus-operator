@@ -407,7 +407,7 @@ templates: []
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
-				MuteTimeIntervals: []*muteTimeInterval{
+				MuteTimeIntervals: []*timeInterval{
 					{
 						Name: "maintenance_windows",
 						TimeIntervals: []timeinterval.TimeInterval{
@@ -1824,9 +1824,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
 	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
 
-	versionTimeIntervalsAllowed := semver.Version{Major: 0, Minor: 24}
-	versionTimeIntervalsNotAllowed := semver.Version{Major: 0, Minor: 23}
-
 	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
 	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -2129,69 +2126,6 @@ func TestSanitizeConfig(t *testing.T) {
 						OpsgenieConfigs: []*opsgenieConfig{{}},
 					},
 				},
-			},
-		},
-		{
-			name:           "time_intervals and active_time_intervals in Route config",
-			againstVersion: versionTimeIntervalsAllowed,
-			in: &alertmanagerConfig{
-				TimeIntervals: []*timeInterval{
-					{
-						Name:          "weekend",
-						TimeIntervals: []timeinterval.TimeInterval{},
-					},
-				},
-				Route: &route{
-					ActiveTimeIntervals: []string{
-						"weekend",
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				TimeIntervals: []*timeInterval{
-					{
-						Name:          "weekend",
-						TimeIntervals: []timeinterval.TimeInterval{},
-					},
-				},
-				Route: &route{
-					ActiveTimeIntervals: []string{
-						"weekend",
-					},
-				},
-			},
-		},
-		{
-			name:           "time_intervals is dropped for unsupported versions",
-			againstVersion: versionTimeIntervalsNotAllowed,
-			in: &alertmanagerConfig{
-				TimeIntervals: []*timeInterval{
-					{
-						Name:          "weekend",
-						TimeIntervals: []timeinterval.TimeInterval{},
-					},
-				},
-			},
-			expect: alertmanagerConfig{},
-		},
-		{
-			name:           "active_time_intervals is dropped for unsupported versions",
-			againstVersion: versionTimeIntervalsNotAllowed,
-			in: &alertmanagerConfig{
-				TimeIntervals: []*timeInterval{
-					{
-						Name:          "weekend",
-						TimeIntervals: []timeinterval.TimeInterval{},
-					},
-				},
-				Route: &route{
-					ActiveTimeIntervals: []string{
-						"weekend",
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Route: &route{},
 			},
 		},
 		{
@@ -2525,6 +2459,168 @@ func TestHTTPClientConfig(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
+func TestTimeInterval(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "time_intervals and active_time_intervals in Route config",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+		},
+		{
+			name:           "time_intervals is dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 23},
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+			},
+			expect: alertmanagerConfig{},
+		},
+		{
+			name:           "active_time_intervals is dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 23},
+			in: &alertmanagerConfig{
+				TimeIntervals: []*timeInterval{
+					{
+						Name:          "weekend",
+						TimeIntervals: []timeinterval.TimeInterval{},
+					},
+				},
+				Route: &route{
+					ActiveTimeIntervals: []string{
+						"weekend",
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Route: &route{},
+			},
+		},
+		{
+			name:           "location is dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 24},
+			in: &alertmanagerConfig{
+				MuteTimeIntervals: []*timeInterval{
+					{
+						Name: "workdays",
+						TimeIntervals: []timeinterval.TimeInterval{
+							{
+								Weekdays: []timeinterval.WeekdayRange{
+									{
+										InclusiveRange: timeinterval.InclusiveRange{Begin: 1, End: 5},
+									},
+								},
+								Location: &timeinterval.Location{
+									Location: time.Local,
+								},
+							},
+						},
+					},
+				},
+				TimeIntervals: []*timeInterval{
+					{
+						Name: "sunday",
+						TimeIntervals: []timeinterval.TimeInterval{
+							{
+								Weekdays: []timeinterval.WeekdayRange{
+									{
+										InclusiveRange: timeinterval.InclusiveRange{Begin: 0, End: 0},
+									},
+								},
+								Location: &timeinterval.Location{
+									Location: time.Local,
+								},
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				MuteTimeIntervals: []*timeInterval{
+					{
+						Name: "workdays",
+						TimeIntervals: []timeinterval.TimeInterval{
+							{
+								Weekdays: []timeinterval.WeekdayRange{
+									{
+										InclusiveRange: timeinterval.InclusiveRange{Begin: 1, End: 5},
+									},
+								},
+							},
+						},
+					},
+				},
+				TimeIntervals: []*timeInterval{
+					{
+						Name: "sunday",
+						TimeIntervals: []timeinterval.TimeInterval{
+							{
+								Weekdays: []timeinterval.WeekdayRange{
+									{
+										InclusiveRange: timeinterval.InclusiveRange{Begin: 0, End: 0},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
 			require.Equal(t, tc.expect, *tc.in)
 		})
 	}
@@ -3059,7 +3155,7 @@ templates: []
 						Name: "null",
 					},
 				},
-				MuteTimeIntervals: []*muteTimeInterval{
+				MuteTimeIntervals: []*timeInterval{
 					{
 						Name: "maintenance_windows",
 						TimeIntervals: []timeinterval.TimeInterval{
