@@ -108,7 +108,7 @@ func (a tlsCredentials) mountParamsForSecret(
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
 	vn := k8sutil.NewResourceNamerWithPrefix(volumePrefix)
-	volumeName, err := vn.UniqueVolumeName(secret.Name)
+	volumeName, err := vn.UniqueDNS1123Label(secret.Name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -140,7 +140,7 @@ func (a tlsCredentials) mountParamsForConfigmap(
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
 	vn := k8sutil.NewResourceNamerWithPrefix(volumePrefix)
-	volumeName, err := vn.UniqueVolumeName(configMap.Name)
+	volumeName, err := vn.UniqueDNS1123Label(configMap.Name)
 	if err != nil {
 		return nil, nil, err
 	}

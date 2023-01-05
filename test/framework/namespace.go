@@ -30,7 +30,7 @@ import (
 func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *TestCtx) string {
 	name := testCtx.ID()
 	rn := k8sutil.ResourceNamer{}
-	name, err := rn.UniqueVolumeName(name)
+	name, err := rn.UniqueDNS1123Label(name)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, fmt.Sprintf("failed to generate a namespace name %v", name)))
 	}

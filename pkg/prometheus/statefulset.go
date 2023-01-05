@@ -569,7 +569,7 @@ func makeStatefulSetSpec(
 	// Mount related secrets
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range p.Spec.Secrets {
-		name, err := rn.VolumeName(s)
+		name, err := rn.DNS1123Label(s)
 		if err != nil {
 			return nil, err
 		}
@@ -591,7 +591,7 @@ func makeStatefulSetSpec(
 
 	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range p.Spec.ConfigMaps {
-		name, err := rn.VolumeName(c)
+		name, err := rn.DNS1123Label(c)
 		if err != nil {
 			return nil, err
 		}
