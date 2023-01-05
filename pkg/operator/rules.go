@@ -16,6 +16,7 @@ package operator
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/go-kit/log"
@@ -75,12 +76,12 @@ func generateRulesConfiguration(ruleformat RuleConfigurationFormat, promRule mon
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal content")
 	}
-	errs := ValidateRule(promRule)
-	if len(errs) != 0 {
+	rValidationErrors := ValidateRule(promRule)
+	if len(rValidationErrors) != 0 {
 		const m = "Invalid rule"
 		level.Debug(logger).Log("msg", m, "content", content)
-		for _, err := range errs {
-			level.Info(logger).Log("msg", m, "err", err)
+		for _, rValidationError := range rValidationErrors {
+			level.Info(logger).Log("msg", m, "field", rValidationError.Field, "err", rValidationError.Error)
 		}
 		return "", errors.New(m)
 	}
@@ -88,28 +89,62 @@ func generateRulesConfiguration(ruleformat RuleConfigurationFormat, promRule mon
 }
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
-func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
+func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []RuleValidationError {
+	groupTag := GetJSONTagForField(monitoringv1.PrometheusRuleSpec{}, "Groups")
+	groupMap := make(map[string]int, len(promRule.Groups))
+
 	for i, group := range promRule.Groups {
+		groupMap[group.Name] = i
 		if group.PartialResponseStrategy == "" {
 			continue
 		}
 		// TODO(slashpai): Remove this validation after v0.65 since this is handled at CRD level
 		if _, ok := thanostypes.PartialResponseStrategy_value[strings.ToUpper(group.PartialResponseStrategy)]; !ok {
-			return []error{
-				fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
-			}
+			return []RuleValidationError{{
+				Field: fmt.Sprintf("%s[%d].%s", groupTag, i, GetJSONTagForField(monitoringv1.RuleGroup{}, "PartialResponseStrategy")),
+				Error: fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
+			}}
 		}
 
 		// reset this as the upstream prometheus rule validator
 		// is not aware of the partial_response_strategy field.
 		promRule.Groups[i].PartialResponseStrategy = ""
 	}
+
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
-		return []error{errors.Wrap(err, "failed to marshal content")}
+		return []RuleValidationError{{Error: errors.Wrap(err, "failed to marshal content")}}
 	}
+	rValidationErrors := []RuleValidationError{}
 	_, errs := rulefmt.Parse(content)
-	return errs
+
+	for _, err := range errs {
+		switch promErr := err.(type) {
+		case *rulefmt.Error:
+			rValidationError := RuleValidationError{
+				// Subtract 1 to promErr.Rule because rulefmt.Parse adds 1
+				// More info on https://github.com/prometheus/prometheus/pull/7495
+				Field: fmt.Sprintf("%s[%d].%s[%d]", groupTag, groupMap[promErr.Group], GetJSONTagForField(monitoringv1.RuleGroup{}, "Rules"), promErr.Rule-1),
+				Error: err,
+			}
+			rValidationErrors = append(rValidationErrors, rValidationError)
+		default:
+			rValidationError := RuleValidationError{
+				Field: groupTag,
+				Error: err,
+			}
+			rValidationErrors = append(rValidationErrors, rValidationError)
+		}
+	}
+
+	return rValidationErrors
+}
+
+func GetJSONTagForField(i interface{}, fieldName string) string {
+	if rRule, found := reflect.ValueOf(i).Type().FieldByName(fieldName); found {
+		return strings.Split(rRule.Tag.Get("json"), ",")[0]
+	}
+	return ""
 }
 
 // Select selects PrometheusRules and translates them into native Prometheus/Thanos configurations.

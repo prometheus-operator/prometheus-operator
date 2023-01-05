@@ -20,6 +20,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type RuleValidationError struct {
+	Field string
+	Error error
+}
+
 func MakeVolumeClaimTemplate(e monitoringv1.EmbeddedPersistentVolumeClaim) *v1.PersistentVolumeClaim {
 	pvc := v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{

@@ -29,9 +29,12 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
@@ -158,6 +161,65 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 	resp = sendAdmissionReview(t, ts, request)
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
+	}
+}
+
+func TestFieldInPrometheusRuleAdmissionError(t *testing.T) {
+	ts := server(api().servePrometheusRulesValidate)
+	t.Cleanup(ts.Close)
+
+	for _, tc := range []struct {
+		name          string
+		spec          string
+		expectedField string
+	}{
+		{
+			name: "Invalid PartialResponseStrategy",
+			spec: specInString(t, monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+				{
+					Name:                    "group",
+					PartialResponseStrategy: "invalid",
+					Rules: []monitoringv1.Rule{
+						{
+							Alert: "alert",
+							Expr:  intstr.FromString("vector(1)"),
+						},
+					},
+				},
+			}}),
+			expectedField: "groups[0].partial_response_strategy",
+		},
+		{
+			name: "Invalid Rule",
+			spec: specInString(t, monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+				{
+					Name: "group",
+					Rules: []monitoringv1.Rule{
+						{
+							Alert: "alert",
+							Expr:  intstr.FromString("vector(1"),
+						},
+					},
+				},
+			}}),
+			expectedField: "groups[0].rules[0]",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := sendAdmissionReview(t, ts, buildAdmissionReviewFromPrometheusRuleSpec(t, tc.spec))
+			fmt.Println(resp)
+			if resp.Response.Allowed == true {
+				t.Errorf(
+					"Unexpected admission result, wanted %v but got %v - (warnings=%v) - (details=%v)", false,
+					resp.Response.Allowed, resp.Response.Warnings, resp.Response.Result.Details)
+			}
+			for _, statusCause := range resp.Response.Result.Details.Causes {
+				if tc.expectedField != statusCause.Field {
+					t.Errorf("field in statusCause doesn't match expected value: expected %s got %s", tc.expectedField,
+						statusCause.Field)
+				}
+			}
+		})
 	}
 }
 
@@ -1114,7 +1176,15 @@ var nonStringsInLabelsAnnotations = []byte(`
   }
 }`)
 
+func buildAdmissionReviewFromPrometheusRuleSpec(t *testing.T, spec string) []byte {
+	return []byte(buildAdmissionReviewFromSpec(t, prometheusRuleKind, prometheusRuleResource, prometheusRuleVersion, spec))
+}
+
 func buildAdmissionReviewFromAlertmanagerConfigSpec(t *testing.T, version, spec string) []byte {
+	return []byte(buildAdmissionReviewFromSpec(t, alertManagerConfigKind, alertManagerConfigResource, version, spec))
+}
+
+func buildAdmissionReviewFromSpec(t *testing.T, kind, resource, version, spec string) []byte {
 	t.Helper()
 	tmpl := fmt.Sprintf(`
 {
@@ -1160,15 +1230,14 @@ func buildAdmissionReviewFromAlertmanagerConfigSpec(t *testing.T, version, spec 
 `,
 		group,
 		version,
-		alertManagerConfigKind,
+		kind,
 		version,
-		alertManagerConfigResource,
+		resource,
 		version,
-		alertManagerConfigKind,
+		kind,
 		spec)
 	return []byte(tmpl)
 }
-
 func buildConversionReviewFromAlertmanagerConfigSpec(t *testing.T, from, to, spec string) []byte {
 	t.Helper()
 	tmpl := fmt.Sprintf(`
@@ -1198,4 +1267,11 @@ func buildConversionReviewFromAlertmanagerConfigSpec(t *testing.T, from, to, spe
 		alertManagerConfigKind,
 		spec)
 	return []byte(tmpl)
+}
+
+func specInString(t *testing.T, spec interface{}) string {
+	byte, err := json.Marshal(spec)
+	assert.NoError(t, err)
+
+	return string(byte)
 }

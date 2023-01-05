@@ -46,6 +46,7 @@ const (
 	errUnmarshalConfig           = "Cannot unmarhsal config from spec"
 
 	group                  = "monitoring.coreos.com"
+	prometheusRuleKind     = monitoringv1.PrometheusRuleKind
 	prometheusRuleResource = monitoringv1.PrometheusRuleName
 	prometheusRuleVersion  = monitoringv1.Version
 
@@ -142,7 +143,7 @@ func (a *Admission) serveConvert(w http.ResponseWriter, r *http.Request) {
 	a.wh.ServeHTTP(w, r)
 }
 
-func toAdmissionResponseFailure(message, resource string, errors []error) *v1.AdmissionResponse {
+func toAdmissionResponseFailure(message, resource string, admissionErrors []promoperator.RuleValidationError) *v1.AdmissionResponse {
 	r := &v1.AdmissionResponse{
 		Result: &metav1.Status{
 			Details: &metav1.StatusDetails{
@@ -153,9 +154,9 @@ func toAdmissionResponseFailure(message, resource string, errors []error) *v1.Ad
 	r.Result.Code = http.StatusUnprocessableEntity
 	r.Result.Message = message
 
-	for _, err := range errors {
+	for _, admissionError := range admissionErrors {
 		r.Result.Details.Name = resource
-		r.Result.Details.Causes = append(r.Result.Details.Causes, metav1.StatusCause{Message: err.Error()})
+		r.Result.Details.Causes = append(r.Result.Details.Causes, metav1.StatusCause{Field: admissionError.Field, Message: admissionError.Error.Error()})
 	}
 
 	return r
@@ -189,7 +190,7 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 
 	if _, _, err := deserializer.Decode(body, nil, &requestedAdmissionReview); err != nil {
 		level.Warn(a.logger).Log("msg", "Unable to deserialize request", "err", err)
-		responseAdmissionReview.Response = toAdmissionResponseFailure("Unable to deserialize request", "", []error{err})
+		responseAdmissionReview.Response = toAdmissionResponseFailure("Unable to deserialize request", "", []promoperator.RuleValidationError{{Error: err}})
 	} else {
 		responseAdmissionReview.Response = admit(requestedAdmissionReview)
 	}
@@ -218,19 +219,19 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 	if ar.Request.Resource != prometheusRuleGVR {
 		err := fmt.Errorf("expected resource to be %v, but received %v", prometheusRuleResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
-		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []error{err})
+		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	rule := &PrometheusRules{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, rule); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
-		return toAdmissionResponseFailure(errUnmarshalAdmission, prometheusRuleResource, []error{err})
+		return toAdmissionResponseFailure(errUnmarshalAdmission, prometheusRuleResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	patches, err := generatePatchesForNonStringLabelsAnnotations(rule.Spec.Raw)
 	if err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
-		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
+		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	reviewResponse := &v1.AdmissionResponse{Allowed: true}
@@ -254,26 +255,27 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		err := fmt.Errorf("expected resource to be %v, but received %v", prometheusRuleResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
 		a.incrementCounter(a.promRuleValidationErrorsCounter)
-		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []error{err})
+		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	promRule := &monitoringv1.PrometheusRule{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
 		a.incrementCounter(a.promRuleValidationErrorsCounter)
-		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
+		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
-	errors := promoperator.ValidateRule(promRule.Spec)
-	if len(errors) != 0 {
+	admissionErrors := promoperator.ValidateRule(promRule.Spec)
+	if len(admissionErrors) != 0 {
 		const m = "Invalid rule"
 		level.Debug(a.logger).Log("msg", m, "content", promRule.Spec)
-		for _, err := range errors {
+		for _, err := range admissionErrors {
 			level.Info(a.logger).Log("msg", m, "err", err)
+
 		}
 
 		a.incrementCounter(a.promRuleValidationErrorsCounter)
-		return toAdmissionResponseFailure("Rules are not valid", prometheusRuleResource, errors)
+		return toAdmissionResponseFailure("Rules are not valid", prometheusRuleResource, admissionErrors)
 	}
 
 	return &v1.AdmissionResponse{Allowed: true}
@@ -288,7 +290,7 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		err := fmt.Errorf("expected resource to be %v, but received %v", alertManagerConfigResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	var amConf interface{}
@@ -299,13 +301,13 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		amConf = &monitoringv1beta1.AlertmanagerConfig{}
 	default:
 		err := fmt.Errorf("expected resource version to be 'v1alpha1' or 'v1beta1', but received %v", ar.Request.Resource.Version)
-		return toAdmissionResponseFailure("Unexpected resource version", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure("Unexpected resource version", alertManagerConfigResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	if err := json.Unmarshal(ar.Request.Object.Raw, amConf); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalConfig, "err", err)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 
 	var (
@@ -321,9 +323,9 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 	if err != nil {
 		msg := "invalid config"
 		level.Debug(a.logger).Log("msg", msg, "content", string(ar.Request.Object.Raw))
-		level.Info(a.logger).Log("msg", msg, "err", err)
+		level.Info(a.logger).Log("msg", msg, "field", "", "err", err.Error)
 		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []promoperator.RuleValidationError{{Error: err}})
 	}
 	return &v1.AdmissionResponse{Allowed: true}
 }
