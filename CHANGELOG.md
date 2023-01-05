@@ -1,3 +1,15 @@
+## 0.62.0 / 2023-01-04
+
+* [CHANGE] Use `spec.version` of the Prometheus object as the image's tag if the image name is untagged. #5171
+* [FEATURE] Generate "apply configuration" types. #5243
+* [FEATURE] Add `EnforcedPodTargetLabels` field to the Prometheus CRD for adding pod target labels to every PodMonitor/ServiceMonitor. #5206
+* [FEATURE] Add `spec.version` field to the ThanosRuler CRD. #5177
+* [ENHANCEMENT] Add `basicAuth` field to the Prometheus CRD for alerting configuration of Prometheus. #5170
+* [ENHANCEMENT] Add `spec.imagePullPolicy` to Prometheus, Alertmanager and ThanosRuler CRDs. #5203
+* [ENHANCEMENT] Add `activeTimeIntervals` field to AlertmanagerConfig CRD. #5198
+* [ENHANCEMENT] Support `time_intervals` and `active_time_intervals` in the Alertmanager configurations. #5135
+* [ENHANCEMENT] Support new fields in the Alertmanager v0.25.0 configuration. #5254 #5263
+
 ## 0.61.1 / 2022-11-24
 
 * [BUGFIX] Fixed a regression that caused the ThanosRuler statefulsets to be stuck after upgrading the operator to v0.61.0. #5183

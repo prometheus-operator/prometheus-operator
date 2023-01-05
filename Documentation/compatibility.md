@@ -101,6 +101,7 @@ The versions of Prometheus compatible with the Prometheus Operator are:
 * v2.37.2
 * v2.37.3
 * v2.37.4
+* v2.37.5
 * v2.38.0
 * v2.39.0
 * v2.39.1
@@ -111,12 +112,15 @@ The versions of Prometheus compatible with the Prometheus Operator are:
 * v2.40.3
 * v2.40.4
 * v2.40.5
+* v2.40.6
+* v2.40.7
+* v2.41.0
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v2.40.5
+* v2.41.0
 ```
 
 ## Alertmanager
@@ -126,7 +130,7 @@ The Prometheus Operator is compatible with Alertmanager v0.15 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
-* v0.24.0
+* v0.25.0
 ```
 
 ## Thanos
@@ -136,5 +140,5 @@ The Prometheus Operator is compatible with Thanos v0.10 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
-* v0.29.0
+* v0.30.1
 ```
