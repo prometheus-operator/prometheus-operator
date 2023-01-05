@@ -19,7 +19,7 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-community/prom-label-proxy v0.5.0
+	github.com/prometheus-community/prom-label-proxy v0.6.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.62.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.62.0
 	github.com/prometheus/alertmanager v0.25.0
@@ -84,6 +84,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
