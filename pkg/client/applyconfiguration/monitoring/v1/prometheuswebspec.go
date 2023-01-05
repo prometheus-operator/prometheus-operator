@@ -21,6 +21,7 @@ package v1
 type PrometheusWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
 	PageTitle                             *string `json:"pageTitle,omitempty"`
+	MaxConnections                        *int32  `json:"maxConnections,omitempty"`
 }
 
 // PrometheusWebSpecApplyConfiguration constructs an declarative configuration of the PrometheusWebSpec type for use with
@@ -50,5 +51,13 @@ func (b *PrometheusWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfi
 // If called multiple times, the PageTitle field is set to the value of the last call.
 func (b *PrometheusWebSpecApplyConfiguration) WithPageTitle(value string) *PrometheusWebSpecApplyConfiguration {
 	b.PageTitle = &value
+	return b
+}
+
+// WithMaxConnections sets the MaxConnections field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxConnections field is set to the value of the last call.
+func (b *PrometheusWebSpecApplyConfiguration) WithMaxConnections(value int32) *PrometheusWebSpecApplyConfiguration {
+	b.MaxConnections = &value
 	return b
 }
