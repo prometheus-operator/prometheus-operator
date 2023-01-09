@@ -385,8 +385,14 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
-		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+	if p.Spec.Web != nil {
+		if p.Spec.Web.PageTitle != nil {
+			promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *p.Spec.Web.PageTitle})
+		}
+
+		if p.Spec.Web.MaxConnections != nil {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.max-connections", Value: fmt.Sprintf("%d", *p.Spec.Web.MaxConnections)})
+		}
 	}
 
 	if p.Spec.EnableAdminAPI {
@@ -563,7 +569,7 @@ func makeStatefulSetSpec(
 	// Mount related secrets
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
 	for _, s := range p.Spec.Secrets {
-		name, err := rn.VolumeName(s)
+		name, err := rn.DNS1123Label(s)
 		if err != nil {
 			return nil, err
 		}
@@ -585,7 +591,7 @@ func makeStatefulSetSpec(
 
 	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
 	for _, c := range p.Spec.ConfigMaps {
-		name, err := rn.VolumeName(c)
+		name, err := rn.DNS1123Label(c)
 		if err != nil {
 			return nil, err
 		}

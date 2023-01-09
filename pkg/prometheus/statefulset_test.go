@@ -2067,6 +2067,31 @@ func TestWebPageTitle(t *testing.T) {
 	}
 }
 
+func TestMaxConnections(t *testing.T) {
+	maxConnections := int32(600)
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Web: &monitoringv1.PrometheusWebSpec{
+					MaxConnections: &maxConnections,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.max-connections=600" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus web max connections is not correctly set.")
+	}
+}
+
 func TestExpectedStatefulSetShardNames(t *testing.T) {
 	replicas := int32(2)
 	shards := int32(3)
