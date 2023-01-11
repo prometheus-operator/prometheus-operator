@@ -2879,4 +2879,19 @@ func TestPodHostNetworkConfig(t *testing.T) {
 	if sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
 		t.Fatalf("expected DNSPolicy configuration to match due to hostNetwork but failed")
 	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Env) <= 0 {
+		t.Fatalf("expect prometheus POD_IP env but failed")
+	}
+
+	var listenAddrFound bool
+	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		if arg == "--web.listen-address=[$(POD_IP)]:9090" {
+			listenAddrFound = true
+			break
+		}
+	}
+	if !listenAddrFound {
+		t.Fatalf("expect prometheus listen on pod ip but failed")
+	}
 }
