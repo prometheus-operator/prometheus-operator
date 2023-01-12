@@ -28,6 +28,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
@@ -1447,6 +1448,306 @@ templates: []
 	})
 	if err != nil {
 		t.Fatalf("waiting for alertmanager configuration: %v: %v", err, lastErr)
+	}
+}
+
+func TestAlertmanagerConfigSelection(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		amSpec            monitoringv1.AlertmanagerSpec
+		mainAMConfig      monitoringv1alpha1.AlertmanagerConfig
+		secondaryAMConfig []monitoringv1alpha1.AlertmanagerConfig
+		expectedConfig    string
+	}{
+		{
+			name: "Alertmanager not configured to ingest AlertmanagerConfig",
+			amSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: pointer.Int32(1),
+				LogLevel: "debug",
+			},
+			mainAMConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "main-config",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: pointer.String("http://test.url"),
+						}},
+					}},
+				},
+			},
+			expectedConfig: `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+templates: []`,
+		},
+		{
+			name: "Alertmanager with amConfigSelector configured",
+			amSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:                   pointer.Int32(1),
+				LogLevel:                   "debug",
+				AlertmanagerConfigSelector: &metav1.LabelSelector{},
+			},
+			mainAMConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "main-config",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: pointer.String("http://test.url"),
+						}},
+					}},
+				},
+			},
+			expectedConfig: `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+templates: []`,
+		},
+		{
+			name: "Alertmanager configured to ingest AlertmanagerConfig in the same namespace",
+			amSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: pointer.Int32(1),
+				LogLevel: "debug",
+				AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+					Name: "main-config",
+				},
+			},
+			mainAMConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "main-config",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: pointer.String("http://test.url"),
+						}},
+					}},
+				},
+			},
+			expectedConfig: `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  - receiver: main-config/e2e
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: main-config/e2e
+  webhook_configs:
+  - url: http://test.url
+templates: []`,
+		},
+		{
+			name: "Alertmanager with main AlertmanagerConfig and amConfigSelectors",
+			amSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: pointer.Int32(1),
+				LogLevel: "debug",
+				AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+					Name: "main-config",
+				},
+				AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				AlertmanagerConfigNamespaceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"monitored": "true",
+					},
+				},
+			},
+			mainAMConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "main-config",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: pointer.String("http://test.url"),
+						}},
+					}},
+				},
+			},
+			expectedConfig: `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  - receiver: main-config/e2e
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: main-config/e2e
+  webhook_configs:
+  - url: http://test.url
+templates: []`,
+		},
+		{
+			name: "Alertmanager with main AlertmanagerConfig with extra configs",
+			amSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: pointer.Int32(1),
+				LogLevel: "debug",
+				AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+					Name: "main-config",
+				},
+				AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				AlertmanagerConfigNamespaceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"monitored": "true",
+					},
+				},
+			},
+			mainAMConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "main-config",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: pointer.String("http://test.url"),
+						}},
+					}},
+				},
+			},
+			expectedConfig: `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  - receiver: main-config/e2e
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: main-config/e2e
+  webhook_configs:
+  - url: http://test.url
+templates: []`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			// Don't run Alertmanager tests in parallel. See
+			// https://github.com/prometheus/alertmanager/issues/1835 for details.
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			extraNs := framework.CreateNamespace(context.Background(), t, testCtx)
+			if err := framework.AddLabelsToNamespace(context.Background(), extraNs, map[string]string{"monitored": "true"}); err != nil {
+				t.Fatal(err)
+			}
+
+			alertmanager := framework.MakeBasicAlertmanager("amconfig-selector-tests", 1)
+			alertmanager.Spec = tc.amSpec
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+			require.NoError(t, err)
+
+			_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), &tc.mainAMConfig, metav1.CreateOptions{})
+			if err != nil {
+				t.Fatal(err, "expected validating webhook to reject invalid config")
+			}
+
+			for _, extraAMConfig := range tc.secondaryAMConfig {
+				_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(extraNs).Create(context.Background(), &extraAMConfig, metav1.CreateOptions{})
+				if err != nil {
+					t.Fatal(err, "expected validating webhook to reject invalid config")
+				}
+			}
+
+			var lastErr error
+			amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+			err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+				cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), amConfigSecretName, metav1.GetOptions{})
+				if err != nil {
+					lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+					return false, nil
+				}
+
+				if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+					lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
+					return false, nil
+				}
+
+				uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+				if err != nil {
+					t.Fatal(err)
+				}
+				if diff := cmp.Diff(uncompressed, tc.expectedConfig); diff != "" {
+					lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+					return false, nil
+				}
+
+				return true, nil
+			})
+			if err != nil {
+				t.Fatalf("waiting for alertmanager configuration: %v: %v", err, lastErr)
+			}
+		})
 	}
 }
 
