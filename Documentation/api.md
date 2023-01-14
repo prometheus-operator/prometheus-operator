@@ -125,6 +125,20 @@ configured.</p>
 </tr>
 <tr>
 <td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;alertmanager&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>version</code><br/>
 <em>
 string
@@ -661,7 +675,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -1398,6 +1412,20 @@ configured.</p>
 </tr>
 <tr>
 <td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;prometheus&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>imagePullSecrets</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
@@ -2073,7 +2101,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -2147,6 +2175,17 @@ bool
 <p>Use the host&rsquo;s network namespace if true.
 Make sure to understand the security implications if you want to enable it.
 When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 <tr>
@@ -2848,6 +2887,17 @@ ThanosRulerSpec
 <table>
 <tr>
 <td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>podMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
@@ -2868,6 +2918,20 @@ string
 </td>
 <td>
 <p>Thanos container image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -3415,7 +3479,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -3782,6 +3846,19 @@ TLSConfig
 </tr>
 <tr>
 <td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<p>BasicAuth allow an endpoint to authenticate over basic authentication</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>bearerTokenFile</code><br/>
 <em>
 string
@@ -3932,6 +4009,20 @@ string
 combinations. Specifying the version is still necessary to ensure the
 Prometheus Operator knows what version of Alertmanager is being
 configured.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;alertmanager&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -4472,7 +4563,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -4829,7 +4920,7 @@ string
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>BasicAuth allow an endpoint to authenticate over basic authentication
@@ -5030,6 +5121,20 @@ string
 combinations. Specifying the version is still necessary to ensure the
 Prometheus Operator knows what version of Prometheus is being
 configured.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;prometheus&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -5709,7 +5814,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -5783,6 +5888,17 @@ bool
 <p>Use the host&rsquo;s network namespace if true.
 Make sure to understand the security implications if you want to enable it.
 When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 </tbody>
@@ -8256,6 +8372,20 @@ configured.</p>
 </tr>
 <tr>
 <td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;prometheus&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>imagePullSecrets</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
@@ -8931,7 +9061,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -9005,6 +9135,17 @@ bool
 <p>Use the host&rsquo;s network namespace if true.
 Make sure to understand the security implications if you want to enable it.
 When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 <tr>
@@ -9497,6 +9638,18 @@ string
 </td>
 <td>
 <p>The prometheus web page title</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxConnections</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Defines the maximum number of simultaneous connections
+A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
 </td>
 </tr>
 </tbody>
@@ -10991,7 +11144,7 @@ Kubernetes core/v1.EmptyDirVolumeSource
 </em>
 </td>
 <td>
-<p>EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+<p>EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
 info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
 </td>
 </tr>
@@ -11005,7 +11158,7 @@ Kubernetes core/v1.EphemeralVolumeSource
 </em>
 </td>
 <td>
-<p>EphemeralVolumeSource to be used by the Prometheus StatefulSets.
+<p>EphemeralVolumeSource to be used by the StatefulSet.
 This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes">https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes</a></p>
 </td>
@@ -11020,7 +11173,8 @@ EmbeddedPersistentVolumeClaim
 </em>
 </td>
 <td>
-<p>A PVC spec to be used by the Prometheus StatefulSets.</p>
+<p>A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
+(for whatever reason) is to use a label selector alongside manually created PersistentVolumes.</p>
 </td>
 </tr>
 </tbody>
@@ -11217,6 +11371,17 @@ Prometheus &gt;= v2.39.0.</p>
 <tbody>
 <tr>
 <td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Thanos to be deployed.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>podMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
@@ -11237,6 +11402,20 @@ string
 </td>
 <td>
 <p>Thanos container image URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -11784,7 +11963,7 @@ uint32
 <p>Minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.
 Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.</p>
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -14487,6 +14666,18 @@ an alternative type to circumvent the limitation. The downside is that
 the Kube API can&rsquo;t validate the data beyond the fact that it is a valid
 JSON representation.
 MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>activeTimeIntervals</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ActiveTimeIntervals is a list of MuteTimeInterval names when this route should be active.</p>
 </td>
 </tr>
 </tbody>
@@ -17715,7 +17906,19 @@ CRD schema doesn&rsquo;t support self-referential types for now (see
 an alternative type to circumvent the limitation. The downside is that
 the Kube API can&rsquo;t validate the data beyond the fact that it is a valid
 JSON representation.
-MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,</p>
+MuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>activeTimeIntervals</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ActiveTimeIntervals is a list of TimeInterval names when this route should be active.</p>
 </td>
 </tr>
 </tbody>

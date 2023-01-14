@@ -313,6 +313,12 @@ func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeInter
 		}
 	}
 
+	for _, namedTimeInterval := range r.ActiveTimeIntervals {
+		if _, found := timeIntervals[namedTimeInterval]; !found {
+			return errors.Errorf("time interval %q not found", namedTimeInterval)
+		}
+	}
+
 	// validate that if defaults are set, they match regex
 	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
 		return errors.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())

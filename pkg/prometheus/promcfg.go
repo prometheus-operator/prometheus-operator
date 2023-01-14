@@ -43,9 +43,7 @@ const (
 	kubernetesSDRoleIngress       = "ingress"
 )
 
-var (
-	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
-)
+var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
@@ -140,11 +138,32 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 // the updated slice.
 func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
 	if cg.notCompatible {
-		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", k))
+		cg.Warn(k)
 		return m
 	}
 
 	return append(m, yaml.MapItem{Key: k, Value: v})
+}
+
+// AppendCommandlineArgument appends the name/v argument to the given []monitoringv1.Argument and returns
+// the updated slice.
+func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
+	if cg.notCompatible {
+		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
+		return m
+	}
+
+	return append(m, argument)
+}
+
+// IsCompatible return true or false depending if the version being used is compatible
+func (cg *ConfigGenerator) IsCompatible() bool {
+	return !cg.notCompatible
+}
+
+// Warn logs a warning.
+func (cg *ConfigGenerator) Warn(field string) {
+	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
 }
 
 type limitKey struct {
@@ -284,6 +303,23 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 
 	return cfg
+}
+
+func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
+	assetStoreKey string,
+	store *assets.Store,
+	basicAuth *v1.BasicAuth,
+) yaml.MapSlice {
+	if basicAuth == nil {
+		return cfg
+	}
+
+	var authCfg assets.BasicAuthCredentials
+	if s, ok := store.BasicAuthAssets[assetStoreKey]; ok {
+		authCfg = s
+	}
+
+	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
 }
 
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
@@ -695,16 +731,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	if ep.BasicAuth != nil {
-		if s, ok := store.BasicAuthAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: s.Username},
-					{Key: "password", Value: s.Password},
-				},
-			})
-		}
-	}
+	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
 
 	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
@@ -805,7 +832,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -872,7 +899,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -1081,16 +1107,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}
 	}
 
-	if m.Spec.BasicAuth != nil {
-		if s, ok := store.BasicAuthAssets[fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)]; ok {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: s.Username},
-					{Key: "password", Value: s.Password},
-				},
-			})
-		}
-	}
+	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name), store, m.Spec.BasicAuth)
 
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
@@ -1173,16 +1190,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	if ep.BasicAuth != nil {
-		if s, ok := store.BasicAuthAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: s.Username},
-					{Key: "password", Value: s.Password},
-				},
-			})
-		}
-	}
+	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
@@ -1315,7 +1323,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	for _, l := range m.Spec.PodTargetLabels {
+	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -1507,16 +1515,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			Key: "api_server", Value: apiserverConfig.Host,
 		})
 
-		if apiserverConfig.BasicAuth != nil && store.BasicAuthAssets != nil {
-			if s, ok := store.BasicAuthAssets["apiserver"]; ok {
-				k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
-					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.Username},
-						{Key: "password", Value: s.Password},
-					},
-				})
-			}
-		}
+		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, "apiserver", store, apiserverConfig.BasicAuth)
 
 		if apiserverConfig.BearerToken != "" {
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
@@ -1583,6 +1582,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
+
+		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.BasicAuth)
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
@@ -1669,7 +1670,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteRead {
-		//defaults
+		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
 		}
@@ -1695,16 +1696,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
 		}
 
-		if spec.BasicAuth != nil {
-			if s, ok := store.BasicAuthAssets[fmt.Sprintf("remoteRead/%d", i)]; ok {
-				cfg = append(cfg, yaml.MapItem{
-					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.Username},
-						{Key: "password", Value: s.Password},
-					},
-				})
-			}
-		}
+		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteRead/%d", i), store, spec.BasicAuth)
 
 		if spec.BearerToken != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
@@ -1773,11 +1765,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 	p *v1.Prometheus,
 	store *assets.Store,
 ) yaml.MapItem {
-
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteWrite {
-		//defaults
+		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
 		}
@@ -1837,16 +1828,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		}
 
-		if spec.BasicAuth != nil {
-			if s, ok := store.BasicAuthAssets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
-				cfg = append(cfg, yaml.MapItem{
-					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.Username},
-						{Key: "password", Value: s.Password},
-					},
-				})
-			}
-		}
+		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.BasicAuth)
 
 		if spec.BearerToken != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})

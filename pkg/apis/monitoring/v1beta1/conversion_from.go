@@ -31,13 +31,14 @@ func convertRouteFrom(in *v1alpha1.Route) (*Route, error) {
 	}
 
 	out := &Route{
-		Receiver:          in.Receiver,
-		GroupBy:           in.GroupBy,
-		GroupWait:         in.GroupWait,
-		GroupInterval:     in.GroupInterval,
-		RepeatInterval:    in.RepeatInterval,
-		Matchers:          convertMatchersFrom(in.Matchers),
-		MuteTimeIntervals: in.MuteTimeIntervals,
+		Receiver:            in.Receiver,
+		GroupBy:             in.GroupBy,
+		GroupWait:           in.GroupWait,
+		GroupInterval:       in.GroupInterval,
+		RepeatInterval:      in.RepeatInterval,
+		Matchers:            convertMatchersFrom(in.Matchers),
+		MuteTimeIntervals:   in.MuteTimeIntervals,
+		ActiveTimeIntervals: in.ActiveTimeIntervals,
 	}
 
 	// Deserialize child routes to convert them to v1alpha1 and serialize back.
@@ -162,7 +163,6 @@ func convertKeyValuesFrom(in []v1alpha1.KeyValue) []KeyValue {
 	}
 
 	return out
-
 }
 
 func convertSecretKeySelectorFrom(in *v1.SecretKeySelector) *SecretKeySelector {
@@ -522,7 +522,6 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 				Equal:       in.Equal,
 			},
 		)
-
 	}
 
 	for _, in := range src.Spec.MuteTimeIntervals {

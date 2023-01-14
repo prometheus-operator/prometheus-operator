@@ -96,6 +96,10 @@ type CommonPrometheusFields struct {
 	// Prometheus Operator knows what version of Prometheus is being
 	// configured.
 	Image *string `json:"image,omitempty"`
+	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -313,7 +317,7 @@ type CommonPrometheusFields struct {
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
-	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
+	// This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
 	// Pods' hostAliases configuration
@@ -340,6 +344,8 @@ type CommonPrometheusFields struct {
 	// Make sure to understand the security implications if you want to enable it.
 	// When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.
 	HostNetwork bool `json:"hostNetwork,omitempty"`
+	// PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
+	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 }
 
 // +genclient
@@ -719,14 +725,15 @@ type StorageSpec struct {
 	// Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary.
 	// DisableMountSubPath allows to remove any subPath usage in volume mounts.
 	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
-	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+	// EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
 	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
-	// EphemeralVolumeSource to be used by the Prometheus StatefulSets.
+	// EphemeralVolumeSource to be used by the StatefulSet.
 	// This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 	// More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes
 	Ephemeral *v1.EphemeralVolumeSource `json:"ephemeral,omitempty"`
-	// A PVC spec to be used by the Prometheus StatefulSets.
+	// A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
+	// (for whatever reason) is to use a label selector alongside manually created PersistentVolumes.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -783,6 +790,7 @@ type QuerySpec struct {
 	// The delta difference allowed for retrieving metrics during expression evaluations.
 	LookbackDelta *string `json:"lookbackDelta,omitempty"`
 	// Number of concurrent queries that can be run at once.
+	// +kubebuilder:validation:Minimum:=1
 	MaxConcurrency *int32 `json:"maxConcurrency,omitempty"`
 	// Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.
 	MaxSamples *int32 `json:"maxSamples,omitempty"`
@@ -796,6 +804,10 @@ type PrometheusWebSpec struct {
 	WebConfigFileFields `json:",inline"`
 	// The prometheus web page title
 	PageTitle *string `json:"pageTitle,omitempty"`
+	// Defines the maximum number of simultaneous connections
+	// A zero value means that Prometheus doesn't accept any incoming connection.
+	// +kubebuilder:validation:Minimum:=0
+	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
 
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
@@ -1136,21 +1148,21 @@ type LabelName string
 // More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 // +k8s:openapi-gen=true
 type RelabelConfig struct {
-	//The source labels select values from existing labels. Their content is concatenated
-	//using the configured separator and matched against the configured regular expression
-	//for the replace, keep, and drop actions.
+	// The source labels select values from existing labels. Their content is concatenated
+	// using the configured separator and matched against the configured regular expression
+	// for the replace, keep, and drop actions.
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
-	//Separator placed between concatenated source label values. default is ';'.
+	// Separator placed between concatenated source label values. default is ';'.
 	Separator string `json:"separator,omitempty"`
-	//Label to which the resulting value is written in a replace action.
-	//It is mandatory for replace actions. Regex capture groups are available.
+	// Label to which the resulting value is written in a replace action.
+	// It is mandatory for replace actions. Regex capture groups are available.
 	TargetLabel string `json:"targetLabel,omitempty"`
-	//Regular expression against which the extracted value is matched. Default is '(.*)'
+	// Regular expression against which the extracted value is matched. Default is '(.*)'
 	Regex string `json:"regex,omitempty"`
 	// Modulus to take of the hash of the source label values.
 	Modulus uint64 `json:"modulus,omitempty"`
-	//Replacement value against which a regex replace is performed if the
-	//regular expression matches. Regex capture groups are available. Default is '$1'
+	// Replacement value against which a regex replace is performed if the
+	// regular expression matches. Regex capture groups are available. Default is '$1'
 	Replacement string `json:"replacement,omitempty"`
 	//Action to perform based on regex matching. Default is 'replace'.
 	//uppercase and lowercase actions require Prometheus >= 2.36.
@@ -1194,6 +1206,8 @@ type AlertmanagerEndpoints struct {
 	PathPrefix string `json:"pathPrefix,omitempty"`
 	// TLS Config to use for alertmanager connection.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// BasicAuth allow an endpoint to authenticate over basic authentication
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// BearerTokenFile to read from filesystem to use when authenticating to
 	// Alertmanager.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
@@ -1837,7 +1851,6 @@ type RuleGroup struct {
 	// be ignored by Prometheus instances.
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
-	// +kubebuilder:default:=""
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 }
 
@@ -1895,6 +1908,10 @@ type AlertmanagerSpec struct {
 	// Prometheus Operator knows what version of Alertmanager is being
 	// configured.
 	Image *string `json:"image,omitempty"`
+	// Image pull policy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
@@ -2042,7 +2059,7 @@ type AlertmanagerSpec struct {
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
-	// This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate.
+	// This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
 	// +optional
 	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
 	// Pods' hostAliases configuration

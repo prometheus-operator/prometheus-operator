@@ -126,9 +126,12 @@ type Route struct {
 	// an alternative type to circumvent the limitation. The downside is that
 	// the Kube API can't validate the data beyond the fact that it is a valid
 	// JSON representation.
-	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	// MuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
+	// ActiveTimeIntervals is a list of TimeInterval names when this route should be active.
+	// +optional
+	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.

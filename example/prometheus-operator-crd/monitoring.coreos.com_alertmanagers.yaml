@@ -2720,6 +2720,16 @@ spec:
                   to ensure the Prometheus Operator knows what version of Alertmanager
                   is being configured.
                 type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'alertmanager', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
+                type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
                   namespace to use for pulling prometheus and alertmanager images
@@ -3991,8 +4001,9 @@ spec:
                 description: Minimum number of seconds for which a newly created pod
                   should be ready without any of its container crashing for it to
                   be considered available. Defaults to 0 (pod will be considered available
-                  as soon as it is ready) This is an alpha field and requires enabling
-                  StatefulSetMinReadySeconds feature gate.
+                  as soon as it is ready) This is an alpha field from kubernetes 1.22
+                  until 1.24 which requires enabling the StatefulSetMinReadySeconds
+                  feature gate.
                 format: int32
                 type: integer
               nodeSelector:
@@ -4279,9 +4290,9 @@ spec:
                       allows to remove any subPath usage in volume mounts.'
                     type: boolean
                   emptyDir:
-                    description: 'EmptyDirVolumeSource to be used by the Prometheus
-                      StatefulSets. If specified, used in place of any volumeClaimTemplate.
-                      More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
+                    description: 'EmptyDirVolumeSource to be used by the StatefulSet.
+                      If specified, used in place of any volumeClaimTemplate. More
+                      info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
                     properties:
                       medium:
                         description: 'medium represents what type of storage medium
@@ -4304,9 +4315,9 @@ spec:
                         x-kubernetes-int-or-string: true
                     type: object
                   ephemeral:
-                    description: 'EphemeralVolumeSource to be used by the Prometheus
-                      StatefulSets. This is a beta field in k8s 1.21, for lower versions,
-                      starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
+                    description: 'EphemeralVolumeSource to be used by the StatefulSet.
+                      This is a beta field in k8s 1.21, for lower versions, starting
+                      with k8s 1.19, it requires enabling the GenericEphemeralVolume
                       feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
                     properties:
                       volumeClaimTemplate:
@@ -4523,7 +4534,10 @@ spec:
                         type: object
                     type: object
                   volumeClaimTemplate:
-                    description: A PVC spec to be used by the Prometheus StatefulSets.
+                    description: A PVC spec to be used by the StatefulSet. The easiest
+                      way to use a volume that cannot be automatically provisioned
+                      (for whatever reason) is to use a label selector alongside manually
+                      created PersistentVolumes.
                     properties:
                       apiVersion:
                         description: 'APIVersion defines the versioned schema of this

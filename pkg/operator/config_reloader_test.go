@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 var reloaderConfig = ReloaderConfig{
@@ -31,15 +33,21 @@ var reloaderConfig = ReloaderConfig{
 
 func TestCreateInitConfigReloader(t *testing.T) {
 	initContainerName := "init-config-reloader"
+	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		initContainerName,
 		ReloaderResources(reloaderConfig),
-		ReloaderRunOnce())
+		ReloaderRunOnce(),
+		ImagePullPolicy(v1.PullAlways),
+	)
 	if container.Name != "init-config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
 	}
 	if !contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
+	}
+	if container.ImagePullPolicy != expectedImagePullPolicy {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 }
 
@@ -51,6 +59,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	configEnvsubstFile := "configEnvsubstFile"
 	watchedDirectories := []string{"directory1", "directory2"}
 	shard := int32(1)
+	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderResources(reloaderConfig),
@@ -67,6 +76,7 @@ func TestCreateConfigReloader(t *testing.T) {
 		ConfigEnvsubstFile(configEnvsubstFile),
 		WatchedDirectories(watchedDirectories),
 		Shard(shard),
+		ImagePullPolicy(expectedImagePullPolicy),
 	)
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
@@ -103,6 +113,10 @@ func TestCreateConfigReloader(t *testing.T) {
 	}
 	if !flag {
 		t.Errorf("Expected shard value '%d' not found in %s", shard, container.Env)
+	}
+
+	if container.ImagePullPolicy != expectedImagePullPolicy {
+		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 }
 

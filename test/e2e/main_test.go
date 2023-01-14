@@ -287,7 +287,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromDegradedCondition":                  testPromDegradedConditionStatus,
 		"PromStrategicMergePatch":                testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":             testRelabelConfigCRDValidation,
-		"PromRuleCRDValidation":                  testPrometheusRuleCRDValidation,
 	}
 
 	for name, f := range testFuncs {
@@ -302,6 +301,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
+		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)

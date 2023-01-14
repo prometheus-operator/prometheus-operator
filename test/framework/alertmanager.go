@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -36,6 +37,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
+	"k8s.io/utils/pointer"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -396,6 +398,48 @@ func (f *Framework) GetSilences(ctx context.Context, ns, n string) (models.Getta
 	}
 
 	return getSilencesResponse, nil
+}
+
+func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
+	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+		alerts := models.GettableAlerts{}
+
+		resp, err := f.AlertmangerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
+			"state":  "active",
+			"filter": "alertname=" + alertName,
+		})
+		if err != nil {
+			return false, err
+		}
+
+		if err := json.NewDecoder(bytes.NewBuffer(resp)).Decode(&alerts); err != nil {
+			return false, errors.Wrap(err, "failed to decode alerts from Alertmanager API")
+		}
+
+		if len(alerts) != 1 {
+			return false, nil
+		}
+
+		for _, alert := range alerts {
+			if alert.Labels["alertname"] == alertName && alert.Status.State != pointer.String("firing") {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to wait for alert %s to fire: %v", alertName, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) AlertmangerSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
+	request := ProxyGet("", svcName, "web", endpoint, query)
+	return request.DoRaw(ctx)
 }
 
 // PollAlertmanagerConfiguration retrieves the Alertmanager configuration via

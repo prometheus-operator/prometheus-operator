@@ -4382,6 +4382,12 @@ spec:
                   the resource's namespace. If present, it will be added to the generated
                   Alertmanager configuration as a first-level route.
                 properties:
+                  activeTimeIntervals:
+                    description: ActiveTimeIntervals is a list of MuteTimeInterval
+                      names when this route should be active.
+                    items:
+                      type: string
+                    type: array
                   continue:
                     description: Boolean indicating whether an alert should continue
                       matching subsequent sibling nodes. It will always be overridden
@@ -7195,6 +7201,16 @@ spec:
                   to ensure the Prometheus Operator knows what version of Alertmanager
                   is being configured.
                 type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'alertmanager', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
+                type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
                   namespace to use for pulling prometheus and alertmanager images
@@ -8466,8 +8482,9 @@ spec:
                 description: Minimum number of seconds for which a newly created pod
                   should be ready without any of its container crashing for it to
                   be considered available. Defaults to 0 (pod will be considered available
-                  as soon as it is ready) This is an alpha field and requires enabling
-                  StatefulSetMinReadySeconds feature gate.
+                  as soon as it is ready) This is an alpha field from kubernetes 1.22
+                  until 1.24 which requires enabling the StatefulSetMinReadySeconds
+                  feature gate.
                 format: int32
                 type: integer
               nodeSelector:
@@ -8754,9 +8771,9 @@ spec:
                       allows to remove any subPath usage in volume mounts.'
                     type: boolean
                   emptyDir:
-                    description: 'EmptyDirVolumeSource to be used by the Prometheus
-                      StatefulSets. If specified, used in place of any volumeClaimTemplate.
-                      More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
+                    description: 'EmptyDirVolumeSource to be used by the StatefulSet.
+                      If specified, used in place of any volumeClaimTemplate. More
+                      info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
                     properties:
                       medium:
                         description: 'medium represents what type of storage medium
@@ -8779,9 +8796,9 @@ spec:
                         x-kubernetes-int-or-string: true
                     type: object
                   ephemeral:
-                    description: 'EphemeralVolumeSource to be used by the Prometheus
-                      StatefulSets. This is a beta field in k8s 1.21, for lower versions,
-                      starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
+                    description: 'EphemeralVolumeSource to be used by the StatefulSet.
+                      This is a beta field in k8s 1.21, for lower versions, starting
+                      with k8s 1.19, it requires enabling the GenericEphemeralVolume
                       feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
                     properties:
                       volumeClaimTemplate:
@@ -8998,7 +9015,10 @@ spec:
                         type: object
                     type: object
                   volumeClaimTemplate:
-                    description: A PVC spec to be used by the Prometheus StatefulSets.
+                    description: A PVC spec to be used by the StatefulSet. The easiest
+                      way to use a volume that cannot be automatically provisioned
+                      (for whatever reason) is to use a label selector alongside manually
+                      created PersistentVolumes.
                     properties:
                       apiVersion:
                         description: 'APIVersion defines the versioned schema of this
@@ -13746,6 +13766,53 @@ spec:
                                 Bearer, Basic will cause an error
                               type: string
                           type: object
+                        basicAuth:
+                          description: BasicAuth allow an endpoint to authenticate
+                            over basic authentication
+                          properties:
+                            password:
+                              description: The secret in the service monitor namespace
+                                that contains the password for authentication.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            username:
+                              description: The secret in the service monitor namespace
+                                that contains the username for authentication.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
                         bearerTokenFile:
                           description: BearerTokenFile to read from filesystem to
                             use when authenticating to Alertmanager.
@@ -15605,6 +15672,16 @@ spec:
                   to ensure the Prometheus Operator knows what version of Prometheus
                   is being configured.
                 type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'prometheus', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
+                type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
                   namespace to use for pulling prometheus and alertmanager images
@@ -16877,8 +16954,9 @@ spec:
                 description: Minimum number of seconds for which a newly created pod
                   should be ready without any of its container crashing for it to
                   be considered available. Defaults to 0 (pod will be considered available
-                  as soon as it is ready) This is an alpha field and requires enabling
-                  StatefulSetMinReadySeconds feature gate.
+                  as soon as it is ready) This is an alpha field from kubernetes 1.22
+                  until 1.24 which requires enabling the StatefulSetMinReadySeconds
+                  feature gate.
                 format: int32
                 type: integer
               nodeSelector:
@@ -17022,6 +17100,12 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              podTargetLabels:
+                description: PodTargetLabels are added to all Pod/ServiceMonitors'
+                  podTargetLabels
+                items:
+                  type: string
+                type: array
               portName:
                 description: Port name used for the pods and governing service. This
                   defaults to web
@@ -17158,6 +17242,7 @@ spec:
                   maxConcurrency:
                     description: Number of concurrent queries that can be run at once.
                     format: int32
+                    minimum: 1
                     type: integer
                   maxSamples:
                     description: Maximum number of samples a single query can load
@@ -18533,9 +18618,9 @@ spec:
                       allows to remove any subPath usage in volume mounts.'
                     type: boolean
                   emptyDir:
-                    description: 'EmptyDirVolumeSource to be used by the Prometheus
-                      StatefulSets. If specified, used in place of any volumeClaimTemplate.
-                      More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
+                    description: 'EmptyDirVolumeSource to be used by the StatefulSet.
+                      If specified, used in place of any volumeClaimTemplate. More
+                      info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
                     properties:
                       medium:
                         description: 'medium represents what type of storage medium
@@ -18558,9 +18643,9 @@ spec:
                         x-kubernetes-int-or-string: true
                     type: object
                   ephemeral:
-                    description: 'EphemeralVolumeSource to be used by the Prometheus
-                      StatefulSets. This is a beta field in k8s 1.21, for lower versions,
-                      starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
+                    description: 'EphemeralVolumeSource to be used by the StatefulSet.
+                      This is a beta field in k8s 1.21, for lower versions, starting
+                      with k8s 1.19, it requires enabling the GenericEphemeralVolume
                       feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
                     properties:
                       volumeClaimTemplate:
@@ -18777,7 +18862,10 @@ spec:
                         type: object
                     type: object
                   volumeClaimTemplate:
-                    description: A PVC spec to be used by the Prometheus StatefulSets.
+                    description: A PVC spec to be used by the StatefulSet. The easiest
+                      way to use a volume that cannot be automatically provisioned
+                      (for whatever reason) is to use a label selector alongside manually
+                      created PersistentVolumes.
                     properties:
                       apiVersion:
                         description: 'APIVersion defines the versioned schema of this
@@ -21284,6 +21372,13 @@ spec:
                           a rolling update will be triggered.
                         type: boolean
                     type: object
+                  maxConnections:
+                    description: Defines the maximum number of simultaneous connections
+                      A zero value means that Prometheus doesn't accept any incoming
+                      connection.
+                    format: int32
+                    minimum: 0
+                    type: integer
                   pageTitle:
                     description: The prometheus web page title
                     type: string
@@ -21618,7 +21713,6 @@ spec:
                       minLength: 1
                       type: string
                     partial_response_strategy:
-                      default: ""
                       description: 'PartialResponseStrategy is only used by ThanosRuler
                         and will be ignored by Prometheus instances. More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response'
                       pattern: ^(?i)(abort|warn)?$
@@ -24761,6 +24855,16 @@ spec:
               image:
                 description: Thanos container image URL.
                 type: string
+              imagePullPolicy:
+                description: Image pull policy for the 'thanos', 'init-config-reloader'
+                  and 'config-reloader' containers. See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+                  for more details.
+                enum:
+                - ""
+                - Always
+                - Never
+                - IfNotPresent
+                type: string
               imagePullSecrets:
                 description: An optional list of references to secrets in the same
                   namespace to use for pulling thanos images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -26038,8 +26142,9 @@ spec:
                 description: Minimum number of seconds for which a newly created pod
                   should be ready without any of its container crashing for it to
                   be considered available. Defaults to 0 (pod will be considered available
-                  as soon as it is ready) This is an alpha field and requires enabling
-                  StatefulSetMinReadySeconds feature gate.
+                  as soon as it is ready) This is an alpha field from kubernetes 1.22
+                  until 1.24 which requires enabling the StatefulSetMinReadySeconds
+                  feature gate.
                 format: int32
                 type: integer
               nodeSelector:
@@ -26470,9 +26575,9 @@ spec:
                       allows to remove any subPath usage in volume mounts.'
                     type: boolean
                   emptyDir:
-                    description: 'EmptyDirVolumeSource to be used by the Prometheus
-                      StatefulSets. If specified, used in place of any volumeClaimTemplate.
-                      More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
+                    description: 'EmptyDirVolumeSource to be used by the StatefulSet.
+                      If specified, used in place of any volumeClaimTemplate. More
+                      info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir'
                     properties:
                       medium:
                         description: 'medium represents what type of storage medium
@@ -26495,9 +26600,9 @@ spec:
                         x-kubernetes-int-or-string: true
                     type: object
                   ephemeral:
-                    description: 'EphemeralVolumeSource to be used by the Prometheus
-                      StatefulSets. This is a beta field in k8s 1.21, for lower versions,
-                      starting with k8s 1.19, it requires enabling the GenericEphemeralVolume
+                    description: 'EphemeralVolumeSource to be used by the StatefulSet.
+                      This is a beta field in k8s 1.21, for lower versions, starting
+                      with k8s 1.19, it requires enabling the GenericEphemeralVolume
                       feature gate. More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes'
                     properties:
                       volumeClaimTemplate:
@@ -26714,7 +26819,10 @@ spec:
                         type: object
                     type: object
                   volumeClaimTemplate:
-                    description: A PVC spec to be used by the Prometheus StatefulSets.
+                    description: A PVC spec to be used by the StatefulSet. The easiest
+                      way to use a volume that cannot be automatically provisioned
+                      (for whatever reason) is to use a label selector alongside manually
+                      created PersistentVolumes.
                     properties:
                       apiVersion:
                         description: 'APIVersion defines the versioned schema of this
@@ -27254,6 +27362,9 @@ spec:
                 description: TracingConfig specifies the path of the tracing configuration
                   file. When used alongside with TracingConfig, TracingConfigFile
                   takes precedence.
+                type: string
+              version:
+                description: Version of Thanos to be deployed.
                 type: string
               volumes:
                 description: Volumes allows configuration of additional volumes on
@@ -28820,7 +28931,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.62.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -28837,7 +28948,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.62.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -28918,7 +29029,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.62.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -28934,14 +29045,14 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.60.1
+        app.kubernetes.io/version: 0.62.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.60.1
-        image: quay.io/prometheus-operator/prometheus-operator:v0.60.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.62.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.62.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -28973,7 +29084,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.62.0
   name: prometheus-operator
   namespace: default
 ---
@@ -28983,7 +29094,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.60.1
+    app.kubernetes.io/version: 0.62.0
   name: prometheus-operator
   namespace: default
 spec:

@@ -210,7 +210,8 @@ func TestTracing(t *testing.T) {
 		secretName = "thanos-tracing-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "tracing-config"
-		mountPath  = "/etc/thanos/config/tracing-config.yaml"
+		mountPath  = "/etc/thanos/config/tracing-config"
+		fullPath   = "/etc/thanos/config/tracing-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -236,7 +237,7 @@ func TestTracing(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -258,7 +259,7 @@ func TestTracing(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--tracing.config-file=" + mountPath
+		const expectedArg = "--tracing.config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
@@ -320,7 +321,8 @@ func TestObjectStorage(t *testing.T) {
 		secretName = "thanos-objstore-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "objstorage-config"
-		mountPath  = "/etc/thanos/config/objstorage-config.yaml"
+		mountPath  = "/etc/thanos/config/objstorage-config"
+		fullPath   = "/etc/thanos/config/objstorage-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -346,7 +348,7 @@ func TestObjectStorage(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -368,7 +370,7 @@ func TestObjectStorage(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--objstore.config-file=" + mountPath
+		const expectedArg = "--objstore.config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
@@ -430,7 +432,8 @@ func TestAlertRelabel(t *testing.T) {
 		secretName = "thanos-alertrelabel-config-secret"
 		secretKey  = "config.yaml"
 		volumeName = "alertrelabel-config"
-		mountPath  = "/etc/thanos/config/alertrelabel-config.yaml"
+		mountPath  = "/etc/thanos/config/alertrelabel-config"
+		fullPath   = "/etc/thanos/config/alertrelabel-config/config.yaml"
 	)
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -456,7 +459,7 @@ func TestAlertRelabel(t *testing.T) {
 		var containsVolume bool
 		for _, volume := range sset.Spec.Template.Spec.Volumes {
 			if volume.Name == volumeName {
-				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey {
+				if volume.Secret.SecretName == secretName && volume.Secret.Items[0].Key == secretKey && volume.Secret.Items[0].Path == secretKey {
 					containsVolume = true
 					break
 				}
@@ -478,7 +481,7 @@ func TestAlertRelabel(t *testing.T) {
 		}
 	}
 	{
-		const expectedArg = "--alert.relabel-config-file=" + mountPath
+		const expectedArg = "--alert.relabel-config-file=" + fullPath
 		var containsArg bool
 		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 			if arg == expectedArg {
@@ -752,6 +755,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			Name: "registry-secret",
 		},
 	}
+	imagePullPolicy := v1.PullAlways
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -765,6 +769,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ServiceAccountName: serviceAccountName,
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
+			ImagePullPolicy:    imagePullPolicy,
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -794,6 +799,16 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	}
+	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
+		if !reflect.DeepEqual(initContainer.ImagePullPolicy, imagePullPolicy) {
+			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
+		}
+	}
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if !reflect.DeepEqual(container.ImagePullPolicy, imagePullPolicy) {
+			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
+		}
 	}
 }
 
@@ -1253,5 +1268,40 @@ func TestStatefulSetEphemeral(t *testing.T) {
 	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
 		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
 		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
+	}
+}
+
+func TestThanosVersion(t *testing.T) {
+	thanosBaseImage := defaultTestConfig.ThanosDefaultBaseImage
+	for _, tc := range []struct {
+		version       string
+		expectedImage string
+		expectedError bool
+	}{
+		{"v0.29.0", thanosBaseImage + ":" + "v0.29.0", false},
+		{"0.29.0", thanosBaseImage + ":" + "0.29.0", false},
+		{"", thanosBaseImage + ":" + operator.DefaultThanosVersion, false},
+		{"0.29.0-0123", "", true},
+		{"0.29.0.DEV", "", true},
+	} {
+		t.Run(string(tc.version), func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					QueryEndpoints: emptyQueryEndpoints,
+					Version:        tc.version,
+				},
+			}, defaultTestConfig, nil, "")
+
+			if tc.expectedError && err == nil {
+				t.Fatal("expected error but got nil")
+			}
+
+			if !tc.expectedError {
+				image := sset.Spec.Template.Spec.Containers[0].Image
+				if image != tc.expectedImage {
+					t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", tc.expectedImage, image)
+				}
+			}
+		})
 	}
 }

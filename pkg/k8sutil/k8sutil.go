@@ -247,7 +247,7 @@ func NewResourceNamerWithPrefix(p string) ResourceNamer {
 	return ResourceNamer{prefix: p}
 }
 
-func (rn ResourceNamer) sanitizedVolumeName(name string) string {
+func (rn ResourceNamer) sanitizedLabel(name string) string {
 	if rn.prefix != "" {
 		name = strings.TrimRight(rn.prefix, "-") + "-" + name
 	}
@@ -267,16 +267,16 @@ func isValidDNS1123Label(name string) error {
 	return nil
 }
 
-// UniqueVolumeName returns a volume name that is a valid DNS-1123 label.
+// UniqueDNS1123Label returns a name that is a valid DNS-1123 label.
 // The returned name has a hash-based suffix to ensure uniqueness in case the
 // input name exceeds the 63-chars limit.
-func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
+func (rn ResourceNamer) UniqueDNS1123Label(name string) (string, error) {
 	// Hash the name and append the 8 first characters of the hash
 	// value to the resulting name to ensure that 2 names longer than
-	// DNS1123LabelMaxLength return unique volume names.
+	// DNS1123LabelMaxLength return unique names.
 	// E.g. long-63-chars-abc, long-63-chars-XYZ may be added to
-	// volume name since they are trimmed at long-63-chars, there will be 2
-	// volume entries with the same name.
+	// name since they are trimmed at long-63-chars, there will be 2
+	// resource entries with the same name.
 	// In practice, the hash is computed for the full name then trimmed to
 	// the first 8 chars and added to the end:
 	// * long-63-chars-abc -> first-54-chars-deadbeef
@@ -289,7 +289,7 @@ func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 	h := fmt.Sprintf("-%x", xxh.Sum64())
 	h = h[:9]
 
-	name = rn.sanitizedVolumeName(name)
+	name = rn.sanitizedLabel(name)
 
 	if len(name) > validation.DNS1123LabelMaxLength-9 {
 		name = name[:validation.DNS1123LabelMaxLength-9]
@@ -303,9 +303,11 @@ func (rn ResourceNamer) UniqueVolumeName(name string) (string, error) {
 	return name, isValidDNS1123Label(name)
 }
 
-// VolumeName returns a volume name that is a valid DNS-1123 label.
-func (rn ResourceNamer) VolumeName(name string) (string, error) {
-	name = rn.sanitizedVolumeName(name)
+// DNS1123Label returns a name that is a valid DNS-1123 label.
+// It will sanitize a name, removing invalid characters and if
+// the name is bigger than 63 chars it will truncate it.
+func (rn ResourceNamer) DNS1123Label(name string) (string, error) {
+	name = rn.sanitizedLabel(name)
 
 	if len(name) > validation.DNS1123LabelMaxLength {
 		name = name[:validation.DNS1123LabelMaxLength]

@@ -85,7 +85,7 @@ func TestUniqueVolumeName(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			rn := ResourceNamer{prefix: c.prefix}
 
-			out, err := rn.UniqueVolumeName(c.name)
+			out, err := rn.UniqueDNS1123Label(c.name)
 			if c.err {
 				if err == nil {
 					t.Errorf("expecting error, got nil")
@@ -112,12 +112,12 @@ func TestUniqueVolumeNameCollision(t *testing.T) {
 
 	rn := ResourceNamer{}
 
-	fooSanitized, err := rn.UniqueVolumeName(foo)
+	fooSanitized, err := rn.UniqueDNS1123Label(foo)
 	if err != nil {
 		t.Errorf("expecting no error, got %v", err)
 	}
 
-	barSanitized, err := rn.UniqueVolumeName(bar)
+	barSanitized, err := rn.UniqueDNS1123Label(bar)
 	if err != nil {
 		t.Errorf("expecting no error, got %v", err)
 	}
