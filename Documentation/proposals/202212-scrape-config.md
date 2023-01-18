@@ -11,7 +11,8 @@ This document aims at creating a lower level `ScrapeConfig` Custom Resource that
 
 # Why
 
-prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the `Probe` CRD (#3447) or `additionalScrapeConfig` to do so.
+prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the Probe CRD (#3447) or additionalScrapeConfig to do so.
+Furthermore, currently, there is a lot of code duplication due to the operator supporting several CRDs that generate scrape configurations. With the new `ScrapeConfig` CRD, it would be possible to consolidate some of that logic, where the other `*Monitor` CRDs could be migrated so that they create a ScrapeConfig resource that would ultimately be used by the operator to generate scrape configuration.
 
 ## Pitfalls of the current solution
 
@@ -21,6 +22,7 @@ Using `additionalScrapeConfig` comes with drawbacks:
 
 # Goals
 * Provide a way for users to self-service adding scrape targets
+* Consolidate the scrape configuration generation logic in a central point for other resources to use
 
 ## Audience
 * Users who serve prometheus as a service and want to have their customers autonomous in defining scrape configs
@@ -40,6 +42,43 @@ graph TD;
     PodMonitor-->prometheusConfig
     ScrapeConfig-->prometheusConfig
     prometheusConfig
+```
+
+Using a pseudo custom resource definition, we should have the following:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: my-scrape-config
+  namespace: system-monitoring
+  labels:
+    test: value
+spec:
+  staticConfigs:
+    - <StaticConfig>[] # new resource
+  fileSDConfigs:
+    - <fileSDConfig>[] # new resource
+  relabelConfigs:
+    - <RelabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
+  metricsPath: /metrics
+```
+
+with `StaticConfig` being:
+
+```yaml
+targets:
+  - target:9100
+labels:
+  labelA: placeholder
+```
+
+and `fileSDConfig`:
+
+```yaml
+files:
+  - <SecretOrConfigMap>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1644
+refresh_interval: 5m
 ```
 
 Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any configuration, it can also generate scrape configuration for the other CRDs.
