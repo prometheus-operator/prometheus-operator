@@ -200,6 +200,11 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	}
 }
 
+// Test to exercise the function checkAlertmanagerConfigResource
+// and validate that semantic validation is in place for all the fields in the
+// AlertmanagerConfig CR. The validation is preformed by the operator
+// after selecting AlertmanagerConfig resources but before passing them to
+// addAlertmanagerConfigs
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	if err != nil {
@@ -993,6 +998,11 @@ func TestListOptions(t *testing.T) {
 	}
 }
 
+// Test to exercise the function provisionAlertmanagerConfiguration
+// and validate that the operator is able to generate an Alertmanager
+// configuration depending on the method chosen by the user.
+// Alertmanager can be configured using either the AlertmanagerConfig resource
+// or a Kubernetes secret.
 func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 	for _, tc := range []struct {
 		am      *monitoringv1.Alertmanager

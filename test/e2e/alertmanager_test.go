@@ -797,11 +797,24 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	}
 }
 
+// e2e test to validate that all possible fields in an AlertmanagerConfig CR are
+// consumed by the operator and correctly passed to the Alertmanager
+// configuration.
 func testAlertmanagerConfigCRD(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
+
+	// create 2 namespaces:
+	//
+	// 1. "ns" ns:
+	//   - hosts the Alertmanager CR which which should be reconciled
+	//
+	// 2. "configNs" ns:
+	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	// 		thanks to the label monitored: "true" which is removed in the second
+	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	configNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
