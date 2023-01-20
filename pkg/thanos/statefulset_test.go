@@ -755,6 +755,10 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	imagePullPolicy := v1.PullAlways
 
+	additionalArgs := []monitoringv1.Argument{
+		{Name: "additional.arg", Value: "additional-arg-value"},
+	}
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
@@ -768,6 +772,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
+			AdditionalArgs:     additionalArgs,
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -807,6 +812,14 @@ func TestPodTemplateConfig(t *testing.T) {
 		if !reflect.DeepEqual(container.ImagePullPolicy, imagePullPolicy) {
 			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 		}
+	}
+	if !strings.Contains(
+		sset.Spec.Template.Spec.Containers[0].Args[len(sset.Spec.Template.Spec.Containers[0].Args)-1],
+		"--additional.arg=additional-arg-value") {
+		t.Fatalf("expected additional arguments to match, want %s, got %s", additionalArgs, sset.Spec.Template.Spec.Containers[0].Args[len(sset.Spec.Template.Spec.Containers[0].Args)-1])
+	}
+	if sset.Spec.Template.Spec.Containers[0].Args[0] != "rule" {
+		t.Fatalf("expected first argument to match, want `rule`, got %s", sset.Spec.Template.Spec.Containers[0].Args[0])
 	}
 }
 
