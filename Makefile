@@ -21,6 +21,7 @@ TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/podmonitor_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/probe_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/prometheus_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/servicemonitor_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
