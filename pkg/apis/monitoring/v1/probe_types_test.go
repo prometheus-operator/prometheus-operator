@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,5 +66,37 @@ func TestValidateProbeTargets(t *testing.T) {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestMarshallProbe(t *testing.T) {
+	sm := &Probe{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: ProbeSpec{
+			Targets: ProbeTargets{
+				StaticConfig: &ProbeTargetStaticConfig{
+					Targets: []string{"prometheus.io"},
+					Labels: map[string]string{
+						"env": "prometheus",
+					},
+				},
+			},
+		},
+	}
+	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"prober":{"url":""},"targets":{"staticConfig":{"static":["prometheus.io"],"labels":{"env":"prometheus"}}},"bearerTokenSecret":{"key":""}}}`
+
+	r, err := json.Marshal(sm)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	rs := string(r)
+	if rs != expected {
+		t.Fatalf("Got %s expected: %s ", rs, expected)
 	}
 }
