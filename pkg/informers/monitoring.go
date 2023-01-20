@@ -50,8 +50,8 @@ func NewMonitoringInformerFactories(
 
 type monitoringInformersForNamespaces map[string]informers.SharedInformerFactory
 
-func (i monitoringInformersForNamespaces) Namespaces() sets.String {
-	return sets.StringKeySet(i)
+func (i monitoringInformersForNamespaces) Namespaces() sets.Set[string] {
+	return sets.KeySet(i)
 }
 
 func (i monitoringInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {

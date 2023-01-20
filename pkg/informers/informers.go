@@ -15,6 +15,8 @@
 package informers
 
 import (
+	"sort"
+
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,7 +39,7 @@ type InformLister interface {
 // FactoriesForNamespaces is a way to combine several shared informers into a single struct with unified listing power.
 type FactoriesForNamespaces interface {
 	ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error)
-	Namespaces() sets.String
+	Namespaces() sets.Set[string]
 }
 
 // ForResource contains a slice of InformLister for a concrete resource type,
@@ -53,8 +55,10 @@ type ForResource struct {
 // It takes a namespace aware informer factory, wrapped in a FactoriesForNamespaces interface
 // that is able to instantiate an informer for a given namespace.
 func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVersionResource) (*ForResource, error) {
-	namespaces := ifs.Namespaces().List()
-	var informers []InformLister
+	namespaces := ifs.Namespaces().UnsortedList()
+	sort.Strings(namespaces)
+
+	informers := make([]InformLister, 0, len(namespaces))
 
 	for _, ns := range namespaces {
 		informer, err := ifs.ForResource(ns, resource)
@@ -84,7 +88,7 @@ func (w *ForResource) GetInformers() []InformLister {
 // AddEventHandler registers the given handler to all wrapped informers.
 func (w *ForResource) AddEventHandler(handler cache.ResourceEventHandler) {
 	for _, i := range w.informers {
-		i.Informer().AddEventHandler(handler)
+		_, _ = i.Informer().AddEventHandler(handler)
 	}
 }
 

@@ -88,7 +88,7 @@ type ExecOptions struct {
 // stdout, stderr and error. `options` allowed for additional parameters to be
 // passed. Inspired by
 // https://github.com/kubernetes/kubernetes/blob/dde6e8e7465468c32642659cb708a5cc922add64/test/e2e/framework/exec_util.go#L36-L51
-func (f *Framework) ExecWithOptions(options ExecOptions) (string, string, error) {
+func (f *Framework) ExecWithOptions(ctx context.Context, options ExecOptions) (string, string, error) {
 	const tty = false
 
 	req := f.KubeClient.CoreV1().RESTClient().Post().
@@ -107,7 +107,7 @@ func (f *Framework) ExecWithOptions(options ExecOptions) (string, string, error)
 	}, kscheme.ParameterCodec)
 
 	var stdout, stderr bytes.Buffer
-	err := execute("POST", req.URL(), f.RestConfig, options.Stdin, &stdout, &stderr, tty)
+	err := execute(ctx, "POST", req.URL(), f.RestConfig, options.Stdin, &stdout, &stderr, tty)
 
 	if options.PreserveWhitespace {
 		return stdout.String(), stderr.String(), err
@@ -115,12 +115,12 @@ func (f *Framework) ExecWithOptions(options ExecOptions) (string, string, error)
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
-func execute(method string, url *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
+func execute(ctx context.Context, method string, url *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
 	if err != nil {
 		return err
 	}
-	return exec.Stream(remotecommand.StreamOptions{
+	return exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,

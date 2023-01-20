@@ -293,7 +293,7 @@ func (o *Operator) addHandlers() {
 	// change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on rules.
-	o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: o.handleNamespaceUpdate,
 	})
 }
