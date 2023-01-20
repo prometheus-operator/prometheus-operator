@@ -50,16 +50,14 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am := framework.MakeBasicAlertmanager("non-instance", 3)
-	am.Namespace = nonInstanceNs
+	am := framework.MakeBasicAlertmanager(nonInstanceNs, "non-instance", 3)
 	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(context.Background(), am, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am = framework.MakeBasicAlertmanager("instance", 3)
-	am.Namespace = instanceNs
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), instanceNs, am); err != nil {
+	am = framework.MakeBasicAlertmanager(instanceNs, "instance", 3)
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
 		t.Fatal(err)
 	}
 
@@ -91,9 +89,8 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am := framework.MakeBasicAlertmanager("instance", 3)
-	am.Namespace = instanceNs
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), instanceNs, am); err != nil {
+	am := framework.MakeBasicAlertmanager(instanceNs, "instance", 3)
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -137,7 +134,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Create the Alertmanager resource in the "allowed" namespace. We will check later that it is NOT reconciled.
-	am := framework.MakeBasicAlertmanager("instance", 3)
+	am := framework.MakeBasicAlertmanager(allowedNs, "instance", 3)
 
 	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -152,13 +149,14 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Create an Alertmanager resource in the "allowedNs" namespace which must *not* be reconciled.
-	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(context.Background(), am.DeepCopy(), metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(context.Background(), am, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create an Alertmanager resource in the "instance" namespace which must be reconciled.
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), instanceNs, am); err != nil {
+	am.Namespace = instanceNs
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
 		t.Fatal(err)
 	}
 

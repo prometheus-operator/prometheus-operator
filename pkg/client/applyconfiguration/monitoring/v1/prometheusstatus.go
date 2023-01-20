@@ -19,13 +19,13 @@ package v1
 // PrometheusStatusApplyConfiguration represents an declarative configuration of the PrometheusStatus type for use
 // with apply.
 type PrometheusStatusApplyConfiguration struct {
-	Paused              *bool                                   `json:"paused,omitempty"`
-	Replicas            *int32                                  `json:"replicas,omitempty"`
-	UpdatedReplicas     *int32                                  `json:"updatedReplicas,omitempty"`
-	AvailableReplicas   *int32                                  `json:"availableReplicas,omitempty"`
-	UnavailableReplicas *int32                                  `json:"unavailableReplicas,omitempty"`
-	Conditions          []PrometheusConditionApplyConfiguration `json:"conditions,omitempty"`
-	ShardStatuses       []ShardStatusApplyConfiguration         `json:"shardStatuses,omitempty"`
+	Paused              *bool                           `json:"paused,omitempty"`
+	Replicas            *int32                          `json:"replicas,omitempty"`
+	UpdatedReplicas     *int32                          `json:"updatedReplicas,omitempty"`
+	AvailableReplicas   *int32                          `json:"availableReplicas,omitempty"`
+	UnavailableReplicas *int32                          `json:"unavailableReplicas,omitempty"`
+	Conditions          []ConditionApplyConfiguration   `json:"conditions,omitempty"`
+	ShardStatuses       []ShardStatusApplyConfiguration `json:"shardStatuses,omitempty"`
 }
 
 // PrometheusStatusApplyConfiguration constructs an declarative configuration of the PrometheusStatus type for use with
@@ -77,7 +77,7 @@ func (b *PrometheusStatusApplyConfiguration) WithUnavailableReplicas(value int32
 // WithConditions adds the given value to the Conditions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *PrometheusStatusApplyConfiguration) WithConditions(values ...*PrometheusConditionApplyConfiguration) *PrometheusStatusApplyConfiguration {
+func (b *PrometheusStatusApplyConfiguration) WithConditions(values ...*ConditionApplyConfiguration) *PrometheusStatusApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithConditions")

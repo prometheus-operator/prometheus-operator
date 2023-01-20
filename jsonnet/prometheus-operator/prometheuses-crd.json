@@ -8276,7 +8276,7 @@
                   "conditions": {
                     "description": "The current state of the Prometheus deployment.",
                     "items": {
-                      "description": "PrometheusCondition represents the state of the resources associated with the Prometheus resource.",
+                      "description": "Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.",
                       "properties": {
                         "lastTransitionTime": {
                           "description": "lastTransitionTime is the time of the last update to the current status property.",
@@ -8288,7 +8288,7 @@
                           "type": "string"
                         },
                         "observedGeneration": {
-                          "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                          "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if `.metadata.generation` is currently 12, but the `.status.conditions[].observedGeneration` is 9, the condition is out of date with respect to the current state of the instance.",
                           "format": "int64",
                           "type": "integer"
                         },
@@ -8297,7 +8297,7 @@
                           "type": "string"
                         },
                         "status": {
-                          "description": "status of the condition.",
+                          "description": "Status of the condition.",
                           "type": "string"
                         },
                         "type": {

@@ -479,10 +479,50 @@ func (c *Operator) Run(ctx context.Context) error {
 	if c.nsAlrtInf != c.nsAlrtCfgInf {
 		go c.nsAlrtInf.Run(ctx.Done())
 	}
+
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
+
+	// Refresh the status of the existing Alertmanager objects.
+	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		c.rr.EnqueueForStatus(obj.(*monitoringv1.Alertmanager))
+	})
+
 	c.addHandlers()
+
+	// Run a goroutine that refreshes regularly the Alertmanager objects that
+	// aren't fully available to keep the status up-to-date with the pod
+	// conditions. In practice when a new version of the statefulset is rolled
+	// out and the updated pod is crashlooping, the statefulset status won't
+	// see any update because the number of ready/updated replicas doesn't
+	// change. Without the periodic refresh, the Alertmanager object's status
+	// would report "containers with incomplete status: [init-config-reloader]"
+	// forever.
+	// TODO(simonpasquier): watch for Alertmanager pods instead of polling.
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+					a := o.(*monitoringv1.Alertmanager)
+					for _, cond := range a.Status.Conditions {
+						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
+							c.rr.EnqueueForStatus(a)
+							break
+						}
+					}
+				})
+				if err != nil {
+					level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+				}
+			}
+		}
+	}()
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
@@ -726,9 +766,133 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
+// UpdateStatus updates the status subresource of the object identified by the given
+// key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	// FIXME(simonpasquier): implement status update logic.
+	aobj, err := c.alrtInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	a := aobj.(*monitoringv1.Alertmanager)
+	a = a.DeepCopy()
+
+	aStatus := monitoringv1.AlertmanagerStatus{
+		Paused: a.Spec.Paused,
+	}
+
+	logger := log.With(c.logger, "key", key)
+	level.Info(logger).Log("msg", "update alertmanager status")
+
+	var (
+		availableCondition = monitoringv1.Condition{
+			Type:   monitoringv1.Available,
+			Status: monitoringv1.ConditionTrue,
+			LastTransitionTime: metav1.Time{
+				Time: time.Now().UTC(),
+			},
+			ObservedGeneration: a.Generation,
+		}
+		messages []string
+		replicas = 1
+	)
+
+	if a.Spec.Replicas != nil {
+		replicas = int(*a.Spec.Replicas)
+	}
+
+	ssetName := alertmanagerKeyToStatefulSetKey(key)
+	logger = log.With(logger, "statefulset", ssetName)
+
+	obj, err := c.ssetInfs.Get(ssetName)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Object not yet in the store or already deleted.
+			level.Info(logger).Log("msg", "not found")
+			return nil
+		}
+		return errors.Wrap(err, "failed to retrieve statefulset")
+	}
+
+	sset := obj.(*appsv1.StatefulSet)
+	if c.rr.DeletionInProgress(sset) {
+		return nil
+	}
+
+	stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, sset)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve statefulset state")
+	}
+
+	aStatus.Replicas = int32(len(stsReporter.Pods))
+	aStatus.UpdatedReplicas = int32(len(stsReporter.UpdatedPods()))
+	aStatus.AvailableReplicas = int32(len(stsReporter.ReadyPods()))
+	aStatus.UnavailableReplicas = int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
+
+	if len(stsReporter.ReadyPods()) < replicas {
+		if aStatus.AvailableReplicas == 0 {
+			availableCondition.Reason = "NoPodReady"
+			availableCondition.Status = monitoringv1.ConditionFalse
+		} else {
+			availableCondition.Reason = "SomePodsNotReady"
+			availableCondition.Status = monitoringv1.ConditionDegraded
+		}
+	}
+
+	for _, p := range stsReporter.Pods {
+		if m := p.Message(); m != "" {
+			messages = append(messages, fmt.Sprintf("pod %s: %s", p.Name, m))
+		}
+	}
+
+	availableCondition.Message = strings.Join(messages, "\n")
+
+	// Compute the Reconciled ConditionType.
+	reconciledCondition := monitoringv1.Condition{
+		Type:   monitoringv1.Reconciled,
+		Status: monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+		ObservedGeneration: a.Generation,
+	}
+	reconciliationStatus, found := c.reconciliations.GetStatus(key)
+	if !found {
+		reconciledCondition.Status = monitoringv1.ConditionUnknown
+		reconciledCondition.Reason = "NotFound"
+		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
+	} else {
+		if !reconciliationStatus.Ok() {
+			reconciledCondition.Status = monitoringv1.ConditionFalse
+		}
+		reconciledCondition.Reason = reconciliationStatus.Reason()
+		reconciledCondition.Message = reconciliationStatus.Message()
+	}
+
+	// Update the last transition times only if the status of the available condition has changed.
+	for _, condition := range a.Status.Conditions {
+		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
+			availableCondition.LastTransitionTime = condition.LastTransitionTime
+			continue
+		}
+
+		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
+			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
+		}
+	}
+
+	aStatus.Conditions = append(aStatus.Conditions, availableCondition, reconciledCondition)
+
+	a.Status = aStatus
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).UpdateStatus(ctx, a, metav1.UpdateOptions{}); err != nil {
+		return errors.Wrap(err, "failed to update status subresource")
+	}
+
 	return nil
 }
 
@@ -1624,6 +1788,10 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
+// Status evaluates the current status of an Alertmanager object with
+// respect to its specified resource object. It returns the status and a list of
+// pods that are not updated.
+// TODO(simonpasquier): remove once the status subresource is considered stable.
 func Status(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
