@@ -18,7 +18,7 @@ Furthermore, currently, there is a lot of code duplication due to the operator s
 
 Using `additionalScrapeConfig` comes with drawbacks:
 * teams have to build an infrastructure to add scrape rules in a centralized manner, which creates a bottleneck since a single team becomes responsible for the configuration
-* there is no input validation, which can lead to an invalid prometheus configuration
+* There is no input validation, which can lead to an invalid prometheus configuration
 
 # Goals
 * Provide a way for users to self-service adding scrape targets
