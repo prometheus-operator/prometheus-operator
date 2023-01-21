@@ -30,7 +30,7 @@ Using `additionalScrapeConfig` comes with drawbacks:
 * Users who want a supported Kubernetes way of scraping targets outside the Kubernetes cluster
 
 # Non-Goals
-* this proposal doesn't aim at covering all the fields in [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
+* This proposal doesn't aim at covering all the fields in [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
 * refactoring of the other CRDs is not in scope for the first version
 
 # How
