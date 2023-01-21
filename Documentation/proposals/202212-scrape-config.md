@@ -1,4 +1,5 @@
 # ScrapeConfig CRD
+
 * Owners:
   * [xiu](https://github.com/xiu)
 * Related Tickets:
@@ -21,15 +22,18 @@ Using `additionalScrapeConfig` comes with drawbacks:
 * There is no input validation, which can lead to an invalid prometheus configuration
 
 # Goals
+
 * Provide a way for users to self-service adding scrape targets
 * Consolidate the scrape configuration generation logic in a central point for other resources to use
 
 ## Audience
+
 * Users who serve Prometheus as a service and want to have their customers autonomous in defining scrape configs
 * Users who want to manage scrape configs the same way as for services running within the Kubernetes cluster
 * Users who want a supported Kubernetes way of scraping targets outside the Kubernetes cluster
 
 # Non-Goals
+
 * This proposal doesn't aim at covering all the fields in [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
 * refactoring of the other CRDs is not in scope for the first version
 
@@ -93,8 +97,10 @@ graph TD;
 ```
 
 # Alternatives
+
 * Use `additionalScrapeConfig` secrets, with the pitfalls described earlier
 
 # Action Plan
+
 1. Create the `ScrapeConfig` CRD, covering `file_sd_configs` and `static_configs`
 2. Once released, refactor the configuration generation logic to reuse `ScrapeConfig`
