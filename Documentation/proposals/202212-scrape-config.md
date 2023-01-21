@@ -8,7 +8,7 @@
 * Other docs:
   * n/a
 
-This document aims at creating a lower level `ScrapeConfig` Custom Resource  Definition that defines additional scrape configurations the Kubernetes way.
+This document aims at creating a lower level `ScrapeConfig` Custom Resource Definition that defines additional scrape configurations the Kubernetes way.
 
 # Why
 
