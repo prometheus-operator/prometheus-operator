@@ -173,12 +173,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.Wrap(err, "failed to build image path")
 	}
 
-	trCLIArgs := []string{
-		"rule",
-		fmt.Sprintf("--data-dir=%s", storageDir),
-		fmt.Sprintf("--eval-interval=%s", tr.Spec.EvaluationInterval),
-		fmt.Sprintf("--tsdb.retention=%s", tr.Spec.Retention),
+	trCLIArgs := []monitoringv1.Argument{
+		{Name: "data-dir", Value: storageDir},
+		{Name: "eval-interval", Value: string(tr.Spec.EvaluationInterval)},
+		{Name: "tsdb.retention", Value: string(tr.Spec.Retention)},
 	}
+
 	trEnvVars := []v1.EnvVar{
 		{
 			Name: "POD_NAME",
@@ -191,14 +191,14 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	trVolumes := []v1.Volume{}
 	trVolumeMounts := []v1.VolumeMount{}
 
-	trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
+	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="$(POD_NAME)"`, defaultReplicaLabelName)})
 	for k, v := range tr.Spec.Labels {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="%s"`, k, v)})
 	}
 
-	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
+	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.label-drop", Value: defaultReplicaLabelName})
 	for _, lb := range tr.Spec.AlertDropLabels {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", lb))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.label-drop", Value: lb})
 	}
 
 	ports := []v1.ContainerPort{
@@ -209,7 +209,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}
 	if tr.Spec.ListenLocal {
-		trCLIArgs = append(trCLIArgs, "--http-address=localhost:10902")
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "http-address", Value: "localhost:10902"})
 	} else {
 		ports = append(ports,
 			v1.ContainerPort{
@@ -220,78 +220,86 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	if tr.Spec.LogLevel != "" && tr.Spec.LogLevel != "info" {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.level=%s", tr.Spec.LogLevel))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "log.level", Value: tr.Spec.LogLevel})
 	}
 	if tr.Spec.LogFormat != "" {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.format=%s", tr.Spec.LogFormat))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "log.format", Value: tr.Spec.LogFormat})
 	}
 
 	rulePath := rulesDir + "/*/*.yaml"
-	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--rule-file=%s", rulePath))
+	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "rule-file", Value: rulePath})
 
 	if tr.Spec.QueryConfig != nil {
 		fullPath := mountSecret(tr.Spec.QueryConfig, "query-config", &trVolumes, &trVolumeMounts)
-		trCLIArgs = append(trCLIArgs, "--query.config-file="+fullPath)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "query.config-file", Value: fullPath})
 	} else if len(tr.Spec.QueryEndpoints) > 0 {
 		for _, endpoint := range tr.Spec.QueryEndpoints {
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--query=%s", endpoint))
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "query", Value: endpoint})
 		}
 	}
 
 	if tr.Spec.AlertManagersConfig != nil {
 		fullPath := mountSecret(tr.Spec.AlertManagersConfig, "alertmanager-config", &trVolumes, &trVolumeMounts)
-		trCLIArgs = append(trCLIArgs, "--alertmanagers.config-file="+fullPath)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alertmanagers.config-file", Value: fullPath})
 	} else if len(tr.Spec.AlertManagersURL) > 0 {
 		for _, url := range tr.Spec.AlertManagersURL {
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alertmanagers.url=%s", url))
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alertmanagers.url", Value: url})
 		}
 	}
 
 	if tr.Spec.ObjectStorageConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *tr.Spec.ObjectStorageConfigFile})
 	} else if tr.Spec.ObjectStorageConfig != nil {
 		fullPath := mountSecret(tr.Spec.ObjectStorageConfig, "objstorage-config", &trVolumes, &trVolumeMounts)
-		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+fullPath)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: fullPath})
 	}
 
 	if tr.Spec.TracingConfigFile != "" {
-		trCLIArgs = append(trCLIArgs, "--tracing.config-file="+tr.Spec.TracingConfigFile)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: tr.Spec.TracingConfigFile})
 	} else if tr.Spec.TracingConfig != nil {
 		fullPath := mountSecret(tr.Spec.TracingConfig, "tracing-config", &trVolumes, &trVolumeMounts)
-		trCLIArgs = append(trCLIArgs, "--tracing.config-file="+fullPath)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: fullPath})
 	}
 
 	if tr.Spec.AlertRelabelConfigFile != nil {
-		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+*tr.Spec.AlertRelabelConfigFile)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: *tr.Spec.AlertRelabelConfigFile})
 	} else if tr.Spec.AlertRelabelConfigs != nil {
 		fullPath := mountSecret(tr.Spec.AlertRelabelConfigs, "alertrelabel-config", &trVolumes, &trVolumeMounts)
-		trCLIArgs = append(trCLIArgs, "--alert.relabel-config-file="+fullPath)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
 	if tr.Spec.GRPCServerTLSConfig != nil {
 		tls := tr.Spec.GRPCServerTLSConfig
 		if tls.CertFile != "" {
-			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-cert="+tls.CertFile)
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-cert", Value: tls.CertFile})
 		}
 		if tls.KeyFile != "" {
-			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-key="+tls.KeyFile)
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-key", Value: tls.KeyFile})
 		}
 		if tls.CAFile != "" {
-			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-client-ca="+tls.CAFile)
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
 	}
 
 	if tr.Spec.ExternalPrefix != "" {
-		trCLIArgs = append(trCLIArgs, "--web.external-prefix="+tr.Spec.ExternalPrefix)
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "web.external-prefix", Value: tr.Spec.ExternalPrefix})
 	}
 
 	if tr.Spec.RoutePrefix != "" {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--web.route-prefix=%s", tr.Spec.RoutePrefix))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: tr.Spec.RoutePrefix})
 	}
 
 	if tr.Spec.AlertQueryURL != "" {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.query-url", Value: tr.Spec.AlertQueryURL})
 	}
+
+	containerArgs, err := operator.BuildArgs(trCLIArgs, tr.Spec.AdditionalArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	// The first argument to thanos must be "rule" to start thanos ruler, e.g. "thanos rule --data-dir..."
+	containerArgs = append([]string{"rule"}, containerArgs...)
 
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
@@ -391,7 +399,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Name:                     "thanos-ruler",
 			Image:                    trImagePath,
 			ImagePullPolicy:          tr.Spec.ImagePullPolicy,
-			Args:                     trCLIArgs,
+			Args:                     containerArgs,
 			Env:                      trEnvVars,
 			VolumeMounts:             trVolumeMounts,
 			Resources:                tr.Spec.Resources,
