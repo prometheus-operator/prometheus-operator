@@ -854,7 +854,7 @@ func makeStatefulSetSpec(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(p.Spec.Thanos.ReadyTimeout)})
 		}
 
-		containerArgs, err := buildArgs(thanosArgs, p.Spec.Thanos.AdditionalArgs)
+		containerArgs, err := operator.BuildArgs(thanosArgs, p.Spec.Thanos.AdditionalArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -916,7 +916,7 @@ func makeStatefulSetSpec(
 		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
-	containerArgs, err := buildArgs(promArgs, p.Spec.AdditionalArgs)
+	containerArgs, err := operator.BuildArgs(promArgs, p.Spec.AdditionalArgs)
 
 	if err != nil {
 		return nil, err
@@ -1072,63 +1072,4 @@ func queryLogFilePath(p *monitoringv1.Prometheus) string {
 	}
 
 	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
-}
-
-func intersection(a, b []string) (i []string) {
-	m := make(map[string]struct{})
-
-	for _, item := range a {
-		m[item] = struct{}{}
-	}
-
-	for _, item := range b {
-		if _, ok := m[item]; ok {
-			i = append(i, item)
-		}
-
-		negatedItem := strings.TrimPrefix(item, "no-")
-		if item == negatedItem {
-			negatedItem = fmt.Sprintf("no-%s", item)
-		}
-
-		if _, ok := m[negatedItem]; ok {
-			i = append(i, item)
-		}
-	}
-	return i
-}
-
-func extractArgKeys(args []monitoringv1.Argument) []string {
-	var k []string
-	for _, arg := range args {
-		key := arg.Name
-		k = append(k, key)
-	}
-
-	return k
-}
-
-func buildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) ([]string, error) {
-	var containerArgs []string
-
-	argKeys := extractArgKeys(args)
-	additionalArgKeys := extractArgKeys(additionalArgs)
-
-	i := intersection(argKeys, additionalArgKeys)
-	if len(i) > 0 {
-		return nil, errors.Errorf("can't set arguments which are already managed by the operator: %s", strings.Join(i, ","))
-	}
-
-	args = append(args, additionalArgs...)
-
-	for _, arg := range args {
-		if arg.Value != "" {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
-		} else {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
-
-		}
-	}
-
-	return containerArgs, nil
 }
