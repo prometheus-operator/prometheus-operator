@@ -1918,18 +1918,18 @@ func (r *route) sanitize(amVersion semver.Version, logger log.Logger) error {
 
 	if matchersV2Allowed && checkNotEmptyMap(r.Match, r.MatchRE) {
 		msg := "'matchers' field is using a deprecated syntax which will be removed in future versions"
-		level.Warn(withLogger).Log("msg", msg, "match", r.Match, "match_re", r.MatchRE)
+		level.Warn(withLogger).Log("msg", msg, "match", fmt.Sprint(r.Match), "match_re", fmt.Sprint(r.MatchRE))
 	}
 
 	if !muteTimeIntervalsAllowed {
 		msg := "named mute time intervals in route is supported in Alertmanager >= 0.22.0 only - dropping config"
-		level.Warn(withLogger).Log("msg", msg, "mute_time_intervals", r.MuteTimeIntervals)
+		level.Warn(withLogger).Log("msg", msg, "mute_time_intervals", fmt.Sprint(r.MuteTimeIntervals))
 		r.MuteTimeIntervals = nil
 	}
 
 	if !activeTimeIntervalsAllowed {
 		msg := "active time intervals in route is supported in Alertmanager >= 0.24.0 only - dropping config"
-		level.Warn(withLogger).Log("msg", msg, "active_time_intervals", r.ActiveTimeIntervals)
+		level.Warn(withLogger).Log("msg", msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
 		r.ActiveTimeIntervals = nil
 	}
 
