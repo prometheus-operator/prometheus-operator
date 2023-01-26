@@ -8649,6 +8649,8 @@ spec:
                             type: string
                           sendResolved:
                             type: boolean
+                        required:
+                        - roomID
                         type: object
                       type: array
                     webhookConfigs:

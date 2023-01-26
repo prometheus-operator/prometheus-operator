@@ -572,7 +572,7 @@ type HTTPConfig struct {
 type WebexConfig struct {
 	SendResolved *bool       `json:"sendResolved,omitempty"`
 	APIURL       string      `json:"apiURL,omitempty"`
-	RoomID       string      `json:"roomID,omitempty"`
+	RoomID       string      `json:"roomID"`
 	Message      string      `json:"message,omitempty"`
 	HTTPConfig   *HTTPConfig `json:"httpConfig,omitempty"`
 }

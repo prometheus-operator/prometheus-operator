@@ -3999,6 +3999,9 @@
                             type: 'boolean',
                           },
                         },
+                        required: [
+                          'roomID',
+                        ],
                         type: 'object',
                       },
                       type: 'array',
