@@ -229,6 +229,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.TimeRangeApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("VictorOpsConfig"):
 		return &monitoringv1alpha1.VictorOpsConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("WebexConfig"):
+		return &monitoringv1alpha1.WebexConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("WebhookConfig"):
 		return &monitoringv1alpha1.WebhookConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("WeChatConfig"):
