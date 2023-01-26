@@ -23,7 +23,6 @@ type ReceiverApplyConfiguration struct {
 	OpsGenieConfigs  []OpsGenieConfigApplyConfiguration  `json:"opsgenieConfigs,omitempty"`
 	PagerDutyConfigs []PagerDutyConfigApplyConfiguration `json:"pagerdutyConfigs,omitempty"`
 	SlackConfigs     []SlackConfigApplyConfiguration     `json:"slackConfigs,omitempty"`
-	WebexConfigs     []WebexConfigApplyConfiguration     `json:"webexConfigs,omitempty"`
 	WebhookConfigs   []WebhookConfigApplyConfiguration   `json:"webhookConfigs,omitempty"`
 	WeChatConfigs    []WeChatConfigApplyConfiguration    `json:"wechatConfigs,omitempty"`
 	EmailConfigs     []EmailConfigApplyConfiguration     `json:"emailConfigs,omitempty"`
@@ -31,6 +30,7 @@ type ReceiverApplyConfiguration struct {
 	PushoverConfigs  []PushoverConfigApplyConfiguration  `json:"pushoverConfigs,omitempty"`
 	SNSConfigs       []SNSConfigApplyConfiguration       `json:"snsConfigs,omitempty"`
 	TelegramConfigs  []TelegramConfigApplyConfiguration  `json:"telegramConfigs,omitempty"`
+	WebexConfigs     []WebexConfigApplyConfiguration     `json:"webexConfigs,omitempty"`
 }
 
 // ReceiverApplyConfiguration constructs an declarative configuration of the Receiver type for use with
@@ -82,19 +82,6 @@ func (b *ReceiverApplyConfiguration) WithSlackConfigs(values ...*SlackConfigAppl
 			panic("nil value passed to WithSlackConfigs")
 		}
 		b.SlackConfigs = append(b.SlackConfigs, *values[i])
-	}
-	return b
-}
-
-// WithWebexConfigs adds the given value to the WebexConfigs field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the WebexConfigs field.
-func (b *ReceiverApplyConfiguration) WithWebexConfigs(values ...*WebexConfigApplyConfiguration) *ReceiverApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithWebexConfigs")
-		}
-		b.WebexConfigs = append(b.WebexConfigs, *values[i])
 	}
 	return b
 }
@@ -186,6 +173,19 @@ func (b *ReceiverApplyConfiguration) WithTelegramConfigs(values ...*TelegramConf
 			panic("nil value passed to WithTelegramConfigs")
 		}
 		b.TelegramConfigs = append(b.TelegramConfigs, *values[i])
+	}
+	return b
+}
+
+// WithWebexConfigs adds the given value to the WebexConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the WebexConfigs field.
+func (b *ReceiverApplyConfiguration) WithWebexConfigs(values ...*WebexConfigApplyConfiguration) *ReceiverApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithWebexConfigs")
+		}
+		b.WebexConfigs = append(b.WebexConfigs, *values[i])
 	}
 	return b
 }

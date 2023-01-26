@@ -13271,7 +13271,7 @@ SafeTLSConfig
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -14639,6 +14639,19 @@ string
 <p>List of Telegram configurations.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>webexConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.WebexConfig">
+[]WebexConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of Webex configurations.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.Route">Route
@@ -16000,6 +16013,77 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>WebexConfig configures notification via Cisco Webex
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_config">https://prometheus.io/docs/alerting/latest/configuration/#webex_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>roomID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig
 </h3>
 <p>
@@ -16580,7 +16664,7 @@ SafeTLSConfig
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -17878,6 +17962,19 @@ string
 </td>
 <td>
 <p>List of Telegram configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webexConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.WebexConfig">
+[]WebexConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of Webex configurations.</p>
 </td>
 </tr>
 </tbody>
@@ -19319,6 +19416,77 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>HTTP client configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>WebexConfig configures notification via Cisco Webex
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_config">https://prometheus.io/docs/alerting/latest/configuration/#webex_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>roomID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

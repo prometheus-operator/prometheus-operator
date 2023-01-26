@@ -576,11 +576,11 @@ type HTTPConfig struct {
 // WebexConfig configures notification via Cisco Webex
 // See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
 type WebexConfig struct {
-	SendResolved *bool       `json:"sendResolved,omitempty"`
 	APIURL       string      `json:"apiURL,omitempty"`
-	RoomID       string      `json:"roomID,omitempty"`
-	Message      string      `json:"message,omitempty"`
 	HTTPConfig   *HTTPConfig `json:"httpConfig,omitempty"`
+	Message      string      `json:"message,omitempty"`
+	RoomID       string      `json:"roomID"`
+	SendResolved *bool       `json:"sendResolved,omitempty"`
 }
 
 // WeChatConfig configures notifications via WeChat.
