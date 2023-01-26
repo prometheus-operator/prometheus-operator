@@ -165,8 +165,9 @@ issue](https://github.com/kubernetes/enhancements/issues/661)).
 
 It is still possible to fix the situation manually.
 
-First, update the storage request in the `spec.storage` field of the custom
-resource (assuming a Prometheus resource named `example`):
+First, update `spec.paused` field to `true`.
+It should prevent the operator from recreating the statefulset.
+(assuming a Prometheus resource named `example`):
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -175,13 +176,12 @@ metadata:
   name: example
 spec:
   replicas: 1
-  storage:
-    volumeClaimTemplate:
-      spec:
-        resources:
-          requests:
-            storage: 10Gi
+  paused: true
 ```
+
+Directly modifying the storage request in the Prometheus CRD would
+recreate the StatefulSet with the new spec and, unfortunately, all the pods
+managed by the StatefulSet would be recreated at the same time incurring downtime.
 
 Next, patch every PVC with the updated storage request (10Gi in this example):
 
@@ -191,10 +191,29 @@ for p in $(kubectl get pvc -l operator.prometheus.io/name=example -o jsonpath='{
 done
 ```
 
-Last, delete the underlying StatefulSet using the `orphan` deletion strategy:
+Next, delete the underlying StatefulSet using the `orphan` deletion strategy:
 
 ```bash
 kubectl delete statefulset -l operator.prometheus.io/name=example --cascade=orphan
+```
+
+Last, update the storage request in the `spec.storage` field of the custom resource
+And change `spec.paused` field back to `false`.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  replicas: 1
+  paused: false
+  storage:
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 10Gi
 ```
 
 The operator should recreate the StatefulSet immediately, there will be no
