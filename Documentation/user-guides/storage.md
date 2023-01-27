@@ -177,6 +177,12 @@ metadata:
 spec:
   replicas: 1
   paused: true
+    storage:
+      volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
 ```
 
 Directly modifying the storage request in the Prometheus CRD would
