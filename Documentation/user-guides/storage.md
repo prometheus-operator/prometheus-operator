@@ -171,20 +171,8 @@ It should prevent the operator from recreating the statefulset.
 And update the storage request in the `spec.storage` field of the custom
 resource (assuming a Prometheus resource named `example`):
 
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: example
-spec:
-  replicas: 1
-  paused: true
-    storage:
-      volumeClaimTemplate:
-      spec:
-        resources:
-          requests:
-            storage: 10Gi
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": true, "storage": {"volumeClaimTemplate": {"spec": {"resources": {"requests": {"storage":"10Gi"}}}}}}}' --type merge
 ```
 
 Next, patch every PVC with the updated storage request (10Gi in this example):
@@ -203,14 +191,8 @@ kubectl delete statefulset -l operator.prometheus.io/name=example --cascade=orph
 
 Last, change `spec.paused` field of the custom resource back to `false`.
 
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: example
-spec:
-  replicas: 1
-  paused: false
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": false}}' --type merge
 ```
 
 The operator should recreate the StatefulSet immediately, there will be no
