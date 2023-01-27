@@ -8,23 +8,38 @@
 * Other docs:
   * n/a
 
-This document aims at creating a lower level `ScrapeConfig` Custom Resource Definition that defines additional scrape 
+This document aims at creating a lower level `ScrapeConfig` Custom Resource Definition that defines additional scrape
 configurations the Kubernetes way.
 
 # Why
 
-prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the Probe CRD 
-(#3447) or additionalScrapeConfig to do so.
-Furthermore, currently, there is a lot of code duplication due to the operator supporting several CRDs that generate 
-scrape configurations. With the new `ScrapeConfig` CRD, it would be possible to consolidate some of that logic, where 
+prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the Probe CRD
+(#3447) or additionalScrapeConfig to do so. Multiple use cases have been reported:
+
+* A user reported in the contributor office hours that their team serves Prometheus as a service to several teams across
+  multiple regions. These teams have tens of thousands of exporters running outside Kubernetes. To scrape them, each
+  team has to involve this user's team which makes it a bottleneck. While there is CI in place, errors happen and can
+  render Prometheus' configuration to be invalid. They would like to use a CRD to help the team serve themselves in
+  adding scrape configurations.
+* [@auligh in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-539568397)
+  reported needing a specific scrape configuration to scrape services running on the kubernetes nodes but don't have a
+  Service attached to them. This user wants to deploy these scrape configurations alongside the applications rather than
+  in a centralized way with `additionalScrapeConfigs`.
+* [@bgagnon in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-545510764)
+  mentions that `additionalScrapeConfigs`'s usage is error-prone as with usage, multiple unrelated scrape configurations
+  are bundled together.
+
+Furthermore, currently, there is a lot of code duplication due to the operator supporting several CRDs that generate
+scrape configurations. With the new `ScrapeConfig` CRD, it would be possible to consolidate some of that logic, where
 the other `*Monitor` CRDs could be migrated so that they create a ScrapeConfig resource that would ultimately be used by
 the operator to generate scrape configuration.
 
 ## Pitfalls of the current solution
 
 Using `additionalScrapeConfig` comes with drawbacks:
-* Teams have to build an infrastructure to add scrape rules in a centralized manner, which creates a bottleneck since a 
-single team becomes responsible for the configuration
+
+* Teams have to build an infrastructure to add scrape rules in a centralized manner, which creates a bottleneck since a
+  single team becomes responsible for the configuration
 * There is no input validation, which can lead to an invalid prometheus configuration
 
 # Goals
@@ -40,25 +55,25 @@ single team becomes responsible for the configuration
 
 # Non-Goals
 
-* This proposal doesn't aim at covering all the fields in 
-[`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). 
-Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
-* refactoring of the other CRDs is not in scope for the first version
+* This proposal doesn't aim at covering all the fields in
+  [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config).
+  Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
+* Refactoring of the other CRDs is not in scope for the first version
 
 # How
 
-As described by 
-[@aulig in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-559776221), we 
+As described by
+[@aulig in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-559776221), we
 will create a new `ScrapeConfig` CRD, this config will act the same as the other CRDs and append scrape configurations
 to the configuration. `ScrapeConfig` will allow for any scraping configuration, while the other CRDs provide sane
 defaults. This will allow for isolated testing of the new `ScrapeConfig` CRD.
 
 ```mermaid
 graph TD;
-    ServiceMonitor-->prometheusConfig
-    PodMonitor-->prometheusConfig
-    ScrapeConfig-->prometheusConfig
-    prometheusConfig
+ServiceMonitor --> prometheusConfig
+PodMonitor --> prometheusConfig
+ScrapeConfig --> prometheusConfig
+prometheusConfig
 ```
 
 Using a pseudo custom resource definition, we should have the following:
@@ -76,12 +91,16 @@ spec:
     - <StaticConfig>[] # new resource
   fileSDConfigs:
     - <fileSDConfig>[] # new resource
+  httpSDConfigs:
+    - <httpSDConfig>[] # new resource
   relabelConfigs:
     - <RelabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
   metricsPath: /metrics
 ```
 
-with `StaticConfig` being:
+with the following new resources:
+
+* `staticConfig`
 
 ```yaml
 targets:
@@ -90,7 +109,7 @@ labels:
   labelA: placeholder
 ```
 
-and `fileSDConfig`:
+* `fileSDConfig`:
 
 ```yaml
 files:
@@ -98,15 +117,22 @@ files:
 refresh_interval: 5m
 ```
 
+* `httpSDConfig`:
+
+```yaml
+url: http://localhost:1234
+refresh_interval: 60s
+```
+
 Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any
 configuration, it can also generate scrape configuration for the other CRDs.
 
 ```mermaid
 graph TD;
-    ServiceMonitor-->ScrapeConfig
-    PodMonitor-->ScrapeConfig
-    ScrapeConfig-->prometheusConfig
-    prometheusConfig
+ServiceMonitor --> ScrapeConfig
+PodMonitor --> ScrapeConfig
+ScrapeConfig --> prometheusConfig
+prometheusConfig
 ```
 
 # Alternatives
@@ -115,5 +141,6 @@ graph TD;
 
 # Action Plan
 
-1. Create the `ScrapeConfig` CRD, covering `file_sd_configs` and `static_configs`
-2. Once released, refactor the configuration generation logic to reuse `ScrapeConfig`
+1. Create the `ScrapeConfig` CRD, covering `file_sd_configs`, `static_configs` and `http_sd_configs`
+2. Once released, refactor the configuration generation logic to reuse `ScrapeConfig`. In parallel, add other service
+   discovery mechanisms to the CRD.
