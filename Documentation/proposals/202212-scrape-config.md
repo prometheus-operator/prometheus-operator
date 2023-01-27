@@ -8,17 +8,23 @@
 * Other docs:
   * n/a
 
-This document aims at creating a lower level `ScrapeConfig` Custom Resource Definition that defines additional scrape configurations the Kubernetes way.
+This document aims at creating a lower level `ScrapeConfig` Custom Resource Definition that defines additional scrape 
+configurations the Kubernetes way.
 
 # Why
 
-prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the Probe CRD (#3447) or additionalScrapeConfig to do so.
-Furthermore, currently, there is a lot of code duplication due to the operator supporting several CRDs that generate scrape configurations. With the new `ScrapeConfig` CRD, it would be possible to consolidate some of that logic, where the other `*Monitor` CRDs could be migrated so that they create a ScrapeConfig resource that would ultimately be used by the operator to generate scrape configuration.
+prometheus-operator misses a way to scrape external targets using CRD. Users have either been abusing the Probe CRD 
+(#3447) or additionalScrapeConfig to do so.
+Furthermore, currently, there is a lot of code duplication due to the operator supporting several CRDs that generate 
+scrape configurations. With the new `ScrapeConfig` CRD, it would be possible to consolidate some of that logic, where 
+the other `*Monitor` CRDs could be migrated so that they create a ScrapeConfig resource that would ultimately be used by
+the operator to generate scrape configuration.
 
 ## Pitfalls of the current solution
 
 Using `additionalScrapeConfig` comes with drawbacks:
-* Teams have to build an infrastructure to add scrape rules in a centralized manner, which creates a bottleneck since a single team becomes responsible for the configuration
+* Teams have to build an infrastructure to add scrape rules in a centralized manner, which creates a bottleneck since a 
+single team becomes responsible for the configuration
 * There is no input validation, which can lead to an invalid prometheus configuration
 
 # Goals
@@ -34,12 +40,18 @@ Using `additionalScrapeConfig` comes with drawbacks:
 
 # Non-Goals
 
-* This proposal doesn't aim at covering all the fields in [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
+* This proposal doesn't aim at covering all the fields in 
+[`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). 
+Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
 * refactoring of the other CRDs is not in scope for the first version
 
 # How
 
-As described by [@aulig in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-559776221), we will create a new `ScrapeConfig` CRD, this config will act the same as the other CRDs and append scrape configurations to the configuration. `ScrapeConfig` will allow for any scraping configuration, while the other CRDs provide sane defaults. This will allow for isolated testing of the new `ScrapeConfig` CRD.
+As described by 
+[@aulig in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-559776221), we 
+will create a new `ScrapeConfig` CRD, this config will act the same as the other CRDs and append scrape configurations
+to the configuration. `ScrapeConfig` will allow for any scraping configuration, while the other CRDs provide sane
+defaults. This will allow for isolated testing of the new `ScrapeConfig` CRD.
 
 ```mermaid
 graph TD;
@@ -86,7 +98,8 @@ files:
 refresh_interval: 5m
 ```
 
-Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any configuration, it can also generate scrape configuration for the other CRDs.
+Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any
+configuration, it can also generate scrape configuration for the other CRDs.
 
 ```mermaid
 graph TD;
