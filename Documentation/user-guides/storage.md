@@ -165,22 +165,14 @@ issue](https://github.com/kubernetes/enhancements/issues/661)).
 
 It is still possible to fix the situation manually.
 
-First, update the storage request in the `spec.storage` field of the custom
+First, update `spec.paused` field to `true`.
+It should prevent the operator from recreating the statefulset.
+
+And update the storage request in the `spec.storage` field of the custom
 resource (assuming a Prometheus resource named `example`):
 
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: example
-spec:
-  replicas: 1
-  storage:
-    volumeClaimTemplate:
-      spec:
-        resources:
-          requests:
-            storage: 10Gi
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": true, "storage": {"volumeClaimTemplate": {"spec": {"resources": {"requests": {"storage":"10Gi"}}}}}}}' --type merge
 ```
 
 Next, patch every PVC with the updated storage request (10Gi in this example):
@@ -191,10 +183,16 @@ for p in $(kubectl get pvc -l operator.prometheus.io/name=example -o jsonpath='{
 done
 ```
 
-Last, delete the underlying StatefulSet using the `orphan` deletion strategy:
+Next, delete the underlying StatefulSet using the `orphan` deletion strategy:
 
 ```bash
 kubectl delete statefulset -l operator.prometheus.io/name=example --cascade=orphan
+```
+
+Last, change `spec.paused` field of the custom resource back to `false`.
+
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": false}}' --type merge
 ```
 
 The operator should recreate the StatefulSet immediately, there will be no
