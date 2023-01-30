@@ -122,7 +122,7 @@ refresh_interval: 5m
 
 ```yaml
 url: http://localhost:1234
-refresh_interval: 60s
+refreshInterval: 60s
 ```
 
 Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any
