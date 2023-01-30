@@ -64,9 +64,10 @@ Using `additionalScrapeConfig` comes with drawbacks:
 
 As described by
 [@aulig in #2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787#issuecomment-559776221), we
-will create a new `ScrapeConfig` CRD, this config will act the same as the other CRDs and append scrape configurations
-to the configuration. `ScrapeConfig` will allow for any scraping configuration, while the other CRDs provide sane
-defaults. This will allow for isolated testing of the new `ScrapeConfig` CRD.
+will create a new ScrapeConfig CRD, this new CRD will act the same as the other CRDs and append scrape configurations to
+the configuration. Usage of ScrapeConfig doesn't exclude the use of the other CRDs, they are not mutually exclusive.
+`ScrapeConfig` will allow for any scraping configuration, while the other CRDs provide sane defaults. This will allow
+for isolated testing of the new `ScrapeConfig` CRD.
 
 ```mermaid
 graph TD;
