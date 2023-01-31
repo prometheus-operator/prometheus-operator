@@ -480,7 +480,10 @@ func makeStatefulSetSpec(
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+				EmptyDir: &v1.EmptyDirVolumeSource{
+					// tmpfs is used here to avoid writing sensitive data into disk.
+					Medium: v1.StorageMediumMemory,
+				},
 			},
 		},
 	}
