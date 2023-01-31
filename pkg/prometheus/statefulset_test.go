@@ -364,7 +364,9 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 						{
 							Name: "config-out",
 							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
+								EmptyDir: &v1.EmptyDirVolumeSource{
+									Medium: v1.StorageMediumMemory,
+								},
 							},
 						},
 						{
