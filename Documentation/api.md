@@ -10937,6 +10937,19 @@ Duration
 </tr>
 <tr>
 <td>
+<code>keep_firing_for</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labels</code><br/>
 <em>
 map[string]string
