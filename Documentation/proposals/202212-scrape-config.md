@@ -115,7 +115,7 @@ labels:
 ```yaml
 files:
   - <SecretOrConfigMap>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1644
-refresh_interval: 5m
+refreshInterval: 5m
 ```
 
 * `httpSDConfig`:
