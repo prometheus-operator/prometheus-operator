@@ -114,7 +114,10 @@ labels:
 
 ```yaml
 files:
-  - <SecretOrConfigMap>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1644
+  # Files here are string referencing a file existing in the Prometheus Pod. prometheus-operator is not responsible for
+  # these SD files. The operator should use Prometheus.ConfigMaps to mount these files in the pods and have them usable
+  # by ScrapeConfig. No validation on the content of the SD files is expected from prometheus-operator.
+  - /etc/prometheus/configmaps/inventory/file.json
 refreshInterval: 5m
 ```
 
