@@ -95,7 +95,7 @@ spec:
   httpSDConfigs:
     - <httpSDConfig>[] # new resource
   relabelConfigs:
-    - <RelabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
+    - <relabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
   metricsPath: /metrics
 ```
 
