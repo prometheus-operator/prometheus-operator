@@ -485,7 +485,7 @@ func makeStatefulSetSpec(
 		},
 	}
 
-	if volume, ok := queryLogFileVolume(&p); ok {
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok {
 		volumes = append(volumes, volume)
 	}
 
@@ -535,7 +535,7 @@ func makeStatefulSetSpec(
 		})
 	}
 
-	if vmount, ok := queryLogFileVolumeMount(&p); ok {
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
 		promVolumeMounts = append(promVolumeMounts, vmount)
 	}
 
@@ -1037,12 +1037,12 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-func usesDefaultQueryLogVolume(p *monitoringv1.Prometheus) bool {
-	return p.Spec.QueryLogFile != "" && filepath.Dir(p.Spec.QueryLogFile) == "."
+func usesDefaultQueryLogVolume(queryLogFile string) bool {
+	return queryLogFile != "" && filepath.Dir(queryLogFile) == "."
 }
 
-func queryLogFileVolumeMount(p *monitoringv1.Prometheus) (v1.VolumeMount, bool) {
-	if !usesDefaultQueryLogVolume(p) {
+func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {
+	if !usesDefaultQueryLogVolume(queryLogFile) {
 		return v1.VolumeMount{}, false
 	}
 
@@ -1053,8 +1053,8 @@ func queryLogFileVolumeMount(p *monitoringv1.Prometheus) (v1.VolumeMount, bool) 
 	}, true
 }
 
-func queryLogFileVolume(p *monitoringv1.Prometheus) (v1.Volume, bool) {
-	if !usesDefaultQueryLogVolume(p) {
+func queryLogFileVolume(queryLogFile string) (v1.Volume, bool) {
+	if !usesDefaultQueryLogVolume(queryLogFile) {
 		return v1.Volume{}, false
 	}
 
@@ -1066,10 +1066,10 @@ func queryLogFileVolume(p *monitoringv1.Prometheus) (v1.Volume, bool) {
 	}, true
 }
 
-func queryLogFilePath(p *monitoringv1.Prometheus) string {
-	if !usesDefaultQueryLogVolume(p) {
-		return p.Spec.QueryLogFile
+func queryLogFilePath(queryLogFile string) string {
+	if !usesDefaultQueryLogVolume(queryLogFile) {
+		return queryLogFile
 	}
 
-	return filepath.Join(defaultQueryLogDirectory, p.Spec.QueryLogFile)
+	return filepath.Join(defaultQueryLogDirectory, queryLogFile)
 }
