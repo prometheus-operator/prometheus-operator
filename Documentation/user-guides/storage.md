@@ -159,17 +159,23 @@ parameters:
 
 Even if the StorageClass supports resizing, Kubernetes doesn't support (yet)
 volume expansion through StatefulSets. This means that when you update the
-storage requests in the `spec.storage` field of a custom resource, it doesn't
-get propagated to the associated PVCs (more details in the [KEP
+storage requests in the `spec.storage` field of a custom resource such as
+Prometheus, the operator has to delete/recreate the underlying StatefulSet and
+the associated PVCs aren't expanded (more details in the [KEP
 issue](https://github.com/kubernetes/enhancements/issues/661)).
 
 It is still possible to fix the situation manually.
 
-First, update `spec.paused` field to `true`.
-It should prevent the operator from recreating the statefulset.
+First check that the storage class allows volume expansion:
 
-And update the storage request in the `spec.storage` field of the custom
-resource (assuming a Prometheus resource named `example`):
+```bash
+$ kubectl get storageclass -o custom-columns=NAME:.metadata.name,ALLOWVOLUMEEXPANSION:.allowVolumeExpansion
+NAME      ALLOWVOLUMEEXPANSION
+gp2-csi   true
+gp3-csi   true
+```
+
+Next, update the `spec.paused` field to `true` (to prevent the operator from recreating the StatefulSet) and update the storage request in the `spec.storage` field of the custom resource. Assuming a Prometheus resource named `example` for which you want to increase the storage size to 10Gi:
 
 ```bash
 kubectl patch prometheus/example --patch '{"spec": {"paused": true, "storage": {"volumeClaimTemplate": {"spec": {"resources": {"requests": {"storage":"10Gi"}}}}}}}' --type merge
