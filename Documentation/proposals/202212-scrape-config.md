@@ -89,7 +89,7 @@ metadata:
     test: value
 spec:
   staticConfigs:
-    - <StaticConfig>[] # new resource
+    - <staticConfig>[] # new resource
   fileSDConfigs:
     - <fileSDConfig>[] # new resource
   httpSDConfigs:
