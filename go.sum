@@ -481,8 +481,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/thanos-io/thanos v0.30.1 h1:JjC3IS11c6ARNMIoBUFNZlw3AoexVY0oF/dLP9+sWLs=
-github.com/thanos-io/thanos v0.30.1/go.mod h1:ve1mHR1dhCRqQlp0C5g+AFENoNu9GA4gtq1+Og6nuzc=
+github.com/thanos-io/thanos v0.30.2 h1:JcazfBlpX/i747uRxBWHJMopX0g+eSaZYGjqMeQIkPo=
+github.com/thanos-io/thanos v0.30.2/go.mod h1:k23ZcbQSK0Jd/siuEti6J6/3DeezIk+YLRBcYikzXl8=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tidwall/pretty v1.2.0 h1:RWIZEg2iJ8/g6fDDYzMpobmaoGh5OLl4AXtGUGPcqCs=
 github.com/vultr/govultr/v2 v2.17.2 h1:gej/rwr91Puc/tgh+j33p/BLR16UrIPnSr+AIwYWZQs=
