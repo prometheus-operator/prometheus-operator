@@ -686,7 +686,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
-			operator.ReloaderResources(config.ReloaderConfig),
+			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
 				Scheme: alertmanagerURIScheme,
 				Host:   config.LocalHost + ":9093",

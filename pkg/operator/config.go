@@ -31,7 +31,7 @@ type Config struct {
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig
 	ServerTLSConfig              server.TLSServerConfig
-	ReloaderConfig               ReloaderConfig
+	ReloaderConfig               ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
@@ -46,7 +46,9 @@ type Config struct {
 	SecretListWatchSelector      string
 }
 
-type ReloaderConfig struct {
+// ContainerConfig holds some configuration for the ConfigReloader sidecar
+// that can be set through prometheus-operator command line arguments
+type ContainerConfig struct {
 	CPURequest    string
 	CPULimit      string
 	MemoryRequest string
