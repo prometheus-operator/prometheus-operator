@@ -17,7 +17,6 @@ package thanos
 import (
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -541,86 +540,97 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 	alertDropLabelPrefix := "--alert.label-drop="
 
 	tests := []struct {
+		Name                    string
 		Labels                  map[string]string
 		AlertDropLabels         []string
 		ExpectedLabels          []string
 		ExpectedAlertDropLabels []string
 	}{
 		{
+			Name:                    "thanos_ruler_replica-is-set",
 			Labels:                  nil,
 			AlertDropLabels:         nil,
 			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`},
 			ExpectedAlertDropLabels: []string{"thanos_ruler_replica"},
 		},
 		{
+			Name:                    "alert-drop-labels-are-set",
 			Labels:                  nil,
 			AlertDropLabels:         []string{"test"},
 			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`},
 			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test"},
 		},
 		{
+			Name: "labels-are-set",
 			Labels: map[string]string{
 				"test": "test",
 			},
 			AlertDropLabels:         nil,
-			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`, `test="test"`},
 			ExpectedAlertDropLabels: []string{"thanos_ruler_replica"},
 		},
 		{
+			Name: "both-alert-drop-labels-and-labels-are-set",
 			Labels: map[string]string{
 				"test": "test",
 			},
 			AlertDropLabels:         []string{"test"},
-			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`, `test="test"`},
 			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test"},
 		},
 		{
+			Name: "assert-labels-order-is-constant",
 			Labels: map[string]string{
 				"thanos_ruler_replica": "$(POD_NAME)",
 				"test":                 "test",
+				"test4":                "test4",
+				"test1":                "test1",
+				"test2":                "test2",
+				"test3":                "test3",
+				"foo":                  "bar",
+				"bob":                  "alice",
 			},
-			AlertDropLabels:         []string{"test", "aaa"},
-			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`, `thanos_ruler_replica="$(POD_NAME)"`},
-			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test", "aaa"},
+			AlertDropLabels:         []string{"test", "aaa", "foo", "bar", "foo1", "foo2", "foo3"},
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`, `bob="alice"`, `foo="bar"`, `test="test"`, `test1="test1"`, `test2="test2"`, `test3="test3"`, `test4="test4"`, `thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test", "aaa", "foo", "bar", "foo1", "foo2", "foo3"},
 		},
 	}
 	for _, tc := range tests {
-		actualLabels := []string{}
-		actualDropLabels := []string{}
-		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-			ObjectMeta: metav1.ObjectMeta{},
-			Spec: monitoringv1.ThanosRulerSpec{
-				QueryEndpoints:  emptyQueryEndpoints,
-				Labels:          tc.Labels,
-				AlertDropLabels: tc.AlertDropLabels,
-			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		ruler := sset.Spec.Template.Spec.Containers[0]
-		if ruler.Name != "thanos-ruler" {
-			t.Fatalf("Expected 1st containers to be thanos-ruler, got %s", ruler.Name)
-		}
-
-		for _, arg := range ruler.Args {
-			if strings.HasPrefix(arg, labelPrefix) {
-				actualLabels = append(actualLabels, strings.TrimPrefix(arg, labelPrefix))
-			} else if strings.HasPrefix(arg, alertDropLabelPrefix) {
-				actualDropLabels = append(actualDropLabels, strings.TrimPrefix(arg, alertDropLabelPrefix))
+		t.Run(tc.Name, func(t *testing.T) {
+			actualLabels := []string{}
+			actualDropLabels := []string{}
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.ThanosRulerSpec{
+					QueryEndpoints:  emptyQueryEndpoints,
+					Labels:          tc.Labels,
+					AlertDropLabels: tc.AlertDropLabels,
+				},
+			}, defaultTestConfig, nil, "")
+			if err != nil {
+				t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 			}
-		}
-		sort.Slice(actualLabels, func(i, j int) bool {
-			return actualLabels[i] < actualLabels[j]
-		})
-		if !reflect.DeepEqual(actualLabels, tc.ExpectedLabels) {
-			t.Fatal("label sets mismatch")
-		}
 
-		if !reflect.DeepEqual(actualDropLabels, tc.ExpectedAlertDropLabels) {
-			t.Fatal("alert drop label sets mismatch")
-		}
+			ruler := sset.Spec.Template.Spec.Containers[0]
+			if ruler.Name != "thanos-ruler" {
+				t.Fatalf("Expected 1st containers to be thanos-ruler, got %s", ruler.Name)
+			}
+
+			for _, arg := range ruler.Args {
+				if strings.HasPrefix(arg, labelPrefix) {
+					actualLabels = append(actualLabels, strings.TrimPrefix(arg, labelPrefix))
+				} else if strings.HasPrefix(arg, alertDropLabelPrefix) {
+					actualDropLabels = append(actualDropLabels, strings.TrimPrefix(arg, alertDropLabelPrefix))
+				}
+			}
+			if !reflect.DeepEqual(actualLabels, tc.ExpectedLabels) {
+				t.Fatalf("labels mismatch expected %v but got %v", tc.ExpectedLabels, actualLabels)
+			}
+
+			if !reflect.DeepEqual(actualDropLabels, tc.ExpectedAlertDropLabels) {
+				t.Fatalf("alert drop labels mismatch, expected %v, but got %v", tc.ExpectedAlertDropLabels, actualDropLabels)
+			}
+		})
 	}
 }
 

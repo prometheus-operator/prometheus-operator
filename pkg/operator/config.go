@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"sort"
 	"strings"
 
 	"k8s.io/client-go/rest"
@@ -91,6 +92,16 @@ func (labels *Labels) Set(value string) error {
 	(*labels).LabelsMap = m
 	(*labels).LabelsString = value
 	return nil
+}
+
+// Returns an arrary with the keys of the label map sorted
+func (labels *Labels) SortedKeys() []string {
+	keys := make([]string, 0, len(labels.LabelsMap))
+	for key := range labels.LabelsMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type Namespaces struct {
