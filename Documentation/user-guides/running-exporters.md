@@ -142,7 +142,7 @@ The following snippet will only select targets that have the `team` label set to
 
 **Full example**
 
-The following snippets is using a `ServiceMonitor` to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`, but the same configuration may be used with a `PodMonitor`
+The following snippet is using a `ServiceMonitor` to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`. The same configuration may be used with a `PodMonitor`.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
