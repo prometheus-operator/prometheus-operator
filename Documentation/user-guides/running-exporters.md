@@ -135,7 +135,7 @@ The following snippet will configure Prometheus to scrape metrics from the targe
   regex: "prometheus"
   action: keep
 - sourceLabels:
-  - datacenter
+  - __meta_kubernetes_pod_label_datacenter
   regex: west_europe
   action: drop
 ```
@@ -159,11 +159,11 @@ spec:
   - port: web
     relabelings:
       - sourceLabels:
-          - team
+          - __meta_kubernetes_pod_label_team
         regex: "prometheus"
         action: keep
       - sourceLabels:
-          - datacenter
+          - __meta_kubernetes_pod_label_datacenter
         regex: west_europe
         action: drop
 ```
