@@ -108,7 +108,7 @@ Relabeling is a powerful feature to dynamically rewrite the label set of a targe
 
 **Dropping label from a target**
 
-The following snippets drops the `pod` label from every metric scraped as part of the scrape job.
+The following snippet drops the `pod` label from every metric scraped as part of the scrape job.
 
 ```yaml
 - action: labeldrop
