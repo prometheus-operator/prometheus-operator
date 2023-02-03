@@ -57,7 +57,7 @@ Using `additionalScrapeConfig` comes with drawbacks:
 
 * This proposal doesn't aim at covering all the fields in
   [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config).
-  Specifically, it focuses first on `static_configs`, `file_sd_configs`  and `http_sd_configs`.
+  Specifically, it focuses first on `static_configs`, `file_sd_configs` and `http_sd_configs`.
 * Refactoring of the other CRDs is not in scope for the first version
 
 # How
@@ -131,7 +131,7 @@ refreshInterval: 60s
 This example doesn't list all the fields that are offered by prometheus. The implementation of all the fields will be
 done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
 
-Also, to help selecting `ScrapeConfig`, a new field will be added to the Prometheus CRD, same as for `ServiceMonitor` , 
+Also, to help selecting `ScrapeConfig`, a new field will be added to the Prometheus CRD, same as for `ServiceMonitor`,
 `PodMonitor` and `Probe` objects:
 
 ```yaml
