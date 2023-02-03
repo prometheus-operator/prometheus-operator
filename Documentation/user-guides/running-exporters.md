@@ -96,11 +96,91 @@ By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metada
 | container    | __meta_kubernetes_pod_container_name | `{name}` of the container in the scraped pod                                  |
 | endpoint     | -                                    | `{spec.Port}` or `{spec.TargetPort}` if specified                             |
 
+### Relabeling and Metric Relabeling
+
+Prometheus Operator provides the same Prometheus capability to relabel a target before scrape or a metric before sample ingestion, below you can find examples of each use case and implementation for Service or Pod monitors.
+
+#### Relabeling
+
+Relabeling is a powerful feature to dynamically rewrite the label set of a target before it gets scraped, and multiple relabeling steps can be configured per scrape configuration.
+ 
+> Relabel configs are applied to the label set of each target in order of their appearance in the configuration file.
+
+**Dropping label from a target**
+
+The config below will ensure that for every target discovered through the Pod or Service monitor the label `pod` will be removed from every metric exposed by that target.
+
+```yaml
+- action: labeldrop
+  regex: pod
+```
+
+**Adding label to a target**
+
+The config below will ensure that for every target discovered through the Pod or Service monitoir the label `team` will be added for every metric exposed by that target.
+
+```yaml
+- action: replace
+  replacement: prometheus
+  targetLabel: team
+```
+
+**Filtering targets by label**
+
+The config below will ensure that Pod or Service monitor will only scrape targets that belongs to the Prometheus team and drop all the west europe instances.
+
+```yaml
+- sourceLabels:
+  - team
+  regex: "prometheus"
+  action: keep
+- sourceLabels:
+  - datacenter
+  regex: west_europe
+  action: drop
+```
+
+#### Metric Relabeling
+
+Metric relabeling is applied to samples as the last step before ingestion, and it has the same configuration format and actions as target relabeling.
+
+> Metric relabeling does not apply to automatically generated timeseries such as up.
+
+**Dropping metrics**
+
+The config below will drop every metric that the name matches the regular expression.
+
+```yaml
+metricRelabelings:
+- sourceLabels:
+  - __name__
+  regex: container_tasks_state
+  action: drop
+```
+
+**Dropping time series**
+
+The config below will drop every time series having a label value pair that matches the regular expression.
+
+```yaml
+metricRelabelings:
+- sourceLabels:
+  - id
+  regex: '/system.slice/var-lib-docker-containers.*-shm.mount'
+  action: drop
+```
+
+For more information about `relabeling` and `metricRelabelings` please check the official Prometheus document.
+
+- [Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)
+
+- [Metric Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs)
+
 ### Configuration
 
 These labels can be modified or disabled using the `relabelings` and `metricRelabelings` settings of the `PodMonitor` and `ServiceMonitor` specifications. The configuration below will drop all of the labels before being loaded into Prometheus.
 
-```
+```yaml
 relabelings:
 - action: labeldrop
   regex: (container|endpoint|job|namespace|node|pod|service)
