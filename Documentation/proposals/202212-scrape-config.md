@@ -94,8 +94,8 @@ spec:
     - <fileSDConfig>[] # new resource
   httpSDConfigs:
     - <httpSDConfig>[] # new resource
-  relabelConfigs:
-    - <relabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
+  relabelings: # relabel_configs
+    - <RelabelConfig>[] # https://github.com/prometheus-operator/prometheus-operator/blob/e4e27052f57040f073c6c1e4aedaecaaec77d170/pkg/apis/monitoring/v1/types.go#L1150
   metricsPath: /metrics
 ```
 
@@ -128,6 +128,19 @@ url: http://localhost:1234
 refreshInterval: 60s
 ```
 
+This example doesn't list all the fields that are offered by prometheus. The implementation of all the fields will be
+done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
+
+Also, to help selecting `ScrapeConfig`, a new field will be added to the Prometheus CRD, same as for `ServiceMontor` or
+`PodMonitor`:
+
+```yaml
+[...]
+spec:
+  scrapeConfigSelector: ...
+  scrapeConfigNamespaceSelector: ...
+```
+
 Once the CRD is released, we will start refactoring the other CRDs. Since `ScrapeConfig` will allow for any
 configuration, it can also generate scrape configuration for the other CRDs.
 
@@ -145,6 +158,9 @@ prometheusConfig
 
 # Action Plan
 
-1. Create the `ScrapeConfig` CRD, covering `file_sd_configs`, `static_configs` and `http_sd_configs`
+1. Create the `ScrapeConfig` CRD, covering `file_sd_configs`, `static_configs` and `http_sd_configs`. The implementation
+   of every field in each service discovery mechanism is left to the implementation. The expectation is not for all of
+   them to be implemented.
 2. Once released, refactor the configuration generation logic to reuse `ScrapeConfig`. In parallel, add other service
-   discovery mechanisms to the CRD.
+   discovery mechanisms to the CRD and complete the implementation of `file_sd_configs`, `static_configs` and
+   `http_sd_configs`.
