@@ -103,7 +103,7 @@ Prometheus Operator provides the same Prometheus capability to relabel a target 
 #### Relabeling
 
 Relabeling is a powerful feature to dynamically rewrite the label set of a target before it gets scraped, and multiple relabeling steps can be configured per scrape configuration.
- 
+
 > Relabel configs are applied to the label set of each target in order of their appearance in the configuration file.
 
 **Dropping label from a target**
@@ -140,6 +140,34 @@ The following snippet will only select targets that have the `team` label set to
   action: drop
 ```
 
+**Full example**
+
+The following snippets is using a `ServiceMonitor` to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`, but the same configuration may be used with a `PodMonitor`
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  endpoints:
+  - port: web
+    relabelings:
+      - sourceLabels:
+          - team
+        regex: "prometheus"
+        action: keep
+      - sourceLabels:
+          - datacenter
+        regex: west_europe
+        action: drop
+```
+
 #### Metric Relabeling
 
 Metric relabeling is applied to samples as the last step before ingestion, and it has the same configuration format and actions as target relabeling.
@@ -170,10 +198,33 @@ metricRelabelings:
   action: drop
 ```
 
+**Full example**
+
+drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`, but the same configuration may be used with a `ServiceMonitor`
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  endpoints:
+  - port: web
+    metricRelabelings:
+    - sourceLabels:
+      - id
+      regex: '/system.slice/var-lib-docker-containers.*-shm.mount'
+      action: drop
+```
+
 For more information about `relabeling` and `metricRelabelings` please check the official Prometheus document.
 
 - [Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)
-
 - [Metric Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs)
 
 ### Configuration
