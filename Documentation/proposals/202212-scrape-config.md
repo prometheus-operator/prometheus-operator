@@ -57,7 +57,7 @@ Using `additionalScrapeConfig` comes with drawbacks:
 
 * This proposal doesn't aim at covering all the fields in
   [`<scrape_config>`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config).
-  Specifically, no service discovery other than `static_configs` or `file_sd_configs` should be implemented at first.
+  Specifically, it focuses first on `static_configs`, `file_sd_configs`  and `http_sd_configs`.
 * Refactoring of the other CRDs is not in scope for the first version
 
 # How
