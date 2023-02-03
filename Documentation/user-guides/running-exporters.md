@@ -127,7 +127,7 @@ The config below will ensure that for every target discovered through the Pod or
 
 **Filtering targets by label**
 
-The config below will ensure that Pod or Service monitor will only scrape targets that belongs to the Prometheus team and drop all the west europe instances.
+The following snippet will only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`.
 
 ```yaml
 - sourceLabels:
