@@ -131,7 +131,7 @@ The following snippet will configure Prometheus to scrape metrics from the targe
 
 ```yaml
 - sourceLabels:
-  - team
+  - __meta_kubernetes_pod_label_team
   regex: "prometheus"
   action: keep
 - sourceLabels:
