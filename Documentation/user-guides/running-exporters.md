@@ -117,7 +117,7 @@ The following snippet drops the `pod` label from every metric scraped as part of
 
 **Adding label to a target**
 
-The following snippet will add or replace the `team` label to all the metrics scraped as part of this job with the value `prometheus`.
+The following snippet will add or replace the `team` label with the value `prometheus` for all the metrics scraped as part of this job.
 
 ```yaml
 - action: replace
