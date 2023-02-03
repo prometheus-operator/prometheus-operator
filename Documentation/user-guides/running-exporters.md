@@ -117,7 +117,7 @@ The following snippets drops the `pod` label from every metric scraped as part o
 
 **Adding label to a target**
 
-The config below will ensure that for every target discovered through the Pod or Service monitoir the label `team` will be added for every metric exposed by that target.
+The following configuration will add or replace the `team` label to all the metrics scraped as part of this job with the value `prometheus`.
 
 ```yaml
 - action: replace
