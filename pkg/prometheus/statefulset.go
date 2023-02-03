@@ -901,7 +901,7 @@ func makeStatefulSetSpec(
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
-			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderConfig(c.ReloaderConfig),
 			operator.ReloaderRunOnce(),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
@@ -950,7 +950,7 @@ func makeStatefulSetSpec(
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
-			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderConfig(c.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
 				Scheme: prometheusURIScheme,
 				Host:   c.LocalHost + ":9090",

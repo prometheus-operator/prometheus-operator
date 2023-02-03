@@ -322,7 +322,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			additionalContainers,
 			operator.CreateConfigReloader(
 				"config-reloader",
-				operator.ReloaderResources(config.ReloaderConfig),
+				operator.ReloaderConfig(config.ReloaderConfig),
 				operator.ReloaderURL(url.URL{
 					Scheme: "http",
 					Host:   config.LocalHost + ":10902",

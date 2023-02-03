@@ -92,7 +92,7 @@ type Config struct {
 	Host                         string
 	LocalHost                    string
 	ClusterDomain                string
-	ReloaderConfig               operator.ReloaderConfig
+	ReloaderConfig               operator.ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   operator.Namespaces
 	Labels                       operator.Labels
