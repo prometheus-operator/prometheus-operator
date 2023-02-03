@@ -131,8 +131,8 @@ refreshInterval: 60s
 This example doesn't list all the fields that are offered by prometheus. The implementation of all the fields will be
 done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
 
-Also, to help selecting `ScrapeConfig`, a new field will be added to the Prometheus CRD, same as for `ServiceMontor` or
-`PodMonitor`:
+Also, to help selecting `ScrapeConfig`, a new field will be added to the Prometheus CRD, same as for `ServiceMonitor` , 
+`PodMonitor` and `Probe` objects:
 
 ```yaml
 [...]
