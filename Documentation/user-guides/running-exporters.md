@@ -200,7 +200,7 @@ metricRelabelings:
 
 **Full example**
 
-drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`, but the same configuration may be used with a `ServiceMonitor`
+The following `PodMonitor` configures Prometheus to drop metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`. The same configuration could also be used with a `ServiceMonitor`
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
