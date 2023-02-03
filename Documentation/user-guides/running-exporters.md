@@ -98,7 +98,7 @@ By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metada
 
 ### Relabeling and Metric Relabeling
 
-Prometheus Operator provides the same Prometheus capability to relabel a target before scrape or a metric before sample ingestion, below you can find examples of each use case and implementation for Service or Pod monitors.
+Prometheus Operator provides the same capabilities as Prometheus to relabel a target before scrape or a metric before sample ingestion, below you can find examples for Service or Pod monitors.
 
 #### Relabeling
 
