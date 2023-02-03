@@ -160,7 +160,7 @@ metricRelabelings:
 
 **Dropping time series**
 
-The config below will drop every time series having a label value pair that matches the regular expression.
+The following configuration drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`.
 
 ```yaml
 metricRelabelings:
