@@ -148,7 +148,7 @@ Metric relabeling is applied to samples as the last step before ingestion, and i
 
 **Dropping metrics**
 
-The config below will drop every metric that the name matches the regular expression.
+The following configuration drops any metric which name (`__name__`) matches the regex `container_tasks_state`.
 
 ```yaml
 metricRelabelings:
