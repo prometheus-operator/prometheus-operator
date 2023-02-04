@@ -78,7 +78,7 @@ type Config struct {
 	Host                   string
 	TLSInsecure            bool
 	TLSConfig              rest.TLSClientConfig
-	ReloaderConfig         operator.ReloaderConfig
+	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
 	Namespaces             operator.Namespaces
 	Labels                 operator.Labels

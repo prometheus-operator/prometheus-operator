@@ -29,7 +29,7 @@ const configReloaderPort = 8080
 // a config-reloader container
 type ConfigReloader struct {
 	name               string
-	config             ReloaderConfig
+	config             ContainerConfig
 	configFile         string
 	configEnvsubstFile string
 	imagePullPolicy    v1.PullPolicy
@@ -75,7 +75,7 @@ func ConfigEnvsubstFile(configEnvsubstFile string) ReloaderOption {
 }
 
 // ReloaderResources sets the config option for the config-reloader container
-func ReloaderResources(rc ReloaderConfig) ReloaderOption {
+func ReloaderConfig(rc ContainerConfig) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.config = rc
 	}

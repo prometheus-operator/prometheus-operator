@@ -480,7 +480,10 @@ func makeStatefulSetSpec(
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+				EmptyDir: &v1.EmptyDirVolumeSource{
+					// tmpfs is used here to avoid writing sensitive data into disk.
+					Medium: v1.StorageMediumMemory,
+				},
 			},
 		},
 	}
@@ -898,7 +901,7 @@ func makeStatefulSetSpec(
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
-			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderConfig(c.ReloaderConfig),
 			operator.ReloaderRunOnce(),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
@@ -947,7 +950,7 @@ func makeStatefulSetSpec(
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
-			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderConfig(c.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
 				Scheme: prometheusURIScheme,
 				Host:   c.LocalHost + ":9090",
