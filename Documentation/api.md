@@ -16038,6 +16038,8 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The Webex Teams API URL i.e. <a href="https://webexapis.com/v1/messages">https://webexapis.com/v1/messages</a></p>
 </td>
 </tr>
 <tr>
@@ -16050,6 +16052,9 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The HTTP client&rsquo;s configuration.
+You must use this configuration to supply the bot token as part of the HTTP <code>Authorization</code> header.</p>
 </td>
 </tr>
 <tr>
@@ -16060,6 +16065,8 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Message template</p>
 </td>
 </tr>
 <tr>
@@ -16070,6 +16077,7 @@ string
 </em>
 </td>
 <td>
+<p>ID of the Webex Teams room where to send the messages.</p>
 </td>
 </tr>
 <tr>
@@ -16080,6 +16088,8 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
 </td>
 </tr>
 </tbody>
@@ -19439,42 +19449,14 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_con
 <tbody>
 <tr>
 <td>
-<code>sendResolved</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>apiURL</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>roomID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>message</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<em>(Optional)</em>
+<p>The Webex Teams API URL i.e. <a href="https://webexapis.com/v1/messages">https://webexapis.com/v1/messages</a></p>
 </td>
 </tr>
 <tr>
@@ -19487,6 +19469,44 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The HTTP client&rsquo;s configuration.
+You must use this configuration to supply the bot token as part of the HTTP <code>Authorization</code> header.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message template</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>roomID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID of the Webex Teams room where to send the messages.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
 </td>
 </tr>
 </tbody>

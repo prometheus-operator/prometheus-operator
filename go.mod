@@ -44,6 +44,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0
+	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338
 	golang.org/x/net v0.5.0
 )
 
@@ -107,7 +108,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
-	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338 // indirect
 	golang.org/x/oauth2 v0.3.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect

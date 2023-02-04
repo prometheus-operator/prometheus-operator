@@ -3779,10 +3779,11 @@
                             "description": "WebexConfig configures notification via Cisco Webex See https://prometheus.io/docs/alerting/latest/configuration/#webex_config",
                             "properties": {
                               "apiURL": {
+                                "description": "The Webex Teams API URL i.e. https://webexapis.com/v1/messages",
                                 "type": "string"
                               },
                               "httpConfig": {
-                                "description": "HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config",
+                                "description": "The HTTP client's configuration. You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.",
                                 "properties": {
                                   "authorization": {
                                     "description": "Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
@@ -4137,12 +4138,15 @@
                                 "type": "object"
                               },
                               "message": {
+                                "description": "Message template",
                                 "type": "string"
                               },
                               "roomID": {
+                                "description": "ID of the Webex Teams room where to send the messages.",
                                 "type": "string"
                               },
                               "sendResolved": {
+                                "description": "Whether to notify about resolved alerts.",
                                 "type": "boolean"
                               }
                             },

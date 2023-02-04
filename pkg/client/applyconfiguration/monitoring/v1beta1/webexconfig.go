@@ -19,25 +19,17 @@ package v1beta1
 // WebexConfigApplyConfiguration represents an declarative configuration of the WebexConfig type for use
 // with apply.
 type WebexConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
 	APIURL       *string                       `json:"apiURL,omitempty"`
-	RoomID       *string                       `json:"roomID,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	Message      *string                       `json:"message,omitempty"`
+	RoomID       *string                       `json:"roomID,omitempty"`
+	SendResolved *bool                         `json:"sendResolved,omitempty"`
 }
 
 // WebexConfigApplyConfiguration constructs an declarative configuration of the WebexConfig type for use with
 // apply.
 func WebexConfig() *WebexConfigApplyConfiguration {
 	return &WebexConfigApplyConfiguration{}
-}
-
-// WithSendResolved sets the SendResolved field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the SendResolved field is set to the value of the last call.
-func (b *WebexConfigApplyConfiguration) WithSendResolved(value bool) *WebexConfigApplyConfiguration {
-	b.SendResolved = &value
-	return b
 }
 
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
@@ -48,11 +40,11 @@ func (b *WebexConfigApplyConfiguration) WithAPIURL(value string) *WebexConfigApp
 	return b
 }
 
-// WithRoomID sets the RoomID field in the declarative configuration to the given value
+// WithHTTPConfig sets the HTTPConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the RoomID field is set to the value of the last call.
-func (b *WebexConfigApplyConfiguration) WithRoomID(value string) *WebexConfigApplyConfiguration {
-	b.RoomID = &value
+// If called multiple times, the HTTPConfig field is set to the value of the last call.
+func (b *WebexConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *WebexConfigApplyConfiguration {
+	b.HTTPConfig = value
 	return b
 }
 
@@ -64,10 +56,18 @@ func (b *WebexConfigApplyConfiguration) WithMessage(value string) *WebexConfigAp
 	return b
 }
 
-// WithHTTPConfig sets the HTTPConfig field in the declarative configuration to the given value
+// WithRoomID sets the RoomID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the HTTPConfig field is set to the value of the last call.
-func (b *WebexConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *WebexConfigApplyConfiguration {
-	b.HTTPConfig = value
+// If called multiple times, the RoomID field is set to the value of the last call.
+func (b *WebexConfigApplyConfiguration) WithRoomID(value string) *WebexConfigApplyConfiguration {
+	b.RoomID = &value
+	return b
+}
+
+// WithSendResolved sets the SendResolved field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SendResolved field is set to the value of the last call.
+func (b *WebexConfigApplyConfiguration) WithSendResolved(value bool) *WebexConfigApplyConfiguration {
+	b.SendResolved = &value
 	return b
 }
