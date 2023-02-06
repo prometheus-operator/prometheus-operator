@@ -142,7 +142,7 @@ The following snippet will configure Prometheus to scrape metrics from the targe
 
 **Full example**
 
-The following snippet is using a `ServiceMonitor` to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`. The same configuration may be used with a `PodMonitor`.
+The following `ServiceMonitor` configures Prometheus to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`. The same configuration may be used with a `PodMonitor`.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
