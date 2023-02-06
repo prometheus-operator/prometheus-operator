@@ -188,7 +188,7 @@ metricRelabelings:
 
 **Dropping time series**
 
-The following configuration drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`.
+The following snippet drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`.
 
 ```yaml
 metricRelabelings:
