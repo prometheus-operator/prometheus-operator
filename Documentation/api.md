@@ -8228,11 +8228,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.PrometheusInterface">PrometheusInterface
-</h3>
-<div>
-<p>PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.</p>
-</div>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
 <p>
