@@ -51,6 +51,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&AlertmanagerConfigList{},
 		&PrometheusAgent{},
 		&PrometheusAgentList{},
+		&ScrapeConfig{},
+		&ScrapeConfigList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
