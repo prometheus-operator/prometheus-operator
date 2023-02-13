@@ -127,7 +127,7 @@ The following snippet will add or replace the `team` label with the value `prome
 
 **Filtering targets by label**
 
-The following snippet will configure Prometheus to scrape metrics from the targets if they have the `team` label set to `prometheus` and `datacenter` not set to `west_europe`.
+The following snippet will configure Prometheus to scrape metrics from the targets if they have the Kubernetes `team` label set to `prometheus` and the Kubernetes `datacenter` label not set to `west_europe`.
 
 ```yaml
 - sourceLabels:
