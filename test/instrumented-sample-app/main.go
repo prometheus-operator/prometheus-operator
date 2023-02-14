@@ -127,9 +127,11 @@ func mTLSEndpoint() error {
 	address := ":8081"
 
 	server := &http.Server{
-		Addr:      address,
-		TLSConfig: tlsConfig,
-		Handler:   promhttp.Handler(),
+		Addr:              address,
+		TLSConfig:         tlsConfig,
+		ReadHeaderTimeout: 30 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		Handler:           promhttp.Handler(),
 	}
 
 	fmt.Printf("listening for metric requests on '%v' protected via mutual tls\n", address)
