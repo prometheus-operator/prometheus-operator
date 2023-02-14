@@ -57,7 +57,8 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 }
 
 func TestConfigGeneration(t *testing.T) {
-	for _, v := range operator.PrometheusCompatibilityMatrix {
+	for i := range operator.PrometheusCompatibilityMatrix {
+		v := operator.PrometheusCompatibilityMatrix[i]
 		t.Run(v, func(t *testing.T) {
 			t.Parallel()
 			cfg, err := generateTestConfig(t, v)
