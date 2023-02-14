@@ -57,7 +57,26 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		return nil, err
 	}
 
-	return makeStatefulSet(logger, "test", p, defaultTestConfig, cg, nil, "", 0, nil)
+	return makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 }
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -310,6 +329,12 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "",
 								},
 								{
+									Name:      "secret-test-secret1",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/secrets/test-secret1",
+									SubPath:   "",
+								},
+								{
 									Name:      "rules-configmap-one",
 									ReadOnly:  false,
 									MountPath: "/etc/prometheus/rules/rules-configmap-one",
@@ -320,12 +345,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/web_config/web-config.yaml",
 									SubPath:   "web-config.yaml",
-								},
-								{
-									Name:      "secret-test-secret1",
-									ReadOnly:  true,
-									MountPath: "/etc/prometheus/secrets/test-secret1",
-									SubPath:   "",
 								},
 							},
 						},
@@ -364,6 +383,14 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
+							Name: "secret-test-secret1",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "test-secret1",
+								},
+							},
+						},
+						{
 							Name: "rules-configmap-one",
 							VolumeSource: v1.VolumeSource{
 								ConfigMap: &v1.ConfigMapVolumeSource{
@@ -378,14 +405,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
 									SecretName: "prometheus-volume-init-test-web-config",
-								},
-							},
-						},
-						{
-							Name: "secret-test-secret1",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
-									SecretName: "test-secret1",
 								},
 							},
 						},
@@ -418,7 +437,26 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	cg, err := NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "volume-init-test", p, defaultTestConfig, cg, []string{"rules-configmap-one"}, "", 0, []string{tlsAssetsSecretName("volume-init-test") + "-0"})
+	sset, err := makeStatefulSet(
+		logger,
+		"volume-init-test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		[]string{"rules-configmap-one"},
+		"",
+		0,
+		[]string{tlsAssetsSecretName("volume-init-test") + "-0"})
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
@@ -842,7 +880,26 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	cg, err := NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, operatorConfig, cg, nil, "", 0, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		operatorConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
@@ -878,7 +935,26 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	cg, err := NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, thanosBaseImageConfig, cg, nil, "", 0, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		thanosBaseImageConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[2].Image
@@ -1417,7 +1493,26 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	cg, err := NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, testConfig, cg, nil, "", 1, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		testConfig,
+		cg,
+		nil,
+		"",
+		1,
+		nil)
 	require.NoError(t, err)
 
 	if *sset.Spec.Replicas != int32(2) {
@@ -1454,7 +1549,26 @@ func TestSidecarResources(t *testing.T) {
 		cg, err := NewConfigGenerator(logger, &p, false)
 		require.NoError(t, err)
 
-		sset, err := makeStatefulSet(logger, "test", p, testConfig, cg, nil, "", 0, nil)
+		sset, err := makeStatefulSet(
+			logger,
+			"test",
+			&p,
+			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+			p.Spec.Retention,
+			p.Spec.RetentionSize,
+			p.Spec.Rules,
+			p.Spec.Query,
+			p.Spec.AllowOverlappingBlocks,
+			p.Spec.EnableAdminAPI,
+			p.Spec.QueryLogFile,
+			p.Spec.Thanos,
+			p.Spec.DisableCompaction,
+			testConfig,
+			cg,
+			nil,
+			"",
+			0,
+			nil)
 		require.NoError(t, err)
 		return sset
 	})
@@ -1840,7 +1954,26 @@ func TestConfigReloader(t *testing.T) {
 	cg, err := NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, defaultTestConfig, cg, nil, "", int32(expectedShardNum), nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		int32(expectedShardNum),
+		nil)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -2145,11 +2278,11 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 	expectedPrometheusArgs := []string{
 		"--web.console.templates=/etc/prometheus/consoles",
 		"--web.console.libraries=/etc/prometheus/console_libraries",
-		"--storage.tsdb.retention.time=24h",
 		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
-		"--storage.tsdb.path=/prometheus",
 		"--web.enable-lifecycle",
 		"--web.route-prefix=/",
+		"--storage.tsdb.retention.time=24h",
+		"--storage.tsdb.path=/prometheus",
 		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
 		"--scrape.discovery-reload-interval=30s",
 		"--storage.tsdb.no-lockfile",
