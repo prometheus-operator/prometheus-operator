@@ -98,7 +98,7 @@ By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metada
 
 ### Relabeling and Metric Relabeling
 
-Prometheus Operator provides the same capabilities as Prometheus to relabel a target before scrape or a metric before sample ingestion, below you can find examples for Service or Pod monitors.
+The Prometheus Operator provides the same capabilities as Prometheus to relabel a target before scrape or a metric before sample ingestion, below you can find examples for Service or Pod monitors.
 
 #### Relabeling
 
@@ -220,24 +220,6 @@ spec:
       - id
       regex: '/system.slice/var-lib-docker-containers.*-shm.mount'
       action: drop
-```
-
-For more information about `relabeling` and `metricRelabelings` please check the official Prometheus document.
-
-- [Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)
-- [Metric Relabel Config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs)
-
-### Configuration
-
-These labels can be modified or disabled using the `relabelings` and `metricRelabelings` settings of the `PodMonitor` and `ServiceMonitor` specifications. The configuration below will drop all of the labels before being loaded into Prometheus.
-
-```yaml
-relabelings:
-- action: labeldrop
-  regex: (container|endpoint|job|namespace|node|pod|service)
-metricRelabelings:
-- action: labeldrop
-  regex: instance
 ```
 
 ## Troubleshooting
