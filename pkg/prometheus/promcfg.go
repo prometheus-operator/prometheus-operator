@@ -55,17 +55,17 @@ type ConfigGenerator struct {
 	logger                 log.Logger
 	version                semver.Version
 	notCompatible          bool
-	spec                   *v1.PrometheusSpec
+	prom                   v1.PrometheusInterface
 	endpointSliceSupported bool
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p *v1.Prometheus, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 
-	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)
+	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse Prometheus version")
@@ -76,7 +76,7 @@ func NewConfigGenerator(logger log.Logger, p *v1.Prometheus, endpointSliceSuppor
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
-		spec:                   p.Spec.DeepCopy(),
+		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
 	}, nil
 }
@@ -89,7 +89,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		logger:                 log.WithSuffix(cg.logger, keyvals),
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
-		spec:                   cg.spec,
+		prom:                   cg.prom,
 		endpointSliceSupported: cg.endpointSliceSupported,
 	}
 }
@@ -106,7 +106,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			logger:                 log.WithSuffix(cg.logger, "minimum_version", version),
 			version:                cg.version,
 			notCompatible:          true,
-			spec:                   cg.spec,
+			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
 		}
 	}
@@ -126,7 +126,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			logger:                 log.WithSuffix(cg.logger, "maximum_version", version),
 			version:                cg.version,
 			notCompatible:          true,
-			spec:                   cg.spec,
+			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
 		}
 	}
@@ -219,8 +219,9 @@ func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit 
 // For backwards compatibility with Prometheus <2.9.0 we don't set
 // honor_timestamps.
 func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
 	// Fast path.
-	if userHonorTimestamps == nil && !cg.spec.OverrideHonorTimestamps {
+	if userHonorTimestamps == nil && !cpf.OverrideHonorTimestamps {
 		return cfg
 	}
 
@@ -229,13 +230,13 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 		honor = *userHonorTimestamps
 	}
 
-	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cg.spec.OverrideHonorTimestamps)
+	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cpf.OverrideHonorTimestamps)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
 func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
-	if cg.spec.OverrideHonorLabels {
+	if cg.prom.GetCommonPrometheusFields().OverrideHonorLabels {
 		honorLabels = false
 	}
 
@@ -370,22 +371,24 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
 }
 
-func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
+func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	m := map[string]string{}
+	cpf := cg.prom.GetCommonPrometheusFields()
+	objMeta := cg.prom.GetObjectMeta()
 
 	prometheusExternalLabelName := "prometheus"
-	if p.Spec.PrometheusExternalLabelName != nil {
-		prometheusExternalLabelName = *p.Spec.PrometheusExternalLabelName
+	if cpf.PrometheusExternalLabelName != nil {
+		prometheusExternalLabelName = *cpf.PrometheusExternalLabelName
 	}
 
 	// Do not add the external label if the resulting value is empty.
 	if prometheusExternalLabelName != "" {
-		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
+		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", objMeta.GetNamespace(), objMeta.GetName())
 	}
 
 	replicaExternalLabelName := defaultReplicaExternalLabelName
-	if p.Spec.ReplicaExternalLabelName != nil {
-		replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
+	if cpf.ReplicaExternalLabelName != nil {
+		replicaExternalLabelName = *cpf.ReplicaExternalLabelName
 	}
 
 	// Do not add the external label if the resulting value is empty.
@@ -393,7 +396,7 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 		m[replicaExternalLabelName] = "$(POD_NAME)"
 	}
 
-	for n, v := range p.Spec.ExternalLabels {
+	for n, v := range cpf.ExternalLabels {
 		m[n] = v
 	}
 	return stringMapToMapSlice(m)
@@ -421,7 +424,13 @@ func compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 
 // Generate creates a serialized YAML representation of a Prometheus configuration using the provided resources.
 func (cg *ConfigGenerator) Generate(
-	p *v1.Prometheus,
+	evaluationInterval v1.Duration,
+	queryLogFile string,
+	ruleSelector *metav1.LabelSelector,
+	exemplars *v1.Exemplars,
+	tsdb v1.TSDBSpec,
+	alerting *v1.AlertingSpec,
+	remoteRead []v1.RemoteReadSpec,
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
@@ -431,170 +440,93 @@ func (cg *ConfigGenerator) Generate(
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
 ) ([]byte, error) {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
 	// validates the value of scrapeTimeout based on scrapeInterval
-	if p.Spec.ScrapeTimeout != "" {
-		if err := compareScrapeTimeoutToScrapeInterval(p.Spec.ScrapeTimeout, p.Spec.ScrapeInterval); err != nil {
+	if cpf.ScrapeTimeout != "" {
+		if err := compareScrapeTimeoutToScrapeInterval(cpf.ScrapeTimeout, cpf.ScrapeInterval); err != nil {
 			return nil, err
 		}
 	}
 
+	// Global config
 	cfg := yaml.MapSlice{}
-
-	globalItems := yaml.MapSlice{
-		{Key: "evaluation_interval", Value: p.Spec.EvaluationInterval},
-		{Key: "scrape_interval", Value: p.Spec.ScrapeInterval},
-		{Key: "external_labels", Value: buildExternalLabels(p)},
-	}
-
-	if p.Spec.ScrapeTimeout != "" {
-		globalItems = append(globalItems, yaml.MapItem{
-			Key: "scrape_timeout", Value: p.Spec.ScrapeTimeout,
-		})
-	}
-
-	if p.Spec.QueryLogFile != "" {
-		globalItems = cg.WithMinimumVersion("2.16.0").AppendMapItem(globalItems, "query_log_file", queryLogFilePath(p))
-	}
-
+	globalItems := yaml.MapSlice{}
+	globalItems = cg.appendEvaluationInterval(globalItems, evaluationInterval)
+	globalItems = cg.appendScrapeIntervals(globalItems)
+	globalItems = cg.appendExternalLabels(globalItems)
+	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
-	if p.Spec.RuleSelector != nil {
-		ruleFilePaths := []string{}
-		for _, name := range ruleConfigMapNames {
-			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
-		}
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "rule_files",
-			Value: ruleFilePaths,
-		})
+	// Rule Files config
+	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, ruleSelector)
+
+	// Scrape config
+	var (
+		scrapeConfigs   []yaml.MapSlice
+		apiserverConfig = cpf.APIServerConfig
+		shards          = int32(1)
+	)
+	if cpf.Shards != nil && *cpf.Shards > 1 {
+		shards = *cpf.Shards
 	}
-
-	sMonIdentifiers := make([]string, len(sMons))
-	i := 0
-	for k := range sMons {
-		sMonIdentifiers[i] = k
-		i++
-	}
-
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(sMonIdentifiers)
-
-	pMonIdentifiers := make([]string, len(pMons))
-	i = 0
-	for k := range pMons {
-		pMonIdentifiers[i] = k
-		i++
-	}
-
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(pMonIdentifiers)
-
-	probeIdentifiers := make([]string, len(probes))
-	i = 0
-	for k := range probes {
-		probeIdentifiers[i] = k
-		i++
-	}
-
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(probeIdentifiers)
-
-	apiserverConfig := p.Spec.APIServerConfig
-	shards := int32(1)
-	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
-		shards = *p.Spec.Shards
-	}
-
-	var scrapeConfigs []yaml.MapSlice
-	for _, identifier := range sMonIdentifiers {
-		for i, ep := range sMons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs,
-				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
-					sMons[identifier],
-					ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
-			)
-		}
-	}
-	for _, identifier := range pMonIdentifiers {
-		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
-			scrapeConfigs = append(scrapeConfigs,
-				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
-					pMons[identifier], ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
-			)
-		}
-	}
-
-	for _, identifier := range probeIdentifiers {
-		scrapeConfigs = append(scrapeConfigs,
-			cg.WithKeyVals("probe", identifier).generateProbeConfig(
-				probes[identifier],
-				apiserverConfig,
-				store,
-				shards,
-			),
-		)
-	}
-
-	var addlScrapeConfigs []yaml.MapSlice
-	addlScrapeConfigs, err := cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
+	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
-
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
-		Value: append(scrapeConfigs, addlScrapeConfigs...),
+		Value: scrapeConfigs,
 	})
 
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p)
+	// Storage config
+	cfg, err = cg.appendStorageSettingsConfig(cfg, exemplars, tsdb)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating storage_settings configuration failed")
 	}
 
-	cfg, err = cg.appendAlertingConfig(cfg, p, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
+	// Alerting config
+	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating alerting configuration failed")
 	}
 
-	if len(p.Spec.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(p, store))
+	// Remote write config
+	if len(cpf.RemoteWrite) > 0 {
+		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
-	if len(p.Spec.RemoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(p, store))
+	// Remote read config
+	if len(remoteRead) > 0 {
+		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.Prometheus) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *v1.Exemplars, tsdb v1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
 	)
 
-	if p.Spec.Exemplars != nil && p.Spec.Exemplars.MaxSize != nil {
+	if exemplars != nil && exemplars.MaxSize != nil {
 		storage = cgStorage.AppendMapItem(storage, "exemplars", yaml.MapSlice{
 			{
 				Key:   "max_exemplars",
-				Value: *p.Spec.Exemplars.MaxSize,
+				Value: *exemplars.MaxSize,
 			},
 		})
 	}
 
-	if p.Spec.TSDB.OutOfOrderTimeWindow != "" {
+	if tsdb.OutOfOrderTimeWindow != "" {
 		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
-				Value: p.Spec.TSDB.OutOfOrderTimeWindow,
+				Value: tsdb.OutOfOrderTimeWindow,
 			},
 		})
 	}
@@ -608,16 +540,18 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, p *v1.
 
 func (cg *ConfigGenerator) appendAlertingConfig(
 	cfg yaml.MapSlice,
-	p *v1.Prometheus,
+	alerting *v1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertmanagerConfigs []byte,
 	store *assets.Store,
 ) (yaml.MapSlice, error) {
-	if p.Spec.Alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
+	if alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
 	}
 
-	alertmanagerConfigs := cg.generateAlertmanagerConfig(p.Spec.Alerting, p.Spec.APIServerConfig, store)
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	alertmanagerConfigs := cg.generateAlertmanagerConfig(alerting, cpf.APIServerConfig, store)
 
 	var additionalAlertmanagerConfigsYaml []yaml.MapSlice
 	if err := yaml.Unmarshal([]byte(additionalAlertmanagerConfigs), &additionalAlertmanagerConfigsYaml); err != nil {
@@ -628,8 +562,8 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	var alertRelabelConfigs []yaml.MapSlice
 
 	replicaExternalLabelName := defaultReplicaExternalLabelName
-	if p.Spec.ReplicaExternalLabelName != nil {
-		replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
+	if cpf.ReplicaExternalLabelName != nil {
+		replicaExternalLabelName = *cpf.ReplicaExternalLabelName
 	}
 
 	if replicaExternalLabelName != "" {
@@ -832,7 +766,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
-	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	for _, l := range append(m.Spec.PodTargetLabels, cpf.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -872,20 +807,20 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 
-	if cg.spec.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
+	if cpf.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -931,14 +866,15 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}})
 	}
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cpf := cg.prom.GetCommonPrometheusFields()
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 
-	if cg.spec.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
+	if cpf.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
 	}
 
 	relabelings := initRelabelings()
@@ -951,7 +887,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 	}
-	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	if m.Spec.Targets.StaticConfig != nil {
 		// Generate static_config section.
@@ -1323,7 +1259,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	for _, l := range append(m.Spec.PodTargetLabels, cg.spec.PodTargetLabels...) {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	for _, l := range append(m.Spec.PodTargetLabels, cpf.PodTargetLabels...) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
 			{Key: "target_label", Value: sanitizeLabelName(l)},
@@ -1364,20 +1301,20 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	labeler := namespacelabeler.New(cg.spec.EnforcedNamespaceLabel, cg.spec.ExcludedFromEnforcement, false)
+	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cg.spec.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cg.spec.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cg.spec.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cg.spec.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cg.spec.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 
-	if cg.spec.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cg.spec.EnforcedBodySizeLimit)
+	if cpf.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -1466,7 +1403,7 @@ func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors
 func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceSelector, namespace string) []string {
-	if cg.spec.IgnoreNamespaceSelectors {
+	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
 		return []string{}
@@ -1664,12 +1601,13 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
-	p *v1.Prometheus,
+	remoteRead []v1.RemoteReadSpec,
 	store *assets.Store,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
+	objMeta := cg.prom.GetObjectMeta()
 
-	for i, spec := range p.Spec.RemoteRead {
+	for i, spec := range remoteRead {
 		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -1708,7 +1646,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
 
-		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
 
 		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
 
@@ -1762,12 +1700,13 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
-	p *v1.Prometheus,
 	store *assets.Store,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
+	cpf := cg.prom.GetCommonPrometheusFields()
+	objMeta := cg.prom.GetObjectMeta()
 
-	for i, spec := range p.Spec.RemoteWrite {
+	for i, spec := range cpf.RemoteWrite {
 		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -1840,7 +1779,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
 
-		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
 
 		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
 
@@ -1928,4 +1867,157 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 		Key:   "remote_write",
 		Value: cfgs,
 	}
+}
+
+func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	slice = append(slice, yaml.MapItem{Key: "scrape_interval", Value: cpf.ScrapeInterval})
+
+	if cpf.ScrapeTimeout != "" {
+		slice = append(slice, yaml.MapItem{
+			Key: "scrape_timeout", Value: cpf.ScrapeTimeout,
+		})
+	}
+
+	return slice
+}
+
+func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval v1.Duration) yaml.MapSlice {
+	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
+}
+
+func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
+	slice = append(slice, yaml.MapItem{
+		Key:   "external_labels",
+		Value: cg.buildExternalLabels(),
+	})
+
+	return slice
+}
+
+func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
+	if queryLogFile != "" {
+		slice = cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
+	}
+
+	return slice
+}
+
+func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
+	if ruleSelector != nil {
+		ruleFilePaths := []string{}
+		for _, name := range ruleFiles {
+			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+		}
+		slice = append(slice, yaml.MapItem{
+			Key:   "rule_files",
+			Value: ruleFilePaths,
+		})
+	}
+
+	return slice
+}
+
+func (cg *ConfigGenerator) appendServiceMonitorConfigs(
+	slices []yaml.MapSlice,
+	serviceMonitors map[string]*v1.ServiceMonitor,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32) []yaml.MapSlice {
+	sMonIdentifiers := make([]string, len(serviceMonitors))
+	i := 0
+	for k := range serviceMonitors {
+		sMonIdentifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(sMonIdentifiers)
+
+	for _, identifier := range sMonIdentifiers {
+		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
+			slices = append(slices,
+				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
+					serviceMonitors[identifier],
+					ep, i,
+					apiserverConfig,
+					store,
+					shards,
+				),
+			)
+		}
+	}
+
+	return slices
+}
+
+func (cg *ConfigGenerator) appendPodMonitorConfigs(
+	slices []yaml.MapSlice,
+	podMonitors map[string]*v1.PodMonitor,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32) []yaml.MapSlice {
+	pMonIdentifiers := make([]string, len(podMonitors))
+	i := 0
+	for k := range podMonitors {
+		pMonIdentifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(pMonIdentifiers)
+
+	for _, identifier := range pMonIdentifiers {
+		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
+			slices = append(slices,
+				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
+					podMonitors[identifier], ep, i,
+					apiserverConfig,
+					store,
+					shards,
+				),
+			)
+		}
+	}
+
+	return slices
+}
+
+func (cg *ConfigGenerator) appendProbeConfigs(
+	slices []yaml.MapSlice,
+	probes map[string]*v1.Probe,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32) []yaml.MapSlice {
+	probeIdentifiers := make([]string, len(probes))
+	i := 0
+	for k := range probes {
+		probeIdentifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(probeIdentifiers)
+
+	for _, identifier := range probeIdentifiers {
+		slices = append(slices,
+			cg.WithKeyVals("probe", identifier).generateProbeConfig(
+				probes[identifier],
+				apiserverConfig,
+				store,
+				shards,
+			),
+		)
+	}
+
+	return slices
+}
+
+func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.MapSlice, additionalScrapeConfigs []byte, shards int32) ([]yaml.MapSlice, error) {
+	addlScrapeConfigs, err := cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(scrapeConfigs, addlScrapeConfigs...), nil
 }

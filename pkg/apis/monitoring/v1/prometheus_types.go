@@ -28,6 +28,17 @@ const (
 	PrometheusKindKey = "prometheus"
 )
 
+// PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
+// +k8s:deepcopy-gen=false
+type PrometheusInterface interface {
+	metav1.ObjectMetaAccessor
+	GetCommonPrometheusFields() CommonPrometheusFields
+}
+
+func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
+	return l.Spec.CommonPrometheusFields
+}
+
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
