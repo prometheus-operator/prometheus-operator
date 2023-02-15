@@ -45,7 +45,7 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.2.0
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
-	golang.org/x/net v0.6.0
+	golang.org/x/net v0.7.0
 )
 
 require (
