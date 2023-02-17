@@ -15,11 +15,12 @@
 package v1
 
 import (
+	"strings"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strings"
 )
 
 const (
@@ -244,7 +245,8 @@ type CommonPrometheusFields struct {
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// ArbitraryFSAccessThroughSMs configures whether configuration
 	// based on a service monitor can access arbitrary files on the file system
@@ -471,9 +473,6 @@ type PrometheusSpec struct {
 	//
 	// This section is experimental, it may change significantly without
 	// deprecation notice in any release.
-	//
-	// This is experimental and may change significantly without backward
-	// compatibility in any release.
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// QueryLogFile specifies the file to which PromQL queries are logged.
 	// If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an

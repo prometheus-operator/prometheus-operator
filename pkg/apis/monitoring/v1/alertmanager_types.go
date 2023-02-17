@@ -205,7 +205,8 @@ type AlertmanagerSpec struct {
 	// Timeout for cluster peering.
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.

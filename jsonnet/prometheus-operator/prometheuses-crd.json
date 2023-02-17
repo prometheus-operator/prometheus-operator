@@ -4065,7 +4065,8 @@
                     "type": "array"
                   },
                   "portName": {
-                    "description": "Port name used for the pods and governing service. This defaults to web",
+                    "default": "web",
+                    "description": "Port name used for the pods and governing service. Defaults to `web`.",
                     "type": "string"
                   },
                   "priorityClassName": {
@@ -6147,7 +6148,7 @@
                     "type": "string"
                   },
                   "thanos": {
-                    "description": "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment. \n This section is experimental, it may change significantly without deprecation notice in any release. \n This is experimental and may change significantly without backward compatibility in any release.",
+                    "description": "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment. \n This section is experimental, it may change significantly without deprecation notice in any release.",
                     "properties": {
                       "additionalArgs": {
                         "description": "AdditionalArgs allows setting additional arguments for the Thanos container. The arguments are passed as-is to the Thanos container which may cause issues if they are invalid or not supported the given Thanos version. In case of an argument conflict (e.g. an argument which is already set by the operator itself) or when providing an invalid argument the reconciliation will fail and an error will be logged.",
