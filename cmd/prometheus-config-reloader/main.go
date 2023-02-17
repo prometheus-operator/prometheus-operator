@@ -40,9 +40,10 @@ import (
 )
 
 const (
-	defaultWatchInterval = 3 * time.Minute // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
-	defaultDelayInterval = 1 * time.Second // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
-	defaultRetryInterval = 5 * time.Second // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultWatchInterval = 3 * time.Minute  // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultDelayInterval = 1 * time.Second  // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
+	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
 
 	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
@@ -59,6 +60,7 @@ func main() {
 	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories; when set to 0, the program runs only once and exits").Default(defaultWatchInterval.String()).Duration()
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
+	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from reload URL").Default(defaultReloadTimeout.String()).Duration()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
@@ -134,7 +136,7 @@ func main() {
 			},
 		)
 
-		client := createHTTPClient()
+		client := createHTTPClient(reloadTimeout)
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -160,12 +162,12 @@ func main() {
 	}
 }
 
-func createHTTPClient() http.Client {
+func createHTTPClient(timeout *time.Duration) http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
-		Timeout:   30 * time.Second, // Default Timeout as of http.DefaultTransport
-		KeepAlive: -1,               // Keep alive probe is unnecessary
+		Timeout:   *timeout, // How long should we wait to connect to Prometheus
+		KeepAlive: -1,       // Keep alive probe is unnecessary
 	}).DialContext
 
 	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
@@ -176,7 +178,7 @@ func createHTTPClient() http.Client {
 	}
 
 	return http.Client{
-		Timeout:   30 * time.Second, // Construct with a 30 second timeout. This timeout is unchanged related to the Dialer Timeout and is subject for change. Other timeouts are neglected.
+		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
 		Transport: transport,
 	}
 }
