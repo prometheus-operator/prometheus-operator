@@ -60,7 +60,7 @@ func main() {
 	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories; when set to 0, the program runs only once and exits").Default(defaultWatchInterval.String()).Duration()
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
-	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from reload URL").Default(defaultReloadTimeout.String()).Duration()
+	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
