@@ -1011,3 +1011,39 @@ func TestPodTemplateConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestConfigReloader(t *testing.T) {
+	baseSet, err := makeStatefulSet(&monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "init-config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
+			}
+		}
+	}
+
+}
