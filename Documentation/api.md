@@ -12454,6 +12454,20 @@ string
 </tr>
 <tr>
 <td>
+<code>blockSize</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
+WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>readyTimeout</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
