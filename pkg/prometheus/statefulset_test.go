@@ -1195,6 +1195,32 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	}
 }
 
+func TestThanosBlockDuration(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				BlockDuration: "1h",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		if arg == "--storage.tsdb.max-block-duration=1h" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("Thanos BlockDuration arg change not found")
+	}
+}
+
 func TestThanosTracing(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 

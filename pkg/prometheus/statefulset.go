@@ -866,8 +866,9 @@ func makeStatefulSetSpec(
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: "2h"})
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: "2h"})
+		thanosBlockDuration := operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), "2h")
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
 	}
 
 	var watchedDirectories []string

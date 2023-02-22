@@ -19633,6 +19633,18 @@ spec:
                     description: 'Thanos base image if other than default. Deprecated:
                       use ''image'' instead'
                     type: string
+                  blockSize:
+                    default: 2h
+                    description: 'BlockDuration controls the size of TSDB blocks produced
+                      by Prometheus. Default is 2h to match the upstream Prometheus
+                      defaults. WARNING: Changing the block duration can impact the
+                      performance and efficiency of the entire Prometheus/Thanos stack
+                      due to how it interacts with memory and Thanos compactors. It
+                      is recommended to keep this value set to a multiple of 120 times
+                      your longest scrape or rule interval. For example, 30s * 120
+                      = 1h.'
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
                   grpcListenLocal:
                     description: If true, the Thanos sidecar listens on the loopback
                       interface for the gRPC endpoints. It has no effect if `listenLocal`

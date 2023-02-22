@@ -41,6 +41,7 @@ type ThanosSpecApplyConfiguration struct {
 	LogLevel                *string                      `json:"logLevel,omitempty"`
 	LogFormat               *string                      `json:"logFormat,omitempty"`
 	MinTime                 *string                      `json:"minTime,omitempty"`
+	BlockDuration           *apismonitoringv1.Duration   `json:"blockSize,omitempty"`
 	ReadyTimeout            *apismonitoringv1.Duration   `json:"readyTimeout,omitempty"`
 	VolumeMounts            []v1.VolumeMount             `json:"volumeMounts,omitempty"`
 	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
@@ -185,6 +186,14 @@ func (b *ThanosSpecApplyConfiguration) WithLogFormat(value string) *ThanosSpecAp
 // If called multiple times, the MinTime field is set to the value of the last call.
 func (b *ThanosSpecApplyConfiguration) WithMinTime(value string) *ThanosSpecApplyConfiguration {
 	b.MinTime = &value
+	return b
+}
+
+// WithBlockDuration sets the BlockDuration field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BlockDuration field is set to the value of the last call.
+func (b *ThanosSpecApplyConfiguration) WithBlockDuration(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+	b.BlockDuration = &value
 	return b
 }
 
