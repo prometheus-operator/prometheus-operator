@@ -30,8 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 func main() {

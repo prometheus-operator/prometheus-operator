@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/rulefmt"
+	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	thanostypes "github.com/thanos-io/thanos/pkg/store/storepb"
