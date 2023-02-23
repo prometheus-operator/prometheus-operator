@@ -1108,6 +1108,7 @@ func TestThanosObjectStorage(t *testing.T) {
 				ObjectStorageConfig: &v1.SecretKeySelector{
 					Key: testKey,
 				},
+				BlockDuration: "2h",
 			},
 		},
 	})
@@ -1194,6 +1195,7 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfigFile: &testPath,
+				BlockDuration:           "2h",
 			},
 		},
 	})
