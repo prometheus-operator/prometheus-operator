@@ -37,6 +37,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus-agent"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -265,6 +266,13 @@ func Main() int {
 		return 1
 	}
 
+	pao, err := prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating prometheus-agent controller failed: ", err)
+		cancel()
+		return 1
+	}
+
 	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
@@ -356,6 +364,7 @@ func Main() int {
 	mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 
 	wg.Go(func() error { return po.Run(ctx) })
+	wg.Go(func() error { return pao.Run(ctx) })
 	wg.Go(func() error { return ao.Run(ctx) })
 	wg.Go(func() error { return to.Run(ctx) })
 

@@ -49,6 +49,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Prometheus{},
 		&PrometheusList{},
+		&PrometheusAgent{},
+		&PrometheusAgentList{},
 		&ServiceMonitor{},
 		&ServiceMonitorList{},
 		&PodMonitor{},
