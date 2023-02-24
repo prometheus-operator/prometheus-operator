@@ -27,6 +27,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -52,7 +53,7 @@ func newLogger() log.Logger {
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +355,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							Name: "config",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName: configSecretName("volume-init-test"),
+									SecretName: prompkg.ConfigSecretName("volume-init-test"),
 								},
 							},
 						},
@@ -366,7 +367,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 										{
 											Secret: &v1.SecretProjection{
 												LocalObjectReference: v1.LocalObjectReference{
-													Name: tlsAssetsSecretName("volume-init-test") + "-0",
+													Name: prompkg.TLSAssetsSecretName("volume-init-test") + "-0",
 												},
 											},
 										},
@@ -434,7 +435,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -456,7 +457,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		[]string{"rules-configmap-one"},
 		"",
 		0,
-		[]string{tlsAssetsSecretName("volume-init-test") + "-0"})
+		[]string{prompkg.TLSAssetsSecretName("volume-init-test") + "-0"})
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
@@ -877,7 +878,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -932,7 +933,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -1178,7 +1179,7 @@ func TestThanosObjectStorage(t *testing.T) {
 	{
 		var found bool
 		for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
-			if vol.MountPath == storageDir {
+			if vol.MountPath == prompkg.StorageDir {
 				found = true
 				break
 			}
@@ -1260,7 +1261,7 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-sidecar" {
 				for _, vol := range container.VolumeMounts {
-					if vol.MountPath == storageDir {
+					if vol.MountPath == prompkg.StorageDir {
 						found = true
 						break
 					}
@@ -1492,7 +1493,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -1548,7 +1549,7 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		}
 
-		cg, err := NewConfigGenerator(logger, &p, false)
+		cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 		require.NoError(t, err)
 
 		sset, err := makeStatefulSet(
@@ -1897,7 +1898,7 @@ func TestMaxConnections(t *testing.T) {
 func TestExpectedStatefulSetShardNames(t *testing.T) {
 	replicas := int32(2)
 	shards := int32(3)
-	res := expectedStatefulSetShardNames(&monitoringv1.Prometheus{
+	res := prompkg.ExpectedStatefulSetShardNames(&monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
@@ -1953,7 +1954,7 @@ func TestConfigReloader(t *testing.T) {
 	logger := newLogger()
 	p := monitoringv1.Prometheus{}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(

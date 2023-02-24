@@ -59,6 +59,10 @@ type ConfigGenerator struct {
 	endpointSliceSupported bool
 }
 
+func (cg *ConfigGenerator) Version() semver.Version {
+	return cg.version
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
@@ -402,8 +406,8 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-// compareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
-func compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
+// CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
+func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
 	var si, st model.Duration
 	var err error
 
@@ -422,8 +426,8 @@ func compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 	return nil
 }
 
-// Generate creates a serialized YAML representation of a Prometheus configuration using the provided resources.
-func (cg *ConfigGenerator) Generate(
+// GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
+func (cg *ConfigGenerator) GenerateServerConfiguration(
 	evaluationInterval v1.Duration,
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
@@ -444,7 +448,7 @@ func (cg *ConfigGenerator) Generate(
 
 	// validates the value of scrapeTimeout based on scrapeInterval
 	if cpf.ScrapeTimeout != "" {
-		if err := compareScrapeTimeoutToScrapeInterval(cpf.ScrapeTimeout, cpf.ScrapeInterval); err != nil {
+		if err := CompareScrapeTimeoutToScrapeInterval(cpf.ScrapeTimeout, cpf.ScrapeInterval); err != nil {
 			return nil, err
 		}
 	}
@@ -1907,7 +1911,7 @@ func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []stri
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleFiles {
-			ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+			ruleFilePaths = append(ruleFilePaths, RulesDir+"/"+name+"/*.yaml")
 		}
 		slice = append(slice, yaml.MapItem{
 			Key:   "rule_files",

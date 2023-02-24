@@ -36,7 +36,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/api"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
