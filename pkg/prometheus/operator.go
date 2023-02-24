@@ -2260,10 +2260,15 @@ func validateRelabelConfig(p monitoringv1.Prometheus, rc monitoringv1.RelabelCon
 	if err != nil {
 		return errors.Wrap(err, "failed to parse Prometheus version")
 	}
-	minimumVersion := version.GTE(semver.MustParse("2.36.0"))
+	minimumVersionCaseActions := version.GTE(semver.MustParse("2.36.0"))
+	minimumVersionEqualActions := version.GTE(semver.MustParse("2.41.0"))
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !minimumVersion {
+	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
 		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
+	}
+
+	if (rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
+		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
 	}
 
 	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
@@ -2274,15 +2279,15 @@ func validateRelabelConfig(p monitoringv1.Prometheus, rc monitoringv1.RelabelCon
 		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && rc.TargetLabel == "" {
+	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
 		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
+	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
 		return errors.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
@@ -2294,6 +2299,18 @@ func validateRelabelConfig(p monitoringv1.Prometheus, rc monitoringv1.RelabelCon
 
 	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual) {
+		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
+			!(rc.Modulus == uint64(0) ||
+				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
+			!(rc.Separator == "" ||
+				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
+				rc.Replacement == "") {
+			return errors.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
+		}
 	}
 
 	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
