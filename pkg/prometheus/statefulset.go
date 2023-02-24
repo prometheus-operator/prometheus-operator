@@ -472,7 +472,7 @@ func makeStatefulSetSpec(
 	if disableCompaction {
 		thanosBlockDuration := "2h"
 		if thanos != nil {
-			thanosBlockDuration = string(thanos.BlockDuration)
+			thanosBlockDuration = operator.StringValOrDefault(string(thanos.BlockDuration), thanosBlockDuration)
 		}
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
