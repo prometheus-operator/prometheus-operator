@@ -32,11 +32,21 @@ const (
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
 	metav1.ObjectMetaAccessor
+	GetTypeMeta() metav1.TypeMeta
 	GetCommonPrometheusFields() CommonPrometheusFields
+	SetCommonPrometheusFields(CommonPrometheusFields)
 }
 
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 	return l.Spec.CommonPrometheusFields
+}
+
+func (l *Prometheus) SetCommonPrometheusFields(f CommonPrometheusFields) {
+	l.Spec.CommonPrometheusFields = f
+}
+
+func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
+	return l.TypeMeta
 }
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
