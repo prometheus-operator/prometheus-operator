@@ -610,7 +610,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -1936,7 +1936,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -2449,8 +2449,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -3319,7 +3317,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4540,7 +4538,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5705,7 +5703,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -8981,7 +8979,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -9494,8 +9492,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -11888,7 +11884,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>

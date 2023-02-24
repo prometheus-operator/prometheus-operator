@@ -8579,8 +8579,9 @@ spec:
                     type: string
                 type: object
               portName:
-                description: Port name used for the pods and governing service. This
-                  defaults to web
+                default: web
+                description: Port name used for the pods and governing service. Defaults
+                  to `web`.
                 type: string
               priorityClassName:
                 description: Priority class assigned to the Pods
@@ -17404,8 +17405,9 @@ spec:
                   type: string
                 type: array
               portName:
-                description: Port name used for the pods and governing service. This
-                  defaults to web
+                default: web
+                description: Port name used for the pods and governing service. Defaults
+                  to `web`.
                 type: string
               priorityClassName:
                 description: Priority class assigned to the Pods
@@ -19603,8 +19605,7 @@ spec:
                 description: "Thanos configuration allows configuring various aspects
                   of a Prometheus server in a Thanos environment. \n This section
                   is experimental, it may change significantly without deprecation
-                  notice in any release. \n This is experimental and may change significantly
-                  without backward compatibility in any release."
+                  notice in any release."
                 properties:
                   additionalArgs:
                     description: AdditionalArgs allows setting additional arguments
@@ -26774,8 +26775,9 @@ spec:
                     type: string
                 type: object
               portName:
-                description: Port name used for the pods and governing service. This
-                  defaults to web
+                default: web
+                description: Port name used for the pods and governing service. Defaults
+                  to `web`.
                 type: string
               priorityClassName:
                 description: Priority class assigned to the Pods
