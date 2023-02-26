@@ -417,7 +417,7 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
 }
@@ -495,7 +495,7 @@ func (c *Operator) Run(ctx context.Context) error {
 				err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
 					p := o.(*monitoringv1.Prometheus)
 					for _, cond := range p.Status.Conditions {
-						if cond.Type == monitoringv1.PrometheusAvailable && cond.Status != monitoringv1.PrometheusConditionTrue {
+						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
 							c.rr.EnqueueForStatus(p)
 							break
 						}
@@ -1224,7 +1224,26 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return err
 		}
 
-		sset, err := makeStatefulSet(logger, ssetName, *p, &c.config, cg, ruleConfigMapNames, newSSetInputHash, int32(shard), tlsAssets.ShardNames())
+		sset, err := makeStatefulSet(
+			logger,
+			ssetName,
+			p,
+			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+			p.Spec.Retention,
+			p.Spec.RetentionSize,
+			p.Spec.Rules,
+			p.Spec.Query,
+			p.Spec.AllowOverlappingBlocks,
+			p.Spec.EnableAdminAPI,
+			p.Spec.QueryLogFile,
+			p.Spec.Thanos,
+			p.Spec.DisableCompaction,
+			&c.config,
+			cg,
+			ruleConfigMapNames,
+			newSSetInputHash,
+			int32(shard),
+			tlsAssets.ShardNames())
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -1330,16 +1349,21 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	level.Info(logger).Log("msg", "update prometheus status")
 
 	var (
-		availableCondition = monitoringv1.PrometheusCondition{
-			Type:   monitoringv1.PrometheusAvailable,
-			Status: monitoringv1.PrometheusConditionTrue,
+		availableCondition = monitoringv1.Condition{
+			Type:   monitoringv1.Available,
+			Status: monitoringv1.ConditionTrue,
 			LastTransitionTime: metav1.Time{
 				Time: time.Now().UTC(),
 			},
 			ObservedGeneration: p.Generation,
 		}
 		messages []string
+		replicas = 1
 	)
+
+	if p.Spec.Replicas != nil {
+		replicas = int(*p.Spec.Replicas)
+	}
 
 	for shard := range expectedStatefulSetShardNames(p) {
 		ssetName := prometheusKeyToStatefulSetKey(key, shard)
@@ -1360,41 +1384,41 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 			continue
 		}
 
-		stsReporter, err := newStatefulSetReporter(ctx, c.kclient, sset)
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, sset)
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve statefulset state")
 		}
 
-		pStatus.Replicas += int32(len(stsReporter.pods))
-		pStatus.UpdatedReplicas += int32(len(stsReporter.Updated()))
-		pStatus.AvailableReplicas += int32(len(stsReporter.Ready()))
-		pStatus.UnavailableReplicas += int32(len(stsReporter.pods) - len(stsReporter.Ready()))
+		pStatus.Replicas += int32(len(stsReporter.Pods))
+		pStatus.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
+		pStatus.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
+		pStatus.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
 
 		pStatus.ShardStatuses = append(
 			pStatus.ShardStatuses,
 			monitoringv1.ShardStatus{
 				ShardID:             strconv.Itoa(shard),
-				Replicas:            int32(len(stsReporter.pods)),
-				UpdatedReplicas:     int32(len(stsReporter.Updated())),
-				AvailableReplicas:   int32(len(stsReporter.Ready())),
-				UnavailableReplicas: int32(len(stsReporter.pods) - len(stsReporter.Ready())),
+				Replicas:            int32(len(stsReporter.Pods)),
+				UpdatedReplicas:     int32(len(stsReporter.UpdatedPods())),
+				AvailableReplicas:   int32(len(stsReporter.ReadyPods())),
+				UnavailableReplicas: int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods())),
 			},
 		)
 
-		if len(stsReporter.Ready()) == len(stsReporter.pods) {
+		if len(stsReporter.ReadyPods()) >= replicas {
 			// All pods are ready (or the desired number of replicas is zero).
 			continue
 		}
 
-		if len(stsReporter.Ready()) == 0 {
+		if len(stsReporter.ReadyPods()) == 0 {
 			availableCondition.Reason = "NoPodReady"
-			availableCondition.Status = monitoringv1.PrometheusConditionFalse
-		} else if availableCondition.Status != monitoringv1.PrometheusConditionFalse {
+			availableCondition.Status = monitoringv1.ConditionFalse
+		} else if availableCondition.Status != monitoringv1.ConditionFalse {
 			availableCondition.Reason = "SomePodsNotReady"
-			availableCondition.Status = monitoringv1.PrometheusConditionDegraded
+			availableCondition.Status = monitoringv1.ConditionDegraded
 		}
 
-		for _, p := range stsReporter.pods {
+		for _, p := range stsReporter.Pods {
 			if m := p.Message(); m != "" {
 				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
 			}
@@ -1404,9 +1428,9 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	availableCondition.Message = strings.Join(messages, "\n")
 
 	// Compute the Reconciled ConditionType.
-	reconciledCondition := monitoringv1.PrometheusCondition{
-		Type:   monitoringv1.PrometheusReconciled,
-		Status: monitoringv1.PrometheusConditionTrue,
+	reconciledCondition := monitoringv1.Condition{
+		Type:   monitoringv1.Reconciled,
+		Status: monitoringv1.ConditionTrue,
 		LastTransitionTime: metav1.Time{
 			Time: time.Now().UTC(),
 		},
@@ -1414,12 +1438,12 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	reconciliationStatus, found := c.reconciliations.GetStatus(key)
 	if !found {
-		reconciledCondition.Status = monitoringv1.PrometheusConditionUnknown
+		reconciledCondition.Status = monitoringv1.ConditionUnknown
 		reconciledCondition.Reason = "NotFound"
 		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
 	} else {
 		if !reconciliationStatus.Ok() {
-			reconciledCondition.Status = monitoringv1.PrometheusConditionFalse
+			reconciledCondition.Status = monitoringv1.ConditionFalse
 		}
 		reconciledCondition.Reason = reconciliationStatus.Reason()
 		reconciledCondition.Message = reconciliationStatus.Message()
@@ -1521,114 +1545,6 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-type pod v1.Pod
-
-// Ready returns true if the pod is ready.
-func (p *pod) Ready() bool {
-	if p.Status.Phase != v1.PodRunning {
-		return false
-	}
-
-	for _, cond := range p.Status.Conditions {
-		if cond.Type != v1.PodReady {
-			continue
-		}
-		return cond.Status == v1.ConditionTrue
-	}
-
-	return false
-}
-
-// Message returns a human-readable and terse message about the state of the pod.
-func (p *pod) Message() string {
-	for _, condType := range []v1.PodConditionType{
-		v1.PodScheduled,    // Check first that the pod is scheduled.
-		v1.PodInitialized,  // Then that init containers have been started successfully.
-		v1.ContainersReady, // Then that all containers are ready.
-		v1.PodReady,        // And finally that the pod is ready.
-	} {
-		for _, cond := range p.Status.Conditions {
-			if cond.Type == condType && cond.Status == v1.ConditionFalse {
-				return cond.Message
-			}
-		}
-	}
-
-	return ""
-}
-
-type statefulSetReporter struct {
-	pods []*pod
-	sset *appsv1.StatefulSet
-}
-
-// Updated returns the list of pods that match with the statefulset's revision.
-func (sr *statefulSetReporter) Updated() []*pod {
-	return sr.filterPods(func(p *pod) bool {
-		return sr.IsUpdated(p)
-	})
-}
-
-// IsUpdated returns true if the given pod matches with the statefulset's revision.
-func (sr *statefulSetReporter) IsUpdated(p *pod) bool {
-	return sr.sset.Status.UpdateRevision == p.Labels["controller-revision-hash"]
-}
-
-// Ready returns the list of pods that are ready.
-func (sr *statefulSetReporter) Ready() []*pod {
-	return sr.filterPods(func(p *pod) bool {
-		return p.Ready()
-	})
-}
-
-func (sr *statefulSetReporter) filterPods(f func(*pod) bool) []*pod {
-	pods := make([]*pod, 0, len(sr.pods))
-
-	for _, p := range sr.pods {
-		if f(p) {
-			pods = append(pods, p)
-		}
-	}
-
-	return pods
-}
-
-// getPodsState returns the state of pods which are targeted by the given StatefulSet.
-func newStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (*statefulSetReporter, error) {
-	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
-	if err != nil {
-		// Something is really broken if the statefulset's selector isn't valid.
-		panic(err)
-	}
-
-	pods, err := kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{LabelSelector: ls.String()})
-	if err != nil {
-		return nil, err
-	}
-
-	stsReporter := &statefulSetReporter{
-		sset: sset,
-		pods: make([]*pod, 0, len(pods.Items)),
-	}
-	for _, p := range pods.Items {
-		var found bool
-		for _, owner := range p.ObjectMeta.OwnerReferences {
-			if owner.Kind == "StatefulSet" && owner.Name == sset.Name {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			continue
-		}
-
-		stsReporter.pods = append(stsReporter.pods, (func(p pod) *pod { return &p })(pod(p)))
-	}
-
-	return stsReporter, nil
-}
-
 // Status evaluates the current status of a Prometheus deployment with
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
@@ -1643,17 +1559,17 @@ func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.P
 			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
 		}
 
-		stsReporter, err := newStatefulSetReporter(ctx, kclient, sset)
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, kclient, sset)
 		if err != nil {
 			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve pods state for statefulset %s/%s", p.Namespace, ssetName)
 		}
 
-		res.Replicas += int32(len(stsReporter.pods))
-		res.UpdatedReplicas += int32(len(stsReporter.Updated()))
-		res.AvailableReplicas += int32(len(stsReporter.Ready()))
-		res.UnavailableReplicas += int32(len(stsReporter.pods) - len(stsReporter.Ready()))
+		res.Replicas += int32(len(stsReporter.Pods))
+		res.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
+		res.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
+		res.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
 
-		for _, p := range stsReporter.pods {
+		for _, p := range stsReporter.Pods {
 			if p.Ready() && !stsReporter.IsUpdated(p) {
 				oldPods = append(oldPods, v1.Pod(*p))
 			}
@@ -1803,7 +1719,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.Generate(
-		p,
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
 		smons,
 		pmons,
 		bmons,

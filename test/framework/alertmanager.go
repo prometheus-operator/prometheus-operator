@@ -24,20 +24,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/prometheus/alertmanager/api/v2/client/silence"
+	"github.com/prometheus/alertmanager/api/v2/models"
 	v1 "k8s.io/api/core/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/utils/pointer"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus/alertmanager/api/v2/client/silence"
-	"github.com/prometheus/alertmanager/api/v2/models"
-	"k8s.io/utils/pointer"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -54,10 +57,11 @@ receivers:
   - url: 'http://alertmanagerwh:30500/'
 `
 
-func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitoringv1.Alertmanager {
+func (f *Framework) MakeBasicAlertmanager(ns, name string, replicas int32) *monitoringv1.Alertmanager {
 	return &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: ns,
 		},
 		Spec: monitoringv1.AlertmanagerSpec{
 			Replicas: &replicas,
@@ -178,47 +182,36 @@ func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error
 	return s, nil
 }
 
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
-	s, err := f.AlertmanagerConfigSecret(ns, amConfigSecretName)
+	s, err := f.AlertmanagerConfigSecret(a.Namespace, amConfigSecretName)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
-	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(ctx, s, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().Secrets(a.Namespace).Create(ctx, s, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
-	a, err = f.MonClientV1.Alertmanagers(ns).Create(ctx, a, metav1.CreateOptions{})
+	a, err = f.MonClientV1.Alertmanagers(a.Namespace).Create(ctx, a, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ctx, ns, a, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerReady(ctx, a)
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns string, a *monitoringv1.Alertmanager, replicas int) error {
-	if err := f.WaitForPodsReady(
-		ctx,
-		ns,
-		5*time.Minute,
-		replicas,
-		alertmanager.ListOptions(a.Name),
-	); err != nil {
-		return errors.Wrap(err,
-			fmt.Sprintf(
-				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
-				a.Name, replicas,
-			))
-	}
+func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	replicas := int(*a.Spec.Replicas)
 
+	// Check that all pods report the expected number of peers.
 	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
 
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerPodInitialized(ctx, ns, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
+		if err := f.WaitForAlertmanagerPodInitialized(ctx, a.Namespace, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -231,24 +224,61 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, ns string, a *
 	return nil
 }
 
-func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ctx context.Context, ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
-	a, err := f.MonClientV1.Alertmanagers(ns).Update(ctx, a, metav1.UpdateOptions{})
+func (f *Framework) PatchAlertmanagerAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.AlertmanagerSpec) (*monitoringv1.Alertmanager, error) {
+	a, err := f.PatchAlertmanager(ctx, name, ns, spec)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to patch Alertmanager %s/%s", ns, name)
+	}
+
+	err = f.WaitForAlertmanagerReady(ctx, a)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update Alertmanager: %v", err)
+	}
+
+	return a, nil
+}
+
+func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec monitoringv1.AlertmanagerSpec) (*monitoringv1.Alertmanager, error) {
+	b, err := json.Marshal(
+		&monitoringv1.Alertmanager{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.AlertmanagersKind,
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
+			},
+			Spec: spec,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal Alertmanager spec")
+	}
+
+	p, err := f.MonClientV1.Alertmanagers(ns).Patch(
+		ctx,
+		name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        pointer.Bool(true),
+			FieldManager: "e2e-test",
+		},
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	err = f.WaitForPodsReady(
-		ctx,
-		ns,
-		5*time.Minute,
-		int(*a.Spec.Replicas),
-		alertmanager.ListOptions(a.Name),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
-	}
+	return p, nil
+}
 
-	return a, nil
+func (f *Framework) ScaleAlertmanagerAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Alertmanager, error) {
+	return f.PatchAlertmanagerAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1.AlertmanagerSpec{
+			Replicas: pointer.Int32(replicas),
+		},
+	)
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, name string) error {

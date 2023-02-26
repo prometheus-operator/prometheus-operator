@@ -21,27 +21,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PrometheusConditionApplyConfiguration represents an declarative configuration of the PrometheusCondition type for use
+// ConditionApplyConfiguration represents an declarative configuration of the Condition type for use
 // with apply.
-type PrometheusConditionApplyConfiguration struct {
-	Type               *v1.PrometheusConditionType   `json:"type,omitempty"`
-	Status             *v1.PrometheusConditionStatus `json:"status,omitempty"`
-	LastTransitionTime *metav1.Time                  `json:"lastTransitionTime,omitempty"`
-	Reason             *string                       `json:"reason,omitempty"`
-	Message            *string                       `json:"message,omitempty"`
-	ObservedGeneration *int64                        `json:"observedGeneration,omitempty"`
+type ConditionApplyConfiguration struct {
+	Type               *v1.ConditionType   `json:"type,omitempty"`
+	Status             *v1.ConditionStatus `json:"status,omitempty"`
+	LastTransitionTime *metav1.Time        `json:"lastTransitionTime,omitempty"`
+	Reason             *string             `json:"reason,omitempty"`
+	Message            *string             `json:"message,omitempty"`
+	ObservedGeneration *int64              `json:"observedGeneration,omitempty"`
 }
 
-// PrometheusConditionApplyConfiguration constructs an declarative configuration of the PrometheusCondition type for use with
+// ConditionApplyConfiguration constructs an declarative configuration of the Condition type for use with
 // apply.
-func PrometheusCondition() *PrometheusConditionApplyConfiguration {
-	return &PrometheusConditionApplyConfiguration{}
+func Condition() *ConditionApplyConfiguration {
+	return &ConditionApplyConfiguration{}
 }
 
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithType(value v1.PrometheusConditionType) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithType(value v1.ConditionType) *ConditionApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -49,7 +49,7 @@ func (b *PrometheusConditionApplyConfiguration) WithType(value v1.PrometheusCond
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithStatus(value v1.PrometheusConditionStatus) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithStatus(value v1.ConditionStatus) *ConditionApplyConfiguration {
 	b.Status = &value
 	return b
 }
@@ -57,7 +57,7 @@ func (b *PrometheusConditionApplyConfiguration) WithStatus(value v1.PrometheusCo
 // WithLastTransitionTime sets the LastTransitionTime field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LastTransitionTime field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithLastTransitionTime(value metav1.Time) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithLastTransitionTime(value metav1.Time) *ConditionApplyConfiguration {
 	b.LastTransitionTime = &value
 	return b
 }
@@ -65,7 +65,7 @@ func (b *PrometheusConditionApplyConfiguration) WithLastTransitionTime(value met
 // WithReason sets the Reason field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Reason field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithReason(value string) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithReason(value string) *ConditionApplyConfiguration {
 	b.Reason = &value
 	return b
 }
@@ -73,7 +73,7 @@ func (b *PrometheusConditionApplyConfiguration) WithReason(value string) *Promet
 // WithMessage sets the Message field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Message field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithMessage(value string) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithMessage(value string) *ConditionApplyConfiguration {
 	b.Message = &value
 	return b
 }
@@ -81,7 +81,7 @@ func (b *PrometheusConditionApplyConfiguration) WithMessage(value string) *Prome
 // WithObservedGeneration sets the ObservedGeneration field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ObservedGeneration field is set to the value of the last call.
-func (b *PrometheusConditionApplyConfiguration) WithObservedGeneration(value int64) *PrometheusConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithObservedGeneration(value int64) *ConditionApplyConfiguration {
 	b.ObservedGeneration = &value
 	return b
 }

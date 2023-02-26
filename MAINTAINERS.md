@@ -20,10 +20,11 @@ We also have some nice souls that help triaging issues and PRs. See [here](https
 
 Full list of triage people is displayed below:
 
-| Name            | Slack         | GitHub                                       | Company         |
-|-----------------|---------------|----------------------------------------------|-----------------|
-| Noah Kantrowitz | `@coderanger` | [@coderanger](https://github.com/coderanger) | Geomagical/IKEA |
-| Jayapriya Pai   | `@slashpai`   | [@slashpai](https://github.com/slashpai)     | Red Hat         |
+| Name            | Slack              | GitHub                                                 | Company         |
+|-----------------|--------------------|--------------------------------------------------------|-----------------|
+| Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
+| Jayapriya Pai   | `@slashpai`        | [@slashpai](https://github.com/slashpai)               | Red Hat         |
+| João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 
 ## Emeritus maintainers
 

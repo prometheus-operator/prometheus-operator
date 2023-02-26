@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -29,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/yaml"
 )
 
 // GetCRD gets a custom resource definition from the apiserver.

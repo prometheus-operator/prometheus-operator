@@ -63,6 +63,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("Condition"):
+		return &monitoringv1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
 		return &monitoringv1.EmbeddedObjectMetadataApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedPersistentVolumeClaim"):
@@ -107,8 +109,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ProbeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Prometheus"):
 		return &monitoringv1.PrometheusApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("PrometheusCondition"):
-		return &monitoringv1.PrometheusConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRule"):
 		return &monitoringv1.PrometheusRuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRuleExcludeConfig"):

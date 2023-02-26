@@ -25,7 +25,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
 	v1 "k8s.io/api/core/v1"

@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var reloaderConfig = ReloaderConfig{
+var reloaderConfig = ContainerConfig{
 	CPURequest:    "100m",
 	CPULimit:      "100m",
 	MemoryRequest: "50Mi",
@@ -36,7 +36,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		initContainerName,
-		ReloaderResources(reloaderConfig),
+		ReloaderConfig(reloaderConfig),
 		ReloaderRunOnce(),
 		ImagePullPolicy(v1.PullAlways),
 	)
@@ -62,7 +62,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		containerName,
-		ReloaderResources(reloaderConfig),
+		ReloaderConfig(reloaderConfig),
 		ReloaderURL(url.URL{
 			Scheme: "http",
 			Host:   "localhost:9093",

@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"sort"
 	"strings"
 
 	"k8s.io/client-go/rest"
@@ -31,7 +32,7 @@ type Config struct {
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig
 	ServerTLSConfig              server.TLSServerConfig
-	ReloaderConfig               ReloaderConfig
+	ReloaderConfig               ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
@@ -46,7 +47,9 @@ type Config struct {
 	SecretListWatchSelector      string
 }
 
-type ReloaderConfig struct {
+// ContainerConfig holds some configuration for the ConfigReloader sidecar
+// that can be set through prometheus-operator command line arguments
+type ContainerConfig struct {
 	CPURequest    string
 	CPULimit      string
 	MemoryRequest string
@@ -91,6 +94,16 @@ func (labels *Labels) Set(value string) error {
 	(*labels).LabelsMap = m
 	(*labels).LabelsString = value
 	return nil
+}
+
+// Returns an arrary with the keys of the label map sorted
+func (labels *Labels) SortedKeys() []string {
+	keys := make([]string, 0, len(labels.LabelsMap))
+	for key := range labels.LabelsMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type Namespaces struct {

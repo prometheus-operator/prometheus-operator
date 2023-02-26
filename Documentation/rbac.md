@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.62.0
+    app.kubernetes.io/version: 0.63.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -34,6 +34,7 @@ rules:
   resources:
   - alertmanagers
   - alertmanagers/finalizers
+  - alertmanagers/status
   - alertmanagerconfigs
   - prometheuses
   - prometheuses/finalizers
@@ -175,7 +176,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.62.0
+    app.kubernetes.io/version: 0.63.0
   name: prometheus-operator
   namespace: default
 ```
@@ -191,7 +192,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.62.0
+    app.kubernetes.io/version: 0.63.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io

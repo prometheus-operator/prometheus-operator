@@ -278,7 +278,7 @@ func testTRAlertmanagerConfig(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	// Create Alertmanager resource and service
-	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 1))
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 1))
 	assert.NoError(t, err)
 
 	amSVC := framework.MakeAlertmanagerService(alertmanager.Name, group, v1.ServiceTypeClusterIP)
@@ -333,4 +333,73 @@ alertmanagers:
 
 	err = framework.WaitForAlertmanagerFiringAlert(context.Background(), ns, amSVC.Name, testAlert)
 	assert.NoError(t, err)
+}
+
+// Tests Thanos ruler query Config
+// This is done by creating a firing rule that will be picked up by
+// Thanos Ruler which will only fire the rule if it's able to query prometheus
+// it has to pull configuration from queryConfig file
+func testTRQueryConfig(t *testing.T) {
+	const (
+		name       = "test"
+		group      = "thanos-ruler-query-config"
+		secretName = "thanos-ruler-query-config"
+		configKey  = "query.yaml"
+		testAlert  = "alert1"
+	)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	// Create a Prometheus resource because Thanos ruler needs a query API.
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	assert.NoError(t, err)
+
+	promSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC)
+	assert.NoError(t, err)
+
+	// Create Secret with query config,
+	trQueryConfSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			configKey: []byte(fmt.Sprintf(`
+- scheme: http
+  static_configs:
+  - %s.%s.svc:%d
+`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trQueryConfSecret, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	// Create Thanos ruler resource and service
+	// setting queryEndpoint to "" as it will be ignored because we set QueryConfig
+	thanos := framework.MakeBasicThanosRuler(name, 1, "")
+	thanos.Spec.EvaluationInterval = "1s"
+	thanos.Spec.QueryConfig = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: secretName,
+		},
+		Key: configKey,
+	}
+
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
+	assert.NoError(t, err)
+
+	svc := framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+	assert.NoError(t, err)
+
+	// Create firing rule
+	_, err = framework.MakeAndCreateFiringRule(context.Background(), ns, "rule1", testAlert)
+	assert.NoError(t, err)
+
+	if err := framework.WaitForThanosFiringAlert(context.Background(), ns, svc.Name, testAlert); err != nil {
+		t.Fatal(err)
+	}
 }

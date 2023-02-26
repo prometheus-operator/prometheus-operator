@@ -73,6 +73,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	AlertRelabelConfigs                *corev1.SecretKeySelector                       `json:"alertRelabelConfigs,omitempty"`
 	AlertRelabelConfigFile             *string                                         `json:"alertRelabelConfigFile,omitempty"`
 	HostAliases                        []HostAliasApplyConfiguration                   `json:"hostAliases,omitempty"`
+	AdditionalArgs                     []ArgumentApplyConfiguration                    `json:"additionalArgs,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerSpec type for use with
@@ -506,6 +507,19 @@ func (b *ThanosRulerSpecApplyConfiguration) WithHostAliases(values ...*HostAlias
 			panic("nil value passed to WithHostAliases")
 		}
 		b.HostAliases = append(b.HostAliases, *values[i])
+	}
+	return b
+}
+
+// WithAdditionalArgs adds the given value to the AdditionalArgs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AdditionalArgs field.
+func (b *ThanosRulerSpecApplyConfiguration) WithAdditionalArgs(values ...*ArgumentApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAdditionalArgs")
+		}
+		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
 	}
 	return b
 }

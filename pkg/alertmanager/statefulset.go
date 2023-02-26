@@ -359,6 +359,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	podAnnotations["kubectl.kubernetes.io/default-container"] = "alertmanager"
 
+	var operatorInitContainers []v1.Container
+
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
 		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
@@ -465,7 +467,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+				EmptyDir: &v1.EmptyDirVolumeSource{
+					// tmpfs is used here to avoid writing sensitive data into disk.
+					Medium: v1.StorageMediumMemory,
+				},
 			},
 		},
 	}
@@ -683,7 +688,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
-			operator.ReloaderResources(config.ReloaderConfig),
+			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
 				Scheme: alertmanagerURIScheme,
 				Host:   config.LocalHost + ":9093",
@@ -712,6 +717,27 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		minReadySeconds = int32(*a.Spec.MinReadySeconds)
 	}
 
+	operatorInitContainers = append(operatorInitContainers,
+		operator.CreateConfigReloader(
+			"init-config-reloader",
+			operator.ReloaderConfig(config.ReloaderConfig),
+			operator.ReloaderRunOnce(),
+			operator.LogFormat(a.Spec.LogFormat),
+			operator.LogLevel(a.Spec.LogLevel),
+			operator.WatchedDirectories(watchedDirectories),
+			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.Shard(-1),
+			operator.ConfigFile(path.Join(alertmanagerConfigDir, alertmanagerConfigFileCompressed)),
+			operator.ConfigEnvsubstFile(path.Join(alertmanagerConfigOutDir, alertmanagerConfigEnvsubstFilename)),
+			operator.ImagePullPolicy(a.Spec.ImagePullPolicy),
+		),
+	)
+
+	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, a.Spec.InitContainers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge init containers spec")
+	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -734,7 +760,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				InitContainers:                a.Spec.InitContainers,
+				InitContainers:                initContainers,
 				Containers:                    containers,
 				Volumes:                       volumes,
 				ServiceAccountName:            a.Spec.ServiceAccountName,

@@ -156,7 +156,8 @@ type ThanosRulerSpec struct {
 	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// Interval between consecutive evaluations.
 	// +kubebuilder:default:="15s"
@@ -225,6 +226,15 @@ type ThanosRulerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// ThanosRuler container which may cause issues if they are invalid or not supported
+	// by the given ThanosRuler version.
+	// In case of an argument conflict (e.g. an argument which is already set by the
+	// operator itself) or when providing an invalid argument the reconciliation will
+	// fail and an error will be logged.
+	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

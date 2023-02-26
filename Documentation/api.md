@@ -519,9 +519,12 @@ this behaviour may break at any time without notice.</p>
 <p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the Alertmanager configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -607,7 +610,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -732,9 +735,8 @@ AlertmanagerStatus
 </em>
 </td>
 <td>
-<p>Most recent observed status of the Alertmanager cluster. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>Most recent observed status of the Alertmanager cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
@@ -1299,9 +1301,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery. <em>Deprecated:</em> if
-neither this nor podMonitorSelector are specified, configuration is
-unmanaged.</p>
+<p>ServiceMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -1328,9 +1336,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.
-<em>Deprecated:</em> if neither this nor serviceMonitorSelector are specified,
-configuration is unmanaged.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -1358,6 +1372,14 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -1914,7 +1936,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -2427,8 +2449,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -3297,7 +3317,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -3521,6 +3541,26 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+ThanosRuler container which may cause issues if they are invalid or not supported
+by the given ThanosRuler version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
 </td>
 </tr>
 </table>
@@ -4407,9 +4447,12 @@ this behaviour may break at any time without notice.</p>
 <p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the Alertmanager configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -4495,7 +4538,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4615,9 +4658,8 @@ This field may change in future releases.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Alertmanager">Alertmanager</a>)
 </p>
 <div>
-<p>AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </div>
 <table>
@@ -4649,7 +4691,7 @@ int32
 </td>
 <td>
 <p>Total number of non-terminated pods targeted by this Alertmanager
-cluster (their labels match the selector).</p>
+object (their labels match the selector).</p>
 </td>
 </tr>
 <tr>
@@ -4661,7 +4703,7 @@ int32
 </td>
 <td>
 <p>Total number of non-terminated pods targeted by this Alertmanager
-cluster that have the desired version spec.</p>
+object that have the desired version spec.</p>
 </td>
 </tr>
 <tr>
@@ -4684,7 +4726,21 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of unavailable pods targeted by this Alertmanager cluster.</p>
+<p>Total number of unavailable pods targeted by this Alertmanager object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the Alertmanager object.</p>
 </td>
 </tr>
 </tbody>
@@ -4771,7 +4827,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.Argument">Argument
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>Argument as part of the AdditionalArgs list.</p>
@@ -5012,9 +5068,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery. <em>Deprecated:</em> if
-neither this nor podMonitorSelector are specified, configuration is
-unmanaged.</p>
+<p>ServiceMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -5041,9 +5103,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.
-<em>Deprecated:</em> if neither this nor serviceMonitorSelector are specified,
-configuration is unmanaged.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -5071,6 +5139,14 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -5627,7 +5703,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5903,6 +5979,159 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.Condition">Condition
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
+</p>
+<div>
+<p>Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionType">
+ConditionType
+</a>
+</em>
+</td>
+<td>
+<p>Type of the condition being reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionStatus">
+ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>lastTransitionTime is the time of the last update to the current status property.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Reason for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>observedGeneration</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>ObservedGeneration represents the .metadata.generation that the
+condition was set based upon. For instance, if <code>.metadata.generation</code> is
+currently 12, but the <code>.status.conditions[].observedGeneration</code> is 9, the
+condition is out of date with respect to the current state of the
+instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConditionStatus">ConditionStatus
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Degraded&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;False&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;True&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Unknown&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConditionType">ConditionType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Available&#34;</p></td>
+<td><p>Available indicates whether enough pods are ready to provide the
+service.
+The possible status values for this condition type are:
+- True: all pods are running and ready, the service is fully available.
+- Degraded: some pods aren&rsquo;t ready, the service is partially available.
+- False: no pods are running, the service is totally unavailable.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
+</td>
+</tr><tr><td><p>&#34;Reconciled&#34;</p></td>
+<td><p>Reconciled indicates whether the operator has reconciled the state of
+the underlying resources with the object&rsquo;s spec.
+The possible status values for this condition type are:
+- True: the reconciliation was successful.
+- False: the reconciliation failed.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
@@ -6128,38 +6357,45 @@ Kubernetes core/v1.TypedLocalObjectReference
 * An existing PVC (PersistentVolumeClaim)
 If the provisioner or an external controller can support the specified data source,
 it will create a new volume based on the contents of the specified data source.
-If the AnyVolumeDataSource feature gate is enabled, this field will always have
-the same contents as the DataSourceRef field.</p>
+When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
+and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+If the namespace is specified, then dataSourceRef will not be copied to dataSource.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>dataSourceRef</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#typedlocalobjectreference-v1-core">
-Kubernetes core/v1.TypedLocalObjectReference
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#typedobjectreference-v1-core">
+Kubernetes core/v1.TypedObjectReference
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
-volume is desired. This may be any local object from a non-empty API group (non
+volume is desired. This may be any object from a non-empty API group (non
 core object) or a PersistentVolumeClaim object.
 When this field is specified, volume binding will only succeed if the type of
 the specified object matches some installed volume populator or dynamic
 provisioner.
-This field will replace the functionality of the DataSource field and as such
+This field will replace the functionality of the dataSource field and as such
 if both fields are non-empty, they must have the same value. For backwards
-compatibility, both fields (DataSource and DataSourceRef) will be set to the same
+compatibility, when namespace isn&rsquo;t specified in dataSourceRef,
+both fields (dataSource and dataSourceRef) will be set to the same
 value automatically if one of them is empty and the other is non-empty.
-There are two important differences between DataSource and DataSourceRef:
-* While DataSource only allows two specific types of objects, DataSourceRef
+When namespace is specified in dataSourceRef,
+dataSource isn&rsquo;t set to the same value and must be empty.
+There are three important differences between dataSource and dataSourceRef:
+* While dataSource only allows two specific types of objects, dataSourceRef
 allows any non-core object, as well as PersistentVolumeClaim objects.
-* While DataSource ignores disallowed values (dropping them), DataSourceRef
+* While dataSource ignores disallowed values (dropping them), dataSourceRef
 preserves all values, and generates an error if a disallowed value is
 specified.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.</p>
+* While dataSource only allows local objects, dataSourceRef allows objects
+in any namespaces.
+(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.</p>
 </td>
 </tr>
 </table>
@@ -7996,157 +8232,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
-</p>
-<div>
-<p>PrometheusCondition represents the state of the resources associated with the Prometheus resource.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionType">
-PrometheusConditionType
-</a>
-</em>
-</td>
-<td>
-<p>Type of the condition being reported.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusConditionStatus">
-PrometheusConditionStatus
-</a>
-</em>
-</td>
-<td>
-<p>status of the condition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>lastTransitionTime</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<p>lastTransitionTime is the time of the last update to the current status property.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>reason</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Reason for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>message</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>observedGeneration</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<p>ObservedGeneration represents the .metadata.generation that the condition was set based upon.
-For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-with respect to the current state of the instance.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionStatus">PrometheusConditionStatus
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Degraded&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;False&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;True&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Unknown&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PrometheusConditionType">PrometheusConditionType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusCondition">PrometheusCondition</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Available&#34;</p></td>
-<td><p>Available indicates whether enough Prometheus pods are ready to provide
-the service.
-The possible status values for this condition type are:
-- True: all pods are running and ready, the service is fully available.
-- Degraded: some pods aren&rsquo;t ready, the service is partially available.
-- False: no pods are running, the service is totally unavailable.
-- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
-</td>
-</tr><tr><td><p>&#34;Reconciled&#34;</p></td>
-<td><p>Reconciled indicates whether the operator has reconciled the state of
-the underlying resources with the Prometheus object spec.
-The possible status values for this condition type are:
-- True: the reconciliation was successful.
-- False: the reconciliation failed.
-- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
-</td>
-</tr></tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
 <p>
@@ -8259,9 +8344,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery. <em>Deprecated:</em> if
-neither this nor podMonitorSelector are specified, configuration is
-unmanaged.</p>
+<p>ServiceMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -8288,9 +8379,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.
-<em>Deprecated:</em> if neither this nor serviceMonitorSelector are specified,
-configuration is unmanaged.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -8318,6 +8415,14 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -8874,7 +8979,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -9387,8 +9492,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -9561,8 +9664,8 @@ int32
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PrometheusCondition">
-[]PrometheusCondition
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
 </a>
 </em>
 </td>
@@ -11781,7 +11884,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12005,6 +12108,26 @@ When used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes prece
 </td>
 <td>
 <p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+ThanosRuler container which may cause issues if they are invalid or not supported
+by the given ThanosRuler version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
 </td>
 </tr>
 </tbody>
@@ -12323,6 +12446,20 @@ string
 </td>
 <td>
 <p>MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>blockSize</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
+WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.</p>
 </td>
 </tr>
 <tr>

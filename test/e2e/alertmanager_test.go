@@ -29,7 +29,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"golang.org/x/net/http2"
-	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -60,7 +59,7 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -79,19 +78,17 @@ func testAMScaling(t *testing.T) {
 
 	name := "test"
 
-	a, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(name, 3))
+	a, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	a.Spec.Replicas = proto.Int32(5)
-	a, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, a)
+	a, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	a.Spec.Replicas = proto.Int32(3)
-	if _, err := framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, a); err != nil {
+	if _, err := framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -106,21 +103,19 @@ func testAMVersionMigration(t *testing.T) {
 
 	name := "test"
 
-	am := framework.MakeBasicAlertmanager(name, 1)
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
 	am.Spec.Version = "v0.16.2"
-	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.17.0"
-	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	am, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.17.0"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.16.2"
-	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.16.2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,27 +130,32 @@ func testAMStorageUpdate(t *testing.T) {
 
 	name := "test"
 
-	am := framework.MakeBasicAlertmanager(name, 1)
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
 
-	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Storage = &monitoringv1.StorageSpec{
-		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceStorage: resource.MustParse("200Mi"),
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(
+		context.Background(),
+		am.Name,
+		am.Namespace,
+		monitoringv1.AlertmanagerSpec{
+			Storage: &monitoringv1.StorageSpec{
+				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceStorage: resource.MustParse("200Mi"),
+							},
+						},
 					},
 				},
 			},
 		},
-	}
-
-	_, err = framework.MonClientV1.Alertmanagers(ns).Update(context.Background(), am, metav1.UpdateOptions{})
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,10 +192,10 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -220,7 +220,7 @@ func testAMClusterInitialization(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	amClusterSize := 3
-	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
 	// Print Alertmanager logs on failure.
@@ -237,7 +237,7 @@ func testAMClusterInitialization(t *testing.T) {
 		}
 	}()
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -268,9 +268,9 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	amClusterSize := 3
 
-	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 
-	if alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -283,17 +283,14 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	// We need to force a rolling update, e.g. by changing one of the command
 	// line flags via the Retention.
-	alertmanager.Spec.Retention = "1h"
-
-	if _, err := framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(
+		context.Background(),
+		alertmanager.Name,
+		alertmanager.Namespace,
+		monitoringv1.AlertmanagerSpec{Retention: "1h"},
+	)
+	if err != nil {
 		t.Fatal(err)
-	}
-
-	for i := 0; i < amClusterSize; i++ {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
-			t.Fatal(err)
-		}
 	}
 }
 
@@ -306,9 +303,9 @@ func testAMClusterGossipSilences(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	amClusterSize := 3
-	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -354,7 +351,7 @@ func testAMReloadConfig(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "reload-config", 1)
 	templateResourceName := fmt.Sprintf("alertmanager-templates-%s", alertmanager.Name)
 	alertmanager.Spec.ConfigMaps = []string{templateResourceName}
 	alertmanager.Spec.Secrets = []string{templateResourceName}
@@ -454,7 +451,7 @@ An Alert test
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -577,7 +574,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	alertmanager := framework.MakeBasicAlertmanager("rolling-deploy", 3)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "rolling-deploy", 3)
 	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
 	amcfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -617,7 +614,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -697,14 +694,19 @@ inhibit_rules:
 
 	// We need to force a rolling update, e.g. by changing one of the command
 	// line flags via the Retention.
-	alertmanager.Spec.Retention = "1h"
-	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(context.Background(), alertmanager, metav1.UpdateOptions{}); err != nil {
+	alertmanager, err = framework.PatchAlertmanagerAndWaitUntilReady(
+		context.Background(),
+		alertmanager.Name,
+		alertmanager.Namespace,
+		monitoringv1.AlertmanagerSpec{Retention: "1h"},
+	)
+	if err != nil {
 		t.Fatal(err)
 	}
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas)); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -729,9 +731,9 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	alertmanager := framework.MakeBasicAlertmanager("amconfig-versions", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "amconfig-versions", 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
-	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -797,21 +799,34 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	}
 }
 
+// e2e test to validate that all possible fields in an AlertmanagerConfig CR are
+// consumed by the operator and correctly passed to the Alertmanager
+// configuration.
 func testAlertmanagerConfigCRD(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
+
+	// create 2 namespaces:
+	//
+	// 1. "ns" ns:
+	//   - hosts the Alertmanager CR which which should be reconciled
+	//
+	// 2. "configNs" ns:
+	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	// 		thanks to the label monitored: "true" which is removed in the second
+	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	configNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	alertmanager := framework.MakeBasicAlertmanager("amconfig-crd", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "amconfig-crd", 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
 	alertmanager.Spec.AlertmanagerConfigNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{"monitored": "true"},
 	}
-	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1483,9 +1498,9 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	alertmanager := framework.MakeBasicAlertmanager("user-amconfig", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "user-amconfig", 1)
 	alertmanager.Spec.ConfigSecret = "amconfig"
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1536,7 +1551,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	alertmanager := framework.MakeBasicAlertmanager("user-amconfig", 1)
+	alertmanager := framework.MakeBasicAlertmanager(ns, "user-amconfig", 1)
 	alertmanagerConfig, err := framework.CreateAlertmanagerConfig(context.Background(), ns, "user-amconfig")
 	if err != nil {
 		t.Fatal(err)
@@ -1640,7 +1655,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1720,10 +1735,9 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	name := "test"
 
-	alertManager := framework.MakeBasicAlertmanager(name, 3)
-	alertManager.Namespace = ns
+	am := framework.MakeBasicAlertmanager(ns, name, 3)
 
-	alertManager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertManager)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1789,8 +1803,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	}
 
 	// Ensure resource reconciles
-	alertManager.Spec.Replicas = proto.Int32(2)
-	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertManager)
+	_, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1827,8 +1840,8 @@ func testAMRollbackManualChanges(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
-	alertManager := framework.MakeBasicAlertmanager(name, 3)
-	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertManager)
+	alertManager := framework.MakeBasicAlertmanager(ns, name, 3)
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertManager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1839,17 +1852,33 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	replicas := int32(0)
-	sset.Spec.Replicas = &replicas
-	if _, err := ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{}); err != nil {
+	sset.Spec.Replicas = pointer.Int32(0)
+	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 0); err != nil {
-		t.Fatal(err)
+	// Wait for the operator to update the statefulset definition.
+	var pollErr error
+	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+		current, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if current.Generation == sset.Generation {
+			pollErr = errors.New("statefulset generation not updated")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), ns, alertManager, 3); err != nil {
+	if err := framework.WaitForAlertmanagerReady(context.Background(), alertManager); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1877,7 +1906,7 @@ func testAMWeb(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am := framework.MakeBasicAlertmanager(name, 1)
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
 	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
@@ -1908,7 +1937,7 @@ func testAMWeb(t *testing.T) {
 			},
 		},
 	}
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
 		t.Fatalf("Creating alertmanager failed: %v", err)
 	}
 
@@ -2034,9 +2063,9 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	var setMinReadySecondsInitial uint32 = 5
-	am := framework.MakeBasicAlertmanager("basic-am", 3)
+	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
 	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
-	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	if err != nil {
 		t.Fatal("Creating AlertManager failed: ", err)
 	}
@@ -2051,9 +2080,8 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	}
 
 	var updated uint32 = 10
-	am.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdateAlertmanagerAndWaitUntilReady(context.Background(), ns, am); err != nil {
-		t.Fatal("Updating AlertManager failed: ", err)
+	if _, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: &updated}); err != nil {
+		t.Fatal("Patching AlertManager failed: ", err)
 	}
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
@@ -2159,7 +2187,8 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 
 			am := &monitoringv1.Alertmanager{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: name,
+					Name:      name,
+					Namespace: ns,
 				},
 				Spec: test.alertmanagerSpec,
 			}
@@ -2172,7 +2201,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 				return
 			}
 
-			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, am)
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 			if err != nil {
 				t.Fatal(err)
 			}
