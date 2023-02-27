@@ -130,10 +130,15 @@ func makeStatefulSet(
 		cpf.Replicas = &intZero
 	}
 
+	enableFeatures := map[string]bool{}
+	for _, v := range cpf.EnableFeatures {
+		enableFeatures[v] = true
+	}
+
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(logger, baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(logger, baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, enableFeatures, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -184,46 +189,48 @@ func makeStatefulSet(
 	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
-	storageSpec := cpf.Storage
-	if storageSpec == nil {
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(objMeta.GetName()),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		})
-	} else if storageSpec.EmptyDir != nil {
-		emptyDir := storageSpec.EmptyDir
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(objMeta.GetName()),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: emptyDir,
-			},
-		})
-	} else if storageSpec.Ephemeral != nil {
-		ephemeral := storageSpec.Ephemeral
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: volumeName(objMeta.GetName()),
-			VolumeSource: v1.VolumeSource{
-				Ephemeral: ephemeral,
-			},
-		})
-	} else {
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = volumeName(objMeta.GetName())
-		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+	if cg.WithMaximumVersion("2.32.0").IsCompatible() || !(enableFeatures["agent"]) {
+		storageSpec := cpf.Storage
+		if storageSpec == nil {
+			statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+				Name: volumeName(objMeta.GetName()),
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			})
+		} else if storageSpec.EmptyDir != nil {
+			emptyDir := storageSpec.EmptyDir
+			statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+				Name: volumeName(objMeta.GetName()),
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: emptyDir,
+				},
+			})
+		} else if storageSpec.Ephemeral != nil {
+			ephemeral := storageSpec.Ephemeral
+			statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+				Name: volumeName(objMeta.GetName()),
+				VolumeSource: v1.VolumeSource{
+					Ephemeral: ephemeral,
+				},
+			})
 		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
+			pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = volumeName(objMeta.GetName())
+			}
+			if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
-	}
 
-	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
+	}
 
 	if cpf.HostNetwork {
 		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
@@ -322,6 +329,7 @@ func makeStatefulSetSpec(
 	query *monitoringv1.QuerySpec,
 	allowOverlappingBlocks bool,
 	enableAdminAPI bool,
+	enableFeatures map[string]bool,
 	queryLogFile string,
 	thanos *monitoringv1.ThanosSpec,
 	disableCompaction bool,
@@ -358,7 +366,7 @@ func makeStatefulSetSpec(
 		webRoutePrefix = cpf.RoutePrefix
 	}
 	promArgs := buildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI)
+	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, enableFeatures)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -749,31 +757,34 @@ func appendServerArgs(
 	retentionSize monitoringv1.ByteSize,
 	rules monitoringv1.Rules,
 	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks, enableAdminAPI bool) []monitoringv1.Argument {
+	allowOverlappingBlocks, enableAdminAPI bool,
+	enableFeatures map[string]bool) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(retention)
 	)
-	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
-		retentionTimeFlagName = "storage.tsdb.retention"
-		if retention == "" {
+	if cg.WithMaximumVersion("2.32.0").IsCompatible() || !(enableFeatures["agent"]) {
+		if cg.WithMaximumVersion("2.7.0").IsCompatible() {
+			retentionTimeFlagName = "storage.tsdb.retention"
+			if retention == "" {
+				retentionTimeFlagValue = defaultRetention
+			}
+		} else if retention == "" && retentionSize == "" {
 			retentionTimeFlagValue = defaultRetention
 		}
-	} else if retention == "" && retentionSize == "" {
-		retentionTimeFlagValue = defaultRetention
-	}
 
-	if retentionTimeFlagValue != "" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
-	}
-	if retentionSize != "" {
-		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(retentionSize)}
-		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
-	}
+		if retentionTimeFlagValue != "" {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
+		}
+		if retentionSize != "" {
+			retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(retentionSize)}
+			promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
+		}
 
-	promArgs = append(promArgs,
-		monitoringv1.Argument{Name: "storage.tsdb.path", Value: storageDir},
-	)
+		promArgs = append(promArgs,
+			monitoringv1.Argument{Name: "storage.tsdb.path", Value: storageDir},
+		)
+	}
 
 	if enableAdminAPI {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-admin-api"})

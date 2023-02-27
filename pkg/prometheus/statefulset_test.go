@@ -1409,26 +1409,40 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		version                    string
 		specRetention              monitoringv1.Duration
 		specRetentionSize          monitoringv1.ByteSize
+		specEnableFeatures         []string
 		expectedRetentionArg       string
 		expectedRetentionSizeArg   string
 		shouldContainRetention     bool
 		shouldContainRetentionSize bool
 	}{
-		{"v2.5.0", "", "", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "1d", "", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "", "512MB", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.5.0", "1d", "512MB", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.7.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
-		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v2.5.0", "", "", []string{}, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "1d", "", []string{}, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "", "512MB", []string{}, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "1d", "512MB", []string{}, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.7.0", "", "", []string{}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "1d", "", []string{}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "", "512MB", []string{}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.7.0", "1d", "512MB", []string{}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v2.7.0", "", "", []string{"agent"}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "1d", "", []string{"agent"}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "", "512MB", []string{"agent"}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.7.0", "1d", "512MB", []string{"agent"}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v2.32.0", "", "", []string{}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.32.0", "1d", "", []string{}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.32.0", "", "512MB", []string{}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.32.0", "1d", "512MB", []string{}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v2.32.0", "", "", []string{"agent"}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
+		{"v2.32.0", "1d", "", []string{"agent"}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
+		{"v2.32.0", "", "512MB", []string{"agent"}, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v2.32.0", "1d", "512MB", []string{"agent"}, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
 	}
 
 	for i, test := range tests {
 		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: test.version,
+					Version:        test.version,
+					EnableFeatures: test.specEnableFeatures,
 				},
 				Retention:     test.specRetention,
 				RetentionSize: test.specRetentionSize,
