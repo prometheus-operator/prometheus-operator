@@ -559,7 +559,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	var foundVM, foundV bool
 	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
-		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerNotificationTemplatesDir {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
 			foundVM = true
 			break
 		}

@@ -1028,10 +1028,10 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		// set templates
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
 			if v.ConfigMap != nil {
-				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerNotificationTemplatesDir, v.ConfigMap.Key))
+				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerTemplatesDir, v.ConfigMap.Key))
 			}
 			if v.Secret != nil {
-				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerNotificationTemplatesDir, v.Secret.Key))
+				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerTemplatesDir, v.Secret.Key))
 			}
 		}
 	} else {

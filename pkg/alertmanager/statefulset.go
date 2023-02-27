@@ -35,21 +35,30 @@ import (
 )
 
 const (
-	governingServiceName                 = "alertmanager-operated"
-	defaultRetention                     = "120h"
-	tlsAssetsDir                         = "/etc/alertmanager/certs"
-	secretsDir                           = "/etc/alertmanager/secrets/"
-	configmapsDir                        = "/etc/alertmanager/configmaps/"
-	alertmanagerNotificationTemplatesDir = "/etc/alertmanager/templates"
-	alertmanagerConfigDir                = "/etc/alertmanager/config"
-	webConfigDir                         = "/etc/alertmanager/web_config"
-	alertmanagerConfigOutDir             = "/etc/alertmanager/config_out"
-	alertmanagerConfigFile               = "alertmanager.yaml"
-	alertmanagerConfigFileCompressed     = "alertmanager.yaml.gz"
-	alertmanagerConfigEnvsubstFilename   = "alertmanager.env.yaml"
-	alertmanagerStorageDir               = "/alertmanager"
-	sSetInputHashName                    = "prometheus-operator-input-hash"
-	defaultPortName                      = "web"
+	governingServiceName = "alertmanager-operated"
+
+	defaultRetention = "120h"
+
+	tlsAssetsVolumeName                = "tls-assets"
+	tlsAssetsDir                       = "/etc/alertmanager/certs"
+	secretsDir                         = "/etc/alertmanager/secrets/"
+	configmapsDir                      = "/etc/alertmanager/configmaps/"
+	alertmanagerTemplatesVolumeName    = "notification-templates"
+	alertmanagerTemplatesDir           = "/etc/alertmanager/templates"
+	webConfigDir                       = "/etc/alertmanager/web_config"
+	alertmanagerConfigVolumeName       = "config-volume"
+	alertmanagerConfigDir              = "/etc/alertmanager/config"
+	alertmanagerConfigOutVolumeName    = "config-out"
+	alertmanagerConfigOutDir           = "/etc/alertmanager/config_out"
+	alertmanagerConfigFile             = "alertmanager.yaml"
+	alertmanagerConfigFileCompressed   = "alertmanager.yaml.gz"
+	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
+
+	alertmanagerStorageDir = "/alertmanager"
+
+	sSetInputHashName = "prometheus-operator-input-hash"
+
+	defaultPortName = "web"
 )
 
 var (
@@ -438,7 +447,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	}
 
 	assetsVolume := v1.Volume{
-		Name: "tls-assets",
+		Name: tlsAssetsVolumeName,
 		VolumeSource: v1.VolumeSource{
 			Projected: &v1.ProjectedVolumeSource{
 				Sources: []v1.VolumeProjection{},
@@ -456,7 +465,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	volumes := []v1.Volume{
 		{
-			Name: "config-volume",
+			Name: alertmanagerConfigVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: generatedConfigSecretName(a.Name),
@@ -465,7 +474,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 		assetsVolume,
 		{
-			Name: "config-out",
+			Name: alertmanagerConfigOutVolumeName,
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{
 					// tmpfs is used here to avoid writing sensitive data into disk.
@@ -484,16 +493,16 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	amVolumeMounts := []v1.VolumeMount{
 		{
-			Name:      "config-volume",
+			Name:      alertmanagerConfigVolumeName,
 			MountPath: alertmanagerConfigDir,
 		},
 		{
-			Name:      "config-out",
+			Name:      alertmanagerConfigOutVolumeName,
 			ReadOnly:  true,
 			MountPath: alertmanagerConfigOutDir,
 		},
 		{
-			Name:      "tls-assets",
+			Name:      tlsAssetsVolumeName,
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
@@ -545,21 +554,21 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			},
 		})
 		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
-			Name:      "notification-templates",
+			Name:      alertmanagerTemplatesVolumeName,
 			ReadOnly:  true,
-			MountPath: alertmanagerNotificationTemplatesDir,
+			MountPath: alertmanagerTemplatesDir,
 		})
 	}
 
 	watchedDirectories := []string{}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
-			Name:      "config-volume",
+			Name:      alertmanagerConfigVolumeName,
 			MountPath: alertmanagerConfigDir,
 			ReadOnly:  true,
 		},
 		{
-			Name:      "config-out",
+			Name:      alertmanagerConfigOutVolumeName,
 			MountPath: alertmanagerConfigOutDir,
 		},
 	}
@@ -579,7 +588,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				},
 			},
 		})
-		mountPath := secretsDir + s
+		mountPath := path.Join(secretsDir, s)
 		mount := v1.VolumeMount{
 			Name:      name,
 			ReadOnly:  true,
@@ -607,7 +616,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				},
 			},
 		})
-		mountPath := configmapsDir + c
+		mountPath := path.Join(configmapsDir, c)
 		mount := v1.VolumeMount{
 			Name:      name,
 			ReadOnly:  true,
