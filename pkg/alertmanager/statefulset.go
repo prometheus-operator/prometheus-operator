@@ -38,11 +38,12 @@ const (
 	governingServiceName = "alertmanager-operated"
 
 	defaultRetention = "120h"
+	defaultPortName  = "web"
 
 	tlsAssetsVolumeName                = "tls-assets"
 	tlsAssetsDir                       = "/etc/alertmanager/certs"
-	secretsDir                         = "/etc/alertmanager/secrets/"
-	configmapsDir                      = "/etc/alertmanager/configmaps/"
+	secretsDir                         = "/etc/alertmanager/secrets"
+	configmapsDir                      = "/etc/alertmanager/configmaps"
 	alertmanagerTemplatesVolumeName    = "notification-templates"
 	alertmanagerTemplatesDir           = "/etc/alertmanager/templates"
 	webConfigDir                       = "/etc/alertmanager/web_config"
@@ -57,8 +58,6 @@ const (
 	alertmanagerStorageDir = "/alertmanager"
 
 	sSetInputHashName = "prometheus-operator-input-hash"
-
-	defaultPortName = "web"
 )
 
 var (
