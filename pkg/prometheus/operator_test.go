@@ -710,6 +710,112 @@ func TestValidateRelabelConfig(t *testing.T) {
 			},
 			expectedErr: true,
 		},
+		// Test keepequal relabel config but lower prometheus version
+		{
+			scenario: "keepequal config with lower prometheus version",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"foo"},
+				Action:       "keepequal",
+				TargetLabel:  "foo_keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.37.0",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		// Test dropequal relabel config but lower prometheus version
+		{
+			scenario: "dropequal config with lower prometheus version",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"bar"},
+				Action:       "keepequal",
+				TargetLabel:  "bar_keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.37.0",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		// Test valid keepequal config
+		{
+			scenario: "valid keepequal config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port1",
+				Action:       "keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+		},
+		// Test valid dropequal config
+		{
+			scenario: "valid dropequal config",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port2",
+				Action:       "dropequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+		},
+		// Test valid keepequal with non default values for other fields
+		{
+			scenario: "valid keepequal config with non default values for other fields",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port1",
+				Separator:    "^",
+				Regex:        "validregex",
+				Replacement:  "replacevalue",
+				Action:       "keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		// Test valid keepequal with default values for other fields
+		{
+			scenario: "valid keepequal config with default values for other fields",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port1",
+				Separator:    relabel.DefaultRelabelConfig.Separator,
+				Regex:        relabel.DefaultRelabelConfig.Regex.String(),
+				Modulus:      relabel.DefaultRelabelConfig.Modulus,
+				Replacement:  relabel.DefaultRelabelConfig.Replacement,
+				Action:       "keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
 			err := validateRelabelConfig(tc.prometheus, tc.relabelConfig)
