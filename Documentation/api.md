@@ -4005,6 +4005,17 @@ HTTPConfig
 <p>HTTP client configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>slackApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Slack Api Url</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec

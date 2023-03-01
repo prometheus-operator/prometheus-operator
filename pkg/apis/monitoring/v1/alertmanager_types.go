@@ -273,6 +273,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// Slack Api Url
+	SlackAPIURL *string `json:"slackApiUrl,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.

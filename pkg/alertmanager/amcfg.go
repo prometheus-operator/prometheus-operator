@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/url"
 	"path"
 	"sort"
 	"strings"
@@ -385,6 +386,13 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			return nil, errors.Wrap(err, "parse resolve timeout")
 		}
 		out.ResolveTimeout = &timeout
+	}
+	if in.SlackAPIURL != nil {
+		u, err := url.Parse(*in.SlackAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse slack API URL")
+		}
+		out.SlackAPIURL = &config.URL{URL: u}
 	}
 	return out, nil
 }
