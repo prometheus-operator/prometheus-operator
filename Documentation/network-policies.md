@@ -5,7 +5,7 @@
 
 # Network policies
 
-[Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) allow you easily restrict the ingress traffic between pods using [k8s labels](https://kubernetes.io/docs/user-guide/labels/).
+[Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) allow you easily restrict the ingress traffic between pods using [k8s labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/).
 To keep your cluster safer, it's strongly recommended to enable network policies into prometheus namespace.
 
 # Example
