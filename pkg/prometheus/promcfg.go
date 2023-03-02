@@ -59,10 +59,6 @@ type ConfigGenerator struct {
 	endpointSliceSupported bool
 }
 
-func (cg *ConfigGenerator) Version() semver.Version {
-	return cg.version
-}
-
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
@@ -73,6 +69,10 @@ func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSli
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse Prometheus version")
+	}
+
+	if version.Major != 2 {
+		return nil, errors.Wrap(err, fmt.Sprintf("unsupported Prometheus major version %s", version))
 	}
 
 	logger = log.WithSuffix(logger, "version", promVersion)

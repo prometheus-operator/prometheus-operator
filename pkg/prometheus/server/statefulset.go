@@ -213,10 +213,6 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	if cg.Version().Major != 2 {
-		return nil, errors.Errorf("unsupported Prometheus major version %s", cg.Version())
-	}
-
 	webRoutePrefix := "/"
 	if cpf.RoutePrefix != "" {
 		webRoutePrefix = cpf.RoutePrefix
