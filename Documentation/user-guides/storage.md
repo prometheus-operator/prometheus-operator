@@ -22,7 +22,7 @@ PersistentVolume to be provisioned when requested.
 
 This document assumes a basic understanding of PersistentVolumes,
 PersistentVolumeClaims, and their
-[provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
+[provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#provisioning).
 
 ## Storage Provisioning on AWS
 
@@ -42,7 +42,7 @@ parameters:
 
 For best results, use volumes that have high I/O throughput. These examples use
 SSD EBS volumes. Read the Kubernetes [Persistent
-Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws)
+Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#provisioning)
 documentation to adapt this `StorageClass` to your needs.
 
 The `StorageClass` that was created can be specified in the `storage` section
