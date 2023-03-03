@@ -47,6 +47,10 @@ else
 	TAG="v$(cat "$(git rev-parse --show-toplevel)/VERSION")-${COMMIT_SHA}"
 fi
 
+echo ">> Tag: ${TAG}"
+echo ">> Main branch: ${MAIN_BRANCH}"
+echo ">> Image suffix: ${IMAGE_SUFFIX}"
+
 # Compose full image names for retagging and publishing to remote container registries
 OPERATORS=""
 RELOADERS=""
@@ -80,7 +84,6 @@ done
 
 # Compose the multi-arch images and push them to remote repositories.
 export DOCKER_CLI_EXPERIMENTAL=enabled
-export COSIGN_EXPERIMENTAL=true
 for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	# Images need to be pushed to the remote registry before creating the manifest.
 	MANIFEST="${r}:${TAG}"
@@ -102,8 +105,8 @@ for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	docker manifest push "${MANIFEST}"
 
 	# Sign the manifest for official tags.
-	if [[ -n "${MAIN_BRANCH}" ]]; then
+	if [[ -z "${MAIN_BRANCH}" ]]; then
 		DIGEST="$(crane digest "${MANIFEST}")"
-		cosign sign --force -a GIT_HASH="${COMMIT_SHA}" -a GIT_VERSION="${TAG}" "${MANIFEST}@${DIGEST}"
+		cosign sign --yes -a GIT_HASH="${COMMIT_SHA}" -a GIT_VERSION="${TAG}" "${MANIFEST}@${DIGEST}"
 	fi
 done
