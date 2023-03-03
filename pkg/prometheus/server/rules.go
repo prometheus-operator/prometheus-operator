@@ -33,6 +33,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 const labelPrometheusName = "prometheus-name"
@@ -302,7 +303,7 @@ func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string)
 	boolTrue := true
 
 	labels := map[string]string{labelPrometheusName: p.Name}
-	for k, v := range managedByOperatorLabels {
+	for k, v := range prompkg.ManagedByOperatorLabels {
 		labels[k] = v
 	}
 

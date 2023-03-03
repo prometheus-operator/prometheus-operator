@@ -49,7 +49,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 

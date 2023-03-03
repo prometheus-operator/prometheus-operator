@@ -28,7 +28,7 @@ import (
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 )
 
 type API struct {

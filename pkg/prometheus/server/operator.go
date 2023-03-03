@@ -50,6 +50,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
@@ -195,7 +196,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	for _, informer := range c.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-	c.metrics.MustRegister(newPrometheusCollectorForStores(promStores...))
+	c.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
 
 	c.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -1166,7 +1167,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
-	cg, err := NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
@@ -1186,14 +1187,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, prompkg.MakeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
-	expected := expectedStatefulSetShardNames(p)
+	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
 		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		level.Debug(logger).Log("msg", "reconciling statefulset")
@@ -1258,7 +1259,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName] {
 			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -1266,7 +1267,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Debug(logger).Log(
 			"msg", "updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName],
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -1300,7 +1301,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prometheusNameLabelName: p.Name}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -1365,7 +1366,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		replicas = int(*p.Spec.Replicas)
 	}
 
-	for shard := range expectedStatefulSetShardNames(p) {
+	for shard := range prompkg.ExpectedStatefulSetShardNames(p) {
 		ssetName := prometheusKeyToStatefulSetKey(key, shard)
 		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
 
@@ -1553,7 +1554,7 @@ func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.P
 	res := monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	var oldPods []v1.Pod
-	for _, ssetName := range expectedStatefulSetShardNames(p) {
+	for _, ssetName := range prompkg.ExpectedStatefulSetShardNames(p) {
 		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
 		if err != nil {
 			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
@@ -1602,7 +1603,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 	return nil, nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *ConfigGenerator, ruleConfigMapNames []string, store *assets.Store) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1610,7 +1611,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		p.Spec.ProbeSelector == nil {
 		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
-		s, err := makeEmptyConfigurationSecret(p, c.config)
+		s, err := prompkg.MakeEmptyConfigurationSecret(p, c.config)
 		if err != nil {
 			return errors.Wrap(err, "generating empty config secret failed")
 		}
@@ -1718,7 +1719,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	// Update secret based on the most recent configuration.
-	conf, err := cg.Generate(
+	conf, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1739,7 +1740,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s := makeConfigSecret(p, c.config)
+	s := prompkg.MakeConfigSecret(p, c.config)
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
@@ -1749,7 +1750,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err = operator.GzipConfig(&buf, conf); err != nil {
 		return errors.Wrap(err, "couldn't gzip config")
 	}
-	s.Data[configFilename] = buf.Bytes()
+	s.Data[prompkg.ConfigFilename] = buf.Bytes()
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
 
@@ -1757,10 +1758,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (*operator.ShardedSecret, error) {
-	labels := c.config.Labels.Merge(managedByOperatorLabels)
+	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 	template := newTLSAssetSecret(p, labels)
 
-	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(p.Name))
+	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p.Name))
 
 	for k, v := range store.TLSAssets {
 		sSecret.AppendData(k.String(), []byte(v))
@@ -1781,7 +1782,7 @@ func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   tlsAssetsSecretName(p.Name),
+			Name:   prompkg.TLSAssetsSecretName(p.Name),
 			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -1807,8 +1808,8 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	webConfig, err := webconfig.New(
-		webConfigDir,
-		webConfigSecretName(p.Name),
+		prompkg.WebConfigDir,
+		prompkg.WebConfigSecretName(p.Name),
 		fields,
 	)
 	if err != nil {
@@ -1824,7 +1825,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
@@ -2371,5 +2372,5 @@ func validateScrapeIntervalAndTimeout(p *monitoringv1.Prometheus, scrapeInterval
 	if scrapeInterval == "" {
 		scrapeInterval = p.Spec.ScrapeInterval
 	}
-	return compareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
+	return prompkg.CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
