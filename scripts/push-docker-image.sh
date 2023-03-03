@@ -87,7 +87,7 @@ for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	IMAGES=()
 	for arch in $CPU_ARCHS; do
 		docker push "${r}:${TAG}-${arch}"
-		IMAGES[${IMAGES[@]}]="${r}:${TAG}-${arch}"
+		IMAGES[${#IMAGES[@]}]="${r}:${TAG}-${arch}"
 	done
 
 	# Create the manifest to join all images under one virtual tag.
