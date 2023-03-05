@@ -32,6 +32,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	PodMonitorNamespaceSelector     *metav1.LabelSelector                                `json:"podMonitorNamespaceSelector,omitempty"`
 	ProbeSelector                   *metav1.LabelSelector                                `json:"probeSelector,omitempty"`
 	ProbeNamespaceSelector          *metav1.LabelSelector                                `json:"probeNamespaceSelector,omitempty"`
+	ScrapeConfigSelector            *metav1.LabelSelector                                `json:"scrapeConfigSelector,omitempty"`
+	ScrapeConfigNamespaceSelector   *metav1.LabelSelector                                `json:"scrapeConfigNamespaceSelector,omitempty"`
 	Version                         *string                                              `json:"version,omitempty"`
 	Paused                          *bool                                                `json:"paused,omitempty"`
 	Image                           *string                                              `json:"image,omitempty"`
@@ -150,6 +152,22 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeSelector(value metav
 // If called multiple times, the ProbeNamespaceSelector field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeNamespaceSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
 	b.ProbeNamespaceSelector = &value
+	return b
+}
+
+// WithScrapeConfigSelector sets the ScrapeConfigSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeConfigSelector = &value
+	return b
+}
+
+// WithScrapeConfigNamespaceSelector sets the ScrapeConfigNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigNamespaceSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeConfigNamespaceSelector = &value
 	return b
 }
 

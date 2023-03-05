@@ -112,6 +112,22 @@ func (b *PrometheusSpecApplyConfiguration) WithProbeNamespaceSelector(value meta
 	return b
 }
 
+// WithScrapeConfigSelector sets the ScrapeConfigSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigSelector field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigSelector(value metav1.LabelSelector) *PrometheusSpecApplyConfiguration {
+	b.ScrapeConfigSelector = &value
+	return b
+}
+
+// WithScrapeConfigNamespaceSelector sets the ScrapeConfigNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigNamespaceSelector(value metav1.LabelSelector) *PrometheusSpecApplyConfiguration {
+	b.ScrapeConfigNamespaceSelector = &value
+	return b
+}
+
 // WithVersion sets the Version field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Version field is set to the value of the last call.
