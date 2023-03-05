@@ -3639,7 +3639,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "podMonitorSelector": {
-                    "description": "*Experimental* PodMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and `spec.probeSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* PodMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -3741,7 +3741,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "probeSelector": {
-                    "description": "*Experimental* Probes to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and `spec.probeSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* Probes to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4432,6 +4432,92 @@
                     "description": "The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`.",
                     "type": "string"
                   },
+                  "scrapeConfigNamespaceSelector": {
+                    "description": "Namespace's labels to match for ServiceMonitor discovery. If nil, only check own namespace.",
+                    "properties": {
+                      "matchExpressions": {
+                        "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                        "items": {
+                          "description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+                          "properties": {
+                            "key": {
+                              "description": "key is the label key that the selector applies to.",
+                              "type": "string"
+                            },
+                            "operator": {
+                              "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+                              "type": "string"
+                            },
+                            "values": {
+                              "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "operator"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "matchLabels": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                        "type": "object"
+                      }
+                    },
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
+                  },
+                  "scrapeConfigSelector": {
+                    "description": "*Experimental* ScrapeConfigs to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "properties": {
+                      "matchExpressions": {
+                        "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                        "items": {
+                          "description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+                          "properties": {
+                            "key": {
+                              "description": "key is the label key that the selector applies to.",
+                              "type": "string"
+                            },
+                            "operator": {
+                              "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+                              "type": "string"
+                            },
+                            "values": {
+                              "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "operator"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "matchLabels": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                        "type": "object"
+                      }
+                    },
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
+                  },
                   "scrapeInterval": {
                     "default": "30s",
                     "description": "Interval between consecutive scrapes. Default: `30s`",
@@ -4618,7 +4704,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "serviceMonitorSelector": {
-                    "description": "ServiceMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and `spec.probeSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "ServiceMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",

@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"regexp"
 	"strings"
 
@@ -44,6 +45,7 @@ type ResourceSelector struct {
 	podMonitorLister     ListAllByNamespacer
 	serviceMonitorLister ListAllByNamespacer
 	probeLister          ListAllByNamespacer
+	scrapeConfigLister   ListAllByNamespacer
 	namespaceInformers   cache.SharedIndexInformer
 	metrics              *operator.Metrics
 	accessor             *operator.Accessor
@@ -53,7 +55,7 @@ type ListAllByNamespacer interface {
 	ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 }
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, podMonitorLister ListAllByNamespacer, serviceMonitorLister ListAllByNamespacer, probeLister ListAllByNamespacer, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, podMonitorLister ListAllByNamespacer, serviceMonitorLister ListAllByNamespacer, probeLister ListAllByNamespacer, scrapeConfigLister ListAllByNamespacer, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
 	return &ResourceSelector{
 		l:                    l,
 		p:                    p,
@@ -61,6 +63,7 @@ func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store
 		podMonitorLister:     podMonitorLister,
 		serviceMonitorLister: serviceMonitorLister,
 		probeLister:          probeLister,
+		scrapeConfigLister:   scrapeConfigLister,
 		namespaceInformers:   namespaceInformers,
 		metrics:              metrics,
 		accessor:             operator.NewAccessor(l),
@@ -583,4 +586,69 @@ func validateProberURL(url string) error {
 		}
 	}
 	return nil
+}
+
+// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration.
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+	cpf := rs.p.GetCommonPrometheusFields()
+	objMeta := rs.p.GetObjectMeta()
+	namespaces := []string{}
+	// Selectors might overlap. Deduplicate them along the keyFunc.
+	scrapeConfigs := make(map[string]*monitoringv1alpha1.ScrapeConfig)
+
+	sConSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	// If 'ScrapeConfigSelector' is nil only check own namespace.
+	if cpf.ScrapeConfigSelector == nil {
+		namespaces = append(namespaces, objMeta.GetNamespace())
+	} else {
+		sConNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces, err = operator.ListMatchingNamespaces(sConNSSelector, rs.namespaceInformers)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	level.Debug(rs.l).Log("msg", "filtering namespaces to select ScrapeConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	for _, ns := range namespaces {
+		err := rs.scrapeConfigLister.ListAllByNamespace(ns, sConSelector, func(obj interface{}) {
+			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
+				scrapeConfig := obj.(*monitoringv1alpha1.ScrapeConfig).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(scrapeConfig); err != nil {
+					level.Error(rs.l).Log("msg", "failed to set ScrapeConfig type information", "namespace", ns, "err", err)
+					return
+				}
+				scrapeConfigs[k] = scrapeConfig
+			}
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list probes in namespace %s", ns)
+		}
+	}
+
+	// TODO(xiu): add validation steps
+	var rejected int
+	res := make(map[string]*monitoringv1alpha1.ScrapeConfig, len(scrapeConfigs))
+
+	scrapeConfigKeys := make([]string, 0)
+	for k := range res {
+		scrapeConfigKeys = append(scrapeConfigKeys, k)
+	}
+	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
+		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
+		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
+	}
+
+	return res, nil
 }

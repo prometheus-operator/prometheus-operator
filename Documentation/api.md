@@ -13266,8 +13266,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13301,8 +13301,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13336,8 +13336,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13357,6 +13357,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -15799,8 +15834,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15834,8 +15869,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15869,8 +15904,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15890,6 +15925,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>

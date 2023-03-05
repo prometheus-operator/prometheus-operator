@@ -67,6 +67,7 @@ type Operator struct {
 	smonInfs  *informers.ForResource
 	pmonInfs  *informers.ForResource
 	probeInfs *informers.ForResource
+	sconInfs  *informers.ForResource
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
@@ -196,6 +197,20 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating probe informers")
 	}
 
+	c.sconInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating scrapeconfig informers")
+	}
+
 	c.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
 			c.config.Namespaces.PrometheusAllowList,
@@ -309,6 +324,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
+	go c.sconInfs.Start(ctx.Done())
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
@@ -360,6 +376,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ServiceMonitor", c.smonInfs},
 		{"PodMonitor", c.pmonInfs},
 		{"Probe", c.probeInfs},
+		{"ScrapeConfig", c.sconInfs},
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
@@ -405,6 +422,11 @@ func (c *Operator) addHandlers() {
 		UpdateFunc: c.handlePmonUpdate,
 	})
 	c.probeInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleBmonAdd,
+		UpdateFunc: c.handleBmonUpdate,
+		DeleteFunc: c.handleBmonDelete,
+	})
+	c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleBmonAdd,
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
@@ -640,7 +662,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.nsMonInf, c.metrics)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.sconInfs, c.nsMonInf, c.metrics)
 	smons, err := resourceSelector.SelectServiceMonitors(ctx)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")

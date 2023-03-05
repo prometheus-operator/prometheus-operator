@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
@@ -68,6 +69,7 @@ type Operator struct {
 	smonInfs  *informers.ForResource
 	pmonInfs  *informers.ForResource
 	probeInfs *informers.ForResource
+	sconInfs  *informers.ForResource
 	ruleInfs  *informers.ForResource
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
@@ -243,6 +245,20 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating probe informers")
 	}
 
+	c.sconInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating scrapeconfig informers")
+	}
+
 	c.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AllowList,
@@ -351,6 +367,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PodMonitor", c.pmonInfs},
 		{"PrometheusRule", c.ruleInfs},
 		{"Probe", c.probeInfs},
+		{"ScrapeConfig", c.sconInfs},
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
@@ -396,6 +413,11 @@ func (c *Operator) addHandlers() {
 		UpdateFunc: c.handlePmonUpdate,
 	})
 	c.probeInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleBmonAdd,
+		UpdateFunc: c.handleBmonUpdate,
+		DeleteFunc: c.handleBmonDelete,
+	})
+	c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleBmonAdd,
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
@@ -456,6 +478,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
+	go c.sconInfs.Start(ctx.Done())
 	go c.ruleInfs.Start(ctx.Done())
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
@@ -1510,7 +1533,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.nsMonInf, c.metrics)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.sconInfs, c.nsMonInf, c.metrics)
 	smons, err := resourceSelector.SelectServiceMonitors(ctx)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
@@ -1525,6 +1548,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
+
+	// TODO(xiu): pass sCons to cg.GenerateServerConfiguration() once implemented
+	_, err = resourceSelector.SelectScrapeConfigs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "selecting ScrapeConfigs failed")
+	}
+
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
