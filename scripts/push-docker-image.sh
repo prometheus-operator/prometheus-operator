@@ -94,7 +94,8 @@ for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	done
 
 	# Create the manifest to join all images under one virtual tag.
-	docker manifest create "${MANIFEST}" "${IMAGES[@]}"
+	echo "Creating manifest ${MANIFEST}"
+	docker manifest create --amend "${MANIFEST}" "${IMAGES[@]}"
 
 	# Annotate to set which image is build for which CPU architecture.
 	for arch in $CPU_ARCHS; do
@@ -102,11 +103,15 @@ for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	done
 
 	# Push the manifest to the remote registry.
+	echo "Pushing manifest ${MANIFEST}"
 	docker manifest push "${MANIFEST}"
 
 	# Sign the manifest for official tags.
 	if [[ -z "${MAIN_BRANCH}" ]]; then
 		DIGEST="$(crane digest "${MANIFEST}")"
+		echo "Signing manifest ${MANIFEST}@${DIGEST}"
 		cosign sign --yes -a GIT_HASH="${COMMIT_SHA}" -a GIT_VERSION="${TAG}" "${MANIFEST}@${DIGEST}"
+	else
+		echo "Not signing the manifest because the tag is 'main'"
 	fi
 done

@@ -25,6 +25,8 @@ jobs:
           go-version: '${{ env.golang-version }}'
       - name: Install cosign
         uses: sigstore/cosign-installer@main
+      - name: Check the Docker version
+        run: docker version
       - name: Check the cosign version
         run: cosign version
       - name: Install crane
