@@ -2158,5 +2158,47 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			Value: configs,
 		})
 	}
+
+	// FileSDConfig
+	if len(m.Spec.FileSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(m.Spec.FileSDConfigs))
+		for i, config := range m.Spec.FileSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "files",
+					Value: config.Files,
+				},
+				{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				},
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "file_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// HTTPSDConfig
+	if len(m.Spec.HTTPSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(m.Spec.HTTPSDConfigs))
+		for i, config := range m.Spec.HTTPSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "url",
+					Value: config.URL,
+				},
+				{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				},
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "http_sd_configs",
+			Value: configs,
+		})
+	}
 	return cfg
 }

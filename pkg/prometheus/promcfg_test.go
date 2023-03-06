@@ -9692,7 +9692,7 @@ func getInt64Pointer(i int64) *int64 {
 	return &i
 }
 
-func TestScrapeConfig(t *testing.T) {
+func TestScrapeConfigStaticConfig(t *testing.T) {
 	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -9773,6 +9773,177 @@ scrape_configs:
     - http://localhost:9100
     labels:
       label1: value1
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
+func TestScrapeConfigFileSDConfig(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeConfigSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"probe1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testscrapeconfig1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+						{
+							Files:           []string{"/tmp/myfile.json"},
+							RefreshInterval: "5m",
+						},
+					},
+					MetricsPath: "/metrics",
+				},
+			},
+		},
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  honor_timestamps: true
+  metrics_path: /metrics
+  relabel_configs: []
+  file_sd_configs:
+  - files:
+    - /tmp/myfile.json
+    refresh_interval: 5m
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
+func TestScrapeConfigHTTPSDConfig(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeConfigSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"probe1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testscrapeconfig1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+						{
+							URL:             "http://localhost:9100/sd.json",
+							RefreshInterval: "5m",
+						},
+					},
+					MetricsPath: "/metrics",
+				},
+			},
+		},
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  honor_timestamps: true
+  metrics_path: /metrics
+  relabel_configs: []
+  http_sd_configs:
+  - url: http://localhost:9100/sd.json
+    refresh_interval: 5m
 `
 
 	result := string(cfg)
