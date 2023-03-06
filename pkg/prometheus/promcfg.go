@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"path"
 	"regexp"
 	"sort"
@@ -28,6 +29,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -438,6 +440,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
+	sCons map[string]*v1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -477,6 +480,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
@@ -2077,4 +2081,82 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	}
 
 	return yaml.Marshal(cfg)
+}
+
+func (cg *ConfigGenerator) appendScrapeConfigs(
+	slices []yaml.MapSlice,
+	scrapeConfigs map[string]*v1alpha1.ScrapeConfig,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32) []yaml.MapSlice {
+	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
+	i := 0
+	for k := range scrapeConfigs {
+		scrapeConfigIdentifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(scrapeConfigIdentifiers)
+
+	for _, identifier := range scrapeConfigIdentifiers {
+		slices = append(slices,
+			cg.WithKeyVals("scrapeconfig", identifier).generateScrapeConfig(
+				scrapeConfigs[identifier],
+				apiserverConfig,
+				store,
+				shards,
+			),
+		)
+	}
+
+	return slices
+}
+
+func (cg *ConfigGenerator) generateScrapeConfig(
+	m *v1alpha1.ScrapeConfig,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32,
+) yaml.MapSlice {
+	jobName := fmt.Sprintf("scrapeconfig/%s/%s", m.Namespace, m.Name)
+	cfg := yaml.MapSlice{
+		{
+			Key:   "job_name",
+			Value: jobName,
+		},
+	}
+
+	cpf := cg.prom.GetCommonPrometheusFields()
+	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+
+	cfg = cg.AddHonorTimestamps(cfg, pointer.Bool(true))
+
+	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: m.Spec.MetricsPath})
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "relabel_configs",
+		Value: labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.RelabelConfigs),
+	})
+
+	// StaticConfig
+	if len(m.Spec.StaticConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(m.Spec.StaticConfigs))
+		for i, config := range m.Spec.StaticConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "targets",
+					Value: config.Targets,
+				},
+				{
+					Key:   "labels",
+					Value: config.Labels,
+				},
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "static_configs",
+			Value: configs,
+		})
+	}
+	return cfg
 }

@@ -17,6 +17,7 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"os"
 	"strings"
 	"testing"
@@ -197,6 +198,7 @@ scrape_configs: []
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
 				map[string]*monitoringv1.ServiceMonitor{},
+				nil,
 				nil,
 				nil,
 				&assets.Store{},
@@ -490,6 +492,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -616,6 +619,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -734,6 +738,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -846,6 +851,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -966,6 +972,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -1120,6 +1127,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -1274,6 +1282,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -1501,6 +1510,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -1680,6 +1690,7 @@ alerting:
 			nil,
 			nil,
 			nil,
+			nil,
 			&assets.Store{BasicAuthAssets: map[string]assets.BasicAuthCredentials{
 				"alertmanager/auth/0": {
 					Username: "bob",
@@ -1737,6 +1748,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1826,6 +1838,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -2043,6 +2056,7 @@ alerting:
 				nil,
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -2089,6 +2103,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			p.Spec.TSDB,
 			p.Spec.Alerting,
 			p.Spec.RemoteRead,
+			nil,
 			nil,
 			nil,
 			nil,
@@ -2274,6 +2289,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		[]byte(`- action: drop
@@ -2397,6 +2413,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -2577,6 +2594,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -2752,6 +2770,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -2919,6 +2938,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -3077,6 +3097,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -3269,6 +3290,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -3408,6 +3430,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -3511,6 +3534,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -3664,6 +3688,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -3796,6 +3821,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -3950,6 +3976,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -4101,6 +4128,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -4250,6 +4278,7 @@ func TestTargetLabels(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -4551,6 +4580,7 @@ oauth2:
 				tt.sMons,
 				tt.pMons,
 				tt.probes,
+				nil,
 				&assets.Store{
 					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
 					OAuth2Assets:    tt.oauth2Credentials,
@@ -4623,6 +4653,7 @@ func TestPodTargetLabels(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -4775,6 +4806,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -4907,6 +4939,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -5030,6 +5063,7 @@ func TestEmptyEndpointPorts(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -5187,6 +5221,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 		p.Spec.RemoteRead,
 		makeServiceMonitors(),
 		makePodMonitors(),
+		nil,
 		nil,
 		&assets.Store{},
 		nil,
@@ -5848,6 +5883,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -6125,6 +6161,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -6339,6 +6376,7 @@ remote_read:
 				prometheus.Spec.TSDB,
 				prometheus.Spec.Alerting,
 				prometheus.Spec.RemoteRead,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -6801,6 +6839,7 @@ remote_write:
 				nil,
 				nil,
 				nil,
+				nil,
 				store,
 				nil,
 				nil,
@@ -7082,6 +7121,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -7322,6 +7362,7 @@ scrape_configs:
 					"testpodmonitor1": &podMonitor,
 				},
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -7543,6 +7584,7 @@ scrape_configs:
 				map[string]*monitoringv1.Probe{
 					"testprobe1": &probe,
 				},
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -7784,6 +7826,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -7856,6 +7899,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -8246,6 +8290,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -8503,6 +8548,7 @@ scrape_configs:
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
 				},
+				nil,
 				nil,
 				&assets.Store{},
 				nil,
@@ -8819,6 +8865,7 @@ scrape_configs:
 				},
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -8887,6 +8934,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		&assets.Store{},
 		nil,
@@ -9191,6 +9239,7 @@ scrape_configs:
 					"testpodmonitor1": &podMonitor,
 				},
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -9309,6 +9358,7 @@ scrape_configs: []
 				tc.Prometheus.Spec.TSDB,
 				tc.Prometheus.Spec.Alerting,
 				tc.Prometheus.Spec.RemoteRead,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -9433,6 +9483,7 @@ storage:
 				nil,
 				nil,
 				nil,
+				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -9524,6 +9575,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		&assets.Store{},
@@ -9638,4 +9690,93 @@ scrape_configs:
 
 func getInt64Pointer(i int64) *int64 {
 	return &i
+}
+
+func TestScrapeConfig(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeConfigSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"probe1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testscrapeconfig1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					StaticConfigs: []monitoringv1alpha1.StaticConfig{
+						{
+							Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+							Labels: map[monitoringv1.LabelName]string{
+								"label1": "value1",
+							},
+						},
+					},
+					MetricsPath: "/metrics",
+				},
+			},
+		},
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  honor_timestamps: true
+  metrics_path: /metrics
+  relabel_configs: []
+  static_configs:
+  - targets:
+    - http://localhost:9100
+    labels:
+      label1: value1
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
 }

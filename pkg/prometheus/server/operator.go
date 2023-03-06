@@ -1549,8 +1549,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 
-	// TODO(xiu): pass sCons to cg.GenerateServerConfiguration() once implemented
-	_, err = resourceSelector.SelectScrapeConfigs(ctx)
+	scrapeConfigs, err := resourceSelector.SelectScrapeConfigs(ctx)
 	if err != nil {
 		return errors.Wrap(err, "selecting ScrapeConfigs failed")
 	}
@@ -1642,6 +1641,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		smons,
 		pmons,
 		bmons,
+		scrapeConfigs,
 		store,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
