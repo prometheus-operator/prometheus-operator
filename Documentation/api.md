@@ -4009,7 +4009,9 @@ HTTPConfig
 <td>
 <code>slackApiUrl</code><br/>
 <em>
-string
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
 </em>
 </td>
 <td>

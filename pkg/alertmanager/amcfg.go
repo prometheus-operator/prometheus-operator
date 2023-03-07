@@ -387,8 +387,13 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 		out.ResolveTimeout = &timeout
 	}
+
 	if in.SlackAPIURL != nil {
-		u, err := url.Parse(*in.SlackAPIURL)
+		slackApiUrl, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.SlackAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get Slack API URL")
+		}
+		u, err := url.Parse(slackApiUrl)
 		if err != nil {
 			return nil, errors.Wrap(err, "parse slack API URL")
 		}
