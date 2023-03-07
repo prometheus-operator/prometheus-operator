@@ -389,11 +389,11 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if in.SlackAPIURL != nil {
-		slackApiUrl, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.SlackAPIURL)
+		slackAPIURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.SlackAPIURL)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get Slack API URL")
 		}
-		u, err := url.Parse(slackApiUrl)
+		u, err := url.Parse(slackAPIURL)
 		if err != nil {
 			return nil, errors.Wrap(err, "parse slack API URL")
 		}
