@@ -274,7 +274,7 @@ type AlertmanagerGlobalConfig struct {
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 
-	// Slack Api Url
+	// The default Slack API URL.
 	SlackAPIURL *v1.SecretKeySelector `json:"slackApiUrl,omitempty"`
 }
 
