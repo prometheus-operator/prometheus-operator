@@ -46,6 +46,6 @@ jobs:
       - name: Cosign login
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | cosign login -u ${{ github.repository_owner }} --password-stdin ghcr.io
-          echo "${{ secrets.quay_password }}" | cosign login -u ${{ github.quay_username }} --password-stdin quay.io
+          echo "${{ secrets.quay_password }}" | cosign login -u ${{ secrets.quay_username }} --password-stdin quay.io
       - name: Build images and push
         run: ./scripts/push-docker-image.sh

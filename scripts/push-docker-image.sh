@@ -47,10 +47,6 @@ else
 	TAG="v$(cat "$(git rev-parse --show-toplevel)/VERSION")-${COMMIT_SHA}"
 fi
 
-echo ">> Tag: ${TAG}"
-echo ">> Main branch: ${MAIN_BRANCH}"
-echo ">> Image suffix: ${IMAGE_SUFFIX}"
-
 # Compose full image names for retagging and publishing to remote container registries
 OPERATORS=""
 RELOADERS=""
@@ -61,6 +57,9 @@ for i in ${REGISTRIES}; do
 	WEBHOOKS="$i/${IMAGE_WEBHOOK}${IMAGE_SUFFIX} ${WEBHOOKS}"
 done
 
+echo "Tag: ${TAG}"
+echo "Main branch: ${MAIN_BRANCH}"
+echo "Image suffix: ${IMAGE_SUFFIX}"
 for img in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	echo "Building multi-arch image: $img:$TAG"
 done
@@ -89,8 +88,9 @@ for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
 	MANIFEST="${r}:${TAG}"
 	IMAGES=()
 	for arch in $CPU_ARCHS; do
-		docker push "${r}:${TAG}-${arch}"
-		IMAGES[${#IMAGES[@]}]="${r}:${TAG}-${arch}"
+		echo "Pushing image ${MANIFEST}-${arch}"
+		docker push "${MANIFEST}-${arch}"
+		IMAGES[${#IMAGES[@]}]="${MANIFEST}-${arch}"
 	done
 
 	# Create the manifest to join all images under one virtual tag.
