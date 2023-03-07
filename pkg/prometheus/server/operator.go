@@ -1546,40 +1546,6 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-// Status evaluates the current status of a Prometheus deployment with
-// respect to its specified resource object. It returns the status and a list of
-// pods that are not updated.
-// TODO(simonpasquier): remove once the status subresource is considered stable.
-func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (monitoringv1.PrometheusStatus, []v1.Pod, error) {
-	res := monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
-
-	var oldPods []v1.Pod
-	for _, ssetName := range prompkg.ExpectedStatefulSetShardNames(p) {
-		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
-		if err != nil {
-			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
-		}
-
-		stsReporter, err := operator.NewStatefulSetReporter(ctx, kclient, sset)
-		if err != nil {
-			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve pods state for statefulset %s/%s", p.Namespace, ssetName)
-		}
-
-		res.Replicas += int32(len(stsReporter.Pods))
-		res.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
-		res.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
-		res.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
-
-		for _, p := range stsReporter.Pods {
-			if p.Ready() && !stsReporter.IsUpdated(p) {
-				oldPods = append(oldPods, v1.Pod(*p))
-			}
-		}
-	}
-
-	return res, oldPods, nil
-}
-
 func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
 	if sks == nil {
 		return nil, nil

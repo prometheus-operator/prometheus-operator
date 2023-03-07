@@ -33,7 +33,6 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
-	"github.com/prometheus-operator/prometheus-operator/pkg/api"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
@@ -280,15 +279,8 @@ func Main() int {
 	}
 
 	mux := http.NewServeMux()
-	web, err := api.New(cfg, log.With(logger, "component", "api"))
-	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
-		cancel()
-		return 1
-	}
-	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
 
-	web.Register(mux)
+	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
@@ -354,6 +346,9 @@ func Main() int {
 	mux.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
 	mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 	mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
 
 	wg.Go(func() error { return po.Run(ctx) })
 	wg.Go(func() error { return ao.Run(ctx) })
