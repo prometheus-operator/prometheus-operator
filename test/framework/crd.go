@@ -18,6 +18,8 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -128,7 +130,10 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 	group := monitoring.GroupName
-	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
+	assetPath := filepath.Join(f.exampleDir, "/prometheus-operator-crd-full/", group+"_"+crdName+".yaml")
+	if _, err := os.Stat(assetPath); err != nil {
+		assetPath = filepath.Join(f.exampleDir, "/prometheus-operator-crd/", group+"_"+crdName+".yaml")
+	}
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
