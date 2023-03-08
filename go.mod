@@ -3,6 +3,7 @@ module github.com/prometheus-operator/prometheus-operator
 go 1.20
 
 require (
+	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/blang/semver/v4 v4.0.0
@@ -24,7 +25,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.63.0
 	github.com/prometheus/alertmanager v0.25.0
 	github.com/prometheus/client_golang v1.14.0
-	github.com/prometheus/common v0.41.0
+	github.com/prometheus/common v0.42.0
 	github.com/prometheus/prometheus v0.42.0
 	github.com/stretchr/testify v1.8.2
 	github.com/thanos-io/thanos v0.30.2
@@ -32,7 +33,6 @@ require (
 	golang.org/x/net v0.8.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/protobuf v1.28.1
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.2
 	k8s.io/apiextensions-apiserver v0.26.2
@@ -46,7 +46,6 @@ require (
 )
 
 require (
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/aws/aws-sdk-go v1.44.187 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -100,6 +99,7 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	go.mongodb.org/mongo-driver v1.11.0 // indirect
 	go.opentelemetry.io/otel v1.11.2 // indirect
 	go.opentelemetry.io/otel/trace v1.11.2 // indirect
