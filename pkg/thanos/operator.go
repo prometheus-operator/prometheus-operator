@@ -614,19 +614,6 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-// listMatchingNamespaces lists all the namespaces that match the provided
-// selector.
-func (o *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(o.nsRuleInf.GetStore(), selector, func(obj interface{}) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list namespaces")
-	}
-	return ns, nil
-}
-
 func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		TR monitoringv1.ThanosRuler
