@@ -19670,6 +19670,16 @@ spec:
                       = 1h.'
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  getConfigInterval:
+                    description: GetConfigInterval is how often the Prometheus config
+                      is fetched. Default 30s.
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                  getConfigTimeout:
+                    description: GetConfigTimeout is the Timeout for getting Prometheus
+                      config. Default 5s.
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
                   grpcListenLocal:
                     description: If true, the Thanos sidecar listens on the loopback
                       interface for the gRPC endpoints. It has no effect if `listenLocal`

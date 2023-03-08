@@ -730,6 +730,12 @@ func createThanosContainer(
 		if thanos.ReadyTimeout != "" {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
+		if thanos.GetConfigTimeout != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
+		}
+		if thanos.GetConfigInterval != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
+		}
 
 		containerArgs, err := operator.BuildArgs(thanosArgs, thanos.AdditionalArgs)
 		if err != nil {
