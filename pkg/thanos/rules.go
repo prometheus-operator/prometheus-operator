@@ -230,7 +230,7 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		"thanos", t.Name,
 	)
 
-	if tKey, ok := o.keyFunc(t); ok {
+	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
 		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules))
 		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, 0)
 	}

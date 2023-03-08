@@ -45,7 +45,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -68,9 +67,10 @@ var (
 // Operator manages life cycle of Alertmanager deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient kubernetes.Interface
-	mclient monitoringclient.Interface
-	logger  log.Logger
+	kclient  kubernetes.Interface
+	mclient  monitoringclient.Interface
+	logger   log.Logger
+	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
 	nsAlrtCfgInf cache.SharedIndexInformer
@@ -121,9 +121,11 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
 
 	o := &Operator{
-		kclient:         client,
-		mclient:         mclient,
-		logger:          logger,
+		kclient:  client,
+		mclient:  mclient,
+		logger:   logger,
+		accessor: operator.NewAccessor(logger),
+
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
@@ -326,7 +328,7 @@ func (c *Operator) addHandlers() {
 }
 
 func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
@@ -340,7 +342,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
@@ -350,7 +352,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
@@ -361,7 +363,7 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret deleted")
 		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
@@ -375,7 +377,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret updated")
 		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
@@ -385,7 +387,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret added")
 		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
@@ -529,32 +531,9 @@ func (c *Operator) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *Operator) keyFunc(obj interface{}) (string, bool) {
-	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-	if err != nil {
-		level.Error(c.logger).Log("msg", "creating key failed", "err", err)
-		return k, false
-	}
-	return k, true
-}
-
-func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
-	ts, ok := obj.(cache.DeletedFinalStateUnknown)
-	if ok {
-		obj = ts.Obj
-	}
-
-	o, err := meta.Accessor(obj)
-	if err != nil {
-		level.Error(c.logger).Log("msg", "get object failed", "err", err)
-		return nil, false
-	}
-	return o, true
-}
-
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.keyFunc(ss)
+	key, ok := c.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
 	}
@@ -1133,7 +1112,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 	}
 
-	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
 
 	amConfigSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigSelector)
@@ -1143,7 +1122,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	for _, ns := range namespaces {
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
-			k, ok := c.keyFunc(obj)
+			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if ok {
 				amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
 				// Add when it is not specified as the global AlertmanagerConfig
@@ -1183,7 +1162,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
-	if amKey, ok := c.keyFunc(am); ok {
+	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
 		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
 	}
