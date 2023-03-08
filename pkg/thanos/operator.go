@@ -36,7 +36,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -53,9 +52,10 @@ const (
 // Operator manages life cycle of Thanos deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient kubernetes.Interface
-	mclient monitoringclient.Interface
-	logger  log.Logger
+	kclient  kubernetes.Interface
+	mclient  monitoringclient.Interface
+	logger   log.Logger
+	accessor *operator.Accessor
 
 	thanosRulerInfs *informers.ForResource
 	cmapInfs        *informers.ForResource
@@ -116,6 +116,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:         client,
 		mclient:         mclient,
 		logger:          logger,
+		accessor:        operator.NewAccessor(logger),
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
@@ -343,18 +344,9 @@ func (o *Operator) Run(ctx context.Context) error {
 	return nil
 }
 
-func (o *Operator) keyFunc(obj interface{}) (string, bool) {
-	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-	if err != nil {
-		level.Error(o.logger).Log("msg", "creating key failed", "err", err)
-		return k, false
-	}
-	return k, true
-}
-
 // TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (o *Operator) handleConfigMapAdd(obj interface{}) {
-	meta, ok := o.getObjectMeta(obj)
+	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap added")
 		o.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
@@ -364,7 +356,7 @@ func (o *Operator) handleConfigMapAdd(obj interface{}) {
 }
 
 func (o *Operator) handleConfigMapDelete(obj interface{}) {
-	meta, ok := o.getObjectMeta(obj)
+	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap deleted")
 		o.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
@@ -378,7 +370,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 		return
 	}
 
-	meta, ok := o.getObjectMeta(cur)
+	meta, ok := o.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(o.logger).Log("msg", "ConfigMap updated")
 		o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
@@ -389,7 +381,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleAdd(obj interface{}) {
-	meta, ok := o.getObjectMeta(obj)
+	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule added")
 		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
@@ -404,7 +396,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 		return
 	}
 
-	meta, ok := o.getObjectMeta(cur)
+	meta, ok := o.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule updated")
 		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
@@ -415,7 +407,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleDelete(obj interface{}) {
-	meta, ok := o.getObjectMeta(obj)
+	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule deleted")
 		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
@@ -426,7 +418,7 @@ func (o *Operator) handleRuleDelete(obj interface{}) {
 
 // Resolve implements the operator.Syncer interface.
 func (o *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := o.keyFunc(ss)
+	key, ok := o.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
 	}
@@ -779,18 +771,4 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			"err", err,
 		)
 	}
-}
-
-func (o *Operator) getObjectMeta(obj interface{}) (metav1.Object, bool) {
-	ts, ok := obj.(cache.DeletedFinalStateUnknown)
-	if ok {
-		obj = ts.Obj
-	}
-
-	metaObj, err := meta.Accessor(obj)
-	if err != nil {
-		level.Error(o.logger).Log("msg", "get object failed", "err", err)
-		return nil, false
-	}
-	return metaObj, true
 }
