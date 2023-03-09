@@ -152,37 +152,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid global config with slackApiUrl",
+			name: "valid global config with Slack API URL",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				ResolveTimeout: "30s",
-				HTTPConfig: &monitoringingv1.HTTPConfig{
-					OAuth2: &monitoringingv1.OAuth2{
-						ClientID: monitoringingv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
-								},
-								Key: "test",
-							},
-						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
-							},
-							Key: "test",
-						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
-						},
-					},
-					FollowRedirects: pointer.Bool(true),
-				},
 				SlackAPIURL: &corev1.SecretKeySelector{
-					Key: "slack_api_url",
+					Key: "url",
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "slack-secret",
+						Name: "slack",
 					},
 				},
 			},
@@ -212,20 +187,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
-					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
-					HTTPConfig: &httpClientConfig{
-						OAuth2: &oauth2{
-							ClientID:     "clientID",
-							ClientSecret: "clientSecret",
-							Scopes:       []string{"any"},
-							TokenURL:     "https://test.com",
-							EndpointParams: map[string]string{
-								"some": "value",
-							},
-						},
-						FollowRedirects: pointer.Bool(true),
-					},
-					SlackAPIURL: slackAPIURL(),
+					SlackAPIURL: parseURL(t, "https://slack.example.com"),
 				},
 				Receivers: []*receiver{
 					{
@@ -245,6 +207,78 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "global config with invalid Slack API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "invalid_url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "slack",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "global config with missing Slack API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "not_existing",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
 		},
 		{
 			name: "missing route",
@@ -326,11 +360,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "slack-secret",
+					Name:      "slack",
 					Namespace: "mynamespace",
 				},
 				Data: map[string][]byte{
-					"slack_api_url": []byte("https://slack"),
+					"url":         []byte("https://slack.example.com"),
+					"invalid_url": []byte("://slack.example.com"),
 				},
 			},
 		)
@@ -3374,10 +3409,11 @@ templates: []
 	}
 }
 
-func slackAPIURL() *config.URL {
-	url, err := url.Parse("https://slack")
+func parseURL(t *testing.T, u string) *config.URL {
+	t.Helper()
+	url, err := url.Parse(u)
 	if err != nil {
-		panic(err)
+		t.Fatalf("failed to parse URL %q: %s", u, err)
 	}
 	return &config.URL{URL: url}
 }
