@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/go-kit/log"
+	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -730,10 +731,19 @@ func createThanosContainer(
 		if thanos.ReadyTimeout != "" {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
-		if thanos.GetConfigTimeout != "" {
+
+		thanosMinVersion, err := version.NewVersion("v0.28.0")
+		if err != nil {
+			return nil, err
+		}
+		thanosCurrentVersion, err := version.NewVersion(*thanos.Version)
+		if err != nil {
+			return nil, err
+		}
+		if thanos.GetConfigTimeout != "" && (thanosCurrentVersion.GreaterThanOrEqual(thanosMinVersion)) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
 		}
-		if thanos.GetConfigInterval != "" {
+		if thanos.GetConfigInterval != "" && (thanosCurrentVersion.GreaterThanOrEqual(thanosMinVersion)) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
 		}
 
