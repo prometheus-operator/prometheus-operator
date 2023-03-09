@@ -116,7 +116,11 @@ kubectl create -f bundle.yaml
 To run the Operator outside of a cluster:
 
 ```sh
-make
+kubectl create -f example/prometheus-operator-crd-full
+```
+
+```sh
+make operator
 scripts/run-external.sh <kubectl cluster name>
 ```
 
