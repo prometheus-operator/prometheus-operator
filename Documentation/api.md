@@ -12485,7 +12485,7 @@ Duration
 </em>
 </td>
 <td>
-<p>GetConfigInterval is how often the Prometheus config is fetched. Default 30s.</p>
+<p>How often to retrieve the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -12498,7 +12498,7 @@ Duration
 </em>
 </td>
 <td>
-<p>GetConfigTimeout is the Timeout for getting Prometheus config. Default 5s.</p>
+<p>Maximum time to wait when retrieving the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
