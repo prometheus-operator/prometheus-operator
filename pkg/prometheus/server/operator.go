@@ -36,7 +36,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -61,9 +60,10 @@ const (
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient kubernetes.Interface
-	mclient monitoringclient.Interface
-	logger  log.Logger
+	kclient  kubernetes.Interface
+	mclient  monitoringclient.Interface
+	logger   log.Logger
+	accessor *operator.Accessor
 
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
@@ -514,16 +514,6 @@ func (c *Operator) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *Operator) keyFunc(obj interface{}) (string, bool) {
-	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-	if err != nil {
-		level.Error(c.logger).Log("msg", "creating key failed", "err", err)
-		return "", false
-	}
-
-	return k, true
-}
-
 func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
 	c.syncNodeEndpointsWithLogError(ctx)
 	ticker := time.NewTicker(3 * time.Minute)
@@ -688,7 +678,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
 		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
@@ -703,7 +693,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
 		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
@@ -714,7 +704,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
 		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
@@ -725,7 +715,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor added")
 		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
@@ -739,7 +729,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor updated")
 		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
@@ -750,7 +740,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor delete")
 		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
@@ -761,7 +751,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonAdd(obj interface{}) {
-	if o, ok := c.getObject(obj); ok {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
 		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
@@ -774,7 +764,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 		return
 	}
 
-	if o, ok := c.getObject(cur); ok {
+	if o, ok := c.accessor.ObjectMetadata(cur); ok {
 		level.Debug(c.logger).Log("msg", "Probe updated")
 		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
 		c.enqueueForMonitorNamespace(o.GetNamespace())
@@ -783,7 +773,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonDelete(obj interface{}) {
-	if o, ok := c.getObject(obj); ok {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
 		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
@@ -792,7 +782,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule added")
 		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
@@ -807,7 +797,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule updated")
 		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
@@ -818,7 +808,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule deleted")
 		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
@@ -829,7 +819,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret deleted")
 		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
@@ -843,7 +833,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret updated")
 		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
@@ -853,7 +843,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "Secret added")
 		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
@@ -864,7 +854,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 
 // TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap added")
 		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
@@ -874,7 +864,7 @@ func (c *Operator) handleConfigMapAdd(obj interface{}) {
 }
 
 func (c *Operator) handleConfigMapDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
 		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
@@ -888,27 +878,13 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 		return
 	}
 
-	o, ok := c.getObject(cur)
+	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ConfigMap updated")
 		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
 
 		c.enqueueForPrometheusNamespace(o.GetNamespace())
 	}
-}
-
-func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
-	ts, ok := obj.(cache.DeletedFinalStateUnknown)
-	if ok {
-		obj = ts.Obj
-	}
-
-	o, err := meta.Accessor(obj)
-	if err != nil {
-		level.Error(c.logger).Log("msg", "get object failed", "err", err)
-		return nil, false
-	}
-	return o, true
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
@@ -1019,7 +995,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.keyFunc(ss)
+	key, ok := c.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
 	}
@@ -1836,7 +1812,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
-	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
 
 	servMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
@@ -1863,7 +1839,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 	for _, ns := range namespaces {
 		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
-			k, ok := c.keyFunc(obj)
+			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if ok {
 				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
 				if err := k8sutil.AddTypeInformationToObject(svcMon); err != nil {
@@ -1959,7 +1935,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	}
 	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(smKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	if pKey, ok := c.keyFunc(p); ok {
+	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.ServiceMonitorsKind, len(res))
 		c.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
 	}
@@ -1969,7 +1945,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.PodMonitor, error) {
 	namespaces := []string{}
-	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	podMonitors := make(map[string]*monitoringv1.PodMonitor)
 
 	podMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorSelector)
@@ -1996,7 +1972,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 
 	for _, ns := range namespaces {
 		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
-			k, ok := c.keyFunc(obj)
+			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if ok {
 				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
 				if err := k8sutil.AddTypeInformationToObject(podMon); err != nil {
@@ -2084,7 +2060,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 	}
 	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(pmKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	if pKey, ok := c.keyFunc(p); ok {
+	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.PodMonitorsKind, len(res))
 		c.metrics.SetRejectedResources(pKey, monitoringv1.PodMonitorsKind, rejected)
 	}
@@ -2094,7 +2070,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 
 func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.Probe, error) {
 	namespaces := []string{}
-	// Selectors might overlap. Deduplicate them along the keyFunc.
+	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	probes := make(map[string]*monitoringv1.Probe)
 
 	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeSelector)
@@ -2121,7 +2097,7 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 
 	for _, ns := range namespaces {
 		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
-			if k, ok := c.keyFunc(obj); ok {
+			if k, ok := c.accessor.MetaNamespaceKey(obj); ok {
 				probe := obj.(*monitoringv1.Probe).DeepCopy()
 				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
 					level.Error(c.logger).Log("msg", "failed to set Probe type information", "namespace", ns, "err", err)
@@ -2210,7 +2186,7 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	}
 	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probeKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	if pKey, ok := c.keyFunc(p); ok {
+	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
 		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, rejected)
 	}

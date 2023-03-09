@@ -29,6 +29,7 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
@@ -36,7 +37,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (

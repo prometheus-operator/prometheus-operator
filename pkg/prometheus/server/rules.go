@@ -231,7 +231,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		"prometheus", p.Name,
 	)
 
-	if pKey, ok := c.keyFunc(p); ok {
+	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
 		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, 0)
 	}
