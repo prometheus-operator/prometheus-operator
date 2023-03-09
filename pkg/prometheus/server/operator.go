@@ -614,7 +614,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		},
 	}
 
-	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
 		return errors.Wrap(err, "listing nodes failed")
 	}
@@ -1519,6 +1519,7 @@ func ListOptions(name string) metav1.ListOptions {
 			"app.kubernetes.io/name": "prometheus",
 			"prometheus":             name,
 		})).String(),
+		ResourceVersion: "0",
 	}
 }
 
@@ -1531,7 +1532,7 @@ func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.P
 
 	var oldPods []v1.Pod
 	for _, ssetName := range prompkg.ExpectedStatefulSetShardNames(p) {
-		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
+		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{ResourceVersion: "0"})
 		if err != nil {
 			return monitoringv1.PrometheusStatus{}, nil, errors.Wrapf(err, "failed to retrieve statefulset %s/%s", p.Namespace, ssetName)
 		}
@@ -1620,7 +1621,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
+	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
 		return err
 	}
