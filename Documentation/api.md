@@ -4015,7 +4015,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>Slack Api Url</p>
+<p>The default Slack API URL.</p>
 </td>
 </tr>
 </tbody>

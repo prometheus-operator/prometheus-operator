@@ -1364,7 +1364,7 @@ spec:
                         pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                         type: string
                       slackApiUrl:
-                        description: Slack Api Url
+                        description: The default Slack API URL.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must

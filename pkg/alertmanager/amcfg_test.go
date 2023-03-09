@@ -152,6 +152,101 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid global config with slackApiUrl",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					OAuth2: &monitoringingv1.OAuth2{
+						ClientID: monitoringingv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-id",
+								},
+								Key: "test",
+							},
+						},
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						TokenURL: "https://test.com",
+						Scopes:   []string{"any"},
+						EndpointParams: map[string]string{
+							"some": "value",
+						},
+					},
+					FollowRedirects: pointer.Bool(true),
+				},
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "slack_api_url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "slack-secret",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
+					HTTPConfig: &httpClientConfig{
+						OAuth2: &oauth2{
+							ClientID:     "clientID",
+							ClientSecret: "clientSecret",
+							Scopes:       []string{"any"},
+							TokenURL:     "https://test.com",
+							EndpointParams: map[string]string{
+								"some": "value",
+							},
+						},
+						FollowRedirects: pointer.Bool(true),
+					},
+					SlackAPIURL: slackAPIURL(),
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "missing route",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -227,6 +322,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"test": []byte("clientSecret"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-secret",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"slack_api_url": []byte("https://slack"),
 				},
 			},
 		)
@@ -3268,4 +3372,12 @@ templates: []
 			require.Equal(t, tc.expected, ac)
 		})
 	}
+}
+
+func slackAPIURL() *config.URL {
+	url, err := url.Parse("https://slack")
+	if err != nil {
+		panic(err)
+	}
+	return &config.URL{URL: url}
 }

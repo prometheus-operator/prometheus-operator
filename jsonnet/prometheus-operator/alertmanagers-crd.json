@@ -1219,7 +1219,7 @@
                             "type": "string"
                           },
                           "slackApiUrl": {
-                            "description": "Slack Api Url",
+                            "description": "The default Slack API URL.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
