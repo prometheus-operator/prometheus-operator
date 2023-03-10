@@ -1592,6 +1592,33 @@ func testInvalidRulesAreRejected(t *testing.T) {
 	}
 }
 
+func testPromReconcileStatusWhenInvalidRuleCreated(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	ruleFilesNamespaceSelector := map[string]string{"excludeFromWebhook": "true", "role": "rulefile"}
+
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleFilesNamespaceSelector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ruleName := "invalidrule"
+	alertName := "invalidalert"
+
+	_, err = framework.MakeAndCreateInvalidRule(context.Background(), ns, ruleName, alertName)
+	if err != nil {
+		t.Fatalf("expected invalid rule to be created in namespace %v", err)
+	}
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+}
+
 // generateHugePrometheusRule returns a Prometheus rule instance that would fill
 // more than half of the space of a Kubernetes ConfigMap.
 func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusRule {

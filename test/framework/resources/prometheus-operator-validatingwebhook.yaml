@@ -10,7 +10,11 @@ webhooks:
         path: /admission-prometheusrules/validate
     failurePolicy: Fail
     name: prometheusrulemutate.monitoring.coreos.com
-    namespaceSelector: {}
+    namespaceSelector:
+      matchExpressions:
+      - key: excludeFromWebhook
+        operator: NotIn
+        values: ["true"]
     rules:
       - apiGroups:
           - monitoring.coreos.com
