@@ -20,8 +20,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
-	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -732,14 +732,15 @@ func createThanosContainer(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
 
-		thanosVersion, err := operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion)
+		thanosVersion, err := semver.ParseTolerant(operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse Prometheus version")
+			return nil, errors.Wrap(err, "failed to parse Thanos version")
 		}
-		if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.18.0")) {
+
+		if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
 		}
-		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.18.0")) {
+		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
 		}
 
