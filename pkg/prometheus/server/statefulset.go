@@ -732,18 +732,14 @@ func createThanosContainer(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
 
-		thanosMinVersion, err := version.NewVersion("v0.28.0")
+		thanosVersion, err := operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to parse Prometheus version")
 		}
-		thanosCurrentVersion, err := version.NewVersion(*thanos.Version)
-		if err != nil {
-			return nil, err
-		}
-		if thanos.GetConfigTimeout != "" && (thanosCurrentVersion.GreaterThanOrEqual(thanosMinVersion)) {
+		if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.18.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
 		}
-		if thanos.GetConfigInterval != "" && (thanosCurrentVersion.GreaterThanOrEqual(thanosMinVersion)) {
+		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.18.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
 		}
 
