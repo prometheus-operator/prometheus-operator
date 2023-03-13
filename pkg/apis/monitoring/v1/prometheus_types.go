@@ -668,6 +668,10 @@ type ThanosSpec struct {
 	BlockDuration Duration `json:"blockSize,omitempty"`
 	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
 	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
+	// How often to retrieve the Prometheus configuration.
+	GetConfigInterval Duration `json:"getConfigInterval,omitempty"`
+	// Maximum time to wait when retrieving the Prometheus configuration.
+	GetConfigTimeout Duration `json:"getConfigTimeout,omitempty"`
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`

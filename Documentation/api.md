@@ -12490,6 +12490,32 @@ Duration
 </tr>
 <tr>
 <td>
+<code>getConfigInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>How often to retrieve the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>getConfigTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Maximum time to wait when retrieving the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">

@@ -43,6 +43,8 @@ type ThanosSpecApplyConfiguration struct {
 	MinTime                 *string                      `json:"minTime,omitempty"`
 	BlockDuration           *apismonitoringv1.Duration   `json:"blockSize,omitempty"`
 	ReadyTimeout            *apismonitoringv1.Duration   `json:"readyTimeout,omitempty"`
+	GetConfigInterval       *apismonitoringv1.Duration   `json:"getConfigInterval,omitempty"`
+	GetConfigTimeout        *apismonitoringv1.Duration   `json:"getConfigTimeout,omitempty"`
 	VolumeMounts            []v1.VolumeMount             `json:"volumeMounts,omitempty"`
 	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
 }
@@ -202,6 +204,22 @@ func (b *ThanosSpecApplyConfiguration) WithBlockDuration(value apismonitoringv1.
 // If called multiple times, the ReadyTimeout field is set to the value of the last call.
 func (b *ThanosSpecApplyConfiguration) WithReadyTimeout(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
 	b.ReadyTimeout = &value
+	return b
+}
+
+// WithGetConfigInterval sets the GetConfigInterval field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the GetConfigInterval field is set to the value of the last call.
+func (b *ThanosSpecApplyConfiguration) WithGetConfigInterval(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+	b.GetConfigInterval = &value
+	return b
+}
+
+// WithGetConfigTimeout sets the GetConfigTimeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the GetConfigTimeout field is set to the value of the last call.
+func (b *ThanosSpecApplyConfiguration) WithGetConfigTimeout(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+	b.GetConfigTimeout = &value
 	return b
 }
 

@@ -2018,7 +2018,58 @@ func TestConfigReloader(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestThanosGetConfigInterval(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				GetConfigInterval: "1m",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.get_config_interval=1m" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar get_config_interval is not set when it should.")
+	}
+}
+
+func TestThanosGetConfigTimeout(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				GetConfigTimeout: "30s",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.get_config_timeout=30s" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar get_config_timeout is not set when it should.")
+	}
 }
 
 func TestThanosReadyTimeout(t *testing.T) {
