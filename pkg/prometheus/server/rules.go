@@ -176,7 +176,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		namespaces, err = prompkg.ListMatchingNamespaces(ruleNamespaceSelector, c.nsMonInf)
+		namespaces, err = operator.ListMatchingNamespaces(ruleNamespaceSelector, c.nsMonInf)
 		if err != nil {
 			return nil, err
 		}

@@ -27,7 +27,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -89,7 +88,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[stri
 			return nil, err
 		}
 
-		namespaces, err = ListMatchingNamespaces(servMonNSSelector, rs.namespaceInformers)
+		namespaces, err = operator.ListMatchingNamespaces(servMonNSSelector, rs.namespaceInformers)
 		if err != nil {
 			return nil, err
 		}
@@ -201,19 +200,6 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[stri
 	}
 
 	return res, nil
-}
-
-// ListMatchingNamespaces lists all the namespaces that match the provided
-// selector.
-func ListMatchingNamespaces(selector labels.Selector, nsMonInf cache.SharedIndexInformer) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(nsMonInf.GetStore(), selector, func(obj interface{}) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list namespaces")
-	}
-	return ns, nil
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
@@ -340,7 +326,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 			return nil, err
 		}
 
-		namespaces, err = ListMatchingNamespaces(podMonNSSelector, rs.namespaceInformers)
+		namespaces, err = operator.ListMatchingNamespaces(podMonNSSelector, rs.namespaceInformers)
 		if err != nil {
 			return nil, err
 		}
@@ -467,7 +453,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 			return nil, err
 		}
 
-		namespaces, err = ListMatchingNamespaces(bMonNSSelector, rs.namespaceInformers)
+		namespaces, err = operator.ListMatchingNamespaces(bMonNSSelector, rs.namespaceInformers)
 		if err != nil {
 			return nil, err
 		}
