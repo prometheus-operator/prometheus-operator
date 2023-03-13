@@ -141,6 +141,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:                client,
 		mclient:                mclient,
 		logger:                 logger,
+		accessor:               operator.NewAccessor(logger),
 		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
