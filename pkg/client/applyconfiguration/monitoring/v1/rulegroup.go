@@ -27,6 +27,7 @@ type RuleGroupApplyConfiguration struct {
 	Interval                *v1.Duration             `json:"interval,omitempty"`
 	Rules                   []RuleApplyConfiguration `json:"rules,omitempty"`
 	PartialResponseStrategy *string                  `json:"partial_response_strategy,omitempty"`
+	Limit                   *int                     `json:"limit,omitempty"`
 }
 
 // RuleGroupApplyConfiguration constructs an declarative configuration of the RuleGroup type for use with
@@ -69,5 +70,13 @@ func (b *RuleGroupApplyConfiguration) WithRules(values ...*RuleApplyConfiguratio
 // If called multiple times, the PartialResponseStrategy field is set to the value of the last call.
 func (b *RuleGroupApplyConfiguration) WithPartialResponseStrategy(value string) *RuleGroupApplyConfiguration {
 	b.PartialResponseStrategy = &value
+	return b
+}
+
+// WithLimit sets the Limit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Limit field is set to the value of the last call.
+func (b *RuleGroupApplyConfiguration) WithLimit(value int) *RuleGroupApplyConfiguration {
+	b.Limit = &value
 	return b
 }

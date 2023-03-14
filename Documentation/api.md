@@ -10625,6 +10625,20 @@ be ignored by Prometheus instances.
 More info: <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response">https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>limit</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Limit the number of alerts an alerting rule and series a recording
+rule can produce.
+Limit is supported starting with Prometheus &gt;= 2.31 and Thanos Ruler &gt;= 0.24.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Rules">Rules

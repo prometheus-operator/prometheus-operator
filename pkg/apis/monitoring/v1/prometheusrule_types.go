@@ -70,6 +70,11 @@ type RuleGroup struct {
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
+	// Limit the number of alerts an alerting rule and series a recording
+	// rule can produce.
+	// Limit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.
+	// +optional
+	Limit *int `json:"limit,omitempty"`
 }
 
 // Rule describes an alerting or recording rule
