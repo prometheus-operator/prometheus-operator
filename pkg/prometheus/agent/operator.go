@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -51,6 +52,7 @@ type Operator struct {
 	kclient kubernetes.Interface
 	mclient monitoringclient.Interface
 	logger  log.Logger
+	accessor *operator.Accessor
 
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
@@ -351,7 +353,7 @@ func (c *Operator) Run(ctx context.Context) error {
 		return err
 	}
 
-	// Refresh the status of the existing Prometheus objects.
+	// Refresh the status of the existing Prometheus agent objects.
 	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		c.rr.EnqueueForStatus(obj.(*monitoringv1.PrometheusAgent))
 	})
@@ -650,30 +652,28 @@ func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) 
 
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	level.Info(c.logger).Log("msg", "Resolve not implemented yet")
-	return nil
-	// key, ok := c.keyFunc(ss)
-	// if !ok {
-	// 	return nil
-	// }
+	key, ok := c.accessor.MetaNamespaceKey(ss)
+	if !ok {
+		return nil
+	}
 
-	// match, promKey := statefulSetKeyToPrometheusKey(key)
-	// if !match {
-	// 	level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
-	// 	return nil
-	// }
+	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
+	if !match {
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
+		return nil
+	}
 
-	// p, err := c.promInfs.Get(promKey)
-	// if apierrors.IsNotFound(err) {
-	// 	return nil
-	// }
+	p, err := c.promInfs.Get(promKey)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
 
-	// if err != nil {
-	// 	level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
-	// 	return nil
-	// }
+	if err != nil {
+		level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
+		return nil
+	}
 
-	// return p.(*monitoringv1.Prometheus)
+	return p.(*monitoringv1.PrometheusAgent)
 }
 
 // Sync implements the operator.Syncer interface.
