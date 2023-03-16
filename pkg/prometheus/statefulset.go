@@ -65,16 +65,18 @@ var (
 )
 
 func ExpectedStatefulSetShardNames(
-	p *monitoringv1.Prometheus,
+	p monitoringv1.PrometheusInterface,
 ) []string {
+	cpf := p.GetCommonPrometheusFields()
+
 	res := []string{}
 	shards := minShards
-	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
-		shards = *p.Spec.Shards
+	if cpf.Shards != nil && *cpf.Shards > 1 {
+		shards = *cpf.Shards
 	}
 
 	for i := int32(0); i < shards; i++ {
-		res = append(res, prometheusNameByShard(p.Name, i))
+		res = append(res, prometheusNameByShard(p.GetObjectMeta().GetName(), i))
 	}
 
 	return res
@@ -88,7 +90,7 @@ func prometheusNameByShard(name string, shard int32) string {
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func MakeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config operator.Config) (*v1.Secret, error) {
+func MakeEmptyConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config) (*v1.Secret, error) {
 	s := MakeConfigSecret(p, config)
 
 	s.ObjectMeta.Annotations = map[string]string{
@@ -98,20 +100,23 @@ func MakeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config operator.Co
 	return s, nil
 }
 
-func MakeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Secret {
+func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config) *v1.Secret {
+	objMeta := p.GetObjectMeta()
+	typeMeta := p.GetTypeMeta()
+
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ConfigSecretName(p.Name),
+			Name:   ConfigSecretName(objMeta.GetName()),
 			Labels: config.Labels.Merge(ManagedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					APIVersion:         p.APIVersion,
+					APIVersion:         typeMeta.APIVersion,
 					BlockOwnerDeletion: &boolTrue,
 					Controller:         &boolTrue,
-					Kind:               p.Kind,
-					Name:               p.Name,
-					UID:                p.UID,
+					Kind:               typeMeta.Kind,
+					Name:               objMeta.GetName(),
+					UID:                objMeta.GetUID(),
 				},
 			},
 		},
@@ -121,6 +126,8 @@ func MakeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Se
 	}
 }
 
+// TODO(ArthurSens): Move method to server pkg, since it is server specific.
+// Or generalize it enough to be used by both server and agent.
 func MakeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
 	p = p.DeepCopy()
 

@@ -21,15 +21,18 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -678,13 +681,374 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	level.Info(c.logger).Log("msg", "Sync not implemented yet")
+	err := c.sync(ctx, key)
+	c.reconciliations.SetStatus(key, err)
+
+	return err
+}
+
+func (c *Operator) sync(ctx context.Context, key string) error {
+	pobj, err := c.promInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	p := pobj.(*monitoringv1.PrometheusAgent)
+	p = p.DeepCopy()
+	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
+		return errors.Wrap(err, "failed to set Prometheus type information")
+	}
+
+	logger := log.With(c.logger, "key", key)
+	if p.Spec.Paused {
+		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
+		return nil
+	}
+
+	level.Info(logger).Log("msg", "sync prometheus")
+
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	if err != nil {
+		return err
+	}
+
+	// TODO(ArthurSens): Sync configuration secret
+	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
+		return errors.Wrap(err, "creating config failed")
+	}
+
+	//TODO(ArthurSens): Sync TLS assets secret
+	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	if err != nil {
+		return errors.Wrap(err, "creating tls asset secret failed")
+	}
+
+	// TODO(ArthurSens): Sync web config secret
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
+	}
+
+	// Create governing service if it doesn't exist.
+	svcClient := c.kclient.CoreV1().Services(p.Namespace)
+	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+		return errors.Wrap(err, "synchronizing governing service failed")
+	}
+
+	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
+
+	// Ensure we have a StatefulSet running Prometheus Agent deployed and that StatefulSet names are created correctly.
+	expected := prompkg.ExpectedStatefulSetShardNames(p)
+	for shard, ssetName := range expected {
+		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		level.Debug(logger).Log("msg", "reconciling statefulset")
+
+		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(key, shard))
+		exists := !apierrors.IsNotFound(err)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, "retrieving statefulset failed")
+		}
+
+		existingStatefulSet := &appsv1.StatefulSet{}
+		if obj != nil {
+			existingStatefulSet = obj.(*appsv1.StatefulSet)
+			if c.rr.DeletionInProgress(existingStatefulSet) {
+				// We want to avoid entering a hot-loop of update/delete cycles
+				// here since the sts was marked for deletion in foreground,
+				// which means it may take some time before the finalizers
+				// complete and the resource disappears from the API. The
+				// deletion timestamp will have been set when the initial
+				// delete request was issued. In that case, we avoid further
+				// processing.
+				continue
+			}
+		}
+
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, tlsAssets, existingStatefulSet.Spec)
+		if err != nil {
+			return err
+		}
+
+		sset, err := makeStatefulSet(
+			logger,
+			ssetName,
+			p,
+			&c.config,
+			cg,
+			newSSetInputHash,
+			int32(shard),
+			tlsAssets.ShardNames())
+		if err != nil {
+			return errors.Wrap(err, "making statefulset failed")
+		}
+		operator.SanitizeSTS(sset)
+
+		if !exists {
+			level.Debug(logger).Log("msg", "no current statefulset found")
+			level.Debug(logger).Log("msg", "creating statefulset")
+			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+				return errors.Wrap(err, "creating statefulset failed")
+			}
+			continue
+		}
+
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName] {
+			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			continue
+		}
+
+		level.Debug(logger).Log(
+			"msg", "updating current statefulset because of hash divergence",
+			"new_hash", newSSetInputHash,
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName],
+		)
+
+		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
+		sErr, ok := err.(*apierrors.StatusError)
+
+		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+			c.metrics.StsDeleteCreateCounter().Inc()
+
+			// Gather only reason for failed update
+			failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+			for i, cause := range sErr.ErrStatus.Details.Causes {
+				failMsg[i] = cause.Message
+			}
+
+			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+
+			propagationPolicy := metav1.DeletePropagationForeground
+			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+			}
+			continue
+		}
+
+		if err != nil {
+			return errors.Wrap(err, "updating StatefulSet failed")
+		}
+	}
+
+	ssets := map[string]struct{}{}
+	for _, ssetName := range expected {
+		ssets[ssetName] = struct{}{}
+	}
+
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name}), func(obj interface{}) {
+		s := obj.(*appsv1.StatefulSet)
+
+		if _, ok := ssets[s.Name]; ok {
+			// Do not delete statefulsets that we still expect to exist. This
+			// is to cleanup StatefulSets when shards are reduced.
+			return
+		}
+
+		if c.rr.DeletionInProgress(s) {
+			return
+		}
+
+		propagationPolicy := metav1.DeletePropagationForeground
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		}
+	})
+	if err != nil {
+		return errors.Wrap(err, "listing StatefulSet resources failed")
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
+	// If no service or pod monitor selectors are configured, the user wants to
+	// manage configuration themselves. Do create an empty Secret if it doesn't
+	// exist.
+	// if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
+	// 	p.Spec.ProbeSelector == nil {
+	// 	level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
+
+	level.Info(c.logger).Log("msg", "Generation of config secret not implemented yet, creating empty secret")
+	s, err := prompkg.MakeEmptyConfigurationSecret(p, c.config)
+	if err != nil {
+		return errors.Wrap(err, "generating empty config secret failed")
+	}
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
+			return errors.Wrap(err, "creating empty config file failed")
+		}
+	}
+	if !apierrors.IsNotFound(err) && err != nil {
+		return err
+	}
+
 	return nil
 
-	// err := c.sync(ctx, key)
-	// c.reconciliations.SetStatus(key, err)
+	// smons, err := c.selectServiceMonitors(ctx, p, store)
+	// if err != nil {
+	// 	return errors.Wrap(err, "selecting ServiceMonitors failed")
+	// }
 
-	// return err
+	// pmons, err := c.selectPodMonitors(ctx, p, store)
+	// if err != nil {
+	// 	return errors.Wrap(err, "selecting PodMonitors failed")
+	// }
+
+	// bmons, err := c.selectProbes(ctx, p, store)
+	// if err != nil {
+	// 	return errors.Wrap(err, "selecting Probes failed")
+	// }
+	// sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	// SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
+	// if err != nil {
+	// 	return err
+	// }
+
+	// for i, remote := range p.Spec.RemoteRead {
+	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+	// 		return errors.Wrapf(err, "remote read %d", i)
+	// 	}
+	// 	if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+	// 		return errors.Wrapf(err, "remote read %d", i)
+	// 	}
+	// 	if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+	// 		return errors.Wrapf(err, "remote read %d", i)
+	// 	}
+	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
+	// 		return errors.Wrapf(err, "remote read %d", i)
+	// 	}
+	// }
+
+	// for i, remote := range p.Spec.RemoteWrite {
+	// 	if err := validateRemoteWriteSpec(remote); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// 	key := fmt.Sprintf("remoteWrite/%d", i)
+	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// 	if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// 	if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// 	if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
+	// 		return errors.Wrapf(err, "remote write %d", i)
+	// 	}
+	// }
+
+	// if p.Spec.APIServerConfig != nil {
+	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
+	// 		return errors.Wrap(err, "apiserver config")
+	// 	}
+	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
+	// 		return errors.Wrapf(err, "apiserver config")
+	// 	}
+	// }
+	// if p.Spec.Alerting != nil {
+	// 	for i, am := range p.Spec.Alerting.Alertmanagers {
+	// 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+	// 			return errors.Wrapf(err, "alerting")
+	// 		}
+	// 		if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+	// 			return errors.Wrapf(err, "alerting")
+	// 		}
+	// 	}
+	// }
+
+	// additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	// if err != nil {
+	// 	return errors.Wrap(err, "loading additional scrape configs from Secret failed")
+	// }
+	// additionalAlertRelabelConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	// if err != nil {
+	// 	return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
+	// }
+	// additionalAlertManagerConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
+	// if err != nil {
+	// 	return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
+	// }
+
+	// // Update secret based on the most recent configuration.
+	// conf, err := cg.GenerateServerConfiguration(
+	// 	p.Spec.EvaluationInterval,
+	// 	p.Spec.QueryLogFile,
+	// 	p.Spec.RuleSelector,
+	// 	p.Spec.Exemplars,
+	// 	p.Spec.TSDB,
+	// 	p.Spec.Alerting,
+	// 	p.Spec.RemoteRead,
+	// 	smons,
+	// 	pmons,
+	// 	bmons,
+	// 	store,
+	// 	additionalScrapeConfigs,
+	// 	additionalAlertRelabelConfigs,
+	// 	additionalAlertManagerConfigs,
+	// 	ruleConfigMapNames,
+	// )
+	// if err != nil {
+	// 	return errors.Wrap(err, "generating config failed")
+	// }
+
+	// s := prompkg.MakeConfigSecret(p, c.config)
+	// s.ObjectMeta.Annotations = map[string]string{
+	// 	"generated": "true",
+	// }
+
+	// // Compress config to avoid 1mb secret limit for a while
+	// var buf bytes.Buffer
+	// if err = operator.GzipConfig(&buf, conf); err != nil {
+	// 	return errors.Wrap(err, "couldn't gzip config")
+	// }
+	// s.Data[prompkg.ConfigFilename] = buf.Bytes()
+
+	// level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+
+	// return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+}
+
+func createSSetInputHash(p monitoringv1.PrometheusAgent, c operator.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
+	var http2 *bool
+	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
+		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+
+	hash, err := hashstructure.Hash(struct {
+		PrometheusLabels      map[string]string
+		PrometheusAnnotations map[string]string
+		PrometheusGeneration  int64
+		PrometheusWebHTTP2    *bool
+		Config                operator.Config
+		StatefulSetSpec       appsv1.StatefulSetSpec
+		Assets                []string `hash:"set"`
+	}{
+		PrometheusLabels:      p.Labels,
+		PrometheusAnnotations: p.Annotations,
+		PrometheusGeneration:  p.Generation,
+		PrometheusWebHTTP2:    http2,
+		Config:                c,
+		StatefulSetSpec:       ssSpec,
+		Assets:                tlsAssets.ShardNames(),
+	},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to calculate combined hash")
+	}
+
+	return fmt.Sprintf("%d", hash), nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
@@ -833,4 +1197,60 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	// }
 
 	// return nil
+}
+
+func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
+	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
+	template := prompkg.NewTLSAssetSecret(p, labels)
+
+	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p.Name))
+
+	for k, v := range store.TLSAssets {
+		sSecret.AppendData(k.String(), []byte(v))
+	}
+
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+
+	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
+		return nil, errors.Wrapf(err, "failed to create TLS assets secret for Prometheus")
+	}
+
+	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
+
+	return sSecret, nil
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.PrometheusAgent) error {
+	boolTrue := true
+
+	var fields monitoringv1.WebConfigFileFields
+	if p.Spec.Web != nil {
+		fields = p.Spec.Web.WebConfigFileFields
+	}
+
+	webConfig, err := webconfig.New(
+		prompkg.WebConfigDir,
+		prompkg.WebConfigSecretName(p.Name),
+		fields,
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize web config")
+	}
+
+	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	ownerReference := metav1.OwnerReference{
+		APIVersion:         p.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               p.Kind,
+		Name:               p.Name,
+		UID:                p.UID,
+	}
+	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+		return errors.Wrap(err, "failed to reconcile web config secret")
+	}
+
+	return nil
 }

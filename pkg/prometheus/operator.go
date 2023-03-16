@@ -14,7 +14,16 @@
 
 package prometheus
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
@@ -33,4 +42,40 @@ func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
 		return false, ""
 	}
 	return true, matches[0][1] + "/" + matches[0][2]
+}
+
+func KeyToStatefulSetKey(key string, shard int) string {
+	keyParts := strings.Split(key, "/")
+	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
+}
+
+func statefulSetNameFromPrometheusName(name string, shard int) string {
+	if shard == 0 {
+		return fmt.Sprintf("prometheus-%s", name)
+	}
+	return fmt.Sprintf("prometheus-%s-shard-%d", name, shard)
+}
+
+func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]string) *v1.Secret {
+	objMeta := p.GetObjectMeta()
+	typeMeta := p.GetTypeMeta()
+
+	boolTrue := true
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   TLSAssetsSecretName(objMeta.GetName()),
+			Labels: labels,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         typeMeta.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               typeMeta.Kind,
+					Name:               objMeta.GetName(),
+					UID:                objMeta.GetUID(),
+				},
+			},
+		},
+		Data: map[string][]byte{},
+	}
 }
