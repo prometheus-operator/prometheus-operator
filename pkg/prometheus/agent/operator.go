@@ -451,35 +451,30 @@ func (c *Operator) addHandlers() {
 	c.ssetInfs.AddEventHandler(c.rr)
 
 	c.smonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		//TODO(ArthurSens): Add support for ServiceMonitor handlers
-		// AddFunc:    c.handleSmonAdd,
-		// DeleteFunc: c.handleSmonDelete,
-		// UpdateFunc: c.handleSmonUpdate,
+		AddFunc:    c.handleSmonAdd,
+		DeleteFunc: c.handleSmonDelete,
+		UpdateFunc: c.handleSmonUpdate,
 	})
 
 	c.pmonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		//TODO(ArthurSens): Add support for PodMonitor handlers
-		// AddFunc:    c.handlePmonAdd,
-		// DeleteFunc: c.handlePmonDelete,
-		// UpdateFunc: c.handlePmonUpdate,
+		AddFunc:    c.handlePmonAdd,
+		DeleteFunc: c.handlePmonDelete,
+		UpdateFunc: c.handlePmonUpdate,
 	})
 	c.probeInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		//TODO(ArthurSens): Add support for Probe handlers
-		// AddFunc:    c.handleBmonAdd,
-		// UpdateFunc: c.handleBmonUpdate,
-		// DeleteFunc: c.handleBmonDelete,
+		AddFunc:    c.handleBmonAdd,
+		UpdateFunc: c.handleBmonUpdate,
+		DeleteFunc: c.handleBmonDelete,
 	})
 	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// 	//TODO(ArthurSens): Add support for ConfigMap handlers
-		// 	// AddFunc:    c.handleConfigMapAdd,
-		// 	// DeleteFunc: c.handleConfigMapDelete,
-		// 	// UpdateFunc: c.handleConfigMapUpdate,
+		AddFunc:    c.handleConfigMapAdd,
+		DeleteFunc: c.handleConfigMapDelete,
+		UpdateFunc: c.handleConfigMapUpdate,
 	})
 	c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// 	//TODO(ArthurSens): Add support for Secret handlers
-		// 	// AddFunc:    c.handleSecretAdd,
-		// 	// DeleteFunc: c.handleSecretDelete,
-		// 	// UpdateFunc: c.handleSecretUpdate,
+		AddFunc:    c.handleSecretAdd,
+		DeleteFunc: c.handleSecretDelete,
+		UpdateFunc: c.handleSecretUpdate,
 	})
 
 	// The controller needs to watch the namespaces in which the service/pod
@@ -488,8 +483,7 @@ func (c *Operator) addHandlers() {
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
 	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		//TODO(ArthurSens): Add support for Namespace handlers
-		// UpdateFunc: c.handleMonitorNamespaceUpdate,
+		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
 }
 
@@ -1231,4 +1225,319 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 
 	level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
 	return nil, nil
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleSmonAdd(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleSmonUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
+		return
+	}
+
+	o, ok := c.accessor.ObjectMetadata(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleSmonDelete(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
+		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handlePmonAdd(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "PodMonitor added")
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handlePmonUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
+		return
+	}
+
+	o, ok := c.accessor.ObjectMetadata(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "PodMonitor updated")
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handlePmonDelete(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "PodMonitor delete")
+		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleBmonAdd(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "Probe added")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleBmonUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
+		return
+	}
+
+	if o, ok := c.accessor.ObjectMetadata(cur); ok {
+		level.Debug(c.logger).Log("msg", "Probe updated")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleBmonDelete(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "Probe delete")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Do we need to enqueue configmaps just for the namespace or in general?
+func (c *Operator) handleConfigMapAdd(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ConfigMap added")
+		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleConfigMapDelete(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
+		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
+	if old.(*v1.ConfigMap).ResourceVersion == cur.(*v1.ConfigMap).ResourceVersion {
+		return
+	}
+
+	o, ok := c.accessor.ObjectMetadata(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "ConfigMap updated")
+		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Do we need to enqueue secrets just for the namespace or in general?
+func (c *Operator) handleSecretDelete(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "Secret deleted")
+		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	if old.(*v1.Secret).ResourceVersion == cur.(*v1.Secret).ResourceVersion {
+		return
+	}
+
+	o, ok := c.accessor.ObjectMetadata(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "Secret updated")
+		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSecretAdd(obj interface{}) {
+	o, ok := c.accessor.ObjectMetadata(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "Secret added")
+		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
+
+		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
+	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
+}
+
+func (c *Operator) enqueueForMonitorNamespace(nsName string) {
+	c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+}
+
+// enqueueForNamespace enqueues all Prometheus object keys that belong to the
+// given namespace or select objects in the given namespace.
+func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
+	nsObject, exists, err := store.GetByKey(nsName)
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "get namespace to enqueue Prometheus instances failed",
+			"err", err,
+		)
+		return
+	}
+	if !exists {
+		level.Error(c.logger).Log(
+			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+		)
+		return
+	}
+	ns := nsObject.(*v1.Namespace)
+
+	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		// Check for Prometheus Agent instances in the namespace.
+		p := obj.(*monitoringv1.PrometheusAgent)
+		if p.Namespace == nsName {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
+
+		// Check for Prometheus instances selecting ServiceMonitors in
+		// the namespace.
+		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if smNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
+
+		// Check for Prometheus instances selecting PodMonitors in the NS.
+		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
+
+		// Check for Prometheus instances selecting Probes in the NS.
+		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
+	}
+
+}
+
+func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
+	old := oldo.(*v1.Namespace)
+	cur := curo.(*v1.Namespace)
+
+	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	// Periodic resync may resend the Namespace without changes
+	// in-between.
+	if old.ResourceVersion == cur.ResourceVersion {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
+	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
+
+	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
+	// and Probes in the namespace.
+	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		p := obj.(*monitoringv1.PrometheusAgent)
+
+		for name, selector := range map[string]*metav1.LabelSelector{
+			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
+			"Probes":          p.Spec.ProbeNamespaceSelector,
+			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
+		} {
+
+			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"err", err,
+					"name", p.Name,
+					"namespace", p.Namespace,
+					"subresource", name,
+				)
+				return
+			}
+
+			if sync {
+				c.rr.EnqueueForReconciliation(p)
+				return
+			}
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus Agent instances from cache failed",
+			"err", err,
+		)
+	}
 }
