@@ -67,6 +67,9 @@ func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store
 	}
 }
 
+// SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
+// scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[string]*monitoringv1.ServiceMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
@@ -305,6 +308,9 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	return nil
 }
 
+// SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
+// scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*monitoringv1.PodMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
@@ -432,6 +438,9 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 	return res, nil
 }
 
+// SelectProbes selects Probes based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
+// scrape intervals, relabel configs and Probe URLs.
 func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monitoringv1.Probe, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
