@@ -898,10 +898,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	// pmons, err := resourceSelector.SelectPodMonitors(ctx)
-	// if err != nil {
-	// 	return errors.Wrap(err, "selecting PodMonitors failed")
-	// }
+	pmons, err := resourceSelector.SelectPodMonitors(ctx)
+	if err != nil {
+		return errors.Wrap(err, "selecting PodMonitors failed")
+	}
 
 	// bmons, err := resourceSelector.SelectProbes(ctx)
 	// if err != nil {
@@ -970,7 +970,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
 		smons,
-		/*pmons*/ nil,
+		pmons,
 		/*bmons*/ nil,
 		store,
 		/*additionalScrapeConfigs*/ nil,
