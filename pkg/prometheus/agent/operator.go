@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,9 +54,9 @@ const (
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient kubernetes.Interface
-	mclient monitoringclient.Interface
-	logger  log.Logger
+	kclient  kubernetes.Interface
+	mclient  monitoringclient.Interface
+	logger   log.Logger
 	accessor *operator.Accessor
 
 	nsPromInf cache.SharedIndexInformer
@@ -469,16 +470,16 @@ func (c *Operator) addHandlers() {
 		// DeleteFunc: c.handleBmonDelete,
 	})
 	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-	// 	//TODO(ArthurSens): Add support for ConfigMap handlers
-	// 	// AddFunc:    c.handleConfigMapAdd,
-	// 	// DeleteFunc: c.handleConfigMapDelete,
-	// 	// UpdateFunc: c.handleConfigMapUpdate,
+		// 	//TODO(ArthurSens): Add support for ConfigMap handlers
+		// 	// AddFunc:    c.handleConfigMapAdd,
+		// 	// DeleteFunc: c.handleConfigMapDelete,
+		// 	// UpdateFunc: c.handleConfigMapUpdate,
 	})
 	c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-	// 	//TODO(ArthurSens): Add support for Secret handlers
-	// 	// AddFunc:    c.handleSecretAdd,
-	// 	// DeleteFunc: c.handleSecretDelete,
-	// 	// UpdateFunc: c.handleSecretUpdate,
+		// 	//TODO(ArthurSens): Add support for Secret handlers
+		// 	// AddFunc:    c.handleSecretAdd,
+		// 	// DeleteFunc: c.handleSecretDelete,
+		// 	// UpdateFunc: c.handleSecretUpdate,
 	})
 
 	// The controller needs to watch the namespaces in which the service/pod
@@ -719,19 +720,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	// TODO(ArthurSens): Sync configuration secret
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	//TODO(ArthurSens): Sync TLS assets secret
 	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
 	if err != nil {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
-	// TODO(ArthurSens): Sync web config secret
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
@@ -943,7 +941,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 			return errors.Wrapf(err, "apiserver config")
 		}
 	}
-	
 
 	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
@@ -1015,148 +1012,146 @@ func createSSetInputHash(p monitoringv1.PrometheusAgent, c operator.Config, tlsA
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	level.Info(c.logger).Log("msg", "UpdateStatus not implemented yet")
+	pobj, err := c.promInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	p := pobj.(*monitoringv1.PrometheusAgent)
+	p = p.DeepCopy()
+
+	pStatus := monitoringv1.PrometheusStatus{
+		Paused: p.Spec.Paused,
+	}
+
+	logger := log.With(c.logger, "key", key)
+	level.Info(logger).Log("msg", "update prometheus status")
+
+	var (
+		availableCondition = monitoringv1.Condition{
+			Type:   monitoringv1.Available,
+			Status: monitoringv1.ConditionTrue,
+			LastTransitionTime: metav1.Time{
+				Time: time.Now().UTC(),
+			},
+			ObservedGeneration: p.Generation,
+		}
+		messages []string
+		replicas = 1
+	)
+
+	if p.Spec.Replicas != nil {
+		replicas = int(*p.Spec.Replicas)
+	}
+
+	for shard := range prompkg.ExpectedStatefulSetShardNames(p) {
+		ssetName := prompkg.KeyToStatefulSetKey(key, shard)
+		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
+
+		obj, err := c.ssetInfs.Get(ssetName)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				// Object not yet in the store or already deleted.
+				level.Info(logger).Log("msg", "not found")
+				continue
+			}
+			return errors.Wrap(err, "failed to retrieve statefulset")
+		}
+
+		sset := obj.(*appsv1.StatefulSet)
+		if c.rr.DeletionInProgress(sset) {
+			continue
+		}
+
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, sset)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve statefulset state")
+		}
+
+		pStatus.Replicas += int32(len(stsReporter.Pods))
+		pStatus.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
+		pStatus.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
+		pStatus.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
+
+		pStatus.ShardStatuses = append(
+			pStatus.ShardStatuses,
+			monitoringv1.ShardStatus{
+				ShardID:             strconv.Itoa(shard),
+				Replicas:            int32(len(stsReporter.Pods)),
+				UpdatedReplicas:     int32(len(stsReporter.UpdatedPods())),
+				AvailableReplicas:   int32(len(stsReporter.ReadyPods())),
+				UnavailableReplicas: int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods())),
+			},
+		)
+
+		if len(stsReporter.ReadyPods()) >= replicas {
+			// All pods are ready (or the desired number of replicas is zero).
+			continue
+		}
+
+		if len(stsReporter.ReadyPods()) == 0 {
+			availableCondition.Reason = "NoPodReady"
+			availableCondition.Status = monitoringv1.ConditionFalse
+		} else if availableCondition.Status != monitoringv1.ConditionFalse {
+			availableCondition.Reason = "SomePodsNotReady"
+			availableCondition.Status = monitoringv1.ConditionDegraded
+		}
+
+		for _, p := range stsReporter.Pods {
+			if m := p.Message(); m != "" {
+				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
+			}
+		}
+	}
+
+	availableCondition.Message = strings.Join(messages, "\n")
+
+	// Compute the Reconciled ConditionType.
+	reconciledCondition := monitoringv1.Condition{
+		Type:   monitoringv1.Reconciled,
+		Status: monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+		ObservedGeneration: p.Generation,
+	}
+	reconciliationStatus, found := c.reconciliations.GetStatus(key)
+	if !found {
+		reconciledCondition.Status = monitoringv1.ConditionUnknown
+		reconciledCondition.Reason = "NotFound"
+		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
+	} else {
+		if !reconciliationStatus.Ok() {
+			reconciledCondition.Status = monitoringv1.ConditionFalse
+		}
+		reconciledCondition.Reason = reconciliationStatus.Reason()
+		reconciledCondition.Message = reconciliationStatus.Message()
+	}
+
+	// Update the last transition times only if the status of the available condition has changed.
+	for _, condition := range p.Status.Conditions {
+		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
+			availableCondition.LastTransitionTime = condition.LastTransitionTime
+			continue
+		}
+
+		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
+			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
+		}
+	}
+
+	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
+
+	p.Status = pStatus
+	if _, err = c.mclient.MonitoringV1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
+		return errors.Wrap(err, "failed to update status subresource")
+	}
+
 	return nil
-	// pobj, err := c.promInfs.Get(key)
-
-	// if apierrors.IsNotFound(err) {
-	// 	return nil
-	// }
-	// if err != nil {
-	// 	return err
-	// }
-
-	// p := pobj.(*monitoringv1.Prometheus)
-	// p = p.DeepCopy()
-
-	// pStatus := monitoringv1.PrometheusStatus{
-	// 	Paused: p.Spec.Paused,
-	// }
-
-	// logger := log.With(c.logger, "key", key)
-	// level.Info(logger).Log("msg", "update prometheus status")
-
-	// var (
-	// 	availableCondition = monitoringv1.Condition{
-	// 		Type:   monitoringv1.Available,
-	// 		Status: monitoringv1.ConditionTrue,
-	// 		LastTransitionTime: metav1.Time{
-	// 			Time: time.Now().UTC(),
-	// 		},
-	// 		ObservedGeneration: p.Generation,
-	// 	}
-	// 	messages []string
-	// 	replicas = 1
-	// )
-
-	// if p.Spec.Replicas != nil {
-	// 	replicas = int(*p.Spec.Replicas)
-	// }
-
-	// for shard := range expectedStatefulSetShardNames(p) {
-	// 	ssetName := prometheusKeyToStatefulSetKey(key, shard)
-	// 	logger := log.With(logger, "statefulset", ssetName, "shard", shard)
-
-	// 	obj, err := c.ssetInfs.Get(ssetName)
-	// 	if err != nil {
-	// 		if apierrors.IsNotFound(err) {
-	// 			// Object not yet in the store or already deleted.
-	// 			level.Info(logger).Log("msg", "not found")
-	// 			continue
-	// 		}
-	// 		return errors.Wrap(err, "failed to retrieve statefulset")
-	// 	}
-
-	// 	sset := obj.(*appsv1.StatefulSet)
-	// 	if c.rr.DeletionInProgress(sset) {
-	// 		continue
-	// 	}
-
-	// 	stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, sset)
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "failed to retrieve statefulset state")
-	// 	}
-
-	// 	pStatus.Replicas += int32(len(stsReporter.Pods))
-	// 	pStatus.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
-	// 	pStatus.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
-	// 	pStatus.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
-
-	// 	pStatus.ShardStatuses = append(
-	// 		pStatus.ShardStatuses,
-	// 		monitoringv1.ShardStatus{
-	// 			ShardID:             strconv.Itoa(shard),
-	// 			Replicas:            int32(len(stsReporter.Pods)),
-	// 			UpdatedReplicas:     int32(len(stsReporter.UpdatedPods())),
-	// 			AvailableReplicas:   int32(len(stsReporter.ReadyPods())),
-	// 			UnavailableReplicas: int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods())),
-	// 		},
-	// 	)
-
-	// 	if len(stsReporter.ReadyPods()) >= replicas {
-	// 		// All pods are ready (or the desired number of replicas is zero).
-	// 		continue
-	// 	}
-
-	// 	if len(stsReporter.ReadyPods()) == 0 {
-	// 		availableCondition.Reason = "NoPodReady"
-	// 		availableCondition.Status = monitoringv1.ConditionFalse
-	// 	} else if availableCondition.Status != monitoringv1.ConditionFalse {
-	// 		availableCondition.Reason = "SomePodsNotReady"
-	// 		availableCondition.Status = monitoringv1.ConditionDegraded
-	// 	}
-
-	// 	for _, p := range stsReporter.Pods {
-	// 		if m := p.Message(); m != "" {
-	// 			messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
-	// 		}
-	// 	}
-	// }
-
-	// availableCondition.Message = strings.Join(messages, "\n")
-
-	// // Compute the Reconciled ConditionType.
-	// reconciledCondition := monitoringv1.Condition{
-	// 	Type:   monitoringv1.Reconciled,
-	// 	Status: monitoringv1.ConditionTrue,
-	// 	LastTransitionTime: metav1.Time{
-	// 		Time: time.Now().UTC(),
-	// 	},
-	// 	ObservedGeneration: p.Generation,
-	// }
-	// reconciliationStatus, found := c.reconciliations.GetStatus(key)
-	// if !found {
-	// 	reconciledCondition.Status = monitoringv1.ConditionUnknown
-	// 	reconciledCondition.Reason = "NotFound"
-	// 	reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
-	// } else {
-	// 	if !reconciliationStatus.Ok() {
-	// 		reconciledCondition.Status = monitoringv1.ConditionFalse
-	// 	}
-	// 	reconciledCondition.Reason = reconciliationStatus.Reason()
-	// 	reconciledCondition.Message = reconciliationStatus.Message()
-	// }
-
-	// // Update the last transition times only if the status of the available condition has changed.
-	// for _, condition := range p.Status.Conditions {
-	// 	if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-	// 		availableCondition.LastTransitionTime = condition.LastTransitionTime
-	// 		continue
-	// 	}
-
-	// 	if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
-	// 		reconciledCondition.LastTransitionTime = condition.LastTransitionTime
-	// 	}
-	// }
-
-	// pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
-
-	// p.Status = pStatus
-	// if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
-	// 	return errors.Wrap(err, "failed to update status subresource")
-	// }
-
-	// return nil
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
