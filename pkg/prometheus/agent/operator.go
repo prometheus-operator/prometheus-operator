@@ -913,27 +913,27 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// 	return err
 	// }
 
-	// for i, remote := range p.Spec.RemoteWrite {
-	// 	if err := validateRemoteWriteSpec(remote); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// 	key := fmt.Sprintf("remoteWrite/%d", i)
-	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// 	if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// 	if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// 	if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
-	// 		return errors.Wrapf(err, "remote write %d", i)
-	// 	}
-	// }
+	for i, remote := range p.Spec.RemoteWrite {
+		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		key := fmt.Sprintf("remoteWrite/%d", i)
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+	}
 
 	// if p.Spec.APIServerConfig != nil {
 	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
@@ -943,16 +943,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// 		return errors.Wrapf(err, "apiserver config")
 	// 	}
 	// }
-	// if p.Spec.Alerting != nil {
-	// 	for i, am := range p.Spec.Alerting.Alertmanagers {
-	// 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
-	// 			return errors.Wrapf(err, "alerting")
-	// 		}
-	// 		if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
-	// 			return errors.Wrapf(err, "alerting")
-	// 		}
-	// 	}
-	// }
+	
 
 	// additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	// if err != nil {

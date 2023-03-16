@@ -18,11 +18,13 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"reflect"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/pkg/errors"
 )
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
@@ -78,4 +80,29 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]str
 		},
 		Data: map[string][]byte{},
 	}
+}
+
+// ValidateRemoteWriteSpec checks that mutually exclusive configurations are not
+// included in the Prometheus remoteWrite configuration section.
+// Reference:
+// https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
+func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+	var nonNilFields []string
+	for k, v := range map[string]interface{}{
+		"basicAuth":     spec.BasicAuth,
+		"oauth2":        spec.OAuth2,
+		"authorization": spec.Authorization,
+		"sigv4":         spec.Sigv4,
+	} {
+		if reflect.ValueOf(v).IsNil() {
+			continue
+		}
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
+	}
+
+	if len(nonNilFields) > 1 {
+		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	return nil
 }

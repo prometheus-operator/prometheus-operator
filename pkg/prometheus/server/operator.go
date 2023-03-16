@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -1607,7 +1606,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := validateRemoteWriteSpec(remote); err != nil {
+		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		key := fmt.Sprintf("remoteWrite/%d", i)
@@ -1750,31 +1749,6 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
-	}
-
-	return nil
-}
-
-// validateRemoteWriteSpec checks that mutually exclusive configurations are not
-// included in the Prometheus remoteWrite configuration section.
-// Reference:
-// https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
-	var nonNilFields []string
-	for k, v := range map[string]interface{}{
-		"basicAuth":     spec.BasicAuth,
-		"oauth2":        spec.OAuth2,
-		"authorization": spec.Authorization,
-		"sigv4":         spec.Sigv4,
-	} {
-		if reflect.ValueOf(v).IsNil() {
-			continue
-		}
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
-	}
-
-	if len(nonNilFields) > 1 {
-		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
 	return nil
