@@ -15,6 +15,7 @@
 package prometheusagent
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -869,61 +870,47 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
-	// if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-	// 	p.Spec.ProbeSelector == nil {
-	// 	level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
+		p.Spec.ProbeSelector == nil {
+		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
-	level.Info(c.logger).Log("msg", "Generation of config secret not implemented yet, creating empty secret")
-	s, err := prompkg.MakeEmptyConfigurationSecret(p, c.config)
-	if err != nil {
-		return errors.Wrap(err, "generating empty config secret failed")
-	}
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-			return errors.Wrap(err, "creating empty config file failed")
+		s, err := prompkg.MakeEmptyConfigurationSecret(p, c.config)
+		if err != nil {
+			return errors.Wrap(err, "generating empty config secret failed")
 		}
+		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+		_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
+				return errors.Wrap(err, "creating empty config file failed")
+			}
+		}
+		if !apierrors.IsNotFound(err) && err != nil {
+			return err
+		}
+
+		return nil
 	}
-	if !apierrors.IsNotFound(err) && err != nil {
-		return err
+
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.nsMonInf, c.metrics)
+	smons, err := resourceSelector.SelectServiceMonitors(ctx)
+	if err != nil {
+		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	return nil
-
-	// smons, err := c.selectServiceMonitors(ctx, p, store)
-	// if err != nil {
-	// 	return errors.Wrap(err, "selecting ServiceMonitors failed")
-	// }
-
-	// pmons, err := c.selectPodMonitors(ctx, p, store)
+	// pmons, err := resourceSelector.SelectPodMonitors(ctx)
 	// if err != nil {
 	// 	return errors.Wrap(err, "selecting PodMonitors failed")
 	// }
 
-	// bmons, err := c.selectProbes(ctx, p, store)
+	// bmons, err := resourceSelector.SelectProbes(ctx)
 	// if err != nil {
 	// 	return errors.Wrap(err, "selecting Probes failed")
 	// }
-	// sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	// SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
 	// if err != nil {
 	// 	return err
-	// }
-
-	// for i, remote := range p.Spec.RemoteRead {
-	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
-	// 		return errors.Wrapf(err, "remote read %d", i)
-	// 	}
-	// 	if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
-	// 		return errors.Wrapf(err, "remote read %d", i)
-	// 	}
-	// 	if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
-	// 		return errors.Wrapf(err, "remote read %d", i)
-	// 	}
-	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
-	// 		return errors.Wrapf(err, "remote read %d", i)
-	// 	}
 	// }
 
 	// for i, remote := range p.Spec.RemoteWrite {
@@ -980,43 +967,33 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// 	return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	// }
 
-	// // Update secret based on the most recent configuration.
-	// conf, err := cg.GenerateServerConfiguration(
-	// 	p.Spec.EvaluationInterval,
-	// 	p.Spec.QueryLogFile,
-	// 	p.Spec.RuleSelector,
-	// 	p.Spec.Exemplars,
-	// 	p.Spec.TSDB,
-	// 	p.Spec.Alerting,
-	// 	p.Spec.RemoteRead,
-	// 	smons,
-	// 	pmons,
-	// 	bmons,
-	// 	store,
-	// 	additionalScrapeConfigs,
-	// 	additionalAlertRelabelConfigs,
-	// 	additionalAlertManagerConfigs,
-	// 	ruleConfigMapNames,
-	// )
-	// if err != nil {
-	// 	return errors.Wrap(err, "generating config failed")
-	// }
+	// Update secret based on the most recent configuration.
+	conf, err := cg.GenerateAgentConfiguration(
+		smons,
+		/*pmons*/ nil,
+		/*bmons*/ nil,
+		store,
+		/*additionalScrapeConfigs*/ nil,
+	)
+	if err != nil {
+		return errors.Wrap(err, "generating config failed")
+	}
 
-	// s := prompkg.MakeConfigSecret(p, c.config)
-	// s.ObjectMeta.Annotations = map[string]string{
-	// 	"generated": "true",
-	// }
+	s := prompkg.MakeConfigSecret(p, c.config)
+	s.ObjectMeta.Annotations = map[string]string{
+		"generated": "true",
+	}
 
-	// // Compress config to avoid 1mb secret limit for a while
-	// var buf bytes.Buffer
-	// if err = operator.GzipConfig(&buf, conf); err != nil {
-	// 	return errors.Wrap(err, "couldn't gzip config")
-	// }
-	// s.Data[prompkg.ConfigFilename] = buf.Bytes()
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	if err = operator.GzipConfig(&buf, conf); err != nil {
+		return errors.Wrap(err, "couldn't gzip config")
+	}
+	s.Data[prompkg.ConfigFilename] = buf.Bytes()
 
-	// level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
 
-	// return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
 func createSSetInputHash(p monitoringv1.PrometheusAgent, c operator.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
