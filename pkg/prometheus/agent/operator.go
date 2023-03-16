@@ -908,10 +908,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	// SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
-	// if err != nil {
-	// 	return err
-	// }
+	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
 
 	for i, remote := range p.Spec.RemoteWrite {
 		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
@@ -935,28 +935,20 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 	}
 
-	// if p.Spec.APIServerConfig != nil {
-	// 	if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
-	// 		return errors.Wrap(err, "apiserver config")
-	// 	}
-	// 	if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
-	// 		return errors.Wrapf(err, "apiserver config")
-	// 	}
-	// }
+	if p.Spec.APIServerConfig != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
+			return errors.Wrap(err, "apiserver config")
+		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
+			return errors.Wrapf(err, "apiserver config")
+		}
+	}
 	
 
-	// additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
-	// if err != nil {
-	// 	return errors.Wrap(err, "loading additional scrape configs from Secret failed")
-	// }
-	// additionalAlertRelabelConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
-	// if err != nil {
-	// 	return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
-	// }
-	// additionalAlertManagerConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
-	// if err != nil {
-	// 	return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
-	// }
+	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	if err != nil {
+		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
+	}
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
@@ -964,7 +956,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		store,
-		/*additionalScrapeConfigs*/ nil,
+		additionalScrapeConfigs,
 	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
@@ -1221,4 +1213,27 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
+}
+
+func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+	if sks == nil {
+		return nil, nil
+	}
+
+	for _, secret := range s.Items {
+		if secret.Name == sks.Name {
+			if c, ok := secret.Data[sks.Key]; ok {
+				return c, nil
+			}
+
+			return nil, fmt.Errorf("key %v could not be found in secret %v", sks.Key, sks.Name)
+		}
+	}
+
+	if sks.Optional == nil || !*sks.Optional {
+		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
+	}
+
+	level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
+	return nil, nil
 }
