@@ -33,6 +33,7 @@ function(params) {
                                                  if po.config.enableAlertmanagerConfigV1beta1 then
                                                    (import 'alertmanagerconfigs-v1beta1-crd.libsonnet')
                                                  else {},
+  '0prometheusagentCustomResourceDefinition': import 'prometheusagents-crd.json',                                                 
   '0prometheusCustomResourceDefinition': import 'prometheuses-crd.json',
   '0servicemonitorCustomResourceDefinition': import 'servicemonitors-crd.json',
   '0podmonitorCustomResourceDefinition': import 'podmonitors-crd.json',
@@ -77,6 +78,9 @@ function(params) {
           'prometheuses',
           'prometheuses/finalizers',
           'prometheuses/status',
+          'prometheusagents',
+          'prometheusagents/finalizers',
+          'prometheusagents/status',
           'thanosrulers',
           'thanosrulers/finalizers',
           'servicemonitors',

@@ -109,6 +109,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ProbeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Prometheus"):
 		return &monitoringv1.PrometheusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PrometheusAgent"):
+		return &monitoringv1.PrometheusAgentApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):
+		return &monitoringv1.PrometheusAgentSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRule"):
 		return &monitoringv1.PrometheusRuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRuleExcludeConfig"):
