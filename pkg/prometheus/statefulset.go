@@ -61,6 +61,7 @@ var (
 	ShardLabelName                = "operator.prometheus.io/shard"
 	PrometheusNameLabelName       = "operator.prometheus.io/name"
 	ProbeTimeoutSeconds     int32 = 3
+	LabelPrometheusName           = "prometheus-name"
 )
 
 func ExpectedStatefulSetShardNames(

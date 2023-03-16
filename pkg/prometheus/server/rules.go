@@ -35,8 +35,6 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-const labelPrometheusName = "prometheus-name"
-
 // The maximum `Data` size of a ConfigMap seems to differ between
 // environments. This is probably due to different meta data sizes which count
 // into the overall maximum size of a ConfigMap. Thereby lets leave a
@@ -161,7 +159,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 }
 
 func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
-	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelPrometheusName, prometheusName)}
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", prompkg.LabelPrometheusName, prometheusName)}
 }
 
 func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
@@ -255,7 +253,7 @@ func bucketSize(bucket map[string]string) int {
 func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
 	boolTrue := true
 
-	labels := map[string]string{labelPrometheusName: p.Name}
+	labels := map[string]string{prompkg.LabelPrometheusName: p.Name}
 	for k, v := range prompkg.ManagedByOperatorLabels {
 		labels[k] = v
 	}

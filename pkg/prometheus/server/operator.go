@@ -258,7 +258,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			c.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = labelPrometheusName
+				options.LabelSelector = prompkg.LabelPrometheusName
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),

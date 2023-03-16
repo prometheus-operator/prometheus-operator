@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -100,11 +101,10 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "can not parse prometheus-agent selector value")
 	}
 
-	//TODO(ArthurSens): Re-enable once I understand what it does
-	// secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "can not parse secrets selector value")
-	// }
+	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not parse secrets selector value")
+	}
 
 	kubeletObjectName := ""
 	kubeletObjectNamespace := ""
@@ -182,8 +182,8 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	for _, informer := range c.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-	//TODO(ArthurSens): Re-enable collectors
-	// c.metrics.MustRegister(newPrometheusCollectorForStores(promStores...))
+
+	c.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
 
 	c.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -227,39 +227,37 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating probe informers")
 	}
 
-	//TODO(ArthurSens): Re-enable configmap informers
-	// 	c.cmapInfs, err = informers.NewInformersForResource(
-	// 	informers.NewKubeInformerFactories(
-	// 		c.config.Namespaces.PrometheusAllowList,
-	// 		c.config.Namespaces.DenyList,
-	// 		c.kclient,
-	// 		resyncPeriod,
-	// 		func(options *metav1.ListOptions) {
-	// 			options.LabelSelector = labelPrometheusName
-	// 		},
-	// 	),
-	// 	v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
-	// )
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "error creating configmap informers")
-	// }
+	c.cmapInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.config.Namespaces.PrometheusAllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
+			resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = prompkg.LabelPrometheusName
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating configmap informers")
+	}
 
-	//TODO(ArthurSens): Re-enable secrets informers
-	// c.secrInfs, err = informers.NewInformersForResource(
-	// 	informers.NewKubeInformerFactories(
-	// 		c.config.Namespaces.PrometheusAllowList,
-	// 		c.config.Namespaces.DenyList,
-	// 		c.kclient,
-	// 		resyncPeriod,
-	// 		func(options *metav1.ListOptions) {
-	// 			options.FieldSelector = secretListWatchSelector.String()
-	// 		},
-	// 	),
-	// 	v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
-	// )
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "error creating secrets informers")
-	// }
+	c.secrInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.config.Namespaces.PrometheusAllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
+			resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = secretListWatchSelector.String()
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating secrets informers")
+	}
 
 	c.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
@@ -342,9 +340,8 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
-	//TODO(ArthurSens): Re-enable configmap and secret informers
-	// go c.cmapInfs.Start(ctx.Done())
-	// go c.secrInfs.Start(ctx.Done())
+	go c.cmapInfs.Start(ctx.Done())
+	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
 	go c.nsMonInf.Run(ctx.Done())
 	if c.nsPromInf != c.nsMonInf {
@@ -413,9 +410,8 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ServiceMonitor", c.smonInfs},
 		{"PodMonitor", c.pmonInfs},
 		{"Probe", c.probeInfs},
-		//TODO(ArthurSens): Re-enable configmap and secret informers
-		// {"ConfigMap", c.cmapInfs},
-		// {"Secret", c.secrInfs},
+		{"ConfigMap", c.cmapInfs},
+		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
@@ -466,18 +462,18 @@ func (c *Operator) addHandlers() {
 		// UpdateFunc: c.handleBmonUpdate,
 		// DeleteFunc: c.handleBmonDelete,
 	})
-	// c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 	// 	//TODO(ArthurSens): Add support for ConfigMap handlers
 	// 	// AddFunc:    c.handleConfigMapAdd,
 	// 	// DeleteFunc: c.handleConfigMapDelete,
 	// 	// UpdateFunc: c.handleConfigMapUpdate,
-	// })
-	// c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	})
+	c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 	// 	//TODO(ArthurSens): Add support for Secret handlers
 	// 	// AddFunc:    c.handleSecretAdd,
 	// 	// DeleteFunc: c.handleSecretDelete,
 	// 	// UpdateFunc: c.handleSecretUpdate,
-	// })
+	})
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
