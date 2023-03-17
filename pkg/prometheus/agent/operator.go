@@ -38,6 +38,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -319,6 +320,15 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
+	allowed, err := c.checkAgentAuthorization(ctx)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects.")
+		return nil
+	}
+
 	errChan := make(chan error)
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
@@ -1540,4 +1550,43 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			"err", err,
 		)
 	}
+}
+
+// checkAgentAuthorization checks if the operator has access to PrometheusAgent CRD
+// It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
+func (c *Operator) checkAgentAuthorization(ctx context.Context) (bool, error) {
+	verbs := map[string][]string{
+		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+	}
+	var ssar *authv1.SelfSubjectAccessReview
+	var ssarResponse *authv1.SelfSubjectAccessReview
+	var err error
+
+	for ns := range c.config.Namespaces.PrometheusAllowList {
+		for resource, verbs := range verbs {
+			for _, verb := range verbs {
+				ssar = &authv1.SelfSubjectAccessReview{
+					Spec: authv1.SelfSubjectAccessReviewSpec{
+						ResourceAttributes: &authv1.ResourceAttributes{
+							Verb:     verb,
+							Group:    monitoringv1alpha1.SchemeGroupVersion.Group,
+							Resource: resource,
+							// If ns is empty string, it will check cluster-wide
+							Namespace: ns,
+						},
+					},
+				}
+				ssarResponse, err = c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
+				if err != nil {
+					return false, err
+				}
+				if !ssarResponse.Status.Allowed {
+					return false, nil
+				}
+			}
+		}
+	}
+
+	return true, nil
 }
