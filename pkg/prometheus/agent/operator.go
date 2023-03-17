@@ -700,31 +700,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	// If no service or pod monitor selectors are configured, the user wants to
-	// manage configuration themselves. Do create an empty Secret if it doesn't
-	// exist.
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-		p.Spec.ProbeSelector == nil {
-		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
-
-		s, err := prompkg.MakeEmptyConfigurationSecret(p, c.config)
-		if err != nil {
-			return errors.Wrap(err, "generating empty config secret failed")
-		}
-		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-		_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return errors.Wrap(err, "creating empty config file failed")
-			}
-		}
-		if !apierrors.IsNotFound(err) && err != nil {
-			return err
-		}
-
-		return nil
-	}
-
 	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.nsMonInf, c.metrics)
 	smons, err := resourceSelector.SelectServiceMonitors(ctx)
 	if err != nil {
