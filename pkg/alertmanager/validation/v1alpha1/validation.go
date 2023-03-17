@@ -96,6 +96,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
 		}
 
+		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'webexConfig' - receiver %s", receiver.Name)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -297,6 +301,25 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 		}
 	}
 
+	return nil
+}
+
+func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
+	for _, config := range configs {
+		if config.APIURL != "" {
+			if _, err := validation.ValidateURL(config.APIURL); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
+			}
+		}
+
+		if config.RoomID == 0 {
+			return fmt.Errorf("mandatory field %q is empty", "roomID")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

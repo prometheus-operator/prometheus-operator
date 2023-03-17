@@ -596,6 +596,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var webexConfigs []*webexConfig
+	if l := len(in.WebexConfigs); l > 0 {
+		webexConfigs = make([]*webexConfig, l)
+		for i := range in.WebexConfigs {
+			receiver, err := cb.convertWebexConfig(ctx, in.WebexConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "WebexConfig[%d]", i)
+			}
+			webexConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -608,6 +620,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		PushoverConfigs:  pushoverConfigs,
 		SNSConfigs:       snsConfigs,
 		TelegramConfigs:  telegramConfigs,
+		WebexConfigs:     webexConfigs,
 	}, nil
 }
 
@@ -892,6 +905,34 @@ func (cb *configBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 
 	return out, nil
 }
+
+func (cb *configBuilder) convertWebexConfig(ctx context.Context, in monitoringv1alpha1.WebexConfig, crKey types.NamespacedName) (*webexConfig, error) {
+	out := &webexConfig{
+		VSendResolved: in.SendResolved,
+		APIURL:        in.APIURL,
+		RoomID:        in.RoomID,
+		Message:       in.Message,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
+	out := &emailConfig{
+		VSendResolved: in.SendResolved,
+		To:            in.To,
+		From:          in.From,
+		Hello:         in.Hello,
+		AuthUsername:  in.AuthUsername,
+		AuthIdentity:  in.AuthIdentity,
 
 func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{

@@ -1011,7 +1011,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					ChatID: 12345,
 				}},
-
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
@@ -1033,6 +1032,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						TopicARN: "test-topicARN",
 					},
 				},
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					APIURL: "https://webex.api.url",
+					RoomID: "testingRoomID",
+				}},
 			}},
 		},
 	}
@@ -1378,6 +1381,9 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  webex_configs:
+  - api_url: https://webex.api.url
+    room_id: testingRoomID
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
