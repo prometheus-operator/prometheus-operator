@@ -435,7 +435,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	}
 
 	logger := newLogger()
-	
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
