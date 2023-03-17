@@ -118,7 +118,7 @@ func makeStatefulSet(
 	storageSpec := cpf.Storage
 	if storageSpec == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -126,7 +126,7 @@ func makeStatefulSet(
 	} else if storageSpec.EmptyDir != nil {
 		emptyDir := storageSpec.EmptyDir
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: emptyDir,
 			},
@@ -134,7 +134,7 @@ func makeStatefulSet(
 	} else if storageSpec.Ephemeral != nil {
 		ephemeral := storageSpec.Ephemeral
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				Ephemeral: ephemeral,
 			},
@@ -142,7 +142,7 @@ func makeStatefulSet(
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = prompkg.VolumeName(objMeta.GetName())
+			pvcTemplate.Name = prompkg.VolumeName(p)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
 			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
@@ -224,7 +224,7 @@ func makeStatefulSetSpec(
 			fields = cpf.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(promName), fields)
+		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(p), fields)
 		if err != nil {
 			return nil, err
 		}

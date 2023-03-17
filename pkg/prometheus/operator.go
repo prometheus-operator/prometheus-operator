@@ -46,16 +46,16 @@ func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
 	return true, matches[0][1] + "/" + matches[0][2]
 }
 
-func KeyToStatefulSetKey(key string, shard int) string {
+func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
-	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
+	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
 }
 
-func statefulSetNameFromPrometheusName(name string, shard int) string {
+func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name string, shard int) string {
 	if shard == 0 {
-		return fmt.Sprintf("prometheus-%s", name)
+		return fmt.Sprintf("%s-%s", prefix(p), name)
 	}
-	return fmt.Sprintf("prometheus-%s-shard-%d", name, shard)
+	return fmt.Sprintf("%s-%s-shard-%d",prefix(p), name, shard)
 }
 
 func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]string) *v1.Secret {
@@ -65,7 +65,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]str
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   TLSAssetsSecretName(objMeta.GetName()),
+			Name:   TLSAssetsSecretName(p),
 			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{

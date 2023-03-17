@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -76,14 +77,14 @@ func ExpectedStatefulSetShardNames(
 	}
 
 	for i := int32(0); i < shards; i++ {
-		res = append(res, prometheusNameByShard(p.GetObjectMeta().GetName(), i))
+		res = append(res, prometheusNameByShard(p, i))
 	}
 
 	return res
 }
 
-func prometheusNameByShard(name string, shard int32) string {
-	base := prefixedName(name)
+func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
+	base := prefixedName(p)
 	if shard == 0 {
 		return base
 	}
@@ -107,7 +108,7 @@ func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ConfigSecretName(objMeta.GetName()),
+			Name:   ConfigSecretName(p),
 			Labels: config.Labels.Merge(ManagedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -176,24 +177,35 @@ func MakeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 	return svc
 }
 
-func ConfigSecretName(name string) string {
-	return prefixedName(name)
+func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
+	return prefixedName(p)
 }
 
-func TLSAssetsSecretName(name string) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-tls-assets", prefixedName(p))
 }
 
-func WebConfigSecretName(name string) string {
-	return fmt.Sprintf("%s-web-config", prefixedName(name))
+func WebConfigSecretName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(p))
 }
 
-func VolumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
+func VolumeName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-db", prefixedName(p))
 }
 
-func prefixedName(name string) string {
-	return fmt.Sprintf("prometheus-%s", name)
+func prefixedName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-%s", prefix(p), p.GetObjectMeta().GetName())
+}
+
+func prefix(p monitoringv1.PrometheusInterface) string {
+	switch p.(type) {
+	case *monitoringv1.Prometheus:
+		return "prometheus"
+	case *monitoringv1alpha1.PrometheusAgent:
+		return "prom-agent"
+	default:
+		return ""
+	}
 }
 
 // TODO: Storage methods should be moved to server package.
@@ -280,7 +292,6 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 // BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent
 func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []string) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
-	promName := p.GetObjectMeta().GetName()
 
 	assetsVolume := v1.Volume{
 		Name: "tls-assets",
@@ -304,7 +315,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 			Name: "config",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: ConfigSecretName(promName),
+					SecretName: ConfigSecretName(p),
 				},
 			},
 		},
@@ -320,7 +331,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 		},
 	}
 
-	volName := VolumeName(promName)
+	volName := VolumeName(p)
 	if cpf.Storage != nil {
 		if cpf.Storage.VolumeClaimTemplate.Name != "" {
 			volName = cpf.Storage.VolumeClaimTemplate.Name

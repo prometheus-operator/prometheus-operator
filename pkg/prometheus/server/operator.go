@@ -1139,7 +1139,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		level.Debug(logger).Log("msg", "reconciling statefulset")
 
-		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(key, shard))
+		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
 		exists := !apierrors.IsNotFound(err)
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrap(err, "retrieving statefulset failed")
@@ -1307,7 +1307,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	for shard := range prompkg.ExpectedStatefulSetShardNames(p) {
-		ssetName := prompkg.KeyToStatefulSetKey(key, shard)
+		ssetName := prompkg.KeyToStatefulSetKey(p, key, shard)
 		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
 
 		obj, err := c.ssetInfs.Get(ssetName)
@@ -1702,7 +1702,7 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitor
 	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 	template := prompkg.NewTLSAssetSecret(p, labels)
 
-	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p.Name))
+	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p))
 
 	for k, v := range store.TLSAssets {
 		sSecret.AppendData(k.String(), []byte(v))
@@ -1729,7 +1729,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	webConfig, err := webconfig.New(
 		prompkg.WebConfigDir,
-		prompkg.WebConfigSecretName(p.Name),
+		prompkg.WebConfigSecretName(p),
 		fields,
 	)
 	if err != nil {

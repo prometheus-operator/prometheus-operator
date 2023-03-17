@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
 func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
@@ -60,24 +61,27 @@ func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
 
 func TestKeyToStatefulSetKey(t *testing.T) {
 	cases := []struct {
+		p        monitoringv1.PrometheusInterface
 		name     string
 		shard    int
 		expected string
 	}{
 		{
+			p:        &monitoringv1.Prometheus{},
 			name:     "namespace/test",
 			shard:    0,
 			expected: "namespace/prometheus-test",
 		},
 		{
+			p:        &monitoringv1alpha1.PrometheusAgent{},
 			name:     "namespace/test",
 			shard:    1,
-			expected: "namespace/prometheus-test-shard-1",
+			expected: "namespace/prom-agent-test-shard-1",
 		},
 	}
 
 	for _, c := range cases {
-		got := KeyToStatefulSetKey(c.name, c.shard)
+		got := KeyToStatefulSetKey(c.p, c.name, c.shard)
 		if c.expected != got {
 			t.Fatalf("Expected key %q got %q", c.expected, got)
 		}

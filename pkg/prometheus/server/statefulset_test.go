@@ -302,6 +302,19 @@ func TestStatefulSetEphemeral(t *testing.T) {
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {
+	p := monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "volume-init-test",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Secrets: []string{
+					"test-secret1",
+				},
+			},
+		},
+	}
+
 	expected := &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
 			Template: v1.PodTemplateSpec{
@@ -355,7 +368,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							Name: "config",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName: prompkg.ConfigSecretName("volume-init-test"),
+									SecretName: prompkg.ConfigSecretName(&p),
 								},
 							},
 						},
@@ -367,7 +380,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 										{
 											Secret: &v1.SecretProjection{
 												LocalObjectReference: v1.LocalObjectReference{
-													Name: prompkg.TLSAssetsSecretName("volume-init-test") + "-0",
+													Name: prompkg.TLSAssetsSecretName(&p) + "-0",
 												},
 											},
 										},
@@ -422,18 +435,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	}
 
 	logger := newLogger()
-	p := monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "volume-init-test",
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Secrets: []string{
-					"test-secret1",
-				},
-			},
-		},
-	}
+	
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
@@ -457,7 +459,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		[]string{"rules-configmap-one"},
 		"",
 		0,
-		[]string{prompkg.TLSAssetsSecretName("volume-init-test") + "-0"})
+		[]string{prompkg.TLSAssetsSecretName(&p) + "-0"})
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
