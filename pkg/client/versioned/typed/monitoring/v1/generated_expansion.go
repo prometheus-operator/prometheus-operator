@@ -24,8 +24,6 @@ type ProbeExpansion interface{}
 
 type PrometheusExpansion interface{}
 
-type PrometheusAgentExpansion interface{}
-
 type PrometheusRuleExpansion interface{}
 
 type ServiceMonitorExpansion interface{}

@@ -30,8 +30,6 @@ type Interface interface {
 	Probes() ProbeInformer
 	// Prometheuses returns a PrometheusInformer.
 	Prometheuses() PrometheusInformer
-	// PrometheusAgents returns a PrometheusAgentInformer.
-	PrometheusAgents() PrometheusAgentInformer
 	// PrometheusRules returns a PrometheusRuleInformer.
 	PrometheusRules() PrometheusRuleInformer
 	// ServiceMonitors returns a ServiceMonitorInformer.
@@ -69,11 +67,6 @@ func (v *version) Probes() ProbeInformer {
 // Prometheuses returns a PrometheusInformer.
 func (v *version) Prometheuses() PrometheusInformer {
 	return &prometheusInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// PrometheusAgents returns a PrometheusAgentInformer.
-func (v *version) PrometheusAgents() PrometheusAgentInformer {
-	return &prometheusAgentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PrometheusRules returns a PrometheusRuleInformer.

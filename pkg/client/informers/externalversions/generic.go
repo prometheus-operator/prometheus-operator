@@ -61,8 +61,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().Probes().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("prometheuses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().Prometheuses().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("prometheusagents"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().PrometheusAgents().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("prometheusrules"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().PrometheusRules().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("servicemonitors"):
@@ -73,6 +71,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("alertmanagerconfigs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1alpha1().AlertmanagerConfigs().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("prometheusagents"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1alpha1().PrometheusAgents().Informer()}, nil
 
 		// Group=monitoring.coreos.com, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("alertmanagerconfigs"):

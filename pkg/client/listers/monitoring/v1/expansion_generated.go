@@ -48,14 +48,6 @@ type PrometheusListerExpansion interface{}
 // PrometheusNamespaceLister.
 type PrometheusNamespaceListerExpansion interface{}
 
-// PrometheusAgentListerExpansion allows custom methods to be added to
-// PrometheusAgentLister.
-type PrometheusAgentListerExpansion interface{}
-
-// PrometheusAgentNamespaceListerExpansion allows custom methods to be added to
-// PrometheusAgentNamespaceLister.
-type PrometheusAgentNamespaceListerExpansion interface{}
-
 // PrometheusRuleListerExpansion allows custom methods to be added to
 // PrometheusRuleLister.
 type PrometheusRuleListerExpansion interface{}

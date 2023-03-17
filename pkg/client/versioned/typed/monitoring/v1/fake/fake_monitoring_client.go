@@ -42,10 +42,6 @@ func (c *FakeMonitoringV1) Prometheuses(namespace string) v1.PrometheusInterface
 	return &FakePrometheuses{c, namespace}
 }
 
-func (c *FakeMonitoringV1) PrometheusAgents(namespace string) v1.PrometheusAgentInterface {
-	return &FakePrometheusAgents{c, namespace}
-}
-
 func (c *FakeMonitoringV1) PrometheusRules(namespace string) v1.PrometheusRuleInterface {
 	return &FakePrometheusRules{c, namespace}
 }

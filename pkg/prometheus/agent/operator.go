@@ -23,6 +23,7 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
@@ -162,7 +163,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.logger,
 		c,
 		c.metrics,
-		monitoringv1.PrometheusAgentsKind,
+		monitoringv1alpha1.PrometheusAgentsKind,
 		r,
 	)
 
@@ -176,7 +177,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 				options.LabelSelector = c.config.PromSelector
 			},
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusAgentName),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
@@ -366,7 +367,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Prometheus agent objects.
 	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.rr.EnqueueForStatus(obj.(*monitoringv1.PrometheusAgent))
+		c.rr.EnqueueForStatus(obj.(*monitoringv1alpha1.PrometheusAgent))
 	})
 
 	c.addHandlers()
@@ -389,7 +390,7 @@ func (c *Operator) Run(ctx context.Context) error {
 				return
 			case <-ticker.C:
 				err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
-					p := o.(*monitoringv1.PrometheusAgent)
+					p := o.(*monitoringv1alpha1.PrometheusAgent)
 					for _, cond := range p.Status.Conditions {
 						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
 							c.rr.EnqueueForStatus(p)
@@ -512,7 +513,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	return p.(*monitoringv1.PrometheusAgent)
+	return p.(*monitoringv1alpha1.PrometheusAgent)
 }
 
 // Sync implements the operator.Syncer interface.
@@ -535,7 +536,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	p := pobj.(*monitoringv1.PrometheusAgent)
+	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return errors.Wrap(err, "failed to set Prometheus type information")
@@ -698,7 +699,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -810,7 +811,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-func createSSetInputHash(p monitoringv1.PrometheusAgent, c operator.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c operator.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
 	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
@@ -855,7 +856,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return err
 	}
 
-	p := pobj.(*monitoringv1.PrometheusAgent)
+	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
 
 	pStatus := monitoringv1.PrometheusStatus{
@@ -981,14 +982,14 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
 
 	p.Status = pStatus
-	if _, err = c.mclient.MonitoringV1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
+	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to update status subresource")
 	}
 
 	return nil
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
+func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
 	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 	template := prompkg.NewTLSAssetSecret(p, labels)
 
@@ -1009,7 +1010,7 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitor
 	return sSecret, nil
 }
 
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.PrometheusAgent) error {
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
 	boolTrue := true
 
 	var fields monitoringv1.WebConfigFileFields
@@ -1270,7 +1271,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus Agent instances in the namespace.
-		p := obj.(*monitoringv1.PrometheusAgent)
+		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 		if p.Namespace == nsName {
 			c.rr.EnqueueForReconciliation(p)
 			return
@@ -1349,7 +1350,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
 	// and Probes in the namespace.
 	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		p := obj.(*monitoringv1.PrometheusAgent)
+		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 
 		for name, selector := range map[string]*metav1.LabelSelector{
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,

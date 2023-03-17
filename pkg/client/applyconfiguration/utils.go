@@ -109,10 +109,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ProbeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Prometheus"):
 		return &monitoringv1.PrometheusApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("PrometheusAgent"):
-		return &monitoringv1.PrometheusAgentApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):
-		return &monitoringv1.PrometheusAgentSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRule"):
 		return &monitoringv1.PrometheusRuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRuleExcludeConfig"):
@@ -209,6 +205,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PagerDutyImageConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyLinkConfig"):
 		return &monitoringv1alpha1.PagerDutyLinkConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgent"):
+		return &monitoringv1alpha1.PrometheusAgentApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):
+		return &monitoringv1alpha1.PrometheusAgentSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PushoverConfig"):
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):

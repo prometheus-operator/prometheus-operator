@@ -13052,7 +13052,7 @@ spec:
       name: Paused
       priority: 1
       type: boolean
-    name: v1
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: PrometheusAgent defines a Prometheus agent deployment.

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -25,11 +26,11 @@ const (
 	PrometheusAgentKindKey = "prometheusagent"
 )
 
-func (l *PrometheusAgent) GetCommonPrometheusFields() CommonPrometheusFields {
+func (l *PrometheusAgent) GetCommonPrometheusFields() monitoringv1.CommonPrometheusFields {
 	return l.Spec.CommonPrometheusFields
 }
 
-func (l *PrometheusAgent) SetCommonPrometheusFields(f CommonPrometheusFields) {
+func (l *PrometheusAgent) SetCommonPrometheusFields(f monitoringv1.CommonPrometheusFields) {
 	l.Spec.CommonPrometheusFields = f
 }
 
@@ -59,7 +60,7 @@ type PrometheusAgent struct {
 	// Most recent observed status of the Prometheus cluster. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-	Status PrometheusStatus `json:"status,omitempty"`
+	Status monitoringv1.PrometheusStatus `json:"status,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -87,5 +88,5 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusAgentSpec struct {
-	CommonPrometheusFields `json:",inline"`
+	monitoringv1.CommonPrometheusFields `json:",inline"`
 }
