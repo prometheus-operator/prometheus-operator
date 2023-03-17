@@ -180,9 +180,9 @@ func makeStatefulSetSpec(
 	pImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(cpf.Image, ""),
 		operator.StringValOrDefault("", c.PrometheusDefaultBaseImage),
-		operator.StringValOrDefault("", operator.DefaultPrometheusVersion),
-		operator.StringValOrDefault("", ""),
-		operator.StringValOrDefault("", ""),
+		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
+		"",
+		"",
 	)
 	if err != nil {
 		return nil, err
