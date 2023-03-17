@@ -176,7 +176,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		namespaces, err = o.listMatchingNamespaces(ruleNamespaceSelector)
+		namespaces, err = operator.ListMatchingNamespaces(ruleNamespaceSelector, o.nsRuleInf)
 		if err != nil {
 			return nil, err
 		}
