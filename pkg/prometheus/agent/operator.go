@@ -83,7 +83,6 @@ type Operator struct {
 	host                   string
 	kubeletObjectName      string
 	kubeletObjectNamespace string
-	kubeletSyncEnabled     bool
 	config                 operator.Config
 	endpointSliceSupported bool
 }
@@ -116,7 +115,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	kubeletObjectName := ""
 	kubeletObjectNamespace := ""
-	kubeletSyncEnabled := false
 
 	if conf.KubeletObject != "" {
 		parts := strings.Split(conf.KubeletObject, "/")
@@ -125,7 +123,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		}
 		kubeletObjectNamespace = parts[0]
 		kubeletObjectName = parts[1]
-		kubeletSyncEnabled = true
 	}
 
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
@@ -138,7 +135,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
-		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
 		metrics:                operator.NewMetrics(r),
 		reconciliations:        &operator.ReconciliationTracker{},
@@ -375,10 +371,6 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	c.addHandlers()
 
-	if c.kubeletSyncEnabled {
-		go c.reconcileNodeEndpoints(ctx)
-	}
-
 	// Run a goroutine that refreshes regularly the Prometheus objects that
 	// aren't fully available to keep the status up-to-date with the pod
 	// conditions. In practice when a new version of the statefulset is rolled
@@ -495,168 +487,6 @@ func (c *Operator) addHandlers() {
 	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
-}
-
-func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
-	c.syncNodeEndpointsWithLogError(ctx)
-	ticker := time.NewTicker(3 * time.Minute)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			c.syncNodeEndpointsWithLogError(ctx)
-		}
-	}
-}
-
-func (c *Operator) syncNodeEndpointsWithLogError(ctx context.Context) {
-	level.Debug(c.logger).Log("msg", "Syncing nodes into Endpoints object")
-
-	c.nodeEndpointSyncs.Inc()
-	err := c.syncNodeEndpoints(ctx)
-	if err != nil {
-		c.nodeEndpointSyncErrors.Inc()
-		level.Error(c.logger).Log("msg", "Syncing nodes into Endpoints object failed", "err", err)
-	}
-}
-
-func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
-	logger := log.With(c.logger, "operation", "syncNodeEndpoints")
-	eps := &v1.Endpoints{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: c.kubeletObjectName,
-			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			}),
-		},
-		Subsets: []v1.EndpointSubset{
-			{
-				Ports: []v1.EndpointPort{
-					{
-						Name: "https-metrics",
-						Port: 10250,
-					},
-					{
-						Name: "http-metrics",
-						Port: 10255,
-					},
-					{
-						Name: "cadvisor",
-						Port: 4194,
-					},
-				},
-			},
-		},
-	}
-
-	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return errors.Wrap(err, "listing nodes failed")
-	}
-
-	level.Debug(logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
-
-	addresses, errs := getNodeAddresses(nodes)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			level.Warn(logger).Log("err", err)
-		}
-		c.nodeAddressLookupErrors.Add(float64(len(errs)))
-	}
-	level.Debug(logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
-
-	eps.Subsets[0].Addresses = addresses
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: c.kubeletObjectName,
-			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			}),
-		},
-		Spec: v1.ServiceSpec{
-			Type:      v1.ServiceTypeClusterIP,
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name: "https-metrics",
-					Port: 10250,
-				},
-				{
-					Name: "http-metrics",
-					Port: 10255,
-				},
-				{
-					Name: "cadvisor",
-					Port: 4194,
-				},
-			},
-		},
-	}
-
-	level.Debug(logger).Log("msg", "Updating Kubernetes service", "service", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
-	err = k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
-	if err != nil {
-		return errors.Wrap(err, "synchronizing kubelet service object failed")
-	}
-
-	level.Debug(logger).Log("msg", "Updating Kubernetes endpoint", "endpoint", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
-	err = k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
-	if err != nil {
-		return errors.Wrap(err, "synchronizing kubelet endpoints object failed")
-	}
-
-	return nil
-}
-
-func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
-	addresses := make([]v1.EndpointAddress, 0)
-	errs := make([]error, 0)
-
-	for _, n := range nodes.Items {
-		address, _, err := nodeAddress(n)
-		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "failed to determine hostname for node (%s)", n.Name))
-			continue
-		}
-		addresses = append(addresses, v1.EndpointAddress{
-			IP: address,
-			TargetRef: &v1.ObjectReference{
-				Kind:       "Node",
-				Name:       n.Name,
-				UID:        n.UID,
-				APIVersion: n.APIVersion,
-			},
-		})
-	}
-
-	return addresses, errs
-}
-
-// nodeAddresses returns the provided node's address, based on the priority:
-// 1. NodeInternalIP
-// 2. NodeExternalIP
-//
-// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
-func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
-	m := map[v1.NodeAddressType][]string{}
-	for _, a := range node.Status.Addresses {
-		m[a.Type] = append(m[a.Type], a.Address)
-	}
-
-	if addresses, ok := m[v1.NodeInternalIP]; ok {
-		return addresses[0], m, nil
-	}
-	if addresses, ok := m[v1.NodeExternalIP]; ok {
-		return addresses[0], m, nil
-	}
-	return "", m, fmt.Errorf("host address unknown")
 }
 
 // Resolve implements the operator.Syncer interface.
