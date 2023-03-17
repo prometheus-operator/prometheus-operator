@@ -55,7 +55,7 @@ func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name 
 	if shard == 0 {
 		return fmt.Sprintf("%s-%s", prefix(p), name)
 	}
-	return fmt.Sprintf("%s-%s-shard-%d",prefix(p), name, shard)
+	return fmt.Sprintf("%s-%s-shard-%d", prefix(p), name, shard)
 }
 
 func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]string) *v1.Secret {
