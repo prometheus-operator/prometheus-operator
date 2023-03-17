@@ -166,8 +166,10 @@ func newSrv(logger log.Logger, tlsConf *tls.Config) *srv {
 	return &srv{
 		logger: logger,
 		s: &http.Server{
-			Handler:   mux,
-			TLSConfig: tlsConf,
+			Handler:           mux,
+			TLSConfig:         tlsConf,
+			ReadHeaderTimeout: 30 * time.Second,
+			ReadTimeout:       30 * time.Second,
 			// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
 			// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
 			// and no datetime related flag to keep 'ts' field from base logger (with controlled format)

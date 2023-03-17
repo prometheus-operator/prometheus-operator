@@ -156,7 +156,8 @@ type ThanosRulerSpec struct {
 	//+kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// Interval between consecutive evaluations.
 	// +kubebuilder:default:="15s"

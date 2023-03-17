@@ -4065,7 +4065,8 @@
                     "type": "array"
                   },
                   "portName": {
-                    "description": "Port name used for the pods and governing service. This defaults to web",
+                    "default": "web",
+                    "description": "Port name used for the pods and governing service. Defaults to `web`.",
                     "type": "string"
                   },
                   "priorityClassName": {
@@ -5132,7 +5133,11 @@
                                   "lowercase",
                                   "Lowercase",
                                   "uppercase",
-                                  "Uppercase"
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
                                 ],
                                 "type": "string"
                               },
@@ -6147,7 +6152,7 @@
                     "type": "string"
                   },
                   "thanos": {
-                    "description": "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment. \n This section is experimental, it may change significantly without deprecation notice in any release. \n This is experimental and may change significantly without backward compatibility in any release.",
+                    "description": "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment. \n This section is experimental, it may change significantly without deprecation notice in any release.",
                     "properties": {
                       "additionalArgs": {
                         "description": "AdditionalArgs allows setting additional arguments for the Thanos container. The arguments are passed as-is to the Thanos container which may cause issues if they are invalid or not supported the given Thanos version. In case of an argument conflict (e.g. an argument which is already set by the operator itself) or when providing an invalid argument the reconciliation will fail and an error will be logged.",
@@ -6173,6 +6178,22 @@
                       },
                       "baseImage": {
                         "description": "Thanos base image if other than default. Deprecated: use 'image' instead",
+                        "type": "string"
+                      },
+                      "blockSize": {
+                        "default": "2h",
+                        "description": "BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults. WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                        "type": "string"
+                      },
+                      "getConfigInterval": {
+                        "description": "How often to retrieve the Prometheus configuration.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                        "type": "string"
+                      },
+                      "getConfigTimeout": {
+                        "description": "Maximum time to wait when retrieving the Prometheus configuration.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "grpcListenLocal": {

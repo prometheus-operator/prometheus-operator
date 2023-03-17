@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
@@ -206,30 +205,6 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *
 // cluster as a whole to be ready.
 func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) error {
 	replicas := int(*a.Spec.Replicas)
-
-	// The Alertmanager status subresource requires a version > 0.62.z.
-	// The upgrade e2e test verifies the x.(y-1) -> x.y upgrade path (where x.y = VERSION of the main branch).
-	// TODO(simonpasquier): remove the test once v0.63.0 is released.
-	if f.operatorVersion.GTE(semver.MustParse("0.62.0")) {
-		if err := f.WaitForResourceAvailable(
-			ctx,
-			func() (resourceStatus, error) {
-				current, err := f.MonClientV1.Alertmanagers(a.Namespace).Get(ctx, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return resourceStatus{}, err
-				}
-				return resourceStatus{
-					expectedReplicas: int32(replicas),
-					generation:       current.Generation,
-					replicas:         current.Status.UpdatedReplicas,
-					conditions:       current.Status.Conditions,
-				}, nil
-			},
-			5*time.Minute,
-		); err != nil {
-			return errors.Wrapf(err, "alertmanager %v/%v failed to become available", a.Namespace, a.Name)
-		}
-	}
 
 	// Check that all pods report the expected number of peers.
 	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil

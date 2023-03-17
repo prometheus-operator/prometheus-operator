@@ -559,7 +559,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	var foundVM, foundV bool
 	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
-		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerNotificationTemplatesDir {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
 			foundVM = true
 			break
 		}
@@ -1010,4 +1010,40 @@ func TestPodTemplateConfig(t *testing.T) {
 			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 		}
 	}
+}
+
+func TestConfigReloader(t *testing.T) {
+	baseSet, err := makeStatefulSet(&monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "init-config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
+			}
+		}
+	}
+
 }

@@ -6,8 +6,9 @@ set -o pipefail
 # error on unset variables
 set -u
 
-if [[ -z "$1" ]]; then
-	echo "missing cluster name"
+if [[ -z "${1:-}" ]]; then
+	echo "ERROR: missing cluster name"
+	echo "usage: ❯ $0 <clustername>"
 	exit 1
 fi
 

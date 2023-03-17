@@ -49,7 +49,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -1589,6 +1589,33 @@ func testInvalidRulesAreRejected(t *testing.T) {
 	_, err := framework.MakeAndCreateInvalidRule(context.Background(), ns, name, admissionAlert)
 	if err == nil {
 		t.Fatal("Expected invalid prometheusrule to be rejected")
+	}
+}
+
+func testPromReconcileStatusWhenInvalidRuleCreated(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	ruleFilesNamespaceSelector := map[string]string{"excludeFromWebhook": "true", "role": "rulefile"}
+
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleFilesNamespaceSelector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ruleName := "invalidrule"
+	alertName := "invalidalert"
+
+	_, err = framework.MakeAndCreateInvalidRule(context.Background(), ns, ruleName, alertName)
+	if err != nil {
+		t.Fatalf("expected invalid rule to be created in namespace %v", err)
+	}
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
 	}
 }
 

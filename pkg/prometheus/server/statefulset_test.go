@@ -27,6 +27,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -52,12 +53,31 @@ func newLogger() log.Logger {
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
 	}
 
-	return makeStatefulSet(logger, "test", p, defaultTestConfig, cg, nil, "", 0, nil)
+	return makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 }
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -310,6 +330,12 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "",
 								},
 								{
+									Name:      "secret-test-secret1",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/secrets/test-secret1",
+									SubPath:   "",
+								},
+								{
 									Name:      "rules-configmap-one",
 									ReadOnly:  false,
 									MountPath: "/etc/prometheus/rules/rules-configmap-one",
@@ -321,12 +347,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									MountPath: "/etc/prometheus/web_config/web-config.yaml",
 									SubPath:   "web-config.yaml",
 								},
-								{
-									Name:      "secret-test-secret1",
-									ReadOnly:  true,
-									MountPath: "/etc/prometheus/secrets/test-secret1",
-									SubPath:   "",
-								},
 							},
 						},
 					},
@@ -335,7 +355,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							Name: "config",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName: configSecretName("volume-init-test"),
+									SecretName: prompkg.ConfigSecretName("volume-init-test"),
 								},
 							},
 						},
@@ -347,7 +367,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 										{
 											Secret: &v1.SecretProjection{
 												LocalObjectReference: v1.LocalObjectReference{
-													Name: tlsAssetsSecretName("volume-init-test") + "-0",
+													Name: prompkg.TLSAssetsSecretName("volume-init-test") + "-0",
 												},
 											},
 										},
@@ -360,6 +380,14 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{
 									Medium: v1.StorageMediumMemory,
+								},
+							},
+						},
+						{
+							Name: "secret-test-secret1",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "test-secret1",
 								},
 							},
 						},
@@ -378,14 +406,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
 									SecretName: "prometheus-volume-init-test-web-config",
-								},
-							},
-						},
-						{
-							Name: "secret-test-secret1",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
-									SecretName: "test-secret1",
 								},
 							},
 						},
@@ -415,10 +435,29 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "volume-init-test", p, defaultTestConfig, cg, []string{"rules-configmap-one"}, "", 0, []string{tlsAssetsSecretName("volume-init-test") + "-0"})
+	sset, err := makeStatefulSet(
+		logger,
+		"volume-init-test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		[]string{"rules-configmap-one"},
+		"",
+		0,
+		[]string{prompkg.TLSAssetsSecretName("volume-init-test") + "-0"})
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
@@ -839,10 +878,29 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, operatorConfig, cg, nil, "", 0, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		operatorConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
@@ -875,10 +933,29 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, thanosBaseImageConfig, cg, nil, "", 0, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		thanosBaseImageConfig,
+		cg,
+		nil,
+		"",
+		0,
+		nil)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[2].Image
@@ -1032,6 +1109,7 @@ func TestThanosObjectStorage(t *testing.T) {
 				ObjectStorageConfig: &v1.SecretKeySelector{
 					Key: testKey,
 				},
+				BlockDuration: "2h",
 			},
 		},
 	})
@@ -1101,7 +1179,7 @@ func TestThanosObjectStorage(t *testing.T) {
 	{
 		var found bool
 		for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
-			if vol.MountPath == storageDir {
+			if vol.MountPath == prompkg.StorageDir {
 				found = true
 				break
 			}
@@ -1118,6 +1196,7 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfigFile: &testPath,
+				BlockDuration:           "2h",
 			},
 		},
 	})
@@ -1182,7 +1261,7 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-sidecar" {
 				for _, vol := range container.VolumeMounts {
-					if vol.MountPath == storageDir {
+					if vol.MountPath == prompkg.StorageDir {
 						found = true
 						break
 					}
@@ -1192,6 +1271,32 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		if !found {
 			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
 		}
+	}
+}
+
+func TestThanosBlockDuration(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				BlockDuration: "1h",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		if arg == "--storage.tsdb.max-block-duration=1h" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("Thanos BlockDuration arg change not found")
 	}
 }
 
@@ -1388,10 +1493,29 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		},
 	}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, testConfig, cg, nil, "", 1, nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		testConfig,
+		cg,
+		nil,
+		"",
+		1,
+		nil)
 	require.NoError(t, err)
 
 	if *sset.Spec.Replicas != int32(2) {
@@ -1425,10 +1549,29 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		}
 
-		cg, err := NewConfigGenerator(logger, &p, false)
+		cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 		require.NoError(t, err)
 
-		sset, err := makeStatefulSet(logger, "test", p, testConfig, cg, nil, "", 0, nil)
+		sset, err := makeStatefulSet(
+			logger,
+			"test",
+			&p,
+			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+			p.Spec.Retention,
+			p.Spec.RetentionSize,
+			p.Spec.Rules,
+			p.Spec.Query,
+			p.Spec.AllowOverlappingBlocks,
+			p.Spec.EnableAdminAPI,
+			p.Spec.QueryLogFile,
+			p.Spec.Thanos,
+			p.Spec.DisableCompaction,
+			testConfig,
+			cg,
+			nil,
+			"",
+			0,
+			nil)
 		require.NoError(t, err)
 		return sset
 	})
@@ -1755,7 +1898,7 @@ func TestMaxConnections(t *testing.T) {
 func TestExpectedStatefulSetShardNames(t *testing.T) {
 	replicas := int32(2)
 	shards := int32(3)
-	res := expectedStatefulSetShardNames(&monitoringv1.Prometheus{
+	res := prompkg.ExpectedStatefulSetShardNames(&monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
@@ -1811,10 +1954,29 @@ func TestConfigReloader(t *testing.T) {
 	logger := newLogger()
 	p := monitoringv1.Prometheus{}
 
-	cg, err := NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(logger, "test", p, defaultTestConfig, cg, nil, "", int32(expectedShardNum), nil)
+	sset, err := makeStatefulSet(
+		logger,
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		int32(expectedShardNum),
+		nil)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1856,7 +2018,58 @@ func TestConfigReloader(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestThanosGetConfigInterval(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				GetConfigInterval: "1m",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.get_config_interval=1m" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar get_config_interval is not set when it should.")
+	}
+}
+
+func TestThanosGetConfigTimeout(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				GetConfigTimeout: "30s",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.get_config_timeout=30s" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar get_config_timeout is not set when it should.")
+	}
 }
 
 func TestThanosReadyTimeout(t *testing.T) {
@@ -2119,11 +2332,11 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 	expectedPrometheusArgs := []string{
 		"--web.console.templates=/etc/prometheus/consoles",
 		"--web.console.libraries=/etc/prometheus/console_libraries",
-		"--storage.tsdb.retention.time=24h",
 		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
-		"--storage.tsdb.path=/prometheus",
 		"--web.enable-lifecycle",
 		"--web.route-prefix=/",
+		"--storage.tsdb.retention.time=24h",
+		"--storage.tsdb.path=/prometheus",
 		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
 		"--scrape.discovery-reload-interval=30s",
 		"--storage.tsdb.no-lockfile",

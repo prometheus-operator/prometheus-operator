@@ -218,7 +218,11 @@
                                   "lowercase",
                                   "Lowercase",
                                   "uppercase",
-                                  "Uppercase"
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
                                 ],
                                 "type": "string"
                               },
@@ -407,7 +411,11 @@
                                   "lowercase",
                                   "Lowercase",
                                   "uppercase",
-                                  "Uppercase"
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
                                 ],
                                 "type": "string"
                               },

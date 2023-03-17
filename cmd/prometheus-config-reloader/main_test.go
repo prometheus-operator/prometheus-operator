@@ -70,7 +70,9 @@ func TestCreateHTTPClient(t *testing.T) {
 			Timeout:   30 * time.Second,
 		}
 
-		client := createHTTPClient()
+		timeoutDuration := 30 * time.Second
+
+		client := createHTTPClient(&timeoutDuration)
 
 		if diff := deep.Equal(client, expectedClient); diff != nil {
 			t.Errorf("found differences %v", diff)

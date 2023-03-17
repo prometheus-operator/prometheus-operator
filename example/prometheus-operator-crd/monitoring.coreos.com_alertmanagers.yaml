@@ -1363,6 +1363,25 @@ spec:
                           they always include EndsAt.
                         pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                         type: string
+                      slackApiUrl:
+                        description: The default Slack API URL.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
                     type: object
                   name:
                     description: The name of the AlertmanagerConfig resource which
@@ -2782,10 +2801,12 @@ spec:
                   into the Alertmanager configuration from external sources. Any errors
                   during the execution of an initContainer will lead to a restart
                   of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-                  Using initContainers for any use case other then secret fetching
-                  is entirely outside the scope of what the maintainers will support
-                  and by doing so, you accept that this behaviour may break at any
-                  time without notice.'
+                  InitContainers described here modify an operator generated init
+                  containers if they share the same name and modifications are done
+                  via a strategic merge patch. The current init container name is:
+                  `init-config-reloader`. Overriding init containers is entirely outside
+                  the scope of what the maintainers will support and by doing so,
+                  you accept that this behaviour may break at any time without notice.'
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -4096,8 +4117,9 @@ spec:
                     type: string
                 type: object
               portName:
-                description: Port name used for the pods and governing service. This
-                  defaults to web
+                default: web
+                description: Port name used for the pods and governing service. Defaults
+                  to `web`.
                 type: string
               priorityClassName:
                 description: Priority class assigned to the Pods

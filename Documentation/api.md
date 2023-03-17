@@ -519,9 +519,12 @@ this behaviour may break at any time without notice.</p>
 <p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the Alertmanager configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -607,7 +610,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -1933,7 +1936,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -2446,8 +2449,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -3316,7 +3317,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4004,6 +4005,19 @@ HTTPConfig
 <p>HTTP client configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>slackApiUrl</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>The default Slack API URL.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec
@@ -4446,9 +4460,12 @@ this behaviour may break at any time without notice.</p>
 <p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the Alertmanager configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -4534,7 +4551,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5699,7 +5716,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -8975,7 +8992,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -9488,8 +9505,6 @@ ThanosSpec
 server in a Thanos environment.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
-<p>This is experimental and may change significantly without backward
-compatibility in any release.</p>
 </td>
 </tr>
 <tr>
@@ -11882,7 +11897,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-This defaults to web</p>
+Defaults to <code>web</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12448,6 +12463,20 @@ string
 </tr>
 <tr>
 <td>
+<code>blockSize</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
+WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>readyTimeout</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -12457,6 +12486,32 @@ Duration
 </td>
 <td>
 <p>ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>getConfigInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>How often to retrieve the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>getConfigTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Maximum time to wait when retrieving the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>

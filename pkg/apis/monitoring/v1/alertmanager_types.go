@@ -183,9 +183,12 @@ type AlertmanagerSpec struct {
 	// InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 	// fetch secrets for injection into the Alertmanager configuration from external sources. Any
 	// errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// Using initContainers for any use case other then secret fetching is entirely outside the scope
-	// of what the maintainers will support and by doing so, you accept that this behaviour may break
-	// at any time without notice.
+	// InitContainers described here modify an operator
+	// generated init containers if they share the same name and modifications are
+	// done via a strategic merge patch. The current init container name is:
+	// `init-config-reloader`. Overriding init containers is entirely outside the
+	// scope of what the maintainers will support and by doing so, you accept that
+	// this behaviour may break at any time without notice.
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
@@ -202,7 +205,8 @@ type AlertmanagerSpec struct {
 	// Timeout for cluster peering.
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
@@ -269,6 +273,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// The default Slack API URL.
+	SlackAPIURL *v1.SecretKeySelector `json:"slackApiUrl,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.

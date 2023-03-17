@@ -96,17 +96,130 @@ By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metada
 | container    | __meta_kubernetes_pod_container_name | `{name}` of the container in the scraped pod                                  |
 | endpoint     | -                                    | `{spec.Port}` or `{spec.TargetPort}` if specified                             |
 
-### Configuration
+### Relabeling and Metric Relabeling
 
-These labels can be modified or disabled using the `relabelings` and `metricRelabelings` settings of the `PodMonitor` and `ServiceMonitor` specifications. The configuration below will drop all of the labels before being loaded into Prometheus.
+The Prometheus Operator provides the same capabilities as Prometheus to relabel a target before scrape or a metric before sample ingestion, below you can find examples for Service or Pod monitors.
 
+#### Relabeling
+
+Relabeling is a powerful feature to dynamically rewrite the label set of a target before it gets scraped, and multiple relabeling steps can be configured per scrape configuration.
+
+> Relabel configs are applied to the label set of each target in order of their appearance in the configuration file.
+
+**Dropping label from a target**
+
+The following snippet drops the `pod` label from every metric scraped as part of the scrape job.
+
+```yaml
+- action: labeldrop
+  regex: pod
 ```
-relabelings:
-- action: labeldrop
-  regex: (container|endpoint|job|namespace|node|pod|service)
+
+**Adding label to a target**
+
+The following snippet will add or replace the `team` label with the value `prometheus` for all the metrics scraped as part of this job.
+
+```yaml
+- action: replace
+  replacement: prometheus
+  targetLabel: team
+```
+
+**Filtering targets by label**
+
+The following snippet will configure Prometheus to scrape metrics from the targets if they have the Kubernetes `team` label set to `prometheus` and the Kubernetes `datacenter` label not set to `west_europe`.
+
+```yaml
+- sourceLabels:
+  - __meta_kubernetes_pod_label_team
+  regex: "prometheus"
+  action: keep
+- sourceLabels:
+  - __meta_kubernetes_pod_label_datacenter
+  regex: west_europe
+  action: drop
+```
+
+**Full example**
+
+The following `ServiceMonitor` configures Prometheus to only select targets that have the `team` label set to `prometheus` and exclude the ones that have `datacenter` set to `west_europe`. The same configuration may be used with a `PodMonitor`.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  endpoints:
+  - port: web
+    relabelings:
+      - sourceLabels:
+          - __meta_kubernetes_pod_label_team
+        regex: "prometheus"
+        action: keep
+      - sourceLabels:
+          - __meta_kubernetes_pod_label_datacenter
+        regex: west_europe
+        action: drop
+```
+
+#### Metric Relabeling
+
+Metric relabeling is applied to samples as the last step before ingestion, and it has the same configuration format and actions as target relabeling.
+
+> Metric relabeling does not apply to automatically generated timeseries such as up.
+
+**Dropping metrics**
+
+The following snippet drops any metric which name (`__name__`) matches the regex `container_tasks_state`.
+
+```yaml
 metricRelabelings:
-- action: labeldrop
-  regex: instance
+- sourceLabels:
+  - __name__
+  regex: container_tasks_state
+  action: drop
+```
+
+**Dropping time series**
+
+The following snippet drops metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`.
+
+```yaml
+metricRelabelings:
+- sourceLabels:
+  - id
+  regex: '/system.slice/var-lib-docker-containers.*-shm.mount'
+  action: drop
+```
+
+**Full example**
+
+The following `PodMonitor` configures Prometheus to drop metrics where the `id` label matches the regex `/system.slice/var-lib-docker-containers.*-shm.mount`. The same configuration could also be used with a `ServiceMonitor`
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  endpoints:
+  - port: web
+    metricRelabelings:
+    - sourceLabels:
+      - id
+      regex: '/system.slice/var-lib-docker-containers.*-shm.mount'
+      action: drop
 ```
 
 ## Troubleshooting

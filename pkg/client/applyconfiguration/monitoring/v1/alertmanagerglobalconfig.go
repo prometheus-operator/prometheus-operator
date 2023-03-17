@@ -18,6 +18,7 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // AlertmanagerGlobalConfigApplyConfiguration represents an declarative configuration of the AlertmanagerGlobalConfig type for use
@@ -25,6 +26,7 @@ import (
 type AlertmanagerGlobalConfigApplyConfiguration struct {
 	ResolveTimeout *v1.Duration                  `json:"resolveTimeout,omitempty"`
 	HTTPConfig     *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	SlackAPIURL    *corev1.SecretKeySelector     `json:"slackApiUrl,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs an declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -46,5 +48,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithResolveTimeout(value v1
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithSlackAPIURL sets the SlackAPIURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SlackAPIURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAPIURL(value corev1.SecretKeySelector) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.SlackAPIURL = &value
 	return b
 }

@@ -22,13 +22,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/ghodss/yaml"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 func main() {

@@ -1,3 +1,12 @@
+## 0.63.0 / 2023-02-08
+
+* [CHANGE] Use `tmpfs` to store `Prometheus` and `Alertmanager` configuration. #5311
+* [FEATURE] Add `status` subresource to the `Alertmanager` CRD. #5270
+* [FEATURE] Add `spec.additionalArgs` to the `ThanosRuler` CRD. #5293
+* [ENHANCEMENT] Add `spec.web.maxConnections` to the `Prometheus` CRD. #5175
+* [BUGFIX] Fix unsupported types in Alertmanager route sanitizer log lines. #5296
+* [BUGFIX] Fix `ThanosRuler` StatefulSet re-creation bug when labels are specified. #5318
+
 ## 0.62.0 / 2023-01-04
 
 * [CHANGE] Use `spec.version` of the Prometheus object as the image's tag if the image name is untagged. #5171

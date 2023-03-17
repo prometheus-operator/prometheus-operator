@@ -3803,8 +3803,9 @@ spec:
                     type: string
                 type: object
               portName:
-                description: Port name used for the pods and governing service. This
-                  defaults to web
+                default: web
+                description: Port name used for the pods and governing service. Defaults
+                  to `web`.
                 type: string
               priorityClassName:
                 description: Priority class assigned to the Pods

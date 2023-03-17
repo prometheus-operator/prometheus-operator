@@ -152,6 +152,135 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid global config with Slack API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "slack",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: parseURL(t, "https://slack.example.com"),
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "global config with invalid Slack API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "invalid_url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "slack",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "global config with missing Slack API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SlackAPIURL: &corev1.SecretKeySelector{
+					Key: "url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "not_existing",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name: "missing route",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -227,6 +356,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"test": []byte("clientSecret"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"url":         []byte("https://slack.example.com"),
+					"invalid_url": []byte("://slack.example.com"),
 				},
 			},
 		)
@@ -3268,4 +3407,13 @@ templates: []
 			require.Equal(t, tc.expected, ac)
 		})
 	}
+}
+
+func parseURL(t *testing.T, u string) *config.URL {
+	t.Helper()
+	url, err := url.Parse(u)
+	if err != nil {
+		t.Fatalf("failed to parse URL %q: %s", u, err)
+	}
+	return &config.URL{URL: url}
 }
