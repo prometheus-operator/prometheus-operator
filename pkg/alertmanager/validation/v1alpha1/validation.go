@@ -312,7 +312,7 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 			}
 		}
 
-		if config.RoomID == 0 {
+		if config.RoomID != "" {
 			return fmt.Errorf("mandatory field %q is empty", "roomID")
 		}
 
