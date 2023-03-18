@@ -1475,7 +1475,7 @@ func checkWebexConfigs(
 		}
 		webexConfigKey := fmt.Sprintf("%s/webex/%d", key, i)
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, wechatConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, webexConfigKey, store); err != nil {
 			return err
 		}
 	}
