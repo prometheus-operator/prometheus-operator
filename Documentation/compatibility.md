@@ -30,6 +30,25 @@ v0.26.2
 Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's end-to-end tests verify that the operator can deploy the following Prometheus versions:
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility"
+go: downloading github.com/prometheus/common v0.42.0
+go: downloading github.com/alecthomas/kingpin/v2 v2.3.2
+go: downloading github.com/prometheus/prometheus v0.42.0
+go: downloading github.com/thanos-io/thanos v0.30.2
+go: downloading k8s.io/client-go v0.26.2
+go: downloading k8s.io/component-base v0.26.2
+go: downloading google.golang.org/protobuf v1.30.0
+go: downloading github.com/xhit/go-str2duration/v2 v2.1.0
+go: downloading k8s.io/kube-openapi v0.0.0-20230202010329-39b3636cbaa3
+go: downloading golang.org/x/term v0.6.0
+go: downloading golang.org/x/oauth2 v0.5.0
+go: downloading golang.org/x/exp v0.0.0-20230206171751-46f607a40771
+go: downloading github.com/go-openapi/jsonpointer v0.19.6
+go: downloading github.com/stretchr/testify v1.8.2
+go: downloading github.com/go-openapi/jsonreference v0.20.2
+go: downloading github.com/emicklei/go-restful/v3 v3.10.1
+go: downloading github.com/aws/aws-sdk-go v1.44.187
+go: downloading google.golang.org/grpc v1.52.1
+go: downloading google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2
 * v2.37.0
 * v2.37.1
 * v2.37.2
