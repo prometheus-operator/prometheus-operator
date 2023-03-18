@@ -933,15 +933,6 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		Hello:         in.Hello,
 		AuthUsername:  in.AuthUsername,
 		AuthIdentity:  in.AuthIdentity,
-
-func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
-	out := &emailConfig{
-		VSendResolved: in.SendResolved,
-		To:            in.To,
-		From:          in.From,
-		Hello:         in.Hello,
-		AuthUsername:  in.AuthUsername,
-		AuthIdentity:  in.AuthIdentity,
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
