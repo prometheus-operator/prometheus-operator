@@ -276,6 +276,12 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Slack API URL.
 	SlackAPIURL *v1.SecretKeySelector `json:"slackApiUrl,omitempty"`
+
+	// The default OpsGenie API URL.
+	OpsGenieAPIURL *v1.SecretKeySelector `json:"opsGenieApiUrl,omitempty"`
+
+	// The default OpsGenie API Key.
+	OpsGenieAPIKey *v1.SecretKeySelector `json:"opsGenieApiKey,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.

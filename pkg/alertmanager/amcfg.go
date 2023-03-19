@@ -399,6 +399,27 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 		out.SlackAPIURL = &config.URL{URL: u}
 	}
+
+	if in.OpsGenieAPIURL != nil {
+		opsgenieAPIURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OpsGenieAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get OpsGenie API URL")
+		}
+		u, err := url.Parse(opsgenieAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse OpsGenie API URL")
+		}
+		out.OpsGenieAPIURL = &config.URL{URL: u}
+	}
+
+	if in.OpsGenieAPIKey != nil {
+		opsGenieAPIKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OpsGenieAPIKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get OpsGenie API KEY")
+		}
+		out.OpsGenieAPIKey = opsGenieAPIKey
+	}
+
 	return out, nil
 }
 
