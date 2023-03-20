@@ -49,6 +49,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -68,6 +69,7 @@ var (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 	logger   log.Logger
 	accessor *operator.Accessor
@@ -112,6 +114,11 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
+	mdClient, err := metadata.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
+	}
+
 	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
@@ -122,6 +129,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 
 	o := &Operator{
 		kclient:  client,
+		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
@@ -205,11 +213,12 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "can not parse secrets selector value")
 	}
+
 	c.secrInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = secretListWatchSelector.String()
@@ -364,36 +373,45 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	if old.(*v1.Secret).ResourceVersion == cur.(*v1.Secret).ResourceVersion {
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+	level.Debug(c.logger).Log("msg", "Secret deleted")
+	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
+	c.enqueueForNamespace(o.GetNamespace())
+}
 
-		c.enqueueForNamespace(o.GetNamespace())
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
+		return
 	}
+
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
+	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Secret updated")
+	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+
+	c.enqueueForNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "Secret added")
+	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
+	c.enqueueForNamespace(o.GetNamespace())
 }
 
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the

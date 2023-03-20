@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -57,6 +58,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 	logger   log.Logger
 	accessor *operator.Accessor
@@ -102,6 +104,11 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
+	mdClient, err := metadata.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating metadata client failed")
+	}
+
 	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
@@ -135,6 +142,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	c := &Operator{
 		kclient:                client,
+		mdClient:               mdClient,
 		mclient:                mclient,
 		logger:                 logger,
 		accessor:               operator.NewAccessor(logger),
@@ -252,10 +260,10 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	}
 
 	c.cmapInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = labelPrometheusName
@@ -268,10 +276,10 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	}
 
 	c.secrInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = secretListWatchSelector.String()
@@ -817,71 +825,86 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+	level.Debug(c.logger).Log("msg", "Secret deleted")
+	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
 }
 
 func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	if old.(*v1.Secret).ResourceVersion == cur.(*v1.Secret).ResourceVersion {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
 	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Secret updated")
+	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+	c.enqueueForPrometheusNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "Secret added")
+	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
 }
 
 // TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap added")
-		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "ConfigMap added")
+	c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
 }
 
 func (c *Operator) handleConfigMapDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
-		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
-	if old.(*v1.ConfigMap).ResourceVersion == cur.(*v1.ConfigMap).ResourceVersion {
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap updated")
-		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
+	level.Debug(c.logger).Log("msg", "ConfigMap deleted")
+	c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
+}
 
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
+		return
 	}
+
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
+	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "ConfigMap updated")
+	c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
+	c.enqueueForPrometheusNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
