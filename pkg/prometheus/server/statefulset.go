@@ -39,6 +39,10 @@ const (
 	defaultQueryLogVolume = "query-log-file"
 )
 
+var (
+	prometheusMode = "server"
+)
+
 func makeStatefulSet(
 	logger log.Logger,
 	name string,
@@ -99,6 +103,7 @@ func makeStatefulSet(
 	}
 	labels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 	labels[prompkg.PrometheusNameLabelName] = objMeta.GetName()
+	labels[prompkg.PrometheusModeLabeLName] = prometheusMode
 
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{

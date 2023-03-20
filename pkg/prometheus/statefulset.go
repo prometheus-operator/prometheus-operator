@@ -61,6 +61,7 @@ var (
 	}
 	ShardLabelName                = "operator.prometheus.io/shard"
 	PrometheusNameLabelName       = "operator.prometheus.io/name"
+	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
 	ProbeTimeoutSeconds     int32 = 3
 	LabelPrometheusName           = "prometheus-name"
 )

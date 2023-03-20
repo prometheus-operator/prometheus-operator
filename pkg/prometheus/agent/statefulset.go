@@ -35,6 +35,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
+var (
+	prometheusMode = "agent"
+)
+
 func makeStatefulSet(
 	logger log.Logger,
 	name string,
@@ -84,6 +88,7 @@ func makeStatefulSet(
 	}
 	labels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 	labels[prompkg.PrometheusNameLabelName] = objMeta.GetName()
+	labels[prompkg.PrometheusModeLabeLName] = prometheusMode
 
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -275,10 +280,9 @@ func makeStatefulSetSpec(
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := map[string]string{
-		"app.kubernetes.io/name":        "prometheus",
+		"app.kubernetes.io/name":        "prometheus-agent",
 		"app.kubernetes.io/managed-by":  "prometheus-operator",
 		"app.kubernetes.io/instance":    promName,
-		"prometheus":                    promName,
 		prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
 		prompkg.PrometheusNameLabelName: promName,
 	}

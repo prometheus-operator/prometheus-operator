@@ -1241,7 +1241,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {

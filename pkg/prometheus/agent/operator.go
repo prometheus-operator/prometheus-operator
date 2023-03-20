@@ -108,7 +108,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
 
-
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
@@ -640,7 +639,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
