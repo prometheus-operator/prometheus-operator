@@ -28,6 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -256,7 +257,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating scrapeconfig informers")
+		return nil, errors.Wrap(err, "error creating scrapeconfigs informers")
 	}
 
 	c.ruleInfs, err = informers.NewInformersForResource(
@@ -372,6 +373,14 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
+		// Skipping ScrapeConfigs if we don't have access to the CRD
+		if infs.name == "ScrapeConfig" {
+			if ok, err := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs"); !ok || err != nil {
+				level.Warn(c.logger).Log("msg", fmt.Sprintf("skipping %s for cache sync (informersForResource == nil)", infs.name))
+				continue
+			}
+		}
+
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				return errors.Errorf("failed to sync cache for %s informer", infs.name)
@@ -417,11 +426,13 @@ func (c *Operator) addHandlers() {
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
 	})
-	c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleBmonAdd,
-		UpdateFunc: c.handleBmonUpdate,
-		DeleteFunc: c.handleBmonDelete,
-	})
+	if c.sconInfs != nil {
+		c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleBmonAdd,
+			UpdateFunc: c.handleBmonUpdate,
+			DeleteFunc: c.handleBmonDelete,
+		})
+	}
 	c.ruleInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleRuleAdd,
 		DeleteFunc: c.handleRuleDelete,
@@ -478,7 +489,15 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
-	go c.sconInfs.Start(ctx.Done())
+	if ok, err := c.checkCRDAuthorization(
+		ctx,
+		"*",
+		"monitoring.coreos.com/v1alpha1",
+		"scrapeconfigs"); err != nil || !ok {
+		level.Info(c.logger).Log("msg", "prometheus-operator is not allowed to manage ScrapeConfig resources. The operator will ignore ScrapeConfig resources.")
+	} else {
+		go c.sconInfs.Start(ctx.Done())
+	}
 	go c.ruleInfs.Start(ctx.Done())
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
@@ -1549,9 +1568,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 
-	scrapeConfigs, err := resourceSelector.SelectScrapeConfigs(ctx)
-	if err != nil {
-		return errors.Wrap(err, "selecting ScrapeConfigs failed")
+	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+	if ok, _ := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs"); ok {
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx)
+		if err != nil {
+			// ScrapeConfigs are still optional,
+			level.Error(c.logger).Log("msg", errors.Wrap(err, "selecting ScrapeConfigs failed"), "prometheus", p.Name, "namespace", p.Namespace)
+		}
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
@@ -1723,4 +1746,49 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
+}
+
+// checkCRDAuthorization checks if the operator has access to the specified CRD
+// It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
+func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group string, resource string) (bool, error) {
+	if c.config.Namespaces.AllowList != nil {
+		allowed := true
+		for ns := range c.config.Namespaces.AllowList {
+			ssar := &authv1.SelfSubjectAccessReview{
+				Spec: authv1.SelfSubjectAccessReviewSpec{
+					ResourceAttributes: &authv1.ResourceAttributes{
+						Verb:      verb,
+						Group:     group,
+						Resource:  resource,
+						Namespace: ns,
+					},
+				},
+			}
+			ssarResponse, err := c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
+			if err != nil {
+				return false, err
+			}
+			if !ssarResponse.Status.Allowed {
+				allowed = false
+				break
+			}
+		}
+
+		return allowed, nil
+	}
+
+	ssar := &authv1.SelfSubjectAccessReview{
+		Spec: authv1.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &authv1.ResourceAttributes{
+				Verb:     verb,
+				Group:    group,
+				Resource: resource,
+			},
+		},
+	}
+	ssarResponse, err := c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+	return ssarResponse.Status.Allowed, nil
 }
