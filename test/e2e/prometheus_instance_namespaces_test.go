@@ -33,7 +33,7 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	nonInstanceNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, instanceNs)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, nil, []string{instanceNs}, nil, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, nil, []string{instanceNs}, nil, false, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, []string{deniedNs, instanceNs}, []string{instanceNs}, nil, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, []string{deniedNs, instanceNs}, []string{instanceNs}, nil, false, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +215,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{allowedNs}, nil, []string{instanceNs}, nil, false, false)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{allowedNs}, nil, []string{instanceNs}, nil, false, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,7 +369,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{"notfound", allowedNs}, nil, []string{"notfound", instanceNs}, nil, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{"notfound", allowedNs}, nil, []string{"notfound", instanceNs}, nil, false, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
