@@ -205,7 +205,7 @@ func prefix(p monitoringv1.PrometheusInterface) string {
 	case *monitoringv1alpha1.PrometheusAgent:
 		return "prom-agent"
 	default:
-		return ""
+		panic("unknown prometheus type")
 	}
 }
 
