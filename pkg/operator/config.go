@@ -64,20 +64,20 @@ type ContainerConfig struct {
 type ReadinessConfig v1.Probe
 type LivenessConfig v1.Probe
 
-func (rc *ReadinessConfig) Set(value string) error {
+func (readinessconfig *ReadinessConfig) Set(value string) error {
 	if value == "" {
-		rc = nil
+		readinessconfig = nil
 	} else {
-		return json.Unmarshal([]byte(value), rc)
+		return json.Unmarshal([]byte(value), readinessconfig)
 	}
 	return nil
 }
 
-func (lc *LivenessConfig) Set(value string) error {
+func (livenessconfig *LivenessConfig) Set(value string) error {
 	if value == "" {
-		lc = nil
+		livenessconfig = nil
 	} else {
-		return json.Unmarshal([]byte(value), lc)
+		return json.Unmarshal([]byte(value), livenessconfig)
 	}
 	return nil
 }
