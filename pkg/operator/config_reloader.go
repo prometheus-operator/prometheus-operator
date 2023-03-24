@@ -288,28 +288,27 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 				},
 			},
 		}
-	} else {
-		return v1.Container{
-			Name:                     name,
-			Image:                    configReloader.config.Image,
-			ImagePullPolicy:          configReloader.imagePullPolicy,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Env:                      envVars,
-			Command:                  []string{"/bin/prometheus-config-reloader"},
-			Args:                     args,
-			Ports:                    ports,
-			VolumeMounts:             configReloader.volumeMounts,
-			Resources:                resources,
-			LivenessProbe:            livenessProbe,
-			ReadinessProbe:           readinessProbe,
-			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: &boolFalse,
-				ReadOnlyRootFilesystem:   &boolTrue,
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
-		}
 	}
 
+	return v1.Container{
+		Name:                     name,
+		Image:                    configReloader.config.Image,
+		ImagePullPolicy:          configReloader.imagePullPolicy,
+		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		Env:                      envVars,
+		Command:                  []string{"/bin/prometheus-config-reloader"},
+		Args:                     args,
+		Ports:                    ports,
+		VolumeMounts:             configReloader.volumeMounts,
+		Resources:                resources,
+		LivenessProbe:            livenessProbe,
+		ReadinessProbe:           readinessProbe,
+		SecurityContext: &v1.SecurityContext{
+			AllowPrivilegeEscalation: &boolFalse,
+			ReadOnlyRootFilesystem:   &boolTrue,
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		},
+	}
 }
