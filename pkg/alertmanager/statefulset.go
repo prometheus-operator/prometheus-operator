@@ -730,6 +730,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			"init-config-reloader",
 			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.ReloaderRunOnce(),
+			operator.IsInitContainer(),
 			operator.LogFormat(a.Spec.LogFormat),
 			operator.LogLevel(a.Spec.LogLevel),
 			operator.WatchedDirectories(watchedDirectories),

@@ -372,6 +372,7 @@ func makeStatefulSetSpec(
 			"init-config-reloader",
 			operator.ReloaderConfig(c.ReloaderConfig),
 			operator.ReloaderRunOnce(),
+			operator.IsInitContainer(),
 			operator.LogFormat(cpf.LogFormat),
 			operator.LogLevel(cpf.LogLevel),
 			operator.VolumeMounts(configReloaderVolumeMounts),
