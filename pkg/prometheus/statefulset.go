@@ -32,7 +32,6 @@ import (
 )
 
 const (
-	GoverningServiceName            = "prometheus-operated"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	StorageDir                      = "/prometheus"
 	ConfDir                         = "/etc/prometheus/config"
@@ -126,56 +125,6 @@ func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config
 			ConfigFilename: {},
 		},
 	}
-}
-
-// TODO(ArthurSens): Move method to server pkg, since it is server specific.
-// Or generalize it enough to be used by both server and agent.
-func MakeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
-	p = p.DeepCopy()
-
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = DefaultPortName
-	}
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: GoverningServiceName,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					Name:       p.GetName(),
-					Kind:       p.Kind,
-					APIVersion: p.APIVersion,
-					UID:        p.GetUID(),
-				},
-			},
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-prometheus": "true",
-			}),
-		},
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
-			},
-		},
-	}
-
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
-
-	return svc
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {

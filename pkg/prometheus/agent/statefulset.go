@@ -35,8 +35,9 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
-var (
-	prometheusMode = "agent"
+const (
+	prometheusMode       = "agent"
+	governingServiceName = "prometheus-agent-operated"
 )
 
 func makeStatefulSet(
@@ -396,7 +397,7 @@ func makeStatefulSetSpec(
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         prompkg.GoverningServiceName,
+		ServiceName:         governingServiceName,
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
@@ -440,7 +441,7 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: prompkg.GoverningServiceName,
+			Name: governingServiceName,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					Name:       p.GetName(),
@@ -463,7 +464,7 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
+				"app.kubernetes.io/name": "prometheus-agent",
 			},
 		},
 	}

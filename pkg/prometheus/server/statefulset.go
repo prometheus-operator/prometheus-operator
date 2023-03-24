@@ -26,6 +26,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -37,11 +38,58 @@ import (
 const (
 	defaultRetention      = "24h"
 	defaultQueryLogVolume = "query-log-file"
+	prometheusMode        = "server"
+	governingServiceName  = "prometheus-operated"
 )
 
-var (
-	prometheusMode = "server"
-)
+// TODO(ArthurSens): generalize it enough to be used by both server and agent.
+func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
+	p = p.DeepCopy()
+
+	if p.Spec.PortName == "" {
+		p.Spec.PortName = prompkg.DefaultPortName
+	}
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: governingServiceName,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name:       p.GetName(),
+					Kind:       p.Kind,
+					APIVersion: p.APIVersion,
+					UID:        p.GetUID(),
+				},
+			},
+			Labels: config.Labels.Merge(map[string]string{
+				"operated-prometheus": "true",
+			}),
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: "None",
+			Ports: []v1.ServicePort{
+				{
+					Name:       p.Spec.PortName,
+					Port:       9090,
+					TargetPort: intstr.FromString(p.Spec.PortName),
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name": "prometheus",
+			},
+		},
+	}
+
+	if p.Spec.Thanos != nil {
+		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			Name:       "grpc",
+			Port:       10901,
+			TargetPort: intstr.FromString("grpc"),
+		})
+	}
+
+	return svc
+}
 
 func makeStatefulSet(
 	logger log.Logger,
@@ -450,7 +498,7 @@ func makeStatefulSetSpec(
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         prompkg.GoverningServiceName,
+		ServiceName:         governingServiceName,
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
