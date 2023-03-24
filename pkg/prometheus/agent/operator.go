@@ -282,12 +282,22 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
+	crdInstalled, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.PrometheusAgentName)
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "failed to check if the API supports the PrometheusAgent CRD", "err ", err)
+		return nil
+	}
+	if !crdInstalled {
+		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because the PrometheusAgent CRD isn't installed")
+		return nil
+	}
+
 	allowed, err := c.checkAgentAuthorization(ctx)
 	if err != nil {
 		return err
 	}
 	if !allowed {
-		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects.")
+		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects")
 		return nil
 	}
 
