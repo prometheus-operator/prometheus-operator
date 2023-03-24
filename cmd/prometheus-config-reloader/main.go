@@ -145,11 +145,16 @@ func main() {
 			cancel()
 		})
 	}
-
+	f := func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"status":"up"}`))
+		w.WriteHeader(http.StatusOK)
+	}
 	if *listenAddress != "" && *watchInterval != 0 {
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+			http.HandleFunc("/ready", f)
+			http.HandleFunc("/healthy", f)
 			return http.ListenAndServe(*listenAddress, nil)
 		}, func(err error) {
 			level.Error(logger).Log("err", err)

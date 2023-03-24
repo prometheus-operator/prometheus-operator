@@ -17,10 +17,12 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const configReloaderPort = 8080
@@ -38,8 +40,6 @@ type ConfigReloader struct {
 	logFormat          string
 	logLevel           string
 	reloadURL          url.URL
-	liveness           v1.Probe
-	readiness          v1.Probe
 	runOnce            bool
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
@@ -139,20 +139,6 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
-// LivenessProbe sets the livenessProbe option for the config-reloader container
-func LivenessProbe(lp v1.Probe) ReloaderOption {
-	return func(c *ConfigReloader) {
-		c.liveness = lp
-	}
-}
-
-// ReadinessProbe sets the readinessProbe option for the config-reloader container
-func ReadinessProbe(rp v1.Probe) ReloaderOption {
-	return func(c *ConfigReloader) {
-		c.readiness = rp
-	}
-}
-
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -237,6 +223,34 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		resources.Limits[v1.ResourceMemory] = resource.MustParse(configReloader.config.MemoryLimit)
 	}
 
+	livenessProbeHandler := v1.ProbeHandler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean("/healthy"),
+			Port: intstr.FromInt(configReloaderPort),
+		},
+	}
+
+	readinessProbeHandler := v1.ProbeHandler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean("/ready"),
+			Port: intstr.FromInt(configReloaderPort),
+		},
+	}
+
+	livenessProbe := &v1.Probe{
+		ProbeHandler:     livenessProbeHandler,
+		TimeoutSeconds:   3,
+		FailureThreshold: 10,
+	}
+
+	readinessProbe := &v1.Probe{
+		ProbeHandler:        readinessProbeHandler,
+		InitialDelaySeconds: 3,
+		TimeoutSeconds:      3,
+		PeriodSeconds:       5,
+		FailureThreshold:    10,
+	}
+
 	if configReloader.shard != nil {
 		envVars = append(envVars, v1.EnvVar{
 			Name:  "SHARD",
@@ -257,8 +271,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                resources,
-		LivenessProbe:            &configReloader.liveness,
-		ReadinessProbe:           &configReloader.readiness,
+		LivenessProbe:            livenessProbe,
+		ReadinessProbe:           readinessProbe,
 		SecurityContext: &v1.SecurityContext{
 			AllowPrivilegeEscalation: &boolFalse,
 			ReadOnlyRootFilesystem:   &boolTrue,
