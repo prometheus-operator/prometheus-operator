@@ -38,6 +38,8 @@ type ConfigReloader struct {
 	logFormat          string
 	logLevel           string
 	reloadURL          url.URL
+	liveness           v1.Probe
+	readiness          v1.Probe
 	runOnce            bool
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
@@ -134,6 +136,20 @@ func Shard(shard int32) ReloaderOption {
 func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.imagePullPolicy = imagePullPolicy
+	}
+}
+
+// LivenessProbe sets the livenessProbe option for the config-reloader container
+func LivenessProbe(lp v1.Probe) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.liveness = lp
+	}
+}
+
+// ReadinessProbe sets the readinessProbe option for the config-reloader container
+func ReadinessProbe(rp v1.Probe) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.readiness = rp
 	}
 }
 
@@ -241,6 +257,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                resources,
+		LivenessProbe:            &configReloader.liveness,
+		ReadinessProbe:           &configReloader.readiness,
 		SecurityContext: &v1.SecurityContext{
 			AllowPrivilegeEscalation: &boolFalse,
 			ReadOnlyRootFilesystem:   &boolTrue,

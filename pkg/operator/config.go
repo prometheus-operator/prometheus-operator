@@ -15,9 +15,11 @@
 package operator
 
 import (
+	"encoding/json"
 	"sort"
 	"strings"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -33,6 +35,8 @@ type Config struct {
 	TLSConfig                    rest.TLSClientConfig
 	ServerTLSConfig              server.TLSServerConfig
 	ReloaderConfig               ContainerConfig
+	ReadinessProbe               ReadinessConfig
+	LivenessProbe                LivenessConfig
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
@@ -55,6 +59,27 @@ type ContainerConfig struct {
 	MemoryRequest string
 	MemoryLimit   string
 	Image         string
+}
+
+type ReadinessConfig v1.Probe
+type LivenessConfig v1.Probe
+
+func (rc *ReadinessConfig) Set(value string) error {
+	if value == "" {
+		rc = nil
+	} else {
+		return json.Unmarshal([]byte(value), rc)
+	}
+	return nil
+}
+
+func (lc *LivenessConfig) Set(value string) error {
+	if value == "" {
+		lc = nil
+	} else {
+		return json.Unmarshal([]byte(value), lc)
+	}
+	return nil
 }
 
 type Labels struct {
