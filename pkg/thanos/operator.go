@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
@@ -53,6 +54,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 	logger   log.Logger
 	accessor *operator.Accessor
@@ -100,6 +102,11 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
+	mdClient, err := metadata.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating metadata client failed")
+	}
+
 	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
@@ -114,6 +121,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	o := &Operator{
 		kclient:         client,
+		mdClient:        mdClient,
 		mclient:         mclient,
 		logger:          logger,
 		accessor:        operator.NewAccessor(logger),
@@ -143,10 +151,10 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	)
 
 	o.cmapInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			o.config.Namespaces.ThanosRulerAllowList,
 			o.config.Namespaces.DenyList,
-			o.kclient,
+			o.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = labelThanosRulerName
@@ -366,17 +374,24 @@ func (o *Operator) handleConfigMapDelete(obj interface{}) {
 }
 
 func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
-	if old.(*v1.ConfigMap).ResourceVersion == cur.(*v1.ConfigMap).ResourceVersion {
+
+	oldMeta, ok := o.accessor.ObjectMetadata(old)
+	if !ok {
 		return
 	}
 
-	meta, ok := o.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(o.logger).Log("msg", "ConfigMap updated")
-		o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
-
-		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
+	curMeta, ok := o.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
 	}
+
+	if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(o.logger).Log("msg", "ConfigMap updated")
+	o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
+	o.enqueueForThanosRulerNamespace(curMeta.GetNamespace())
 }
 
 // TODO: Don't enqueue just for the namespace
