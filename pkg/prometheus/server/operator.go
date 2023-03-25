@@ -373,9 +373,9 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
-		// Skipping ScrapeConfigs if we don't have access to the CRD
+		// Skipping ScrapeConfigs if we don't have access to the CRD or if the CRD is not installed
 		if infs.name == "ScrapeConfig" {
-			if ok, err := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs"); !ok || err != nil {
+			if ok, err := c.isScrapeConfigInstalled(ctx); !ok || err != nil {
 				level.Warn(c.logger).Log("msg", fmt.Sprintf("skipping %s for cache sync (informersForResource == nil)", infs.name))
 				continue
 			}
@@ -489,11 +489,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
-	if ok, err := c.checkCRDAuthorization(
-		ctx,
-		"*",
-		"monitoring.coreos.com/v1alpha1",
-		"scrapeconfigs"); err != nil || !ok {
+	if ok, err := c.isScrapeConfigInstalled(ctx); err != nil || !ok {
 		level.Info(c.logger).Log("msg", "prometheus-operator is not allowed to manage ScrapeConfig resources. The operator will ignore ScrapeConfig resources.")
 	} else {
 		go c.sconInfs.Start(ctx.Done())
@@ -1569,7 +1565,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
-	if ok, _ := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs"); ok {
+	if ok, _ := c.isScrapeConfigInstalled(ctx); ok {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx)
 		if err != nil {
 			// ScrapeConfigs are still optional,
@@ -1791,4 +1787,22 @@ func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group
 		return false, err
 	}
 	return ssarResponse.Status.Allowed, nil
+}
+
+// isScrapeConfigInstalled returns true if the CRD is installed and if the operator is allowed to access it
+func (c *Operator) isScrapeConfigInstalled(ctx context.Context) (bool, error) {
+	crdInstalled, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.ScrapeConfigName)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if the API supports the ScrapeConfig CRD")
+	}
+	if !crdInstalled {
+		return false, nil
+	}
+
+	ok, err := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check authorization on the ScrapeConfig CRD")
+	}
+
+	return ok, nil
 }
