@@ -44,8 +44,6 @@ type ConfigReloader struct {
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
-
-	isInitContainer bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -54,12 +52,6 @@ type ReloaderOption = func(*ConfigReloader)
 func ReloaderRunOnce() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.runOnce = true
-	}
-}
-
-func IsInitContainer() ReloaderOption {
-	return func(c *ConfigReloader) {
-		c.isInitContainer = true
 	}
 }
 
@@ -233,7 +225,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean("/healthy"),
+			Path: path.Clean("/healthz"),
 			Port: intstr.FromInt(configReloaderPort),
 		},
 	}
@@ -268,7 +260,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	boolFalse := false
 	boolTrue := true
-	if configReloader.isInitContainer {
+	if !configReloader.runOnce && configReloader.config.IsProbes {
 		return v1.Container{
 			Name:                     name,
 			Image:                    configReloader.config.Image,
@@ -280,6 +272,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			Ports:                    ports,
 			VolumeMounts:             configReloader.volumeMounts,
 			Resources:                resources,
+			LivenessProbe:            livenessProbe,
+			ReadinessProbe:           readinessProbe,
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: &boolFalse,
 				ReadOnlyRootFilesystem:   &boolTrue,
@@ -301,8 +295,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                resources,
-		LivenessProbe:            livenessProbe,
-		ReadinessProbe:           readinessProbe,
 		SecurityContext: &v1.SecurityContext{
 			AllowPrivilegeEscalation: &boolFalse,
 			ReadOnlyRootFilesystem:   &boolTrue,
