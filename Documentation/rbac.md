@@ -39,6 +39,9 @@ rules:
   - prometheuses
   - prometheuses/finalizers
   - prometheuses/status
+  - prometheusagents
+  - prometheusagents/finalizers
+  - prometheusagents/status
   - thanosrulers
   - thanosrulers/finalizers
   - servicemonitors

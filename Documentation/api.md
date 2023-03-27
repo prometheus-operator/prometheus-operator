@@ -5071,7 +5071,7 @@ Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: <co
 <h3 id="monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec</a>)
 </p>
 <div>
 <p>CommonPrometheusFields are the options available to both the Prometheus server and agent.</p>
@@ -9625,7 +9625,7 @@ TSDBSpec
 <h3 id="monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Prometheus">Prometheus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Prometheus">Prometheus</a>, <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>)
 </p>
 <div>
 <p>PrometheusStatus is the most recent observed status of the Prometheus cluster.
@@ -12910,6 +12910,8 @@ string
 Resource Types:
 <ul><li>
 <a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>
 </li></ul>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
@@ -13029,6 +13031,1017 @@ the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 </table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent
+</h3>
+<div>
+<p>PrometheusAgent defines a Prometheus agent deployment.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>PrometheusAgent</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">
+PrometheusAgentSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of the desired behavior of the Prometheus agent. More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>podMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
+EmbeddedObjectMetadata
+</a>
+</em>
+</td>
+<td>
+<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceMonitorSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>ServiceMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceMonitorNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podMonitorSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podMonitorNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
+check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>probeSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>probeNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Prometheus to be deployed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>paused</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When a Prometheus deployment is paused, no actions except for deletion
+will be performed on the underlying objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Image if specified has precedence over baseImage, tag and sha
+combinations. Specifying the version is still necessary to ensure the
+Prometheus Operator knows what version of Prometheus is being
+configured.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;prometheus&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullSecrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
+[]Kubernetes core/v1.LocalObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>An optional list of references to secrets in the same namespace
+to use for pulling prometheus and alertmanager images from registries
+see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Number of replicas of each shard to deploy for a Prometheus deployment.
+Number of replicas multiplied by shards is the total number of Pods
+created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shards</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
+replicas multiplied by shards is the total number of Pods created. Note
+that scaling down shards will not reshard data onto remaining instances,
+it must be manually moved. Increasing shards will not reshard data
+either but it will continue to be available from the same instances. To
+query globally use Thanos sidecar and Thanos querier or remote write
+data to a central location. Sharding is done on the content of the
+<code>__address__</code> target meta-label.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicaExternalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of Prometheus external label used to denote replica name.
+Defaults to the value of <code>prometheus_replica</code>. External label will
+<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prometheusExternalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of Prometheus external label used to denote Prometheus instance
+name. Defaults to the value of <code>prometheus</code>. External label will
+<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logLevel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Log level for Prometheus to be configured with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logFormat</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Log format for Prometheus to be configured with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Number of seconds to wait for target to respond before erroring.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalLabels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>The labels to add to any time series or alerts when communicating with
+external systems (federation, remote storage, Alertmanager).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableRemoteWriteReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
+WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
+Only valid in Prometheus versions 2.33.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Enable access to Prometheus disabled features. By default, no features are enabled.
+Enabling disabled features is entirely outside the scope of what the maintainers will
+support and by doing so, you accept that this behaviour may break at any
+time without notice.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The external URL the Prometheus instances will be available under. This is
+necessary to generate correct URLs. This is necessary if Prometheus is not
+served from root of a DNS name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>routePrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
+if using ExternalURL and a proxy is rewriting HTTP routes of a request,
+and the actual ExternalURL is still true, but the server serves requests
+under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storage</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StorageSpec">
+StorageSpec
+</a>
+</em>
+</td>
+<td>
+<p>Storage spec to specify how storage shall be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumes</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core">
+[]Kubernetes core/v1.Volume
+</a>
+</em>
+</td>
+<td>
+<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
+that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusWebSpec">
+PrometheusWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the web command line flags when starting Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<p>Define resources requests and limits for single Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeSelector</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Define which Nodes the Pods are scheduled on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ServiceAccountName is the name of the ServiceAccount to use to run the
+Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Secrets is a list of Secrets in the same namespace as the Prometheus
+object, which shall be mounted into the Prometheus Pods.
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configMaps</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
+object, which shall be mounted into the Prometheus Pods.
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tolerations</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
+[]Kubernetes core/v1.Toleration
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s tolerations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologySpreadConstraints</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
+[]Kubernetes core/v1.TopologySpreadConstraint
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<p>remoteWrite is the list of remote write configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>listenLocal</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>ListenLocal makes the Prometheus server listen on loopback, so that it
+does not bind against the Pod IP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>containers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>Containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to a Prometheus pod or to change the behavior of an operator
+generated container. Containers described here modify an operator
+generated container if they share the same name and modifications are
+done via a strategic merge patch. The current container names are:
+<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
+containers is entirely outside the scope of what the maintainers will
+support and by doing so, you accept that this behaviour may break at any
+time without notice.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>initContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+fetch secrets for injection into the Prometheus configuration from external sources. Any errors
+during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalScrapeConfigs</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
+additional Prometheus scrape configurations. Scrape configurations
+specified are appended to the configurations generated by the Prometheus
+Operator. Job configurations specified must have the form as specified
+in the official Prometheus documentation:
+<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config</a>.
+As scrape configs are appended, the user is responsible to make sure it
+is valid. Note that using this feature may expose the possibility to
+break upgrades of Prometheus. It is advised to review Prometheus release
+notes to ensure that no incompatible scrape configs are going to break
+Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiserverConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.APIServerConfig">
+APIServerConfig
+</a>
+</em>
+</td>
+<td>
+<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
+If left empty, Prometheus is assumed to run inside of the cluster
+and will discover API servers automatically and use the pod&rsquo;s CA certificate
+and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Priority class assigned to the Pods</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Port name used for the pods and governing service.
+Defaults to <code>web</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>arbitraryFSAccessThroughSMs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ArbitraryFSAccessThroughSMsConfig">
+ArbitraryFSAccessThroughSMsConfig
+</a>
+</em>
+</td>
+<td>
+<p>ArbitraryFSAccessThroughSMs configures whether configuration
+based on a service monitor can access arbitrary files on the file system
+of the Prometheus container e.g. bearer token files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>overrideHonorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in
+the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
+from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>overrideHonorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreNamespaceSelectors</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
+settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+only discover endpoints within the namespace of the PodMonitor,
+ServiceMonitor and Probe objects.
+Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedNamespaceLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<ol>
+<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
+<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
+<ul>
+<li>alerting &amp; recording rules and</li>
+<li>the metrics used in their expressions (<code>expr</code>).</li>
+</ul></li>
+</ol>
+<p>Label name is this field&rsquo;s value.
+Label value is the namespace of the created object (mentioned above).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedSampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>EnforcedSampleLimit defines global limit on number of scraped samples
+that will be accepted. This overrides any SampleLimit set per
+ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
+enforce the SampleLimit to keep overall number of samples/series under
+the desired limit.
+Note that if SampleLimit is lower that value will be taken instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedTargetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>EnforcedTargetLimit defines a global limit on the number of scraped
+targets.  This overrides any TargetLimit set per ServiceMonitor or/and
+PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
+to keep the overall number of targets under the desired limit.
+Note that if TargetLimit is lower, that value will be taken instead,
+except if either value is zero, in which case the non-zero value will be
+used.  If both values are zero, no limit is enforced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on number of labels that will be accepted for a sample. If
+more than this number of labels are present post metric-relabeling, the
+entire scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+If a label name is longer than this number post metric-relabeling, the entire
+scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+If a label value is longer than this number post metric-relabeling, the
+entire scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
+that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
+will cause the scrape to fail. Example: 100MB.
+If defined, the limit will apply to all service/pod monitors and probes.
+This is an experimental feature, this behaviour could
+change or be removed in the future.
+Only valid in Prometheus versions 2.28.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minReadySeconds</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum number of seconds for which a newly created pod should be ready
+without any of its container crashing for it to be considered available.
+Defaults to 0 (pod will be considered available as soon as it is ready)
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostAliases</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HostAlias">
+[]HostAlias
+</a>
+</em>
+</td>
+<td>
+<p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Prometheus container which may cause issues if they are invalid or not supported
+by the given Prometheus version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Use the host&rsquo;s network namespace if true.
+Make sure to understand the security implications if you want to enable it.
+When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusStatus">
+PrometheusStatus
+</a>
+</em>
+</td>
+<td>
+<p>Most recent observed status of the Prometheus cluster. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
 </tbody>
@@ -14374,6 +15387,957 @@ int
 </td>
 <td>
 <p>End of the range</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>)
+</p>
+<div>
+<p>PrometheusAgentSpec is a specification of the desired behavior of the Prometheus agent. More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>podMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
+EmbeddedObjectMetadata
+</a>
+</em>
+</td>
+<td>
+<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceMonitorSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>ServiceMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceMonitorNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podMonitorSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podMonitorNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
+check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>probeSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
+<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>probeNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of Prometheus to be deployed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>paused</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When a Prometheus deployment is paused, no actions except for deletion
+will be performed on the underlying objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Image if specified has precedence over baseImage, tag and sha
+combinations. Specifying the version is still necessary to ensure the
+Prometheus Operator knows what version of Prometheus is being
+configured.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<p>Image pull policy for the &lsquo;prometheus&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullSecrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
+[]Kubernetes core/v1.LocalObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>An optional list of references to secrets in the same namespace
+to use for pulling prometheus and alertmanager images from registries
+see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Number of replicas of each shard to deploy for a Prometheus deployment.
+Number of replicas multiplied by shards is the total number of Pods
+created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shards</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
+replicas multiplied by shards is the total number of Pods created. Note
+that scaling down shards will not reshard data onto remaining instances,
+it must be manually moved. Increasing shards will not reshard data
+either but it will continue to be available from the same instances. To
+query globally use Thanos sidecar and Thanos querier or remote write
+data to a central location. Sharding is done on the content of the
+<code>__address__</code> target meta-label.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicaExternalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of Prometheus external label used to denote replica name.
+Defaults to the value of <code>prometheus_replica</code>. External label will
+<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prometheusExternalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of Prometheus external label used to denote Prometheus instance
+name. Defaults to the value of <code>prometheus</code>. External label will
+<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logLevel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Log level for Prometheus to be configured with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logFormat</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Log format for Prometheus to be configured with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<p>Number of seconds to wait for target to respond before erroring.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalLabels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>The labels to add to any time series or alerts when communicating with
+external systems (federation, remote storage, Alertmanager).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableRemoteWriteReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
+WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
+Only valid in Prometheus versions 2.33.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Enable access to Prometheus disabled features. By default, no features are enabled.
+Enabling disabled features is entirely outside the scope of what the maintainers will
+support and by doing so, you accept that this behaviour may break at any
+time without notice.
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The external URL the Prometheus instances will be available under. This is
+necessary to generate correct URLs. This is necessary if Prometheus is not
+served from root of a DNS name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>routePrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
+if using ExternalURL and a proxy is rewriting HTTP routes of a request,
+and the actual ExternalURL is still true, but the server serves requests
+under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storage</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StorageSpec">
+StorageSpec
+</a>
+</em>
+</td>
+<td>
+<p>Storage spec to specify how storage shall be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumes</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core">
+[]Kubernetes core/v1.Volume
+</a>
+</em>
+</td>
+<td>
+<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
+that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusWebSpec">
+PrometheusWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the web command line flags when starting Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<p>Define resources requests and limits for single Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeSelector</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Define which Nodes the Pods are scheduled on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ServiceAccountName is the name of the ServiceAccount to use to run the
+Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Secrets is a list of Secrets in the same namespace as the Prometheus
+object, which shall be mounted into the Prometheus Pods.
+Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
+The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configMaps</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
+object, which shall be mounted into the Prometheus Pods.
+Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
+The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tolerations</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
+[]Kubernetes core/v1.Toleration
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s tolerations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologySpreadConstraints</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
+[]Kubernetes core/v1.TopologySpreadConstraint
+</a>
+</em>
+</td>
+<td>
+<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<p>remoteWrite is the list of remote write configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>listenLocal</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>ListenLocal makes the Prometheus server listen on loopback, so that it
+does not bind against the Pod IP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>containers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>Containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to a Prometheus pod or to change the behavior of an operator
+generated container. Containers described here modify an operator
+generated container if they share the same name and modifications are
+done via a strategic merge patch. The current container names are:
+<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
+containers is entirely outside the scope of what the maintainers will
+support and by doing so, you accept that this behaviour may break at any
+time without notice.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>initContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+fetch secrets for injection into the Prometheus configuration from external sources. Any errors
+during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator
+generated init containers if they share the same name and modifications are
+done via a strategic merge patch. The current init container name is:
+<code>init-config-reloader</code>. Overriding init containers is entirely outside the
+scope of what the maintainers will support and by doing so, you accept that
+this behaviour may break at any time without notice.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalScrapeConfigs</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
+additional Prometheus scrape configurations. Scrape configurations
+specified are appended to the configurations generated by the Prometheus
+Operator. Job configurations specified must have the form as specified
+in the official Prometheus documentation:
+<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config</a>.
+As scrape configs are appended, the user is responsible to make sure it
+is valid. Note that using this feature may expose the possibility to
+break upgrades of Prometheus. It is advised to review Prometheus release
+notes to ensure that no incompatible scrape configs are going to break
+Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiserverConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.APIServerConfig">
+APIServerConfig
+</a>
+</em>
+</td>
+<td>
+<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
+If left empty, Prometheus is assumed to run inside of the cluster
+and will discover API servers automatically and use the pod&rsquo;s CA certificate
+and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Priority class assigned to the Pods</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Port name used for the pods and governing service.
+Defaults to <code>web</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>arbitraryFSAccessThroughSMs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ArbitraryFSAccessThroughSMsConfig">
+ArbitraryFSAccessThroughSMsConfig
+</a>
+</em>
+</td>
+<td>
+<p>ArbitraryFSAccessThroughSMs configures whether configuration
+based on a service monitor can access arbitrary files on the file system
+of the Prometheus container e.g. bearer token files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>overrideHonorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in
+the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
+from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>overrideHonorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreNamespaceSelectors</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
+settings from all PodMonitor, ServiceMonitor and Probe objects. They will
+only discover endpoints within the namespace of the PodMonitor,
+ServiceMonitor and Probe objects.
+Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedNamespaceLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<ol>
+<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
+<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
+<ul>
+<li>alerting &amp; recording rules and</li>
+<li>the metrics used in their expressions (<code>expr</code>).</li>
+</ul></li>
+</ol>
+<p>Label name is this field&rsquo;s value.
+Label value is the namespace of the created object (mentioned above).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedSampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>EnforcedSampleLimit defines global limit on number of scraped samples
+that will be accepted. This overrides any SampleLimit set per
+ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
+enforce the SampleLimit to keep overall number of samples/series under
+the desired limit.
+Note that if SampleLimit is lower that value will be taken instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedTargetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>EnforcedTargetLimit defines a global limit on the number of scraped
+targets.  This overrides any TargetLimit set per ServiceMonitor or/and
+PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
+to keep the overall number of targets under the desired limit.
+Note that if TargetLimit is lower, that value will be taken instead,
+except if either value is zero, in which case the non-zero value will be
+used.  If both values are zero, no limit is enforced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on number of labels that will be accepted for a sample. If
+more than this number of labels are present post metric-relabeling, the
+entire scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+If a label name is longer than this number post metric-relabeling, the entire
+scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedLabelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+If a label value is longer than this number post metric-relabeling, the
+entire scrape will be treated as failed. 0 means no limit.
+Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
+that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
+will cause the scrape to fail. Example: 100MB.
+If defined, the limit will apply to all service/pod monitors and probes.
+This is an experimental feature, this behaviour could
+change or be removed in the future.
+Only valid in Prometheus versions 2.28.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minReadySeconds</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum number of seconds for which a newly created pod should be ready
+without any of its container crashing for it to be considered available.
+Defaults to 0 (pod will be considered available as soon as it is ready)
+This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostAliases</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HostAlias">
+[]HostAlias
+</a>
+</em>
+</td>
+<td>
+<p>Pods&rsquo; hostAliases configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Prometheus container which may cause issues if they are invalid or not supported
+by the given Prometheus version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>walCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enable compression of the write-ahead log using Snappy. This flag is
+only available in versions of Prometheus &gt;= 2.11.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedFromEnforcement</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ObjectReference">
+[]ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+to be excluded from enforcing a namespace label of origin.
+Applies only if enforcedNamespaceLabel set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Use the host&rsquo;s network namespace if true.
+Make sure to understand the security implications if you want to enable it.
+When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podTargetLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
 </tbody>

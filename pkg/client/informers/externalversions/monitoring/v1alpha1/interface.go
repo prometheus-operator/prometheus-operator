@@ -24,6 +24,8 @@ import (
 type Interface interface {
 	// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
 	AlertmanagerConfigs() AlertmanagerConfigInformer
+	// PrometheusAgents returns a PrometheusAgentInformer.
+	PrometheusAgents() PrometheusAgentInformer
 }
 
 type version struct {
@@ -40,4 +42,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AlertmanagerConfigs returns a AlertmanagerConfigInformer.
 func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
 	return &alertmanagerConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// PrometheusAgents returns a PrometheusAgentInformer.
+func (v *version) PrometheusAgents() PrometheusAgentInformer {
+	return &prometheusAgentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
