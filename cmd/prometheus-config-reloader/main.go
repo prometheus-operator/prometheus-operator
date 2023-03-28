@@ -146,8 +146,8 @@ func main() {
 		})
 	}
 	f := func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"status":"up"}`))
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"up"}`))
 	}
 	if *listenAddress != "" && *watchInterval != 0 {
 		g.Add(func() error {
