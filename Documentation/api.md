@@ -14232,9 +14232,8 @@ More info:
 <h3 id="monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig
 </h3>
 <div>
-<p>ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across</p>
-<pre><code>multiple namespaces into the Prometheus configuration.
-</code></pre>
+<p>ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
+multiple namespaces into the Prometheus configuration.</p>
 </div>
 <table>
 <thead>
@@ -14298,6 +14297,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<p>StaticConfigs list of labeled statically configured targets for this job.</p>
 </td>
 </tr>
 <tr>
@@ -14310,6 +14310,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<p>FileSDConfigs list of file service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -14322,6 +14323,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -14698,7 +14700,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </td>
 <td>
 <p>List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
-prometheus-operator project can&rsquo;t guarantee that the working directly will stay the same over time.
+prometheus-operator project can&rsquo;t guarantee that the working directory will stay the same over time.
 Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.</p>
 </td>
 </tr>
@@ -14713,8 +14715,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the refresh interval for the file. Prometheus will reload the content of the file at the interval
-defined by RefreshInterval.</p>
+<p>RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.</p>
 </td>
 </tr>
 </tbody>
@@ -14862,7 +14863,7 @@ string
 </em>
 </td>
 <td>
-<p>URL to request service discovery from.</p>
+<p>URL from which the targets are fetched.</p>
 </td>
 </tr>
 <tr>
@@ -14876,8 +14877,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the refresh interval for the HTTP endpoint. Prometheus will reload the content of the endpoint at the
-interval defined by RefreshInterval.</p>
+<p>RefreshInterval configures the refresh interval at which Prometheus will re-query the
+endpoint to update the target list.</p>
 </td>
 </tr>
 </tbody>
@@ -17458,6 +17459,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<p>StaticConfigs list of labeled statically configured targets for this job.</p>
 </td>
 </tr>
 <tr>
@@ -17470,6 +17472,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<p>FileSDConfigs list of file service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -17482,6 +17485,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -18032,7 +18036,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<p>List of targets for this scrape configuration</p>
+<p>List of targets for this static configuration</p>
 </td>
 </tr>
 <tr>
@@ -18044,7 +18048,7 @@ map[github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.La
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of labels to add to the metrics scrape as part of this configuration</p>
+<p>Labels assigned to all metrics scraped from the targets.</p>
 </td>
 </tr>
 </tbody>

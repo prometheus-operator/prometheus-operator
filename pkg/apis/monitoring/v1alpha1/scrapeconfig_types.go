@@ -37,8 +37,7 @@ type Target string
 // +kubebuilder:storageversion
 
 // ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
-//
-//	multiple namespaces into the Prometheus configuration.
+// multiple namespaces into the Prometheus configuration.
 type ScrapeConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -68,9 +67,13 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 }
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
+// +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
+	// StaticConfigs list of labeled statically configured targets for this job.
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
+	// FileSDConfigs list of file service discovery configurations.
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
+	// HTTPSDConfigs list of HTTP service discovery configurations.
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
@@ -83,37 +86,39 @@ type ScrapeConfigSpec struct {
 
 // StaticConfig defines a prometheus static configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
+// +k8s:openapi-gen=true
 type StaticConfig struct {
-	// List of targets for this scrape configuration
+	// List of targets for this static configuration
 	Targets []Target `json:"targets"`
-	// List of labels to add to the metrics scrape as part of this configuration
+	// Labels assigned to all metrics scraped from the targets.
 	// +optional
 	Labels map[v1.LabelName]string `json:"labels,omitempty"`
 }
 
 // FileSDConfig defines a prometheus file service discovery configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
+// +k8s:openapi-gen=true
 type FileSDConfig struct {
 	// List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
-	// prometheus-operator project can't guarantee that the working directly will stay the same over time.
+	// prometheus-operator project can't guarantee that the working directory will stay the same over time.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
 	// +kubebuilder:validation:MinItems:=1
 	Files []string `json:"files"`
-	// Configures the refresh interval for the file. Prometheus will reload the content of the file at the interval
-	// defined by RefreshInterval.
+	// RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.
 	// +optional
 	RefreshInterval v1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // HTTPSDConfig defines a prometheus HTTP service discovery configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
+// +k8s:openapi-gen=true
 type HTTPSDConfig struct {
-	// URL to request service discovery from.
+	// URL from which the targets are fetched.
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	URL string `json:"url"`
-	// Configures the refresh interval for the HTTP endpoint. Prometheus will reload the content of the endpoint at the
-	// interval defined by RefreshInterval.
+	// RefreshInterval configures the refresh interval at which Prometheus will re-query the
+	// endpoint to update the target list.
 	// +optional
 	RefreshInterval v1.Duration `json:"refreshInterval,omitempty"`
 }

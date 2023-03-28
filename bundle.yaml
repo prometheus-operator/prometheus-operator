@@ -30479,8 +30479,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: "ScrapeConfig defines a namespaced Prometheus scrape_config to
-          be aggregated across \n multiple namespaces into the Prometheus configuration."
+        description: ScrapeConfig defines a namespaced Prometheus scrape_config to
+          be aggregated across multiple namespaces into the Prometheus configuration.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -30499,6 +30499,7 @@ spec:
               for a scrape configuration.
             properties:
               fileSDConfigs:
+                description: FileSDConfigs list of file service discovery configurations.
                 items:
                   description: FileSDConfig defines a prometheus file service discovery
                     configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
@@ -30506,7 +30507,7 @@ spec:
                     files:
                       description: 'List of files to be used for file discovery. Recommendation:
                         use absolute paths. While relative paths work, the prometheus-operator
-                        project can''t guarantee that the working directly will stay
+                        project can''t guarantee that the working directory will stay
                         the same over time. Files must be mounted using Prometheus.ConfigMaps
                         or Prometheus.Secrets.'
                       items:
@@ -30514,9 +30515,8 @@ spec:
                       minItems: 1
                       type: array
                     refreshInterval:
-                      description: Configures the refresh interval for the file. Prometheus
-                        will reload the content of the file at the interval defined
-                        by RefreshInterval.
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will reload the content of the files.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                   required:
@@ -30524,18 +30524,19 @@ spec:
                   type: object
                 type: array
               httpSDConfigs:
+                description: HTTPSDConfigs list of HTTP service discovery configurations.
                 items:
                   description: HTTPSDConfig defines a prometheus HTTP service discovery
                     configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
                   properties:
                     refreshInterval:
-                      description: Configures the refresh interval for the HTTP endpoint.
-                        Prometheus will reload the content of the endpoint at the
-                        interval defined by RefreshInterval.
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-query the endpoint to update the
+                        target list.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     url:
-                      description: URL to request service discovery from.
+                      description: URL from which the targets are fetched.
                       minLength: 1
                       pattern: ^http(s)?://.+$
                       type: string
@@ -30623,6 +30624,8 @@ spec:
                   type: object
                 type: array
               staticConfigs:
+                description: StaticConfigs list of labeled statically configured targets
+                  for this job.
                 items:
                   description: StaticConfig defines a prometheus static configuration
                     See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
@@ -30630,11 +30633,11 @@ spec:
                     labels:
                       additionalProperties:
                         type: string
-                      description: List of labels to add to the metrics scrape as
-                        part of this configuration
+                      description: Labels assigned to all metrics scraped from the
+                        targets.
                       type: object
                     targets:
-                      description: List of targets for this scrape configuration
+                      description: List of targets for this static configuration
                       items:
                         description: Target represents a target for Prometheus to
                           scrape
