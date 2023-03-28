@@ -1,3 +1,7 @@
+## 0.64.0-rc.1 / 2023-03-28
+
+No change compared to `0.64.0-rc.0` except fixes in the build pipeline.
+
 ## 0.64.0-rc.0 / 2023-03-27
 
 This release provides first-class support for running Prometheus in agent mode
