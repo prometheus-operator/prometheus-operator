@@ -232,7 +232,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	boolFalse := false
 	boolTrue := true
-	c := &v1.Container{
+	c := v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
 		ImagePullPolicy:          configReloader.imagePullPolicy,
@@ -256,10 +256,10 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		c = addProbes(c)
 	}
 
-	return *c
+	return c
 }
 
-func addProbes(c *v1.Container) *v1.Container {
+func addProbes(c v1.Container) v1.Container {
 	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean("/healthz"),
