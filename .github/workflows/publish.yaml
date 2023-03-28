@@ -12,10 +12,14 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     name: Publish container images
+
+    permissions:
+      id-token: write  # needed to sign images with cosign.
+      packages: write  # needed to push images to ghcr.io.
+
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
