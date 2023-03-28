@@ -29,6 +29,7 @@ var reloaderConfig = ContainerConfig{
 	MemoryRequest: "50Mi",
 	MemoryLimit:   "50Mi",
 	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+	EnableProbes:  true,
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
@@ -48,6 +49,14 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	}
 	if container.ImagePullPolicy != expectedImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
+	}
+
+	if container.LivenessProbe != nil {
+		t.Errorf("Expected LivenessProbe %v, but found %s", nil, container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe != nil {
+		t.Errorf("Expected ReadinessProbe %v, but found %s", nil, container.ReadinessProbe)
 	}
 }
 
@@ -117,6 +126,14 @@ func TestCreateConfigReloader(t *testing.T) {
 
 	if container.ImagePullPolicy != expectedImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
+	}
+
+	if container.LivenessProbe == nil {
+		t.Errorf("Expected LivenessProbe %s, but not found", container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe == nil {
+		t.Errorf("Expected ReadinessProbe %s, but not found", container.ReadinessProbe)
 	}
 }
 

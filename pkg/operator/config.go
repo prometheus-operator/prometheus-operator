@@ -55,7 +55,7 @@ type ContainerConfig struct {
 	MemoryRequest string
 	MemoryLimit   string
 	Image         string
-	IsProbes      bool
+	EnableProbes  bool
 }
 
 type Labels struct {

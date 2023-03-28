@@ -223,6 +223,43 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		resources.Limits[v1.ResourceMemory] = resource.MustParse(configReloader.config.MemoryLimit)
 	}
 
+	if configReloader.shard != nil {
+		envVars = append(envVars, v1.EnvVar{
+			Name:  "SHARD",
+			Value: strconv.Itoa(int(*configReloader.shard)),
+		})
+	}
+
+	boolFalse := false
+	boolTrue := true
+	c := &v1.Container{
+		Name:                     name,
+		Image:                    configReloader.config.Image,
+		ImagePullPolicy:          configReloader.imagePullPolicy,
+		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		Env:                      envVars,
+		Command:                  []string{"/bin/prometheus-config-reloader"},
+		Args:                     args,
+		Ports:                    ports,
+		VolumeMounts:             configReloader.volumeMounts,
+		Resources:                resources,
+		SecurityContext: &v1.SecurityContext{
+			AllowPrivilegeEscalation: &boolFalse,
+			ReadOnlyRootFilesystem:   &boolTrue,
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		},
+	}
+
+	if !configReloader.runOnce && configReloader.config.EnableProbes {
+		c = addProbes(c)
+	}
+
+	return *c
+}
+
+func addProbes(c *v1.Container) *v1.Container {
 	livenessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean("/healthz"),
@@ -251,56 +288,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		FailureThreshold:    10,
 	}
 
-	if configReloader.shard != nil {
-		envVars = append(envVars, v1.EnvVar{
-			Name:  "SHARD",
-			Value: strconv.Itoa(int(*configReloader.shard)),
-		})
-	}
-
-	boolFalse := false
-	boolTrue := true
-	if !configReloader.runOnce && configReloader.config.IsProbes {
-		return v1.Container{
-			Name:                     name,
-			Image:                    configReloader.config.Image,
-			ImagePullPolicy:          configReloader.imagePullPolicy,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Env:                      envVars,
-			Command:                  []string{"/bin/prometheus-config-reloader"},
-			Args:                     args,
-			Ports:                    ports,
-			VolumeMounts:             configReloader.volumeMounts,
-			Resources:                resources,
-			LivenessProbe:            livenessProbe,
-			ReadinessProbe:           readinessProbe,
-			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: &boolFalse,
-				ReadOnlyRootFilesystem:   &boolTrue,
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
-		}
-	}
-
-	return v1.Container{
-		Name:                     name,
-		Image:                    configReloader.config.Image,
-		ImagePullPolicy:          configReloader.imagePullPolicy,
-		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		Env:                      envVars,
-		Command:                  []string{"/bin/prometheus-config-reloader"},
-		Args:                     args,
-		Ports:                    ports,
-		VolumeMounts:             configReloader.volumeMounts,
-		Resources:                resources,
-		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: &boolFalse,
-			ReadOnlyRootFilesystem:   &boolTrue,
-			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
-			},
-		},
-	}
+	c.LivenessProbe = livenessProbe
+	c.ReadinessProbe = readinessProbe
+	return c
 }
