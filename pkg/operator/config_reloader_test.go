@@ -29,7 +29,64 @@ var reloaderConfig = ContainerConfig{
 	MemoryRequest: "50Mi",
 	MemoryLimit:   "50Mi",
 	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-	EnableProbes:  true,
+	EnableProbes:  false,
+}
+
+func TestCreateConfigReloaderEnableProbes(t *testing.T) {
+	reloaderConfigCopy := reloaderConfig
+	reloaderConfigCopy.EnableProbes = true
+	containerName := "config-reloader"
+	var container = CreateConfigReloader(
+		containerName,
+		ReloaderConfig(reloaderConfigCopy),
+		ReloaderURL(url.URL{
+			Scheme: "http",
+			Host:   "localhost:9093",
+			Path:   "/-/reload",
+		}),
+		ListenLocal(true),
+		LocalHost("localhost"),
+	)
+
+	if container.Name != "config-reloader" {
+		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
+	}
+
+	if container.LivenessProbe == nil {
+		t.Errorf("Expected LivenessProbe %s, but not found", container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe == nil {
+		t.Errorf("Expected ReadinessProbe %s, but not found", container.ReadinessProbe)
+	}
+}
+
+func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
+	reloaderConfigCopy := reloaderConfig
+	reloaderConfigCopy.EnableProbes = true
+	initContainerName := "init-config-reloader"
+	var container = CreateConfigReloader(
+		initContainerName,
+		ReloaderConfig(reloaderConfigCopy),
+		ReloaderURL(url.URL{
+			Scheme: "http",
+			Host:   "localhost:9093",
+			Path:   "/-/reload",
+		}),
+		ReloaderRunOnce(),
+	)
+
+	if container.Name != "init-config-reloader" {
+		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
+	}
+
+	if container.LivenessProbe != nil {
+		t.Errorf("Expected LivenessProbe %v, but found %s", nil, container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe != nil {
+		t.Errorf("Expected ReadinessProbe %v, but found %s", nil, container.ReadinessProbe)
+	}
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
@@ -128,12 +185,12 @@ func TestCreateConfigReloader(t *testing.T) {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 
-	if container.LivenessProbe == nil {
-		t.Errorf("Expected LivenessProbe %s, but not found", container.LivenessProbe)
+	if container.LivenessProbe != nil {
+		t.Errorf("Expected LivenessProbe %v, but found %s", nil, container.LivenessProbe)
 	}
 
-	if container.ReadinessProbe == nil {
-		t.Errorf("Expected ReadinessProbe %s, but not found", container.ReadinessProbe)
+	if container.ReadinessProbe != nil {
+		t.Errorf("Expected ReadinessProbe %v, but found %s", nil, container.ReadinessProbe)
 	}
 }
 

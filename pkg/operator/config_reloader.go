@@ -269,7 +269,7 @@ func addProbes(c v1.Container) v1.Container {
 
 	readinessProbeHandler := v1.ProbeHandler{
 		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean("/ready"),
+			Path: path.Clean("/healthz"),
 			Port: intstr.FromInt(configReloaderPort),
 		},
 	}
@@ -281,11 +281,10 @@ func addProbes(c v1.Container) v1.Container {
 	}
 
 	readinessProbe := &v1.Probe{
-		ProbeHandler:        readinessProbeHandler,
-		InitialDelaySeconds: 3,
-		TimeoutSeconds:      3,
-		PeriodSeconds:       5,
-		FailureThreshold:    10,
+		ProbeHandler:     readinessProbeHandler,
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 10,
 	}
 
 	c.LivenessProbe = livenessProbe
