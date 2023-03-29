@@ -2652,10 +2652,7 @@ PrometheusRuleSpec
 <code>apiVersion</code><br/>
 string</td>
 <td>
-<code>
-monitoring.coreos.com/v1
-</code>
-</td>
+<code>monitoring.coreos.com/v1</code></td>
 </tr>
 <tr>
 <td>
