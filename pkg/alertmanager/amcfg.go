@@ -421,11 +421,7 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if in.PagerdutyURL != nil {
-		pagerdutyURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.PagerdutyURL)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get Pagerduty URL")
-		}
-		u, err := url.Parse(pagerdutyURL)
+		u, err := url.Parse(*in.PagerdutyURL)
 		if err != nil {
 			return nil, errors.Wrap(err, "parse Pagerduty URL")
 		}

@@ -4048,9 +4048,7 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <code>pagerdutyUrl</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
+string
 </em>
 </td>
 <td>

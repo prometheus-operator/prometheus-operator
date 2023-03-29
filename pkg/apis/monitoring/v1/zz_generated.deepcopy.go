@@ -204,8 +204,8 @@ func (in *AlertmanagerGlobalConfig) DeepCopyInto(out *AlertmanagerGlobalConfig) 
 	}
 	if in.PagerdutyURL != nil {
 		in, out := &in.PagerdutyURL, &out.PagerdutyURL
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		*out = new(string)
+		**out = **in
 	}
 }
 

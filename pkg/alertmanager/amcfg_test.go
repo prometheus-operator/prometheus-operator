@@ -54,6 +54,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}
 
 	myrouteJSON, _ := json.Marshal(myroute)
+	pagerdutyURL := "example.pagerduty.com"
+	invalidPagerdutyURL := "://example.pagerduty.com"
 
 	tests := []struct {
 		name            string
@@ -505,12 +507,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "valid global config with Pagerduty URL",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &corev1.SecretKeySelector{
-					Key: "url",
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "pagerduty",
-					},
-				},
+				PagerdutyURL: &pagerdutyURL,
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -538,7 +535,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
-					PagerdutyURL: parseURL(t, "https://pagerduty.example.com"),
+					PagerdutyURL: parseURL(t, pagerdutyURL),
 				},
 				Receivers: []*receiver{
 					{
@@ -562,48 +559,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "global config with invalid Pagerduty URL",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &corev1.SecretKeySelector{
-					Key: "invalid_url",
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "pagerduty",
-					},
-				},
-			},
-			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "global-config",
-					Namespace: "mynamespace",
-				},
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-					},
-					Route: &monitoringv1alpha1.Route{
-						Receiver: "null",
-						Routes: []v1.JSON{
-							{
-								Raw: myrouteJSON,
-							},
-						},
-					},
-				},
-			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
-				Type: "OnNamespace",
-			},
-			wantErr: true,
-		},
-		{
-			name: "global config with missing Pagerduty URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &corev1.SecretKeySelector{
-					Key: "url",
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "not_existing",
-					},
-				},
+				PagerdutyURL: &invalidPagerdutyURL,
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -728,16 +684,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					"url":         []byte("https://opsgenie.example.com"),
 					"invalid_url": []byte("://opsgenie.example.com"),
 					"api_key":     []byte("mykey"),
-				},
-			},
-			&corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pagerduty",
-					Namespace: "mynamespace",
-				},
-				Data: map[string][]byte{
-					"url":         []byte("https://pagerduty.example.com"),
-					"invalid_url": []byte("://pagerduty.example.com"),
 				},
 			},
 		)
