@@ -1,4 +1,4 @@
-## 0.64.0-rc.0 / 2023-03-27
+## 0.64.0 / 2023-03-29
 
 This release provides first-class support for running Prometheus in agent mode
 with the new `PrometheusAgent` CRD. As the v1alpha1 version tells it, we don't
