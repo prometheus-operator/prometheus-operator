@@ -267,6 +267,18 @@ type ThanosRulerStatus struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
+func (tr *ThanosRuler) ExpectedReplicas() int {
+	if tr.Spec.Replicas == nil {
+		return 1
+	}
+	return int(*tr.Spec.Replicas)
+}
+
+func (tr *ThanosRuler) SetReplicas(i int)            { tr.Status.Replicas = int32(i) }
+func (tr *ThanosRuler) SetUpdatedReplicas(i int)     { tr.Status.UpdatedReplicas = int32(i) }
+func (tr *ThanosRuler) SetAvailableReplicas(i int)   { tr.Status.AvailableReplicas = int32(i) }
+func (tr *ThanosRuler) SetUnavailableReplicas(i int) { tr.Status.UnavailableReplicas = int32(i) }
+
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ThanosRuler) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()

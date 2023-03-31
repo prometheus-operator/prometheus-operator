@@ -186,7 +186,7 @@ func testOperatorUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = framework.WaitForThanosRulerReady(thanosRuler, 5*time.Minute)
+	err = framework.WaitForThanosRulerReady(context.Background(), thanosRuler, 5*time.Minute)
 	if err != nil {
 		t.Fatal(err)
 	}
