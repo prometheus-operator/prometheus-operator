@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,7 +134,8 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	Deny bool `json:"deny,omitempty"`
 }
 
-// Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.
+// Condition represents the state of the resources associated with the
+// Prometheus, Alertmanager or ThanosRuler resource.
 // +k8s:deepcopy-gen=true
 type Condition struct {
 	// Type of the condition being reported.

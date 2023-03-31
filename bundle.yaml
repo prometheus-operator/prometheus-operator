@@ -11580,7 +11580,7 @@ spec:
                 description: The current state of the Alertmanager object.
                 items:
                   description: Condition represents the state of the resources associated
-                    with the Prometheus or Alertmanager resource.
+                    with the Prometheus, Alertmanager or ThanosRuler resource.
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the time of the last update
@@ -20808,7 +20808,7 @@ spec:
                 description: The current state of the Prometheus deployment.
                 items:
                   description: Condition represents the state of the resources associated
-                    with the Prometheus or Alertmanager resource.
+                    with the Prometheus, Alertmanager or ThanosRuler resource.
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the time of the last update
@@ -30010,7 +30010,7 @@ spec:
                 description: The current state of the Prometheus deployment.
                 items:
                   description: Condition represents the state of the resources associated
-                    with the Prometheus or Alertmanager resource.
+                    with the Prometheus, Alertmanager or ThanosRuler resource.
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the time of the last update
@@ -30964,10 +30964,24 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: The version of Thanos Ruler
+      jsonPath: .spec.version
+      name: Version
+      type: string
     - description: The number of desired replicas
       jsonPath: .spec.replicas
       name: Replicas
       type: integer
+    - description: The number of ready replicas
+      jsonPath: .status.availableReplicas
+      name: Ready
+      type: integer
+    - jsonPath: .status.conditions[?(@.type == 'Reconciled')].status
+      name: Reconciled
+      type: string
+    - jsonPath: .status.conditions[?(@.type == 'Available')].status
+      name: Available
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -37577,14 +37591,54 @@ spec:
             type: object
           status:
             description: 'Most recent observed status of the ThanosRuler cluster.
-              Read-only. Not included when requesting from the apiserver, only from
-              the ThanosRuler Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+              Read-only. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
             properties:
               availableReplicas:
                 description: Total number of available pods (ready for at least minReadySeconds)
                   targeted by this ThanosRuler deployment.
                 format: int32
                 type: integer
+              conditions:
+                description: The current state of the Alertmanager object.
+                items:
+                  description: Condition represents the state of the resources associated
+                    with the Prometheus, Alertmanager or ThanosRuler resource.
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the time of the last update
+                        to the current status property.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Human-readable message indicating details for the
+                        condition's last transition.
+                      type: string
+                    observedGeneration:
+                      description: ObservedGeneration represents the .metadata.generation
+                        that the condition was set based upon. For instance, if `.metadata.generation`
+                        is currently 12, but the `.status.conditions[].observedGeneration`
+                        is 9, the condition is out of date with respect to the current
+                        state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: Reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition.
+                      type: string
+                    type:
+                      description: Type of the condition being reported.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               paused:
                 description: Represents whether any actions on the underlying managed
                   objects are being performed. Only delete actions will be performed.
@@ -37616,7 +37670,8 @@ spec:
         type: object
     served: true
     storage: true
-    subresources: {}
+    subresources:
+      status: {}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -37659,6 +37714,7 @@ rules:
   - prometheusagents/status
   - thanosrulers
   - thanosrulers/finalizers
+  - thanosrulers/status
   - servicemonitors
   - podmonitors
   - probes

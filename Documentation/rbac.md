@@ -44,6 +44,7 @@ rules:
   - prometheusagents/status
   - thanosrulers
   - thanosrulers/finalizers
+  - thanosrulers/status
   - servicemonitors
   - podmonitors
   - probes
