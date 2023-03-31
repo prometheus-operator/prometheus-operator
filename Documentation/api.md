@@ -722,6 +722,18 @@ If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If you don&rsquo;t want the kubelet to automatically mount a ServiceAccount&rsquo;s API credentials, you can opt out of the default behavior.
+You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token for a pod by setting automountServiceAccountToken: false on the pod spec.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4687,6 +4699,18 @@ AlertmanagerConfiguration
 <p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If you don&rsquo;t want the kubelet to automatically mount a ServiceAccount&rsquo;s API credentials, you can opt out of the default behavior.
+You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token for a pod by setting automountServiceAccountToken: false on the pod spec.</p>
 </td>
 </tr>
 </tbody>

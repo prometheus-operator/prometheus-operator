@@ -1047,3 +1047,20 @@ func TestConfigReloader(t *testing.T) {
 	}
 
 }
+
+func TestAutomountServiceAccountToken(t *testing.T) {
+	for i := range []int{0, 1} {
+		automountServiceAccountToken := (i == 0)
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				AutomountServiceAccountToken: &automountServiceAccountToken,
+			},
+		}, defaultTestConfig, "", nil)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
+		if *sset.Spec.Template.Spec.AutomountServiceAccountToken != automountServiceAccountToken {
+			t.Fatal("AutomountServiceAccountToken not found")
+		}
+	}
+}
