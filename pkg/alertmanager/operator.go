@@ -506,47 +506,32 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Alertmanager objects.
 	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.rr.EnqueueForStatus(obj.(*monitoringv1.Alertmanager))
+		c.RefreshStatusFor(obj.(*monitoringv1.Alertmanager))
 	})
 
 	c.addHandlers()
 
-	// Run a goroutine that refreshes regularly the Alertmanager objects that
-	// aren't fully available to keep the status up-to-date with the pod
-	// conditions. In practice when a new version of the statefulset is rolled
-	// out and the updated pod is crashlooping, the statefulset status won't
-	// see any update because the number of ready/updated replicas doesn't
-	// change. Without the periodic refresh, the Alertmanager object's status
-	// would report "containers with incomplete status: [init-config-reloader]"
-	// forever.
 	// TODO(simonpasquier): watch for Alertmanager pods instead of polling.
-	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
-					a := o.(*monitoringv1.Alertmanager)
-					for _, cond := range a.Status.Conditions {
-						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
-							c.rr.EnqueueForStatus(a)
-							break
-						}
-					}
-				})
-				if err != nil {
-					level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
-				}
-			}
-		}
-	}()
+	go operator.StatusPoller(ctx, c)
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
+}
+
+// Iterate implements the operator.StatusReconciler interface.
+func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+	if err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+		a := o.(*monitoringv1.Alertmanager)
+		processFn(a, a.Status.Conditions)
+	}); err != nil {
+		level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+	}
+}
+
+// RefreshStatus implements the operator.StatusReconciler interface.
+func (c *Operator) RefreshStatusFor(o metav1.Object) {
+	c.rr.EnqueueForStatus(o)
 }
 
 // Resolve implements the operator.Syncer interface.

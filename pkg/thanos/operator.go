@@ -345,11 +345,34 @@ func (o *Operator) Run(ctx context.Context) error {
 		return err
 	}
 
+	// Refresh the status of the existing ThanosRuler objects.
+	_ = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		o.rr.EnqueueForStatus(obj.(*monitoringv1.Alertmanager))
+	})
+
 	o.addHandlers()
+
+	// TODO(simonpasquier): watch for ThanosRuler pods instead of polling.
+	go operator.StatusPoller(ctx, o)
 
 	o.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
+}
+
+// Iterate implements the operator.StatusReconciler interface.
+func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o interface{}) {
+		a := o.(*monitoringv1.Alertmanager)
+		processFn(a, a.Status.Conditions)
+	}); err != nil {
+		level.Error(o.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+	}
+}
+
+// RefreshStatus implements the operator.StatusReconciler interface.
+func (o *Operator) RefreshStatusFor(obj metav1.Object) {
+	o.rr.EnqueueForStatus(obj)
 }
 
 // TODO: Do we need to enqueue configmaps just for the namespace or in general?
