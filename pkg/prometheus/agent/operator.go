@@ -292,12 +292,12 @@ func (c *Operator) Run(ctx context.Context) error {
 		return nil
 	}
 
-	allowed, err := c.checkAgentAuthorization(ctx)
+	missingPermissions, err := c.getMissingPermissions(ctx)
 	if err != nil {
 		return err
 	}
-	if !allowed {
-		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects")
+	if len(missingPermissions) > 0 {
+		level.Warn(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects", "missingpermissions", fmt.Sprintf("%v", missingPermissions))
 		return nil
 	}
 
@@ -1333,9 +1333,9 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	}
 }
 
-// checkAgentAuthorization checks if the operator has access to PrometheusAgent CRD
-// It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
-func (c *Operator) checkAgentAuthorization(ctx context.Context) (bool, error) {
+// getMissingPermissions returns the RBAC permissions that the controller would need to be
+// granted to fulfill its mission. An empty map means that everything is ok.
+func (c *Operator) getMissingPermissions(ctx context.Context) (map[string][]string, error) {
 	verbs := map[string][]string{
 		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
 		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
@@ -1343,6 +1343,8 @@ func (c *Operator) checkAgentAuthorization(ctx context.Context) (bool, error) {
 	var ssar *authv1.SelfSubjectAccessReview
 	var ssarResponse *authv1.SelfSubjectAccessReview
 	var err error
+
+	missingPermissions := map[string][]string{}
 
 	for ns := range c.config.Namespaces.PrometheusAllowList {
 		for resource, verbs := range verbs {
@@ -1360,14 +1362,14 @@ func (c *Operator) checkAgentAuthorization(ctx context.Context) (bool, error) {
 				}
 				ssarResponse, err = c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
 				if err != nil {
-					return false, err
+					return nil, err
 				}
 				if !ssarResponse.Status.Allowed {
-					return false, nil
+					missingPermissions[resource] = append(missingPermissions[resource], verb)
 				}
 			}
 		}
 	}
 
-	return true, nil
+	return missingPermissions, nil
 }
