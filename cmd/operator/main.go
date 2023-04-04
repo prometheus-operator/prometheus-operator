@@ -33,6 +33,7 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
@@ -266,11 +267,39 @@ func Main() int {
 		return 1
 	}
 
-	pao, err := prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+	var pao *prometheusagentcontroller.Operator
+	verbs := map[string][]string{
+		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+	}
+
+	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus-agent controller failed: ", err)
+		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
 		cancel()
 		return 1
+	}
+
+	err = cc.CheckPrerequisites(ctx,
+		namespaces(cfg.Namespaces.AllowList).asSlice(),
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.PrometheusAgentName)
+
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "Prometheus agent controller disabled because prerequisites not met", "err", err)
+	case err != nil:
+		level.Error(logger).Log("msg", "failed to check prerequisites for prometheus-agent controller ", "err", err)
+		cancel()
+		return 1
+	default:
+		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
+			cancel()
+			return 1
+		}
 	}
 
 	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
@@ -360,7 +389,9 @@ func Main() int {
 	}))
 
 	wg.Go(func() error { return po.Run(ctx) })
-	wg.Go(func() error { return pao.Run(ctx) })
+	if pao != nil {
+		wg.Go(func() error { return pao.Run(ctx) })
+	}
 	wg.Go(func() error { return ao.Run(ctx) })
 	wg.Go(func() error { return to.Run(ctx) })
 
