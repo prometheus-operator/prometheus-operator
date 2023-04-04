@@ -1072,7 +1072,7 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape interval is used.</p>
+If not specified, the Prometheus global scrape timeout is used.</p>
 </td>
 </tr>
 <tr>
@@ -7788,7 +7788,7 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape interval is used.</p>
+If not specified, the Prometheus global scrape timeout is used.</p>
 </td>
 </tr>
 <tr>

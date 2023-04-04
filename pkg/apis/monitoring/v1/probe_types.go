@@ -61,7 +61,7 @@ type ProbeSpec struct {
 	// If not specified Prometheus' global scrape interval is used.
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
-	// If not specified, the Prometheus global scrape interval is used.
+	// If not specified, the Prometheus global scrape timeout is used.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
