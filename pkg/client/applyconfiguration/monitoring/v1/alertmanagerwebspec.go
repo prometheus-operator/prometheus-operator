@@ -20,6 +20,8 @@ package v1
 // with apply.
 type AlertmanagerWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
+	GetConcurrency                        *uint32 `json:"getConcurrency,omitempty"`
+	Timeout                               *uint32 `json:"timeout,omitempty"`
 }
 
 // AlertmanagerWebSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerWebSpec type for use with
@@ -41,5 +43,21 @@ func (b *AlertmanagerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfi
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *AlertmanagerWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *AlertmanagerWebSpecApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithGetConcurrency sets the GetConcurrency field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the GetConcurrency field is set to the value of the last call.
+func (b *AlertmanagerWebSpecApplyConfiguration) WithGetConcurrency(value uint32) *AlertmanagerWebSpecApplyConfiguration {
+	b.GetConcurrency = &value
+	return b
+}
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *AlertmanagerWebSpecApplyConfiguration) WithTimeout(value uint32) *AlertmanagerWebSpecApplyConfiguration {
+	b.Timeout = &value
 	return b
 }

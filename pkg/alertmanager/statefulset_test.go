@@ -24,6 +24,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -438,6 +439,109 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 
 	if !containsWebRoutePrefix {
 		t.Fatal("expected stateful set to contain arg '-web.route-prefix'")
+	}
+}
+
+func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
+
+	tt := []struct {
+		scenario         string
+		version          string
+		web              *monitoringv1.AlertmanagerWebSpec
+		expectTimeoutArg bool
+	}{{
+		scenario:         "no timeout by default",
+		version:          operator.DefaultAlertmanagerVersion,
+		web:              nil,
+		expectTimeoutArg: false,
+	}, {
+		scenario: "no timeout for old version",
+		version:  "0.16.9",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			Timeout: toPtr(uint32(50)),
+		},
+		expectTimeoutArg: false,
+	}, {
+		scenario: "timeout arg set if specified",
+		version:  operator.DefaultAlertmanagerVersion,
+		web: &monitoringv1.AlertmanagerWebSpec{
+			Timeout: toPtr(uint32(50)),
+		},
+		expectTimeoutArg: true,
+	}}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Web = ts.web
+
+			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			args := ss.Template.Spec.Containers[0].Args
+			if got := slices.ContainsFunc(args, containsString("-web.timeout")); got != ts.expectTimeoutArg {
+				t.Fatalf("expected alertmanager args %v web.timeout to be %v but is %v", args, ts.expectTimeoutArg, got)
+			}
+
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
+
+	tt := []struct {
+		scenario                string
+		version                 string
+		web                     *monitoringv1.AlertmanagerWebSpec
+		expectGetConcurrencyArg bool
+	}{{
+		scenario:                "no get-concurrency by default",
+		version:                 operator.DefaultAlertmanagerVersion,
+		web:                     nil,
+		expectGetConcurrencyArg: false,
+	}, {
+		scenario: "no get-concurrency for old version",
+		version:  "0.16.9",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			GetConcurrency: toPtr(uint32(50)),
+		},
+		expectGetConcurrencyArg: false,
+	}, {
+		scenario: "get-concurrency arg set if specified",
+		version:  operator.DefaultAlertmanagerVersion,
+
+		web: &monitoringv1.AlertmanagerWebSpec{
+			GetConcurrency: toPtr(uint32(50)),
+		},
+		expectGetConcurrencyArg: true,
+	}}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Web = ts.web
+
+			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			args := ss.Template.Spec.Containers[0].Args
+			if got := slices.ContainsFunc(args, containsString("-web.get-concurrency")); got != ts.expectGetConcurrencyArg {
+				t.Fatalf("expected alertmanager args %v web.get-concurrency to be %v but is %v", args, ts.expectGetConcurrencyArg, got)
+			}
+
+		})
 	}
 }
 
@@ -1046,4 +1150,14 @@ func TestConfigReloader(t *testing.T) {
 		}
 	}
 
+}
+
+func containsString(sub string) func(string) bool {
+	return func(x string) bool {
+		return strings.Contains(x, sub)
+	}
+}
+
+func toPtr[T any](t T) *T {
+	return &t
 }
