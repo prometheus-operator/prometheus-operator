@@ -1869,6 +1869,10 @@
                                 "description": "Whether or not to notify about resolved alerts.",
                                 "type": "boolean"
                               },
+                              "device": {
+                                "description": "The name of the device to send the notification to.",
+                                "type": "string"
+                              },
                               "sound": {
                                 "description": "The name of one of the sounds supported by device clients to override the user's default sound choice",
                                 "type": "string"

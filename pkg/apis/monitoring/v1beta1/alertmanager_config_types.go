@@ -715,6 +715,9 @@ type PushoverConfig struct {
 	URLTitle string `json:"urlTitle,omitempty"`
 	// The name of one of the sounds supported by device clients to override the user's default sound choice
 	// +optional
+	Device string `json:"device,omitempty"`
+	// The name of one of the sounds supported by device clients to override the user's default sound choice
+	// +optional
 	Sound string `json:"sound,omitempty"`
 	// Priority, see https://pushover.net/api#priority
 	// +optional
