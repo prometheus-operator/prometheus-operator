@@ -713,7 +713,7 @@ type PushoverConfig struct {
 	// A title for supplementary URL, otherwise just the URL is shown
 	// +optional
 	URLTitle string `json:"urlTitle,omitempty"`
-	// The name of one of the sounds supported by device clients to override the user's default sound choice
+	// The name of one of the devices to send the notification to
 	// +optional
 	Device string `json:"device,omitempty"`
 	// The name of one of the sounds supported by device clients to override the user's default sound choice
