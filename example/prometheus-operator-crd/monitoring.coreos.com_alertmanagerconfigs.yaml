@@ -1399,8 +1399,8 @@ spec:
                           See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
                         properties:
                           device:
-                            description: The name of one of the devices to send the
-                              notification to
+                            description: The name of a device to send the notification
+                              to
                             type: string
                           expire:
                             description: How long your notification will continue

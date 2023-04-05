@@ -1353,7 +1353,7 @@
                         description: 'PushoverConfig configures notifications via Pushover. See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config',
                         properties: {
                           device: {
-                            description: "The name of one of the sounds supported by device clients to override the user's default sound choice",
+                            description: 'The name of a device to send the notification to',
                             type: 'string',
                           },
                           expire: {

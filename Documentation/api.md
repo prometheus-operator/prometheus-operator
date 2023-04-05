@@ -19711,7 +19711,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of one of the sounds supported by device clients to override the user&rsquo;s default sound choice</p>
+<p>The name of a device to send the notification to</p>
 </td>
 </tr>
 <tr>
