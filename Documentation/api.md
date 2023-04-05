@@ -16458,7 +16458,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of one of the devices to send the notification to</p>
+<p>The name of a device to send the notification to</p>
 </td>
 </tr>
 <tr>
