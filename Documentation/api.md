@@ -4826,6 +4826,32 @@ WebHTTPConfig
 <p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>getConcurrency</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum number of GET requests processed concurrently. This corresponds to the
+Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Timeout for HTTP requests. This corresponds to the Alertmanager&rsquo;s
+<code>--web.timeout</code> flag.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ArbitraryFSAccessThroughSMsConfig">ArbitraryFSAccessThroughSMsConfig

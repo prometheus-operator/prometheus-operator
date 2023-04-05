@@ -6066,6 +6066,11 @@
                   "web": {
                     "description": "Defines the web command line flags when starting Alertmanager.",
                     "properties": {
+                      "getConcurrency": {
+                        "description": "Maximum number of GET requests processed concurrently. This corresponds to the Alertmanager's `--web.get-concurrency` flag.",
+                        "format": "int32",
+                        "type": "integer"
+                      },
                       "httpConfig": {
                         "description": "Defines HTTP parameters for web server.",
                         "properties": {
@@ -6110,6 +6115,11 @@
                           }
                         },
                         "type": "object"
+                      },
+                      "timeout": {
+                        "description": "Timeout for HTTP requests. This corresponds to the Alertmanager's `--web.timeout` flag.",
+                        "format": "int32",
+                        "type": "integer"
                       },
                       "tlsConfig": {
                         "description": "Defines the TLS parameters for HTTPS.",
