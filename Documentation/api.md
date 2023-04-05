@@ -16451,6 +16451,18 @@ string
 </tr>
 <tr>
 <td>
+<code>device</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of one of the devices to send the notification to</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>sound</code><br/>
 <em>
 string
@@ -19688,6 +19700,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>A title for supplementary URL, otherwise just the URL is shown</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>device</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of one of the sounds supported by device clients to override the user&rsquo;s default sound choice</p>
 </td>
 </tr>
 <tr>

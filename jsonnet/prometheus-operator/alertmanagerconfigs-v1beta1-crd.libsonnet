@@ -1352,6 +1352,10 @@
                       items: {
                         description: 'PushoverConfig configures notifications via Pushover. See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config',
                         properties: {
+                          device: {
+                            description: "The name of one of the sounds supported by device clients to override the user's default sound choice",
+                            type: 'string',
+                          },
                           expire: {
                             description: 'How long your notification will continue to be retried for, unless the user acknowledges the notification.',
                             pattern: '^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$',

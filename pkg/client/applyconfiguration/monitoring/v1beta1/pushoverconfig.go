@@ -26,7 +26,7 @@ type PushoverConfigApplyConfiguration struct {
 	Message      *string                              `json:"message,omitempty"`
 	URL          *string                              `json:"url,omitempty"`
 	URLTitle     *string                              `json:"urlTitle,omitempty"`
-	Device        *string                              `json:"device,omitempty"`
+	Device       *string                              `json:"device,omitempty"`
 	Sound        *string                              `json:"sound,omitempty"`
 	Priority     *string                              `json:"priority,omitempty"`
 	Retry        *string                              `json:"retry,omitempty"`
