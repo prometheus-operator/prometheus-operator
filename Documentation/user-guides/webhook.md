@@ -157,6 +157,8 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: prometheus-operator-admission-webhook
       volumes:
       - name: tls-certificates
