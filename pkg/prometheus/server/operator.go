@@ -18,8 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -266,7 +264,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = labelPrometheusName
+				options.LabelSelector = prompkg.LabelPrometheusName
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
@@ -1020,7 +1018,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	match, promKey := statefulSetKeyToPrometheusKey(key)
+	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
 	if !match {
 		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
 		return nil
@@ -1037,37 +1035,6 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return p.(*monitoringv1.Prometheus)
-}
-
-func statefulSetNameFromPrometheusName(name string, shard int) string {
-	if shard == 0 {
-		return fmt.Sprintf("prometheus-%s", name)
-	}
-	return fmt.Sprintf("prometheus-%s-shard-%d", name, shard)
-}
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
-
-func statefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
-func prometheusKeyToStatefulSetKey(key string, shard int) string {
-	keyParts := strings.Split(key, "/")
-	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
@@ -1183,7 +1150,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, prompkg.MakeStatefulSetService(p, c.config)); err != nil {
+	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -1195,7 +1162,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		level.Debug(logger).Log("msg", "reconciling statefulset")
 
-		obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key, shard))
+		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
 		exists := !apierrors.IsNotFound(err)
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrap(err, "retrieving statefulset failed")
@@ -1297,7 +1264,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -1363,7 +1330,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	for shard := range prompkg.ExpectedStatefulSetShardNames(p) {
-		ssetName := prometheusKeyToStatefulSetKey(key, shard)
+		ssetName := prompkg.KeyToStatefulSetKey(p, key, shard)
 		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
 
 		obj, err := c.ssetInfs.Get(ssetName)
@@ -1628,7 +1595,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := validateRemoteWriteSpec(remote); err != nil {
+		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		key := fmt.Sprintf("remoteWrite/%d", i)
@@ -1722,9 +1689,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (*operator.ShardedSecret, error) {
 	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
-	template := newTLSAssetSecret(p, labels)
+	template := prompkg.NewTLSAssetSecret(p, labels)
 
-	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p.Name))
+	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p))
 
 	for k, v := range store.TLSAssets {
 		sSecret.AppendData(k.String(), []byte(v))
@@ -1741,27 +1708,6 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitor
 	return sSecret, nil
 }
 
-func newTLSAssetSecret(p *monitoringv1.Prometheus, labels map[string]string) *v1.Secret {
-	boolTrue := true
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   prompkg.TLSAssetsSecretName(p.Name),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         p.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               p.Kind,
-					Name:               p.Name,
-					UID:                p.UID,
-				},
-			},
-		},
-		Data: map[string][]byte{},
-	}
-}
-
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
 	boolTrue := true
 
@@ -1772,7 +1718,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	webConfig, err := webconfig.New(
 		prompkg.WebConfigDir,
-		prompkg.WebConfigSecretName(p.Name),
+		prompkg.WebConfigSecretName(p),
 		fields,
 	)
 	if err != nil {
@@ -1792,31 +1738,6 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
-	}
-
-	return nil
-}
-
-// validateRemoteWriteSpec checks that mutually exclusive configurations are not
-// included in the Prometheus remoteWrite configuration section.
-// Reference:
-// https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
-	var nonNilFields []string
-	for k, v := range map[string]interface{}{
-		"basicAuth":     spec.BasicAuth,
-		"oauth2":        spec.OAuth2,
-		"authorization": spec.Authorization,
-		"sigv4":         spec.Sigv4,
-	} {
-		if reflect.ValueOf(v).IsNil() {
-			continue
-		}
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
-	}
-
-	if len(nonNilFields) > 1 {
-		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
 	return nil

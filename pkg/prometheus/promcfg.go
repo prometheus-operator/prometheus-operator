@@ -2025,3 +2025,56 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 
 	return append(scrapeConfigs, addlScrapeConfigs...), nil
 }
+
+// GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
+func (cg *ConfigGenerator) GenerateAgentConfiguration(
+	sMons map[string]*v1.ServiceMonitor,
+	pMons map[string]*v1.PodMonitor,
+	probes map[string]*v1.Probe,
+	store *assets.Store,
+	additionalScrapeConfigs []byte,
+) ([]byte, error) {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	// validates the value of scrapeTimeout based on scrapeInterval
+	if cpf.ScrapeTimeout != "" {
+		if err := CompareScrapeTimeoutToScrapeInterval(cpf.ScrapeTimeout, cpf.ScrapeInterval); err != nil {
+			return nil, err
+		}
+	}
+
+	// Global config
+	cfg := yaml.MapSlice{}
+	globalItems := yaml.MapSlice{}
+	globalItems = cg.appendScrapeIntervals(globalItems)
+	globalItems = cg.appendExternalLabels(globalItems)
+	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
+
+	// Scrape config
+	var (
+		scrapeConfigs   []yaml.MapSlice
+		apiserverConfig = cpf.APIServerConfig
+		shards          = int32(1)
+	)
+	if cpf.Shards != nil && *cpf.Shards > 1 {
+		shards = *cpf.Shards
+	}
+	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	if err != nil {
+		return nil, errors.Wrap(err, "generate additional scrape configs")
+	}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "scrape_configs",
+		Value: scrapeConfigs,
+	})
+
+	// Remote write config
+	if len(cpf.RemoteWrite) > 0 {
+		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+	}
+
+	return yaml.Marshal(cfg)
+}
