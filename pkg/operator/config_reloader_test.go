@@ -52,7 +52,7 @@ func TestCreateConfigReloaderEnableProbes(t *testing.T) {
 	}
 
 	if container.LivenessProbe == nil {
-		t.Errorf("Expected LivenessProbe %s, but not found", container.LivenessProbe)
+		t.Errorf("expected LivenessProbe but got none")
 	}
 
 	if container.ReadinessProbe == nil {
