@@ -261,10 +261,11 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 func addProbes(c v1.Container) v1.Container {
 	probe := &v1.Probe{
-		ProbeHandler:     v1.ProbeHandler{
+		ProbeHandler: v1.ProbeHandler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path: path.Clean("/healthz"),
 				Port: intstr.FromInt(configReloaderPort),
+			},
 		},
 	}
 
