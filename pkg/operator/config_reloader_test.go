@@ -56,7 +56,7 @@ func TestCreateConfigReloaderEnableProbes(t *testing.T) {
 	}
 
 	if container.ReadinessProbe == nil {
-		t.Errorf("Expected ReadinessProbe %s, but not found", container.ReadinessProbe)
+		t.Errorf("expected ReadinessProbe but got none")
 	}
 }
 
