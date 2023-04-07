@@ -84,7 +84,7 @@ func TestPrometheusRuleCRDValidation(t *testing.T) {
 			promRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name:  "empty",
+						Name: "empty",
 					},
 				},
 			},

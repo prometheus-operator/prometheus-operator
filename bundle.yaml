@@ -30226,7 +30226,6 @@ spec:
                       type: array
                   required:
                   - name
-                  - rules
                   type: object
                 type: array
                 x-kubernetes-list-map-keys:
