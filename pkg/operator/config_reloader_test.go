@@ -185,7 +185,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	}
 
 	if container.LivenessProbe != nil {
-		t.Errorf("Expected LivenessProbe %v, but found %s", nil, container.LivenessProbe)
+		t.Errorf("expected no LivenessProbe but got %v", container.LivenessProbe)
 	}
 
 	if container.ReadinessProbe != nil {
