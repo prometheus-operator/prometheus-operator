@@ -3639,7 +3639,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "podMonitorSelector": {
-                    "description": "*Experimental* PodMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* PodMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",

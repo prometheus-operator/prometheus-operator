@@ -1337,7 +1337,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -5203,7 +5203,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -8517,7 +8517,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -13301,7 +13301,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -15870,7 +15870,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
