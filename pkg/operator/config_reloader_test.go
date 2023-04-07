@@ -112,7 +112,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	}
 
 	if container.ReadinessProbe != nil {
-		t.Errorf("expected no ReadinessProbe but got %v",  container.ReadinessProbe)
+		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
 	}
 }
 
