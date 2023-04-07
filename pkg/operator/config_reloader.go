@@ -260,34 +260,15 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 }
 
 func addProbes(c v1.Container) v1.Container {
-	livenessProbeHandler := v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean("/healthz"),
-			Port: intstr.FromInt(configReloaderPort),
+	probe := &v1.Probe{
+		ProbeHandler:     v1.ProbeHandler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: path.Clean("/healthz"),
+				Port: intstr.FromInt(configReloaderPort),
 		},
 	}
 
-	readinessProbeHandler := v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean("/healthz"),
-			Port: intstr.FromInt(configReloaderPort),
-		},
-	}
-
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     livenessProbeHandler,
-		TimeoutSeconds:   3,
-		FailureThreshold: 10,
-	}
-
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readinessProbeHandler,
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 10,
-	}
-
-	c.LivenessProbe = livenessProbe
-	c.ReadinessProbe = readinessProbe
+	c.LivenessProbe = probe
+	c.ReadinessProbe = probe
 	return c
 }
