@@ -29,7 +29,6 @@ var reloaderConfig = ContainerConfig{
 	MemoryRequest: "50Mi",
 	MemoryLimit:   "50Mi",
 	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-	EnableProbes:  false,
 }
 
 func TestCreateConfigReloaderEnableProbes(t *testing.T) {
