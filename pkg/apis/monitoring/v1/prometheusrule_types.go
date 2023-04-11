@@ -64,7 +64,7 @@ type RuleGroup struct {
 	// Interval determines how often rules in the group are evaluated.
 	Interval Duration `json:"interval,omitempty"`
 	// List of alerting and recording rules.
-	Rules []Rule `json:"rules"`
+	Rules []Rule `json:"rules,omitempty"`
 	// PartialResponseStrategy is only used by ThanosRuler and will
 	// be ignored by Prometheus instances.
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
