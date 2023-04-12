@@ -1396,7 +1396,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		Rr:              c.rr,
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+		return errors.Wrap(err, "failed to get prometheus status")
 	}
 
 	p.Status = *pStatus

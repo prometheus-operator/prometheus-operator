@@ -859,7 +859,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		Rr:              c.rr,
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+		return errors.Wrap(err, "failed to get prometheus agent status")
 	}
 	p.Status = *pStatus
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
