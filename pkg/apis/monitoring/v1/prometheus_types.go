@@ -36,6 +36,7 @@ type PrometheusInterface interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetCommonPrometheusFields() CommonPrometheusFields
 	SetCommonPrometheusFields(CommonPrometheusFields)
+	GetStatus() PrometheusStatus
 }
 
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
@@ -48,6 +49,10 @@ func (l *Prometheus) SetCommonPrometheusFields(f CommonPrometheusFields) {
 
 func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
 	return l.TypeMeta
+}
+
+func (l *Prometheus) GetStatus() PrometheusStatus {
+	return l.Status
 }
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.

@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/common"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	"github.com/go-kit/log"
@@ -846,100 +846,22 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if err != nil {
 		return err
 	}
-
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
 
-	pStatus := monitoringv1.PrometheusStatus{
-		Paused: p.Spec.Paused,
+	pStatus, err := common.GetStatus(ctx, common.Config{
+		Kclient:         c.kclient,
+		Logger:          c.logger,
+		Key:             key,
+		Instance:        p,
+		Reconciliations: c.reconciliations,
+		SsetInfs:        c.ssetInfs,
+		Rr:              c.rr,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to update status subresource")
 	}
-
-	logger := log.With(c.logger, "key", key)
-	level.Info(logger).Log("msg", "update prometheus status")
-
-	var (
-		availableCondition = monitoringv1.Condition{
-			Type:   monitoringv1.Available,
-			Status: monitoringv1.ConditionTrue,
-			LastTransitionTime: metav1.Time{
-				Time: time.Now().UTC(),
-			},
-			ObservedGeneration: p.Generation,
-		}
-		messages []string
-		replicas = 1
-	)
-
-	if p.Spec.Replicas != nil {
-		replicas = int(*p.Spec.Replicas)
-	}
-
-	for shard := range prompkg.ExpectedStatefulSetShardNames(p) {
-		ssetName := prompkg.KeyToStatefulSetKey(p, key, shard)
-		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
-
-		obj, err := c.ssetInfs.Get(ssetName)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				// Object not yet in the store or already deleted.
-				level.Info(logger).Log("msg", "not found")
-				continue
-			}
-			return errors.Wrap(err, "failed to retrieve statefulset")
-		}
-
-		sset := obj.(*appsv1.StatefulSet)
-		if c.rr.DeletionInProgress(sset) {
-			continue
-		}
-
-		stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, sset)
-		if err != nil {
-			return errors.Wrap(err, "failed to retrieve statefulset state")
-		}
-
-		pStatus.Replicas += int32(len(stsReporter.Pods))
-		pStatus.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
-		pStatus.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
-		pStatus.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
-
-		pStatus.ShardStatuses = append(
-			pStatus.ShardStatuses,
-			monitoringv1.ShardStatus{
-				ShardID:             strconv.Itoa(shard),
-				Replicas:            int32(len(stsReporter.Pods)),
-				UpdatedReplicas:     int32(len(stsReporter.UpdatedPods())),
-				AvailableReplicas:   int32(len(stsReporter.ReadyPods())),
-				UnavailableReplicas: int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods())),
-			},
-		)
-
-		if len(stsReporter.ReadyPods()) >= replicas {
-			// All pods are ready (or the desired number of replicas is zero).
-			continue
-		}
-
-		if len(stsReporter.ReadyPods()) == 0 {
-			availableCondition.Reason = "NoPodReady"
-			availableCondition.Status = monitoringv1.ConditionFalse
-		} else if availableCondition.Status != monitoringv1.ConditionFalse {
-			availableCondition.Reason = "SomePodsNotReady"
-			availableCondition.Status = monitoringv1.ConditionDegraded
-		}
-
-		for _, p := range stsReporter.Pods {
-			if m := p.Message(); m != "" {
-				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
-			}
-		}
-	}
-
-	availableCondition.Message = strings.Join(messages, "\n")
-
-	reconciledCondition := c.reconciliations.GetCondition(key, p.Generation)
-	pStatus.Conditions = operator.UpdateConditions(pStatus.Conditions, availableCondition, reconciledCondition)
-
-	p.Status = pStatus
+	p.Status = *pStatus
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to update status subresource")
 	}
