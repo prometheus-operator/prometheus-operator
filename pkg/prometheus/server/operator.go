@@ -45,7 +45,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/common"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
@@ -1386,7 +1385,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
 
-	pStatus, err := common.GetStatus(ctx, common.Config{
+	pStatus, err := prompkg.GetStatus(ctx, prompkg.Config{
 		Kclient:         c.kclient,
 		Logger:          c.logger,
 		Key:             key,
