@@ -63,6 +63,8 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 
 * **`Prometheus`**, which defines a desired Prometheus deployment.
 
+* **`PrometheusAgent`**, which defines a desired Prometheus deployment, but running in Agent mode.
+
 * **`Alertmanager`**, which defines a desired Alertmanager deployment.
 
 * **`ThanosRuler`**, which defines a desired Thanos Ruler deployment.
