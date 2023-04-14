@@ -22,7 +22,7 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
   to fully manage the life cycle of Silences Custom resources, Nevertheless, this comes with a drawback
   as the team must be able to manage a new component in their stack.
 
-Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)), 
+Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
 because that would require us to fully manage this component as of any managed app (monitoring, logging, alerting etc..).
 Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
 
