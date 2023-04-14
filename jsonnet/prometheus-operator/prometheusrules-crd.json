@@ -118,8 +118,7 @@
                         }
                       },
                       "required": [
-                        "name",
-                        "rules"
+                        "name"
                       ],
                       "type": "object"
                     },
