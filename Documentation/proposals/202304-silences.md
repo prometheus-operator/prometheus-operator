@@ -22,8 +22,9 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
   to fully manage the life cycle of Silences Custom resources, Nevertheless, this comes with a drawback
   as the team must be able to manage a new component in their stack.
 
-Additionally, Having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)).
-It's really better to have this feature as part of prometheus-operator and keep it maintained and available for the community.
+Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)), 
+because that would require us to fully manage this component as of any managed app (monitoring, logging, alerting etc..).
+Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
 
 By Adding support for `Silence` CRD in the prometheus-operator, this will make users more flexible in terms of choosing the tool
 to deploy their silences and will free others from managing a standalone component within the stack.
@@ -57,11 +58,8 @@ Using Alertmanager API Directly comes with drawbacks:
 # How
 
 Creating a new cluster-scope Silence CRD that will act as an interface by adding silences via the Alertmanager API.
-Usage of Silences doesn't exclude the use of the other CRDs, they are not mutually exclusive.
-`Silence` will allow the creation of any silences to Alertmanager, while the other CRDs provide sane defaults. This will allow
-for isolated testing of the new `Silence` CRD.
 
-A typical Silence resouce should looks like the following:
+A typical `Silence` resource could look like the following:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
@@ -73,7 +71,7 @@ metadata:
 spec:
   selector:
     app: test-alertmanager
-  validUntil: "2023-06-01"
+  expiresAt: "2023-06-01"
   matchers:
     - name: namespace
       value: test-ns
@@ -106,6 +104,7 @@ spec:
 # Alternatives
 
 * Use Alertmanager API, with the pitfalls described earlier
+* Use [silence-operator](https://github.com/giantswarm/silence-operator), which is suboptimal as it requires users to install two operators for the feature
 
 # Action Plan
 
