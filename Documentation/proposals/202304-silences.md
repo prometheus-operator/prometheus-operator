@@ -82,7 +82,7 @@ The above resource will result in creating a silence in the Alertmanager with la
 `app: test-alertmanager`.
 
 * `selector` used to select which Kubernetes Service to use as an Alertmanager API.
-* `validUntil` to define the expiration of the silence.
+* `expiresAt` to define the expiration of the silence.
 * `matchers` field corresponds to the Alertmanager silence matchers each of which consists of:
   - `name` - name of tag on an alert to match
   - `value` - fixed string or expression to match against the value of the tag named by name above on an alert
@@ -108,5 +108,5 @@ spec:
 
 # Action Plan
 
-1. Create the `Silence` CRD, covering `selector`, `matchers` and `validUntil`.
+1. Create the `Silence` CRD, covering `selector`, `matchers` and `expiresAt`.
 2. Once released, add other mechanisms to the CRD and complete the implementation.
