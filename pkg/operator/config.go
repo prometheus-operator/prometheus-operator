@@ -54,6 +54,7 @@ type ContainerConfig struct {
 	CPULimit      string
 	MemoryRequest string
 	MemoryLimit   string
+	ConfigEnvvar  string
 	Image         string
 	EnableProbes  bool
 }
