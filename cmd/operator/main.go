@@ -33,9 +33,13 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -45,13 +49,18 @@ import (
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	pkgerrors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/client-go/kubernetes"
 	klog "k8s.io/klog/v2"
 )
 
@@ -260,7 +269,14 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
+	cm, err := initCommonConfig(cfg)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating common config failed: ", err)
+		cancel()
+		return 1
+	}
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, cm)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
@@ -294,7 +310,7 @@ func Main() int {
 		cancel()
 		return 1
 	default:
-		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r, cm)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -458,6 +474,143 @@ func Main() int {
 	}
 
 	return 0
+}
+
+func initCommonConfig(c operator.Config) (*prompkg.CommonConfig, error) {
+	var cm prompkg.CommonConfig
+	var err error
+	cm.ClusterConfig, err = k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "instantiating cluster config failed")
+	}
+
+	cm.KClient, err = kubernetes.NewForConfig(cm.ClusterConfig)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "instantiating kubernetes client failed")
+	}
+
+	cm.MClient, err = monitoringclient.NewForConfig(cm.ClusterConfig)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "instantiating monitoring client failed")
+	}
+
+	secretListWatchSelector, err := fields.ParseSelector(c.SecretListWatchSelector)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "can not parse secrets selector value")
+	}
+
+	// init promInfs
+	cm.PromInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = c.PromSelector
+			},
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating prometheus-agent informers")
+	}
+
+	// init smonInfs
+	cm.SmonInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			prompkg.ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ServiceMonitorName),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating servicemonitor informers")
+	}
+
+	// init pmonInfs
+	cm.PmonInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			prompkg.ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PodMonitorName),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating podmonitor informers")
+	}
+
+	// init probeInfs
+	cm.ProbeInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			prompkg.ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ProbeName),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating probe informers")
+	}
+
+	// init cmapInfs
+	cm.CmapInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = prompkg.LabelPrometheusName
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating configmap informers")
+	}
+
+	// init secrInfs
+	cm.SecrInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = secretListWatchSelector.String()
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating secrets informers")
+	}
+
+	// init ssetInfs
+	cm.SsetInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			prompkg.ResyncPeriod,
+			nil,
+		),
+		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
+	)
+	if err != nil {
+		return nil, pkgerrors.Wrap(err, "error creating statefulset informers")
+	}
+
+	return &cm, nil
 }
 
 func main() {

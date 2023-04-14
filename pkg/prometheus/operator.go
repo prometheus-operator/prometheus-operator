@@ -19,16 +19,39 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+)
+
+const (
+	ResyncPeriod = 5 * time.Minute
 )
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
+
+type CommonConfig struct {
+	ClusterConfig *rest.Config
+	KClient       *kubernetes.Clientset
+	MClient       *monitoringclient.Clientset
+
+	PromInfs  *informers.ForResource
+	SmonInfs  *informers.ForResource
+	PmonInfs  *informers.ForResource
+	ProbeInfs *informers.ForResource
+	CmapInfs  *informers.ForResource
+	SecrInfs  *informers.ForResource
+	SsetInfs  *informers.ForResource
+}
 
 func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
 	r := prometheusKeyInStatefulSet
