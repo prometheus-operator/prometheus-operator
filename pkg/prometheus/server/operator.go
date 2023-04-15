@@ -1748,7 +1748,6 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 // It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
 func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group string, resource string) (bool, error) {
 	if c.config.Namespaces.AllowList != nil {
-		allowed := true
 		for ns := range c.config.Namespaces.AllowList {
 			ssar := &authv1.SelfSubjectAccessReview{
 				Spec: authv1.SelfSubjectAccessReviewSpec{
@@ -1765,12 +1764,11 @@ func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group
 				return false, err
 			}
 			if !ssarResponse.Status.Allowed {
-				allowed = false
-				break
+				return ssarResponse.Status.Allowed, nil
 			}
 		}
 
-		return allowed, nil
+		return true, nil
 	}
 
 	ssar := &authv1.SelfSubjectAccessReview{

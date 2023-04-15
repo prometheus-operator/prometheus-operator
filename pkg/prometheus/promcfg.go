@@ -2116,12 +2116,12 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
-	m *v1alpha1.ScrapeConfig,
+	sc *v1alpha1.ScrapeConfig,
 	apiserverConfig *v1.APIServerConfig,
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-	jobName := fmt.Sprintf("scrapeconfig/%s/%s", m.Namespace, m.Name)
+	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -2134,16 +2134,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.AddHonorTimestamps(cfg, pointer.Bool(true))
 
-	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: m.Spec.MetricsPath})
+	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "relabel_configs",
-		Value: labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.RelabelConfigs),
+		Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
 	})
 
 	// StaticConfig
-	if len(m.Spec.StaticConfigs) > 0 {
-		configs := make([][]yaml.MapItem, len(m.Spec.StaticConfigs))
-		for i, config := range m.Spec.StaticConfigs {
+	if len(sc.Spec.StaticConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.StaticConfigs))
+		for i, config := range sc.Spec.StaticConfigs {
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "targets",
@@ -2162,9 +2162,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	// FileSDConfig
-	if len(m.Spec.FileSDConfigs) > 0 {
-		configs := make([][]yaml.MapItem, len(m.Spec.FileSDConfigs))
-		for i, config := range m.Spec.FileSDConfigs {
+	if len(sc.Spec.FileSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.FileSDConfigs))
+		for i, config := range sc.Spec.FileSDConfigs {
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "files",
@@ -2183,9 +2183,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	// HTTPSDConfig
-	if len(m.Spec.HTTPSDConfigs) > 0 {
-		configs := make([][]yaml.MapItem, len(m.Spec.HTTPSDConfigs))
-		for i, config := range m.Spec.HTTPSDConfigs {
+	if len(sc.Spec.HTTPSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.HTTPSDConfigs))
+		for i, config := range sc.Spec.HTTPSDConfigs {
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "url",

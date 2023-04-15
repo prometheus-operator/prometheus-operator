@@ -4776,7 +4776,7 @@ spec:
                   for use with `kubectl proxy`.
                 type: string
               scrapeConfigNamespaceSelector:
-                description: Namespace's labels to match for ServiceMonitor discovery.
+                description: Namespace's labels to match for ScrapeConfig discovery.
                   If nil, only check own namespace.
                 properties:
                   matchExpressions:

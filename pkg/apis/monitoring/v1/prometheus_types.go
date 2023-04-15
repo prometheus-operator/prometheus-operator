@@ -107,7 +107,7 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
-	// Namespace's labels to match for ServiceMonitor discovery. If nil, only
+	// Namespace's labels to match for ScrapeConfig discovery. If nil, only
 	// check own namespace.
 	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.

@@ -1426,7 +1426,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
 check own namespace.</p>
 </td>
 </tr>
@@ -5292,7 +5292,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
 check own namespace.</p>
 </td>
 </tr>
@@ -8606,7 +8606,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
 check own namespace.</p>
 </td>
 </tr>
@@ -13390,7 +13390,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
 check own namespace.</p>
 </td>
 </tr>
@@ -15959,7 +15959,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
 check own namespace.</p>
 </td>
 </tr>

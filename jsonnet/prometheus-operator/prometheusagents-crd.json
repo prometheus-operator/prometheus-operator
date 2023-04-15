@@ -4433,7 +4433,7 @@
                     "type": "string"
                   },
                   "scrapeConfigNamespaceSelector": {
-                    "description": "Namespace's labels to match for ServiceMonitor discovery. If nil, only check own namespace.",
+                    "description": "Namespace's labels to match for ScrapeConfig discovery. If nil, only check own namespace.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",

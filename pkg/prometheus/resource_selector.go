@@ -631,7 +631,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context) (map[string
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list probes in namespace %s", ns)
+			return nil, errors.Wrapf(err, "failed to list ScrapeConfigs in namespace %s", ns)
 		}
 	}
 
