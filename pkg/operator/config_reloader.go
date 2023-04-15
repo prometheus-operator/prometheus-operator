@@ -164,6 +164,9 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	if configReloader.runOnce {
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
 	}
+	if configReloader.config.PrometheusReplicaVal != "" {
+		args = append(args, fmt.Sprintf("--prometheus-replica-val=%s", configReloader.config.PrometheusReplicaVal))
+	}
 
 	if configReloader.listenLocal {
 		args = append(args, fmt.Sprintf("--listen-address=%s:%d", configReloader.localHost, configReloaderPort))

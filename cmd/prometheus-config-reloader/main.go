@@ -26,12 +26,11 @@ import (
 	"strings"
 	"time"
 
-	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
-
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -47,6 +46,7 @@ const (
 
 	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
+	PrometheusReplicaValDefault         = ""
 )
 
 func main() {
@@ -63,6 +63,11 @@ func main() {
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
+
+	createPrometheusReplicaVal := app.Flag(
+		"prometheus-replica-val",
+		"Prometheus config prometheus_replica var").
+		Default(PrometheusReplicaValDefault).String()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
@@ -104,6 +109,11 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
+	if createPrometheusReplicaVal != nil {
+		if err := createEnvvar(*createPrometheusReplicaVal, statefulsetOrdinalFromEnvvarDefault); err != nil {
+			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalFromEnvvarDefault))
+		}
+	}
 	if createStatefulsetOrdinalFrom != nil {
 		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
 			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
@@ -187,6 +197,9 @@ func createHTTPClient(timeout *time.Duration) http.Client {
 	}
 }
 
+func createEnvvar(val, envVar string) error {
+	return os.Setenv(envVar, val)
+}
 func createOrdinalEnvvar(fromName string) error {
 	reg := regexp.MustCompile(`\d+$`)
 	val := reg.FindString(os.Getenv(fromName))

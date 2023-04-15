@@ -50,12 +50,13 @@ type Config struct {
 // ContainerConfig holds some configuration for the ConfigReloader sidecar
 // that can be set through prometheus-operator command line arguments
 type ContainerConfig struct {
-	CPURequest    string
-	CPULimit      string
-	MemoryRequest string
-	MemoryLimit   string
-	Image         string
-	EnableProbes  bool
+	CPURequest           string
+	CPULimit             string
+	MemoryRequest        string
+	MemoryLimit          string
+	PrometheusReplicaVal string
+	Image                string
+	EnableProbes         bool
 }
 
 type Labels struct {

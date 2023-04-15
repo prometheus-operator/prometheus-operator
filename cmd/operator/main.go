@@ -59,8 +59,9 @@ const (
 )
 
 const (
-	defaultReloaderCPU    = "100m"
-	defaultReloaderMemory = "50Mi"
+	defaultReloaderCPU          = "100m"
+	defaultReloaderMemory       = "50Mi"
+	defaultPrometheusReplicaVal = ""
 )
 
 var (
@@ -153,6 +154,7 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
+	flagset.StringVar(&cfg.ReloaderConfig.PrometheusReplicaVal, "prometheus-config-reloader-replicaval", defaultPrometheusReplicaVal, "Prometheus config prometheus_replica var")
 	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", defaultReloaderCPU, "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
 	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", defaultReloaderCPU, "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", defaultReloaderMemory, "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
