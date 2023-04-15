@@ -109,7 +109,7 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	if createPrometheusReplicaVal != nil {
+	if *createPrometheusReplicaVal != "" {
 		if err := createEnvvar(*createPrometheusReplicaVal, statefulsetOrdinalFromEnvvarDefault); err != nil {
 			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalFromEnvvarDefault))
 		}
