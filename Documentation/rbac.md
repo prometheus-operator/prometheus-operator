@@ -45,6 +45,7 @@ rules:
   - thanosrulers
   - thanosrulers/finalizers
   - thanosrulers/status
+  - scrapeconfigs
   - servicemonitors
   - podmonitors
   - probes
