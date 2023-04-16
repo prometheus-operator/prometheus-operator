@@ -428,9 +428,9 @@ func (c *Operator) addHandlers() {
 	})
 	if c.sconInfs != nil {
 		c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc:    c.handleBmonAdd,
-			UpdateFunc: c.handleBmonUpdate,
-			DeleteFunc: c.handleBmonDelete,
+			AddFunc:    c.handleScrapeConfigAdd,
+			UpdateFunc: c.handleScrapeConfigUpdate,
+			DeleteFunc: c.handleScrapeConfigDelete,
 		})
 	}
 	c.ruleInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -802,6 +802,37 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
 		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.AddEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
+	if old.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion == cur.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion {
+		return
+	}
+
+	if o, ok := c.accessor.ObjectMetadata(cur); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig updated")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.UpdateEvent)
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig delete")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
