@@ -1789,6 +1789,12 @@ func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group
 
 // isScrapeConfigInstalled returns true if the CRD is installed and if the operator is allowed to access it
 func (c *Operator) isScrapeConfigInstalled(ctx context.Context) (bool, error) {
+	verbs := []string{
+		"get",
+		"watch",
+		"list",
+	}
+
 	crdInstalled, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.ScrapeConfigName)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to check if the API supports the ScrapeConfig CRD")
@@ -1797,10 +1803,12 @@ func (c *Operator) isScrapeConfigInstalled(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	ok, err := c.checkCRDAuthorization(ctx, "*", "monitoring.coreos.com", "scrapeconfigs")
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check authorization on the ScrapeConfig CRD")
+	for _, verb := range verbs {
+		_, err := c.checkCRDAuthorization(ctx, verb, "monitoring.coreos.com", "scrapeconfigs")
+		if err != nil {
+			return false, errors.Wrap(err, "failed to check authorization on the ScrapeConfig CRD")
+		}
 	}
 
-	return ok, nil
+	return true, nil
 }
