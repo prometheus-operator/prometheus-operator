@@ -286,7 +286,7 @@ Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck
+format: go-fmt jsonnet-fmt check-license shellcheck docs
 
 .PHONY: go-fmt
 go-fmt:
