@@ -66,22 +66,26 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	for _, s := range c.stores {
 		for _, p := range s.List() {
-			c.collectPrometheus(ch, p.(*v1.Prometheus))
+			c.collectPrometheus(ch, p.(v1.PrometheusInterface))
 		}
 	}
 }
 
-func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p *v1.Prometheus) {
+func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p v1.PrometheusInterface) {
 	replicas := float64(MinReplicas)
-	if p.Spec.Replicas != nil {
-		replicas = float64(*p.Spec.Replicas)
+	cpf := p.GetCommonPrometheusFields()
+	namespace := p.GetObjectMeta().GetNamespace()
+	name := p.GetObjectMeta().GetName()
+
+	if cpf.Replicas != nil {
+		replicas = float64(*cpf.Replicas)
 	}
-	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, p.Namespace, p.Name)
+	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, namespace, name)
 	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
-	if p.Spec.EnforcedSampleLimit != nil {
-		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*p.Spec.EnforcedSampleLimit), p.Namespace, p.Name)
+	if cpf.EnforcedSampleLimit != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*cpf.EnforcedSampleLimit), namespace, name)
 	}
-	if p.Spec.Shards != nil {
-		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*p.Spec.Shards), p.Namespace, p.Name)
+	if cpf.Shards != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*cpf.Shards), namespace, name)
 	}
 }
