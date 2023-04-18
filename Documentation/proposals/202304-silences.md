@@ -47,9 +47,8 @@ Using Alertmanager API Directly comes with drawbacks:
 
 # Goals
 
-* Provide a way for users to manage Alertmanager silences with the Kubernetes Way.
-* Make it easier to manage Alertmanager silences via centralised repo with e.g. ArgoCD, Flux...
-* Provide a way to manage silence expiration with a silence CR.
+* Provide a way for users to manage Alertmanager silences with Custom Resources (CR).
+* Enable management of Alertmanager silences via centralised repo with e.g. ArgoCD, Flux...
 
 ## Audience
 
