@@ -52,7 +52,7 @@ Using Alertmanager API Directly comes with drawbacks:
 
 # Non-Goals
 
-* This proposal doesn't aim to remove the CR after the expiration date has reached
+* This proposal do not cover automatic cleanup of expired Silence CRs
 * Refactoring of the other CRDs is not in scope for the first version
 
 # How
