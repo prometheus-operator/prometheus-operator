@@ -13,14 +13,21 @@ configurations in the Kubernetes way.
 
 # Why
 
-prometheus-operator doesn't have a way to automate the management of Alertmanager silences. Many users have either been using some internal scripts
+Prometheus-operator doesn't have a way to automate the management of Alertmanager silences. Users have either been using internal scripts
 or an additional operator that does the job e.g. [silence-operator](https://github.com/giantswarm/silence-operator).
 
-* Users who are using CI/CD jobs to manage silences have reported that this is really cumbersome.
-* Users that use scripts are not in better shape obviously.
-* Users that use a standalone operator that exposes a Silence CRD are in a better situation, some folks have reported that they are using GitOps
-  to fully manage the life cycle of Silences Custom resources, Nevertheless, this comes with a drawback
-  as the team must be able to manage a new component in their stack.
+* Users using CI/CD jobs to manage silences have reported that this is cumbersome, since they need to either expose
+  Alertmanager via an ingress or using a service account to connect to the cluster, in order to Add Silences.
+  However, there's folks that uses a Kubernetes Job to adds Silences,
+  In both situation, a CI/CD pipeline is needed in order to automate the execution, this includes managing the secrets and/or deprecation of code
+  In the Kubernetes Job way, teams need to build and deploy a container and monitor its status, which is an added efforts
+
+![CI/CD K8s Job Approach](../img/CICD-k8s-job.png "CI/CD K8s Job Approach")
+
+* Users that use a standalone operator that implements a Silence CRD are in a better situation,
+* Users that use a standalone operator that implements a Silence CRD are in a better situation,
+  for example users have reported that they are using GitOps to fully manage the life cycle of Silences Custom resources,
+  which in fact brings benefits to the whole team because having a history and revisions in Git as well as constancy to manage the silences in a multi-tenant environment
 
 Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
 because that would require us to fully manage this component as of any managed app (monitoring, logging, alerting etc..).
@@ -47,7 +54,7 @@ Using Alertmanager API Directly comes with drawbacks:
 ## Audience
 
 * Users who serve Prometheus as a service and want to have an interface in defining silences exposed to developers.
-* Users who want to manage silences the same way as for services running within the Kubernetes cluster
+* Users who want to manage silences the same way as for services running within the Kubernetes cluster.
 * Users who want a supported Kubernetes way of silences outside the Kubernetes cluster
 
 # Non-Goals
@@ -89,22 +96,13 @@ The above resource will result in creating a silence in the Alertmanager with la
   - `isRegex` - a boolean specifying whether to treat value as a regex (=~) or a fixed string (=)
   - `isEqual` - a boolean specifying whether to use equal signs (= or =~) or to negate the matcher (!= or !~)
 
-This example doesn't list all the fields that are offered by prometheus. The implementation of all the fields will be
+This example doesn't list all the fields that are offered by Alertmanager. The implementation of all the fields will be
 done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
-
-Also, to help selecting `Silence`, a new field will be added to the Alertmanager CRD:
-
-```yaml
-[...]
-spec:
-  silenceSelector: ...
-  silenceNamespaceSelector: ...
-```
 
 # Alternatives
 
-* Use Alertmanager API, with the pitfalls described earlier
-* Use [silence-operator](https://github.com/giantswarm/silence-operator), which is suboptimal as it requires users to install two operators for the feature
+* Use Alertmanager API
+* Use [silence-operator](https://github.com/giantswarm/silence-operator)
 
 # Action Plan
 
