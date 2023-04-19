@@ -821,7 +821,8 @@ type RelabelConfig struct {
 	// for the replace, keep, and drop actions.
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 	// Separator placed between concatenated source label values. default is ';'.
-	Separator string `json:"separator,omitempty"`
+	//+kubebuilder:default=;
+	Separator string `json:"separator"`
 	// Label to which the resulting value is written in a replace action.
 	// It is mandatory for replace actions. Regex capture groups are available.
 	TargetLabel string `json:"targetLabel,omitempty"`

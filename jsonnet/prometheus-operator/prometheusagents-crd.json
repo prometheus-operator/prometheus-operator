@@ -4331,6 +4331,9 @@
                                 "type": "string"
                               },
                               "separator": {
+                                "default": [
+                                  ";"
+                                ],
                                 "description": "Separator placed between concatenated source label values. default is ';'.",
                                 "type": "string"
                               },
@@ -4348,6 +4351,9 @@
                                 "type": "string"
                               }
                             },
+                            "required": [
+                              "separator"
+                            ],
                             "type": "object"
                           },
                           "type": "array"

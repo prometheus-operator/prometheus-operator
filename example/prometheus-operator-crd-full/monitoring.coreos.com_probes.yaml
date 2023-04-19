@@ -209,6 +209,8 @@ spec:
                         groups are available. Default is '$1'
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator placed between concatenated source label
                         values. default is ';'.
                       type: string
@@ -228,6 +230,8 @@ spec:
                         a replace action. It is mandatory for replace actions. Regex
                         capture groups are available.
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               module:
@@ -434,6 +438,8 @@ spec:
                                 Regex capture groups are available. Default is '$1'
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator placed between concatenated source
                                 label values. default is ';'.
                               type: string
@@ -454,6 +460,8 @@ spec:
                                 in a replace action. It is mandatory for replace actions.
                                 Regex capture groups are available.
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       selector:
@@ -567,6 +575,8 @@ spec:
                                 Regex capture groups are available. Default is '$1'
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator placed between concatenated source
                                 label values. default is ';'.
                               type: string
@@ -587,6 +597,8 @@ spec:
                                 in a replace action. It is mandatory for replace actions.
                                 Regex capture groups are available.
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       static:
