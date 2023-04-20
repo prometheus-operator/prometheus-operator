@@ -17,10 +17,12 @@ Prometheus-operator doesn't have a way to automate the management of Alertmanage
 or an additional operator that does the job e.g. [silence-operator](https://github.com/giantswarm/silence-operator).
 
 * Users using CI/CD jobs to manage silences have reported that this is cumbersome, since they need to either expose
-  Alertmanager via an ingress or using a service account to connect to the cluster, in order to Add Silences.
+  Alertmanager via an ingress or using a service account to connect to the cluster, and this is even more complicated
+  in a multi-cluster setup.
   However, there's folks that uses a Kubernetes Job to adds Silences,
   In both situation, a CI/CD pipeline is needed in order to automate the execution, this includes managing the secrets and/or deprecation of code
   In the Kubernetes Job way, teams need to build and deploy a container and monitor its status, which is an added efforts
+  CI/CD pipeline is not the best option in multi-cluster setups, teams need to manage k8s access, secrets, and configs.
 
 ![CI/CD K8s Job Approach](../img/CICD-k8s-job.png "CI/CD K8s Job Approach")
 
