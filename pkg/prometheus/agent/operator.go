@@ -126,7 +126,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:         cm.KClient,
 		mclient:         cm.MClient,
 		logger:          logger,
-		promInfs:        cm.PromInfs,
+		promInfs:        cm.PromAgInfs,
 		smonInfs:        cm.SmonInfs,
 		pmonInfs:        cm.PmonInfs,
 		probeInfs:       cm.ProbeInfs,

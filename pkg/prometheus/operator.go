@@ -22,12 +22,17 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -44,13 +49,14 @@ type CommonConfig struct {
 	KClient       *kubernetes.Clientset
 	MClient       *monitoringclient.Clientset
 
-	PromInfs  *informers.ForResource
-	SmonInfs  *informers.ForResource
-	PmonInfs  *informers.ForResource
-	ProbeInfs *informers.ForResource
-	CmapInfs  *informers.ForResource
-	SecrInfs  *informers.ForResource
-	SsetInfs  *informers.ForResource
+	PromInfs   *informers.ForResource
+	PromAgInfs *informers.ForResource
+	SmonInfs   *informers.ForResource
+	PmonInfs   *informers.ForResource
+	ProbeInfs  *informers.ForResource
+	CmapInfs   *informers.ForResource
+	SecrInfs   *informers.ForResource
+	SsetInfs   *informers.ForResource
 }
 
 func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
@@ -128,4 +134,159 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	return nil
+}
+
+func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
+	var cm CommonConfig
+	var err error
+
+	cm.ClusterConfig, err = k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating cluster config failed")
+	}
+
+	cm.KClient, err = kubernetes.NewForConfig(cm.ClusterConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
+	}
+
+	cm.MClient, err = monitoringclient.NewForConfig(cm.ClusterConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating monitoring client failed")
+	}
+
+	secretListWatchSelector, err := fields.ParseSelector(c.SecretListWatchSelector)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not parse secrets selector value")
+	}
+
+	// init promInfs
+	cm.PromInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = c.PromSelector
+			},
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheus informers")
+	}
+
+	// init promAgInfs
+	cm.PromAgInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = c.PromSelector
+			},
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
+	}
+
+	// init smonInfs
+	cm.SmonInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ServiceMonitorName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating servicemonitor informers")
+	}
+
+	// init pmonInfs
+	cm.PmonInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PodMonitorName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating podmonitor informers")
+	}
+
+	// init probeInfs
+	cm.ProbeInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
+			cm.MClient,
+			ResyncPeriod,
+			nil,
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ProbeName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating probe informers")
+	}
+
+	// init cmapInfs
+	cm.CmapInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = LabelPrometheusName
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating configmap informers")
+	}
+
+	// init secrInfs
+	cm.SecrInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = secretListWatchSelector.String()
+			},
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating secrets informers")
+	}
+
+	// init ssetInfs
+	cm.SsetInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			cm.KClient,
+			ResyncPeriod,
+			nil,
+		),
+		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating statefulset informers")
+	}
+
+	return &cm, nil
 }
