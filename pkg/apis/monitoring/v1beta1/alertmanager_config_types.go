@@ -1143,6 +1143,9 @@ type TimePeriod struct {
 	// Years is a list of YearRange
 	// +optional
 	Years []YearRange `json:"years,omitempty"`
+	// Location is the time zone for the time interval
+	// +optional
+	Location string `json:"location,omitempty"`
 }
 
 // Time defines a time in 24hr format
