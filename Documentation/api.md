@@ -17701,6 +17701,18 @@ HTTPConfig
 <p>Years is a list of YearRange</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>location</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Location is the time zone for the time interval</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.TimeRange">TimeRange
@@ -21022,6 +21034,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>Years is a list of YearRange</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>location</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Location is the time zone for the time interval</p>
 </td>
 </tr>
 </tbody>
