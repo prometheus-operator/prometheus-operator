@@ -21,7 +21,7 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
   in a multi-cluster setup.
   However, there's folks that uses a Kubernetes Job to adds Silences,
   In both situation, a CI/CD pipeline is needed in order to automate the execution, this includes managing the secrets and/or deprecation of code
-  In the Kubernetes Job way, teams need to build and deploy a container and monitor its status, which is an added efforts
+  In the Kubernetes Job way, teams need to build and deploy a container and monitor its status, which is an additional effort.
   CI/CD pipeline is not the best option in multi-cluster setups, teams need to manage k8s access, secrets, and configs.
 
 ![CI/CD K8s Job Approach](../img/CICD-k8s-job.png "CI/CD K8s Job Approach")
