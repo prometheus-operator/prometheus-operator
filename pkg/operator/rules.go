@@ -114,6 +114,18 @@ func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
 		promRule.Groups[i].PartialResponseStrategy = ""
+
+		// Empty durations need to be translated to nil to be omitted from the
+		// YAML ouptut otherwise the generated configuration will not be valid.
+		if promRule.Groups[i].Interval != nil && *promRule.Groups[i].Interval == "" {
+			promRule.Groups[i].Interval = nil
+		}
+
+		for j := range promRule.Groups[i].Rules {
+			if promRule.Groups[i].Rules[j].For != nil && *promRule.Groups[i].Rules[j].For == "" {
+				promRule.Groups[i].Rules[j].For = nil
+			}
+		}
 	}
 
 	content, err := yaml.Marshal(promRule)

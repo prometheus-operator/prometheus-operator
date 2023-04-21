@@ -62,8 +62,10 @@ type RuleGroup struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Interval determines how often rules in the group are evaluated.
-	Interval Duration `json:"interval,omitempty"`
+	// +optional
+	Interval *Duration `json:"interval,omitempty"`
 	// List of alerting and recording rules.
+	// +optional
 	Rules []Rule `json:"rules,omitempty"`
 	// PartialResponseStrategy is only used by ThanosRuler and will
 	// be ignored by Prometheus instances.
@@ -90,7 +92,8 @@ type Rule struct {
 	// PromQL expression to evaluate.
 	Expr intstr.IntOrString `json:"expr"`
 	// Alerts are considered firing once they have been returned for this long.
-	For Duration `json:"for,omitempty"`
+	// +optional
+	For *Duration `json:"for,omitempty"`
 	// Labels to add or overwrite.
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations to add to each alert.

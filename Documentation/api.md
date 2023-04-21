@@ -10891,6 +10891,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Alerts are considered firing once they have been returned for this long.</p>
 </td>
 </tr>
@@ -10956,6 +10957,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Interval determines how often rules in the group are evaluated.</p>
 </td>
 </tr>
@@ -10969,6 +10971,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of alerting and recording rules.</p>
 </td>
 </tr>
