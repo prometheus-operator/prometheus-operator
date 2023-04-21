@@ -188,6 +188,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
+
 	_, err = f.KubeClient.CoreV1().Secrets(a.Namespace).Create(ctx, s, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
@@ -205,6 +206,25 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *
 // cluster as a whole to be ready.
 func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) error {
 	replicas := int(*a.Spec.Replicas)
+
+	if err := f.WaitForResourceAvailable(
+		ctx,
+		func() (resourceStatus, error) {
+			current, err := f.MonClientV1.Alertmanagers(a.Namespace).Get(ctx, a.Name, metav1.GetOptions{})
+			if err != nil {
+				return resourceStatus{}, err
+			}
+			return resourceStatus{
+				expectedReplicas: int32(replicas),
+				generation:       current.Generation,
+				replicas:         current.Status.UpdatedReplicas,
+				conditions:       current.Status.Conditions,
+			}, nil
+		},
+		5*time.Minute,
+	); err != nil {
+		return errors.Wrapf(err, "alertmanager %v/%v failed to become available", a.Namespace, a.Name)
+	}
 
 	// Check that all pods report the expected number of peers.
 	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
