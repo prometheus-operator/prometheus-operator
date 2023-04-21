@@ -33,6 +33,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -159,7 +160,7 @@ func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
-	if _, err := labels.Parse(conf.PromSelector); err != nil {
+	if _, err := labels.Parse(c.PromSelector); err != nil {
 		return nil, errors.Wrap(err, "can not parse prometheus selector value")
 	}
 	// init promInfs
