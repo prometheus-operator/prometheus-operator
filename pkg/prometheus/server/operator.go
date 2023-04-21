@@ -96,10 +96,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "instantiating metadata client failed")
 	}
 
-	if _, err := labels.Parse(conf.PromSelector); err != nil {
-		return nil, errors.Wrap(err, "can not parse prometheus selector value")
-	}
-
 	kubeletObjectName := ""
 	kubeletObjectNamespace := ""
 	kubeletSyncEnabled := false
