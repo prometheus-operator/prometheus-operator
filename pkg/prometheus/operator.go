@@ -159,7 +159,9 @@ func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
-
+	if _, err := labels.Parse(conf.PromSelector); err != nil {
+		return nil, errors.Wrap(err, "can not parse prometheus selector value")
+	}
 	// init promInfs
 	cm.PromInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
