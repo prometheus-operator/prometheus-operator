@@ -81,12 +81,6 @@ type Operator struct {
 // New creates a new controller.
 func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer, cm *prompkg.CommonConfig) (*Operator, error) {
 
-
-	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
-	if err != nil {
-		return nil, errors.Wrap(err, "can not parse secrets selector value")
-	}
-
 	// Check prerequisites for ScrapeConfig
 	verbs := map[string][]string{
 		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
