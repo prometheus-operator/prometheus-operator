@@ -28,7 +28,7 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
 
 * Users that use a standalone operator that implements a Silence CRD are in a better situation,
   for example users have reported that they are using GitOps to fully manage the life cycle of Silences Custom resources,
-  which in fact brings benefits to the whole team because having a history and revisions in Git as well as constancy to manage the silences in a multi-tenant environment
+  which in fact brings benefits to the whole team because having a history and revisions in Git as well as constancy to manage the silences in a multi-tenant environment.
 
 Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
 because that would require us to fully manage this component as of any managed app (monitoring, logging, alerting etc..).
