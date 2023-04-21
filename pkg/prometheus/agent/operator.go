@@ -81,9 +81,6 @@ type Operator struct {
 // New creates a new controller.
 func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer, cm *prompkg.CommonConfig) (*Operator, error) {
 
-	if _, err := labels.Parse(conf.PromSelector); err != nil {
-		return nil, errors.Wrap(err, "can not parse prometheus-agent selector value")
-	}
 
 	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
 	if err != nil {
