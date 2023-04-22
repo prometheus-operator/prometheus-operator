@@ -1597,7 +1597,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
 	if ok, _ := c.isScrapeConfigInstalled(ctx); ok {
-		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx)
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs()
 		if err != nil {
 			// ScrapeConfigs are still optional,
 			level.Error(c.logger).Log("msg", errors.Wrap(err, "selecting ScrapeConfigs failed"), "prometheus", p.Name, "namespace", p.Namespace)

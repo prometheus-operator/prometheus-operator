@@ -590,7 +590,7 @@ func validateProberURL(url string) error {
 
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+func (rs *ResourceSelector) SelectScrapeConfigs() (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -602,8 +602,8 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context) (map[string
 		return nil, err
 	}
 
-	// If 'ScrapeConfigSelector' is nil only check own namespace.
-	if cpf.ScrapeConfigSelector == nil {
+	// If 'ScrapeConfigNamespaceSelector' is nil only check own namespace.
+	if cpf.ScrapeConfigNamespaceSelector == nil {
 		namespaces = append(namespaces, objMeta.GetNamespace())
 	} else {
 		sConNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigNamespaceSelector)
@@ -636,19 +636,17 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context) (map[string
 	}
 
 	// TODO(xiu): add validation steps
-	var rejected int
-	res := make(map[string]*monitoringv1alpha1.ScrapeConfig, len(scrapeConfigs))
-
 	scrapeConfigKeys := make([]string, 0)
-	for k := range res {
+	for k := range scrapeConfigs {
 		scrapeConfigKeys = append(scrapeConfigKeys, k)
 	}
 	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
-		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
+		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(scrapeConfigs))
+		// since we don't have validation steps, we don't reject anything
+		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, 0)
 	}
 
-	return res, nil
+	return scrapeConfigs, nil
 }
