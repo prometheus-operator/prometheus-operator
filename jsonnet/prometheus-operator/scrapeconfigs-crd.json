@@ -70,6 +70,10 @@
                     },
                     "type": "array"
                   },
+                  "honorTimestamps": {
+                    "description": "HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.",
+                    "type": "boolean"
+                  },
                   "httpSDConfigs": {
                     "description": "HTTPSDConfigs list of HTTP service discovery configurations.",
                     "items": {

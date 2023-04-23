@@ -23,11 +23,12 @@ import (
 // ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
-	StaticConfigs  []StaticConfigApplyConfiguration `json:"staticConfigs,omitempty"`
-	FileSDConfigs  []FileSDConfigApplyConfiguration `json:"fileSDConfigs,omitempty"`
-	HTTPSDConfigs  []HTTPSDConfigApplyConfiguration `json:"httpSDConfigs,omitempty"`
-	RelabelConfigs []*v1.RelabelConfig              `json:"relabelings,omitempty"`
-	MetricsPath    *string                          `json:"metricsPath,omitempty"`
+	StaticConfigs   []StaticConfigApplyConfiguration `json:"staticConfigs,omitempty"`
+	FileSDConfigs   []FileSDConfigApplyConfiguration `json:"fileSDConfigs,omitempty"`
+	HTTPSDConfigs   []HTTPSDConfigApplyConfiguration `json:"httpSDConfigs,omitempty"`
+	RelabelConfigs  []*v1.RelabelConfig              `json:"relabelings,omitempty"`
+	MetricsPath     *string                          `json:"metricsPath,omitempty"`
+	HonorTimestamps *bool                            `json:"honorTimestamps,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -93,5 +94,13 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithRelabelConfigs(values ...**v1.R
 // If called multiple times, the MetricsPath field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithMetricsPath(value string) *ScrapeConfigSpecApplyConfiguration {
 	b.MetricsPath = &value
+	return b
+}
+
+// WithHonorTimestamps sets the HonorTimestamps field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HonorTimestamps field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithHonorTimestamps(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.HonorTimestamps = &value
 	return b
 }

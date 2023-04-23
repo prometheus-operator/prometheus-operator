@@ -14353,6 +14353,17 @@ string
 <p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>honorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17513,6 +17524,17 @@ string
 </td>
 <td>
 <p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
 </td>
 </tr>
 </tbody>

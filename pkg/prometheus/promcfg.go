@@ -25,17 +25,15 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
-	"github.com/prometheus/common/model"
-	"gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
-
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus/common/model"
+	"gopkg.in/yaml.v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -2132,7 +2130,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cpf := cg.prom.GetCommonPrometheusFields()
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
-	cfg = cg.AddHonorTimestamps(cfg, pointer.Bool(true))
+	if sc.Spec.HonorTimestamps != nil {
+		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)
+	}
 
 	if sc.Spec.MetricsPath != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})

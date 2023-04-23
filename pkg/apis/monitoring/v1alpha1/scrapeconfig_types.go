@@ -82,6 +82,8 @@ type ScrapeConfigSpec struct {
 	RelabelConfigs []*v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	MetricsPath string `json:"metricsPath,omitempty"`
+	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 }
 
 // StaticConfig defines a prometheus static configuration
