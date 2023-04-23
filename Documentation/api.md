@@ -14364,6 +14364,17 @@ bool
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>honorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17535,6 +17546,17 @@ bool
 </td>
 <td>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
 </td>
 </tr>
 </tbody>

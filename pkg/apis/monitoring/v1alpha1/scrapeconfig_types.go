@@ -84,6 +84,8 @@ type ScrapeConfigSpec struct {
 	MetricsPath string `json:"metricsPath,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// HonorLabels chooses the metric's labels on collisions with target labels.
+	HonorLabels *bool `json:"honorLabels,omitempty"`
 }
 
 // StaticConfig defines a prometheus static configuration

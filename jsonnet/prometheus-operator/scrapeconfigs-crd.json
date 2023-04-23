@@ -70,6 +70,10 @@
                     },
                     "type": "array"
                   },
+                  "honorLabels": {
+                    "description": "HonorLabels chooses the metric's labels on collisions with target labels.",
+                    "type": "boolean"
+                  },
                   "honorTimestamps": {
                     "description": "HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.",
                     "type": "boolean"
