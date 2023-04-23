@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"path"
 	"regexp"
 	"sort"
@@ -33,6 +32,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -2134,7 +2134,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.AddHonorTimestamps(cfg, pointer.Bool(true))
 
-	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	if sc.Spec.MetricsPath != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	}
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "relabel_configs",
 		Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
