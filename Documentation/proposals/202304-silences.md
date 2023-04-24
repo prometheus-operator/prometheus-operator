@@ -58,7 +58,7 @@ Using Alertmanager API Directly comes with drawbacks:
 
 * Users who use the Prometheus operator to offer monitoring-as-a-service to developers.
 * Users who want to manage silences the same way as for services running within the Kubernetes cluster.
-* Users who want a supported Kubernetes way of silences outside the Kubernetes cluster
+* Users who want a supported GitOps way of silences outside the Kubernetes cluster
 
 # Non-Goals
 
