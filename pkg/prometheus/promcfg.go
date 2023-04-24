@@ -2141,10 +2141,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if sc.Spec.MetricsPath != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
 	}
-	cfg = append(cfg, yaml.MapItem{
-		Key:   "relabel_configs",
-		Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
-	})
+
+	if sc.Spec.RelabelConfigs != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "relabel_configs",
+			Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
+		})
+	}
 
 	// StaticConfig
 	if len(sc.Spec.StaticConfigs) > 0 {

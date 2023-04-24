@@ -98,7 +98,7 @@ type CommonPrometheusFields struct {
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 	// *Experimental* ScrapeConfigs to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.ProbeSelector`
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
 	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw

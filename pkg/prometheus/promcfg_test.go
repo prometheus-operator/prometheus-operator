@@ -9766,7 +9766,6 @@ func TestScrapeConfigStaticConfig(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-  relabel_configs: []
   static_configs:
   - targets:
     - http://localhost:9100
@@ -9802,6 +9801,7 @@ func TestScrapeConfigFileSDConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 
+	refreshInterval := monitoringv1.Duration("5m")
 	cfg, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
@@ -9826,7 +9826,7 @@ func TestScrapeConfigFileSDConfig(t *testing.T) {
 					FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
 						{
 							Files:           []string{"/tmp/myfile.json"},
-							RefreshInterval: "5m",
+							RefreshInterval: &refreshInterval,
 						},
 					},
 					MetricsPath: "/metrics",
@@ -9852,7 +9852,6 @@ func TestScrapeConfigFileSDConfig(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-  relabel_configs: []
   file_sd_configs:
   - files:
     - /tmp/myfile.json
@@ -9887,6 +9886,7 @@ func TestScrapeConfigHTTPSDConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 
+	refreshInterval := monitoringv1.Duration("5m")
 	cfg, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
@@ -9911,7 +9911,7 @@ func TestScrapeConfigHTTPSDConfig(t *testing.T) {
 					HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
 						{
 							URL:             "http://localhost:9100/sd.json",
-							RefreshInterval: "5m",
+							RefreshInterval: &refreshInterval,
 						},
 					},
 					MetricsPath: "/metrics",
@@ -9937,7 +9937,6 @@ func TestScrapeConfigHTTPSDConfig(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-  relabel_configs: []
   http_sd_configs:
   - url: http://localhost:9100/sd.json
     refresh_interval: 5m
@@ -10015,7 +10014,6 @@ func TestScrapeConfigWithMetricsPath(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-  relabel_configs: []
 `
 
 	result := string(cfg)
@@ -10090,7 +10088,6 @@ func TestScrapeConfigWithHonorTimestamps(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   honor_timestamps: false
-  relabel_configs: []
 `
 
 	result := string(cfg)
@@ -10162,7 +10159,6 @@ func TestScrapeConfigEmpty(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
-  relabel_configs: []
 `
 
 	result := string(cfg)
@@ -10237,6 +10233,79 @@ func TestScrapeConfigWithHonorLabels(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   honor_labels: true
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
+func TestScrapeConfigWithRelabelConfigs(t *testing.T) {
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeConfigSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Version:        operator.DefaultPrometheusVersion,
+				ScrapeInterval: "30s",
+			},
+			EvaluationInterval: "30s",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"probe1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testscrapeconfig1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{},
+				},
+			},
+		},
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
   relabel_configs: []
 `
 

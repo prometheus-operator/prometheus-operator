@@ -17879,7 +17879,7 @@ spec:
               scrapeConfigSelector:
                 description: "*Experimental* ScrapeConfigs to be selected for target
                   discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`,
-                  `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the
+                  `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the
                   Prometheus configuration is unmanaged. The Prometheus operator will
                   ensure that the Prometheus configuration's Secret exists, but it
                   is the responsibility of the user to provide the raw gzipped Prometheus
@@ -26759,7 +26759,7 @@ spec:
               scrapeConfigSelector:
                 description: "*Experimental* ScrapeConfigs to be selected for target
                   discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`,
-                  `spec.ProbeSelector` and `spec.scrapeConfigSelector` are null, the
+                  `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the
                   Prometheus configuration is unmanaged. The Prometheus operator will
                   ensure that the Prometheus configuration's Secret exists, but it
                   is the responsibility of the user to provide the raw gzipped Prometheus

@@ -1406,7 +1406,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -5272,7 +5272,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -8586,7 +8586,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -13370,7 +13370,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -14297,6 +14297,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>StaticConfigs list of labeled statically configured targets for this job.</p>
 </td>
 </tr>
@@ -14310,6 +14311,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>FileSDConfigs list of file service discovery configurations.</p>
 </td>
 </tr>
@@ -14323,6 +14325,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
 </td>
 </tr>
@@ -14336,6 +14339,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>RelabelConfigs to apply to samples before scraping.
 Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
@@ -14350,6 +14354,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
 </td>
 </tr>
@@ -14361,6 +14366,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
 </td>
 </tr>
@@ -14372,6 +14378,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
 </td>
 </tr>
@@ -15961,7 +15968,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.ProbeSelector</code>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
@@ -17481,6 +17488,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>StaticConfigs list of labeled statically configured targets for this job.</p>
 </td>
 </tr>
@@ -17494,6 +17502,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>FileSDConfigs list of file service discovery configurations.</p>
 </td>
 </tr>
@@ -17507,6 +17516,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
 </td>
 </tr>
@@ -17520,6 +17530,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>RelabelConfigs to apply to samples before scraping.
 Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
@@ -17534,6 +17545,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
 </td>
 </tr>
@@ -17545,6 +17557,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
 </td>
 </tr>
@@ -17556,6 +17569,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
 </td>
 </tr>

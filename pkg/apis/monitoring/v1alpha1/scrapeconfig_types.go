@@ -70,21 +70,28 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
 	// StaticConfigs list of labeled statically configured targets for this job.
+	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
 	// FileSDConfigs list of file service discovery configurations.
+	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// HTTPSDConfigs list of HTTP service discovery configurations.
+	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +optional
 	RelabelConfigs []*v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
+	// +optional
 	MetricsPath string `json:"metricsPath,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
+	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 }
 
@@ -110,7 +117,7 @@ type FileSDConfig struct {
 	Files []string `json:"files"`
 	// RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.
 	// +optional
-	RefreshInterval v1.Duration `json:"refreshInterval,omitempty"`
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // HTTPSDConfig defines a prometheus HTTP service discovery configuration
@@ -124,5 +131,5 @@ type HTTPSDConfig struct {
 	// RefreshInterval configures the refresh interval at which Prometheus will re-query the
 	// endpoint to update the target list.
 	// +optional
-	RefreshInterval v1.Duration `json:"refreshInterval,omitempty"`
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
