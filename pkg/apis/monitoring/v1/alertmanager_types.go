@@ -314,6 +314,14 @@ type AlertmanagerStatus struct {
 // +k8s:openapi-gen=true
 type AlertmanagerWebSpec struct {
 	WebConfigFileFields `json:",inline"`
+	// Maximum number of GET requests processed concurrently. This corresponds to the
+	// Alertmanager's `--web.get-concurrency` flag.
+	// +optional
+	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`
+	// Timeout for HTTP requests. This corresponds to the Alertmanager's
+	// `--web.timeout` flag.
+	// +optional
+	Timeout *uint32 `json:"timeout,omitempty"`
 }
 
 // HTTPConfig defines a client HTTP configuration.
