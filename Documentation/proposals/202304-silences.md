@@ -34,8 +34,7 @@ Additionally, having a new component in the stack and keeping it maintained is n
 because that requires to manage an extra component +CRDs on top of the Prometheus operator.
 Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
 
-By Adding support for `Silence` CRD in the prometheus-operator, this will make users more flexible in terms of choosing the tool
-to deploy their silences and will free others from managing a standalone component within the stack.
+Adding support for `Silence` CRD in the Prometheus-operator will provide more flexibility to users in terms of choosing the tool to deploy their silences and will free users from managing a standalone component within the stack.
 
 ## Pitfalls of the current solution
 
