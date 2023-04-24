@@ -88,6 +88,8 @@ spec:
       value: test-ns
 ```
 
+The above resource will result in creating a silence in the Alertmanager that has the appropriate selector.
+
 * `expiresAt` to define the expiration of the silence.
   - If a silence has `expiredAt` defined, it'll expire at the time defined and the CR will have to be manually removed.
   - If a silence doesn't have `expiredAt`, it'll be kept active as long as the CR exists and removed as soon as the CR is gone
