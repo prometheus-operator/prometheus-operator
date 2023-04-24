@@ -111,6 +111,15 @@ spec:
   silenceNamespaceSelector: ...
 ```
 
+Additionally, the silence-controller will handle `Silences` overwrite.
+after successfully created a silence, the silence id will be kept in the status sub-resource:
+
+```yaml
+[...]
+status:
+  silenceID: ...
+```
+
 # Alternatives
 
 * Use Alertmanager API
