@@ -83,9 +83,9 @@ metadata:
 spec:
   expiresAt: "2023-06-01"
   matchers:
-    - name: namespace
+    - matchType: "="
+      name: namespace
       value: test-ns
-      isRegex: false
 ```
 
 * `expiresAt` to define the expiration of the silence.
@@ -94,8 +94,8 @@ spec:
 * `matchers` field corresponds to the Alertmanager silence matchers each of which consists of:
   - `name` - name of tag on an alert to match
   - `value` - fixed string or expression to match against the value of the tag named by name above on an alert
-  - `isRegex` - a boolean specifying whether to treat value as a regex (=~) or a fixed string (=)
-  - `isEqual` - a boolean specifying whether to use equal signs (= or =~) or to negate the matcher (!= or !~)
+  - `matchType` - Match operation available with AlertManager >= v0.22.0 and takes precedence over Regex (deprecated) if non-empty.
+  - `regex` - Whether to match on equality (false) or regular-expression (true). Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead.
 
 This example doesn't list all the fields that are offered by Alertmanager. The implementation of all the fields will be
 done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
