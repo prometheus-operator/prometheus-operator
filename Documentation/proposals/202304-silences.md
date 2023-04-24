@@ -63,6 +63,7 @@ Using Alertmanager API Directly comes with drawbacks:
 
 * This proposal do not cover automatic cleanup of expired Silence CRs
 * Refactoring of the other CRDs is not in scope for the first version
+* Adding silences to a remote Alertmanager cluster
 
 # How
 
