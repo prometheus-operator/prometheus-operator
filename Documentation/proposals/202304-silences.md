@@ -80,8 +80,6 @@ metadata:
   labels:
     test: value
 spec:
-  selector:
-    app: test-alertmanager
   expiresAt: "2023-06-01"
   matchers:
     - name: namespace
@@ -89,11 +87,9 @@ spec:
       isRegex: false
 ```
 
-The above resource will result in creating a silence in the Alertmanager with label selector,
-`app: test-alertmanager`.
-
-* `selector` used to select which Kubernetes Service to use as an Alertmanager API.
 * `expiresAt` to define the expiration of the silence.
+  - If a silence has `expiredAt` defined, it'll expire at the time defined and the CR will have to be manually removed.
+  - If a silence doesn't have `expiredAt`, it'll be kept active as long as the CR exists and removed as soon as the CR is gone
 * `matchers` field corresponds to the Alertmanager silence matchers each of which consists of:
   - `name` - name of tag on an alert to match
   - `value` - fixed string or expression to match against the value of the tag named by name above on an alert
@@ -102,6 +98,15 @@ The above resource will result in creating a silence in the Alertmanager with la
 
 This example doesn't list all the fields that are offered by Alertmanager. The implementation of all the fields will be
 done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
+
+Also, to help select `Silences`, a new field will be added to the Alertmanager CRD:
+
+```yaml
+[...]
+spec:
+  silenceSelector: ...
+  silenceNamespaceSelector: ...
+```
 
 # Alternatives
 
