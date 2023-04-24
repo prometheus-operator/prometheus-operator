@@ -52,6 +52,7 @@ Using Alertmanager API Directly comes with drawbacks:
 * Enable management of Alertmanager silences via centralised repo with e.g. ArgoCD, Flux...
 * Multi tenancy: Silences CR can be using kubernetes rbac.
 * Moving the Giant Swarm silence operator to prometheus operator would provide better community support and less fragmentation.
+* Improve user experience when managing silences, so users can use the same tools to manage their monitoring pipeline (kyverno, cr validations).
 
 ## Audience
 
