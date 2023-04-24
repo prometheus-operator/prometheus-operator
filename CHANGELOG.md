@@ -1,3 +1,7 @@
+## 0.64.1 / 2023-04-24
+
+* [BUGFIX] Fix panic when scraping `/metrics` with PrometheusAgent resources declared. #5511
+
 ## 0.64.0 / 2023-03-29
 
 This release provides first-class support for running Prometheus in agent mode
