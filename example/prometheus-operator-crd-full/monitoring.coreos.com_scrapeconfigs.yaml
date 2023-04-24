@@ -42,17 +42,18 @@ spec:
               for a scrape configuration.
             properties:
               fileSDConfigs:
-                description: FileSDConfigs list of file service discovery configurations.
+                description: FileSDConfigs defines a list of file service discovery
+                  configurations.
                 items:
-                  description: FileSDConfig defines a prometheus file service discovery
+                  description: FileSDConfig defines a Prometheus file service discovery
                     configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
                   properties:
                     files:
                       description: 'List of files to be used for file discovery. Recommendation:
                         use absolute paths. While relative paths work, the prometheus-operator
-                        project can''t guarantee that the working directory will stay
-                        the same over time. Files must be mounted using Prometheus.ConfigMaps
-                        or Prometheus.Secrets.'
+                        project makes no guarantees about the working directory where
+                        the configuration file is stored. Files must be mounted using
+                        Prometheus.ConfigMaps or Prometheus.Secrets.'
                       items:
                         type: string
                       minItems: 1
@@ -75,7 +76,8 @@ spec:
                   the timestamps present in scraped data.
                 type: boolean
               httpSDConfigs:
-                description: HTTPSDConfigs list of HTTP service discovery configurations.
+                description: HTTPSDConfigs defines a list of HTTP service discovery
+                  configurations.
                 items:
                   description: HTTPSDConfig defines a prometheus HTTP service discovery
                     configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
@@ -100,10 +102,11 @@ spec:
                   Prometheus uses the default value (e.g. /metrics).
                 type: string
               relabelings:
-                description: 'RelabelConfigs to apply to samples before scraping.
-                  Prometheus Operator automatically adds relabelings for a few standard
-                  Kubernetes fields. The original scrape job''s name is available
-                  via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                description: 'RelabelConfigs defines how to rewrite the target''s
+                  labels before scraping. Prometheus Operator automatically adds relabelings
+                  for a few standard Kubernetes fields. The original scrape job''s
+                  name is available via the `__tmp_prometheus_job_name` label. More
+                  info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                 items:
                   description: 'RelabelConfig allows dynamic rewriting of the label
                     set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section
@@ -175,10 +178,10 @@ spec:
                   type: object
                 type: array
               staticConfigs:
-                description: StaticConfigs list of labeled statically configured targets
-                  for this job.
+                description: StaticConfigs defines a list of static targets with a
+                  common label set.
                 items:
-                  description: StaticConfig defines a prometheus static configuration
+                  description: StaticConfig defines a Prometheus static configuration.
                     See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
                   properties:
                     labels:
@@ -188,12 +191,10 @@ spec:
                         targets.
                       type: object
                     targets:
-                      description: List of targets for this static configuration
+                      description: List of targets for this static configuration.
                       items:
                         description: Target represents a target for Prometheus to
                           scrape
-                        minLength: 1
-                        pattern: '[^/]+'
                         type: string
                       type: array
                   required:

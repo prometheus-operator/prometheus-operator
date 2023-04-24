@@ -14298,7 +14298,7 @@ ScrapeConfigSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>StaticConfigs list of labeled statically configured targets for this job.</p>
+<p>StaticConfigs defines a list of static targets with a common label set.</p>
 </td>
 </tr>
 <tr>
@@ -14312,7 +14312,7 @@ ScrapeConfigSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>FileSDConfigs list of file service discovery configurations.</p>
+<p>FileSDConfigs defines a list of file service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -14326,7 +14326,7 @@ ScrapeConfigSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
+<p>HTTPSDConfigs defines a list of HTTP service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -14340,7 +14340,7 @@ ScrapeConfigSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>RelabelConfigs to apply to samples before scraping.
+<p>RelabelConfigs defines how to rewrite the target&rsquo;s labels before scraping.
 Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
 More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
@@ -14709,7 +14709,7 @@ SafeTLSConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>FileSDConfig defines a prometheus file service discovery configuration
+<p>FileSDConfig defines a Prometheus file service discovery configuration
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config</a></p>
 </div>
 <table>
@@ -14729,7 +14729,8 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </td>
 <td>
 <p>List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
-prometheus-operator project can&rsquo;t guarantee that the working directory will stay the same over time.
+prometheus-operator project makes no guarantees about the working directory where the configuration file is
+stored.
 Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.</p>
 </td>
 </tr>
@@ -17489,7 +17490,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>StaticConfigs list of labeled statically configured targets for this job.</p>
+<p>StaticConfigs defines a list of static targets with a common label set.</p>
 </td>
 </tr>
 <tr>
@@ -17503,7 +17504,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>FileSDConfigs list of file service discovery configurations.</p>
+<p>FileSDConfigs defines a list of file service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -17517,7 +17518,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>HTTPSDConfigs list of HTTP service discovery configurations.</p>
+<p>HTTPSDConfigs defines a list of HTTP service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -17531,7 +17532,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>RelabelConfigs to apply to samples before scraping.
+<p>RelabelConfigs defines how to rewrite the target&rsquo;s labels before scraping.
 Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
 More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
@@ -18073,7 +18074,7 @@ bool
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>StaticConfig defines a prometheus static configuration
+<p>StaticConfig defines a Prometheus static configuration.
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config</a></p>
 </div>
 <table>
@@ -18094,7 +18095,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<p>List of targets for this static configuration</p>
+<p>List of targets for this static configuration.</p>
 </td>
 </tr>
 <tr>

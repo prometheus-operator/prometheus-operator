@@ -27,8 +27,6 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
-// +kubebuilder:validation:MinLength:=1
-// +kubebuilder:validation:Pattern:="[^/]+"
 type Target string
 
 // +genclient
@@ -69,16 +67,16 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
-	// StaticConfigs list of labeled statically configured targets for this job.
+	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
-	// FileSDConfigs list of file service discovery configurations.
+	// FileSDConfigs defines a list of file service discovery configurations.
 	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
-	// HTTPSDConfigs list of HTTP service discovery configurations.
+	// HTTPSDConfigs defines a list of HTTP service discovery configurations.
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
-	// RelabelConfigs to apply to samples before scraping.
+	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
@@ -95,23 +93,24 @@ type ScrapeConfigSpec struct {
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 }
 
-// StaticConfig defines a prometheus static configuration
+// StaticConfig defines a Prometheus static configuration.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
 // +k8s:openapi-gen=true
 type StaticConfig struct {
-	// List of targets for this static configuration
+	// List of targets for this static configuration.
 	Targets []Target `json:"targets"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +optional
 	Labels map[v1.LabelName]string `json:"labels,omitempty"`
 }
 
-// FileSDConfig defines a prometheus file service discovery configuration
+// FileSDConfig defines a Prometheus file service discovery configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
 // +k8s:openapi-gen=true
 type FileSDConfig struct {
 	// List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
-	// prometheus-operator project can't guarantee that the working directory will stay the same over time.
+	// prometheus-operator project makes no guarantees about the working directory where the configuration file is
+	// stored.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
 	// +kubebuilder:validation:MinItems:=1
 	Files []string `json:"files"`
