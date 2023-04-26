@@ -209,7 +209,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 
 	if err := f.WaitForResourceAvailable(
 		ctx,
-		func() (resourceStatus, error) {
+		func(context.Context) (resourceStatus, error) {
 			current, err := f.MonClientV1.Alertmanagers(a.Namespace).Get(ctx, a.Name, metav1.GetOptions{})
 			if err != nil {
 				return resourceStatus{}, err
@@ -326,7 +326,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 
 func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode, https bool) error {
 	var pollError error
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 
 		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, name, https)
 		if err != nil {
@@ -451,7 +451,7 @@ func (f *Framework) GetSilences(ctx context.Context, ns, n string) (models.Getta
 }
 
 func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
-	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		alerts := models.GettableAlerts{}
 
 		resp, err := f.AlertmangerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
@@ -497,7 +497,7 @@ func (f *Framework) AlertmangerSVCGetRequest(ctx context.Context, ns, svcName, e
 // It will retry every 10 second for 5 minutes before giving up.
 func (f *Framework) PollAlertmanagerConfiguration(ctx context.Context, ns, amName string, conditions ...func(config string) error) error {
 	var pollError error
-	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, "alertmanager-"+amName+"-0", false)
 
 		if err != nil {
@@ -533,7 +533,7 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ctx context.Context
 
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, ns, amName string, previousReloadTimestamp time.Time) error {
 	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
-	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		timestampSec, err := f.GetMetricVal(ctx, ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
 		if err != nil {
 			return false, err

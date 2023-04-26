@@ -109,9 +109,9 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	var loopError error
-	err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
-		firing, loopError = framework.CheckThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert)
+		firing, loopError = framework.CheckThanosFiringAlert(ctx, thanosNamespace, thanosService.Name, testAlert)
 		return !firing, nil
 	})
 

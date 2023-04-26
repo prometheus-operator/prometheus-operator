@@ -908,8 +908,8 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -975,8 +975,8 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 		t.Errorf("incorrect volume claim annotation, want: %v, got: %v", "bar", val)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -1044,8 +1044,8 @@ func testPromStorageUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(p.Name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(p.Name))
 		if err != nil {
 			return false, err
 		}
@@ -1274,8 +1274,8 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
-		response, err := framework.PrometheusSVCGetRequest(context.Background(), ns, svc.Name, "http", "/api/v1/alertmanagers", map[string]string{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+		response, err := framework.PrometheusSVCGetRequest(ctx, ns, svc.Name, "http", "/api/v1/alertmanagers", map[string]string{})
 		if err != nil {
 			return true, err
 		}
@@ -1459,9 +1459,9 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 
 	for _, file := range ruleFiles {
 		var loopError error
-		err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 			var firing bool
-			firing, loopError = framework.CheckPrometheusFiringAlert(context.Background(), file.ns, pSVC.Name, file.alertName)
+			firing, loopError = framework.CheckPrometheusFiringAlert(ctx, file.ns, pSVC.Name, file.alertName)
 			return !firing, nil
 		})
 
@@ -2291,8 +2291,8 @@ func testResharding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(time.Second, 1*time.Minute, func() (bool, error) {
-		_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+		_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return false, err
 		}
@@ -2349,7 +2349,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "creating Alertmanager service failed"))
 	}
 
-	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(context.Background(), ns, svc.Name, alertmanagerName))
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(context.Background(), ns, svc.Name, alertmanagerName))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus Alertmanager discovery failed"))
 	}
@@ -2549,13 +2549,13 @@ func testThanos(t *testing.T) {
 		t.Fatal("Creating Thanos query service failed: ", err)
 	}
 
-	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
 		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
 			"query": "prometheus_build_info",
 			"dedup": "false",
 		})
-		b, err := request.DoRaw(context.Background())
+		b, err := request.DoRaw(ctx)
 		if err != nil {
 			t.Logf("Error performing request against Thanos query: %v\n\nretrying...", err)
 			return false, nil
@@ -3396,8 +3396,8 @@ func testPromStaticProbe(t *testing.T) {
 	q.Set("target", targets[0])
 	expectedURL.RawQuery = q.Encode()
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		activeTargets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	if err := wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+		activeTargets, err := framework.GetActiveTargets(ctx, ns, svc.Name)
 		if err != nil {
 			return false, err
 		}
@@ -3707,8 +3707,8 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		promPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -3872,8 +3872,8 @@ func testPromMinReadySeconds(t *testing.T) {
 		t.Fatal("Updating prometheus failed: ", err)
 	}
 
-	err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -3996,7 +3996,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4148,7 +4148,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4623,9 +4623,9 @@ func testPromUnavailableConditionStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	var pollErr error
-	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		var current *monitoringv1.Prometheus
-		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 		if pollErr != nil {
 			return false, nil
 		}
@@ -4699,9 +4699,9 @@ func testPromDegradedConditionStatus(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		var current *monitoringv1.Prometheus
-		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 		if pollErr != nil {
 			return false, nil
 		}
@@ -4797,9 +4797,9 @@ func testPromStrategicMergePatch(t *testing.T) {
 	}
 }
 
-func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func() (bool, error) {
-	return func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(alertmanagerName))
+func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
+	return func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
 		if err != nil {
 			return false, err
 		}

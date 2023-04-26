@@ -73,7 +73,7 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 }
 
 func (f *Framework) WaitForServiceReady(ctx context.Context, namespace string, serviceName string) error {
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		endpoints, err := f.getEndpoints(ctx, namespace, serviceName)
 		if err != nil {
 			return false, err
@@ -91,7 +91,7 @@ func (f *Framework) DeleteServiceAndWaitUntilGone(ctx context.Context, namespace
 		return errors.Wrap(err, fmt.Sprintf("deleting service %v failed", serviceName))
 	}
 
-	err := wait.Poll(5*time.Second, time.Minute, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 5*time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
 		_, err := f.getEndpoints(ctx, namespace, serviceName)
 		if err != nil {
 			return true, nil

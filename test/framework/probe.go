@@ -139,7 +139,7 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Con
 		return err
 	}
 
-	return wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		blackbox, err := deploymentInterface.Get(ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
