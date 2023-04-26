@@ -29,9 +29,14 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="ruler"
+// +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Thanos Ruler"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The number of desired replicas"
+// +kubebuilder:printcolumn:name="Ready",type="integer",JSONPath=".status.availableReplicas",description="The number of ready replicas"
+// +kubebuilder:printcolumn:name="Reconciled",type="string",JSONPath=".status.conditions[?(@.type == 'Reconciled')].status"
+// +kubebuilder:printcolumn:name="Available",type="string",JSONPath=".status.conditions[?(@.type == 'Available')].status"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
+// +kubebuilder:subresource:status
 
 // ThanosRuler defines a ThanosRuler deployment.
 type ThanosRuler struct {
@@ -40,11 +45,10 @@ type ThanosRuler struct {
 	// Specification of the desired behavior of the ThanosRuler cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Spec ThanosRulerSpec `json:"spec"`
-	// Most recent observed status of the ThanosRuler cluster. Read-only. Not
-	// included when requesting from the apiserver, only from the ThanosRuler
-	// Operator API itself. More info:
+	// Most recent observed status of the ThanosRuler cluster. Read-only.
+	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-	Status *ThanosRulerStatus `json:"status,omitempty"`
+	Status ThanosRulerStatus `json:"status,omitempty"`
 }
 
 // ThanosRulerList is a list of ThanosRulers.
@@ -237,9 +241,8 @@ type ThanosRulerSpec struct {
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 }
 
-// ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
-// included when requesting from the apiserver, only from the Prometheus
-// Operator API itself. More info:
+// ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
+// More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ThanosRulerStatus struct {
@@ -257,7 +260,24 @@ type ThanosRulerStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this ThanosRuler deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// The current state of the Alertmanager object.
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []Condition `json:"conditions,omitempty"`
 }
+
+func (tr *ThanosRuler) ExpectedReplicas() int {
+	if tr.Spec.Replicas == nil {
+		return 1
+	}
+	return int(*tr.Spec.Replicas)
+}
+
+func (tr *ThanosRuler) SetReplicas(i int)            { tr.Status.Replicas = int32(i) }
+func (tr *ThanosRuler) SetUpdatedReplicas(i int)     { tr.Status.UpdatedReplicas = int32(i) }
+func (tr *ThanosRuler) SetAvailableReplicas(i int)   { tr.Status.AvailableReplicas = int32(i) }
+func (tr *ThanosRuler) SetUnavailableReplicas(i int) { tr.Status.UnavailableReplicas = int32(i) }
 
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ThanosRuler) DeepCopyObject() runtime.Object {

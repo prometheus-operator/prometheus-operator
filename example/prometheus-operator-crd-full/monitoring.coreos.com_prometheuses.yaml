@@ -9091,7 +9091,7 @@ spec:
                 description: The current state of the Prometheus deployment.
                 items:
                   description: Condition represents the state of the resources associated
-                    with the Prometheus or Alertmanager resource.
+                    with the Prometheus, Alertmanager or ThanosRuler resource.
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the time of the last update

@@ -310,6 +310,18 @@ type AlertmanagerStatus struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
+func (a *Alertmanager) ExpectedReplicas() int {
+	if a.Spec.Replicas == nil {
+		return 1
+	}
+	return int(*a.Spec.Replicas)
+}
+
+func (a *Alertmanager) SetReplicas(i int)            { a.Status.Replicas = int32(i) }
+func (a *Alertmanager) SetUpdatedReplicas(i int)     { a.Status.UpdatedReplicas = int32(i) }
+func (a *Alertmanager) SetAvailableReplicas(i int)   { a.Status.AvailableReplicas = int32(i) }
+func (a *Alertmanager) SetUnavailableReplicas(i int) { a.Status.UnavailableReplicas = int32(i) }
+
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 // +k8s:openapi-gen=true
 type AlertmanagerWebSpec struct {

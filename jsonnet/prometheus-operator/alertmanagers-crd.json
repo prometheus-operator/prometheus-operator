@@ -6300,7 +6300,7 @@
                   "conditions": {
                     "description": "The current state of the Alertmanager object.",
                     "items": {
-                      "description": "Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.",
+                      "description": "Condition represents the state of the resources associated with the Prometheus, Alertmanager or ThanosRuler resource.",
                       "properties": {
                         "lastTransitionTime": {
                           "description": "lastTransitionTime is the time of the last update to the current status property.",

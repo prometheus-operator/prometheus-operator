@@ -3576,9 +3576,8 @@ ThanosRulerStatus
 </em>
 </td>
 <td>
-<p>Most recent observed status of the ThanosRuler cluster. Read-only. Not
-included when requesting from the apiserver, only from the ThanosRuler
-Operator API itself. More info:
+<p>Most recent observed status of the ThanosRuler cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
@@ -6047,10 +6046,11 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
 </p>
 <div>
-<p>Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.</p>
+<p>Condition represents the state of the resources associated with the
+Prometheus, Alertmanager or ThanosRuler resource.</p>
 </div>
 <table>
 <thead>
@@ -12203,9 +12203,8 @@ fail and an error will be logged.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRuler">ThanosRuler</a>)
 </p>
 <div>
-<p>ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </div>
 <table>
@@ -12273,6 +12272,20 @@ int32
 </td>
 <td>
 <p>Total number of unavailable pods targeted by this ThanosRuler deployment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the Alertmanager object.</p>
 </td>
 </tr>
 </tbody>
