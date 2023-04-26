@@ -12131,7 +12131,13 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: HTTP scheme to use for scraping.
+                      description: HTTP scheme to use for scraping. `http` and `https`
+                        are the expected values unless you rewrite the `__scheme__`
+                        label via relabeling. If empty, Prometheus uses the default
+                        value `http`.
+                      enum:
+                      - http
+                      - https
                       type: string
                     scrapeTimeout:
                       description: Timeout after which the scrape is ended If not
@@ -12670,7 +12676,13 @@ spec:
                     description: Optional ProxyURL.
                     type: string
                   scheme:
-                    description: HTTP scheme to use for scraping. Defaults to `http`.
+                    description: HTTP scheme to use for scraping. `http` and `https`
+                      are the expected values unless you rewrite the `__scheme__`
+                      label via relabeling. If empty, Prometheus uses the default
+                      value `http`.
+                    enum:
+                    - http
+                    - https
                     type: string
                   url:
                     description: Mandatory URL of the prober.
@@ -30687,7 +30699,13 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: HTTP scheme to use for scraping.
+                      description: HTTP scheme to use for scraping. `http` and `https`
+                        are the expected values unless you rewrite the `__scheme__`
+                        label via relabeling. If empty, Prometheus uses the default
+                        value `http`.
+                      enum:
+                      - http
+                      - https
                       type: string
                     scrapeTimeout:
                       description: Timeout after which the scrape is ended If not
