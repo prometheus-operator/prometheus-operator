@@ -28,7 +28,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,6 +90,7 @@ type Operator struct {
 	kubeletSyncEnabled     bool
 	config                 operator.Config
 	endpointSliceSupported bool
+	scrapeConfigSupported  bool
 }
 
 // New creates a new controller.
@@ -138,6 +138,35 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletSyncEnabled = true
 	}
 
+	// Check prerequisites for ScrapeConfig
+	verbs := map[string][]string{
+		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+	}
+	var scrapeConfigSupported bool
+	cc, err := k8sutil.NewCRDChecker(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
+	}
+
+	var namespaces = make([]string, 0, len(conf.Namespaces.AllowList))
+	for k := range conf.Namespaces.AllowList {
+		namespaces = append(namespaces, k)
+	}
+
+	err = cc.CheckPrerequisites(ctx,
+		namespaces,
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
+	case err != nil:
+		return nil, errors.Wrap(err, "failed to check prerequisites for the ScrapeConfig CRD ")
+	default:
+		scrapeConfigSupported = true
+	}
+
 	// All the metrics exposed by the controller get the controller="prometheus" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
 
@@ -166,6 +195,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			Name: "prometheus_operator_node_syncs_failed_total",
 			Help: "Number of node endpoints synchronisation failures",
 		}),
+		scrapeConfigSupported: scrapeConfigSupported,
 	}
 	c.metrics.MustRegister(
 		c.nodeAddressLookupErrors,
@@ -246,20 +276,21 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating probe informers")
 	}
 
-	c.sconInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
-			c.config.Namespaces.DenyList,
-			mclient,
-			resyncPeriod,
-			nil,
-		),
-		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating scrapeconfigs informers")
+	if c.scrapeConfigSupported {
+		c.sconInfs, err = informers.NewInformersForResource(
+			informers.NewMonitoringInformerFactories(
+				c.config.Namespaces.AllowList,
+				c.config.Namespaces.DenyList,
+				mclient,
+				resyncPeriod,
+				nil,
+			),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating scrapeconfigs informers")
+		}
 	}
-
 	c.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AllowList,
@@ -373,12 +404,10 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
-		// Skipping ScrapeConfigs if we don't have access to the CRD or if the CRD is not installed
-		if infs.name == "ScrapeConfig" {
-			if ok, err := c.isScrapeConfigInstalled(ctx); !ok || err != nil {
-				level.Warn(c.logger).Log("msg", fmt.Sprintf("skipping %s for cache sync (informersForResource == nil)", infs.name))
-				continue
-			}
+		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
+		// nil. ScrapeConfig is one example.
+		if infs.informersForResource == nil {
+			continue
 		}
 
 		for _, inf := range infs.informersForResource.GetInformers() {
@@ -489,9 +518,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
-	if ok, err := c.isScrapeConfigInstalled(ctx); err != nil || !ok {
-		level.Info(c.logger).Log("msg", "prometheus-operator is not allowed to manage ScrapeConfig resources. The operator will ignore ScrapeConfig resources.")
-	} else {
+	if c.scrapeConfigSupported {
 		go c.sconInfs.Start(ctx.Done())
 	}
 	go c.ruleInfs.Start(ctx.Done())
@@ -1596,7 +1623,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
-	if ok, _ := c.isScrapeConfigInstalled(ctx); ok {
+	if c.scrapeConfigSupported {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs()
 		if err != nil {
 			// ScrapeConfigs are still optional,
@@ -1773,73 +1800,4 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
-}
-
-// checkCRDAuthorization checks if the operator has access to the specified CRD
-// It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
-func (c *Operator) checkCRDAuthorization(ctx context.Context, verb string, group string, resource string) (bool, error) {
-	if c.config.Namespaces.AllowList != nil {
-		for ns := range c.config.Namespaces.AllowList {
-			ssar := &authv1.SelfSubjectAccessReview{
-				Spec: authv1.SelfSubjectAccessReviewSpec{
-					ResourceAttributes: &authv1.ResourceAttributes{
-						Verb:      verb,
-						Group:     group,
-						Resource:  resource,
-						Namespace: ns,
-					},
-				},
-			}
-			ssarResponse, err := c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
-			if err != nil {
-				return false, err
-			}
-			if !ssarResponse.Status.Allowed {
-				return ssarResponse.Status.Allowed, nil
-			}
-		}
-
-		return true, nil
-	}
-
-	ssar := &authv1.SelfSubjectAccessReview{
-		Spec: authv1.SelfSubjectAccessReviewSpec{
-			ResourceAttributes: &authv1.ResourceAttributes{
-				Verb:     verb,
-				Group:    group,
-				Resource: resource,
-			},
-		},
-	}
-	ssarResponse, err := c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
-	if err != nil {
-		return false, err
-	}
-	return ssarResponse.Status.Allowed, nil
-}
-
-// isScrapeConfigInstalled returns true if the CRD is installed and if the operator is allowed to access it
-func (c *Operator) isScrapeConfigInstalled(ctx context.Context) (bool, error) {
-	verbs := []string{
-		"get",
-		"watch",
-		"list",
-	}
-
-	crdInstalled, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.ScrapeConfigName)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check if the API supports the ScrapeConfig CRD")
-	}
-	if !crdInstalled {
-		return false, nil
-	}
-
-	for _, verb := range verbs {
-		_, err := c.checkCRDAuthorization(ctx, verb, "monitoring.coreos.com", "scrapeconfigs")
-		if err != nil {
-			return false, errors.Wrap(err, "failed to check authorization on the ScrapeConfig CRD")
-		}
-	}
-
-	return true, nil
 }

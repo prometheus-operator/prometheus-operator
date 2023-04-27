@@ -111,10 +111,10 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	// Check prerequisites for ScrapeConfig
 	verbs := map[string][]string{
-		monitoringv1alpha1.PrometheusAgentName: {"get", "list", "watch"},
+		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
 	}
 	var scrapeConfigSupported bool
-	cc, err := k8sutil.NewCRDChecker(cfg.Host, conf.TLSInsecure, &conf.TLSConfig)
+	cc, err := k8sutil.NewCRDChecker(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
 	}
@@ -416,7 +416,8 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
-		// Skipping ScrapeConfigs if we don't have access to the CRD or if the CRD is not installed
+		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
+		// nil. ScrapeConfig is one example.
 		if infs.informersForResource == nil {
 			continue
 		}
