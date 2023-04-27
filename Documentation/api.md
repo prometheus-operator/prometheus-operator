@@ -6544,7 +6544,9 @@ string
 </em>
 </td>
 <td>
-<p>HTTP scheme to use for scraping.</p>
+<p>HTTP scheme to use for scraping.
+<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
+If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
