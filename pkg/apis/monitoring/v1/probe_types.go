@@ -166,7 +166,9 @@ type ProberSpec struct {
 	// Mandatory URL of the prober.
 	URL string `json:"url"`
 	// HTTP scheme to use for scraping.
-	// Defaults to `http`.
+	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
+	// If empty, Prometheus uses the default value `http`.
+	// +kubebuilder:validation:Enum=http;https
 	Scheme string `json:"scheme,omitempty"`
 	// Path to collect metrics from.
 	// Defaults to `/probe`.
