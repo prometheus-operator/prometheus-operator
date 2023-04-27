@@ -176,6 +176,7 @@ gp3-csi   true
 ```
 
 Next, update the `spec.paused` field to `true` (to prevent the operator from recreating the StatefulSet) and update the storage request in the `spec.storage` field of the custom resource. Assuming a Prometheus resource named `example` for which you want to increase the storage size to 10Gi:
+(You can get actual name by running `kubectl get prometheus`) 
 
 ```bash
 kubectl patch prometheus/example --patch '{"spec": {"paused": true, "storage": {"volumeClaimTemplate": {"spec": {"resources": {"requests": {"storage":"10Gi"}}}}}}}' --type merge
