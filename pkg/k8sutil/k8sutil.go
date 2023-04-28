@@ -156,7 +156,7 @@ func (cc CRDChecker) CheckPrerequisites(ctx context.Context, nsAllowList []strin
 func (cc CRDChecker) validateCRDInstallation(sgv, resource string) error {
 	crdInstalled, err := IsAPIGroupVersionResourceSupported(cc.kclient.Discovery(), sgv, resource)
 	if err != nil {
-		return fmt.Errorf("failed to check if the API supports %s resource (apiGroup:  %q)", resource, sgv)
+		return fmt.Errorf("failed to check if the API supports %s resource (apiGroup: %q): %w", resource, sgv, err)
 	}
 	if !crdInstalled {
 		return fmt.Errorf("%w: %s resource (apiGroup: %q) not installed", ErrPrerequiresitesFailed, resource, sgv)
