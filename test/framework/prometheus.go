@@ -384,7 +384,7 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 
 	if err := f.WaitForResourceAvailable(
 		ctx,
-		func() (resourceStatus, error) {
+		func(ctx context.Context) (resourceStatus, error) {
 			current, err := f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 			if err != nil {
 				return resourceStatus{}, err
@@ -451,7 +451,7 @@ func promImage(version string) string {
 func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var targets []*Target
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var err error
 		targets, err = f.GetActiveTargets(ctx, ns, svcName)
 		if err != nil {
@@ -475,7 +475,7 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var targets []*Target
 		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
 		if loopErr != nil {
@@ -499,7 +499,7 @@ func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName strin
 func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, prometheusName string) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
@@ -672,7 +672,7 @@ func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *mo
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
 		firing, loopError = f.CheckPrometheusFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil

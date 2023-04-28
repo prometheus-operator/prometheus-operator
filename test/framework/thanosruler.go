@@ -112,7 +112,7 @@ func (f *Framework) WaitForThanosRulerReady(ctx context.Context, tr *monitoringv
 	if f.operatorVersion.LTE(semver.MustParse("0.64.0")) {
 		var pollErr error
 
-		err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 			st, _, pollErr := thanos.RulerStatus(context.Background(), f.KubeClient, tr)
 
 			if pollErr != nil {
@@ -132,7 +132,7 @@ func (f *Framework) WaitForThanosRulerReady(ctx context.Context, tr *monitoringv
 
 	if err := f.WaitForResourceAvailable(
 		ctx,
-		func() (resourceStatus, error) {
+		func(ctx context.Context) (resourceStatus, error) {
 			current, err := f.MonClientV1.ThanosRulers(tr.Namespace).Get(ctx, tr.Name, metav1.GetOptions{})
 			if err != nil {
 				return resourceStatus{}, err
@@ -180,7 +180,7 @@ func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.Se
 func (f *Framework) WaitForThanosFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
 		firing, loopError = f.CheckThanosFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil

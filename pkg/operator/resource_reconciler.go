@@ -86,6 +86,10 @@ type ResourceReconciler struct {
 	g errgroup.Group
 }
 
+var (
+	_ = cache.ResourceEventHandler(&ResourceReconciler{})
+)
+
 // NewResourceReconciler returns a reconciler for the "kind" resource.
 func NewResourceReconciler(
 	l log.Logger,
@@ -213,7 +217,7 @@ func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 }
 
 // OnAdd implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnAdd(obj interface{}) {
+func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 	if _, ok := obj.(*appsv1.StatefulSet); ok {
 		rr.onStatefulSetAdd(obj.(*appsv1.StatefulSet))
 		return
