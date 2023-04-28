@@ -467,11 +467,13 @@ func (c *Operator) addHandlers() {
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
 	})
-	c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleScrapeConfigAdd,
-		UpdateFunc: c.handleScrapeConfigUpdate,
-		DeleteFunc: c.handleScrapeConfigDelete,
-	})
+	if c.sconInfs != nil {
+		c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleScrapeConfigAdd,
+			UpdateFunc: c.handleScrapeConfigUpdate,
+			DeleteFunc: c.handleScrapeConfigDelete,
+		})
+	}
 	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleConfigMapAdd,
 		DeleteFunc: c.handleConfigMapDelete,
