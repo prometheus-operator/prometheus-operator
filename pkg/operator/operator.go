@@ -161,6 +161,8 @@ func (rt *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
 	for _, st := range rt.statusByObject {
 		if st.Ok() {
 			ok++
+		} else {
+			failed++
 		}
 	}
 
