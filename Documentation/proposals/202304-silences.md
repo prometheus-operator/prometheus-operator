@@ -12,7 +12,7 @@ This document describes the creation of `Silence` Custom Resource Definition tha
 
 # Why
 
-Prometheus-operator does not have provide a way to automate the management of Alertmanager silences and there is no current standard/best practice way to do that.
+Prometheus-operator does not provide a way to automate the management of Alertmanager silences and there is no current standard/best practice way to do that.
 Moreover, setting an automation to manage silences has been reported as cumbersome by multiple users.
 or an additional operator that does the job e.g. [silence-operator](https://github.com/giantswarm/silence-operator).
 
