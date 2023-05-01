@@ -8,8 +8,7 @@
 * Other docs:
   * n/a
 
-This document describes the creation of `Silence` Custom Resource Definition that defines Alertmanager silences
-configurations in the Kubernetes way.
+This document describes the creation of `Silence` Custom Resource Definition that defines Alertmanager silences.
 
 # Why
 
