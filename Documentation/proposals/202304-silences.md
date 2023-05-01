@@ -31,7 +31,7 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
   which in fact brings benefits to the whole team because having a history and revisions in Git as well as constancy to manage the silences in a multi-tenant environment.
 
 Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
-because that requires to manage an extra component +CRDs on top of the Prometheus operator.
+because that requires managing an extra component +CRDs on top of the Prometheus operator.
 Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
 
 Adding support for `Silence` CRD in the Prometheus-operator will provide more flexibility to users in terms of choosing the tool to deploy their silences and will free users from managing a standalone component within the stack.
