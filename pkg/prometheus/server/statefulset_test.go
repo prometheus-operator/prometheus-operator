@@ -669,6 +669,21 @@ func TestListenTLS(t *testing.T) {
 	}
 
 	fmt.Println(sset.Spec.Template.Spec.Containers[2].Args)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=https://localhost:9090/-/reload",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
 }
 
 func TestTagAndShaAndVersion(t *testing.T) {
