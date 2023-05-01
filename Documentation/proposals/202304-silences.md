@@ -17,14 +17,19 @@ Moreover, setting an automation to manage silences has been reported as cumberso
 or an additional operator that does the job e.g. [silence-operator](https://github.com/giantswarm/silence-operator).
 
 * Users using CI/CD jobs to manage silences have reported that this is cumbersome, since they need to either expose
-  Alertmanager via an ingress or using a service account to connect to the cluster, and this is even more complicated
-  in a multi-cluster setup.
-  However, there are folks that use a Kubernetes Job to add Silences,
+  Alertmanager via an ingress behind an authentication mechanism, or using a service account to connect to the cluster, and this is even more complicated
+  in a multi-cluster setup as they need to configure alertmanagers from different clusters in one tool.
+  In addition to the fact that CI jobs cost money to run, as well as there is no reconcilition loop unless ci runs which is expensive in the end.
+* However, there are folks that use a Kubernetes Job to add Silences,
   In both situations, a CI/CD pipeline is needed in order to automate the execution, this includes managing the secrets and/or deprecation of code
   Using Kubernetes Jobs, teams need to build and deploy a container and monitor its status, which is an additional effort.
   CI/CD pipeline is not the best option in multi-cluster setups, teams need to manage k8s access, secrets, and configs.
+  Essentially, both solutions have drawbacks with cost and reconciliation loop.
 
 ![CI/CD K8s Job Approach](../img/CICD-k8s-job.png "CI/CD K8s Job Approach")
+
+* There are few folks that stick in creating silences manually in Alertmanager UI, which means that developers need access to alertmanagers
+  and add silences manually, but again, there's no reconciliation loop.
 
 * Users that use a standalone operator that implements a Silence CRD are in a better situation,
   for example, users have reported that they are using GitOps to fully manage the life cycle of Silences Custom resources,
@@ -32,6 +37,7 @@ or an additional operator that does the job e.g. [silence-operator](https://gith
 
 Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
 because that requires managing an extra component +CRDs on top of the Prometheus operator.
+Moreover, this project doesn't have a lot of community support, and it's reached by small amount of users.
 Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
 
 Adding support for `Silence` CRD in the Prometheus-operator will provide more flexibility to users in terms of choosing the tool to deploy their silences and will free users from managing a standalone component within the stack.
