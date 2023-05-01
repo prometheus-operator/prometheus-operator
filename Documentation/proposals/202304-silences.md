@@ -42,7 +42,7 @@ Adding support for `Silence` CRD in the Prometheus-operator will provide more fl
 Using Alertmanager API Directly comes with drawbacks:
 
 * Teams have to build an automation to add silences in a centralized manner
-* There is no input validation, which can lead to an invalid silence configuration
+* There is no input validation in CI, which can lead to an invalid silence configuration
 * Teams need to manage expiration on their own
 * If a silence was deleted by accident, it will be permanent.
 
@@ -81,7 +81,7 @@ metadata:
   labels:
     test: value
 spec:
-  expiresAt: "2023-06-01"
+  expiresAt: "2023-06-01 10:00"
   matchers:
     - matchType: "="
       name: namespace
