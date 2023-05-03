@@ -14724,7 +14724,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>files</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1alpha1.SDFile">
+[]SDFile
+</a>
 </em>
 </td>
 <td>
@@ -17316,6 +17318,14 @@ MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route 
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.SDFile">SDFile
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>)
+</p>
+<div>
+<p>SDFile represents a file used for service discovery</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig
 </h3>
 <p>
@@ -18095,6 +18105,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of targets for this static configuration.</p>
 </td>
 </tr>

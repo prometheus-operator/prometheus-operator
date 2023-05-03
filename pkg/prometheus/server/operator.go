@@ -858,7 +858,7 @@ func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 // TODO: Don't enqueue just for the namespace
 func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
-		level.Debug(c.logger).Log("msg", "ScrapeConfig delete")
+		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -1622,13 +1622,12 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 
-	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
-	if c.scrapeConfigSupported {
-		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs()
-		if err != nil {
-			// ScrapeConfigs are still optional,
-			level.Error(c.logger).Log("msg", errors.Wrap(err, "selecting ScrapeConfigs failed"), "prometheus", p.Name, "namespace", p.Namespace)
-		}
+	scrapeConfigs, err := resourceSelector.SelectScrapeConfigs()
+	switch {
+	case errors.Is(err, prompkg.ScrapeConfigIsNotAvailable):
+		break
+	case err != nil:
+		return err
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)

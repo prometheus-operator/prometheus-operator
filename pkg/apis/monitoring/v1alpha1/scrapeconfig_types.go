@@ -29,6 +29,10 @@ const (
 // Target represents a target for Prometheus to scrape
 type Target string
 
+// SDFile represents a file used for service discovery
+// +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
+type SDFile string
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
@@ -98,8 +102,10 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// List of targets for this static configuration.
-	Targets []Target `json:"targets"`
+	// +optional
+	Targets []Target `json:"targets,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
+	// +mapType:=atomic
 	// +optional
 	Labels map[v1.LabelName]string `json:"labels,omitempty"`
 }
@@ -113,7 +119,7 @@ type FileSDConfig struct {
 	// stored.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
 	// +kubebuilder:validation:MinItems:=1
-	Files []string `json:"files"`
+	Files []SDFile `json:"files"`
 	// RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`

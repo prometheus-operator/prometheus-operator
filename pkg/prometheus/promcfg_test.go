@@ -9825,7 +9825,7 @@ func TestScrapeConfigFileSDConfig(t *testing.T) {
 				Spec: monitoringv1alpha1.ScrapeConfigSpec{
 					FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
 						{
-							Files:           []string{"/tmp/myfile.json"},
+							Files:           []monitoringv1alpha1.SDFile{"/tmp/myfile.json"},
 							RefreshInterval: &refreshInterval,
 						},
 					},

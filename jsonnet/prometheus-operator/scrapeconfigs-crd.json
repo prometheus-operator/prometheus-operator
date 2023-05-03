@@ -52,6 +52,8 @@
                         "files": {
                           "description": "List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the prometheus-operator project makes no guarantees about the working directory where the configuration file is stored. Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.",
                           "items": {
+                            "description": "SDFile represents a file used for service discovery",
+                            "pattern": "^[^*]*(\\*[^/]*)?\\.(json|yml|yaml|JSON|YML|YAML)$",
                             "type": "string"
                           },
                           "minItems": 1,
@@ -185,7 +187,8 @@
                             "type": "string"
                           },
                           "description": "Labels assigned to all metrics scraped from the targets.",
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         },
                         "targets": {
                           "description": "List of targets for this static configuration.",
@@ -196,9 +199,6 @@
                           "type": "array"
                         }
                       },
-                      "required": [
-                        "targets"
-                      ],
                       "type": "object"
                     },
                     "type": "array"

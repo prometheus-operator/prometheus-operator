@@ -177,7 +177,7 @@ func (in *FileSDConfig) DeepCopyInto(out *FileSDConfig) {
 	*out = *in
 	if in.Files != nil {
 		in, out := &in.Files, &out.Files
-		*out = make([]string, len(*in))
+		*out = make([]SDFile, len(*in))
 		copy(*out, *in)
 	}
 	if in.RefreshInterval != nil {

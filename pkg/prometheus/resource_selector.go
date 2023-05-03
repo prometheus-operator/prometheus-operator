@@ -17,7 +17,6 @@ package prometheus
 import (
 	"context"
 	"fmt"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"regexp"
 	"strings"
 
@@ -33,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -50,6 +50,8 @@ type ResourceSelector struct {
 	metrics              *operator.Metrics
 	accessor             *operator.Accessor
 }
+
+var ScrapeConfigIsNotAvailable = errors.New("ScrapeConfig is not available, either because the operator misses permissions or the CRD is unavailable")
 
 type ListAllByNamespacer interface {
 	ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -591,6 +593,10 @@ func validateProberURL(url string) error {
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs() (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+	if rs.scrapeConfigLister == nil {
+		return nil, ScrapeConfigIsNotAvailable
+	}
+
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}

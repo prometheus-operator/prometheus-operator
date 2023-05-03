@@ -25,15 +25,16 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
+	"gopkg.in/yaml.v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus/common/model"
-	"gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -2179,10 +2180,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "files",
 					Value: config.Files,
 				},
-				{
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
 					Value: config.RefreshInterval,
-				},
+				})
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -2200,10 +2204,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "url",
 					Value: config.URL,
 				},
-				{
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
 					Value: config.RefreshInterval,
-				},
+				})
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{

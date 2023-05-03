@@ -55,6 +55,8 @@ spec:
                         the configuration file is stored. Files must be mounted using
                         Prometheus.ConfigMaps or Prometheus.Secrets.'
                       items:
+                        description: SDFile represents a file used for service discovery
+                        pattern: ^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$
                         type: string
                       minItems: 1
                       type: array
@@ -190,6 +192,7 @@ spec:
                       description: Labels assigned to all metrics scraped from the
                         targets.
                       type: object
+                      x-kubernetes-map-type: atomic
                     targets:
                       description: List of targets for this static configuration.
                       items:
@@ -197,8 +200,6 @@ spec:
                           scrape
                         type: string
                       type: array
-                  required:
-                  - targets
                   type: object
                 type: array
             type: object
