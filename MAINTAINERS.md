@@ -8,7 +8,7 @@
 | Simon Pasquier    | pasquier.simon@gmail.com  | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier) | Red Hat       |
 | Vasily Sliouniaev |                           | `@vas`               | [@vsliouniaev](https://github.com/vsliouniaev)     |               |
 | Kemal Akkoyun     | kakkoyun@gmail.com        | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)           | Polar Signals |
-| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Gitpod        |
+| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Coralogix     |
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat       |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat       |
 
