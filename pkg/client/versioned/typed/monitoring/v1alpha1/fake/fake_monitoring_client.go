@@ -34,6 +34,10 @@ func (c *FakeMonitoringV1alpha1) PrometheusAgents(namespace string) v1alpha1.Pro
 	return &FakePrometheusAgents{c, namespace}
 }
 
+func (c *FakeMonitoringV1alpha1) ScrapeConfigs(namespace string) v1alpha1.ScrapeConfigInterface {
+	return &FakeScrapeConfigs{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeMonitoringV1alpha1) RESTClient() rest.Interface {

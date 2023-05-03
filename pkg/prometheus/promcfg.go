@@ -31,6 +31,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -438,6 +439,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
+	sCons map[string]*v1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -477,6 +479,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
@@ -2031,6 +2034,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
+	sCons map[string]*v1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -2062,6 +2066,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
@@ -2077,4 +2082,141 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	}
 
 	return yaml.Marshal(cfg)
+}
+
+func (cg *ConfigGenerator) appendScrapeConfigs(
+	slices []yaml.MapSlice,
+	scrapeConfigs map[string]*v1alpha1.ScrapeConfig,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32) []yaml.MapSlice {
+	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
+	i := 0
+	for k := range scrapeConfigs {
+		scrapeConfigIdentifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(scrapeConfigIdentifiers)
+
+	for _, identifier := range scrapeConfigIdentifiers {
+		slices = append(slices,
+			cg.WithKeyVals("scrapeconfig", identifier).generateScrapeConfig(
+				scrapeConfigs[identifier],
+				apiserverConfig,
+				store,
+				shards,
+			),
+		)
+	}
+
+	return slices
+}
+
+func (cg *ConfigGenerator) generateScrapeConfig(
+	sc *v1alpha1.ScrapeConfig,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32,
+) yaml.MapSlice {
+	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
+	cfg := yaml.MapSlice{
+		{
+			Key:   "job_name",
+			Value: jobName,
+		},
+	}
+
+	cpf := cg.prom.GetCommonPrometheusFields()
+	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+
+	if sc.Spec.HonorTimestamps != nil {
+		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)
+	}
+
+	if sc.Spec.HonorLabels != nil {
+		cfg = cg.AddHonorLabels(cfg, *sc.Spec.HonorLabels)
+	}
+
+	if sc.Spec.MetricsPath != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	}
+
+	if sc.Spec.RelabelConfigs != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "relabel_configs",
+			Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
+		})
+	}
+
+	// StaticConfig
+	if len(sc.Spec.StaticConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.StaticConfigs))
+		for i, config := range sc.Spec.StaticConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "targets",
+					Value: config.Targets,
+				},
+				{
+					Key:   "labels",
+					Value: config.Labels,
+				},
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "static_configs",
+			Value: configs,
+		})
+	}
+
+	// FileSDConfig
+	if len(sc.Spec.FileSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.FileSDConfigs))
+		for i, config := range sc.Spec.FileSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "files",
+					Value: config.Files,
+				},
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "file_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// HTTPSDConfig
+	if len(sc.Spec.HTTPSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.HTTPSDConfigs))
+		for i, config := range sc.Spec.HTTPSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "url",
+					Value: config.URL,
+				},
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "http_sd_configs",
+			Value: configs,
+		})
+	}
+	return cfg
 }

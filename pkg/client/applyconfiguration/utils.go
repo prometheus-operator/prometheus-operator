@@ -185,8 +185,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.DayOfMonthRangeApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1alpha1.EmailConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
+		return &monitoringv1alpha1.FileSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1alpha1.HTTPConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("HTTPSDConfig"):
+		return &monitoringv1alpha1.HTTPSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KeyValue"):
@@ -215,6 +219,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1alpha1.RouteApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfig"):
+		return &monitoringv1alpha1.ScrapeConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfigSpec"):
+		return &monitoringv1alpha1.ScrapeConfigSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackAction"):
 		return &monitoringv1alpha1.SlackActionApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackConfig"):
@@ -225,6 +233,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.SlackFieldApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SNSConfig"):
 		return &monitoringv1alpha1.SNSConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("StaticConfig"):
+		return &monitoringv1alpha1.StaticConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("TelegramConfig"):
 		return &monitoringv1alpha1.TelegramConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("TimeInterval"):

@@ -57,8 +57,8 @@ type CommonPrometheusFields struct {
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -71,8 +71,8 @@ type CommonPrometheusFields struct {
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -85,8 +85,8 @@ type CommonPrometheusFields struct {
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// *Experimental* Probes to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -96,6 +96,20 @@ type CommonPrometheusFields struct {
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
+	// *Experimental* ScrapeConfigs to be selected for target discovery.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is deprecated and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
+	// Namespace's labels to match for ScrapeConfig discovery. If nil, only
+	// check own namespace.
+	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
