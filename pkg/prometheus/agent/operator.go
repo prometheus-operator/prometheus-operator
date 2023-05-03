@@ -723,7 +723,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	scrapeConfigs, err := resourceSelector.SelectScrapeConfigs()
 	switch {
-	case errors.Is(err, prompkg.ScrapeConfigIsNotAvailable):
+	case errors.Is(err, prompkg.ErrScrapeConfigIsNotAvailable):
 		break
 	case err != nil:
 		return errors.Wrap(err, "selecting ScrapeConfigs failed")

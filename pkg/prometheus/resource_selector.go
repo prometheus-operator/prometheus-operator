@@ -51,7 +51,7 @@ type ResourceSelector struct {
 	accessor             *operator.Accessor
 }
 
-var ScrapeConfigIsNotAvailable = errors.New("ScrapeConfig is not available, either because the operator misses permissions or the CRD is unavailable")
+var ErrScrapeConfigIsNotAvailable = errors.New("ScrapeConfig is not available, either because the operator misses permissions or the CRD is unavailable")
 
 type ListAllByNamespacer interface {
 	ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -594,7 +594,7 @@ func validateProberURL(url string) error {
 // returning only those with a valid configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs() (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
 	if rs.scrapeConfigLister == nil {
-		return nil, ScrapeConfigIsNotAvailable
+		return nil, ErrScrapeConfigIsNotAvailable
 	}
 
 	cpf := rs.p.GetCommonPrometheusFields()
