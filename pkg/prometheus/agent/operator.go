@@ -726,7 +726,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	case errors.Is(err, prompkg.ScrapeConfigIsNotAvailable):
 		break
 	case err != nil:
-		return err
+		return errors.Wrap(err, "selecting ScrapeConfigs failed")
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
