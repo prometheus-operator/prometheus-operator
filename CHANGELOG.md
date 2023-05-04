@@ -1,3 +1,29 @@
+## 0.65.0 / 2022-05-04
+
+The main change introduced by this release is the new v1alpha1 `ScrapeConfig` CRD.
+This implements the [proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+documented in [#5279](https://github.com/prometheus-operator/prometheus-operator/pull/5279)
+and provides a Kubernetes native API to create and manage additional scrape configurations.
+
+To try it, follow the following steps:
+1. Install the new CRD in the cluster (see
+   `example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml`).
+2. Update the Prometheus operator's RBAC permissions to manage `ScrapeConfig` resources
+   (see `example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml`).
+
+**NOTE**: if these conditions aren't met, the operator will start but it won't
+be able to reconcile the `ScrapeConfig` resources.
+
+* [FEATURE] Add the `status` subresource for the `ThanosRuler` CRD. #5520
+* [FEATURE] Add `spec.web.timeout` and `spec.web.getConcurrency` to the `Alertmanager` CRD. #5478
+* [FEATURE] Add `spec.groups[].limit` to the `Prometheus` CRD. #4999
+* [FEATURE] Add ScrapeConfig CRD. #5335
+* [ENHANCEMENT] Set a default for `seccompProfile` on the operator and webhook Deployments to `RuntimeDefault`. #5477
+* [ENHANCEMENT] Add optional liveness and readiness probes to `prometheus-config-reloader`. This can be enabled via the `--enable-config-reloader-probes` CLI flag. #5449
+* [BUGFIX] Don't start the `PrometheusAgent` controller if the CRD isn't present or the operator lacks permissions. #5476
+* [BUGFIX] Declare `spec.rules` optional in `PrometheusRule` CRD. #5481
+* [BUGFIX] Fix incorrect metric counter value for failed sync status. #5533
+
 ## 0.64.1 / 2023-04-24
 
 * [BUGFIX] Fix panic when scraping `/metrics` with PrometheusAgent resources declared. #5511
