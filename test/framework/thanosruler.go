@@ -108,8 +108,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 }
 
 func (f *Framework) WaitForThanosRulerReady(ctx context.Context, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
-	// TODO(simonpasquier): remove the following block after 0.65.0 is released.
-	if f.operatorVersion.LTE(semver.MustParse("0.64.0")) {
+	if f.operatorVersion.LT(semver.MustParse("0.65.0")) {
 		var pollErr error
 
 		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
