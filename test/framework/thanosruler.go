@@ -55,7 +55,7 @@ func (f *Framework) CreateThanosRulerAndWaitUntilReady(ctx context.Context, ns s
 		return nil, fmt.Errorf("creating %v ThanosRuler instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
 
-	if err := f.WaitForThanosRulerReady(ctx, result, 5*time.Minute); err != nil {
+	if err := f.WaitForThanosRulerReady(ctx, ns, result, 5*time.Minute); err != nil {
 		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
 
@@ -68,7 +68,7 @@ func (f *Framework) PatchThanosRulerAndWaitUntilReady(ctx context.Context, name,
 		return nil, err
 	}
 
-	if err := f.WaitForThanosRulerReady(ctx, tr, 5*time.Minute); err != nil {
+	if err := f.WaitForThanosRulerReady(ctx, ns, tr, 5*time.Minute); err != nil {
 		return nil, err
 	}
 
@@ -107,7 +107,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 	return tr, nil
 }
 
-func (f *Framework) WaitForThanosRulerReady(ctx context.Context, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
+func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
 	if f.operatorVersion.LT(semver.MustParse("0.65.0")) {
 		var pollErr error
 
@@ -132,7 +132,7 @@ func (f *Framework) WaitForThanosRulerReady(ctx context.Context, tr *monitoringv
 	if err := f.WaitForResourceAvailable(
 		ctx,
 		func(ctx context.Context) (resourceStatus, error) {
-			current, err := f.MonClientV1.ThanosRulers(tr.Namespace).Get(ctx, tr.Name, metav1.GetOptions{})
+			current, err := f.MonClientV1.ThanosRulers(ns).Get(ctx, tr.Name, metav1.GetOptions{})
 			if err != nil {
 				return resourceStatus{}, err
 			}
