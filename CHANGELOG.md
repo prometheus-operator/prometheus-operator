@@ -1,3 +1,22 @@
+## 0.65.0 / 2022-05-04
+
+The main change introduced by this release is the new v1alpha1 `ScrapeConfig` CRD.
+This implements the [proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+documented in [#5279](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+and provides a Kubernetes native API to create and manage additional scrape configurations.
+
+* [CHANGE] Add validation for missing CRDs. #5476
+* [FEATURE] Add the `status` subresource for the `ThanosRuler` CRD. #5520
+* [FEATURE] Add support for setting the `web.timeout` and `web.get-concurrency` options on `Alertmanager`
+* [FEATURE] Add support for `Prometheus` `RuleGroup` Limit. #4999
+* [FEATURE] Add ScrapeConfig CRD. #5335
+* [ENHANCEMENT] Set a default for `seccompProfile` on the operator Deployment to `RuntimeDefault`. #5477
+* [ENHANCEMENT] Add liveness and readiness probes to prometheus-config-reloader. #5449
+* [ENHANCEMENT] Add HTTP `scheme` validation in `Probe.spec` and `PodMonitor.spec.podMetricsEndpoints`. #5531
+* [BUGFIX] Declare `spec.rules` optional in `PrometheusRule` CRD. #5481
+* [BUGFIX] Fix incorrect metric counter value for failed sync status. #5533
+* [BUGFIX] Report downstream errors when CRD validation fails. #5534
+
 ## 0.64.1 / 2023-04-24
 
 * [BUGFIX] Fix panic when scraping `/metrics` with PrometheusAgent resources declared. #5511
