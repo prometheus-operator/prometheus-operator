@@ -1606,28 +1606,29 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.sconInfs, c.nsMonInf, c.metrics)
-	smons, err := resourceSelector.SelectServiceMonitors(ctx)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics)
+
+	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	pmons, err := resourceSelector.SelectPodMonitors(ctx)
+	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting PodMonitors failed")
 	}
 
-	bmons, err := resourceSelector.SelectProbes(ctx)
+	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 
-	scrapeConfigs, err := resourceSelector.SelectScrapeConfigs()
-	switch {
-	case errors.Is(err, prompkg.ErrScrapeConfigIsNotAvailable):
-		break
-	case err != nil:
-		return errors.Wrap(err, "selecting ScrapeConfigs failed")
+	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+	if c.sconInfs != nil {
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(c.sconInfs.ListAllByNamespace)
+		if err != nil {
+			return errors.Wrap(err, "selecting ScrapeConfigs failed")
+		}
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
