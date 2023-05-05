@@ -1,3 +1,7 @@
+## 0.65.1 / 2022-05-05
+
+* [BUGFIX] Fix panic when ScrapeConfig CRD is not installed. #5550
+
 ## 0.65.0 / 2022-05-04
 
 The main change introduced by this release is the new v1alpha1 `ScrapeConfig` CRD.
