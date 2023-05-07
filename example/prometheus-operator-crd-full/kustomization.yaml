@@ -5,7 +5,7 @@ resources:
   - ./monitoring.coreos.com_alertmanagers.yaml
   - ./monitoring.coreos.com_podmonitors.yaml
   - ./monitoring.coreos.com_probes.yaml
-  - ./monitoring.coreos.com_prometheuseagents.yaml
+  - ./monitoring.coreos.com_prometheusagents.yaml
   - ./monitoring.coreos.com_prometheuses.yaml
   - ./monitoring.coreos.com_prometheusrules.yaml
   - ./monitoring.coreos.com_servicemonitors.yaml
