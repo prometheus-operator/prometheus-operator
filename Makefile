@@ -298,7 +298,7 @@ go-fmt:
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)
-	# *.*sonnet will match *.jsonnet and *.libsonnet files but nothing else in this repository
+	# jsonnet will match *.jsonnet and *.libsonnet files but nothing else in this repository
 	find . -name *.jsonnet -not -path "*/vendor/*" -print0 | xargs -0 $(JSONNETFMT_BINARY) -i
 
 .PHONY: check-license
