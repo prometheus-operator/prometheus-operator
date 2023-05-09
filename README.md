@@ -85,6 +85,8 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
   of ingresses or static targets should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
 
+* **`ScrapeConfig`**, which declaratively specifies scrape configurations to be added to Prometheus. This CustomResourceDefinition helps with scraping resources outside the Kubernetes cluster.
+
 * **`PrometheusRule`**, which defines a desired set of Prometheus alerting and/or recording rules.
   The Operator generates a rule file, which can be used by Prometheus instances.
 
