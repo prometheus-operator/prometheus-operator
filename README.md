@@ -4,9 +4,15 @@
 [![Go Report Card](https://goreportcard.com/badge/prometheus-operator/prometheus-operator "Go Report Card")](https://goreportcard.com/report/prometheus-operator/prometheus-operator)
 [![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
 
-**Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
+*Note: Project was previously known as coreos/prometheus-operator.*
 
-Note: Project was previously known as coreos/prometheus-operator.
+## Project Status
+
+The operator in itself is considered to be production ready. Please refer to the CRDs versions for the status of each CRD:
+
+* `monitoring.coreos.com/vX`: **stable** CRDs and API, changes are made in a backward compatible way
+* `monitoring.coreos.com/vXbetaY`: **unstable** CRDs and API, changes can happen
+* `monitoring.coreos.com/vXalphaY`: **unstable** CRDs and API, changes can happen frequently
 
 ## Overview
 
