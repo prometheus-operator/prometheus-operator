@@ -3157,6 +3157,21 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </tr>
 <tr>
 <td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
+that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>objectStorageConfig</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
@@ -11874,6 +11889,21 @@ StorageSpec
 <td>
 <p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
+that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>

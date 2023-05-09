@@ -2483,6 +2483,13 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.VolumeMounts != nil {
+		in, out := &in.VolumeMounts, &out.VolumeMounts
+		*out = make([]corev1.VolumeMount, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.ObjectStorageConfig != nil {
 		in, out := &in.ObjectStorageConfig, &out.ObjectStorageConfig
 		*out = new(corev1.SecretKeySelector)
