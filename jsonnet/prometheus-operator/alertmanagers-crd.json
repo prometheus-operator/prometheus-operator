@@ -1257,6 +1257,10 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
+                          "pagerdutyUrl": {
+                            "description": "The default Pagerduty URL.",
+                            "type": "string"
+                          },
                           "resolveTimeout": {
                             "description": "ResolveTimeout is the default value used by alertmanager if the alert does not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated. This has no impact on alerts from Prometheus, as they always include EndsAt.",
                             "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

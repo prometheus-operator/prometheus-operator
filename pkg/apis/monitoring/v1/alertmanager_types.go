@@ -282,6 +282,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default OpsGenie API Key.
 	OpsGenieAPIKey *v1.SecretKeySelector `json:"opsGenieApiKey,omitempty"`
+
+	// The default Pagerduty URL.
+	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.

@@ -5874,6 +5874,9 @@ spec:
                         - key
                         type: object
                         x-kubernetes-map-type: atomic
+                      pagerdutyUrl:
+                        description: The default Pagerduty URL.
+                        type: string
                       resolveTimeout:
                         description: ResolveTimeout is the default value used by alertmanager
                           if the alert does not include EndsAt, after this time passes

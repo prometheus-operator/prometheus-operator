@@ -4093,6 +4093,17 @@ Kubernetes core/v1.SecretKeySelector
 <p>The default OpsGenie API Key.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>pagerdutyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The default Pagerduty URL.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec
