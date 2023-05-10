@@ -41,12 +41,14 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
+	"k8s.io/client-go/tools/events"
 )
 
 const (
@@ -77,8 +79,10 @@ type Operator struct {
 
 	rr *operator.ResourceReconciler
 
-	metrics         *operator.Metrics
-	reconciliations *operator.ReconciliationTracker
+	metrics          *operator.Metrics
+	reconciliations  *operator.ReconciliationTracker
+	eventBroadcaster events.EventBroadcaster
+	eventRecorder    events.EventRecorder
 
 	nodeAddressLookupErrors prometheus.Counter
 	nodeEndpointSyncs       prometheus.Counter
@@ -170,6 +174,8 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	// All the metrics exposed by the controller get the controller="prometheus" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
 
+	eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: client.EventsV1()})
+
 	c := &Operator{
 		kclient:                client,
 		mdClient:               mdClient,
@@ -183,6 +189,8 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		config:                 conf,
 		metrics:                operator.NewMetrics(r),
 		reconciliations:        &operator.ReconciliationTracker{},
+		eventBroadcaster:       eventBroadcaster,
+		eventRecorder:          eventBroadcaster.NewRecorder(scheme.Scheme, "prometheus-operator"),
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
 			Help: "Number of times a node IP address could not be determined",
@@ -513,6 +521,13 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	go c.rr.Run(ctx)
 	defer c.rr.Stop()
+
+	eventsRecordingStopChan := make(chan struct{})
+	c.eventBroadcaster.StartRecordingToSink(eventsRecordingStopChan)
+	defer func() {
+		close(eventsRecordingStopChan)
+		c.eventBroadcaster.Shutdown()
+	}()
 
 	go c.promInfs.Start(ctx.Done())
 	go c.smonInfs.Start(ctx.Done())
@@ -1207,8 +1222,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	level.Info(logger).Log("msg", "sync prometheus")
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusRulesConfigMaps", "Failed to update Prometheus rule ConfigMaps %s: %v", ruleConfigMapNames, err)
 		return err
 	}
+	c.eventRecorder.Eventf(p, nil, v1.EventTypeNormal, "ReconcilePrometheus", "UpdatePrometheusRulesConfigMaps", "Sucesfully updated Prometheus rule ConfigMaps %s", ruleConfigMapNames)
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
@@ -1217,21 +1234,25 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, ruleConfigMapNames, assetStore); err != nil {
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusConfigurationSecret", "Failed to update or create Secret with Prometheus configuration: %v", err)
 		return errors.Wrap(err, "creating config failed")
 	}
 
 	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
 	if err != nil {
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusTLSSecrets", "Failed to update or create Secret with Prometheus TLS assets: %v", err)
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusWebConfigSecrets", "Failed to update or create Secret with Prometheus web config: %v", err)
 		return errors.Wrap(err, "synchronizing web config secret failed")
 	}
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusService", "Failed to update or create Prometheus Service: %v", err)
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -1246,6 +1267,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
 		exists := !apierrors.IsNotFound(err)
 		if err != nil && !apierrors.IsNotFound(err) {
+			c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Failed to retrieve info about present StatefulSets: %v", err)
 			return errors.Wrap(err, "retrieving statefulset failed")
 		}
 
@@ -1290,14 +1312,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			int32(shard),
 			tlsAssets.ShardNames())
 		if err != nil {
+			c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Failed to update or create Prometheus StatefulSet: %v", err)
 			return errors.Wrap(err, "making statefulset failed")
 		}
 		operator.SanitizeSTS(sset)
 
 		if !exists {
+			c.eventRecorder.Eventf(p, nil, v1.EventTypeNormal, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "No current StatefulSet found, creating new one")
 			level.Debug(logger).Log("msg", "no current statefulset found")
 			level.Debug(logger).Log("msg", "creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+				c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Failed to update or create Prometheus StatefulSet: %v", err)
 				return errors.Wrap(err, "creating statefulset failed")
 			}
 			continue
@@ -1326,18 +1351,22 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				failMsg[i] = cause.Message
 			}
 
+			c.eventRecorder.Eventf(p, nil, v1.EventTypeNormal, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Recreating StatefulSet because the update operation wasn't possible. Reason: %s: ", failMsg)
 			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+				c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Failed to delete StatefulSet: %v", err)
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 			}
 			continue
 		}
 
 		if err != nil {
+			c.eventRecorder.Eventf(p, nil, v1.EventTypeWarning, "ReconcilePrometheus", "UpdatePrometheusStatefulSet", "Failed to update or create Prometheus StatefulSet: %v", err)
 			return errors.Wrap(err, "updating StatefulSet failed")
 		}
+		c.eventRecorder.Eventf(p, nil, v1.EventTypeNormal, "ReconcilePrometheus", "SyncPrometheus", "Sucesfully updated Prometheus")
 	}
 
 	ssets := map[string]struct{}{}
