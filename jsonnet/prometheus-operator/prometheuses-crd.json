@@ -4939,6 +4939,10 @@
                           "description": "Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer.",
                           "type": "boolean"
                         },
+                        "sendNativeHistograms": {
+                          "description": "Enables sending of native histograms, also known as sparse histograms over remote write. Only valid in Prometheus versions 2.40.0 and newer.",
+                          "type": "boolean"
+                        },
                         "sigv4": {
                           "description": "Sigv4 allows to configures AWS's Signature Verification 4",
                           "properties": {

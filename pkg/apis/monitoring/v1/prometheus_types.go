@@ -713,6 +713,9 @@ type RemoteWriteSpec struct {
 	// for exemplars to be scraped in the first place.  Only valid in
 	// Prometheus versions 2.27.0 and newer.
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
+	// Enables sending of native histograms, also known as sparse histograms
+	// over remote write. Only valid in Prometheus versions 2.40.0 and newer.
+	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
 	// Timeout for requests to the remote write endpoint.
 	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote write request.

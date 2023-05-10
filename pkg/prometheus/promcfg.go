@@ -1735,6 +1735,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "send_exemplars", spec.SendExemplars)
 		}
 
+		if spec.SendNativeHistograms != nil {
+			cfg = cg.WithMinimumVersion("2.40.0").AppendMapItem(cfg, "send_native_histograms", spec.SendNativeHistograms)
+		}
+
 		if spec.WriteRelabelConfigs != nil {
 			relabelings := []yaml.MapSlice{}
 			for _, c := range spec.WriteRelabelConfigs {
