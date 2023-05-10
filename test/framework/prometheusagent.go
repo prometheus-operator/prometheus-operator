@@ -90,7 +90,7 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 			return resourceStatus{
 				expectedReplicas: expected,
 				generation:       current.Generation,
-				replicas:         current.Status.AvailableReplicas,
+				replicas:         current.Status.UpdatedReplicas,
 				conditions:       current.Status.Conditions,
 			}, nil
 		},
