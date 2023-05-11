@@ -4,10 +4,6 @@
 [![Go Report Card](https://goreportcard.com/badge/prometheus-operator/prometheus-operator "Go Report Card")](https://goreportcard.com/report/prometheus-operator/prometheus-operator)
 [![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
 
-**Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
-
-Note: Project was previously known as coreos/prometheus-operator.
-
 ## Overview
 
 The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of
@@ -26,6 +22,14 @@ The Prometheus operator includes, but is not limited to, the following features:
   on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
 For an introduction to the Prometheus Operator, see the [getting started](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/getting-started.md) guide.
+
+## Project Status
+
+The operator in itself is considered to be production ready. Please refer to the CRDs versions for the status of each CRD:
+
+* `monitoring.coreos.com/v1`: **stable** CRDs and API, changes are made in a backward-compatible way.
+* `monitoring.coreos.com/v1beta1`: **unstable** CRDs and API, changes can happen but the team is focused on avoiding them. We encourage usage in production for users that accept the risk of breaking changes.
+* `monitoring.coreos.com/v1alpha1`: **unstable** CRDs and API, changes can happen frequently, and we suggest avoiding its usage on mission-critical environments.
 
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
@@ -78,6 +82,8 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 * **`Probe`**, which declaratively specifies how groups
   of ingresses or static targets should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
+
+* **`ScrapeConfig`**, which declaratively specifies scrape configurations to be added to Prometheus. This CustomResourceDefinition helps with scraping resources outside the Kubernetes cluster.
 
 * **`PrometheusRule`**, which defines a desired set of Prometheus alerting and/or recording rules.
   The Operator generates a rule file, which can be used by Prometheus instances.
