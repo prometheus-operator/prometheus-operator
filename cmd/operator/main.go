@@ -262,7 +262,7 @@ func Main() int {
 
 	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
 		return 1
 	}
@@ -304,14 +304,14 @@ func Main() int {
 
 	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		cancel()
 		return 1
 	}
 
 	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()
 		return 1
 	}
@@ -322,7 +322,7 @@ func Main() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
 		cancel()
 		return 1
 	}
@@ -335,7 +335,7 @@ func Main() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprint(os.Stderr, "invalid TLS config", err)
+			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
 			cancel()
 			return 1
 		}
@@ -402,7 +402,7 @@ func Main() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
 			cancel()
 			return 1
 		}
