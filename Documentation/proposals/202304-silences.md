@@ -132,5 +132,5 @@ status:
 
 # Action Plan
 
-1. Create the `Silence` CRD, covering `selector`, `matchers` and `expiresAt`.
+1. Create the `Silence` CRD, covering `matchers` and `expiresAt`.
 2. Once released, add other mechanisms to the CRD and complete the implementation.
