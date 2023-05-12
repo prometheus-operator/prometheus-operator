@@ -116,8 +116,7 @@
               severity: 'warning',
             },
             annotations: {
-              description: 'Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to sync config in {{$labels.namespace}} namespace.
-As a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.',
+              description: 'Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to sync config in {{$labels.namespace}} namespace.\nAs a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.',
               summary: 'config-reloader sidecar has not had a successful reload for 10m',
             },
             'for': '10m',
