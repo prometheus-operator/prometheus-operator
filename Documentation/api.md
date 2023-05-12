@@ -10492,6 +10492,18 @@ Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>sendNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enables sending of native histograms, also known as sparse histograms
+over remote write. Only valid in Prometheus versions 2.40.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>remoteTimeout</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">

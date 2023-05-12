@@ -17,10 +17,11 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"os"
 	"strings"
 	"testing"
+
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -6415,6 +6416,7 @@ remote_read:
 }
 
 func TestRemoteWriteConfig(t *testing.T) {
+	sendNativeHistograms := true
 	for _, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
@@ -6750,6 +6752,83 @@ remote_write:
 			version: "v2.30.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+					RetryOnRateLimit:  true,
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    min_backoff: 1s
+    max_backoff: 10s
+    retry_on_http_429: true
+`,
+		},
+		{
+			version: "v2.43.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+					RetryOnRateLimit:  true,
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  send_native_histograms: true
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    min_backoff: 1s
+    max_backoff: 10s
+    retry_on_http_429: true
+`,
+		},
+		{
+			version: "v2.39.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
