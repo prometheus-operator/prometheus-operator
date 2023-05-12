@@ -12,7 +12,7 @@ function concat() {
 
 function generate_bundle() {
     # shellcheck disable=SC2046
-    concat $(find "$@" -maxdepth 1 -name '*.yaml' | sort | grep -v service-monitor)
+    concat $(find "$@" -maxdepth 1 -name '*.yaml' ! -name 'kustomization.yaml' ! -name '*service-monitor*' | sort)
 }
 
 generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd > bundle.yaml
