@@ -26,6 +26,8 @@ TYPES_V1_TARGET += pkg/apis/monitoring/v1/servicemonitor_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
 TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/prometheusagent_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/scrapeconfig_types.go
 TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
