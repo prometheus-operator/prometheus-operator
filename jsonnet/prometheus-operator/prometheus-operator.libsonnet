@@ -40,6 +40,7 @@ function(params) {
   '0probeCustomResourceDefinition': import 'probes-crd.json',
   '0prometheusruleCustomResourceDefinition': import 'prometheusrules-crd.json',
   '0thanosrulerCustomResourceDefinition': import 'thanosrulers-crd.json',
+  '0scrapeconfigCustomResourceDefinition': import 'scrapeconfigs-crd.json',
 
   clusterRoleBinding: {
     apiVersion: 'rbac.authorization.k8s.io/v1',
