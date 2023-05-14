@@ -1400,7 +1400,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	p.Status = *pStatus
 	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+		return errors.Wrap(err, "failed to update prometheus status subresource")
 	}
 
 	return nil
