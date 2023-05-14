@@ -117,7 +117,7 @@ spec:
 ```
 
 Additionally, the silence-controller will handle `Silences` overwrites.
-after successfully created a silence, the silence id will be kept in the status sub-resource:
+After having successfully created a silence, the silence id will be kept in the status sub-resource:
 
 ```yaml
 [...]
