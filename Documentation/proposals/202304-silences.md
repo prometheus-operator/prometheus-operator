@@ -116,7 +116,7 @@ spec:
   silenceNamespaceSelector: ...
 ```
 
-Additionally, the silence-controller will handle `Silences` overwrite.
+Additionally, the silence-controller will handle `Silences` overwrites.
 after successfully created a silence, the silence id will be kept in the status sub-resource:
 
 ```yaml
