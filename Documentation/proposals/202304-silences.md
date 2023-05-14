@@ -56,7 +56,7 @@ Using Alertmanager API Directly comes with drawbacks:
 * Provide a way for users to manage Alertmanager silences with a Custom Resource Definition (CRD).
 * Enable management of Alertmanager silences via centralised repo with e.g. ArgoCD, Flux...
 * Multi tenancy: Silences CR can be using kubernetes rbac.
-* Moving the Giant Swarm silence operator to prometheus operator would provide better community support and less fragmentation.
+* Provide better community support and reduce fragmentation as Giant Swarm's silence operator are added to prometheus-operator
 * Improve user experience when managing silences, so users can use the same tools to manage their monitoring pipeline (kyverno, cr validations).
 
 ## Audience
