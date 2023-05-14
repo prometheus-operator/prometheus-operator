@@ -73,7 +73,7 @@ Using Alertmanager API Directly comes with drawbacks:
 
 # How
 
-Creating a new namespaced Silence CRD that will act as an interface by adding silences via the Alertmanager API.
+We will create a new namespaced Silence CRD that will act as an interface by adding silences via the Alertmanager API.
 
 A typical `Silence` resource could look like the following:
 
