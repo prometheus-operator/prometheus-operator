@@ -1,4 +1,3 @@
-
 ## Scrape Classes
 
 * **Owners:**
@@ -8,15 +7,15 @@
   * https://github.com/prometheus-operator/prometheus-operator/issues/4121
   * https://github.com/prometheus-operator/prometheus-operator/issues/3922
 
-This proposal aims to introduce the concept of _scrape classes_, to enable users to leverage scrape configuration data 
+This proposal aims to introduce the concept of *scrape classes*, to enable users to leverage scrape configuration data
 that is provided by the administrator. For example, to allow pod monitors and probes to safely use
-unsafe TLS configuration fields (e.g. `keyFile`). 
+unsafe TLS configuration fields (e.g. `keyFile`).
 
 ## Why
 
-Today, there are some scenarios that are difficult to support in a safe way, notably the need to reference 
+Today, there are some scenarios that are difficult to support in a safe way, notably the need to reference
 a local TLS file in a scrape configuration. For example, to scrape a pod in an Istio mesh with strict mTLS would require that
-the scrape configuration use a TLS keyfile that is provided by the Prometheus server's Istio sidecar. 
+the scrape configuration use a TLS keyfile that is provided by the Prometheus server's Istio sidecar.
 See [Istio documentation](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings) for more details.
 
 Another motivation is to improve feature parity amongst the monitor resources. The `PodMonitor` and `Probe` resources
@@ -26,8 +25,8 @@ Yet another motivation is to decouple the monitor spec from low-level infrastruc
 
 ### Pitfalls of the current solution
 
-The only known solution for use cases where you'd need to use unsafe TLS settings is to use `additionalScrapeConfig`. 
-The downside is obviously the loss of a great feature of the Prometheus Operator. The monitor resources make it possible 
+The only known solution for use cases where you'd need to use unsafe TLS settings is to use `additionalScrapeConfig`.
+The downside is obviously the loss of a great feature of the Prometheus Operator. The monitor resources make it possible
 to compose the scrape configurations in a Kubernetes way.
 
 ## Goals
@@ -43,19 +42,20 @@ to compose the scrape configurations in a Kubernetes way.
 
 ## How
 
-The proposed solution is to introduce a notion of a  _scrape class_, akin to a Kubernetes [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/). 
-A scrape class defines TLS settings (and possibly other settings in future) to be applied to all scrape endpoints of that class. 
+The proposed solution is to introduce a notion of a *scrape class*, akin to a Kubernetes [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
+A scrape class defines TLS settings (and possibly other settings in future) to be applied to all scrape endpoints of that class.
 
-When defining a probe/podmonitor/servicemonitor, a user may optionally assign a class to each endpoint. 
+When defining a probe/podmonitor/servicemonitor, a user may optionally assign a class to each endpoint.
 A default class may be defined by the administrator.
 
 Class names are assumed to be installation-specific. In practice, some common class names like `istio-mtls` are likely to emerge.
 
 ### Prometheus Resource
+
 It is proposed that the `Prometheus` resource contain a new section for defining scrape classes.
 
-_The rationale for defining scrape classes inline is that, in practice, the TLS file paths are closely related to the `volumeMounts`
-of the `Prometheus` spec. An alternative is outlined later, of factoring the class definitions into a separate resource._
+The rationale for defining scrape classes inline is that, in practice, the TLS file paths are closely related to the `volumeMounts`
+of the `Prometheus` spec. An alternative is outlined later, of factoring the class definitions into a separate resource.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -82,7 +82,9 @@ spec:
 Any object references in the scrape class definition are assumed to refer to objects in the namespace of the `Prometheus` object.
 
 ### PodMonitor Resource
+
 Allow the user to select a scrape class for each endpoint.
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -98,7 +100,9 @@ The proposed behavior is:
 2. the inline `tlsConfig` (if any) takes precedence over the `tlsConfig` in the scrape class.
 
 ### Probe Resource
+
 Allow the user to select a scrape class for the probe.
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
@@ -107,7 +111,9 @@ spec:
 ```
 
 ### ServiceMonitor Resource
+
 Allow the user to select a scrape class for each endpoint.
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -129,9 +135,11 @@ Deprecate the unsafe TLS settings in `ServiceMonitor`.
 ## Alternatives
 
 ### Global scrape TLS configuration
+
 An alternative solution would be to apply a default TLS configuration to all monitors.
 
 For example, via a hypothetical field `spec.scrapeTlsConfig`:
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -144,10 +152,11 @@ spec:
 ```
 
 Objections:
-1. A singular default configuration may be too inflexible to effectively scrape a diverse set of pods. For example, in Istio, 
-some pods may be in STRICT mode.
+1. A singular default configuration may be too inflexible to effectively scrape a diverse set of pods. For example, in Istio,
+   some pods may be in STRICT mode.
 
 ### Istio Permissive Mode
+
 An alternative for the Istio use case is to use PERMISSIVE mode (see [documentation](https://istio.io/latest/docs/concepts/security/#permissive-mode)),
 or to use `exclude` annotations on the pod such that the metrics endpoint bypasses mTLS.
 
@@ -156,7 +165,9 @@ Objections:
 2. Strict mTLS is the basis for [Istio authorization policy](https://istio.io/latest/docs/reference/config/security/authorization-policy/), e.g. to explicitly allow access from prom to the metrics endpoint.
 
 ### ScrapeClass Resource
+
 A variant of the proposed solution is to introduce a new custom resource for defining scrape classes.
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeClass
@@ -176,11 +187,12 @@ Objections:
 1. Since the file paths are dependent on the volume mounts in the server, this approach may not achieve a meaningful decoupling.
 
 ### Non-Safe Monitors
-Another alternative would be to allow `PodMonitor` and `Probe` to use unsafe TLS settings. 
+
+Another alternative would be to allow `PodMonitor` and `Probe` to use unsafe TLS settings.
 
 Objections:
-1. See [explanation](https://github.com/prometheus-operator/prometheus-operator/issues/3922#issuecomment-802899950) for why 
-unsafe settings were disallowed in the first place.
+1. See [explanation](https://github.com/prometheus-operator/prometheus-operator/issues/3922#issuecomment-802899950) for why
+   unsafe settings were disallowed in the first place.
 
 ## Action Plan
 
@@ -188,4 +200,3 @@ unsafe settings were disallowed in the first place.
 * [ ] Update the scrape configuration generator to use the scrape class
 * [ ] Update documentation
 * [ ] Resolve issues #4121, #3922
-
