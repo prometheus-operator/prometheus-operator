@@ -290,6 +290,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
+		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 	}
 
 	for name, f := range testFuncs {

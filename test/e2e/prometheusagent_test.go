@@ -40,3 +40,32 @@ func testCreatePrometheusAgent(t *testing.T) {
 	}
 
 }
+
+func testAgentAndServerNameColision(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	name := "test"
+
+	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name); err != nil {
+		t.Fatal(err)
+	}
+	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
+		t.Fatal(err)
+	}
+
+}
