@@ -1371,3 +1371,13 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 		)
 	}
 }
+
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+			"app.kubernetes.io/name":       "prometheus-agent",
+			"app.kubernetes.io/managed-by": "prometheus-operator",
+			"app.kubernetes.io/instance":   name,
+		})).String(),
+	}
+}

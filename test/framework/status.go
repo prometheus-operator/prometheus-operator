@@ -48,6 +48,10 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 
 		var reconciled, available *monitoringv1.Condition
 		for _, cond := range status.conditions {
+			// We need to create a new address for 'cond' inside the loop, otherwise we change the value of
+			// 'available' and 'reconciled' will have their pointer changed on every loop iteration.
+			// https://medium.com/swlh/use-pointer-of-for-range-loop-variable-in-go-3d3481f7ffc9
+			cond := cond
 			if cond.Type == monitoringv1.Available {
 				available = &cond
 			}
