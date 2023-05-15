@@ -22,7 +22,7 @@ See [Istio documentation](https://istio.io/latest/docs/ops/integrations/promethe
 Another motivation is to improve feature parity amongst the monitor resources. The `PodMonitor` and `Probe` resources
 aren't at parity with `ServiceMonitor` because the latter allows for unsafe TLS settings.
 
-A minor motivation is to decouple the monitor spec from low-level infrastructure details like TLS certificates.
+Yet another motivation is to decouple the monitor spec from low-level infrastructure details like TLS certificates.
 
 ### Pitfalls of the current solution
 
@@ -79,6 +79,8 @@ spec:
       mountPath: "/etc/istio-certs/"
 ```
 
+Any object references in the scrape class definition are assumed to refer to objects in the namespace of the `Prometheus` object.
+
 ### PodMonitor Resource
 Allow the user to select a scrape class for each endpoint.
 ```yaml
@@ -91,7 +93,7 @@ spec:
     scrapeClass: istio-mtls
 ```
 
-The suggested behavior is:
+The proposed behavior is:
 1. the `tlsConfig` in the associated scrape class is automatically applied to the scrape configuration of the endpoint.
 2. the inline `tlsConfig` (if any) takes precedence over the `tlsConfig` in the scrape class.
 
@@ -156,10 +158,10 @@ Objections:
 ### ScrapeClass Resource
 A variant of the proposed solution is to introduce a new custom resource for defining scrape classes.
 ```yaml
-apiVersion: monitoring.coreos.com/v1
+apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeClass
 metadata:
-  name: istio
+  name: istio-mtls
 spec:
   tlsConfig:
     caFile: "/etc/istio-certs/root-cert.pem"
