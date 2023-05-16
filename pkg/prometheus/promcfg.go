@@ -30,8 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -56,12 +55,12 @@ type ConfigGenerator struct {
 	logger                 log.Logger
 	version                semver.Version
 	notCompatible          bool
-	prom                   v1.PrometheusInterface
+	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -268,8 +267,8 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
-func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig) yaml.MapSlice {
-	pathForSelector := func(sel v1.SecretOrConfigMap) string {
+func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
+	pathForSelector := func(sel monitoringv1.SecretOrConfigMap) string {
 		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
 	}
 	tlsConfig := yaml.MapSlice{
@@ -282,7 +281,7 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig)
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
 	}
 	if tls.KeySecret != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(v1.SecretOrConfigMap{Secret: tls.KeySecret})})
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(monitoringv1.SecretOrConfigMap{Secret: tls.KeySecret})})
 	}
 	if tls.ServerName != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
@@ -291,7 +290,7 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig)
 	return cfg
 }
 
-func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
+func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
 	if tls == nil {
 		return cfg
 	}
@@ -314,7 +313,7 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
-	basicAuth *v1.BasicAuth,
+	basicAuth *monitoringv1.BasicAuth,
 ) yaml.MapSlice {
 	if basicAuth == nil {
 		return cfg
@@ -332,7 +331,7 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
-	auth *v1.SafeAuthorization,
+	auth *monitoringv1.SafeAuthorization,
 ) yaml.MapSlice {
 	if auth == nil {
 		return cfg
@@ -359,7 +358,7 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
-	auth *v1.Authorization,
+	auth *monitoringv1.Authorization,
 ) yaml.MapSlice {
 	if auth == nil {
 		return cfg
@@ -429,17 +428,17 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
-	evaluationInterval v1.Duration,
+	evaluationInterval monitoringv1.Duration,
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
-	exemplars *v1.Exemplars,
-	tsdb v1.TSDBSpec,
-	alerting *v1.AlertingSpec,
-	remoteRead []v1.RemoteReadSpec,
-	sMons map[string]*v1.ServiceMonitor,
-	pMons map[string]*v1.PodMonitor,
-	probes map[string]*v1.Probe,
-	sCons map[string]*v1alpha1.ScrapeConfig,
+	exemplars *monitoringv1.Exemplars,
+	tsdb monitoringv1.TSDBSpec,
+	alerting *monitoringv1.AlertingSpec,
+	remoteRead []monitoringv1.RemoteReadSpec,
+	sMons map[string]*monitoringv1.ServiceMonitor,
+	pMons map[string]*monitoringv1.PodMonitor,
+	probes map[string]*monitoringv1.Probe,
+	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -514,7 +513,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *v1.Exemplars, tsdb v1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
@@ -547,7 +546,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 
 func (cg *ConfigGenerator) appendAlertingConfig(
 	cfg yaml.MapSlice,
-	alerting *v1.AlertingSpec,
+	alerting *monitoringv1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertmanagerConfigs []byte,
 	store *assets.Store,
@@ -613,9 +612,9 @@ func initRelabelings() []yaml.MapSlice {
 }
 
 func (cg *ConfigGenerator) generatePodMonitorConfig(
-	m *v1.PodMonitor,
-	ep v1.PodMetricsEndpoint,
-	i int, apiserverConfig *v1.APIServerConfig,
+	m *monitoringv1.PodMonitor,
+	ep monitoringv1.PodMetricsEndpoint,
+	i int, apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
@@ -836,8 +835,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 }
 
 func (cg *ConfigGenerator) generateProbeConfig(
-	m *v1.Probe,
-	apiserverConfig *v1.APIServerConfig,
+	m *monitoringv1.Probe,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
@@ -1063,10 +1062,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 }
 
 func (cg *ConfigGenerator) generateServiceMonitorConfig(
-	m *v1.ServiceMonitor,
-	ep v1.Endpoint,
+	m *monitoringv1.ServiceMonitor,
+	ep monitoringv1.Endpoint,
 	i int,
-	apiserverConfig *v1.APIServerConfig,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
@@ -1368,7 +1367,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 	})
 }
 
-func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
+func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 	var cfg []yaml.MapSlice
 
 	for _, c := range rc {
@@ -1409,7 +1408,7 @@ func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
 
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors
-func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceSelector, namespace string) []string {
+func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
 	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
@@ -1422,14 +1421,14 @@ func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceS
 
 type attachMetadataConfig struct {
 	MinimumVersion string
-	AttachMetadata *v1.AttachMetadata
+	AttachMetadata *monitoringv1.AttachMetadata
 }
 
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
 func (cg *ConfigGenerator) generateK8SSDConfig(
-	namespaceSelector v1.NamespaceSelector,
+	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
-	apiserverConfig *v1.APIServerConfig,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
@@ -1489,7 +1488,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec, apiserverConfig *v1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
 	if alerting == nil || len(alerting.Alertmanagers) == 0 {
 		return nil
 	}
@@ -1521,7 +1520,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *v1.AlertingSpec,
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(v1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
 
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
@@ -1608,7 +1607,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
-	remoteRead []v1.RemoteReadSpec,
+	remoteRead []monitoringv1.RemoteReadSpec,
 	store *assets.Store,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
@@ -1675,7 +1674,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 func (cg *ConfigGenerator) addOAuth2ToYaml(
 	cfg yaml.MapSlice,
-	oauth2 *v1.OAuth2,
+	oauth2 *monitoringv1.OAuth2,
 	tlsAssets map[string]assets.OAuth2Credentials,
 	assetKey string,
 ) yaml.MapSlice {
@@ -1893,7 +1892,7 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 	return slice
 }
 
-func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval v1.Duration) yaml.MapSlice {
+func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
@@ -1931,8 +1930,8 @@ func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []stri
 
 func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	slices []yaml.MapSlice,
-	serviceMonitors map[string]*v1.ServiceMonitor,
-	apiserverConfig *v1.APIServerConfig,
+	serviceMonitors map[string]*monitoringv1.ServiceMonitor,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32) []yaml.MapSlice {
 	sMonIdentifiers := make([]string, len(serviceMonitors))
@@ -1964,8 +1963,8 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 
 func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	slices []yaml.MapSlice,
-	podMonitors map[string]*v1.PodMonitor,
-	apiserverConfig *v1.APIServerConfig,
+	podMonitors map[string]*monitoringv1.PodMonitor,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32) []yaml.MapSlice {
 	pMonIdentifiers := make([]string, len(podMonitors))
@@ -1996,8 +1995,8 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 
 func (cg *ConfigGenerator) appendProbeConfigs(
 	slices []yaml.MapSlice,
-	probes map[string]*v1.Probe,
-	apiserverConfig *v1.APIServerConfig,
+	probes map[string]*monitoringv1.Probe,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32) []yaml.MapSlice {
 	probeIdentifiers := make([]string, len(probes))
@@ -2035,10 +2034,10 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 
 // GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateAgentConfiguration(
-	sMons map[string]*v1.ServiceMonitor,
-	pMons map[string]*v1.PodMonitor,
-	probes map[string]*v1.Probe,
-	sCons map[string]*v1alpha1.ScrapeConfig,
+	sMons map[string]*monitoringv1.ServiceMonitor,
+	pMons map[string]*monitoringv1.PodMonitor,
+	probes map[string]*monitoringv1.Probe,
+	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -2090,8 +2089,8 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
 	slices []yaml.MapSlice,
-	scrapeConfigs map[string]*v1alpha1.ScrapeConfig,
-	apiserverConfig *v1.APIServerConfig,
+	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32) []yaml.MapSlice {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
@@ -2119,8 +2118,8 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
-	sc *v1alpha1.ScrapeConfig,
-	apiserverConfig *v1.APIServerConfig,
+	sc *monitoringv1alpha1.ScrapeConfig,
+	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
