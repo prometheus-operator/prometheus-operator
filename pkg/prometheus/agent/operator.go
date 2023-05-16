@@ -77,7 +77,6 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	host                   string
 	config                 operator.Config
 	endpointSliceSupported bool
 	scrapeConfigSupported  bool
@@ -145,7 +144,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kclient:               client,
 		mclient:               mclient,
 		logger:                logger,
-		host:                  cfg.Host,
 		config:                conf,
 		metrics:               operator.NewMetrics(r),
 		reconciliations:       &operator.ReconciliationTracker{},
