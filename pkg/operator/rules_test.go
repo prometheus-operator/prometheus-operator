@@ -28,7 +28,6 @@ import (
 
 func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
-	t.Run("shouldRejectRuleWithInvalidPartialResponseStrategyValue", shouldRejectRuleWithInvalidPartialResponseStrategyValue)
 	t.Run("shouldAcceptValidRule", shouldAcceptValidRule)
 	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
@@ -69,30 +68,6 @@ func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
 	if !strings.Contains(content, "partial_response_strategy: warn") {
 		t.Fatalf("expected `partial_response_strategy` to be set in PrometheusRule as `warn`")
 
-	}
-}
-
-func shouldRejectRuleWithInvalidPartialResponseStrategyValue(t *testing.T) {
-	rules := &monitoringv1.PrometheusRule{
-		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
-			{
-				Name:                    "group",
-				PartialResponseStrategy: "invalid",
-				Rules: []monitoringv1.Rule{
-					{
-						Alert: "alert",
-						Expr:  intstr.FromString("vector(1)"),
-					},
-				},
-			},
-		}},
-	}
-
-	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
-	_, err := pr.generateRulesConfiguration(rules)
-	if err == nil {
-		t.Fatalf("expected errors when parsing rule with invalid partial_response_strategy value")
 	}
 }
 

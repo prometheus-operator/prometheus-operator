@@ -738,7 +738,7 @@ func ListOptions(name string) metav1.ListOptions {
 // RulerStatus evaluates the current status of a ThanosRuler deployment with
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
-// TODO(simonpasquier): remove after 0.65.0 is released.
+// TODO(simonpasquier): remove after 0.66.0 is released.
 func RulerStatus(ctx context.Context, kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
 	res := &monitoringv1.ThanosRulerStatus{Paused: tr.Spec.Paused}
 

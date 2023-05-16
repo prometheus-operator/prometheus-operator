@@ -30,7 +30,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
-	thanostypes "github.com/thanos-io/thanos/pkg/store/storepb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -111,21 +110,12 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
 func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
-	for i, group := range promRule.Groups {
-		if group.PartialResponseStrategy == "" {
-			continue
-		}
-		// TODO(slashpai): Remove this validation after v0.65 since this is handled at CRD level
-		if _, ok := thanostypes.PartialResponseStrategy_value[strings.ToUpper(group.PartialResponseStrategy)]; !ok {
-			return []error{
-				fmt.Errorf("invalid partial_response_strategy %s value", group.PartialResponseStrategy),
-			}
-		}
-
-		// reset this as the upstream prometheus rule validator
-		// is not aware of the partial_response_strategy field.
+	for i := range promRule.Groups {
+		// The upstream Prometheus rule validator doesn't support the
+		// partial_response_strategy field.
 		promRule.Groups[i].PartialResponseStrategy = ""
 	}
+
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
 		return []error{errors.Wrap(err, "failed to marshal content")}

@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -556,10 +555,6 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetNameFromAlertmanagerName(name string) string {
-	return "alertmanager-" + name
 }
 
 func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
@@ -1708,62 +1703,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"alertmanager":           name,
 		})).String(),
 	}
-}
-
-// Status evaluates the current status of an Alertmanager object with
-// respect to its specified resource object. It returns the status and a list of
-// pods that are not updated.
-// TODO(simonpasquier): remove once the status subresource is considered stable.
-func Status(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
-	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
-
-	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ctx, ListOptions(a.Name))
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
-	}
-	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(ctx, statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
-	}
-
-	res.Replicas = int32(len(pods.Items))
-
-	var oldPods []v1.Pod
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
-		}
-		if ready {
-			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template
-			// that are mutable.
-			if needsUpdate(&pod, sset.Spec.Template) {
-				oldPods = append(oldPods, pod)
-			} else {
-				res.UpdatedReplicas++
-			}
-			continue
-		}
-		res.UnavailableReplicas++
-	}
-
-	return res, oldPods, nil
-}
-
-func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
-	c1 := pod.Spec.Containers[0]
-	c2 := tmpl.Spec.Containers[0]
-
-	if c1.Image != c2.Image {
-		return true
-	}
-
-	if !reflect.DeepEqual(c1.Args, c2.Args) {
-		return true
-	}
-
-	return false
 }
 
 func tlsAssetsSecretName(name string) string {
