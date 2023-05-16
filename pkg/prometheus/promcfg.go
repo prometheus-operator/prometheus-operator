@@ -846,6 +846,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	return cfg
 }
 
+// generateProbeConfig builds the prometheus configuration for a probe. This function
+// assumes that it will never receive a probe with empty targets, since the
+// operator filters those in the validation step in SelectProbes().
 func (cg *ConfigGenerator) generateProbeConfig(
 	m *monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -950,7 +953,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	} else {
+	} else if m.Spec.Targets.Ingress != nil {
 		// Generate kubernetes_sd_config section for the ingress resources.
 
 		// Filter targets by ingresses selected by the monitor.

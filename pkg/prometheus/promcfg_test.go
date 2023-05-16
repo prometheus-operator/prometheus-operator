@@ -48,11 +48,6 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
-				},
 				Version:        operator.DefaultPrometheusVersion,
 				ScrapeInterval: "30s",
 			},
@@ -8666,6 +8661,515 @@ scrape_configs:
 `
 
 	require.Equal(t, expected, string(cfg))
+}
+
+// When adding new test cases the developer should specify a name, a Probe Spec
+// (pbSpec) and an expectedConfig. (Optional) It's also possible to specify a
+// function that modifies the default Prometheus CR used if necessary for the test
+// case.
+func TestProbeSpecConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		patchProm   func(*monitoringv1.Prometheus)
+		pbSpec      monitoringv1.ProbeSpec
+		expectedCfg string
+	}{
+		{
+			name:   "empty_probe",
+			pbSpec: monitoringv1.ProbeSpec{},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "prober_spec",
+			pbSpec: monitoringv1.ProbeSpec{
+				ProberSpec: monitoringv1.ProberSpec{
+					Scheme:   "http",
+					URL:      "example.com",
+					Path:     "/probe",
+					ProxyURL: "socks://myproxy:9095",
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  proxy_url: socks://myproxy:9095
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "targets_static_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				Targets: monitoringv1.ProbeTargets{
+					StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+						Targets: []string{
+							"prometheus.io",
+							"promcon.io",
+						},
+						Labels: map[string]string{
+							"static": "label",
+						},
+						RelabelConfigs: []*monitoringv1.RelabelConfig{
+							{
+								TargetLabel: "foo",
+								Replacement: "bar",
+								Action:      "replace",
+							},
+						},
+					},
+				}},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+      static: label
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - target_label: foo
+    replacement: bar
+    action: replace
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "target_ingress_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				Targets: monitoringv1.ProbeTargets{
+					Ingress: &monitoringv1.ProbeTargetIngress{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"prometheus.io/probe": "true",
+							},
+						},
+						NamespaceSelector: monitoringv1.NamespaceSelector{
+							Any: true,
+						},
+						RelabelConfigs: []*monitoringv1.RelabelConfig{
+							{
+								TargetLabel: "foo",
+								Replacement: "bar",
+								Action:      "replace",
+							},
+						},
+					},
+				}},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  kubernetes_sd_configs:
+  - role: ingress
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_ingress_label_prometheus_io_probe
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: (true);true
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
+    separator: ;
+    regex: (.+);(.+);(.+)
+    target_label: __param_target
+    replacement: ${1}://${2}${3}
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_ingress_name
+    target_label: ingress
+  - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - target_label: foo
+    replacement: bar
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "job_name_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				JobName: "blackbox",
+				// To tests JobName we also need to provide at least one target
+				Targets: monitoringv1.ProbeTargets{
+					StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+						Targets: []string{"prometheus.io"},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  static_configs:
+  - targets:
+    - prometheus.io
+    labels:
+      namespace: default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - target_label: job
+    replacement: blackbox
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "module_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  params:
+    module:
+    - http_2xx
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "enforcedNamespaceLabel_targets_static",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.EnforcedNamespaceLabel = "namespace"
+			},
+			pbSpec: monitoringv1.ProbeSpec{
+				// To tests EnforcedNamespaceLabel we also need to provide at least one target
+				Targets: monitoringv1.ProbeTargets{
+					StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+						Targets: []string{"prometheus.io"},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  static_configs:
+  - targets:
+    - prometheus.io
+    labels:
+      namespace: default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - target_label: namespace
+    replacement: default
+  metric_relabel_configs:
+  - target_label: namespace
+    replacement: default
+`,
+		},
+		{
+			name: "enforcedNamespaceLabel_target_ingress",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.EnforcedNamespaceLabel = "namespace"
+			},
+			pbSpec: monitoringv1.ProbeSpec{
+				// To tests EnforcedNamespaceLabel we also need to provide at least one target
+				Targets: monitoringv1.ProbeTargets{
+					Ingress: &monitoringv1.ProbeTargetIngress{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"prometheus.io/probe": "true",
+							},
+						},
+					},
+				}},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  kubernetes_sd_configs:
+  - role: ingress
+    namespaces:
+      names:
+      - default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_ingress_label_prometheus_io_probe
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: (true);true
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
+    separator: ;
+    regex: (.+);(.+);(.+)
+    target_label: __param_target
+    replacement: ${1}://${2}${3}
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_ingress_name
+    target_label: ingress
+  - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - target_label: namespace
+    replacement: default
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs:
+  - target_label: namespace
+    replacement: default
+`,
+		},
+		{
+			name: "shards_target_ingress",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.Shards = pointer.Int32(2)
+			},
+			pbSpec: monitoringv1.ProbeSpec{
+				// To tests Shards we also need to provide at least one target
+				Targets: monitoringv1.ProbeTargets{
+					Ingress: &monitoringv1.ProbeTargetIngress{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"prometheus.io/probe": "true",
+							},
+						},
+					},
+				}},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  kubernetes_sd_configs:
+  - role: ingress
+    namespaces:
+      names:
+      - default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_ingress_label_prometheus_io_probe
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: (true);true
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
+    separator: ;
+    regex: (.+);(.+);(.+)
+    target_label: __param_target
+    replacement: ${1}://${2}${3}
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_ingress_name
+    target_label: ingress
+  - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 2
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pbs := map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "probe1",
+						Namespace: "default",
+					},
+					Spec: tc.pbSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			if tc.patchProm != nil {
+				tc.patchProm(p)
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				pbs,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedCfg, string(cfg))
+		})
+
+	}
 }
 
 // When adding new test cases the developer should specify a name, a ScrapeConfig Spec
