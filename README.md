@@ -25,7 +25,7 @@ For an introduction to the Prometheus Operator, see the [getting started](https:
 
 ## Project Status
 
-The operator in itself is considered to be production ready. Please refer to the CRDs versions for the status of each CRD:
+The operator in itself is considered to be production ready. Please refer to the Custom Resource Defintion (CRD) versions for the status of each CRD:
 
 * `monitoring.coreos.com/v1`: **stable** CRDs and API, changes are made in a backward-compatible way.
 * `monitoring.coreos.com/v1beta1`: **unstable** CRDs and API, changes can happen but the team is focused on avoiding them. We encourage usage in production for users that accept the risk of breaking changes.
@@ -63,7 +63,7 @@ we recommend upgrading Kubernetes first and then the Prometheus Operator.
 
 A core feature of the Prometheus Operator is to monitor the Kubernetes API server for changes
 to specific objects and ensure that the current Prometheus deployments match these objects.
-The Operator acts on the following [custom resource definitions (CRDs)](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/):
+The Operator acts on the following [Custom Resource Definitions (CRDs)](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/):
 
 * **`Prometheus`**, which defines a desired Prometheus deployment.
 
@@ -95,9 +95,9 @@ The Prometheus operator automatically detects changes in the Kubernetes API serv
 matching deployments and configurations are kept in sync.
 
 To learn more about the CRDs introduced by the Prometheus Operator have a look
-at the [design doc](Documentation/design.md).
+at the [design](https://prometheus-operator.dev/docs/operator/design/) page.
 
-To automate validation of your CRD configuration files see about [linting](Documentation/user-guides/linting.md).
+To automate the validation of your CRD configuration files, see the [linting](Documentation/user-guides/linting.md) page.
 
 ## Dynamic Admission Control
 
@@ -105,7 +105,7 @@ To prevent invalid Prometheus alerting and recording rules from causing failures
 an [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
 is provided to validate `PrometheusRule` resources upon initial creation or update.
 
-For more information on this feature, see the [user guide](Documentation/user-guides/webhook.md).
+For more information on this feature, see the [user guide](https://prometheus-operator.dev/docs/user-guides/webhook/).
 
 ## Quickstart
 
@@ -217,13 +217,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ## Contributing
 
-Many files (documentation, manifests, ...) in this repository are
-auto-generated. E.g. `bundle.yaml` originates from the *Jsonnet* files in
-`/jsonnet/prometheus-operator`. Before proposing a pull request:
-
-1. Commit your changes.
-2. Run `make generate`.
-3. Commit the generated changes.
+See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Security
 
