@@ -8632,52 +8632,22 @@ scrape_configs:
 	require.Equal(t, expected, string(cfg))
 }
 
-func TestScrapeConfigStaticConfig(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					StaticConfigs: []monitoringv1alpha1.StaticConfig{
-						{
-							Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
-							Labels: map[monitoringv1.LabelName]string{
-								"label1": "value1",
-							},
-						},
-					},
-					MetricsPath: "/metrics",
-				},
-			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
+// When adding new test cases the developer should specify a name, a ScrapeConfig Spec
+// (scSpec) and an expectedConfig. (Optional) It's also possible to specify a
+// function (patchProm) that modifies the default Prometheus CR used if necessary for the test
+// case.
+func TestScrapeConfigSpecConfig(t *testing.T) {
+	refreshInterval := monitoringv1.Duration("5m")
+	for _, tc := range []struct {
+		name        string
+		patchProm   func(*monitoringv1.Prometheus)
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		expectedCfg string
+	}{
+		{
+			name:   "empty_scrape_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+			expectedCfg: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
@@ -8685,62 +8655,46 @@ func TestScrapeConfigStaticConfig(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
-  metrics_path: /metrics
+`,
+		},
+		{
+			name: "static_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				StaticConfigs: []monitoringv1alpha1.StaticConfig{
+					{
+						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Labels: map[monitoringv1.LabelName]string{
+							"label1": "value1",
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
   static_configs:
   - targets:
     - http://localhost:9100
     labels:
       label1: value1
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigFileSDConfig(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	refreshInterval := monitoringv1.Duration("5m")
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+`,
+		},
+		{
+			name: "file_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+					{
+						Files:           []monitoringv1alpha1.SDFile{"/tmp/myfile.json"},
+						RefreshInterval: &refreshInterval,
 					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
-						{
-							Files:           []monitoringv1alpha1.SDFile{"/tmp/myfile.json"},
-							RefreshInterval: &refreshInterval,
-						},
-					},
-					MetricsPath: "/metrics",
 				},
 			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
+			expectedCfg: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
@@ -8748,61 +8702,23 @@ func TestScrapeConfigFileSDConfig(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
-  metrics_path: /metrics
   file_sd_configs:
   - files:
     - /tmp/myfile.json
     refresh_interval: 5m
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigHTTPSDConfig(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	refreshInterval := monitoringv1.Duration("5m")
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+`,
+		},
+		{
+			name: "http_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL:             "http://localhost:9100/sd.json",
+						RefreshInterval: &refreshInterval,
 					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-						{
-							URL:             "http://localhost:9100/sd.json",
-							RefreshInterval: &refreshInterval,
-						},
-					},
-					MetricsPath: "/metrics",
 				},
 			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
+			expectedCfg: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
@@ -8810,53 +8726,17 @@ func TestScrapeConfigHTTPSDConfig(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
-  metrics_path: /metrics
   http_sd_configs:
   - url: http://localhost:9100/sd.json
     refresh_interval: 5m
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigWithMetricsPath(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					MetricsPath: "/metrics",
-				},
-			},
+`,
 		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
+		{
+			name: "metrics_path",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricsPath: "/metrics",
+			},
+			expectedCfg: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
@@ -8865,199 +8745,14 @@ func TestScrapeConfigWithMetricsPath(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigWithHonorTimestamps(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					HonorTimestamps: pointer.Bool(false),
-				},
-			},
+`,
 		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  honor_timestamps: false
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigEmpty(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{},
+		{
+			name: "empty_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				RelabelConfigs: []*monitoringv1.RelabelConfig{},
 			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigWithHonorLabels(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					HonorLabels: pointer.Bool(true),
-				},
-			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  honor_labels: true
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
-func TestScrapeConfigWithRelabelConfigs(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testscrapeconfig1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1alpha1.ScrapeConfigSpec{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{},
-				},
-			},
-		},
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
+			expectedCfg: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
@@ -9066,7 +8761,79 @@ func TestScrapeConfigWithRelabelConfigs(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   relabel_configs: []
-`
+`,
+		},
+		{
+			name: "honor_timestamp",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HonorTimestamps: pointer.Bool(true),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  honor_timestamps: true
+`,
+		},
+		{
+			name: "honor_labels",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HonorLabels: pointer.Bool(true),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  honor_labels: true
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
 
-	require.Equal(t, expected, string(cfg))
+			p := defaultPrometheus()
+			if tc.patchProm != nil {
+				tc.patchProm(p)
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedCfg, string(cfg))
+		})
+
+	}
 }
