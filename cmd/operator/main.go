@@ -261,7 +261,7 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	cm, err := prompkg.InitCommonConfig(cfg)
+	cm, err := prompkg.InitCommonConfig(ctx, cfg, log.With(logger, "component", "prometheusoperator"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating common config failed: ", err)
 		cancel()

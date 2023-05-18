@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -22,11 +23,14 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -54,6 +58,9 @@ type CommonConfig struct {
 	CmapInfs  *informers.ForResource
 	SecrInfs  *informers.ForResource
 	SsetInfs  *informers.ForResource
+	SconInfs  *informers.ForResource
+
+	ScrapeConfigSupported bool
 }
 
 func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
@@ -133,7 +140,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
+func InitCommonConfig(ctx context.Context, c operator.Config, logger log.Logger) (*CommonConfig, error) {
 	var cm CommonConfig
 	var err error
 
@@ -156,6 +163,37 @@ func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
+
+	// Check prerequisites for ScrapeConfig
+	verbs := map[string][]string{
+		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+	}
+	var scrapeConfigSupported bool
+	cc, err := k8sutil.NewCRDChecker(c.Host, c.TLSInsecure, &c.TLSConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
+	}
+
+	var namespaces = make([]string, 0, len(c.Namespaces.AllowList))
+	for k := range c.Namespaces.AllowList {
+		namespaces = append(namespaces, k)
+	}
+
+	err = cc.CheckPrerequisites(ctx,
+		namespaces,
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
+	case err != nil:
+		return nil, errors.Wrap(err, "failed to check prerequisites for the ScrapeConfig CRD ")
+	default:
+		scrapeConfigSupported = true
+	}
+
+	cm.ScrapeConfigSupported = scrapeConfigSupported
 
 	// init smonInfs
 	cm.SmonInfs, err = informers.NewInformersForResource(
@@ -249,6 +287,23 @@ func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating statefulset informers")
+	}
+
+	// init sconInfs
+	if cm.ScrapeConfigSupported {
+		cm.SconInfs, err = informers.NewInformersForResource(
+			informers.NewMonitoringInformerFactories(
+				c.Namespaces.AllowList,
+				c.Namespaces.DenyList,
+				cm.MClient,
+				ResyncPeriod,
+				nil,
+			),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating scrapeconfigs informers")
+		}
 	}
 
 	return &cm, nil
