@@ -27,8 +27,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -40,13 +38,8 @@ import (
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
-type Config struct {
-	Kclient kubernetes.Interface
-	Logger  log.Logger
-
-	Key      string
-	Instance monitoringv1.PrometheusInterface
-
+type StatusReporter struct {
+	Kclient         kubernetes.Interface
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
@@ -129,17 +122,14 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-// GetStatus is a helper function that retrieves the status subresource of the object identified by the given
+// Process is a helper function that retrieves the status subresource of the object identified by the given
 // key.
-func GetStatus(ctx context.Context, config Config) (*monitoringv1.PrometheusStatus, error) {
+func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 
-	commonFields := config.Instance.GetCommonPrometheusFields()
+	commonFields := p.GetCommonPrometheusFields()
 	pStatus := monitoringv1.PrometheusStatus{
 		Paused: commonFields.Paused,
 	}
-
-	logger := log.With(config.Logger, "key", config.Key)
-	level.Info(logger).Log("msg", "update prometheus status")
 
 	var (
 		availableCondition = monitoringv1.Condition{
@@ -148,7 +138,7 @@ func GetStatus(ctx context.Context, config Config) (*monitoringv1.PrometheusStat
 			LastTransitionTime: metav1.Time{
 				Time: time.Now().UTC(),
 			},
-			ObservedGeneration: config.Instance.GetObjectMeta().GetGeneration(),
+			ObservedGeneration: p.GetObjectMeta().GetGeneration(),
 		}
 		messages []string
 		replicas = 1
@@ -158,26 +148,24 @@ func GetStatus(ctx context.Context, config Config) (*monitoringv1.PrometheusStat
 		replicas = int(*commonFields.Replicas)
 	}
 
-	for shard := range ExpectedStatefulSetShardNames(config.Instance) {
-		ssetName := KeyToStatefulSetKey(config.Instance, config.Key, shard)
-		logger := log.With(logger, "statefulset", ssetName, "shard", shard)
+	for shard := range ExpectedStatefulSetShardNames(p) {
+		ssetName := KeyToStatefulSetKey(p, key, shard)
 
-		obj, err := config.SsetInfs.Get(ssetName)
+		obj, err := sr.SsetInfs.Get(ssetName)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				// Object not yet in the store or already deleted.
-				level.Info(logger).Log("msg", "not found")
 				continue
 			}
 			return nil, errors.Wrap(err, "failed to retrieve statefulset")
 		}
 
 		sset := obj.(*appsv1.StatefulSet)
-		if config.Rr.DeletionInProgress(sset) {
+		if sr.Rr.DeletionInProgress(sset) {
 			continue
 		}
 
-		stsReporter, err := operator.NewStatefulSetReporter(ctx, config.Kclient, sset)
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, sr.Kclient, sset)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve statefulset state")
 		}
@@ -220,7 +208,7 @@ func GetStatus(ctx context.Context, config Config) (*monitoringv1.PrometheusStat
 
 	availableCondition.Message = strings.Join(messages, "\n")
 
-	reconciledCondition := config.Reconciliations.GetCondition(config.Key, config.Instance.GetObjectMeta().GetGeneration())
+	reconciledCondition := sr.Reconciliations.GetCondition(key, p.GetObjectMeta().GetGeneration())
 	pStatus.Conditions = operator.UpdateConditions(pStatus.Conditions, availableCondition, reconciledCondition)
 
 	return &pStatus, nil

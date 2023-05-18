@@ -90,6 +90,8 @@ type Operator struct {
 	config                 operator.Config
 	endpointSliceSupported bool
 	scrapeConfigSupported  bool
+
+	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
@@ -384,6 +386,14 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	}
 	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
 	c.endpointSliceSupported = endpointSliceSupported
+
+	c.statusReporter = prompkg.StatusReporter{
+		Kclient:         c.kclient,
+		Reconciliations: c.reconciliations,
+		SsetInfs:        c.ssetInfs,
+		Rr:              c.rr,
+	}
+
 	return c, nil
 }
 
@@ -1385,15 +1395,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
 
-	pStatus, err := prompkg.GetStatus(ctx, prompkg.Config{
-		Kclient:         c.kclient,
-		Logger:          c.logger,
-		Key:             key,
-		Instance:        p,
-		Reconciliations: c.reconciliations,
-		SsetInfs:        c.ssetInfs,
-		Rr:              c.rr,
-	})
+	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get prometheus status")
 	}
