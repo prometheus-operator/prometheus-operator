@@ -91,7 +91,6 @@ type Operator struct {
 }
 
 type Config struct {
-	Host                         string
 	LocalHost                    string
 	ClusterDomain                string
 	ReloaderConfig               operator.ContainerConfig
@@ -137,7 +136,6 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
-			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
 			ReloaderConfig:               c.ReloaderConfig,

@@ -84,7 +84,6 @@ type Operator struct {
 	nodeEndpointSyncs       prometheus.Counter
 	nodeEndpointSyncErrors  prometheus.Counter
 
-	host                   string
 	kubeletObjectName      string
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
@@ -176,7 +175,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		mclient:                mclient,
 		logger:                 logger,
 		accessor:               operator.NewAccessor(logger),
-		host:                   cfg.Host,
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
