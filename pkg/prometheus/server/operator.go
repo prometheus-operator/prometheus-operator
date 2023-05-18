@@ -148,7 +148,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		mclient:                cm.MClient,
 		logger:                 logger,
 		accessor:               operator.NewAccessor(logger),
-		promInfs:               cm.PromInfs,
 		smonInfs:               cm.SmonInfs,
 		pmonInfs:               cm.PmonInfs,
 		probeInfs:              cm.ProbeInfs,
@@ -175,6 +174,24 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		}),
 		scrapeConfigSupported: scrapeConfigSupported,
 	}
+
+	// init promInfs
+	c.promInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			conf.Namespaces.PrometheusAllowList,
+			conf.Namespaces.DenyList,
+			c.mclient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = conf.PromSelector.String()
+			},
+		),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheus informers")
+	}
+
 	c.metrics.MustRegister(
 		c.nodeAddressLookupErrors,
 		c.nodeEndpointSyncs,

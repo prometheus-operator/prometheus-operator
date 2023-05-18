@@ -129,6 +129,24 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		reconciliations: &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 	}
+
+	// init promAgInfs
+	c.promInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			conf.Namespaces.PrometheusAllowList,
+			conf.Namespaces.DenyList,
+			c.mclient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = conf.PromSelector.String()
+			},
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
+	}
+
 	c.metrics.MustRegister(
 		c.reconciliations,
 	)

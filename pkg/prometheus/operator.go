@@ -22,7 +22,6 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -49,14 +48,12 @@ type CommonConfig struct {
 	KClient       *kubernetes.Clientset
 	MClient       *monitoringclient.Clientset
 
-	PromInfs   *informers.ForResource
-	PromAgInfs *informers.ForResource
-	SmonInfs   *informers.ForResource
-	PmonInfs   *informers.ForResource
-	ProbeInfs  *informers.ForResource
-	CmapInfs   *informers.ForResource
-	SecrInfs   *informers.ForResource
-	SsetInfs   *informers.ForResource
+	SmonInfs  *informers.ForResource
+	PmonInfs  *informers.ForResource
+	ProbeInfs *informers.ForResource
+	CmapInfs  *informers.ForResource
+	SecrInfs  *informers.ForResource
+	SsetInfs  *informers.ForResource
 }
 
 func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
@@ -158,39 +155,6 @@ func InitCommonConfig(c operator.Config) (*CommonConfig, error) {
 	secretListWatchSelector, err := fields.ParseSelector(c.SecretListWatchSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
-	}
-	// init promInfs
-	cm.PromInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.Namespaces.PrometheusAllowList,
-			c.Namespaces.DenyList,
-			cm.MClient,
-			ResyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = c.PromSelector.String()
-			},
-		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating prometheus informers")
-	}
-
-	// init promAgInfs
-	cm.PromAgInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.Namespaces.PrometheusAllowList,
-			c.Namespaces.DenyList,
-			cm.MClient,
-			ResyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = c.PromSelector.String()
-			},
-		),
-		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
 	}
 
 	// init smonInfs
