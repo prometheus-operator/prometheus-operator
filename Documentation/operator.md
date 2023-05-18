@@ -63,7 +63,7 @@ Usage of ./operator:
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
     	Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
-  -prometheus-instance-selector string
+  -prometheus-instance-selector value
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
   -secret-field-selector string
     	Field selector to filter Secrets to watch

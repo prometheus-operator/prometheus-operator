@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -41,7 +43,7 @@ type Config struct {
 	LocalHost                    string
 	LogLevel                     string
 	LogFormat                    string
-	PromSelector                 string
+	PromSelector                 PromLabelSelector
 	AlertManagerSelector         string
 	ThanosRulerSelector          string
 	SecretListWatchSelector      string
@@ -112,4 +114,21 @@ type Namespaces struct {
 	AllowList, DenyList map[string]struct{}
 	// Allow list for prometheus/alertmanager custom resources.
 	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
+}
+
+type PromLabelSelector string
+
+// Set implements the flagset.Value interface.
+func (l PromLabelSelector) Set(value string) error {
+	_, err := labels.Parse(value)
+	if err != nil {
+		return errors.New("can not parse prometheus selector value")
+	}
+	l = PromLabelSelector(value)
+	return nil
+}
+
+// Set implements the flagset.Value interface.
+func (l PromLabelSelector) String() string {
+	return string(l)
 }
