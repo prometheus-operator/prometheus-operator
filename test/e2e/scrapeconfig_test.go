@@ -113,14 +113,13 @@ func testScrapeConfigCreation(t *testing.T) {
 			sc.Spec = test.spec
 			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
 
-			if err == nil {
-				require.Falsef(t, test.expectedError, "expected error but got nil")
+			if test.expectedError {
+			        require.Error(t, err)		
+  				require.Truef(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
 				return
 			}
-
-			require.Truef(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
-
-			require.True(t, test.expectedError)
+			require.NoError(t, err)
+			require.Falsef(t, test.expectedError, "expected error but got nil")
 		})
 	}
 }
