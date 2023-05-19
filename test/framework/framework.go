@@ -311,11 +311,9 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		return nil, errors.Wrap(err, "initialize PrometheusAgent v1alpha1 CRD")
 	}
 
-	// TODO(xiu): The OperatorUpgrade tests won't pass because the operator v0.64.1 doesn't have the scrapeconfig CRD.
-	// This check can be removed after v0.66.0 is released.
 	if createScrapeConfigCrd {
 		err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.ScrapeConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
-			return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
+			return f.MonClientV1alpha1.ScrapeConfigs(v1.NamespaceAll).List(ctx, opts)
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "initialize ScrapeConfig v1alpha1 CRD")

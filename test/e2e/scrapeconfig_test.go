@@ -114,8 +114,8 @@ func testScrapeConfigCreation(t *testing.T) {
 			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
 
 			if test.expectedError {
-			        require.Error(t, err)		
-  				require.Truef(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
+				require.Error(t, err)
+				require.Truef(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
 				return
 			}
 			require.NoError(t, err)
@@ -155,7 +155,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 			Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},
 		},
 	}
-	_, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus
@@ -202,7 +202,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. Remove the ScrapeConfig and check that the targets disappear in Prometheus
-	err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Delete(context.Background(), "scrape-config", metav1.DeleteOptions{})
+	err = framework.DeleteScrapeConfig(context.Background(), ns, "scrape-config")
 	require.NoError(t, err)
 
 	// Check that the targets disappeared in Prometheus
@@ -224,7 +224,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 // testPromOperatorStartsWithoutScrapeConfigCRD deletes the ScrapeConfig CRD from the cluster and then starts
 // prometheus-operator to check that it doesn't crash.
 func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
-	skipPrometheusTests(t)
+	skipPrometheusAllNSTests(t)
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)

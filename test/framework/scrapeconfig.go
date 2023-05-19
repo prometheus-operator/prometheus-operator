@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -63,19 +62,6 @@ func (f *Framework) GetScrapeConfig(ctx context.Context, ns, name string) (*moni
 	}
 
 	return result, nil
-}
-
-// WaitForScrapeConfig waits for a ScrapeConfig with a given name to exist in a given namespace.
-func (f *Framework) WaitForScrapeConfig(ctx context.Context, ns, name string) error {
-	return wait.PollUntilContextTimeout(ctx, time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		_, err := f.MonClientV1alpha1.ScrapeConfigs(ns).Get(ctx, name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			return false, nil
-		} else if err != nil {
-			return false, err
-		}
-		return true, nil
-	})
 }
 
 func (f *Framework) UpdateScrapeConfig(ctx context.Context, ns string, ar *monitoringv1alpha1.ScrapeConfig) (*monitoringv1alpha1.ScrapeConfig, error) {
