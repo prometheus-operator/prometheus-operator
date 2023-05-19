@@ -122,8 +122,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-// Process is a helper function that retrieves the status subresource of the object identified by the given
-// key.
+// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster
 func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 
 	commonFields := p.GetCommonPrometheusFields()
