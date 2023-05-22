@@ -116,7 +116,7 @@ type Namespaces struct {
 	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
 }
 
-type PromLabelSelector string
+type PromLabelSelector []rune
 
 // Set implements the flagset.Value interface.
 func (l PromLabelSelector) Set(value string) error {
@@ -124,11 +124,14 @@ func (l PromLabelSelector) Set(value string) error {
 	if err != nil {
 		return errors.New("can not parse prometheus selector value")
 	}
-	l = PromLabelSelector(value)
+
+	for pos, char := range value {
+		l[pos] = char
+	}
 	return nil
 }
 
-// Set implements the flagset.Value interface.
+// String implements the flagset.Value interface.
 func (l PromLabelSelector) String() string {
 	return string(l)
 }
