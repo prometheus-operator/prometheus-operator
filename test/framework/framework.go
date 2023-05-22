@@ -201,7 +201,7 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // Returns the CA, which can bs used to access the operator over TLS
 func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createResourceAdmissionHooks, createClusterRoleBindings, createAgentCrd bool, createScrapeConfigCrd bool) ([]FinalizerFn, error) {
+	createResourceAdmissionHooks, createClusterRoleBindings, createScrapeConfigCrd bool) ([]FinalizerFn, error) {
 
 	var finalizers []FinalizerFn
 
@@ -304,25 +304,21 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
 	}
 
-	// TODO(ArthurSens): The OperatorUpgrade tests won't pass because the operator v0.63.0 doesn't have the agent CRD.
-	// This check can be removed after the next release of the operator.
-	if createAgentCrd {
-		err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.PrometheusAgentName, func(opts metav1.ListOptions) (runtime.Object, error) {
-			return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "initialize PrometheusAgent v1alpha1 CRD")
-		}
+	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.PrometheusAgentName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize PrometheusAgent v1alpha1 CRD")
 	}
 
 	// TODO(xiu): The OperatorUpgrade tests won't pass because the operator v0.64.1 doesn't have the scrapeconfig CRD.
-	// This check can be removed after the next release of the operator.
+	// This check can be removed after v0.66.0 is released.
 	if createScrapeConfigCrd {
 		err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.ScrapeConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
 			return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "initialize PrometheusAgent v1alpha1 CRD")
+			return nil, errors.Wrap(err, "initialize ScrapeConfig v1alpha1 CRD")
 		}
 	}
 
@@ -737,13 +733,6 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		}
 	}
 
-	// TODO(simonpasquier): remove after v0.61
-	deploy.Spec.Template.Spec.Volumes = []v1.Volume{{
-		Name:         "cert",
-		VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: standaloneAdmissionHookSecretName}}}}
-	// TODO(simonpasquier): remove after v0.61
-	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true}}
-
 	_, err = f.createOrUpdateServiceAccount(ctx, namespace, fmt.Sprintf("%s/admission-webhook/service-account.yaml", f.exampleDir))
 	if err != nil {
 		return nil, nil, err
@@ -760,9 +749,6 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	}
 
 	service.Namespace = namespace
-	// TODO(simonpasquier): remove after v0.61
-	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
-
 	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, namespace, service); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create or update admission webhook server service")
 	}
