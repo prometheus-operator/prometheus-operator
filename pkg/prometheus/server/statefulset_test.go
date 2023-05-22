@@ -1317,6 +1317,50 @@ func TestThanosBlockDuration(t *testing.T) {
 	}
 }
 
+func TestThanosWithNamedPVC(t *testing.T) {
+	testKey := "named-pvc"
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Name: testKey,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: pvc,
+				},
+			},
+			Thanos: &monitoringv1.ThanosSpec{
+				BlockDuration: "1h",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, vol := range container.VolumeMounts {
+				if vol.Name == testKey {
+					found = true
+				}
+			}
+		}
+	}
+	require.True(t, found, "VolumeClaimTemplate name not found on thanos-sidecar volumeMounts")
+}
+
 func TestThanosTracing(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 
