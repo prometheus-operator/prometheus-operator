@@ -25,7 +25,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.65.1
 	github.com/prometheus/alertmanager v0.25.0
 	github.com/prometheus/client_golang v1.15.1
-	github.com/prometheus/common v0.43.0
+	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.44.0
 	github.com/stretchr/testify v1.8.3
 	github.com/thanos-io/thanos v0.31.1-0.20230518071718-528944910da2
@@ -107,7 +107,7 @@ require (
 	go.uber.org/goleak v1.2.1 // indirect
 	go4.org/intern v0.0.0-20220617035311-6925f38cc365 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230221090011-e4bae7ad2296 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
+	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
