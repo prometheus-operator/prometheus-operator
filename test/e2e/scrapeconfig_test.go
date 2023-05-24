@@ -19,14 +19,12 @@ import (
 	"testing"
 	"time"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/stretchr/testify/require"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/wait"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
 // testScrapeConfigCreation tests multiple ScrapeConfig definitions
@@ -136,7 +134,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true)
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
@@ -159,18 +157,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		targets, pollErr := framework.GetActiveTargets(ctx, ns, "prometheus-operated")
-		if pollErr != nil {
-			return false, nil
-		}
-
-		if len(targets) != 2 {
-			return false, nil
-		}
-
-		return true, nil
-	})
+	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 2)
 	require.NoError(t, err)
 
 	// 2. Update the ScrapeConfig and add a target. Then, check that 3 targets appear in Prometheus.
@@ -187,18 +174,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
-		targets, pollErr := framework.GetActiveTargets(ctx, ns, "prometheus-operated")
-		if pollErr != nil {
-			return false, nil
-		}
-
-		if len(targets) != 3 {
-			return false, nil
-		}
-
-		return true, nil
-	})
+	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 3)
 	require.NoError(t, err)
 
 	// 3. Remove the ScrapeConfig and check that the targets disappear in Prometheus
@@ -206,18 +182,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets disappeared in Prometheus
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
-		targets, pollErr := framework.GetActiveTargets(ctx, ns, "prometheus-operated")
-		if pollErr != nil {
-			return false, nil
-		}
-
-		if len(targets) != 0 {
-			return false, nil
-		}
-
-		return true, nil
-	})
+	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 0)
 	require.NoError(t, err)
 }
 
@@ -234,7 +199,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	err := framework.DeleteCRD(context.Background(), "scrapeconfigs.monitoring.coreos.com")
 	require.NoError(t, err)
 
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true, false)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, false)
 	require.NoError(t, err)
 
 	time.Sleep(10 * time.Second)
@@ -257,6 +222,6 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	}
 
 	// re-create Prometheus-Operator to reinstall the CRDs
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true, true)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true)
 	require.NoError(t, err)
 }
