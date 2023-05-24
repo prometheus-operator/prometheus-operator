@@ -27,6 +27,22 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/main/ADOPTERS.md) to the list.
 
+## CERN
+
+[Centre Européen pour la Recherche Nucléaire](https://home.cern/)
+
+Environments: On-premise Openstack
+
+The CERN Kubernetes team is responsible for the [Openstack Magnum](https://docs.openstack.org/magnum/latest/)
+offering to the IT infrastructure users. We offer a variety of opt-in features to the
+user's managed kubernetes clusters. The monitoring feature is provided by the
+community owned __kube-prometheus-stack__ helm chart. Be sure to check our [blog](https://kubernetes.web.cern.ch/)!
+
+Details:
+- 400+ Kubernetes clusters
+- ~120 clusters use `default` kube-prometheus-stack provided monitoring
+- Cluster sizes range from few nodes to ~100
+
 ## Clyso
 
 [clyso.com](https://www.clyso.com/en)
