@@ -10,6 +10,7 @@
 | Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Coralogix     |
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat       |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat       |
+| Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                     | Independent   |
 
 Please reach any of the maintainers on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
 
