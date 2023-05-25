@@ -29,19 +29,18 @@ Go ahead and [add your organization](https://github.com/prometheus-operator/prom
 
 ## CERN
 
-[Centre Européen pour la Recherche Nucléaire](https://home.cern/)
+[European Laboratory for Particle Physics](https://home.cern/)
 
-Environments: On-premise Openstack
+Environments: On-premises
 
-The CERN Kubernetes team is responsible for the [Openstack Magnum](https://docs.openstack.org/magnum/latest/)
-offering to the IT infrastructure users. We offer a variety of opt-in features to the
-user's managed kubernetes clusters. The monitoring feature is provided by the
-community owned __kube-prometheus-stack__ helm chart. Be sure to check our [blog](https://kubernetes.web.cern.ch/)!
+Prometheus is used extensively as part of the CERN Kubernetes infrastructure,
+both managed and unmanaged. Metrics deployment is managed by the community owned
+__kube-prometheus-stack__ helm chart. Be sure to check our [blog](https://kubernetes.web.cern.ch/).
 
 Details:
-- 400+ Kubernetes clusters
-- ~120 clusters use `default` kube-prometheus-stack provided monitoring
-- Cluster sizes range from few nodes to ~100
+- 400+ Kubernetes clusters, with cluster sizes ranging from few nodes to ~100s
+
+Significant usage also exists outside Kubernetes for generic service and infrastructure monitoring.
 
 ## Clyso
 
