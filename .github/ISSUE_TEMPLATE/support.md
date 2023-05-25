@@ -1,6 +1,6 @@
 ---
 name: Support
-about: If you have questions about the Prometheus Operator. If you have questions about helm installation, go to https://github.com/prometheus-community/helm-charts repository. If you have questions about kube-prometheus setup, go to https://github.com/prometheus-operator/kube-prometheus
+about: For questions about prometheus-operator. For Helm, go to https://github.com/prometheus-community/helm-charts. For kube-prometheus, go to https://github.com/prometheus-operator/kube-prometheus.
 labels: kind/support
 ---
 
