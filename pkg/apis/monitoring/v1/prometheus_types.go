@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -526,6 +527,45 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
+	// TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// +optional
+	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+}
+
+type PrometheusTracingConfig struct {
+	// Client used to export the traces. Options are "http" or "grpc".
+	//+kubebuilder:validation:Enum=http;grpc
+	// +optional
+	ClientType *string `json:"clientType"`
+
+	// Endpoint to send the traces to. Should be provided in format <host>:<port>.
+	//+required
+	Endpoint string `json:"endpoint"`
+
+	// Sets the probability a given trace will be sampled. Must be a float from 0 through 1.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction"`
+
+	// If disabled, the client will use a secure connection.
+	// +optional
+	Insecure *bool `json:"insecure"`
+
+	// Key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers map[string]string `json:"headers"`
+
+	// Compression key for supported compression types. Supported compression: gzip
+	//+kubebuilder:validation:Enum=gzip
+	// +optional
+	Compression *string `json:"compression"`
+
+	// Maximum time the exporter will wait for each batch export. Default '10s'
+	// +optional
+	Timeout *Duration `json:"timeout"`
+
+	// TLS Config to use when sending traces.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.

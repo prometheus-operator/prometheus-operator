@@ -1713,6 +1713,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
+		p.Spec.TracingConfig,
 		smons,
 		pmons,
 		bmons,
