@@ -10423,6 +10423,18 @@ string
 </tr>
 <tr>
 <td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+Requires Prometheus v2.26.0 and above.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>filterExternalLabels</code><br/>
 <em>
 bool
