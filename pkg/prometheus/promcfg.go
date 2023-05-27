@@ -1659,6 +1659,11 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
+
+        if spec.FollowRedirects {
+            cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
+        }
+
 		if spec.FilterExternalLabels != nil {
 			cfg = cg.WithMinimumVersion("2.34.0").AppendMapItem(cfg, "filter_external_labels", spec.FilterExternalLabels)
 		}
