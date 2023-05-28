@@ -10429,6 +10429,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Configure whether HTTP requests follow HTTP 3xx redirects.
 Requires Prometheus v2.26.0 and above.</p>
 </td>
