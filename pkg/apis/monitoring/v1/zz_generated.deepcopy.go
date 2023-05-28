@@ -1926,6 +1926,11 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
+	}
 	if in.FilterExternalLabels != nil {
 		in, out := &in.FilterExternalLabels, &out.FilterExternalLabels
 		*out = new(bool)
