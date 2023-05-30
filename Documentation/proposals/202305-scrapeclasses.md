@@ -43,10 +43,12 @@ to compose the scrape configurations in a Kubernetes way.
 ## How
 
 The proposed solution is to introduce a notion of a *scrape class*, akin to a Kubernetes [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
-A scrape class defines TLS settings (and possibly other settings in future) to be applied to all scrape endpoints of that class.
+A scrape class defines TLS settings (and possibly other settings in future, e.g. non-safe authorization settings) to be applied to all scrape configs of that class.
 
-When defining a probe/podmonitor/servicemonitor, a user may optionally assign a class to each endpoint.
-A default class may be defined by the administrator.
+One scrape class may be designated as the default class, in which case that class is applied to any scrape config that doesn't specify a value for `scrapeClass`.
+
+When defining a podmonitor/servicemonitor/probe/scrapeconfig, a user may assign a scrape class via the `scrapeClass` field.
+For monitors, each endpoint may be assigned a scrape class.
 
 Class names are assumed to be installation-specific. In practice, some common class names like `istio-mtls` are likely to emerge.
 
@@ -61,12 +63,11 @@ of the `Prometheus` spec. An alternative is outlined later, of factoring the cla
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 spec:
-  # optional: set a default scrape class
-  defaultScrapeClass: istio-mtls
-
   # define scrape classes for use by the monitors
+  # one class may be designated as the default class
   scrapeClasses:
     - name: istio-mtls
+      default: true
       tlsConfig:
         caFile: "/etc/istio-certs/root-cert.pem"
         certFile: "/etc/istio-certs/cert-chain.pem"
@@ -124,7 +125,26 @@ spec:
     scrapeClass: istio-mtls
 ```
 
-Deprecate the unsafe TLS settings in `ServiceMonitor`.
+Out-of-scope: deprecation of the unsafe TLS settings in `ServiceMonitor`.
+
+### ScrapeConfig
+
+Allow the user to select a scrape class for the generic scrape configuration.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: scrape-config
+spec:
+  scrapeClass: istio-mtls
+  staticConfigs:
+    [...]
+  httpSDConfig:
+    [...]
+  fileSDConfig:
+    [...]
+```
 
 ## Test Plan
 
@@ -185,6 +205,7 @@ An open question is whether the resource would be cluster-scoped or namespace-sc
 
 Objections:
 1. Since the file paths are dependent on the volume mounts in the server, this approach may not achieve a meaningful decoupling.
+2. Extra complexity in defining a new CRD.
 
 ### Non-Safe Monitors
 
