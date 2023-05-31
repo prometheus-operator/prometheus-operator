@@ -60,7 +60,7 @@ const (
 )
 
 const (
-	defaultReloaderCPU    = "100m"
+	defaultReloaderCPU    = "10m"
 	defaultReloaderMemory = "50Mi"
 )
 
