@@ -95,6 +95,8 @@ type ScrapeConfigSpec struct {
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// The scrape class to apply.
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.

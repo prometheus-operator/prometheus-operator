@@ -147,6 +147,8 @@ type PodMetricsEndpoint struct {
 	// Drop pods that are not running. (Failed, Succeeded). Enabled by default.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	FilterRunning *bool `json:"filterRunning,omitempty"`
+	// The scrape class to apply.
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 // PodMetricsEndpointTLSConfig specifies TLS configuration parameters.

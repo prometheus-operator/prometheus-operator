@@ -371,6 +371,11 @@ type CommonPrometheusFields struct {
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 	// PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// *Experimental* List of scrape classes to expose to monitors and other scrape configs.
+	// This is experimental feature and might change in the future.
+	// +listType=map
+	// +listMapKey=name
+	ScrapeClasses []InlineScrapeClass `json:"scrapeClasses,omitempty"`
 }
 
 // +genclient
@@ -1018,4 +1023,9 @@ type AuthorizationValidationError struct {
 
 func (e *AuthorizationValidationError) Error() string {
 	return e.err
+}
+
+// InlineScrapeClass defines a scrape class for a given Prometheus server.
+type InlineScrapeClass struct {
+	CommonScrapeClassFields `json:",inline"`
 }

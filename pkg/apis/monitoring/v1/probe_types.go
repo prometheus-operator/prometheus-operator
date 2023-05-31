@@ -91,6 +91,8 @@ type ProbeSpec struct {
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
+	// The scrape class to apply.
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.

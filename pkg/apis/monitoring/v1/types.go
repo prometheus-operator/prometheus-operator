@@ -417,6 +417,8 @@ type Endpoint struct {
 	// Drop pods that are not running. (Failed, Succeeded). Enabled by default.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	FilterRunning *bool `json:"filterRunning,omitempty"`
+	// The scrape class to apply.
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 type AttachMetadata struct {
@@ -634,4 +636,17 @@ type Argument struct {
 	Name string `json:"name"`
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	Value string `json:"value,omitempty"`
+}
+
+// CommonScrapeClassFields defines a scrape class.
+type CommonScrapeClassFields struct {
+	// Name of the scrape class, e.g. "istio-mtls".
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+	// Default designates a scrape class as the default class.
+	Default *bool `json:default,omitempty`
+	// TLSConfig section for scrapes.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// Authorization section for scrapes.
+	Authorization *Authorization `json:"authorization,omitempty"`
 }
