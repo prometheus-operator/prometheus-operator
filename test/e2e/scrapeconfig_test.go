@@ -134,7 +134,7 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
@@ -199,7 +199,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	err := framework.DeleteCRD(context.Background(), "scrapeconfigs.monitoring.coreos.com")
 	require.NoError(t, err)
 
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, false)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, false)
 	require.NoError(t, err)
 
 	time.Sleep(10 * time.Second)
@@ -222,6 +222,6 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	}
 
 	// re-create Prometheus-Operator to reinstall the CRDs
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, true, true, true)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 }
