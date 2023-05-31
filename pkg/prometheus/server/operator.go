@@ -1693,6 +1693,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 	}
 
+	for i, scrapeClass := range p.Spec.ScrapeClasses {
+		if err := store.AddTLSConfig(ctx, p.GetNamespace(), scrapeClass.TLSConfig); err != nil {
+			return errors.Wrapf(err, "scrape class %d", i)
+		}
+		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), scrapeClass.Authorization, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name)); err != nil {
+			return errors.Wrapf(err, "scrape class %d", i)
+		}
+	}
+
 	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
