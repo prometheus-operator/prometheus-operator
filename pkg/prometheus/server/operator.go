@@ -377,12 +377,16 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
+	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io/v1", "endpointslices")
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
 	}
 	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
-	c.endpointSliceSupported = endpointSliceSupported
+	// The operator doesn't yet support the endpointslices API.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/3862
+	// for details.
+	c.endpointSliceSupported = false
+
 	return c, nil
 }
 
