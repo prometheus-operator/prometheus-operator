@@ -17,7 +17,6 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"os"
 	"strings"
 	"testing"
@@ -36,6 +35,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -10312,5 +10312,782 @@ scrape_configs:
 	result := string(cfg)
 	if diff := cmp.Diff(expected, result); diff != "" {
 		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
+func TestScrapeClassWithTlsFile(t *testing.T) {
+	scrapeClass := monitoringv1.InlineScrapeClass{
+		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
+			Name:    "testclass",
+			Default: swag.Bool(true),
+			TLSConfig: &monitoringv1.TLSConfig{
+				CAFile: "/path/to/file",
+			},
+		},
+	}
+	expectedCfg := strings.TrimSpace(`
+tls_config:
+    insecure_skip_verify: false
+    ca_file: /path/to/file`)
+
+	testCases := []struct {
+		name          string
+		p             *monitoringv1.Prometheus
+		sMons         map[string]*monitoringv1.ServiceMonitor
+		pMons         map[string]*monitoringv1.PodMonitor
+		probes        map[string]*monitoringv1.Probe
+		scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+		tlsAssets     map[assets.TLSAssetKey]assets.TLSAsset
+		expectedCfg   string
+	}{
+		{
+			name: "service monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ProbeSpec{
+						ScrapeClass: &scrapeClass.Name,
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "scrape config with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{
+				"testscrapeconfig1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1alpha1.ScrapeConfigSpec{
+						ScrapeClass: &scrapeClass.Name,
+						StaticConfigs: []monitoringv1alpha1.StaticConfig{
+							{
+								Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+							},
+						},
+						MetricsPath: "/metrics",
+					},
+				},
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tt.p)
+			cfg, err := cg.GenerateServerConfiguration(
+				tt.p.Spec.EvaluationInterval,
+				tt.p.Spec.QueryLogFile,
+				tt.p.Spec.RuleSelector,
+				tt.p.Spec.Exemplars,
+				tt.p.Spec.TSDB,
+				tt.p.Spec.Alerting,
+				tt.p.Spec.RemoteRead,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				tt.scrapeConfigs,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					TokenAssets:     map[string]assets.Token{},
+					TLSAssets:       tt.tlsAssets,
+				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
+	}
+}
+
+func TestScrapeClassWithTlsOverride(t *testing.T) {
+	scrapeClass := monitoringv1.InlineScrapeClass{
+		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
+			Name:    "testclass",
+			Default: swag.Bool(true),
+			TLSConfig: &monitoringv1.TLSConfig{
+				CAFile: "/path/to/file",
+			},
+		},
+	}
+	tlsConfig := monitoringv1.SafeTLSConfig{
+		CA: monitoringv1.SecretOrConfigMap{
+			ConfigMap: &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{Name: "testconfigmap"},
+				Key:                  "ca.crt",
+			},
+		},
+	}
+
+	expectedCfg := strings.TrimSpace(`
+tls_config:
+    insecure_skip_verify: false
+    ca_file: /etc/prometheus/certs/configmap_default_testconfigmap_ca.crt`)
+
+	testCases := []struct {
+		name          string
+		p             *monitoringv1.Prometheus
+		sMons         map[string]*monitoringv1.ServiceMonitor
+		pMons         map[string]*monitoringv1.PodMonitor
+		probes        map[string]*monitoringv1.Probe
+		scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+		tlsAssets     map[assets.TLSAssetKey]assets.TLSAsset
+		expectedCfg   string
+	}{
+		{
+			name: "service monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+								TLSConfig: &monitoringv1.TLSConfig{
+									SafeTLSConfig: tlsConfig,
+								},
+							},
+						},
+					},
+				},
+			},
+			tlsAssets: map[assets.TLSAssetKey]assets.TLSAsset{
+				assets.TLSAssetKeyFromSelector("default", tlsConfig.CA): assets.TLSAsset("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+								TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
+									SafeTLSConfig: tlsConfig,
+								},
+							},
+						},
+					},
+				},
+			},
+			tlsAssets: map[assets.TLSAssetKey]assets.TLSAsset{
+				assets.TLSAssetKeyFromSelector("default", tlsConfig.CA): assets.TLSAsset("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ProbeSpec{
+						ScrapeClass: &scrapeClass.Name,
+						TLSConfig: &monitoringv1.ProbeTLSConfig{
+							SafeTLSConfig: tlsConfig,
+						},
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			tlsAssets: map[assets.TLSAssetKey]assets.TLSAsset{
+				assets.TLSAssetKeyFromSelector("default", tlsConfig.CA): assets.TLSAsset("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tt.p)
+			cfg, err := cg.GenerateServerConfiguration(
+				tt.p.Spec.EvaluationInterval,
+				tt.p.Spec.QueryLogFile,
+				tt.p.Spec.RuleSelector,
+				tt.p.Spec.Exemplars,
+				tt.p.Spec.TSDB,
+				tt.p.Spec.Alerting,
+				tt.p.Spec.RemoteRead,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				tt.scrapeConfigs,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					TokenAssets:     map[string]assets.Token{},
+					TLSAssets:       tt.tlsAssets,
+				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
+	}
+}
+
+func TestScrapeClassWithAuthorizationCredentials(t *testing.T) {
+	scrapeClass := monitoringv1.InlineScrapeClass{
+		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
+			Name:    "testclass",
+			Default: swag.Bool(true),
+			Authorization: &monitoringv1.Authorization{
+				// CredentialsFile: "/path/to/file",
+				SafeAuthorization: monitoringv1.SafeAuthorization{
+					Credentials: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "testsecret"},
+						Key:                  "token",
+					},
+				},
+			},
+		},
+	}
+	expectedCfg := strings.TrimSpace(`
+authorization:
+    type: Bearer
+    credentials: data`)
+
+	testCases := []struct {
+		name          string
+		p             *monitoringv1.Prometheus
+		sMons         map[string]*monitoringv1.ServiceMonitor
+		pMons         map[string]*monitoringv1.PodMonitor
+		probes        map[string]*monitoringv1.Probe
+		scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+		tokenAssets   map[string]assets.Token
+		expectedCfg   string
+	}{
+		{
+			name: "service monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"scrapeClass/auth/testclass": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:        "web",
+								ScrapeClass: &scrapeClass.Name,
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"scrapeClass/auth/testclass": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ProbeSpec{
+						ScrapeClass: &scrapeClass.Name,
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"scrapeClass/auth/testclass": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "scrape config with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{
+				"testscrapeconfig1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1alpha1.ScrapeConfigSpec{
+						ScrapeClass: &scrapeClass.Name,
+						StaticConfigs: []monitoringv1alpha1.StaticConfig{
+							{
+								Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+							},
+						},
+						MetricsPath: "/metrics",
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"scrapeClass/auth/testclass": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tt.p)
+			cfg, err := cg.GenerateServerConfiguration(
+				tt.p.Spec.EvaluationInterval,
+				tt.p.Spec.QueryLogFile,
+				tt.p.Spec.RuleSelector,
+				tt.p.Spec.Exemplars,
+				tt.p.Spec.TSDB,
+				tt.p.Spec.Alerting,
+				tt.p.Spec.RemoteRead,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				tt.scrapeConfigs,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					TokenAssets:     tt.tokenAssets,
+					TLSAssets:       map[assets.TLSAssetKey]assets.TLSAsset{},
+				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
+	}
+}
+
+func TestScrapeClassWithAuthorizationOverride(t *testing.T) {
+	scrapeClass := monitoringv1.InlineScrapeClass{
+		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
+			Name:    "testclass",
+			Default: swag.Bool(true),
+			Authorization: &monitoringv1.Authorization{
+				CredentialsFile: "/path/to/file",
+			},
+		},
+	}
+	authConfig := monitoringv1.SafeAuthorization{
+		Credentials: &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{Name: "testsecret"},
+			Key:                  "token",
+		},
+	}
+	expectedCfg := strings.TrimSpace(`
+authorization:
+    type: Bearer
+    credentials: data`)
+
+	testCases := []struct {
+		name          string
+		p             *monitoringv1.Prometheus
+		sMons         map[string]*monitoringv1.ServiceMonitor
+		pMons         map[string]*monitoringv1.PodMonitor
+		probes        map[string]*monitoringv1.Probe
+		scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+		tokenAssets   map[string]assets.Token
+		expectedCfg   string
+	}{
+		{
+			name: "service monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:          "web",
+								ScrapeClass:   &scrapeClass.Name,
+								Authorization: &authConfig,
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"serviceMonitor/auth/default/testservicemonitor1/0": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "pod monitor with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			pMons: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:          "web",
+								ScrapeClass:   &scrapeClass.Name,
+								Authorization: &authConfig,
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"podMonitor/auth/default/testpodmonitor1/0": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+		{
+			name: "probe with scrape class",
+			p: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						Version:       operator.DefaultPrometheusVersion,
+					},
+				},
+			},
+			probes: map[string]*monitoringv1.Probe{
+				"testprobe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ProbeSpec{
+						ScrapeClass:   &scrapeClass.Name,
+						Authorization: &authConfig,
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{"127.0.0.1"},
+							},
+						},
+					},
+				},
+			},
+			tokenAssets: map[string]assets.Token{
+				"probe/auth/default/testprobe1": assets.Token("data"),
+			},
+			expectedCfg: expectedCfg,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tt.p)
+			cfg, err := cg.GenerateServerConfiguration(
+				tt.p.Spec.EvaluationInterval,
+				tt.p.Spec.QueryLogFile,
+				tt.p.Spec.RuleSelector,
+				tt.p.Spec.Exemplars,
+				tt.p.Spec.TSDB,
+				tt.p.Spec.Alerting,
+				tt.p.Spec.RemoteRead,
+				tt.sMons,
+				tt.pMons,
+				tt.probes,
+				tt.scrapeConfigs,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+					TokenAssets:     tt.tokenAssets,
+					TLSAssets:       map[assets.TLSAssetKey]assets.TLSAsset{},
+				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+
+			if !strings.Contains(result, tt.expectedCfg) {
+				t.Fatalf("expected Prometheus configuration to contain:\n %s\nFull config:\n %s", tt.expectedCfg, result)
+			}
+		})
 	}
 }

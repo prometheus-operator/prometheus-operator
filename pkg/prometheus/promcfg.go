@@ -58,6 +58,8 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   v1.PrometheusInterface
 	endpointSliceSupported bool
+	scrapeClasses          map[string]v1.CommonScrapeClassFields
+	defaultScrapeClass     string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
@@ -65,8 +67,9 @@ func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSli
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
+	cpf := p.GetCommonPrometheusFields()
 
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse Prometheus version")
@@ -78,11 +81,22 @@ func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSli
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
+	scrapeClasses := map[string]v1.CommonScrapeClassFields{}
+	defaultScrapeClass := ""
+	for _, classSpec := range cpf.ScrapeClasses {
+		scrapeClasses[classSpec.Name] = classSpec.CommonScrapeClassFields
+		if defaultScrapeClass == "" && classSpec.Default != nil && *classSpec.Default {
+			defaultScrapeClass = classSpec.Name
+		}
+	}
+
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
+		scrapeClasses:          scrapeClasses,
+		defaultScrapeClass:     defaultScrapeClass,
 	}, nil
 }
 
@@ -96,6 +110,8 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
 		endpointSliceSupported: cg.endpointSliceSupported,
+		scrapeClasses:          cg.scrapeClasses,
+		defaultScrapeClass:     cg.defaultScrapeClass,
 	}
 }
 
@@ -113,6 +129,8 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			notCompatible:          true,
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
+			scrapeClasses:          cg.scrapeClasses,
+			defaultScrapeClass:     cg.defaultScrapeClass,
 		}
 	}
 
@@ -133,6 +151,8 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			notCompatible:          true,
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
+			scrapeClasses:          cg.scrapeClasses,
+			defaultScrapeClass:     cg.defaultScrapeClass,
 		}
 	}
 
@@ -619,6 +639,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	objMeta := cg.prom.GetObjectMeta()
+	scrapeClass := cg.getScrapeClassOrDefault(ep.ScrapeClass)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -664,6 +687,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	if ep.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
+	} else if scrapeClass != nil {
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), scrapeClass.TLSConfig)
 	}
 
 	if ep.BearerTokenSecret.Name != "" {
@@ -677,7 +702,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	if ep.Authorization != nil {
+		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	} else if scrapeClass != nil {
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
+	}
 
 	relabelings := initRelabelings()
 
@@ -841,6 +870,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	objMeta := cg.prom.GetObjectMeta()
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClass)
+
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -1041,6 +1073,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	if m.Spec.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
+	} else if scrapeClass != nil {
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), scrapeClass.TLSConfig)
 	}
 
 	if m.Spec.BearerTokenSecret.Name != "" {
@@ -1055,7 +1089,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	if m.Spec.Authorization != nil {
+		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	} else if scrapeClass != nil {
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
+	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
 
@@ -1070,6 +1108,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	objMeta := cg.prom.GetObjectMeta()
+	scrapeClass := cg.getScrapeClassOrDefault(ep.ScrapeClass)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -1121,7 +1162,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
+	if ep.TLSConfig != nil {
+		cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
+	} else if scrapeClass != nil {
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), scrapeClass.TLSConfig)
+	}
 
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
@@ -1135,7 +1180,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	if ep.Authorization != nil {
+		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	} else if scrapeClass != nil {
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
+	}
 
 	relabelings := initRelabelings()
 
@@ -2120,6 +2169,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	objMeta := cg.prom.GetObjectMeta()
+	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClass)
+
 	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -2148,6 +2200,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			Key:   "relabel_configs",
 			Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
 		})
+	}
+
+	if scrapeClass != nil {
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), scrapeClass.TLSConfig)
+	}
+
+	if scrapeClass != nil {
+		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
 	}
 
 	// StaticConfig
@@ -2219,4 +2279,19 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 	return cfg
+}
+
+func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *v1.CommonScrapeClassFields {
+	if name != nil {
+		if scrapeClass, ok := cg.scrapeClasses[*name]; ok {
+			return &scrapeClass
+		}
+		return nil
+	}
+	if cg.defaultScrapeClass != "" {
+		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClass]; ok {
+			return &scrapeClass
+		}
+	}
+	return nil
 }
