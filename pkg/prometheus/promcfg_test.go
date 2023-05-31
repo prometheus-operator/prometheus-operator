@@ -10316,7 +10316,7 @@ scrape_configs:
 }
 
 func TestScrapeClassWithTlsFile(t *testing.T) {
-	scrapeClass := monitoringv1.InlineScrapeClass{
+	scrapeClass := monitoringv1.PrometheusScrapeClass{
 		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
 			Name:    "testclass",
 			Default: swag.Bool(true),
@@ -10349,7 +10349,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10381,7 +10381,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10413,7 +10413,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10445,7 +10445,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10511,7 +10511,7 @@ tls_config:
 }
 
 func TestScrapeClassWithTlsOverride(t *testing.T) {
-	scrapeClass := monitoringv1.InlineScrapeClass{
+	scrapeClass := monitoringv1.PrometheusScrapeClass{
 		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
 			Name:    "testclass",
 			Default: swag.Bool(true),
@@ -10553,7 +10553,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10591,7 +10591,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10629,7 +10629,7 @@ tls_config:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10700,12 +10700,11 @@ tls_config:
 }
 
 func TestScrapeClassWithAuthorizationCredentials(t *testing.T) {
-	scrapeClass := monitoringv1.InlineScrapeClass{
+	scrapeClass := monitoringv1.PrometheusScrapeClass{
 		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
 			Name:    "testclass",
 			Default: swag.Bool(true),
 			Authorization: &monitoringv1.Authorization{
-				// CredentialsFile: "/path/to/file",
 				SafeAuthorization: monitoringv1.SafeAuthorization{
 					Credentials: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{Name: "testsecret"},
@@ -10739,7 +10738,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10774,7 +10773,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10809,7 +10808,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10844,7 +10843,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10913,7 +10912,7 @@ authorization:
 }
 
 func TestScrapeClassWithAuthorizationOverride(t *testing.T) {
-	scrapeClass := monitoringv1.InlineScrapeClass{
+	scrapeClass := monitoringv1.PrometheusScrapeClass{
 		CommonScrapeClassFields: monitoringv1.CommonScrapeClassFields{
 			Name:    "testclass",
 			Default: swag.Bool(true),
@@ -10952,7 +10951,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -10988,7 +10987,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},
@@ -11024,7 +11023,7 @@ authorization:
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						ScrapeClasses: []monitoringv1.InlineScrapeClass{scrapeClass},
+						ScrapeClasses: []monitoringv1.PrometheusScrapeClass{scrapeClass},
 						Version:       operator.DefaultPrometheusVersion,
 					},
 				},

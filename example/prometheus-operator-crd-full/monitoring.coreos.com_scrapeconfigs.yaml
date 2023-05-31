@@ -179,6 +179,9 @@ spec:
                       type: string
                   type: object
                 type: array
+              scrapeClass:
+                description: The scrape class to apply.
+                type: string
               staticConfigs:
                 description: StaticConfigs defines a list of static targets with a
                   common label set.

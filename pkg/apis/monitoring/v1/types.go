@@ -644,7 +644,7 @@ type CommonScrapeClassFields struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Default designates a scrape class as the default class.
-	Default *bool `json:default,omitempty`
+	Default *bool `json:"default,omitempty"`
 	// TLSConfig section for scrapes.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Authorization section for scrapes.

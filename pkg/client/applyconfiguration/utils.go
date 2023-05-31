@@ -63,6 +63,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("CommonScrapeClassFields"):
+		return &monitoringv1.CommonScrapeClassFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):
 		return &monitoringv1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
@@ -115,6 +117,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PrometheusRuleExcludeConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRuleSpec"):
 		return &monitoringv1.PrometheusRuleSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PrometheusScrapeClass"):
+		return &monitoringv1.PrometheusScrapeClassApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusSpec"):
 		return &monitoringv1.PrometheusSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusStatus"):

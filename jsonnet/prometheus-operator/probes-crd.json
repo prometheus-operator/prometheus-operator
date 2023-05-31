@@ -382,6 +382,10 @@
                     "format": "int64",
                     "type": "integer"
                   },
+                  "scrapeClass": {
+                    "description": "The scrape class to apply.",
+                    "type": "string"
+                  },
                   "scrapeTimeout": {
                     "description": "Timeout for scraping metrics from the Prometheus exporter. If not specified, the Prometheus global scrape timeout is used.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

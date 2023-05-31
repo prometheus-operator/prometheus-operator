@@ -45,6 +45,7 @@ type PodMetricsEndpointApplyConfiguration struct {
 	FollowRedirects      *bool                                          `json:"followRedirects,omitempty"`
 	EnableHttp2          *bool                                          `json:"enableHttp2,omitempty"`
 	FilterRunning        *bool                                          `json:"filterRunning,omitempty"`
+	ScrapeClass          *string                                        `json:"scrapeClass,omitempty"`
 }
 
 // PodMetricsEndpointApplyConfiguration constructs an declarative configuration of the PodMetricsEndpoint type for use with
@@ -226,5 +227,13 @@ func (b *PodMetricsEndpointApplyConfiguration) WithEnableHttp2(value bool) *PodM
 // If called multiple times, the FilterRunning field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithFilterRunning(value bool) *PodMetricsEndpointApplyConfiguration {
 	b.FilterRunning = &value
+	return b
+}
+
+// WithScrapeClass sets the ScrapeClass field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClass field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithScrapeClass(value string) *PodMetricsEndpointApplyConfiguration {
+	b.ScrapeClass = &value
 	return b
 }

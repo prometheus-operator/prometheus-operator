@@ -46,6 +46,7 @@ type EndpointApplyConfiguration struct {
 	FollowRedirects      *bool                                `json:"followRedirects,omitempty"`
 	EnableHttp2          *bool                                `json:"enableHttp2,omitempty"`
 	FilterRunning        *bool                                `json:"filterRunning,omitempty"`
+	ScrapeClass          *string                              `json:"scrapeClass,omitempty"`
 }
 
 // EndpointApplyConfiguration constructs an declarative configuration of the Endpoint type for use with
@@ -235,5 +236,13 @@ func (b *EndpointApplyConfiguration) WithEnableHttp2(value bool) *EndpointApplyC
 // If called multiple times, the FilterRunning field is set to the value of the last call.
 func (b *EndpointApplyConfiguration) WithFilterRunning(value bool) *EndpointApplyConfiguration {
 	b.FilterRunning = &value
+	return b
+}
+
+// WithScrapeClass sets the ScrapeClass field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClass field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithScrapeClass(value string) *EndpointApplyConfiguration {
+	b.ScrapeClass = &value
 	return b
 }

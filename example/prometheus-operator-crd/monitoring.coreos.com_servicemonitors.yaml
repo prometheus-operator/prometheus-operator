@@ -444,6 +444,9 @@ spec:
                       - http
                       - https
                       type: string
+                    scrapeClass:
+                      description: The scrape class to apply.
+                      type: string
                     scrapeTimeout:
                       description: Timeout after which the scrape is ended If not
                         specified, the Prometheus global scrape timeout is used unless

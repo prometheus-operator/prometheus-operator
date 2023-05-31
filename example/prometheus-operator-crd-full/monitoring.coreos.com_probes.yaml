@@ -351,6 +351,9 @@ spec:
                   samples that will be accepted.
                 format: int64
                 type: integer
+              scrapeClass:
+                description: The scrape class to apply.
+                type: string
               scrapeTimeout:
                 description: Timeout for scraping metrics from the Prometheus exporter.
                   If not specified, the Prometheus global scrape timeout is used.

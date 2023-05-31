@@ -91,6 +91,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ExcludedFromEnforcement         []ObjectReferenceApplyConfiguration                  `json:"excludedFromEnforcement,omitempty"`
 	HostNetwork                     *bool                                                `json:"hostNetwork,omitempty"`
 	PodTargetLabels                 []string                                             `json:"podTargetLabels,omitempty"`
+	ScrapeClasses                   []PrometheusScrapeClassApplyConfiguration            `json:"scrapeClasses,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -677,6 +678,19 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithHostNetwork(value bool) *
 func (b *CommonPrometheusFieldsApplyConfiguration) WithPodTargetLabels(values ...string) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
 		b.PodTargetLabels = append(b.PodTargetLabels, values[i])
+	}
+	return b
+}
+
+// WithScrapeClasses adds the given value to the ScrapeClasses field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeClasses field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClasses(values ...*PrometheusScrapeClassApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithScrapeClasses")
+		}
+		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
 	}
 	return b
 }

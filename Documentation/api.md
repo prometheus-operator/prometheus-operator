@@ -1214,6 +1214,17 @@ uint64
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -2243,6 +2254,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </td>
 <td>
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">
+[]PrometheusScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
 </td>
 </tr>
 <tr>
@@ -5020,7 +5045,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.CommonScrapeClassFields">CommonScrapeClassFields</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
 </p>
 <div>
 <p>Authorization contains optional <code>Authorization</code> header configuration.
@@ -6137,6 +6162,86 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">
+[]PrometheusScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.CommonScrapeClassFields">CommonScrapeClassFields
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">PrometheusScrapeClass</a>)
+</p>
+<div>
+<p>CommonScrapeClassFields defines a scrape class.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the scrape class, e.g. &ldquo;istio-mtls&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>default</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Default designates a scrape class as the default class.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>TLSConfig section for scrapes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<p>Authorization section for scrapes.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -6857,6 +6962,17 @@ bool
 <td>
 <p>Drop pods that are not running. (Failed, Succeeded). Enabled by default.
 More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>
@@ -7590,6 +7706,17 @@ bool
 More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig
@@ -8056,6 +8183,17 @@ uint64
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig
@@ -8466,6 +8604,72 @@ string
 </td>
 <td>
 <p>Content of Prometheus rule file</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PrometheusScrapeClass">PrometheusScrapeClass
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>PrometheusScrapeClass defines an inline scrape class for a given Prometheus server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the scrape class, e.g. &ldquo;istio-mtls&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>default</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Default designates a scrape class as the default class.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>TLSConfig section for scrapes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<p>Authorization section for scrapes.</p>
 </td>
 </tr>
 </tbody>
@@ -9452,6 +9656,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </td>
 <td>
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">
+[]PrometheusScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
 </td>
 </tr>
 <tr>
@@ -11500,7 +11718,7 @@ EmbeddedPersistentVolumeClaim
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.CommonScrapeClassFields">CommonScrapeClassFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>TLSConfig extends the safe TLS configuration with file parameters.</p>
@@ -14267,6 +14485,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">
+[]PrometheusScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -14438,6 +14670,17 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -16868,6 +17111,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusScrapeClass">
+[]PrometheusScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig
@@ -17640,6 +17897,17 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>

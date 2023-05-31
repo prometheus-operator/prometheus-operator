@@ -616,3 +616,16 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithPodTargetLabels(values ...st
 	}
 	return b
 }
+
+// WithScrapeClasses adds the given value to the ScrapeClasses field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeClasses field.
+func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClasses(values ...*v1.PrometheusScrapeClassApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithScrapeClasses")
+		}
+		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
+	}
+	return b
+}

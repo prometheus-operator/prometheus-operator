@@ -30,6 +30,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	MetricsPath     *string                          `json:"metricsPath,omitempty"`
 	HonorTimestamps *bool                            `json:"honorTimestamps,omitempty"`
 	HonorLabels     *bool                            `json:"honorLabels,omitempty"`
+	ScrapeClass     *string                          `json:"scrapeClass,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -111,5 +112,13 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHonorTimestamps(value bool) *Sc
 // If called multiple times, the HonorLabels field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithHonorLabels(value bool) *ScrapeConfigSpecApplyConfiguration {
 	b.HonorLabels = &value
+	return b
+}
+
+// WithScrapeClass sets the ScrapeClass field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClass field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClass(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeClass = &value
 	return b
 }

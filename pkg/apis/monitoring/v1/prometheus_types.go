@@ -375,7 +375,7 @@ type CommonPrometheusFields struct {
 	// This is experimental feature and might change in the future.
 	// +listType=map
 	// +listMapKey=name
-	ScrapeClasses []InlineScrapeClass `json:"scrapeClasses,omitempty"`
+	ScrapeClasses []PrometheusScrapeClass `json:"scrapeClasses,omitempty"`
 }
 
 // +genclient
@@ -1025,7 +1025,7 @@ func (e *AuthorizationValidationError) Error() string {
 	return e.err
 }
 
-// InlineScrapeClass defines a scrape class for a given Prometheus server.
-type InlineScrapeClass struct {
+// PrometheusScrapeClass defines an inline scrape class for a given Prometheus server.
+type PrometheusScrapeClass struct {
 	CommonScrapeClassFields `json:",inline"`
 }
