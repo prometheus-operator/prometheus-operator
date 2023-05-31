@@ -435,6 +435,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	tsdb monitoringv1.TSDBSpec,
 	alerting *monitoringv1.AlertingSpec,
 	remoteRead []monitoringv1.RemoteReadSpec,
+	tracingConfig *monitoringv1.PrometheusTracingConfig,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
@@ -508,6 +509,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	// Remote read config
 	if len(remoteRead) > 0 {
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
+	}
+
+	if tracingConfig != nil {
+		tracingcfg, err := cg.generateTracingConfig(tracingConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "generating tracing configuration failed")
+		}
+
+		cfg = append(cfg, tracingcfg)
 	}
 
 	return yaml.Marshal(cfg)
@@ -2221,4 +2231,73 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 	return cfg
+}
+
+func (cg *ConfigGenerator) generateTracingConfig(tracingConfig *monitoringv1.PrometheusTracingConfig) (yaml.MapItem, error) {
+	cfg := yaml.MapSlice{}
+	objMeta := cg.prom.GetObjectMeta()
+
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "endpoint",
+		Value: tracingConfig.Endpoint,
+	})
+
+	if tracingConfig.ClientType != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "client_type",
+			Value: tracingConfig.ClientType,
+		})
+	}
+
+	if tracingConfig.SamplingFraction != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "sampling_fraction",
+			Value: tracingConfig.SamplingFraction.AsApproximateFloat64(),
+		})
+	}
+
+	if tracingConfig.Insecure != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "insecure",
+			Value: tracingConfig.Insecure,
+		})
+	}
+
+	if len(tracingConfig.Headers) > 0 {
+		headers := yaml.MapSlice{}
+		for key, value := range tracingConfig.Headers {
+			headers = append(headers, yaml.MapItem{
+				Key:   key,
+				Value: value,
+			})
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "headers",
+			Value: headers,
+		})
+	}
+
+	if tracingConfig.Compression != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "compression",
+			Value: tracingConfig.Compression,
+		})
+	}
+
+	if tracingConfig.Timeout != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "timeout",
+			Value: tracingConfig.Timeout,
+		})
+	}
+
+	if tracingConfig.TLSConfig != nil {
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), tracingConfig.TLSConfig)
+	}
+
+	return yaml.MapItem{
+		Key:   "tracing",
+		Value: cfg,
+	}, nil
 }
