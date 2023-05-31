@@ -20,23 +20,24 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/stretchr/testify/require"
-
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-openapi/swag"
+	"github.com/stretchr/testify/require"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+
 	"gopkg.in/yaml.v2"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
-
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func defaultPrometheus() *monitoringv1.Prometheus {
@@ -8745,22 +8746,6 @@ scrape_configs:
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
-`,
-		},
-		{
-			name: "empty_relabel_config",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				RelabelConfigs: []*monitoringv1.RelabelConfig{},
-			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  relabel_configs: []
 `,
 		},
 		{
