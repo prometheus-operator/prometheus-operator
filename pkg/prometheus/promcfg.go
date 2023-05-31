@@ -2132,6 +2132,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
+	relabelings := initRelabelings()
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	if sc.Spec.HonorTimestamps != nil {
@@ -2147,10 +2148,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	if sc.Spec.RelabelConfigs != nil {
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "relabel_configs",
-			Value: labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs),
-		})
+		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
+		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
 
 	// StaticConfig
