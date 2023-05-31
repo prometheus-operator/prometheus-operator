@@ -1,3 +1,7 @@
+## 0.65.2 / 2022-05-31
+
+* [BUGFIX] Fix relabeling issue in `ScrapeConfig` CRD. #5611
+
 ## 0.65.1 / 2022-05-05
 
 * [BUGFIX] Fix panic when ScrapeConfig CRD is not installed. #5550
