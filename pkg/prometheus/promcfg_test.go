@@ -5510,6 +5510,43 @@ remote_read:
 `,
 		},
 		{
+			version: "v2.25.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:             "http://example.com",
+				FollowRedirects: pointer.Bool(true),
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+`,
+		},
+		{
+			version: "v2.26.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL:             "http://example.com",
+				FollowRedirects: pointer.Bool(false),
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_read:
+- url: http://example.com
+  remote_timeout: 30s
+  follow_redirects: false
+`,
+		},
+		{
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",

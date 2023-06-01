@@ -4364,6 +4364,10 @@
                           "description": "Whether to use the external labels as selectors for the remote read endpoint. Requires Prometheus v2.34.0 and above.",
                           "type": "boolean"
                         },
+                        "followRedirects": {
+                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects. Requires Prometheus v2.26.0 and above.",
+                          "type": "boolean"
+                        },
                         "headers": {
                           "additionalProperties": {
                             "type": "string"
