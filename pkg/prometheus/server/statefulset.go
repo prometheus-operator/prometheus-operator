@@ -157,7 +157,7 @@ func makeStatefulSet(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Labels:      config.Labels.Merge(labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,

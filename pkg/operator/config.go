@@ -37,6 +37,7 @@ type Config struct {
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
 	Namespaces                   Namespaces
+	Annotations                  Annotations
 	Labels                       Labels
 	LocalHost                    string
 	LogLevel                     string
@@ -56,6 +57,55 @@ type ContainerConfig struct {
 	MemoryLimit   string
 	Image         string
 	EnableProbes  bool
+}
+
+type Annotations struct {
+	AnnotationsString string
+	AnnotationsMap    map[string]string
+}
+
+// Implement the flag.Value interface
+func (annotations *Annotations) String() string {
+	return annotations.AnnotationsString
+}
+
+// Merge labels create a new map with labels merged.
+func (annotations *Annotations) Merge(otherAnnotations map[string]string) map[string]string {
+	mergedAnnotations := map[string]string{}
+
+	for key, value := range otherAnnotations {
+		mergedAnnotations[key] = value
+	}
+
+	for key, value := range annotations.AnnotationsMap {
+		mergedAnnotations[key] = value
+	}
+	return mergedAnnotations
+}
+
+// Set implements the flag.Set interface.
+func (annotations *Annotations) Set(value string) error {
+	m := map[string]string{}
+	if value != "" {
+		splited := strings.Split(value, ",")
+		for _, pair := range splited {
+			sp := strings.Split(pair, "=")
+			m[sp[0]] = sp[1]
+		}
+	}
+	(*annotations).AnnotationsMap = m
+	(*annotations).AnnotationsString = value
+	return nil
+}
+
+// Returns an arrary with the keys of the label map sorted
+func (annotations *Annotations) SortedKeys() []string {
+	keys := make([]string, 0, len(annotations.AnnotationsMap))
+	for key := range annotations.AnnotationsMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type Labels struct {
