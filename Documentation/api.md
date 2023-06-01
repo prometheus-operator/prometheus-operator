@@ -2202,8 +2202,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -6108,8 +6109,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -9425,8 +9427,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -14393,8 +14396,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -16994,8 +16998,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>

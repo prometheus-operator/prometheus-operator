@@ -6828,7 +6828,7 @@
                     "type": "array"
                   },
                   "walCompression": {
-                    "description": "Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0.",
+                    "description": "Configures compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. WAL compression is enabled by default for Prometheus >= 2.20.0",
                     "type": "boolean"
                   },
                   "web": {
