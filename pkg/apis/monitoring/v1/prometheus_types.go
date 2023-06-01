@@ -533,13 +533,14 @@ type PrometheusSpec struct {
 }
 
 type PrometheusTracingConfig struct {
-	// Client used to export the traces. Options are "http" or "grpc".
+	// Client used to export the traces. Supported values are `http` or `grpc`.
 	//+kubebuilder:validation:Enum=http;grpc
 	// +optional
 	ClientType *string `json:"clientType"`
 
 	// Endpoint to send the traces to. Should be provided in format <host>:<port>.
-	//+required
+	// +kubebuilder:validation:MinLength:=1
+	// +required
 	Endpoint string `json:"endpoint"`
 
 	// Sets the probability a given trace will be sampled. Must be a float from 0 through 1.
@@ -554,12 +555,12 @@ type PrometheusTracingConfig struct {
 	// +optional
 	Headers map[string]string `json:"headers"`
 
-	// Compression key for supported compression types. Supported compression: gzip
+	// Compression key for supported compression types. The only supported value is `gzip`.
 	//+kubebuilder:validation:Enum=gzip
 	// +optional
 	Compression *string `json:"compression"`
 
-	// Maximum time the exporter will wait for each batch export. Default '10s'
+	// Maximum time the exporter will wait for each batch export.
 	// +optional
 	Timeout *Duration `json:"timeout"`
 
