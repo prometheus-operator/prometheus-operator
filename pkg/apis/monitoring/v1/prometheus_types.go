@@ -509,7 +509,7 @@ type PrometheusSpec struct {
 	// For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 	// AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-	// This is still experimental in Prometheus so it may change in any upcoming release.
+	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 	// Exemplars related settings that are runtime reloadable.
 	// It requires to enable the exemplar storage feature to be effective.

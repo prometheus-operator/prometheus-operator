@@ -2513,7 +2513,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -9736,7 +9736,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
