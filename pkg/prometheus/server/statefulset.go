@@ -736,7 +736,7 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeName(p)
+			volName := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
 			container.VolumeMounts = append(
 				container.VolumeMounts,
