@@ -80,7 +80,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(tr.Name),
 			Labels:      config.Labels.Merge(tr.ObjectMeta.Labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         tr.APIVersion,

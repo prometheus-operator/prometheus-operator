@@ -95,6 +95,7 @@ type Config struct {
 	ReloaderConfig               operator.ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   operator.Namespaces
+	Annotations                  operator.Annotations
 	Labels                       operator.Labels
 	AlertManagerSelector         string
 	SecretListWatchSelector      string
@@ -140,6 +141,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 			ReloaderConfig:               c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespaces:                   c.Namespaces,
+			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 			AlertManagerSelector:         c.AlertManagerSelector,
 			SecretListWatchSelector:      c.SecretListWatchSelector,

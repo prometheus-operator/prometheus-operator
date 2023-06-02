@@ -108,8 +108,9 @@ func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ConfigSecretName(p),
-			Labels: config.Labels.Merge(ManagedByOperatorLabels),
+			Name:        ConfigSecretName(p),
+			Annotations: config.Annotations.AnnotationsMap,
+			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,

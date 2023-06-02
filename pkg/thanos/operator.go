@@ -79,6 +79,7 @@ type Config struct {
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
 	Namespaces             operator.Namespaces
+	Annotations            operator.Annotations
 	Labels                 operator.Labels
 	LocalHost              string
 	LogLevel               string
@@ -127,6 +128,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 			ReloaderConfig:         conf.ReloaderConfig,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
+			Annotations:            conf.Annotations,
 			Labels:                 conf.Labels,
 			LocalHost:              conf.LocalHost,
 			LogLevel:               conf.LogLevel,
