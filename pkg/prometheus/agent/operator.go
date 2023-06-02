@@ -48,10 +48,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-const (
-	resyncPeriod = 5 * time.Minute
-)
-
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
 type Operator struct {
@@ -83,72 +79,46 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
-	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating cluster config failed")
-	}
-
-	client, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
-	}
-
-	mclient, err := monitoringclient.NewForConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating monitoring client failed")
-	}
-
-	if _, err := labels.Parse(conf.PromSelector); err != nil {
-		return nil, errors.Wrap(err, "can not parse prometheus-agent selector value")
-	}
-
-	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
-	if err != nil {
-		return nil, errors.Wrap(err, "can not parse secrets selector value")
-	}
-
-	// Check prerequisites for ScrapeConfig
-	verbs := map[string][]string{
-		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
-	}
-	var scrapeConfigSupported bool
-	cc, err := k8sutil.NewCRDChecker(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
-	}
-
-	var namespaces = make([]string, 0, len(conf.Namespaces.AllowList))
-	for k := range conf.Namespaces.AllowList {
-		namespaces = append(namespaces, k)
-	}
-
-	err = cc.CheckPrerequisites(ctx,
-		namespaces,
-		verbs,
-		monitoringv1alpha1.SchemeGroupVersion.String(),
-		monitoringv1alpha1.ScrapeConfigName)
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
-	case err != nil:
-		return nil, errors.Wrap(err, "failed to check prerequisites for the ScrapeConfig CRD ")
-	default:
-		scrapeConfigSupported = true
-	}
+func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer, cm *prompkg.CommonConfig) (*Operator, error) {
 
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
 	c := &Operator{
-		kclient:               client,
-		mclient:               mclient,
+		kclient:               cm.KClient,
+		mclient:               cm.MClient,
 		logger:                logger,
+		smonInfs:              cm.SmonInfs,
+		pmonInfs:              cm.PmonInfs,
+		probeInfs:             cm.ProbeInfs,
+		cmapInfs:              cm.CmapInfs,
+		secrInfs:              cm.SecrInfs,
+		ssetInfs:              cm.SsetInfs,
+		sconInfs:              cm.SconInfs,
 		config:                conf,
 		metrics:               operator.NewMetrics(r),
 		reconciliations:       &operator.ReconciliationTracker{},
-		scrapeConfigSupported: scrapeConfigSupported,
+		scrapeConfigSupported: cm.ScrapeConfigSupported,
 	}
+
+	var err error
+	// init promAgInfs
+	c.promInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			conf.Namespaces.PrometheusAllowList,
+			conf.Namespaces.DenyList,
+			c.mclient,
+			prompkg.ResyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = conf.PromSelector.String()
+			},
+		),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
+	}
+
 	c.metrics.MustRegister(
 		c.reconciliations,
 	)
@@ -161,22 +131,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		r,
 	)
 
-	c.promInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.PrometheusAllowList,
-			c.config.Namespaces.DenyList,
-			mclient,
-			resyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = c.config.PromSelector
-			},
-		),
-		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating prometheus-agent informers")
-	}
-
 	var promStores []cache.Store
 	for _, informer := range c.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
@@ -184,55 +138,13 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	c.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
 
-	c.smonInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
-			c.config.Namespaces.DenyList,
-			mclient,
-			resyncPeriod,
-			nil,
-		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ServiceMonitorName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating servicemonitor informers")
-	}
-
-	c.pmonInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
-			c.config.Namespaces.DenyList,
-			mclient,
-			resyncPeriod,
-			nil,
-		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PodMonitorName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating podmonitor informers")
-	}
-
-	c.probeInfs, err = informers.NewInformersForResource(
-		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList,
-			c.config.Namespaces.DenyList,
-			mclient,
-			resyncPeriod,
-			nil,
-		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ProbeName),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating probe informers")
-	}
-
 	if c.scrapeConfigSupported {
 		c.sconInfs, err = informers.NewInformersForResource(
 			informers.NewMonitoringInformerFactories(
 				c.config.Namespaces.AllowList,
 				c.config.Namespaces.DenyList,
-				mclient,
-				resyncPeriod,
+				c.mclient,
+				prompkg.ResyncPeriod,
 				nil,
 			),
 			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
@@ -240,52 +152,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating scrapeconfig informers")
 		}
-	}
-
-	c.cmapInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
-			c.config.Namespaces.PrometheusAllowList,
-			c.config.Namespaces.DenyList,
-			c.kclient,
-			resyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = prompkg.LabelPrometheusName
-			},
-		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating configmap informers")
-	}
-
-	c.secrInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
-			c.config.Namespaces.PrometheusAllowList,
-			c.config.Namespaces.DenyList,
-			c.kclient,
-			resyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.FieldSelector = secretListWatchSelector.String()
-			},
-		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating secrets informers")
-	}
-
-	c.ssetInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
-			c.config.Namespaces.PrometheusAllowList,
-			c.config.Namespaces.DenyList,
-			c.kclient,
-			resyncPeriod,
-			nil,
-		),
-		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
@@ -298,7 +164,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		// privileged and a regular cache.ListWatch will be used. In this case
 		// watching works and we do not need to resync so frequently.
 		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
+			nsResyncPeriod = prompkg.ResyncPeriod
 		}
 		nsInf := cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(

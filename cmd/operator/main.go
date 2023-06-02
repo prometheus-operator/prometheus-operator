@@ -36,6 +36,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -173,7 +174,7 @@ func init() {
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")
 	flagset.StringVar(&cfg.LogLevel, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", ")))
-	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.")
+	flagset.Var(cfg.PromSelector, "prometheus-instance-selector", "Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	flagset.StringVar(&cfg.SecretListWatchSelector, "secret-field-selector", "", "Field selector to filter Secrets to watch")
@@ -260,7 +261,14 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
+	cm, err := prompkg.InitCommonConfig(ctx, cfg, log.With(logger, "component", "prometheusoperator"))
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating common config failed: ", err)
+		cancel()
+		return 1
+	}
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, cm)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
@@ -294,7 +302,7 @@ func Main() int {
 		cancel()
 		return 1
 	default:
-		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r, cm)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
