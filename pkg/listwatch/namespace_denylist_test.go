@@ -34,11 +34,11 @@ type mockListerWatcher struct {
 	stopped    bool
 }
 
-func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+func (m *mockListerWatcher) List(_ metav1.ListOptions) (runtime.Object, error) {
 	return m.listResult, nil
 }
 
-func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+func (m *mockListerWatcher) Watch(_ metav1.ListOptions) (watch.Interface, error) {
 	return m, nil
 }
 

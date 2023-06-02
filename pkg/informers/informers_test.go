@@ -37,7 +37,7 @@ type mockFactory struct {
 	objects    map[string]runtime.Object
 }
 
-func (m *mockFactory) List(selector labels.Selector) (ret []runtime.Object, err error) {
+func (m *mockFactory) List(_ labels.Selector) (ret []runtime.Object, err error) {
 	panic("implement me")
 }
 
@@ -49,7 +49,7 @@ func (m *mockFactory) Get(name string) (runtime.Object, error) {
 	return nil, errors.NewNotFound(schema.GroupResource{}, name)
 }
 
-func (m *mockFactory) ByNamespace(namespace string) cache.GenericNamespaceLister {
+func (m *mockFactory) ByNamespace(_ string) cache.GenericNamespaceLister {
 	panic("not implemented")
 }
 
@@ -61,7 +61,7 @@ func (m *mockFactory) Lister() cache.GenericLister {
 	return m
 }
 
-func (m *mockFactory) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
+func (m *mockFactory) ForResource(_ string, _ schema.GroupVersionResource) (InformLister, error) {
 	return m, nil
 }
 

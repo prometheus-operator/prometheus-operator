@@ -73,12 +73,12 @@ func main() {
 	_ = http.ListenAndServe(address, nil)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func handler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, time.Now().String())
 	fmt.Fprint(w, "\nAppVersion: "+os.Getenv("VERSION"))
 }
 
-func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {
+func checkBasicAuth(_ http.ResponseWriter, r *http.Request) bool {
 	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 {
 		return false
@@ -97,7 +97,7 @@ func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {
 	return pair[0] == "user" && pair[1] == "pass"
 }
 
-func checkBearerAuth(w http.ResponseWriter, r *http.Request) bool {
+func checkBearerAuth(_ http.ResponseWriter, r *http.Request) bool {
 	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 {
 		return false
