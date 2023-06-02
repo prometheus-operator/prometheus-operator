@@ -69,7 +69,7 @@ func (annotations *Annotations) String() string {
 	return annotations.AnnotationsString
 }
 
-// Merge labels create a new map with labels merged.
+// Merge annotations create a new map with annotations merged.
 func (annotations *Annotations) Merge(otherAnnotations map[string]string) map[string]string {
 	mergedAnnotations := map[string]string{}
 
