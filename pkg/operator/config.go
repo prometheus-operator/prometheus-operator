@@ -98,7 +98,7 @@ func (annotations *Annotations) Set(value string) error {
 	return nil
 }
 
-// Returns an arrary with the keys of the label map sorted
+// Returns an arrary with the keys of the annotation map sorted
 func (annotations *Annotations) SortedKeys() []string {
 	keys := make([]string, 0, len(annotations.AnnotationsMap))
 	for key := range annotations.AnnotationsMap {
