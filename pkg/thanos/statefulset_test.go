@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	containerName        = "thanos-ruler"
-	governingServiceName = "thanos-ruler-operated"
+	containerName = "thanos-ruler"
 )
 
 var (
