@@ -934,7 +934,7 @@ func TestStatefulSetServiceName(t *testing.T) {
 
 	// assert set correctly if not nil
 	expect := "thanos-ruler-operated"
-	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
