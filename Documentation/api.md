@@ -9946,7 +9946,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Client used to export the traces. Options are &ldquo;http&rdquo; or &ldquo;grpc&rdquo;.</p>
+<p>Client used to export the traces. Supported values are <code>http</code> or <code>grpc</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10005,7 +10005,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Compression key for supported compression types. Supported compression: gzip</p>
+<p>Compression key for supported compression types. The only supported value is <code>gzip</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10019,7 +10019,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Maximum time the exporter will wait for each batch export. Default &lsquo;10s&rsquo;</p>
+<p>Maximum time the exporter will wait for each batch export.</p>
 </td>
 </tr>
 <tr>
