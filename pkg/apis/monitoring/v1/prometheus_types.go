@@ -359,8 +359,9 @@ type CommonPrometheusFields struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
-	// Enable compression of the write-ahead log using Snappy. This flag is
-	// only available in versions of Prometheus >= 2.11.0.
+	// Configures compression of the write-ahead log using Snappy.
+	// This flag is only available in versions of Prometheus >= 2.11.0.
+	// WAL compression is enabled by default for Prometheus >= 2.20.0
 	WALCompression *bool `json:"walCompression,omitempty"`
 	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.

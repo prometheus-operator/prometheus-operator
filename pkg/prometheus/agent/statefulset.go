@@ -201,7 +201,7 @@ func makeStatefulSetSpec(
 
 	cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendAgentArgs(promArgs, cg)
+	promArgs = appendAgentArgs(promArgs, cg, cpf.WALCompression)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -473,11 +473,21 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 }
 
 // appendAgentArgs appends arguments that are only valid for the Prometheus agent.
-func appendAgentArgs(promArgs []monitoringv1.Argument, cg *prompkg.ConfigGenerator) []monitoringv1.Argument {
+func appendAgentArgs(
+	promArgs []monitoringv1.Argument,
+	cg *prompkg.ConfigGenerator,
+	walCompression *bool) []monitoringv1.Argument {
 
 	promArgs = append(promArgs,
 		monitoringv1.Argument{Name: "storage.agent.path", Value: prompkg.StorageDir},
 	)
 
+	if walCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.agent.wal-compression"}
+		if *walCompression {
+			arg.Name = "storage.agent.wal-compression"
+		}
+		promArgs = cg.AppendCommandlineArgument(promArgs, arg)
+	}
 	return promArgs
 }
