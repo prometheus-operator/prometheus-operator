@@ -928,7 +928,7 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 func TestStatefulSetServiceName(t *testing.T) {
 	tr := monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints:  emptyQueryEndpoints,
+			QueryEndpoints: emptyQueryEndpoints,
 		},
 	}
 
