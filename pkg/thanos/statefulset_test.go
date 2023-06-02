@@ -31,7 +31,8 @@ import (
 )
 
 const (
-	containerName = "thanos-ruler"
+	containerName        = "thanos-ruler"
+	governingServiceName = "thanos-ruler-operated"
 )
 
 var (
@@ -932,14 +933,14 @@ func TestStatefulSetServiceName(t *testing.T) {
 		},
 	}
 
-	// assert set correctly if not nil
-	expect := "thanos-ruler-operated"
-	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	// assert set correctly
+	expect := governingServiceName
+	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if statefulSet.ServiceName != expect {
-		t.Fatalf("expected ServiceName to be %s but got %s", expect, statefulSet.ServiceName)
+	if spec.ServiceName != expect {
+		t.Fatalf("expected ServiceName to be %s but got %s", expect, spec.ServiceName)
 	}
 }
 
