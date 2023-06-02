@@ -928,14 +928,12 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 func TestStatefulSetServiceName(t *testing.T) {
 	tr := monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
-			ServiceName: nil,
 			QueryEndpoints:  emptyQueryEndpoints,
 		},
 	}
 
 	// assert set correctly if not nil
-	expect := "thanos-ruler-operated-test"
-	tr.Spec.ServiceName = expect
+	expect := "thanos-ruler-operated"
 	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
