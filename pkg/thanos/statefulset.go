@@ -440,7 +440,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	return &appsv1.StatefulSetSpec{
 		Replicas:            tr.Spec.Replicas,
 		MinReadySeconds:     minReadySeconds,
-		ServiceName:         governingServiceName,
+		ServiceName: governingServiceName,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
