@@ -235,8 +235,9 @@ type AlertmanagerSpec struct {
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
-	// If you don't want the kubelet to automatically mount a ServiceAccount's API credentials, you can opt out of the default behavior.
-	// You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token for a pod by setting automountServiceAccountToken: false on the pod spec.
+	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
+	// +optional
 	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
 }
 
