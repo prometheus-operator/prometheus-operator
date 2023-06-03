@@ -1479,11 +1479,10 @@ spec:
                     type: array
                 type: object
               automountServiceAccountToken:
-                description: 'If you don''t want the kubelet to automatically mount
-                  a ServiceAccount''s API credentials, you can opt out of the default
-                  behavior. You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token
-                  for a pod by setting automountServiceAccountToken: false on the
-                  pod spec.'
+                description: 'AutomountServiceAccountToken indicates whether a service
+                  account token should be automatically mounted in the pod. If the
+                  service account has `automountServiceAccountToken: true`, set the
+                  field to `false` to opt out of automounting API credentials.'
                 type: boolean
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.

@@ -730,8 +730,9 @@ bool
 </em>
 </td>
 <td>
-<p>If you don&rsquo;t want the kubelet to automatically mount a ServiceAccount&rsquo;s API credentials, you can opt out of the default behavior.
-You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token for a pod by setting automountServiceAccountToken: false on the pod spec.</p>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
 </td>
 </tr>
 </table>
@@ -4784,8 +4785,9 @@ bool
 </em>
 </td>
 <td>
-<p>If you don&rsquo;t want the kubelet to automatically mount a ServiceAccount&rsquo;s API credentials, you can opt out of the default behavior.
-You can opt out of automounting API credentials on /var/run/secrets/kubernetes.io/serviceaccount/token for a pod by setting automountServiceAccountToken: false on the pod spec.</p>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
 </td>
 </tr>
 </tbody>
