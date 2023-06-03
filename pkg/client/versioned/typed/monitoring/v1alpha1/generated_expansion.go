@@ -19,3 +19,5 @@ package v1alpha1
 type AlertmanagerConfigExpansion interface{}
 
 type PrometheusAgentExpansion interface{}
+
+type ScrapeConfigExpansion interface{}

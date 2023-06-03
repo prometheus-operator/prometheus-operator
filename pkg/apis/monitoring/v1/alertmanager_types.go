@@ -285,6 +285,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default OpsGenie API Key.
 	OpsGenieAPIKey *v1.SecretKeySelector `json:"opsGenieApiKey,omitempty"`
+
+	// The default Pagerduty URL.
+	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -313,10 +316,30 @@ type AlertmanagerStatus struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
+func (a *Alertmanager) ExpectedReplicas() int {
+	if a.Spec.Replicas == nil {
+		return 1
+	}
+	return int(*a.Spec.Replicas)
+}
+
+func (a *Alertmanager) SetReplicas(i int)            { a.Status.Replicas = int32(i) }
+func (a *Alertmanager) SetUpdatedReplicas(i int)     { a.Status.UpdatedReplicas = int32(i) }
+func (a *Alertmanager) SetAvailableReplicas(i int)   { a.Status.AvailableReplicas = int32(i) }
+func (a *Alertmanager) SetUnavailableReplicas(i int) { a.Status.UnavailableReplicas = int32(i) }
+
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 // +k8s:openapi-gen=true
 type AlertmanagerWebSpec struct {
 	WebConfigFileFields `json:",inline"`
+	// Maximum number of GET requests processed concurrently. This corresponds to the
+	// Alertmanager's `--web.get-concurrency` flag.
+	// +optional
+	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`
+	// Timeout for HTTP requests. This corresponds to the Alertmanager's
+	// `--web.timeout` flag.
+	// +optional
+	Timeout *uint32 `json:"timeout,omitempty"`
 }
 
 // HTTPConfig defines a client HTTP configuration.

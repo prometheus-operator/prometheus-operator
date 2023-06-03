@@ -102,6 +102,7 @@ function(params) {
             securityContext: {
               runAsNonRoot: true,
               runAsUser: 65534,
+              seccompProfile: { type: 'RuntimeDefault' },
             },
             serviceAccountName: aw._config.name,
             automountServiceAccountToken: false,

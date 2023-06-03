@@ -144,6 +144,12 @@ func TestStatefulSetVolumes(t *testing.T) {
 									MountPath: "/etc/thanos/rules/rules-configmap-one",
 									SubPath:   "",
 								},
+								{
+									Name:      "additional-volume",
+									ReadOnly:  false,
+									MountPath: "/thanos/additional-volume",
+									SubPath:   "",
+								},
 							},
 						},
 					},
@@ -166,6 +172,14 @@ func TestStatefulSetVolumes(t *testing.T) {
 								},
 							},
 						},
+						{
+							Name: "additional-volume",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{
+									Medium: "",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -175,7 +189,27 @@ func TestStatefulSetVolumes(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 		},
-		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Volumes: []v1.Volume{
+				{
+					Name: "additional-volume",
+					VolumeSource: v1.VolumeSource{
+						EmptyDir: &v1.EmptyDirVolumeSource{
+							Medium: "",
+						},
+					},
+				},
+			},
+			VolumeMounts: []v1.VolumeMount{
+				{
+					Name:      "additional-volume",
+					ReadOnly:  false,
+					MountPath: "/thanos/additional-volume",
+					SubPath:   "",
+				},
+			},
+		},
 	}, defaultTestConfig, []string{"rules-configmap-one"}, "")
 	require.NoError(t, err)
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
@@ -888,6 +922,24 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 	}
 	if statefulSet.MinReadySeconds != int32(expect) {
 		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	}
+}
+
+func TestStatefulSetServiceName(t *testing.T) {
+	tr := monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+		},
+	}
+
+	// assert set correctly
+	expect := governingServiceName
+	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if spec.ServiceName != expect {
+		t.Fatalf("expected ServiceName to be %s but got %s", expect, spec.ServiceName)
 	}
 }
 

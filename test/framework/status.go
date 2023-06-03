@@ -32,11 +32,11 @@ type resourceStatus struct {
 
 // WaitForResourceAvailable waits for a monitoring resource to report itself as being reconciled & available.
 // If the resource isn't available within the given timeout, it returns an error.
-func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceStatus func() (resourceStatus, error), timeout time.Duration) error {
+func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceStatus func(context.Context) (resourceStatus, error), timeout time.Duration) error {
 	var pollErr error
-	if err := wait.Poll(time.Second, timeout, func() (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var status resourceStatus
-		status, pollErr = getResourceStatus()
+		status, pollErr = getResourceStatus(ctx)
 		if pollErr != nil {
 			return false, nil
 		}
@@ -48,6 +48,10 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 
 		var reconciled, available *monitoringv1.Condition
 		for _, cond := range status.conditions {
+			// We need to create a new address for 'cond' inside the loop, otherwise we change the value of
+			// 'available' and 'reconciled' will have their pointer changed on every loop iteration.
+			// https://medium.com/swlh/use-pointer-of-for-range-loop-variable-in-go-3d3481f7ffc9
+			cond := cond
 			if cond.Type == monitoringv1.Available {
 				available = &cond
 			}

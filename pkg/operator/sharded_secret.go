@@ -132,15 +132,7 @@ func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient c
 			return errors.Wrapf(err, "failed to delete excess secret shard %q", secretName)
 		}
 	}
-	// Cleanup possibly existing secret of older non-sharded secret versions.
-	// TODO: remove this in future versions to save the unnecessary API calls.
-	err := sClient.Delete(ctx, sNamePrefix, metav1.DeleteOptions{})
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return errors.Wrapf(err, "failed to delete non-sharded secret %q from older controller version", sNamePrefix)
-	}
+
 	return nil
 }
 

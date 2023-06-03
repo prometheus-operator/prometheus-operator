@@ -93,7 +93,7 @@ func (f *Framework) CreateOrUpdateDeploymentAndWaitUntilReady(ctx context.Contex
 }
 
 func (f *Framework) WaitForDeploymentReady(ctx context.Context, namespace, deploymentName string, expectedGeneration int64) error {
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		d, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -124,7 +124,7 @@ func (f *Framework) DeleteDeployment(ctx context.Context, namespace, name string
 }
 
 func (f *Framework) WaitUntilDeploymentGone(ctx context.Context, kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
-	return wait.Poll(time.Second, timeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		_, err := f.KubeClient.
 			AppsV1beta2().Deployments(namespace).
 			Get(ctx, name, metav1.GetOptions{})

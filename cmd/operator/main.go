@@ -33,6 +33,7 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
@@ -59,7 +60,7 @@ const (
 )
 
 const (
-	defaultReloaderCPU    = "100m"
+	defaultReloaderCPU    = "10m"
 	defaultReloaderMemory = "50Mi"
 )
 
@@ -157,6 +158,7 @@ func init() {
 	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", defaultReloaderCPU, "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", defaultReloaderMemory, "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", defaultReloaderMemory, "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
+	flagset.BoolVar(&cfg.ReloaderConfig.EnableProbes, "enable-config-reloader-probes", false, "Enable liveness and readiness for the config-reloader container. Default: false")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
@@ -260,28 +262,56 @@ func Main() int {
 
 	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
 		return 1
 	}
 
-	pao, err := prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+	var pao *prometheusagentcontroller.Operator
+	verbs := map[string][]string{
+		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+	}
+
+	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus-agent controller failed: ", err)
+		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
 		cancel()
 		return 1
+	}
+
+	err = cc.CheckPrerequisites(ctx,
+		namespaces(cfg.Namespaces.AllowList).asSlice(),
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.PrometheusAgentName)
+
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "Prometheus agent controller disabled because prerequisites not met", "err", err)
+	case err != nil:
+		level.Error(logger).Log("msg", "failed to check prerequisites for prometheus-agent controller ", "err", err)
+		cancel()
+		return 1
+	default:
+		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
+			cancel()
+			return 1
+		}
 	}
 
 	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		cancel()
 		return 1
 	}
 
 	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()
 		return 1
 	}
@@ -292,7 +322,7 @@ func Main() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
 		cancel()
 		return 1
 	}
@@ -305,7 +335,7 @@ func Main() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprint(os.Stderr, "invalid TLS config", err)
+			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
 			cancel()
 			return 1
 		}
@@ -359,7 +389,9 @@ func Main() int {
 	}))
 
 	wg.Go(func() error { return po.Run(ctx) })
-	wg.Go(func() error { return pao.Run(ctx) })
+	if pao != nil {
+		wg.Go(func() error { return pao.Run(ctx) })
+	}
 	wg.Go(func() error { return ao.Run(ctx) })
 	wg.Go(func() error { return to.Run(ctx) })
 
@@ -370,7 +402,7 @@ func Main() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
 			cancel()
 			return 1
 		}

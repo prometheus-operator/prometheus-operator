@@ -28,6 +28,7 @@ type MonitoringV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AlertmanagerConfigsGetter
 	PrometheusAgentsGetter
+	ScrapeConfigsGetter
 }
 
 // MonitoringV1alpha1Client is used to interact with features provided by the monitoring.coreos.com group.
@@ -41,6 +42,10 @@ func (c *MonitoringV1alpha1Client) AlertmanagerConfigs(namespace string) Alertma
 
 func (c *MonitoringV1alpha1Client) PrometheusAgents(namespace string) PrometheusAgentInterface {
 	return newPrometheusAgents(c, namespace)
+}
+
+func (c *MonitoringV1alpha1Client) ScrapeConfigs(namespace string) ScrapeConfigInterface {
+	return newScrapeConfigs(c, namespace)
 }
 
 // NewForConfig creates a new MonitoringV1alpha1Client for the given config.

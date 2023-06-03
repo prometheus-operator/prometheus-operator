@@ -32,45 +32,38 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 type ResourceSelector struct {
-	l                    log.Logger
-	p                    monitoringv1.PrometheusInterface
-	store                *assets.Store
-	podMonitorLister     ListAllByNamespacer
-	serviceMonitorLister ListAllByNamespacer
-	probeLister          ListAllByNamespacer
-	namespaceInformers   cache.SharedIndexInformer
-	metrics              *operator.Metrics
-	accessor             *operator.Accessor
+	l                  log.Logger
+	p                  monitoringv1.PrometheusInterface
+	store              *assets.Store
+	namespaceInformers cache.SharedIndexInformer
+	metrics            *operator.Metrics
+	accessor           *operator.Accessor
 }
 
-type ListAllByNamespacer interface {
-	ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
-}
+type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, podMonitorLister ListAllByNamespacer, serviceMonitorLister ListAllByNamespacer, probeLister ListAllByNamespacer, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
 	return &ResourceSelector{
-		l:                    l,
-		p:                    p,
-		store:                store,
-		podMonitorLister:     podMonitorLister,
-		serviceMonitorLister: serviceMonitorLister,
-		probeLister:          probeLister,
-		namespaceInformers:   namespaceInformers,
-		metrics:              metrics,
-		accessor:             operator.NewAccessor(l),
+		l:                  l,
+		p:                  p,
+		store:              store,
+		namespaceInformers: namespaceInformers,
+		metrics:            metrics,
+		accessor:           operator.NewAccessor(l),
 	}
 }
 
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -100,7 +93,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[stri
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.serviceMonitorLister.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
+		err := listFn(ns, servMonSelector, func(obj interface{}) {
 			k, ok := rs.accessor.MetaNamespaceKey(obj)
 			if ok {
 				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
@@ -311,7 +304,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*monitoringv1.PodMonitor, error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.PodMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -341,7 +334,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.podMonitorLister.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
+		err := listFn(ns, podMonSelector, func(obj interface{}) {
 			k, ok := rs.accessor.MetaNamespaceKey(obj)
 			if ok {
 				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
@@ -441,7 +434,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 // SelectProbes selects Probes based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monitoringv1.Probe, error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.Probe, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -471,7 +464,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.probeLister.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
+		err := listFn(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
 				probe := obj.(*monitoringv1.Probe).DeepCopy()
 				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
@@ -583,4 +576,68 @@ func validateProberURL(url string) error {
 		}
 	}
 	return nil
+}
+
+// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration.
+func (rs *ResourceSelector) SelectScrapeConfigs(listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+	cpf := rs.p.GetCommonPrometheusFields()
+	objMeta := rs.p.GetObjectMeta()
+	namespaces := []string{}
+
+	// Selectors might overlap. Deduplicate them along the keyFunc.
+	scrapeConfigs := make(map[string]*monitoringv1alpha1.ScrapeConfig)
+
+	sConSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	// If 'ScrapeConfigNamespaceSelector' is nil only check own namespace.
+	if cpf.ScrapeConfigNamespaceSelector == nil {
+		namespaces = append(namespaces, objMeta.GetNamespace())
+	} else {
+		sConNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces, err = operator.ListMatchingNamespaces(sConNSSelector, rs.namespaceInformers)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	level.Debug(rs.l).Log("msg", "filtering namespaces to select ScrapeConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	for _, ns := range namespaces {
+		err := listFn(ns, sConSelector, func(obj interface{}) {
+			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
+				scrapeConfig := obj.(*monitoringv1alpha1.ScrapeConfig).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(scrapeConfig); err != nil {
+					level.Error(rs.l).Log("msg", "failed to set ScrapeConfig type information", "namespace", ns, "err", err)
+					return
+				}
+				scrapeConfigs[k] = scrapeConfig
+			}
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list ScrapeConfigs in namespace %s", ns)
+		}
+	}
+
+	// TODO(xiu): add validation steps
+	scrapeConfigKeys := make([]string, 0)
+	for k := range scrapeConfigs {
+		scrapeConfigKeys = append(scrapeConfigKeys, k)
+	}
+	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
+		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(scrapeConfigs))
+		// since we don't have validation steps, we don't reject anything
+		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, 0)
+	}
+
+	return scrapeConfigs, nil
 }

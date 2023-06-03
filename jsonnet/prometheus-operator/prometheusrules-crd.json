@@ -54,6 +54,10 @@
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
+                        "limit": {
+                          "description": "Limit the number of alerts an alerting rule and series a recording rule can produce. Limit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.",
+                          "type": "integer"
+                        },
                         "name": {
                           "description": "Name of the rule group.",
                           "minLength": 1,
@@ -118,8 +122,7 @@
                         }
                       },
                       "required": [
-                        "name",
-                        "rules"
+                        "name"
                       ],
                       "type": "object"
                     },

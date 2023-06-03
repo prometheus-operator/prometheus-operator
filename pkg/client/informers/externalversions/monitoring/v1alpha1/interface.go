@@ -26,6 +26,8 @@ type Interface interface {
 	AlertmanagerConfigs() AlertmanagerConfigInformer
 	// PrometheusAgents returns a PrometheusAgentInformer.
 	PrometheusAgents() PrometheusAgentInformer
+	// ScrapeConfigs returns a ScrapeConfigInformer.
+	ScrapeConfigs() ScrapeConfigInformer
 }
 
 type version struct {
@@ -47,4 +49,9 @@ func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
 // PrometheusAgents returns a PrometheusAgentInformer.
 func (v *version) PrometheusAgents() PrometheusAgentInformer {
 	return &prometheusAgentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ScrapeConfigs returns a ScrapeConfigInformer.
+func (v *version) ScrapeConfigs() ScrapeConfigInformer {
+	return &scrapeConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

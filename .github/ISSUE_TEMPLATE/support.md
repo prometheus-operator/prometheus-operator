@@ -1,6 +1,6 @@
 ---
 name: Support
-about: If you have questions about the Prometheus Operator
+about: For questions about prometheus-operator. For Helm, go to https://github.com/prometheus-community/helm-charts. For kube-prometheus, go to https://github.com/prometheus-operator/kube-prometheus.
 labels: kind/support
 ---
 

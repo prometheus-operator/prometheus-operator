@@ -16,11 +16,13 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -92,7 +94,7 @@ func (rt *ReconciliationTracker) SetStatus(k string, err error) {
 
 // GetStatus returns the last reconciliation status for the given object.
 // The second value indicates whether the object is known or not.
-func (rt *ReconciliationTracker) GetStatus(k string) (ReconciliationStatus, bool) {
+func (rt *ReconciliationTracker) getStatus(k string) (ReconciliationStatus, bool) {
 	rt.mtx.Lock()
 	defer rt.mtx.Unlock()
 
@@ -102,6 +104,34 @@ func (rt *ReconciliationTracker) GetStatus(k string) (ReconciliationStatus, bool
 	}
 
 	return s, true
+}
+
+// GetReconciledCondition returns a monitoringv1.Condition for the last-known
+// reconciliation status of the given object.
+func (rt *ReconciliationTracker) GetCondition(k string, gen int64) monitoringv1.Condition {
+	condition := monitoringv1.Condition{
+		Type:   monitoringv1.Reconciled,
+		Status: monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+		ObservedGeneration: gen,
+	}
+
+	reconciliationStatus, found := rt.getStatus(k)
+	if !found {
+		condition.Status = monitoringv1.ConditionUnknown
+		condition.Reason = "NotFound"
+		condition.Message = fmt.Sprintf("object %q not found", k)
+	} else {
+		if !reconciliationStatus.Ok() {
+			condition.Status = monitoringv1.ConditionFalse
+		}
+		condition.Reason = reconciliationStatus.Reason()
+		condition.Message = reconciliationStatus.Message()
+	}
+
+	return condition
 }
 
 // ForgetObject removes the given object from the tracker.
@@ -131,6 +161,8 @@ func (rt *ReconciliationTracker) Collect(ch chan<- prometheus.Metric) {
 	for _, st := range rt.statusByObject {
 		if st.Ok() {
 			ok++
+		} else {
+			failed++
 		}
 	}
 

@@ -109,9 +109,9 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	var loopError error
-	err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
-		firing, loopError = framework.CheckThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert)
+		firing, loopError = framework.CheckThanosFiringAlert(ctx, thanosNamespace, thanosService.Name, testAlert)
 		return !firing, nil
 	})
 
@@ -187,7 +187,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	thanosRuler.Spec.Replicas = proto.Int32(2)
-	_, err = framework.UpdateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
+	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,8 +245,8 @@ func testTRMinReadySeconds(t *testing.T) {
 
 	var updated uint32 = 10
 	thanosRuler.Spec.MinReadySeconds = &updated
-	if _, err = framework.UpdateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler); err != nil {
-		t.Fatal("Updating ThanosRuler failed: ", err)
+	if _, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec); err != nil {
+		t.Fatal("patching ThanosRuler failed: ", err)
 	}
 
 	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})

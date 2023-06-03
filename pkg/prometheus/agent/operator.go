@@ -39,7 +39,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,6 +67,7 @@ type Operator struct {
 	smonInfs  *informers.ForResource
 	pmonInfs  *informers.ForResource
 	probeInfs *informers.ForResource
+	sconInfs  *informers.ForResource
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
@@ -77,9 +77,9 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	host                   string
 	config                 operator.Config
 	endpointSliceSupported bool
+	scrapeConfigSupported  bool
 }
 
 // New creates a new controller.
@@ -108,17 +108,46 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
 
+	// Check prerequisites for ScrapeConfig
+	verbs := map[string][]string{
+		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+	}
+	var scrapeConfigSupported bool
+	cc, err := k8sutil.NewCRDChecker(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
+	}
+
+	var namespaces = make([]string, 0, len(conf.Namespaces.AllowList))
+	for k := range conf.Namespaces.AllowList {
+		namespaces = append(namespaces, k)
+	}
+
+	err = cc.CheckPrerequisites(ctx,
+		namespaces,
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
+	case err != nil:
+		return nil, errors.Wrap(err, "failed to check prerequisites for the ScrapeConfig CRD ")
+	default:
+		scrapeConfigSupported = true
+	}
+
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
 	c := &Operator{
-		kclient:         client,
-		mclient:         mclient,
-		logger:          logger,
-		host:            cfg.Host,
-		config:          conf,
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
+		kclient:               client,
+		mclient:               mclient,
+		logger:                logger,
+		config:                conf,
+		metrics:               operator.NewMetrics(r),
+		reconciliations:       &operator.ReconciliationTracker{},
+		scrapeConfigSupported: scrapeConfigSupported,
 	}
 	c.metrics.MustRegister(
 		c.reconciliations,
@@ -197,6 +226,22 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating probe informers")
 	}
 
+	if c.scrapeConfigSupported {
+		c.sconInfs, err = informers.NewInformersForResource(
+			informers.NewMonitoringInformerFactories(
+				c.config.Namespaces.AllowList,
+				c.config.Namespaces.DenyList,
+				mclient,
+				resyncPeriod,
+				nil,
+			),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating scrapeconfig informers")
+		}
+	}
+
 	c.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
 			c.config.Namespaces.PrometheusAllowList,
@@ -271,36 +316,21 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
-	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io", "endpointslices")
+	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io/v1", "endpointslices")
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
 	}
 	level.Info(c.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
-	c.endpointSliceSupported = endpointSliceSupported
+	// The operator doesn't yet support the endpointslices API.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/3862
+	// for details.
+	c.endpointSliceSupported = false
+
 	return c, nil
 }
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	crdInstalled, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.PrometheusAgentName)
-	if err != nil {
-		level.Warn(c.logger).Log("msg", "failed to check if the API supports the PrometheusAgent CRD", "err ", err)
-		return nil
-	}
-	if !crdInstalled {
-		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because the PrometheusAgent CRD isn't installed")
-		return nil
-	}
-
-	allowed, err := c.checkAgentAuthorization(ctx)
-	if err != nil {
-		return err
-	}
-	if !allowed {
-		level.Info(c.logger).Log("msg", "Prometheus agent controller disabled because it lacks the required permissions on PrometheusAgent objects")
-		return nil
-	}
-
 	errChan := make(chan error)
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
@@ -329,6 +359,9 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.smonInfs.Start(ctx.Done())
 	go c.pmonInfs.Start(ctx.Done())
 	go c.probeInfs.Start(ctx.Done())
+	if c.scrapeConfigSupported {
+		go c.sconInfs.Start(ctx.Done())
+	}
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
@@ -342,47 +375,32 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Prometheus agent objects.
 	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.rr.EnqueueForStatus(obj.(*monitoringv1alpha1.PrometheusAgent))
+		c.RefreshStatusFor(obj.(*monitoringv1alpha1.PrometheusAgent))
 	})
 
 	c.addHandlers()
 
-	// Run a goroutine that refreshes regularly the Prometheus objects that
-	// aren't fully available to keep the status up-to-date with the pod
-	// conditions. In practice when a new version of the statefulset is rolled
-	// out and the updated pod is crashlooping, the statefulset status won't
-	// see any update because the number of ready/updated replicas doesn't
-	// change. Without the periodic refresh, the Prometheus object's status
-	// would report "containers with incomplete status: [init-config-reloader]"
-	// forever.
-	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
-	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
-					p := o.(*monitoringv1alpha1.PrometheusAgent)
-					for _, cond := range p.Status.Conditions {
-						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
-							c.rr.EnqueueForStatus(p)
-							break
-						}
-					}
-				})
-				if err != nil {
-					level.Error(c.logger).Log("msg", "failed to list PrometheusAgent objects", "err", err)
-				}
-			}
-		}
-	}()
+	// TODO(simonpasquier): watch for PrometheusAgent pods instead of polling.
+	go operator.StatusPoller(ctx, c)
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
+}
+
+// Iterate implements the operator.StatusReconciler interface.
+func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+	if err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
+		p := o.(*monitoringv1alpha1.PrometheusAgent)
+		processFn(p, p.Status.Conditions)
+	}); err != nil {
+		level.Error(c.logger).Log("msg", "failed to list PrometheusAgent objects", "err", err)
+	}
+}
+
+// RefreshStatus implements the operator.StatusReconciler interface.
+func (c *Operator) RefreshStatusFor(o metav1.Object) {
+	c.rr.EnqueueForStatus(o)
 }
 
 // waitForCacheSync waits for the informers' caches to be synced.
@@ -395,10 +413,17 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ServiceMonitor", c.smonInfs},
 		{"PodMonitor", c.pmonInfs},
 		{"Probe", c.probeInfs},
+		{"ScrapeConfig", c.sconInfs},
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
+		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
+		// nil. ScrapeConfig is one example.
+		if infs.informersForResource == nil {
+			continue
+		}
+
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				return errors.Errorf("failed to sync cache for %s informer", infs.name)
@@ -444,6 +469,13 @@ func (c *Operator) addHandlers() {
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
 	})
+	if c.sconInfs != nil {
+		c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleScrapeConfigAdd,
+			UpdateFunc: c.handleScrapeConfigUpdate,
+			DeleteFunc: c.handleScrapeConfigDelete,
+		})
+	}
 	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleConfigMapAdd,
 		DeleteFunc: c.handleConfigMapDelete,
@@ -675,21 +707,31 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.pmonInfs, c.smonInfs, c.probeInfs, c.nsMonInf, c.metrics)
-	smons, err := resourceSelector.SelectServiceMonitors(ctx)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics)
+
+	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	pmons, err := resourceSelector.SelectPodMonitors(ctx)
+	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting PodMonitors failed")
 	}
 
-	bmons, err := resourceSelector.SelectProbes(ctx)
+	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
+
+	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+	if c.sconInfs != nil {
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(c.sconInfs.ListAllByNamespace)
+		if err != nil {
+			return errors.Wrap(err, "selecting ScrapeConfigs failed")
+		}
+	}
+
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -737,6 +779,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		smons,
 		pmons,
 		bmons,
+		scrapeConfigs,
 		store,
 		additionalScrapeConfigs,
 	)
@@ -895,41 +938,8 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	availableCondition.Message = strings.Join(messages, "\n")
 
-	// Compute the Reconciled ConditionType.
-	reconciledCondition := monitoringv1.Condition{
-		Type:   monitoringv1.Reconciled,
-		Status: monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Time{
-			Time: time.Now().UTC(),
-		},
-		ObservedGeneration: p.Generation,
-	}
-	reconciliationStatus, found := c.reconciliations.GetStatus(key)
-	if !found {
-		reconciledCondition.Status = monitoringv1.ConditionUnknown
-		reconciledCondition.Reason = "NotFound"
-		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
-	} else {
-		if !reconciliationStatus.Ok() {
-			reconciledCondition.Status = monitoringv1.ConditionFalse
-		}
-		reconciledCondition.Reason = reconciliationStatus.Reason()
-		reconciledCondition.Message = reconciliationStatus.Message()
-	}
-
-	// Update the last transition times only if the status of the available condition has changed.
-	for _, condition := range p.Status.Conditions {
-		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-			availableCondition.LastTransitionTime = condition.LastTransitionTime
-			continue
-		}
-
-		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
-			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
-		}
-	}
-
-	pStatus.Conditions = append(pStatus.Conditions, availableCondition, reconciledCondition)
+	reconciledCondition := c.reconciliations.GetCondition(key, p.Generation)
+	pStatus.Conditions = operator.UpdateConditions(pStatus.Conditions, availableCondition, reconciledCondition)
 
 	p.Status = pStatus
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
@@ -1118,6 +1128,37 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
 		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.AddEvent).Inc()
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
+	if old.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion == cur.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion {
+		return
+	}
+
+	if o, ok := c.accessor.ObjectMetadata(cur); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig updated")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.UpdateEvent)
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+// TODO: Don't enqueue just for the namespace
+func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
+	if o, ok := c.accessor.ObjectMetadata(obj); ok {
+		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
+		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -1333,41 +1374,12 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	}
 }
 
-// checkAgentAuthorization checks if the operator has access to PrometheusAgent CRD
-// It checks individual namespaces if an allowlist was provided, otherwise it checks cluster-wide.
-func (c *Operator) checkAgentAuthorization(ctx context.Context) (bool, error) {
-	verbs := map[string][]string{
-		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
-		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+			"app.kubernetes.io/name":       "prometheus-agent",
+			"app.kubernetes.io/managed-by": "prometheus-operator",
+			"app.kubernetes.io/instance":   name,
+		})).String(),
 	}
-	var ssar *authv1.SelfSubjectAccessReview
-	var ssarResponse *authv1.SelfSubjectAccessReview
-	var err error
-
-	for ns := range c.config.Namespaces.PrometheusAllowList {
-		for resource, verbs := range verbs {
-			for _, verb := range verbs {
-				ssar = &authv1.SelfSubjectAccessReview{
-					Spec: authv1.SelfSubjectAccessReviewSpec{
-						ResourceAttributes: &authv1.ResourceAttributes{
-							Verb:     verb,
-							Group:    monitoringv1alpha1.SchemeGroupVersion.Group,
-							Resource: resource,
-							// If ns is empty string, it will check cluster-wide
-							Namespace: ns,
-						},
-					},
-				}
-				ssarResponse, err = c.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
-				if err != nil {
-					return false, err
-				}
-				if !ssarResponse.Status.Allowed {
-					return false, nil
-				}
-			}
-		}
-	}
-
-	return true, nil
 }

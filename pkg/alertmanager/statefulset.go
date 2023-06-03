@@ -270,6 +270,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	}
 	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
 
+	web := a.Spec.Web
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.GetConcurrency != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.get-concurrency=%d", *web.GetConcurrency))
+	}
+
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.Timeout != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.timeout=%d", *web.Timeout))
+	}
+
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
 		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
 	}

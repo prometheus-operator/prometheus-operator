@@ -17,10 +17,12 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const configReloaderPort = 8080
@@ -230,7 +232,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	boolFalse := false
 	boolTrue := true
-	return v1.Container{
+	c := v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
 		ImagePullPolicy:          configReloader.imagePullPolicy,
@@ -249,4 +251,25 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			},
 		},
 	}
+
+	if !configReloader.runOnce && configReloader.config.EnableProbes {
+		c = addProbes(c)
+	}
+
+	return c
+}
+
+func addProbes(c v1.Container) v1.Container {
+	probe := &v1.Probe{
+		ProbeHandler: v1.ProbeHandler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: path.Clean("/healthz"),
+				Port: intstr.FromInt(configReloaderPort),
+			},
+		},
+	}
+
+	c.LivenessProbe = probe
+	c.ReadinessProbe = probe
+	return c
 }

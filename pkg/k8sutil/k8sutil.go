@@ -16,7 +16,6 @@ package k8sutil
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,11 +24,13 @@ import (
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/kubernetes"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
@@ -51,10 +53,29 @@ var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
 var scheme = runtime.NewScheme()
 
+var ErrPrerequiresitesFailed = errors.New("unmet prerequisites")
+
 func init() {
 	_ = monitoringv1.SchemeBuilder.AddToScheme(scheme)
 	_ = monitoringv1alpha1.SchemeBuilder.AddToScheme(scheme)
 	_ = monitoringv1beta1.SchemeBuilder.AddToScheme(scheme)
+}
+
+type CRDChecker struct {
+	kclient kubernetes.Interface
+}
+
+func NewCRDChecker(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*CRDChecker, error) {
+	cfg, err := NewClusterConfig(host, tlsInsecure, tlsConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating cluster config failed")
+	}
+
+	kclient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
+	}
+	return &CRDChecker{kclient: kclient}, nil
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
@@ -112,6 +133,71 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
 
 	return cfg, nil
+}
+
+// CheckPrerequisites checks if given resource's CRD is installed in the cluster and the operator
+// serviceaccount has the necessary RBAC verbs in the namespace list to reconcile it.
+func (cc CRDChecker) CheckPrerequisites(ctx context.Context, nsAllowList []string, verbs map[string][]string, sgv, resource string) error {
+	if err := cc.validateCRDInstallation(sgv, resource); err != nil {
+		return err
+	}
+
+	missingPermissions, err := cc.getMissingPermissions(ctx, nsAllowList, verbs)
+	if err != nil {
+		return err
+	}
+	if len(missingPermissions) > 0 {
+		return fmt.Errorf("%w: some permissions are missing: %v", ErrPrerequiresitesFailed, missingPermissions)
+	}
+
+	return nil
+}
+
+func (cc CRDChecker) validateCRDInstallation(sgv, resource string) error {
+	crdInstalled, err := IsAPIGroupVersionResourceSupported(cc.kclient.Discovery(), sgv, resource)
+	if err != nil {
+		return fmt.Errorf("failed to check if the API supports %s resource (apiGroup: %q): %w", resource, sgv, err)
+	}
+	if !crdInstalled {
+		return fmt.Errorf("%w: %s resource (apiGroup: %q) not installed", ErrPrerequiresitesFailed, resource, sgv)
+	}
+	return nil
+}
+
+// getMissingPermissions returns the RBAC permissions that the controller would need to be
+// granted to fulfill its mission. An empty map means that everything is ok.
+func (cc CRDChecker) getMissingPermissions(ctx context.Context, nsAllowList []string, verbs map[string][]string) (map[string][]string, error) {
+	var ssar *authv1.SelfSubjectAccessReview
+	var ssarResponse *authv1.SelfSubjectAccessReview
+	var err error
+	missingPermissions := map[string][]string{}
+
+	for _, ns := range nsAllowList {
+		for resource, verbs := range verbs {
+			for _, verb := range verbs {
+				ssar = &authv1.SelfSubjectAccessReview{
+					Spec: authv1.SelfSubjectAccessReviewSpec{
+						ResourceAttributes: &authv1.ResourceAttributes{
+							Verb:     verb,
+							Group:    monitoringv1alpha1.SchemeGroupVersion.Group,
+							Resource: resource,
+							// If ns is empty string, it will check cluster-wide
+							Namespace: ns,
+						},
+					},
+				}
+				ssarResponse, err = cc.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
+				if err != nil {
+					return nil, err
+				}
+				if !ssarResponse.Status.Allowed {
+					missingPermissions[resource] = append(missingPermissions[resource], verb)
+				}
+			}
+		}
+	}
+
+	return missingPermissions, nil
 }
 
 func IsResourceNotFoundError(err error) bool {

@@ -23,10 +23,14 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 )
@@ -51,42 +55,100 @@ func (f *Framework) CreateThanosRulerAndWaitUntilReady(ctx context.Context, ns s
 		return nil, fmt.Errorf("creating %v ThanosRuler instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
 
-	if err := f.WaitForThanosRulerReady(result, 5*time.Minute); err != nil {
+	if err := f.WaitForThanosRulerReady(ctx, ns, result, 5*time.Minute); err != nil {
 		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
 
 	return result, nil
 }
 
-func (f *Framework) UpdateThanosRulerAndWaitUntilReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Update(ctx, tr, metav1.UpdateOptions{})
+func (f *Framework) PatchThanosRulerAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.ThanosRulerSpec) (*monitoringv1.ThanosRuler, error) {
+	tr, err := f.PatchThanosRuler(ctx, name, ns, spec)
 	if err != nil {
 		return nil, err
 	}
-	if err := f.WaitForThanosRulerReady(result, 5*time.Minute); err != nil {
-		return nil, fmt.Errorf("failed to update %d ThanosRuler instances (%v): %v", tr.Spec.Replicas, tr.Name, err)
+
+	if err := f.WaitForThanosRulerReady(ctx, ns, tr, 5*time.Minute); err != nil {
+		return nil, err
 	}
 
-	return result, nil
+	return tr, nil
 }
 
-func (f *Framework) WaitForThanosRulerReady(tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
-	var pollErr error
+func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec monitoringv1.ThanosRulerSpec) (*monitoringv1.ThanosRuler, error) {
+	b, err := json.Marshal(
+		&monitoringv1.ThanosRuler{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.ThanosRulerKind,
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
+			},
+			Spec: spec,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal ThanosRuler spec")
+	}
 
-	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := thanos.RulerStatus(context.Background(), f.KubeClient, tr)
+	tr, err := f.MonClientV1.ThanosRulers(ns).Patch(
+		ctx,
+		name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        func(b bool) *bool { return &b }(true),
+			FieldManager: "e2e-test",
+		},
+	)
 
-		if pollErr != nil {
+	if err != nil {
+		return nil, err
+	}
+
+	return tr, nil
+}
+
+func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
+	if f.operatorVersion.LT(semver.MustParse("0.65.0")) {
+		var pollErr error
+
+		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
+			st, _, pollErr := thanos.RulerStatus(context.Background(), f.KubeClient, tr)
+
+			if pollErr != nil {
+				return false, nil
+			}
+
+			if st.UpdatedReplicas == *tr.Spec.Replicas {
+				return true, nil
+			}
+
 			return false, nil
-		}
+		})
+		return errors.Wrapf(pollErr, "waiting for ThanosRuler %v/%v: %v", tr.Namespace, tr.Name, err)
+	}
 
-		if st.UpdatedReplicas == *tr.Spec.Replicas {
-			return true, nil
-		}
+	expected := *tr.Spec.Replicas
 
-		return false, nil
-	})
-	return errors.Wrapf(pollErr, "waiting for ThanosRuler %v/%v: %v", tr.Namespace, tr.Name, err)
+	if err := f.WaitForResourceAvailable(
+		ctx,
+		func(ctx context.Context) (resourceStatus, error) {
+			current, err := f.MonClientV1.ThanosRulers(ns).Get(ctx, tr.Name, metav1.GetOptions{})
+			if err != nil {
+				return resourceStatus{}, err
+			}
+			return resourceStatus{
+				expectedReplicas: expected,
+				generation:       current.Generation,
+				replicas:         current.Status.UpdatedReplicas,
+				conditions:       current.Status.Conditions,
+			}, nil
+		},
+		timeout,
+	); err != nil {
+		return errors.Wrapf(err, "thanos ruler %v/%v failed to become available", tr.Namespace, tr.Name)
+	}
+
+	return nil
 }
 
 func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.ServiceType) *v1.Service {
@@ -117,7 +179,7 @@ func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.Se
 func (f *Framework) WaitForThanosFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
 		firing, loopError = f.CheckThanosFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil

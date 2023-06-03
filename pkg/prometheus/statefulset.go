@@ -224,14 +224,6 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
 	}
 
-	if cpf.WALCompression != nil {
-		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
-		if *cpf.WALCompression {
-			arg.Name = "storage.tsdb.wal-compression"
-		}
-		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
-	}
-
 	if cpf.ListenLocal {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
 	}
@@ -281,12 +273,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 		},
 	}
 
-	volName := VolumeName(p)
-	if cpf.Storage != nil {
-		if cpf.Storage.VolumeClaimTemplate.Name != "" {
-			volName = cpf.Storage.VolumeClaimTemplate.Name
-		}
-	}
+	volName := VolumeClaimName(p, cpf)
 
 	promVolumeMounts := []v1.VolumeMount{
 		{
@@ -356,6 +343,16 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 	}
 
 	return volumes, promVolumeMounts, nil
+}
+
+func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) string {
+	volName := VolumeName(p)
+	if cpf.Storage != nil {
+		if cpf.Storage.VolumeClaimTemplate.Name != "" {
+			volName = cpf.Storage.VolumeClaimTemplate.Name
+		}
+	}
+	return volName
 }
 
 func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator, webRoutePrefix string) v1.ProbeHandler {

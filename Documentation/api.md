@@ -1084,7 +1084,7 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape interval is used.</p>
+If not specified, the Prometheus global scrape timeout is used.</p>
 </td>
 </tr>
 <tr>
@@ -1314,8 +1314,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -1349,8 +1349,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -1384,8 +1384,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -1405,6 +1405,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -2179,8 +2214,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -2490,7 +2526,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -2548,6 +2584,20 @@ TSDBSpec
 <td>
 <p>Defines the runtime reloadable configuration of the timeseries database
 (TSDB).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </table>
@@ -3134,6 +3184,21 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </tr>
 <tr>
 <td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
+that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>objectStorageConfig</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
@@ -3588,9 +3653,8 @@ ThanosRulerStatus
 </em>
 </td>
 <td>
-<p>Most recent observed status of the ThanosRuler cluster. Read-only. Not
-included when requesting from the apiserver, only from the ThanosRuler
-Operator API itself. More info:
+<p>Most recent observed status of the ThanosRuler cluster. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
@@ -4054,6 +4118,17 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>The default OpsGenie API Key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pagerdutyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The default Pagerduty URL.</p>
 </td>
 </tr>
 </tbody>
@@ -4850,6 +4925,32 @@ WebHTTPConfig
 <p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>getConcurrency</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum number of GET requests processed concurrently. This corresponds to the
+Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Timeout for HTTP requests. This corresponds to the Alertmanager&rsquo;s
+<code>--web.timeout</code> flag.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ArbitraryFSAccessThroughSMsConfig">ArbitraryFSAccessThroughSMsConfig
@@ -5132,8 +5233,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -5167,8 +5268,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -5202,8 +5303,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -5223,6 +5324,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -5997,8 +6133,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -6045,10 +6182,11 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
 </p>
 <div>
-<p>Condition represents the state of the resources associated with the Prometheus or Alertmanager resource.</p>
+<p>Condition represents the state of the resources associated with the
+Prometheus, Alertmanager or ThanosRuler resource.</p>
 </div>
 <table>
 <thead>
@@ -6198,7 +6336,7 @@ The possible status values for this condition type are:
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -6542,7 +6680,9 @@ string
 </em>
 </td>
 <td>
-<p>HTTP scheme to use for scraping.</p>
+<p>HTTP scheme to use for scraping.
+<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
+If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
@@ -7282,7 +7422,9 @@ string
 </em>
 </td>
 <td>
-<p>HTTP scheme to use for scraping.</p>
+<p>HTTP scheme to use for scraping.
+<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
+If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
@@ -7812,7 +7954,7 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape interval is used.</p>
+If not specified, the Prometheus global scrape timeout is used.</p>
 </td>
 </tr>
 <tr>
@@ -8267,7 +8409,8 @@ string
 </td>
 <td>
 <p>HTTP scheme to use for scraping.
-Defaults to <code>http</code>.</p>
+<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
+If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
@@ -8408,8 +8551,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -8443,8 +8586,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -8478,8 +8621,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -8499,6 +8642,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -9273,8 +9451,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -9584,7 +9763,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -9642,6 +9821,20 @@ TSDBSpec
 <td>
 <p>Defines the runtime reloadable configuration of the timeseries database
 (TSDB).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -9749,6 +9942,122 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The list has one entry per shard. Each entry provides a summary of the shard status.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Client used to export the traces. Supported values are <code>http</code> or <code>grpc</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint to send the traces to. Should be provided in format <host>:<port>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>samplingFraction</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sets the probability a given trace will be sampled. Must be a float from 0 through 1.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>insecure</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If disabled, the client will use a secure connection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Key-value pairs to be used as headers associated with gRPC or HTTP requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>compression</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compression key for supported compression types. The only supported value is <code>gzip</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum time the exporter will wait for each batch export.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS Config to use when sending traces.</p>
 </td>
 </tr>
 </tbody>
@@ -10006,7 +10315,7 @@ This is experimental feature and might change in the future.</p>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
@@ -10285,6 +10594,19 @@ string
 </tr>
 <tr>
 <td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+Requires Prometheus v2.26.0 and above.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>filterExternalLabels</code><br/>
 <em>
 bool
@@ -10350,6 +10672,18 @@ bool
 exemplar-storage itself must be enabled using the enableFeature option
 for exemplars to be scraped in the first place.  Only valid in
 Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enables sending of native histograms, also known as sparse histograms
+over remote write. Only valid in Prometheus versions 2.40.0 and newer.</p>
 </td>
 </tr>
 <tr>
@@ -10673,6 +11007,20 @@ string
 <p>PartialResponseStrategy is only used by ThanosRuler and will
 be ignored by Prometheus instances.
 More info: <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response">https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>limit</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Limit the number of alerts an alerting rule and series a recording
+rule can produce.
+Limit is supported starting with Prometheus &gt;= 2.31 and Thanos Ruler &gt;= 0.24.</p>
 </td>
 </tr>
 </tbody>
@@ -11348,7 +11696,7 @@ EmbeddedPersistentVolumeClaim
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>TLSConfig extends the safe TLS configuration with file parameters.</p>
@@ -11748,6 +12096,21 @@ StorageSpec
 <td>
 <p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
+that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -12201,9 +12564,8 @@ fail and an error will be logged.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRuler">ThanosRuler</a>)
 </p>
 <div>
-<p>ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
-included when requesting from the apiserver, only from the Prometheus
-Operator API itself. More info:
+<p>ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
+More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </div>
 <table>
@@ -12271,6 +12633,20 @@ int32
 </td>
 <td>
 <p>Total number of unavailable pods targeted by this ThanosRuler deployment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the Alertmanager object.</p>
 </td>
 </tr>
 </tbody>
@@ -12936,6 +13312,8 @@ Resource Types:
 <a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig</a>
 </li><li>
 <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig</a>
 </li></ul>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
@@ -13142,8 +13520,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13177,8 +13555,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13212,8 +13590,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -13233,6 +13611,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -14007,8 +14420,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -14066,6 +14480,164 @@ PrometheusStatus
 <p>Most recent observed status of the Prometheus cluster. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig
+</h3>
+<div>
+<p>ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
+multiple namespaces into the Prometheus configuration.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>ScrapeConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">
+ScrapeConfigSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>staticConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.StaticConfig">
+[]StaticConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StaticConfigs defines a list of static targets with a common label set.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fileSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">
+[]FileSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FileSDConfigs defines a list of file service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">
+[]HTTPSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTPSDConfigs defines a list of HTTP service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>relabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RelabelConfigs defines how to rewrite the target&rsquo;s labels before scraping.
+Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
+More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsPath</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+</table>
 </td>
 </tr>
 </tbody>
@@ -14386,6 +14958,55 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>FileSDConfig defines a Prometheus file service discovery configuration
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>files</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SDFile">
+[]SDFile
+</a>
+</em>
+</td>
+<td>
+<p>List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
+prometheus-operator project makes no guarantees about the working directory where the configuration file is
+stored.
+Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
@@ -14500,6 +15121,51 @@ bool
 <td>
 <em>(Optional)</em>
 <p>FollowRedirects specifies whether the client should follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>HTTPSDConfig defines a prometheus HTTP service discovery configuration
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>url</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>URL from which the targets are fetched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RefreshInterval configures the refresh interval at which Prometheus will re-query the
+endpoint to update the target list.</p>
 </td>
 </tr>
 </tbody>
@@ -15456,8 +16122,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>ServiceMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15491,8 +16157,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15526,8 +16192,8 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Probes to be selected for target discovery.</p>
-<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code> and
-<code>spec.probeSelector</code> are null, the Prometheus configuration is unmanaged.
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
@@ -15547,6 +16213,41 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
+and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
+The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
+Secret exists, but it is the responsibility of the user to provide the raw
+gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
+This behavior is deprecated and will be removed in the next major version
+of the custom resource definition. It is recommended to use
+<code>spec.additionalScrapeConfigs</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeConfigNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
+check own namespace.</p>
 </td>
 </tr>
 <tr>
@@ -16321,8 +17022,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -16872,6 +17574,14 @@ MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route 
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.SDFile">SDFile
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>)
+</p>
+<div>
+<p>SDFile represents a file used for service discovery</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig
 </h3>
 <p>
@@ -17015,6 +17725,119 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>HTTP client configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig</a>)
+</p>
+<div>
+<p>ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>staticConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.StaticConfig">
+[]StaticConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StaticConfigs defines a list of static targets with a common label set.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fileSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">
+[]FileSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FileSDConfigs defines a list of file service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">
+[]HTTPSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTPSDConfigs defines a list of HTTP service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>relabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RelabelConfigs defines how to rewrite the target&rsquo;s labels before scraping.
+Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+The original scrape job&rsquo;s name is available via the <code>__tmp_prometheus_job_name</code> label.
+More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsPath</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorTimestamps</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>honorLabels</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
 </td>
 </tr>
 </tbody>
@@ -17511,6 +18334,59 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>StaticConfig defines a Prometheus static configuration.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>targets</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.Target">
+[]Target
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of targets for this static configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+map[github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.LabelName]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels assigned to all metrics scraped from the targets.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.Target">Target
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
+</p>
+<div>
+<p>Target represents a target for Prometheus to scrape</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
 <p>

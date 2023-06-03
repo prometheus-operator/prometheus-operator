@@ -6,11 +6,11 @@
 | Matthias Loibl    | mail@matthiasloibl.com    | `@metalmatze`        | [@metalmatze](https://github.com/metalmatze)       | Polar Signals |
 | Paweł Krupa       | paulfantom@gmail.com      | `@paulfantom`        | [@paulfantom](https://github.com/paulfantom)       | Timescale     |
 | Simon Pasquier    | pasquier.simon@gmail.com  | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier) | Red Hat       |
-| Vasily Sliouniaev |                           | `@vas`               | [@vsliouniaev](https://github.com/vsliouniaev)     |               |
 | Kemal Akkoyun     | kakkoyun@gmail.com        | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)           | Polar Signals |
-| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Gitpod        |
+| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Coralogix     |
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat       |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat       |
+| Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                     | Independent   |
 
 Please reach any of the maintainers on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
 
@@ -28,11 +28,12 @@ Full list of triage people is displayed below:
 
 ## Emeritus maintainers
 
-| Name              | GitHub                                       |
-|-------------------|----------------------------------------------|
-| Damien Grisonnet  | [@dgrisonnet](https://github.com/dgrisonnet) |
-| Lili Cosic        | [@lilic](https://github.com/lilic)           |
-| Sergiusz Urbaniak | [@s-urbaniak](https://github.com/s-urbaniak) |
+| Name              | GitHub                                         |
+|-------------------|------------------------------------------------|
+| Damien Grisonnet  | [@dgrisonnet](https://github.com/dgrisonnet)   |
+| Lili Cosic        | [@lilic](https://github.com/lilic)             |
+| Sergiusz Urbaniak | [@s-urbaniak](https://github.com/s-urbaniak)   |
+| Vasily Sliouniaev | [@vsliouniaev](https://github.com/vsliouniaev) |
 
 ## How to be maintainer?
 

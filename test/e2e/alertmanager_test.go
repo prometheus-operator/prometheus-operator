@@ -160,8 +160,8 @@ func testAMStorageUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -322,8 +322,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 	}
 
 	for i := 0; i < amClusterSize; i++ {
-		err = wait.Poll(time.Second, framework.DefaultTimeout, func() (bool, error) {
-			silences, err := framework.GetSilences(context.Background(), ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
+		err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+			silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
 			if err != nil {
 				return false, err
 			}
@@ -1270,8 +1270,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// Wait for the change above to take effect.
 	var lastErr error
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), amConfigSecretName, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
 			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
 			return false, nil
@@ -1420,8 +1420,8 @@ templates: []
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), amConfigSecretName, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
 			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
 			return false, nil
@@ -1506,8 +1506,8 @@ inhibit_rules:
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, "alertmanager-user-amconfig-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			lastErr = err
 			return false, nil
@@ -1693,8 +1693,8 @@ templates:
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, "alertmanager-user-amconfig-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			lastErr = err
 			return false, nil
@@ -1860,8 +1860,8 @@ func testAMRollbackManualChanges(t *testing.T) {
 
 	// Wait for the operator to update the statefulset definition.
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		current, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		current, err := ssetClient.Get(ctx, "alertmanager-"+name, metav1.GetOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -1942,8 +1942,8 @@ func testAMWeb(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		amPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -2041,6 +2041,91 @@ func testAMWeb(t *testing.T) {
 
 		if reloadSuccessTimestamp == 0 {
 			pollErr = fmt.Errorf("config reloader failed to reload once")
+			return false, nil
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
+	}
+
+	// Simulate a certificate renewal and check that the new certificate is in place
+	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(amPods.Items) == 0 {
+			pollErr = fmt.Errorf("No alertmanager pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := amPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		// The alertmanager certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the alertmanager instance is configured properly.
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		err = http2.ConfigureTransport(transport)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		httpClient := http.Client{
+			Transport: transport,
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9093", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		respNew, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		receivedCertBytesNew, err := certutil.EncodeCertificates(respNew.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytesNew, certBytesNew) {
+			pollErr = fmt.Errorf("certificate received from alertmanager instance does not match the one which is configured after certificate renewal")
 			return false, nil
 		}
 

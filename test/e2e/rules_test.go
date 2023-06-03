@@ -80,6 +80,16 @@ func TestPrometheusRuleCRDValidation(t *testing.T) {
 			},
 		},
 		{
+			name: "empty-rule",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "empty",
+					},
+				},
+			},
+		},
+		{
 			name: "valid-partial-rsp-1",
 			promRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{

@@ -420,6 +420,14 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.OpsGenieAPIKey = opsGenieAPIKey
 	}
 
+	if in.PagerdutyURL != nil {
+		u, err := url.Parse(*in.PagerdutyURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse Pagerduty URL")
+		}
+		out.PagerdutyURL = &config.URL{URL: u}
+	}
+
 	return out, nil
 }
 
