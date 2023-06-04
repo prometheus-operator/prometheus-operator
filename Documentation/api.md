@@ -2248,6 +2248,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -2572,20 +2586,6 @@ TSDBSpec
 <td>
 <p>Defines the runtime reloadable configuration of the timeseries database
 (TSDB).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
-PrometheusTracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </table>
@@ -6153,6 +6153,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -9473,6 +9487,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </tr>
 <tr>
 <td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -9799,20 +9827,6 @@ TSDBSpec
 (TSDB).</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
-PrometheusTracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus
@@ -9925,7 +9939,7 @@ int32
 <h3 id="monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 </div>
@@ -14440,6 +14454,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17040,6 +17068,20 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </td>
 <td>
 <p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </tbody>
