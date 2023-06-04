@@ -16,6 +16,7 @@ package webconfig
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"strings"
 
@@ -140,11 +141,11 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 
 	tlsServerConfig := yaml.MapSlice{}
 	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
 	}
 
 	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
 	}
 
 	if tls.ClientAuthType != "" {
@@ -155,7 +156,7 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
 	}
 
 	if tls.MinVersion != "" {

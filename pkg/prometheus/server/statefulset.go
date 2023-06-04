@@ -272,7 +272,7 @@ func makeStatefulSetSpec(
 		webRoutePrefix = cpf.RoutePrefix
 	}
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI)
+	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -541,7 +541,9 @@ func appendServerArgs(
 	retentionSize monitoringv1.ByteSize,
 	rules monitoringv1.Rules,
 	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks, enableAdminAPI bool) []monitoringv1.Argument {
+	allowOverlappingBlocks,
+	enableAdminAPI bool,
+	walCompression *bool) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(retention)
@@ -601,6 +603,14 @@ func appendServerArgs(
 
 	if allowOverlappingBlocks {
 		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
+	}
+
+	if walCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
+		if *walCompression {
+			arg.Name = "storage.tsdb.wal-compression"
+		}
+		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
 	return promArgs
 }
@@ -736,7 +746,7 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeName(p)
+			volName := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
 			container.VolumeMounts = append(
 				container.VolumeMounts,

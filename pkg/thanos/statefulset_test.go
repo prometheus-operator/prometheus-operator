@@ -925,6 +925,24 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 	}
 }
 
+func TestStatefulSetServiceName(t *testing.T) {
+	tr := monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+		},
+	}
+
+	// assert set correctly
+	expect := governingServiceName
+	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if spec.ServiceName != expect {
+		t.Fatalf("expected ServiceName to be %s but got %s", expect, spec.ServiceName)
+	}
+}
+
 func TestStatefulSetPVC(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",

@@ -2202,8 +2202,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -2513,7 +2514,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -2571,6 +2572,20 @@ TSDBSpec
 <td>
 <p>Defines the runtime reloadable configuration of the timeseries database
 (TSDB).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </table>
@@ -6094,8 +6109,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -6296,7 +6312,7 @@ The possible status values for this condition type are:
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -9411,8 +9427,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -9722,7 +9739,7 @@ bool
 </td>
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-This is still experimental in Prometheus so it may change in any upcoming release.</p>
+Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -9780,6 +9797,20 @@ TSDBSpec
 <td>
 <p>Defines the runtime reloadable configuration of the timeseries database
 (TSDB).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
+PrometheusTracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -9887,6 +9918,122 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The list has one entry per shard. Each entry provides a summary of the shard status.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Client used to export the traces. Supported values are <code>http</code> or <code>grpc</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint to send the traces to. Should be provided in format <host>:<port>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>samplingFraction</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sets the probability a given trace will be sampled. Must be a float from 0 through 1.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>insecure</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If disabled, the client will use a secure connection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Key-value pairs to be used as headers associated with gRPC or HTTP requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>compression</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compression key for supported compression types. The only supported value is <code>gzip</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum time the exporter will wait for each batch export.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS Config to use when sending traces.</p>
 </td>
 </tr>
 </tbody>
@@ -10419,6 +10566,19 @@ string
 </td>
 <td>
 <p>Optional ProxyURL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+Requires Prometheus v2.26.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -11512,7 +11672,7 @@ EmbeddedPersistentVolumeClaim
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>TLSConfig extends the safe TLS configuration with file parameters.</p>
@@ -14236,8 +14396,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>
@@ -16837,8 +16998,9 @@ bool
 </em>
 </td>
 <td>
-<p>Enable compression of the write-ahead log using Snappy. This flag is
-only available in versions of Prometheus &gt;= 2.11.0.</p>
+<p>Configures compression of the write-ahead log using Snappy.
+This flag is only available in versions of Prometheus &gt;= 2.11.0.
+WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </td>
 </tr>
 <tr>

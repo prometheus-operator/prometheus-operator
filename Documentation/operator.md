@@ -32,9 +32,9 @@ Usage of ./operator:
   -cluster-domain string
     	The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.
   -config-reloader-cpu-limit --config-reloader-cpu
-    	Config Reloader CPU limit. Value "0" disables it and causes no limit to be configured. Flag overrides --config-reloader-cpu for the CPU limit (default "100m")
+    	Config Reloader CPU limit. Value "0" disables it and causes no limit to be configured. Flag overrides --config-reloader-cpu for the CPU limit (default "10m")
   -config-reloader-cpu-request --config-reloader-cpu
-    	Config Reloader CPU request. Value "0" disables it and causes no request to be configured. Flag overrides --config-reloader-cpu value for the CPU request (default "100m")
+    	Config Reloader CPU request. Value "0" disables it and causes no request to be configured. Flag overrides --config-reloader-cpu value for the CPU request (default "10m")
   -config-reloader-memory-limit --config-reloader-memory
     	Config Reloader Memory limit. Value "0" disables it and causes no limit to be configured. Flag overrides --config-reloader-memory for the memory limit (default "50Mi")
   -config-reloader-memory-request --config-reloader-memory
@@ -58,7 +58,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.65.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.65.2")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

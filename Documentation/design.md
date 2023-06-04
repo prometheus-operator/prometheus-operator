@@ -22,6 +22,7 @@ The custom resources managed by the Prometheus Operator are:
 * [Probe](#probe)
 * [PrometheusRule](#prometheusrule)
 * [AlertmanagerConfig](#alertmanagerconfig)
+* [PrometheusAgent](#prometheusagent)
 
 ## Prometheus
 
@@ -145,3 +146,11 @@ spec:
     webhookConfigs:
     - url: 'http://example.com/'
 ```
+
+## PrometheusAgent
+
+The `PrometheusAgent` custom resource definition (CRD) declaratively defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
+
+Similar to the binaries of Prometheus Server and Prometheus Agent, the `Prometheus` and `PrometheusAgent` CRs are also similar. Inspired in the Agent binary, the Agent CR has several configuration options redacted when compared with regular Prometheus CR, e.g. alerting, PrometheusRules selectors, remote-read, storage and thanos sidecars.
+
+A more extensive read explaining why Agent support was done with a whole new CRD can be seen [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/designs/prometheus-agent.md).

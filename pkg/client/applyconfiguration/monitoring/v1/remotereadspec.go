@@ -36,6 +36,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	Authorization        *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	TLSConfig            *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyURL             *string                          `json:"proxyUrl,omitempty"`
+	FollowRedirects      *bool                            `json:"followRedirects,omitempty"`
 	FilterExternalLabels *bool                            `json:"filterExternalLabels,omitempty"`
 }
 
@@ -158,6 +159,14 @@ func (b *RemoteReadSpecApplyConfiguration) WithTLSConfig(value *TLSConfigApplyCo
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *RemoteReadSpecApplyConfiguration) WithProxyURL(value string) *RemoteReadSpecApplyConfiguration {
 	b.ProxyURL = &value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *RemoteReadSpecApplyConfiguration) WithFollowRedirects(value bool) *RemoteReadSpecApplyConfiguration {
+	b.FollowRedirects = &value
 	return b
 }
 

@@ -41,7 +41,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -77,9 +76,6 @@ type Operator struct {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                   string
-	TLSInsecure            bool
-	TLSConfig              rest.TLSClientConfig
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
 	Namespaces             operator.Namespaces
@@ -128,9 +124,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
-			Host:                   conf.Host,
-			TLSInsecure:            conf.TLSInsecure,
-			TLSConfig:              conf.TLSConfig,
 			ReloaderConfig:         conf.ReloaderConfig,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
@@ -745,7 +738,7 @@ func ListOptions(name string) metav1.ListOptions {
 // RulerStatus evaluates the current status of a ThanosRuler deployment with
 // respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
-// TODO(simonpasquier): remove after 0.65.0 is released.
+// TODO(simonpasquier): remove after 0.66.0 is released.
 func RulerStatus(ctx context.Context, kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
 	res := &monitoringv1.ThanosRulerStatus{Paused: tr.Spec.Paused}
 

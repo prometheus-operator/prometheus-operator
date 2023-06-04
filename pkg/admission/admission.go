@@ -80,7 +80,7 @@ type Admission struct {
 	amConfValidationErrorsCounter      prometheus.Counter
 	amConfValidationTriggeredCounter   prometheus.Counter
 	logger                             log.Logger
-	wh                                 *conversion.Webhook
+	wh                                 http.Handler
 }
 
 func New(logger log.Logger) *Admission {
@@ -94,14 +94,9 @@ func New(logger log.Logger) *Admission {
 		panic(err)
 	}
 
-	wh := &conversion.Webhook{}
-	if err := wh.InjectScheme(scheme); err != nil {
-		panic(fmt.Sprintf("failed to inject scheme into the webhook handler: %s", err))
-	}
-
 	return &Admission{
 		logger: logger,
-		wh:     wh,
+		wh:     conversion.NewWebhookHandler(scheme),
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -363,8 +364,9 @@ type CommonPrometheusFields struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
-	// Enable compression of the write-ahead log using Snappy. This flag is
-	// only available in versions of Prometheus >= 2.11.0.
+	// Configures compression of the write-ahead log using Snappy.
+	// This flag is only available in versions of Prometheus >= 2.11.0.
+	// WAL compression is enabled by default for Prometheus >= 2.20.0
 	WALCompression *bool `json:"walCompression,omitempty"`
 	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.
@@ -513,7 +515,7 @@ type PrometheusSpec struct {
 	// For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 	// AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-	// This is still experimental in Prometheus so it may change in any upcoming release.
+	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 	// Exemplars related settings that are runtime reloadable.
 	// It requires to enable the exemplar storage feature to be effective.
@@ -531,6 +533,46 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
+	// TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// +optional
+	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+}
+
+type PrometheusTracingConfig struct {
+	// Client used to export the traces. Supported values are `http` or `grpc`.
+	//+kubebuilder:validation:Enum=http;grpc
+	// +optional
+	ClientType *string `json:"clientType"`
+
+	// Endpoint to send the traces to. Should be provided in format <host>:<port>.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Endpoint string `json:"endpoint"`
+
+	// Sets the probability a given trace will be sampled. Must be a float from 0 through 1.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction"`
+
+	// If disabled, the client will use a secure connection.
+	// +optional
+	Insecure *bool `json:"insecure"`
+
+	// Key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers map[string]string `json:"headers"`
+
+	// Compression key for supported compression types. The only supported value is `gzip`.
+	//+kubebuilder:validation:Enum=gzip
+	// +optional
+	Compression *string `json:"compression"`
+
+	// Maximum time the exporter will wait for each batch export.
+	// +optional
+	Timeout *Duration `json:"timeout"`
+
+	// TLS Config to use when sending traces.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.
@@ -828,6 +870,10 @@ type RemoteReadSpec struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// Requires Prometheus v2.26.0 and above.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to use the external labels as selectors for the remote read endpoint.
 	// Requires Prometheus v2.34.0 and above.
 	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`

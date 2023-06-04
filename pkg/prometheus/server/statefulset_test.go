@@ -669,6 +669,21 @@ func TestListenTLS(t *testing.T) {
 	}
 
 	fmt.Println(sset.Spec.Template.Spec.Containers[2].Args)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=https://localhost:9090/-/reload",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
 }
 
 func TestTagAndShaAndVersion(t *testing.T) {
@@ -1300,6 +1315,50 @@ func TestThanosBlockDuration(t *testing.T) {
 	if !found {
 		t.Fatal("Thanos BlockDuration arg change not found")
 	}
+}
+
+func TestThanosWithNamedPVC(t *testing.T) {
+	testKey := "named-pvc"
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Name: testKey,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: pvc,
+				},
+			},
+			Thanos: &monitoringv1.ThanosSpec{
+				BlockDuration: "1h",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, vol := range container.VolumeMounts {
+				if vol.Name == testKey {
+					found = true
+				}
+			}
+		}
+	}
+	require.True(t, found, "VolumeClaimTemplate name not found on thanos-sidecar volumeMounts")
 }
 
 func TestThanosTracing(t *testing.T) {

@@ -119,6 +119,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PrometheusSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusStatus"):
 		return &monitoringv1.PrometheusStatusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PrometheusTracingConfig"):
+		return &monitoringv1.PrometheusTracingConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusWebSpec"):
 		return &monitoringv1.PrometheusWebSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("QuerySpec"):

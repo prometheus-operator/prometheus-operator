@@ -438,6 +438,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
+		ServiceName:         governingServiceName,
 		Replicas:            tr.Spec.Replicas,
 		MinReadySeconds:     minReadySeconds,
 		PodManagementPolicy: appsv1.ParallelPodManagement,

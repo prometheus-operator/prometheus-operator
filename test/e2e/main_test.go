@@ -162,7 +162,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,7 +289,9 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
+		"ScrapeConfigCreation":                      testScrapeConfigCreation,
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
+		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 	}
 
 	for name, f := range testFuncs {
@@ -343,10 +345,11 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":             testPrometheusInstanceNamespacesAllNs,
-		"AllowList":         testPrometheusInstanceNamespacesAllowList,
-		"DenyList":          testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound": testPrometheusInstanceNamespacesNamespaceNotFound,
+		"AllNs":                 testPrometheusInstanceNamespacesAllNs,
+		"AllowList":             testPrometheusInstanceNamespacesAllowList,
+		"DenyList":              testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":     testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle": testScrapeConfigLifecycle,
 	}
 
 	for name, f := range testFuncs {
@@ -372,7 +375,8 @@ func TestAlertmanagerInstanceNs(t *testing.T) {
 func TestOperatorUpgrade(t *testing.T) {
 	skipOperatorUpgradeTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"OperatorUpgrade": testOperatorUpgrade,
+		"OperatorUpgrade":                          testOperatorUpgrade,
+		"PromOperatorStartsWithoutScrapeConfigCRD": testPromOperatorStartsWithoutScrapeConfigCRD,
 	}
 
 	for name, f := range testFuncs {
