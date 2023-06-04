@@ -15,20 +15,35 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
+
+type StatusReporter struct {
+	Kclient         kubernetes.Interface
+	Reconciliations *operator.ReconciliationTracker
+	SsetInfs        *informers.ForResource
+	Rr              *operator.ResourceReconciler
+}
 
 func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
 	r := prometheusKeyInStatefulSet
@@ -105,4 +120,95 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	return nil
+}
+
+// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster
+func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
+
+	commonFields := p.GetCommonPrometheusFields()
+	pStatus := monitoringv1.PrometheusStatus{
+		Paused: commonFields.Paused,
+	}
+
+	var (
+		availableCondition = monitoringv1.Condition{
+			Type:   monitoringv1.Available,
+			Status: monitoringv1.ConditionTrue,
+			LastTransitionTime: metav1.Time{
+				Time: time.Now().UTC(),
+			},
+			ObservedGeneration: p.GetObjectMeta().GetGeneration(),
+		}
+		messages []string
+		replicas = 1
+	)
+
+	if commonFields.Replicas != nil {
+		replicas = int(*commonFields.Replicas)
+	}
+
+	for shard := range ExpectedStatefulSetShardNames(p) {
+		ssetName := KeyToStatefulSetKey(p, key, shard)
+
+		obj, err := sr.SsetInfs.Get(ssetName)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				// Object not yet in the store or already deleted.
+				continue
+			}
+			return nil, errors.Wrap(err, "failed to retrieve statefulset")
+		}
+
+		sset := obj.(*appsv1.StatefulSet)
+		if sr.Rr.DeletionInProgress(sset) {
+			continue
+		}
+
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, sr.Kclient, sset)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve statefulset state")
+		}
+
+		pStatus.Replicas += int32(len(stsReporter.Pods))
+		pStatus.UpdatedReplicas += int32(len(stsReporter.UpdatedPods()))
+		pStatus.AvailableReplicas += int32(len(stsReporter.ReadyPods()))
+		pStatus.UnavailableReplicas += int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
+
+		pStatus.ShardStatuses = append(
+			pStatus.ShardStatuses,
+			monitoringv1.ShardStatus{
+				ShardID:             strconv.Itoa(shard),
+				Replicas:            int32(len(stsReporter.Pods)),
+				UpdatedReplicas:     int32(len(stsReporter.UpdatedPods())),
+				AvailableReplicas:   int32(len(stsReporter.ReadyPods())),
+				UnavailableReplicas: int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods())),
+			},
+		)
+
+		if len(stsReporter.ReadyPods()) >= replicas {
+			// All pods are ready (or the desired number of replicas is zero).
+			continue
+		}
+
+		if len(stsReporter.ReadyPods()) == 0 {
+			availableCondition.Reason = "NoPodReady"
+			availableCondition.Status = monitoringv1.ConditionFalse
+		} else if availableCondition.Status != monitoringv1.ConditionFalse {
+			availableCondition.Reason = "SomePodsNotReady"
+			availableCondition.Status = monitoringv1.ConditionDegraded
+		}
+
+		for _, p := range stsReporter.Pods {
+			if m := p.Message(); m != "" {
+				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
+			}
+		}
+	}
+
+	availableCondition.Message = strings.Join(messages, "\n")
+
+	reconciledCondition := sr.Reconciliations.GetCondition(key, p.GetObjectMeta().GetGeneration())
+	pStatus.Conditions = operator.UpdateConditions(pStatus.Conditions, availableCondition, reconciledCondition)
+
+	return &pStatus, nil
 }
