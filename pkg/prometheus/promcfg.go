@@ -2055,6 +2055,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
+	tracingConfig *monitoringv1.PrometheusTracingConfig,
 ) ([]byte, error) {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -2097,6 +2098,15 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+	}
+
+	if tracingConfig != nil {
+		tracingcfg, err := cg.generateTracingConfig(tracingConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "generating tracing configuration failed")
+		}
+
+		cfg = append(cfg, tracingcfg)
 	}
 
 	return yaml.Marshal(cfg)
