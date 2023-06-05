@@ -2253,12 +2253,11 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 
 	tracingConfig := cg.prom.GetCommonPrometheusFields().TracingConfig
 
-	if len(tracingConfig.Endpoint) > 0 {
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "endpoint",
-			Value: tracingConfig.Endpoint,
-		})
-	}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "endpoint",
+		Value: tracingConfig.Endpoint,
+	})
+
 	if tracingConfig.ClientType != nil {
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "client_type",
