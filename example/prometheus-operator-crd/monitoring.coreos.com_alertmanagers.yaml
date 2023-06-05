@@ -1478,6 +1478,12 @@ spec:
                       type: object
                     type: array
                 type: object
+              automountServiceAccountToken:
+                description: 'AutomountServiceAccountToken indicates whether a service
+                  account token should be automatically mounted in the pod. If the
+                  service account has `automountServiceAccountToken: true`, set the
+                  field to `false` to opt out of automounting API credentials.'
+                type: boolean
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.
                   Deprecated: use ''image'' instead'

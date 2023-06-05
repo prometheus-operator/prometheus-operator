@@ -71,6 +71,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	HostAliases                         []HostAliasApplyConfiguration                        `json:"hostAliases,omitempty"`
 	Web                                 *AlertmanagerWebSpecApplyConfiguration               `json:"web,omitempty"`
 	AlertmanagerConfiguration           *AlertmanagerConfigurationApplyConfiguration         `json:"alertmanagerConfiguration,omitempty"`
+	AutomountServiceAccountToken        *bool                                                `json:"automountServiceAccountToken,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerSpec type for use with
@@ -475,5 +476,13 @@ func (b *AlertmanagerSpecApplyConfiguration) WithWeb(value *AlertmanagerWebSpecA
 // If called multiple times, the AlertmanagerConfiguration field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfiguration(value *AlertmanagerConfigurationApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.AlertmanagerConfiguration = value
+	return b
+}
+
+// WithAutomountServiceAccountToken sets the AutomountServiceAccountToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AutomountServiceAccountToken field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithAutomountServiceAccountToken(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.AutomountServiceAccountToken = &value
 	return b
 }

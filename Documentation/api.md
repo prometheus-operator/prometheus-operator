@@ -722,6 +722,19 @@ If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4762,6 +4775,19 @@ AlertmanagerConfiguration
 <p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 If defined, it takes precedence over the <code>configSecret</code> field.
 This field may change in future releases.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
 </td>
 </tr>
 </tbody>
