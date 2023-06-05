@@ -782,7 +782,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		scrapeConfigs,
 		store,
 		additionalScrapeConfigs,
-		p.Spec.TracingConfig,
 	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
