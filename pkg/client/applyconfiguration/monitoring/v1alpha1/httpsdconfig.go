@@ -18,13 +18,16 @@ package v1alpha1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
 // HTTPSDConfigApplyConfiguration represents an declarative configuration of the HTTPSDConfig type for use
 // with apply.
 type HTTPSDConfigApplyConfiguration struct {
-	URL             *string      `json:"url,omitempty"`
-	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	URL             *string                                           `json:"url,omitempty"`
+	RefreshInterval *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	BasicAuth       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 }
 
 // HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
@@ -46,5 +49,21 @@ func (b *HTTPSDConfigApplyConfiguration) WithURL(value string) *HTTPSDConfigAppl
 // If called multiple times, the RefreshInterval field is set to the value of the last call.
 func (b *HTTPSDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) *HTTPSDConfigApplyConfiguration {
 	b.RefreshInterval = &value
+	return b
+}
+
+// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BasicAuth field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.BasicAuthApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.BasicAuth = value
+	return b
+}
+
+// WithAuthorization sets the Authorization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Authorization field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.Authorization = value
 	return b
 }

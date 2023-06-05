@@ -734,7 +734,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
 	if c.sconInfs != nil {
-		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(c.sconInfs.ListAllByNamespace)
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {
 			return errors.Wrap(err, "selecting ScrapeConfigs failed")
 		}

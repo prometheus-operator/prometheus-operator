@@ -580,7 +580,7 @@ func validateProberURL(url string) error {
 
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -627,6 +627,32 @@ func (rs *ResourceSelector) SelectScrapeConfigs(listFn ListAllByNamespaceFn) (ma
 	}
 
 	// TODO(xiu): add validation steps
+	for _, sc := range scrapeConfigs {
+		var err error
+
+		scKey := fmt.Sprintf("scrapeconfig/%s/%s", sc.GetNamespace(), sc.GetName())
+		if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth, scKey); err != nil {
+			break
+		}
+
+		scAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.GetNamespace(), sc.GetName())
+		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization, scAuthKey); err != nil {
+			break
+		}
+
+		for i, config := range sc.Spec.HTTPSDConfigs {
+			configKey := fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+				break
+			}
+
+			configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+				break
+			}
+		}
+	}
+
 	scrapeConfigKeys := make([]string, 0)
 	for k := range scrapeConfigs {
 		scrapeConfigKeys = append(scrapeConfigKeys, k)
