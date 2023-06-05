@@ -435,7 +435,6 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	tsdb monitoringv1.TSDBSpec,
 	alerting *monitoringv1.AlertingSpec,
 	remoteRead []monitoringv1.RemoteReadSpec,
-	tracingConfig *monitoringv1.PrometheusTracingConfig,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
@@ -511,14 +510,13 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
-	if tracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig(tracingConfig)
-		if err != nil {
-			return nil, errors.Wrap(err, "generating tracing configuration failed")
-		}
+	tracingcfg, err := cg.generateTracingConfig()
 
-		cfg = append(cfg, tracingcfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating tracing configuration failed")
 	}
+
+	cfg = append(cfg, tracingcfg)
 
 	return yaml.Marshal(cfg)
 }
@@ -2055,7 +2053,6 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 	additionalScrapeConfigs []byte,
-	tracingConfig *monitoringv1.PrometheusTracingConfig,
 ) ([]byte, error) {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -2100,14 +2097,13 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
-	if tracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig(tracingConfig)
-		if err != nil {
-			return nil, errors.Wrap(err, "generating tracing configuration failed")
-		}
+	tracingcfg, err := cg.generateTracingConfig()
 
-		cfg = append(cfg, tracingcfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating tracing configuration failed")
 	}
+
+	cfg = append(cfg, tracingcfg)
 
 	return yaml.Marshal(cfg)
 }
@@ -2248,9 +2244,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	return cfg
 }
 
-func (cg *ConfigGenerator) generateTracingConfig(tracingConfig *monitoringv1.PrometheusTracingConfig) (yaml.MapItem, error) {
+func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	cfg := yaml.MapSlice{}
 	objMeta := cg.prom.GetObjectMeta()
+
+	tracingConfig := cg.prom.GetCommonPrometheusFields().TracingConfig
 
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "endpoint",
