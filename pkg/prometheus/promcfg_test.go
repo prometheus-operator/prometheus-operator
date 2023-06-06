@@ -8917,6 +8917,102 @@ scrape_configs:
   honor_labels: true
 `,
 		},
+		{
+			name: "basic_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "foo",
+						},
+						Key: "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "foo",
+						},
+						Key: "password",
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  basic_auth:
+    username: scrape-bob
+    password: scrape-alice
+  http_sd_configs:
+  - url: http://localhost:9100/sd.json
+    basic_auth:
+      username: http-sd-bob
+      password: http-sd-alice
+`,
+		},
+		{
+			name: "authorization",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				Authorization: &monitoringv1.SafeAuthorization{
+					Credentials: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "key",
+						},
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "key",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  authorization:
+    type: Bearer
+    credentials: scrape-secret
+  http_sd_configs:
+  - url: http://localhost:9100/sd.json
+    authorization:
+      type: Bearer
+      credentials: http-sd-secret
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -8948,7 +9044,22 @@ scrape_configs:
 				nil,
 				nil,
 				scs,
-				nil,
+				&assets.Store{
+					BasicAuthAssets: map[string]assets.BasicAuthCredentials{
+						"scrapeconfig/default/testscrapeconfig1": {
+							Username: "scrape-bob",
+							Password: "scrape-alice",
+						},
+						"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
+							Username: "http-sd-bob",
+							Password: "http-sd-alice",
+						},
+					},
+					TokenAssets: map[string]assets.Token{
+						"scrapeconfig/auth/default/testscrapeconfig1": assets.Token("scrape-secret"),
+						"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
+					},
+				},
 				nil,
 				nil,
 				nil,
