@@ -45,6 +45,8 @@ Usage of ./operator:
     	Enable liveness and readiness for the config-reloader container. Default: false
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
+  -kubelet-selector string
+    	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
   -labels value

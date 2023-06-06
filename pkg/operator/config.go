@@ -28,6 +28,7 @@ type Config struct {
 	Host                         string
 	ClusterDomain                string
 	KubeletObject                string
+	KubeletSelector              string
 	ListenAddress                string
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig

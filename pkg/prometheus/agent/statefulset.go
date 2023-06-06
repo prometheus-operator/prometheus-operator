@@ -20,7 +20,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-kit/log"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -41,7 +40,6 @@ const (
 )
 
 func makeStatefulSet(
-	logger log.Logger,
 	name string,
 	p monitoringv1.PrometheusInterface,
 	config *operator.Config,
@@ -69,7 +67,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(logger, p, config, cg, shard, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -170,7 +168,6 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	logger log.Logger,
 	p monitoringv1.PrometheusInterface,
 	c *operator.Config,
 	cg *prompkg.ConfigGenerator,

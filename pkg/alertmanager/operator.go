@@ -1123,7 +1123,7 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 		return err
 	}
 
-	return checkInhibitRules(ctx, amc, amVersion)
+	return checkInhibitRules(amc, amVersion)
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
@@ -1151,7 +1151,7 @@ func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion 
 	return nil
 }
 
-func checkHTTPConfig(ctx context.Context, hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version) error {
+func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version) error {
 	if hc == nil {
 		return nil
 	}
@@ -1201,7 +1201,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
-		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), store)
 		if err != nil {
 			return err
 		}
@@ -1239,7 +1239,7 @@ func checkPagerDutyConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 
@@ -1274,10 +1274,10 @@ func checkOpsGenieConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
-		if err := checkOpsGenieResponder(ctx, config.Responders, amVersion); err != nil {
+		if err := checkOpsGenieResponder(config.Responders, amVersion); err != nil {
 			return err
 		}
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
@@ -1296,7 +1296,7 @@ func checkOpsGenieConfigs(
 	return nil
 }
 
-func checkOpsGenieResponder(ctx context.Context, opsgenieResponder []monitoringv1alpha1.OpsGenieConfigResponder, amVersion semver.Version) error {
+func checkOpsGenieResponder(opsgenieResponder []monitoringv1alpha1.OpsGenieConfigResponder, amVersion semver.Version) error {
 	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
 	for _, resp := range opsgenieResponder {
 		if resp.Type == "teams" && lessThanV0_24 {
@@ -1315,7 +1315,7 @@ func checkSlackConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
@@ -1343,7 +1343,7 @@ func checkWebhookConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
@@ -1375,7 +1375,7 @@ func checkWechatConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
@@ -1394,7 +1394,7 @@ func checkWechatConfigs(
 	return nil
 }
 
-func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, key string, store *assets.Store) error {
+func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, store *assets.Store) error {
 	for _, config := range configs {
 		if config.AuthPassword != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
@@ -1424,7 +1424,7 @@ func checkVictorOpsConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		if config.APIKey != nil {
@@ -1465,7 +1465,7 @@ func checkPushoverConfigs(
 	}
 
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		if err := checkSecret(config.UserKey, "userKey"); err != nil {
@@ -1493,7 +1493,7 @@ func checkSnsConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		snsConfigKey := fmt.Sprintf("%s/sns/%d", key, i)
@@ -1525,7 +1525,7 @@ func checkTelegramConfigs(
 	}
 
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 
@@ -1545,7 +1545,7 @@ func checkTelegramConfigs(
 	return nil
 }
 
-func checkInhibitRules(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
+func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
 	matchersV2Allowed := version.GTE(semver.MustParse("0.22.0"))
 
 	for i, rule := range amc.Spec.InhibitRules {

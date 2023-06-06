@@ -677,7 +677,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		},
 	}
 
-	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{LabelSelector: c.config.KubeletSelector})
 	if err != nil {
 		return errors.Wrap(err, "listing nodes failed")
 	}
@@ -1280,7 +1280,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		sset, err := makeStatefulSet(
-			logger,
 			ssetName,
 			p,
 			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
