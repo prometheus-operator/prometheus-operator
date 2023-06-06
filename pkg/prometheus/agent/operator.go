@@ -625,7 +625,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		sset, err := makeStatefulSet(
-			logger,
 			ssetName,
 			p,
 			&c.config,

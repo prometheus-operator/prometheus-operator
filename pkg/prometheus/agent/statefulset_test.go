@@ -192,14 +192,12 @@ func newLogger() log.Logger {
 
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
-
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
 	}
 
 	return makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		defaultTestConfig,

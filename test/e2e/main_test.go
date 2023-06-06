@@ -171,7 +171,7 @@ func TestAllNS(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
+	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -388,7 +388,7 @@ const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
 
-func testServerTLS(ctx context.Context, t *testing.T, namespace string) func(t *testing.T) {
+func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 	return func(t *testing.T) {
 		skipPrometheusTests(t)
 		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {
