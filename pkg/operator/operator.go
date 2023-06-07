@@ -106,7 +106,7 @@ func (rt *ReconciliationTracker) getStatus(k string) (ReconciliationStatus, bool
 	return s, true
 }
 
-// GetReconciledCondition returns a monitoringv1.Condition for the last-known
+// GetCondition returns a monitoringv1.Condition for the last-known
 // reconciliation status of the given object.
 func (rt *ReconciliationTracker) GetCondition(k string, gen int64) monitoringv1.Condition {
 	condition := monitoringv1.Condition{
