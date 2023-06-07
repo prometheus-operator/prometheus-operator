@@ -2099,7 +2099,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
-	if cg.prom.GetCommonPrometheusFields().TracingConfig != nil {
+	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig()
 		if err != nil {
 			return nil, errors.Wrap(err, "generating tracing configuration failed")
