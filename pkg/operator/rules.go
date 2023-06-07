@@ -86,16 +86,20 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 			promRuleSpec.Groups[i].Limit = nil
 			level.Warn(logger).Log("msg", fmt.Sprintf("`limit` is supported only from %s version %q", component, minVersionLimits))
 		}
+
 		if prs.ruleFormat == PrometheusFormat {
 			// Unset partialResponseStrategy field.
 			promRuleSpec.Groups[i].PartialResponseStrategy = ""
 		}
 	}
 
+	promRuleSpec = prs.validateRuleFieldsWithVersion(promRuleSpec)
+
 	content, err := yaml.Marshal(promRuleSpec)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal content")
 	}
+
 	errs := ValidateRule(promRuleSpec)
 	if len(errs) != 0 {
 		const m = "Invalid rule"
@@ -108,27 +112,51 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 	return string(content), nil
 }
 
+// validateRuleFieldWithVersion checks whether fields added in Rule object is supported in respective Prometheus/Thanos versions.
+func (prs *PrometheusRuleSelector) validateRuleFieldsWithVersion(promRuleSpec monitoringv1.PrometheusRuleSpec) monitoringv1.PrometheusRuleSpec {
+	minVersionKeepFiringFor := semver.MustParse("2.42.0")
+
+	for i := range promRuleSpec.Groups {
+		for j := range promRuleSpec.Groups[i].Rules {
+			switch prs.ruleFormat {
+			case PrometheusFormat:
+				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
+					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
+					level.Warn(prs.logger).Log("msg", fmt.Sprintf("`keep_firing_for` is supported only from %s version %q", "prometheus", minVersionKeepFiringFor))
+				}
+			case ThanosFormat:
+				// keep_firing_for is not yet supported in thanos https://github.com/thanos-io/thanos/issues/6165
+				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil {
+					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
+					level.Warn(prs.logger).Log("msg", "`keep_firing_for` is not yet supported in thanos check https://github.com/thanos-io/thanos/issues/6165")
+				}
+			}
+		}
+	}
+	return promRuleSpec
+}
+
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
-func ValidateRule(promRule monitoringv1.PrometheusRuleSpec) []error {
-	for i := range promRule.Groups {
+func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
+	for i := range promRuleSpec.Groups {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
-		promRule.Groups[i].PartialResponseStrategy = ""
+		promRuleSpec.Groups[i].PartialResponseStrategy = ""
 
 		// Empty durations need to be translated to nil to be omitted from the
 		// YAML ouptut otherwise the generated configuration will not be valid.
-		if promRule.Groups[i].Interval != nil && *promRule.Groups[i].Interval == "" {
-			promRule.Groups[i].Interval = nil
+		if promRuleSpec.Groups[i].Interval != nil && *promRuleSpec.Groups[i].Interval == "" {
+			promRuleSpec.Groups[i].Interval = nil
 		}
 
-		for j := range promRule.Groups[i].Rules {
-			if promRule.Groups[i].Rules[j].For != nil && *promRule.Groups[i].Rules[j].For == "" {
-				promRule.Groups[i].Rules[j].For = nil
+		for j := range promRuleSpec.Groups[i].Rules {
+			if promRuleSpec.Groups[i].Rules[j].For != nil && *promRuleSpec.Groups[i].Rules[j].For == "" {
+				promRuleSpec.Groups[i].Rules[j].For = nil
 			}
 		}
 	}
 
-	content, err := yaml.Marshal(promRule)
+	content, err := yaml.Marshal(promRuleSpec)
 	if err != nil {
 		return []error{errors.Wrap(err, "failed to marshal content")}
 	}

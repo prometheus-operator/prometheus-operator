@@ -2093,6 +2093,11 @@ func (in *Rule) DeepCopyInto(out *Rule) {
 		*out = new(Duration)
 		**out = **in
 	}
+	if in.KeepFiringFor != nil {
+		in, out := &in.KeepFiringFor, &out.KeepFiringFor
+		*out = new(Duration)
+		**out = **in
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
