@@ -211,7 +211,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}); err != nil {
+			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, nil, metav1.OwnerReference{}); err != nil {
 				t.Fatal(err)
 			}
 
