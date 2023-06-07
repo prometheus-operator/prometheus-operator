@@ -550,6 +550,24 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+	// The limit of  uncompressed response body
+	// 0 means no limit.
+	BodySizeLimit units.Base2Bytes `yaml:"bodySizeLimit,omitempty"`
+	// Sample limit,  More than this many samples post metric-relabeling will cause the scrape to
+	// fail. 0 means no limit.
+	SampleLimit uint `yaml:"sampleLimit,omitempty"`
+	// More than this many targets after the target relabeling will cause the
+	// scrapes to fail. 0 means no limit.
+	TargetLimit uint `yaml:"targetLimit,omitempty"`
+	// More than this many labels post metric-relabeling will cause the scrape to
+	// fail. 0 means no limit.
+	LabelLimit uint `yaml:"labelLimit,omitempty"`
+	// More than this label name length post metric-relabeling will cause the
+	// scrape to fail. 0 means no limit.
+	LabelNameLengthLimit uint `yaml:"labelNameLengthLimit,omitempty"`
+	// More than this label value length post metric-relabeling will cause the
+	// scrape to fail. 0 means no limit.
+	LabelValueLengthLimit uint `yaml:"labelValueLengthLimit,omitempty"`
 }
 
 // +genclient

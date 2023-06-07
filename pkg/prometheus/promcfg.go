@@ -465,6 +465,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
+	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Rule Files config
@@ -1927,6 +1928,18 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
+func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	slice = append(slice, yaml.MapItem{Key: "body_size_limit", Value: cpf.BodySizeLimit})
+	slice = append(slice, yaml.MapItem{Key: "sample_limit", Value: cpf.SampleLimit})
+	slice = append(slice, yaml.MapItem{Key: "target_limit", Value: cpf.TargetLimit})
+	slice = append(slice, yaml.MapItem{Key: "label_limit", Value: cpf.LabelLimit})
+	slice = append(slice, yaml.MapItem{Key: "label_name_length_limit", Value: cpf.LabelNameLengthLimit})
+	slice = append(slice, yaml.MapItem{Key: "label_value_length_limit", Value: cpf.LabelValueLengthLimit})
+
+	return slice
+}
+
 func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
 	slice = append(slice, yaml.MapItem{
 		Key:   "external_labels",
@@ -2086,6 +2099,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	globalItems := yaml.MapSlice{}
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
+	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Scrape config
