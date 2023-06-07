@@ -552,22 +552,22 @@ type CommonPrometheusFields struct {
 	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
 	// BodySizeLimit defines per-scrape on response body size.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	BodySizeLimit ByteSize `yaml:"bodySizeLimit,omitempty"`
+	BodySizeLimit ByteSize `json:"bodySizeLimit,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	SampleLimit *uint64 `yaml:"sampleLimit,omitempty"`
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	TargetLimit *uint64 `yaml:"targetLimit,omitempty"`
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	LabelLimit *uint64 `yaml:"labelLimit,omitempty"`
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
 	// Per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	LabelNameLengthLimit *uint64 `yaml:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
-	LabelValueLengthLimit *uint64 `yaml:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 }
 
 // +genclient
