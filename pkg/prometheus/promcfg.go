@@ -510,7 +510,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
-	if cg.prom.GetCommonPrometheusFields().TracingConfig != nil {
+	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig()
 
 		if err != nil {
