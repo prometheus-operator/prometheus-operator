@@ -265,7 +265,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	return nil
 }
 
-// initializeFromAlertmanagerConfig initializes the configuration from raw data.
+// initializeFromRawConfiguration initializes the configuration from raw data.
 func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 	globalAlertmanagerConfig, err := alertmanagerConfigFromBytes(b)
 	if err != nil {

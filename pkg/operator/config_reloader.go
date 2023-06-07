@@ -76,7 +76,7 @@ func ConfigEnvsubstFile(configEnvsubstFile string) ReloaderOption {
 	}
 }
 
-// ReloaderResources sets the config option for the config-reloader container
+// ReloaderConfig sets the config option for the config-reloader container
 func ReloaderConfig(rc ContainerConfig) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.config = rc

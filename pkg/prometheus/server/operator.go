@@ -591,7 +591,7 @@ func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
 	}
 }
 
-// nodeAddresses returns the provided node's address, based on the priority:
+// nodeAddress returns the provided node's address, based on the priority:
 // 1. NodeInternalIP
 // 2. NodeExternalIP
 //
