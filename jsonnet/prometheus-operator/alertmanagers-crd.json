@@ -1287,6 +1287,96 @@
                             ],
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
+                          },
+                          "smtp": {
+                            "description": "Configures global SMTP parameters.",
+                            "properties": {
+                              "authIdentity": {
+                                "description": "SMTP Auth using PLAIN",
+                                "type": "string"
+                              },
+                              "authPassword": {
+                                "description": "SMTP Auth using LOGIN and PLAIN.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "authSecret": {
+                                "description": "SMTP Auth using CRAM-MD5.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "authUsername": {
+                                "description": "SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.",
+                                "type": "string"
+                              },
+                              "from": {
+                                "description": "The default SMTP From header field.",
+                                "type": "string"
+                              },
+                              "hello": {
+                                "description": "The default hostname to identify to the SMTP server.",
+                                "type": "string"
+                              },
+                              "requireTLS": {
+                                "description": "The default SMTP TLS requirement. Note that Go does not support unencrypted connections to remote SMTP endpoints.",
+                                "type": "boolean"
+                              },
+                              "smartHost": {
+                                "description": "The default SMTP smarthost used for sending emails.",
+                                "properties": {
+                                  "host": {
+                                    "description": "Defines the host's address, it can be a DNS name or a literal IP address.",
+                                    "minLength": 1,
+                                    "type": "string"
+                                  },
+                                  "port": {
+                                    "description": "Defines the host's port, it can be a literal port number or a port name.",
+                                    "minLength": 1,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "host",
+                                  "port"
+                                ],
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
                           }
                         },
                         "type": "object"

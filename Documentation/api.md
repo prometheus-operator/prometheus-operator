@@ -4056,6 +4056,20 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configura
 <tbody>
 <tr>
 <td>
+<code>smtp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">
+GlobalSMTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures global SMTP parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resolveTimeout</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -6947,6 +6961,128 @@ A value of zero or less than zero disables the storage.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalSMTPConfig configures global SMTP parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>from</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP From header field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>smartHost</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HostPort">
+HostPort
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP smarthost used for sending emails.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hello</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default hostname to identify to the SMTP server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authUsername</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn&rsquo;t authenticate to the SMTP server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authPassword</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using LOGIN and PLAIN.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authIdentity</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using PLAIN</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using CRAM-MD5.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>requireTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP TLS requirement.
+Note that Go does not support unencrypted connections to remote SMTP endpoints.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
@@ -7112,6 +7248,46 @@ string
 </td>
 <td>
 <p>Hostnames for the above IP address.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.HostPort">HostPort
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig</a>)
+</p>
+<div>
+<p>HostPort represents a &ldquo;host:port&rdquo; network address.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>host</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the host&rsquo;s address, it can be a DNS name or a literal IP address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the host&rsquo;s port, it can be a literal port number or a port name.</p>
 </td>
 </tr>
 </tbody>
