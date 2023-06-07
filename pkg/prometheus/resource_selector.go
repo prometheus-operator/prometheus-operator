@@ -626,44 +626,60 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 		}
 	}
 
-	// TODO(xiu): add validation steps
-	for _, sc := range scrapeConfigs {
-		var err error
+	var rejected int
+	res := make(map[string]*monitoringv1alpha1.ScrapeConfig, len(scrapeConfigs))
+
+	for scName, sc := range scrapeConfigs {
+		rejectFn := func(sc *monitoringv1alpha1.ScrapeConfig, err error) {
+			rejected++
+			level.Warn(rs.l).Log(
+				"msg", "skipping scrapeconfig",
+				"error", err.Error(),
+				"scrapeconfig", sc,
+				"namespace", objMeta.GetNamespace(),
+				"prometheus", objMeta.GetName(),
+			)
+		}
 
 		scKey := fmt.Sprintf("scrapeconfig/%s/%s", sc.GetNamespace(), sc.GetName())
 		if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth, scKey); err != nil {
-			break
+			rejectFn(sc, err)
+			continue
 		}
 
 		scAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.GetNamespace(), sc.GetName())
 		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization, scAuthKey); err != nil {
-			break
+			rejectFn(sc, err)
+			continue
 		}
 
 		for i, config := range sc.Spec.HTTPSDConfigs {
 			configKey := fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
-				break
+				rejectFn(sc, err)
+				continue
 			}
 
 			configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
-				break
+				rejectFn(sc, err)
+				continue
 			}
 		}
+
+		res[scName] = sc
 	}
 
 	scrapeConfigKeys := make([]string, 0)
-	for k := range scrapeConfigs {
+	for k := range res {
 		scrapeConfigKeys = append(scrapeConfigKeys, k)
 	}
 	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(scrapeConfigs))
-		// since we don't have validation steps, we don't reject anything
-		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, 0)
+		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
+		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
 	}
 
-	return scrapeConfigs, nil
+	return res, nil
 }

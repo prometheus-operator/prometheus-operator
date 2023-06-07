@@ -9056,7 +9056,7 @@ scrape_configs:
 						},
 					},
 					TokenAssets: map[string]assets.Token{
-						"scrapeconfig/auth/default/testscrapeconfig1": assets.Token("scrape-secret"),
+						"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
 						"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
 					},
 				},

@@ -14653,8 +14653,7 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a></p>
+<p>BasicAuth information to use on every scrape request.</p>
 </td>
 </tr>
 <tr>
@@ -14668,7 +14667,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization section for this endpoint</p>
+<p>Authorization header to use on every scrape request.</p>
 </td>
 </tr>
 </table>
@@ -15213,7 +15212,7 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication
+<p>BasicAuth information to authenticate against the target HTTP endpoint.
 More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a></p>
 </td>
 </tr>
@@ -15228,7 +15227,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization section for this endpoint</p>
+<p>Authorization header configuration to authenticate against the target HTTP endpoint.</p>
 </td>
 </tr>
 </tbody>
@@ -17914,8 +17913,7 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a></p>
+<p>BasicAuth information to use on every scrape request.</p>
 </td>
 </tr>
 <tr>
@@ -17929,7 +17927,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization section for this endpoint</p>
+<p>Authorization header to use on every scrape request.</p>
 </td>
 </tr>
 </tbody>

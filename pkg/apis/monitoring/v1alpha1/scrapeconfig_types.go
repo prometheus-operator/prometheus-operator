@@ -95,11 +95,10 @@ type ScrapeConfigSpec struct {
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
-	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// Authorization section for this endpoint
+	// Authorization header to use on every scrape request.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 }
@@ -144,11 +143,11 @@ type HTTPSDConfig struct {
 	// endpoint to update the target list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
+	// BasicAuth information to authenticate against the target HTTP endpoint.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// Authorization section for this endpoint
+	// Authorization header configuration to authenticate against the target HTTP endpoint.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 }

@@ -42,7 +42,7 @@ spec:
               for a scrape configuration.
             properties:
               authorization:
-                description: Authorization section for this endpoint
+                description: Authorization header to use on every scrape request.
                 properties:
                   credentials:
                     description: The secret's key that contains the credentials of
@@ -70,8 +70,7 @@ spec:
                     type: string
                 type: object
               basicAuth:
-                description: 'BasicAuth allow an endpoint to authenticate over basic
-                  authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                description: BasicAuth information to use on every scrape request.
                 properties:
                   password:
                     description: The secret in the service monitor namespace that
@@ -158,7 +157,8 @@ spec:
                     configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
                   properties:
                     authorization:
-                      description: Authorization section for this endpoint
+                      description: Authorization header configuration to authenticate
+                        against the target HTTP endpoint.
                       properties:
                         credentials:
                           description: The secret's key that contains the credentials
@@ -186,8 +186,8 @@ spec:
                           type: string
                       type: object
                     basicAuth:
-                      description: 'BasicAuth allow an endpoint to authenticate over
-                        basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                      description: 'BasicAuth information to authenticate against
+                        the target HTTP endpoint. More info: https://prometheus.io/docs/operating/configuration/#endpoints'
                       properties:
                         password:
                           description: The secret in the service monitor namespace
