@@ -48,7 +48,6 @@ type PrometheusSpecApplyConfiguration struct {
 	EvaluationInterval                       *monitoringv1.Duration                          `json:"evaluationInterval,omitempty"`
 	EnableAdminAPI                           *bool                                           `json:"enableAdminAPI,omitempty"`
 	TSDB                                     *TSDBSpecApplyConfiguration                     `json:"tsdb,omitempty"`
-	TracingConfig                            *PrometheusTracingConfigApplyConfiguration      `json:"tracingConfig,omitempty"`
 }
 
 // PrometheusSpecApplyConfiguration constructs an declarative configuration of the PrometheusSpec type for use with
@@ -639,6 +638,14 @@ func (b *PrometheusSpecApplyConfiguration) WithPodTargetLabels(values ...string)
 	return b
 }
 
+// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TracingConfig field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithTracingConfig(value *PrometheusTracingConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.TracingConfig = value
+	return b
+}
+
 // WithBaseImage sets the BaseImage field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BaseImage field is set to the value of the last call.
@@ -822,13 +829,5 @@ func (b *PrometheusSpecApplyConfiguration) WithEnableAdminAPI(value bool) *Prome
 // If called multiple times, the TSDB field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithTSDB(value *TSDBSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.TSDB = value
-	return b
-}
-
-// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithTracingConfig(value *PrometheusTracingConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
-	b.TracingConfig = value
 	return b
 }

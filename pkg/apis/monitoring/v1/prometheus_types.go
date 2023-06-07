@@ -378,6 +378,9 @@ type CommonPrometheusFields struct {
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 	// PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// +optional
+	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
 }
 
 // +genclient
@@ -533,9 +536,6 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
-	// TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.
-	// +optional
-	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
 }
 
 type PrometheusTracingConfig struct {

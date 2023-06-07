@@ -194,6 +194,7 @@ scrape_configs: []
 					ScrapeTimeout:  tc.ScrapeTimeout,
 					ExternalLabels: tc.ExternalLabels,
 					Version:        tc.Version,
+					TracingConfig:  nil,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				QueryLogFile:       tc.QueryLogFile,
@@ -210,7 +211,6 @@ scrape_configs: []
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{},
 				nil,
 				nil,
@@ -433,7 +433,6 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		p.Spec.RemoteRead,
 		nil,
 		nil,
-		nil,
 		map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -537,7 +536,6 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -645,7 +643,6 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		p.Spec.RemoteRead,
 		nil,
 		nil,
-		nil,
 		map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -737,7 +734,6 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		p.Spec.RemoteRead,
 		nil,
 		nil,
-		nil,
 		map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -823,7 +819,6 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -958,7 +953,6 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 		p.Spec.RemoteRead,
 		nil,
 		nil,
-		nil,
 		map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1088,7 +1082,6 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -1335,7 +1328,6 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -1509,7 +1501,6 @@ alerting:
 			nil,
 			nil,
 			nil,
-			nil,
 			&assets.Store{BasicAuthAssets: map[string]assets.BasicAuthCredentials{
 				"alertmanager/auth/0": {
 					Username: "bob",
@@ -1551,7 +1542,6 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		nil,
 		nil,
@@ -1624,7 +1614,6 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		nil,
 		nil,
@@ -1825,7 +1814,6 @@ alerting:
 				nil,
 				nil,
 				nil,
-				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -1852,7 +1840,6 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			p.Spec.TSDB,
 			p.Spec.Alerting,
 			p.Spec.RemoteRead,
-			nil,
 			nil,
 			nil,
 			nil,
@@ -2022,7 +2009,6 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		&assets.Store{},
 		nil,
 		[]byte(`- action: drop
@@ -2084,7 +2070,6 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2245,7 +2230,6 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2413,7 +2397,6 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
 		nil,
-		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2560,7 +2543,6 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
 		nil,
-		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2699,7 +2681,6 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2873,7 +2854,6 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3044,7 +3024,6 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		&assets.Store{},
 		nil,
 		nil,
@@ -3104,7 +3083,6 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3232,7 +3210,6 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
 		nil,
-		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3340,7 +3317,6 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3467,7 +3443,6 @@ func TestSettingHonorLabels(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3597,7 +3572,6 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3726,7 +3700,6 @@ func TestTargetLabels(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -3986,7 +3959,6 @@ oauth2:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				tt.sMons,
 				tt.pMons,
 				tt.probes,
@@ -4023,7 +3995,6 @@ func TestPodTargetLabels(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -4152,7 +4123,6 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
 		nil,
-		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -4262,7 +4232,6 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
 		nil,
-		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -4370,7 +4339,6 @@ func TestEmptyEndpointPorts(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -4539,7 +4507,6 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		makeServiceMonitors(),
 		makePodMonitors(),
 		nil,
@@ -5174,7 +5141,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -5431,7 +5397,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -5663,7 +5628,6 @@ remote_read:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				nil,
 				nil,
 				nil,
@@ -6184,7 +6148,6 @@ remote_write:
 				nil,
 				nil,
 				nil,
-				nil,
 				store,
 				nil,
 				nil,
@@ -6438,7 +6401,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -6657,7 +6619,6 @@ scrape_configs:
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
 				nil,
-				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
 				},
@@ -6856,7 +6817,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				nil,
 				nil,
 				map[string]*monitoringv1.Probe{
@@ -7076,7 +7036,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -7113,7 +7072,6 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -7503,7 +7461,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -7739,7 +7696,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
@@ -8031,7 +7987,6 @@ scrape_configs:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				nil,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -8062,7 +8017,6 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -8360,7 +8314,6 @@ scrape_configs:
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
 				nil,
-				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
 				},
@@ -8451,7 +8404,6 @@ scrape_configs: []
 				nil,
 				nil,
 				nil,
-				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -8538,7 +8490,6 @@ storage:
 				nil,
 				nil,
 				nil,
-				nil,
 				&assets.Store{},
 				nil,
 				nil,
@@ -8563,7 +8514,6 @@ func TestGenerateRelabelConfig(t *testing.T) {
 		p.Spec.TSDB,
 		p.Spec.Alerting,
 		p.Spec.RemoteRead,
-		nil,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -8946,7 +8896,6 @@ scrape_configs:
 				nil,
 				nil,
 				nil,
-				nil,
 				scs,
 				nil,
 				nil,
@@ -9024,7 +8973,8 @@ tracing:
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 
-			p.Spec.TracingConfig = tc.tracingConfig
+			p.Spec.CommonPrometheusFields.TracingConfig = tc.tracingConfig
+
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
@@ -9035,7 +8985,6 @@ tracing:
 				p.Spec.TSDB,
 				p.Spec.Alerting,
 				p.Spec.RemoteRead,
-				p.Spec.TracingConfig,
 				nil,
 				nil,
 				nil,
