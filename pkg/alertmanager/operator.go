@@ -95,6 +95,7 @@ type Config struct {
 	ReloaderConfig               operator.ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   operator.Namespaces
+	Annotations                  operator.Annotations
 	Labels                       operator.Labels
 	AlertManagerSelector         string
 	SecretListWatchSelector      string
@@ -140,6 +141,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 			ReloaderConfig:               c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespaces:                   c.Namespaces,
+			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 			AlertManagerSelector:         c.AlertManagerSelector,
 			SecretListWatchSelector:      c.SecretListWatchSelector,
@@ -992,8 +994,9 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 
 	generatedConfigSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   generatedConfigSecretName(am.Name),
-			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			Name:        generatedConfigSecretName(am.Name),
+			Annotations: c.config.Annotations.AnnotationsMap,
+			Labels:      c.config.Labels.Merge(managedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         am.APIVersion,
@@ -1671,9 +1674,10 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		Name:               a.Name,
 		UID:                a.UID,
 	}
+	secretAnnotations := c.config.Annotations.AnnotationsMap
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 

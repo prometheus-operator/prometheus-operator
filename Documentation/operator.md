@@ -23,6 +23,8 @@ Usage of ./operator:
     	Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.
   -alertmanager-instance-selector string
     	Label selector to filter AlertManager Custom Resources to watch.
+  -annotations value
+    	Annotations to be add to all resources created by the operator
   -apiserver string
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -ca-file string

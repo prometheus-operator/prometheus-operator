@@ -60,6 +60,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 					UID:        p.GetUID(),
 				},
 			},
+			Annotations: config.Annotations.AnnotationsMap,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),
@@ -155,7 +156,7 @@ func makeStatefulSet(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Labels:      config.Labels.Merge(labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,

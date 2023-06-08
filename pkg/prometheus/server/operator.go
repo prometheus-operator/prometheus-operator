@@ -650,7 +650,8 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 	logger := log.With(c.logger, "operation", "syncNodeEndpoints")
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: c.kubeletObjectName,
+			Name:        c.kubeletObjectName,
+			Annotations: c.config.Annotations.AnnotationsMap,
 			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app":                      "kubelet",
 				"app.kubernetes.io/name":       "kubelet",
@@ -1718,9 +1719,10 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
+	secretAnnotations := c.config.Annotations.AnnotationsMap
 	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 

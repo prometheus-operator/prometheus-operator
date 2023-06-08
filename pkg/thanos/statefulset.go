@@ -79,8 +79,8 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(tr.Name),
+			Annotations: config.Annotations.Merge(annotations),
 			Labels:      config.Labels.Merge(tr.ObjectMeta.Labels),
-			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         tr.APIVersion,
@@ -479,7 +479,8 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
+			Name:        governingServiceName,
+			Annotations: config.Annotations.AnnotationsMap,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-thanos-ruler": "true",
 			}),
