@@ -1,0 +1,7 @@
+- job_name: 'kubernetes-nodes'
+  kubernetes_sd_configs:
+  - role: node
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_label_kubernetes_io_role]
+        action: keep
+        regex: worker

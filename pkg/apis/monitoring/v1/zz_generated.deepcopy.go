@@ -2095,7 +2095,7 @@ func (in *Rule) DeepCopyInto(out *Rule) {
 	}
 	if in.KeepFiringFor != nil {
 		in, out := &in.KeepFiringFor, &out.KeepFiringFor
-		*out = new(Duration)
+		*out = new(ImprovedDuration)
 		**out = **in
 	}
 	if in.Labels != nil {

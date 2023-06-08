@@ -73,27 +73,8 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitoringv1.PrometheusRule) (string, error) {
 	logger := log.With(prs.logger, "prometheusrule", promRule.Name, "prometheusrule-namespace", promRule.Namespace)
 	promRuleSpec := promRule.Spec
-	minVersionLimits := semver.MustParse("2.31.0")
-	component := "Prometheus"
 
-	if prs.ruleFormat == ThanosFormat {
-		minVersionLimits = semver.MustParse("0.24.0")
-		component = "Thanos"
-	}
-
-	for i := range promRuleSpec.Groups {
-		if promRuleSpec.Groups[i].Limit != nil && prs.version.LT(minVersionLimits) {
-			promRuleSpec.Groups[i].Limit = nil
-			level.Warn(logger).Log("msg", fmt.Sprintf("`limit` is supported only from %s version %q", component, minVersionLimits))
-		}
-
-		if prs.ruleFormat == PrometheusFormat {
-			// Unset partialResponseStrategy field.
-			promRuleSpec.Groups[i].PartialResponseStrategy = ""
-		}
-	}
-
-	promRuleSpec = prs.validateRuleFieldsWithVersion(promRuleSpec)
+	promRuleSpec = prs.sanitizePrometheusRulesSpec(promRuleSpec)
 
 	content, err := yaml.Marshal(promRuleSpec)
 	if err != nil {
@@ -109,30 +90,49 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 		}
 		return "", errors.New(m)
 	}
+
 	return string(content), nil
 }
 
-// validateRuleFieldWithVersion checks whether fields added in Rule object is supported in respective Prometheus/Thanos versions.
-func (prs *PrometheusRuleSelector) validateRuleFieldsWithVersion(promRuleSpec monitoringv1.PrometheusRuleSpec) monitoringv1.PrometheusRuleSpec {
+// sanitizePrometheusRulesSpec checks whether fields added in Rule object is supported in respective Prometheus/Thanos versions.
+func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec monitoringv1.PrometheusRuleSpec) monitoringv1.PrometheusRuleSpec {
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
+	minVersionLimits := semver.MustParse("2.31.0")
+	component := "Prometheus"
+
+	if prs.ruleFormat == ThanosFormat {
+		minVersionLimits = semver.MustParse("0.24.0")
+		component = "Thanos"
+	}
 
 	for i := range promRuleSpec.Groups {
+		if promRuleSpec.Groups[i].Limit != nil && prs.version.LT(minVersionLimits) {
+			promRuleSpec.Groups[i].Limit = nil
+			level.Warn(prs.logger).Log("msg", fmt.Sprintf("`limit` is supported only from %s version %q", component, minVersionLimits))
+		}
+
+		if prs.ruleFormat == PrometheusFormat {
+			// Unset partialResponseStrategy field.
+			promRuleSpec.Groups[i].PartialResponseStrategy = ""
+		}
+
 		for j := range promRuleSpec.Groups[i].Rules {
 			switch prs.ruleFormat {
 			case PrometheusFormat:
 				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
 					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(prs.logger).Log("msg", fmt.Sprintf("`keep_firing_for` is supported only from %s version %q", "prometheus", minVersionKeepFiringFor))
+					level.Warn(prs.logger).Log("msg", fmt.Sprintf("`keep_firing_for` is supported only from %s version %q", component, minVersionKeepFiringFor))
 				}
 			case ThanosFormat:
 				// keep_firing_for is not yet supported in thanos https://github.com/thanos-io/thanos/issues/6165
 				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil {
 					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(prs.logger).Log("msg", "`keep_firing_for` is not yet supported in thanos check https://github.com/thanos-io/thanos/issues/6165")
+					level.Warn(prs.logger).Log("msg", "`keep_firing_for` is not yet supported in thanos, see https://github.com/thanos-io/thanos/issues/6165")
 				}
 			}
 		}
 	}
+
 	return promRuleSpec
 }
 

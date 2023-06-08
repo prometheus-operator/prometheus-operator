@@ -96,7 +96,7 @@ type Rule struct {
 	For *Duration `json:"for,omitempty"`
 	// KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.
 	// +optional
-	KeepFiringFor *Duration `json:"keep_firing_for,omitempty"`
+	KeepFiringFor *ImprovedDuration `json:"keep_firing_for,omitempty"`
 	// Labels to add or overwrite.
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations to add to each alert.
