@@ -24,7 +24,7 @@ Usage of ./operator:
   -alertmanager-instance-selector string
     	Label selector to filter AlertManager Custom Resources to watch.
   -annotations value
-    	annotations to be add to all resources created by the operator
+    	Annotations to be add to all resources created by the operator
   -apiserver string
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -ca-file string
