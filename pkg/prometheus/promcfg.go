@@ -478,7 +478,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons)
+	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
@@ -2084,7 +2084,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons)
+	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
@@ -2113,7 +2113,8 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
 	slices []yaml.MapSlice,
-	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig) []yaml.MapSlice {
+	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
+	store *assets.Store) []yaml.MapSlice {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
 	i := 0
 	for k := range scrapeConfigs {
@@ -2128,6 +2129,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 		slices = append(slices,
 			cg.WithKeyVals("scrapeconfig", identifier).generateScrapeConfig(
 				scrapeConfigs[identifier],
+				store,
 			),
 		)
 	}
@@ -2137,6 +2139,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 func (cg *ConfigGenerator) generateScrapeConfig(
 	sc *monitoringv1alpha1.ScrapeConfig,
+	store *assets.Store,
 ) yaml.MapSlice {
 	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
@@ -2166,6 +2169,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
+
+	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
+
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
 	// StaticConfig
 	if len(sc.Spec.StaticConfigs) > 0 {
@@ -2229,6 +2236,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
+
+			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",
