@@ -61,8 +61,8 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				},
 			},
 			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
-  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
+  cert_file: /web_certs_path_prefix/secret/test-secret-cert/tls.crt
+  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
 `,
 		},
 		{
@@ -86,8 +86,8 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				},
 			},
 			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
-  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
+  cert_file: /web_certs_path_prefix/configmap/test-configmap-cert/tls.crt
+  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
 `,
 		},
 		{
@@ -119,9 +119,9 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				},
 			},
 			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/configmap_test-configmap_tls.crt
-  key_file: /web_certs_path_prefix/secret_test-secret_tls.key
-  client_ca_file: /web_certs_path_prefix/configmap_test-configmap_tls.client_ca
+  cert_file: /web_certs_path_prefix/configmap/test-configmap-cert/tls.crt
+  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
+  client_ca_file: /web_certs_path_prefix/configmap/test-configmap-ca/tls.client_ca
 `,
 		},
 		{
@@ -159,10 +159,10 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				},
 			},
 			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/secret_test-secret_tls.crt
-  key_file: /web_certs_path_prefix/secret_test-secret_tls.keySecret
+  cert_file: /web_certs_path_prefix/secret/test-secret-cert/tls.crt
+  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.keySecret
   client_auth_type: RequireAnyClientCert
-  client_ca_file: /web_certs_path_prefix/secret_test-secret_tls.ca
+  client_ca_file: /web_certs_path_prefix/secret/test-secret-ca/tls.ca
   min_version: TLS11
   max_version: TLS13
   cipher_suites:
@@ -211,7 +211,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, metav1.OwnerReference{}); err != nil {
+			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, nil, nil, metav1.OwnerReference{}); err != nil {
 				t.Fatal(err)
 			}
 
@@ -329,24 +329,24 @@ func TestGetMountParameters(t *testing.T) {
 				{
 					Name:             "web-config-tls-secret-key-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.key",
-					SubPath:          "tls.key",
+					MountPath:        "/etc/prometheus/web_config/secret/some-secret-key",
+					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
 				},
 				{
 					Name:             "web-config-tls-secret-cert-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.crt",
-					SubPath:          "tls.crt",
+					MountPath:        "/etc/prometheus/web_config/secret/some-secret-cert",
+					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
 				},
 				{
 					Name:             "web-config-tls-secret-client-ca-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/web_config/secret_some-secret_tls.client_ca",
-					SubPath:          "tls.client_ca",
+					MountPath:        "/etc/prometheus/web_config/secret/some-secret-ca",
+					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
 				},

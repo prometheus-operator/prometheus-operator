@@ -22,8 +22,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -119,9 +121,12 @@ func main() {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	var g run.Group
+	var (
+		g           run.Group
+		ctx, cancel = context.WithCancel(context.Background())
+	)
+
 	{
-		ctx, cancel := context.WithCancel(context.Background())
 		rel := reloader.New(
 			logger,
 			r,
@@ -147,14 +152,33 @@ func main() {
 	}
 
 	if *listenAddress != "" && *watchInterval != 0 {
+		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"up"}`))
+		})
+
+		srv := http.Server{Addr: *listenAddress}
+
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-			return http.ListenAndServe(*listenAddress, nil)
-		}, func(err error) {
-			level.Error(logger).Log("err", err)
+			return srv.ListenAndServe()
+		}, func(error) {
+			srv.Close()
 		})
 	}
+
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	g.Add(func() error {
+		select {
+		case <-term:
+			level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
+		case <-ctx.Done():
+		}
+
+		return nil
+	}, func(error) {})
 
 	if err := g.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

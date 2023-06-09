@@ -16,6 +16,7 @@ package webconfig
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"strings"
 
@@ -99,7 +100,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 // CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the data for the web config file.
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
-func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, labels map[string]string, ownerReference metav1.OwnerReference) error {
+func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, annotations map[string]string, labels map[string]string, ownerReference metav1.OwnerReference) error {
 	data, err := c.generateConfigFileContents()
 	if err != nil {
 		return err
@@ -108,6 +109,7 @@ func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient 
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            c.secretName,
+			Annotations:     annotations,
 			Labels:          labels,
 			OwnerReferences: []metav1.OwnerReference{ownerReference},
 		},
@@ -140,11 +142,11 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 
 	tlsServerConfig := yaml.MapSlice{}
 	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
 	}
 
 	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
 	}
 
 	if tls.ClientAuthType != "" {
@@ -155,7 +157,7 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caPath})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
 	}
 
 	if tls.MinVersion != "" {

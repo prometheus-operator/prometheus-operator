@@ -113,11 +113,11 @@ type enforcer interface {
 // No enforcement
 type noopEnforcer struct{}
 
-func (ne *noopEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	return ir
 }
 
-func (ne *noopEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
 	r.Continue = true
 	return r
 }
@@ -265,7 +265,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	return nil
 }
 
-// initializeFromAlertmanagerConfig initializes the configuration from raw data.
+// initializeFromRawConfiguration initializes the configuration from raw data.
 func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 	globalAlertmanagerConfig, err := alertmanagerConfigFromBytes(b)
 	if err != nil {
@@ -346,11 +346,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 	// alerts will fall through.
 	cb.cfg.Route.Routes = append(subRoutes, cb.cfg.Route.Routes...)
 
-	if err := cb.cfg.sanitize(cb.amVersion, cb.logger); err != nil {
-		return err
-	}
-
-	return nil
+	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
 func (cb *configBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
@@ -399,6 +395,35 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 		out.SlackAPIURL = &config.URL{URL: u}
 	}
+
+	if in.OpsGenieAPIURL != nil {
+		opsgenieAPIURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OpsGenieAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get OpsGenie API URL")
+		}
+		u, err := url.Parse(opsgenieAPIURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse OpsGenie API URL")
+		}
+		out.OpsGenieAPIURL = &config.URL{URL: u}
+	}
+
+	if in.OpsGenieAPIKey != nil {
+		opsGenieAPIKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OpsGenieAPIKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get OpsGenie API KEY")
+		}
+		out.OpsGenieAPIKey = opsGenieAPIKey
+	}
+
+	if in.PagerdutyURL != nil {
+		u, err := url.Parse(*in.PagerdutyURL)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse Pagerduty URL")
+		}
+		out.PagerdutyURL = &config.URL{URL: u}
+	}
+
 	return out, nil
 }
 
@@ -967,7 +992,7 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 	}
 
 	if in.TLSConfig != nil {
-		out.TLSConfig = cb.convertTLSConfig(ctx, in.TLSConfig, crKey)
+		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
 	return out, nil
@@ -1357,7 +1382,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1a
 	}
 
 	if in.TLSConfig != nil {
-		out.TLSConfig = cb.convertTLSConfig(ctx, in.TLSConfig, crKey)
+		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
 	if in.BearerTokenSecret != nil {
@@ -1390,7 +1415,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1a
 	return out, nil
 }
 
-func (cb *configBuilder) convertTLSConfig(ctx context.Context, in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
+func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
 	out := tlsConfig{
 		ServerName:         in.ServerName,
 		InsecureSkipVerify: in.InsecureSkipVerify,
@@ -1731,7 +1756,7 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		ogc.UpdateAlerts = nil
 	}
 	for _, responder := range ogc.Responders {
-		if err := responder.sanitize(amVersion, logger); err != nil {
+		if err := responder.sanitize(amVersion); err != nil {
 			return err
 		}
 	}
@@ -1754,7 +1779,7 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger log.Logger)
 	return nil
 }
 
-func (ops *opsgenieResponder) sanitize(amVersion semver.Version, logger log.Logger) error {
+func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 	if ops.Type == "teams" && amVersion.LT(semver.MustParse("0.24.0")) {
 		return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in Alertmanager >= 0.24.0 only")
 	}

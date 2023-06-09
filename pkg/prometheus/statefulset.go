@@ -26,12 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
-	GoverningServiceName            = "prometheus-operated"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	StorageDir                      = "/prometheus"
 	ConfDir                         = "/etc/prometheus/config"
@@ -60,34 +60,38 @@ var (
 	}
 	ShardLabelName                = "operator.prometheus.io/shard"
 	PrometheusNameLabelName       = "operator.prometheus.io/name"
+	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
 	ProbeTimeoutSeconds     int32 = 3
+	LabelPrometheusName           = "prometheus-name"
 )
 
 func ExpectedStatefulSetShardNames(
-	p *monitoringv1.Prometheus,
+	p monitoringv1.PrometheusInterface,
 ) []string {
+	cpf := p.GetCommonPrometheusFields()
+
 	res := []string{}
 	shards := minShards
-	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
-		shards = *p.Spec.Shards
+	if cpf.Shards != nil && *cpf.Shards > 1 {
+		shards = *cpf.Shards
 	}
 
 	for i := int32(0); i < shards; i++ {
-		res = append(res, prometheusNameByShard(p.Name, i))
+		res = append(res, prometheusNameByShard(p, i))
 	}
 
 	return res
 }
 
-func prometheusNameByShard(name string, shard int32) string {
-	base := prefixedName(name)
+func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
+	base := prefixedName(p)
 	if shard == 0 {
 		return base
 	}
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func MakeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config operator.Config) (*v1.Secret, error) {
+func MakeEmptyConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config) (*v1.Secret, error) {
 	s := MakeConfigSecret(p, config)
 
 	s.ObjectMeta.Annotations = map[string]string{
@@ -97,20 +101,24 @@ func MakeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config operator.Co
 	return s, nil
 }
 
-func MakeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Secret {
+func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config) *v1.Secret {
+	objMeta := p.GetObjectMeta()
+	typeMeta := p.GetTypeMeta()
+
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ConfigSecretName(p.Name),
-			Labels: config.Labels.Merge(ManagedByOperatorLabels),
+			Name:        ConfigSecretName(p),
+			Annotations: config.Annotations.AnnotationsMap,
+			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					APIVersion:         p.APIVersion,
+					APIVersion:         typeMeta.APIVersion,
 					BlockOwnerDeletion: &boolTrue,
 					Controller:         &boolTrue,
-					Kind:               p.Kind,
-					Name:               p.Name,
-					UID:                p.UID,
+					Kind:               typeMeta.Kind,
+					Name:               objMeta.GetName(),
+					UID:                objMeta.GetUID(),
 				},
 			},
 		},
@@ -120,72 +128,35 @@ func MakeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Se
 	}
 }
 
-func MakeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
-	p = p.DeepCopy()
+func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
+	return prefixedName(p)
+}
 
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = DefaultPortName
+func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-tls-assets", prefixedName(p))
+}
+
+func WebConfigSecretName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(p))
+}
+
+func VolumeName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-db", prefixedName(p))
+}
+
+func prefixedName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-%s", prefix(p), p.GetObjectMeta().GetName())
+}
+
+func prefix(p monitoringv1.PrometheusInterface) string {
+	switch p.(type) {
+	case *monitoringv1.Prometheus:
+		return "prometheus"
+	case *monitoringv1alpha1.PrometheusAgent:
+		return "prom-agent"
+	default:
+		panic("unknown prometheus type")
 	}
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: GoverningServiceName,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					Name:       p.GetName(),
-					Kind:       p.Kind,
-					APIVersion: p.APIVersion,
-					UID:        p.GetUID(),
-				},
-			},
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-prometheus": "true",
-			}),
-		},
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
-			},
-		},
-	}
-
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
-
-	return svc
-}
-
-func ConfigSecretName(name string) string {
-	return prefixedName(name)
-}
-
-func TLSAssetsSecretName(name string) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
-}
-
-func WebConfigSecretName(name string) string {
-	return fmt.Sprintf("%s-web-config", prefixedName(name))
-}
-
-func VolumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
-}
-
-func prefixedName(name string) string {
-	return fmt.Sprintf("prometheus-%s", name)
 }
 
 // TODO: Storage methods should be moved to server package.
@@ -254,14 +225,6 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
 	}
 
-	if cpf.WALCompression != nil {
-		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
-		if *cpf.WALCompression {
-			arg.Name = "storage.tsdb.wal-compression"
-		}
-		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
-	}
-
 	if cpf.ListenLocal {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
 	}
@@ -272,7 +235,6 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 // BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent
 func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []string) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
-	promName := p.GetObjectMeta().GetName()
 
 	assetsVolume := v1.Volume{
 		Name: "tls-assets",
@@ -296,7 +258,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 			Name: "config",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: ConfigSecretName(promName),
+					SecretName: ConfigSecretName(p),
 				},
 			},
 		},
@@ -312,12 +274,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 		},
 	}
 
-	volName := VolumeName(promName)
-	if cpf.Storage != nil {
-		if cpf.Storage.VolumeClaimTemplate.Name != "" {
-			volName = cpf.Storage.VolumeClaimTemplate.Name
-		}
-	}
+	volName := VolumeClaimName(p, cpf)
 
 	promVolumeMounts := []v1.VolumeMount{
 		{
@@ -387,6 +344,16 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 	}
 
 	return volumes, promVolumeMounts, nil
+}
+
+func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) string {
+	volName := VolumeName(p)
+	if cpf.Storage != nil {
+		if cpf.Storage.VolumeClaimTemplate.Name != "" {
+			volName = cpf.Storage.VolumeClaimTemplate.Name
+		}
+	}
+	return volName
 }
 
 func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator, webRoutePrefix string) v1.ProbeHandler {

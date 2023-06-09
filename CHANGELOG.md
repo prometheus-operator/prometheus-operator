@@ -1,3 +1,73 @@
+## 0.65.2 / 2023-05-31
+
+* [BUGFIX] Fix relabeling issue in `ScrapeConfig` CRD. #5611
+
+## 0.65.1 / 2023-05-05
+
+* [BUGFIX] Fix panic when ScrapeConfig CRD is not installed. #5550
+
+## 0.65.0 / 2023-05-04
+
+The main change introduced by this release is the new v1alpha1 `ScrapeConfig` CRD.
+This implements the [proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+documented in [#5279](https://github.com/prometheus-operator/prometheus-operator/pull/5279)
+and provides a Kubernetes native API to create and manage additional scrape configurations.
+
+To try it, follow the following steps:
+1. Install the new CRD in the cluster (see
+   `example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml`).
+2. Update the Prometheus operator's RBAC permissions to manage `ScrapeConfig` resources
+   (see `example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml`).
+
+**NOTE**: if these conditions aren't met, the operator will start but it won't
+be able to reconcile the `ScrapeConfig` resources.
+
+* [FEATURE] Add the `status` subresource for the `ThanosRuler` CRD. #5520
+* [FEATURE] Add `spec.web.timeout` and `spec.web.getConcurrency` to the `Alertmanager` CRD. #5478
+* [FEATURE] Add `spec.groups[].limit` to the `Prometheus` CRD. #4999
+* [FEATURE] Add ScrapeConfig CRD. #5335
+* [ENHANCEMENT] Set a default for `seccompProfile` on the operator and webhook Deployments to `RuntimeDefault`. #5477
+* [ENHANCEMENT] Add optional liveness and readiness probes to `prometheus-config-reloader`. This can be enabled via the `--enable-config-reloader-probes` CLI flag. #5449
+* [BUGFIX] Don't start the `PrometheusAgent` controller if the CRD isn't present or the operator lacks permissions. #5476
+* [BUGFIX] Declare `spec.rules` optional in `PrometheusRule` CRD. #5481
+* [BUGFIX] Fix incorrect metric counter value for failed sync status. #5533
+
+## 0.64.1 / 2023-04-24
+
+* [BUGFIX] Fix panic when scraping `/metrics` with PrometheusAgent resources declared. #5511
+
+## 0.64.0 / 2023-03-29
+
+This release provides first-class support for running Prometheus in agent mode
+with the new `PrometheusAgent` CRD. As the v1alpha1 version tells it, we don't
+recommend using it in production but we're eager to hear all possible feedback.
+
+To try it, follow the following steps:
+1. Install the new CRD in the cluster (see
+   `example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml`).
+2. Update the Prometheus operator's RBAC permissions to manage PrometheusAgents resources
+   (see `example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml`).
+
+**NOTE**: if these conditions aren't met, the operator will start but it won't
+be able to reconcile the PrometheusAgent resources.
+
+For the first time, the container images associated to this release are signed
+using [sigstore](https://www.sigstore.dev/).
+
+* [CHANGE] Remove the `/apis` endpoints from the operator's web server. #5396
+* [CHANGE] Set default default value of `spec.portName` to `web`. #5350
+* [FEATURE] Add v1alpha1 `PrometheusAgent` CRD to run Prometheus in agent mode. #5385
+* [FEATURE] Add `--reload-timeout` argument to the config-reloader binary which controls how long the program will wait for the reload operation to complete (default: 30s). #5349
+* [ENHANCEMENT] Set web server's `ReadTimeout` and `ReadHeaderTimeout` to 30s for Prometheus operator and config-reloader to avoid potential slowloris attacks. #5340
+* [ENHANCEMENT] Add support for `DropEqual` and `KeepEqual` relabeling actions. #5368
+* [ENHANCEMENT] Drop invalid `PrometheusRule` objects instead of failing the reconciliation of Prometheus and ThanosRuler objects. #5221
+* [ENHANCEMENT] Add `spec.thanos.blockSize` field to the `Prometheus` CRD. #5360
+* [ENHANCEMENT] Add `spec.thanos.configTimeout` and `spec.thanos.configInterval` to the Prometheus CRD. #5399
+* [ENHANCEMENT] Add `spec.alertmanagerConfiguration.global.slackApiUrl` field to the `Alertmanager` CRD. #5383
+* [ENHANCEMENT] Add `spec.alertmanagerConfiguration.global.opsGenieApiUrl` and `spec.alertmanagerConfiguration.global.opsGenieApiKey` fields to the `Alertmanager` CRD. #5422
+* [ENHANCEMENT] Reduce the operator's memory usage by using metadata informers for Kubernetes secrets and configmaps. #5424 #5448
+* [BUGFIX] Add `init-config-reloader` init container to avoid a restart of the Alertmanager's `config-reloader` container when the pod starts. #5358
+
 ## 0.63.0 / 2023-02-08
 
 * [CHANGE] Use `tmpfs` to store `Prometheus` and `Alertmanager` configuration. #5311

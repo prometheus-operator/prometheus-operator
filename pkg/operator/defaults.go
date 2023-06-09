@@ -25,7 +25,7 @@ const (
 	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 
 	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector
-	DefaultThanosVersion = "v0.30.2"
+	DefaultThanosVersion = "v0.31.0"
 	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
 	// storage collector
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
@@ -55,6 +55,9 @@ var (
 		"v2.37.3",
 		"v2.37.4",
 		"v2.37.5",
+		"v2.37.6",
+		"v2.37.7",
+		"v2.37.8",
 		"v2.38.0",
 		"v2.39.0",
 		"v2.39.1",
@@ -69,5 +72,8 @@ var (
 		"v2.40.7",
 		"v2.41.0",
 		"v2.42.0",
+		"v2.43.0",
+		"v2.43.1",
+		"v2.44.0",
 	}
 )

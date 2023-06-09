@@ -360,7 +360,11 @@
                         "type": "string"
                       },
                       "scheme": {
-                        "description": "HTTP scheme to use for scraping. Defaults to `http`.",
+                        "description": "HTTP scheme to use for scraping. `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling. If empty, Prometheus uses the default value `http`.",
+                        "enum": [
+                          "http",
+                          "https"
+                        ],
                         "type": "string"
                       },
                       "url": {
@@ -379,7 +383,7 @@
                     "type": "integer"
                   },
                   "scrapeTimeout": {
-                    "description": "Timeout for scraping metrics from the Prometheus exporter. If not specified, the Prometheus global scrape interval is used.",
+                    "description": "Timeout for scraping metrics from the Prometheus exporter. If not specified, the Prometheus global scrape timeout is used.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },

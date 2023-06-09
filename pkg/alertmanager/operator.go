@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -49,6 +48,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -68,6 +68,7 @@ var (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 	logger   log.Logger
 	accessor *operator.Accessor
@@ -89,12 +90,12 @@ type Operator struct {
 }
 
 type Config struct {
-	Host                         string
 	LocalHost                    string
 	ClusterDomain                string
 	ReloaderConfig               operator.ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   operator.Namespaces
+	Annotations                  operator.Annotations
 	Labels                       operator.Labels
 	AlertManagerSelector         string
 	SecretListWatchSelector      string
@@ -112,6 +113,11 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
+	mdClient, err := metadata.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
+	}
+
 	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
@@ -122,6 +128,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 
 	o := &Operator{
 		kclient:  client,
+		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
@@ -129,12 +136,12 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
-			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
 			ReloaderConfig:               c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespaces:                   c.Namespaces,
+			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 			AlertManagerSelector:         c.AlertManagerSelector,
 			SecretListWatchSelector:      c.SecretListWatchSelector,
@@ -205,11 +212,12 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "can not parse secrets selector value")
 	}
+
 	c.secrInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = secretListWatchSelector.String()
@@ -364,36 +372,45 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	if old.(*v1.Secret).ResourceVersion == cur.(*v1.Secret).ResourceVersion {
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+	level.Debug(c.logger).Log("msg", "Secret deleted")
+	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
+	c.enqueueForNamespace(o.GetNamespace())
+}
 
-		c.enqueueForNamespace(o.GetNamespace())
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
+		return
 	}
+
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
+	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Secret updated")
+	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+
+	c.enqueueForNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "Secret added")
+	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
+	c.enqueueForNamespace(o.GetNamespace())
 }
 
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
@@ -488,47 +505,32 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// Refresh the status of the existing Alertmanager objects.
 	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
-		c.rr.EnqueueForStatus(obj.(*monitoringv1.Alertmanager))
+		c.RefreshStatusFor(obj.(*monitoringv1.Alertmanager))
 	})
 
 	c.addHandlers()
 
-	// Run a goroutine that refreshes regularly the Alertmanager objects that
-	// aren't fully available to keep the status up-to-date with the pod
-	// conditions. In practice when a new version of the statefulset is rolled
-	// out and the updated pod is crashlooping, the statefulset status won't
-	// see any update because the number of ready/updated replicas doesn't
-	// change. Without the periodic refresh, the Alertmanager object's status
-	// would report "containers with incomplete status: [init-config-reloader]"
-	// forever.
 	// TODO(simonpasquier): watch for Alertmanager pods instead of polling.
-	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
-					a := o.(*monitoringv1.Alertmanager)
-					for _, cond := range a.Status.Conditions {
-						if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
-							c.rr.EnqueueForStatus(a)
-							break
-						}
-					}
-				})
-				if err != nil {
-					level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
-				}
-			}
-		}
-	}()
+	go operator.StatusPoller(ctx, c)
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
+}
+
+// Iterate implements the operator.StatusReconciler interface.
+func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+	if err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+		a := o.(*monitoringv1.Alertmanager)
+		processFn(a, a.Status.Conditions)
+	}); err != nil {
+		level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+	}
+}
+
+// RefreshStatus implements the operator.StatusReconciler interface.
+func (c *Operator) RefreshStatusFor(o metav1.Object) {
+	c.rr.EnqueueForStatus(o)
 }
 
 // Resolve implements the operator.Syncer interface.
@@ -555,10 +557,6 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetNameFromAlertmanagerName(name string) string {
-	return "alertmanager-" + name
 }
 
 func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
@@ -677,18 +675,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
-	exists := !apierrors.IsNotFound(err)
-	if err != nil && exists {
-		return errors.Wrap(err, "failed to retrieve statefulset")
+	existingStatefulSet, err := c.getStatefulSetFromAlertmanagerKey(key)
+	if err != nil {
+		return err
 	}
 
-	existingStatefulSet := &appsv1.StatefulSet{}
-	if obj != nil {
-		existingStatefulSet = obj.(*appsv1.StatefulSet)
-		if c.rr.DeletionInProgress(existingStatefulSet) {
-			return nil
-		}
+	shouldCreate := false
+	if existingStatefulSet == nil {
+		shouldCreate = true
+		existingStatefulSet = &appsv1.StatefulSet{}
+	}
+
+	if c.rr.DeletionInProgress(existingStatefulSet) {
+		return nil
 	}
 
 	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, existingStatefulSet.Spec)
@@ -702,14 +701,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
-
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
 		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
-	if !exists {
+	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
+	if shouldCreate {
 		level.Debug(logger).Log("msg", "no current statefulset found")
 		level.Debug(logger).Log("msg", "creating statefulset")
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
@@ -745,61 +743,58 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// UpdateStatus updates the status subresource of the object identified by the given
-// key.
-// UpdateStatus implements the operator.Syncer interface.
-func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	aobj, err := c.alrtInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
+// getAlertmanagerFromKey returns a copy of the Alertmanager object identified by key.
+// If the object is not found, it returns a nil pointer.
+func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanager, error) {
+	obj, err := c.alrtInfs.Get(key)
 	if err != nil {
-		return err
-	}
-
-	a := aobj.(*monitoringv1.Alertmanager)
-	a = a.DeepCopy()
-
-	aStatus := monitoringv1.AlertmanagerStatus{
-		Paused: a.Spec.Paused,
-	}
-
-	logger := log.With(c.logger, "key", key)
-	level.Info(logger).Log("msg", "update alertmanager status")
-
-	var (
-		availableCondition = monitoringv1.Condition{
-			Type:   monitoringv1.Available,
-			Status: monitoringv1.ConditionTrue,
-			LastTransitionTime: metav1.Time{
-				Time: time.Now().UTC(),
-			},
-			ObservedGeneration: a.Generation,
+		if apierrors.IsNotFound(err) {
+			level.Info(c.logger).Log("msg", "Alertmanager not found", "key", key)
+			return nil, nil
 		}
-		messages []string
-		replicas = 1
-	)
-
-	if a.Spec.Replicas != nil {
-		replicas = int(*a.Spec.Replicas)
+		return nil, errors.Wrap(err, "failed to retrieve Alertmanager from informer")
 	}
 
+	return obj.(*monitoringv1.Alertmanager).DeepCopy(), nil
+}
+
+// getStatefulSetFromAlertmanagerKey returns a copy of the StatefulSet object
+// corresponding to the Alertmanager object identified by key.
+// If the object is not found, it returns a nil pointer.
+func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.StatefulSet, error) {
 	ssetName := alertmanagerKeyToStatefulSetKey(key)
-	logger = log.With(logger, "statefulset", ssetName)
 
 	obj, err := c.ssetInfs.Get(ssetName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			// Object not yet in the store or already deleted.
-			level.Info(logger).Log("msg", "not found")
-			return nil
+			level.Info(c.logger).Log("msg", "StatefulSet not found", "key", ssetName)
+			return nil, nil
 		}
-		return errors.Wrap(err, "failed to retrieve statefulset")
+		return nil, errors.Wrap(err, "failed to retrieve StatefulSet from informer")
 	}
 
-	sset := obj.(*appsv1.StatefulSet)
-	if c.rr.DeletionInProgress(sset) {
+	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
+}
+
+// UpdateStatus updates the status subresource of the object identified by the given
+// key.
+// UpdateStatus implements the operator.Syncer interface.
+func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
+	a, err := c.getAlertmanagerFromKey(key)
+	if err != nil {
+		return err
+	}
+
+	if a == nil || c.rr.DeletionInProgress(a) {
+		return nil
+	}
+
+	sset, err := c.getStatefulSetFromAlertmanagerKey(key)
+	if err != nil {
+		return errors.Wrap(err, "failed to get StatefulSet")
+	}
+
+	if sset == nil || c.rr.DeletionInProgress(sset) {
 		return nil
 	}
 
@@ -808,66 +803,11 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to retrieve statefulset state")
 	}
 
-	aStatus.Replicas = int32(len(stsReporter.Pods))
-	aStatus.UpdatedReplicas = int32(len(stsReporter.UpdatedPods()))
-	aStatus.AvailableReplicas = int32(len(stsReporter.ReadyPods()))
-	aStatus.UnavailableReplicas = int32(len(stsReporter.Pods) - len(stsReporter.ReadyPods()))
+	availableCondition := stsReporter.Update(a)
+	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
+	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
+	a.Status.Paused = a.Spec.Paused
 
-	if len(stsReporter.ReadyPods()) < replicas {
-		if aStatus.AvailableReplicas == 0 {
-			availableCondition.Reason = "NoPodReady"
-			availableCondition.Status = monitoringv1.ConditionFalse
-		} else {
-			availableCondition.Reason = "SomePodsNotReady"
-			availableCondition.Status = monitoringv1.ConditionDegraded
-		}
-	}
-
-	for _, p := range stsReporter.Pods {
-		if m := p.Message(); m != "" {
-			messages = append(messages, fmt.Sprintf("pod %s: %s", p.Name, m))
-		}
-	}
-
-	availableCondition.Message = strings.Join(messages, "\n")
-
-	// Compute the Reconciled ConditionType.
-	reconciledCondition := monitoringv1.Condition{
-		Type:   monitoringv1.Reconciled,
-		Status: monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Time{
-			Time: time.Now().UTC(),
-		},
-		ObservedGeneration: a.Generation,
-	}
-	reconciliationStatus, found := c.reconciliations.GetStatus(key)
-	if !found {
-		reconciledCondition.Status = monitoringv1.ConditionUnknown
-		reconciledCondition.Reason = "NotFound"
-		reconciledCondition.Message = fmt.Sprintf("object %q not found", key)
-	} else {
-		if !reconciliationStatus.Ok() {
-			reconciledCondition.Status = monitoringv1.ConditionFalse
-		}
-		reconciledCondition.Reason = reconciliationStatus.Reason()
-		reconciledCondition.Message = reconciliationStatus.Message()
-	}
-
-	// Update the last transition times only if the status of the available condition has changed.
-	for _, condition := range a.Status.Conditions {
-		if condition.Type == availableCondition.Type && condition.Status == availableCondition.Status {
-			availableCondition.LastTransitionTime = condition.LastTransitionTime
-			continue
-		}
-
-		if condition.Type == reconciledCondition.Type && condition.Status == reconciledCondition.Status {
-			reconciledCondition.LastTransitionTime = condition.LastTransitionTime
-		}
-	}
-
-	aStatus.Conditions = append(aStatus.Conditions, availableCondition, reconciledCondition)
-
-	a.Status = aStatus
 	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).UpdateStatus(ctx, a, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to update status subresource")
 	}
@@ -1054,8 +994,9 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 
 	generatedConfigSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   generatedConfigSecretName(am.Name),
-			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			Name:        generatedConfigSecretName(am.Name),
+			Annotations: c.config.Annotations.AnnotationsMap,
+			Labels:      c.config.Labels.Merge(managedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         am.APIVersion,
@@ -1185,7 +1126,7 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 		return err
 	}
 
-	return checkInhibitRules(ctx, amc, amVersion)
+	return checkInhibitRules(amc, amVersion)
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
@@ -1213,7 +1154,7 @@ func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion 
 	return nil
 }
 
-func checkHTTPConfig(ctx context.Context, hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version) error {
+func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version) error {
 	if hc == nil {
 		return nil
 	}
@@ -1268,7 +1209,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
-		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), store)
 		if err != nil {
 			return err
 		}
@@ -1306,7 +1247,7 @@ func checkPagerDutyConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 
@@ -1341,10 +1282,10 @@ func checkOpsGenieConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
-		if err := checkOpsGenieResponder(ctx, config.Responders, amVersion); err != nil {
+		if err := checkOpsGenieResponder(config.Responders, amVersion); err != nil {
 			return err
 		}
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
@@ -1363,7 +1304,7 @@ func checkOpsGenieConfigs(
 	return nil
 }
 
-func checkOpsGenieResponder(ctx context.Context, opsgenieResponder []monitoringv1alpha1.OpsGenieConfigResponder, amVersion semver.Version) error {
+func checkOpsGenieResponder(opsgenieResponder []monitoringv1alpha1.OpsGenieConfigResponder, amVersion semver.Version) error {
 	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
 	for _, resp := range opsgenieResponder {
 		if resp.Type == "teams" && lessThanV0_24 {
@@ -1382,7 +1323,7 @@ func checkSlackConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
@@ -1410,7 +1351,7 @@ func checkWebhookConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
@@ -1442,7 +1383,7 @@ func checkWechatConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
@@ -1483,7 +1424,7 @@ func checkWebexConfigs(
 	return nil
 }
 
-func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, key string, store *assets.Store) error {
+func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, store *assets.Store) error {
 	for _, config := range configs {
 		if config.AuthPassword != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
@@ -1513,7 +1454,7 @@ func checkVictorOpsConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		if config.APIKey != nil {
@@ -1554,7 +1495,7 @@ func checkPushoverConfigs(
 	}
 
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		if err := checkSecret(config.UserKey, "userKey"); err != nil {
@@ -1582,7 +1523,7 @@ func checkSnsConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		snsConfigKey := fmt.Sprintf("%s/sns/%d", key, i)
@@ -1614,7 +1555,7 @@ func checkTelegramConfigs(
 	}
 
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 
@@ -1634,7 +1575,7 @@ func checkTelegramConfigs(
 	return nil
 }
 
-func checkInhibitRules(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
+func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
 	matchersV2Allowed := version.GTE(semver.MustParse("0.22.0"))
 
 	for i, rule := range amc.Spec.InhibitRules {
@@ -1760,9 +1701,10 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		Name:               a.Name,
 		UID:                a.UID,
 	}
+	secretAnnotations := c.config.Annotations.AnnotationsMap
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
 		return errors.Wrap(err, "failed to reconcile web config secret")
 	}
 
@@ -1792,62 +1734,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"alertmanager":           name,
 		})).String(),
 	}
-}
-
-// Status evaluates the current status of an Alertmanager object with
-// respect to its specified resource object. It returns the status and a list of
-// pods that are not updated.
-// TODO(simonpasquier): remove once the status subresource is considered stable.
-func Status(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
-	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
-
-	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ctx, ListOptions(a.Name))
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
-	}
-	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(ctx, statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
-	}
-
-	res.Replicas = int32(len(pods.Items))
-
-	var oldPods []v1.Pod
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
-		}
-		if ready {
-			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template
-			// that are mutable.
-			if needsUpdate(&pod, sset.Spec.Template) {
-				oldPods = append(oldPods, pod)
-			} else {
-				res.UpdatedReplicas++
-			}
-			continue
-		}
-		res.UnavailableReplicas++
-	}
-
-	return res, oldPods, nil
-}
-
-func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
-	c1 := pod.Spec.Containers[0]
-	c2 := tmpl.Spec.Containers[0]
-
-	if c1.Image != c2.Image {
-		return true
-	}
-
-	if !reflect.DeepEqual(c1.Args, c2.Args) {
-		return true
-	}
-
-	return false
 }
 
 func tlsAssetsSecretName(name string) string {

@@ -162,7 +162,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestAllNS(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), t, ns))
+	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -289,6 +289,9 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
+		"ScrapeConfigCreation":                      testScrapeConfigCreation,
+		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
+		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 	}
 
 	for name, f := range testFuncs {
@@ -342,10 +345,11 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":             testPrometheusInstanceNamespacesAllNs,
-		"AllowList":         testPrometheusInstanceNamespacesAllowList,
-		"DenyList":          testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound": testPrometheusInstanceNamespacesNamespaceNotFound,
+		"AllNs":                 testPrometheusInstanceNamespacesAllNs,
+		"AllowList":             testPrometheusInstanceNamespacesAllowList,
+		"DenyList":              testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":     testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle": testScrapeConfigLifecycle,
 	}
 
 	for name, f := range testFuncs {
@@ -371,7 +375,8 @@ func TestAlertmanagerInstanceNs(t *testing.T) {
 func TestOperatorUpgrade(t *testing.T) {
 	skipOperatorUpgradeTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"OperatorUpgrade": testOperatorUpgrade,
+		"OperatorUpgrade":                          testOperatorUpgrade,
+		"PromOperatorStartsWithoutScrapeConfigCRD": testPromOperatorStartsWithoutScrapeConfigCRD,
 	}
 
 	for name, f := range testFuncs {
@@ -383,7 +388,7 @@ const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
 
-func testServerTLS(ctx context.Context, t *testing.T, namespace string) func(t *testing.T) {
+func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 	return func(t *testing.T) {
 		skipPrometheusTests(t)
 		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {

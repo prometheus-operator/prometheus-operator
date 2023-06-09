@@ -59,7 +59,6 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 	}
 
 	return makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -100,6 +99,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"testlabel":                    "testlabelvalue",
 		"operator.prometheus.io/name":  "",
 		"operator.prometheus.io/shard": "0",
+		"operator.prometheus.io/mode":  "server",
 	}
 
 	expectedPodLabels := map[string]string{
@@ -302,6 +302,19 @@ func TestStatefulSetEphemeral(t *testing.T) {
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {
+	p := monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "volume-init-test",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Secrets: []string{
+					"test-secret1",
+				},
+			},
+		},
+	}
+
 	expected := &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
 			Template: v1.PodTemplateSpec{
@@ -355,7 +368,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							Name: "config",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName: prompkg.ConfigSecretName("volume-init-test"),
+									SecretName: prompkg.ConfigSecretName(&p),
 								},
 							},
 						},
@@ -367,7 +380,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 										{
 											Secret: &v1.SecretProjection{
 												LocalObjectReference: v1.LocalObjectReference{
-													Name: prompkg.TLSAssetsSecretName("volume-init-test") + "-0",
+													Name: prompkg.TLSAssetsSecretName(&p) + "-0",
 												},
 											},
 										},
@@ -422,24 +435,11 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	}
 
 	logger := newLogger()
-	p := monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "volume-init-test",
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Secrets: []string{
-					"test-secret1",
-				},
-			},
-		},
-	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
-		logger,
 		"volume-init-test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -457,7 +457,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		[]string{"rules-configmap-one"},
 		"",
 		0,
-		[]string{prompkg.TLSAssetsSecretName("volume-init-test") + "-0"})
+		[]string{prompkg.TLSAssetsSecretName(&p) + "-0"})
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
@@ -667,6 +667,21 @@ func TestListenTLS(t *testing.T) {
 	}
 
 	fmt.Println(sset.Spec.Template.Spec.Containers[2].Args)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=https://localhost:9090/-/reload",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
 }
 
 func TestTagAndShaAndVersion(t *testing.T) {
@@ -882,7 +897,6 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -937,7 +951,6 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -1300,6 +1313,50 @@ func TestThanosBlockDuration(t *testing.T) {
 	}
 }
 
+func TestThanosWithNamedPVC(t *testing.T) {
+	testKey := "named-pvc"
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Name: testKey,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: pvc,
+				},
+			},
+			Thanos: &monitoringv1.ThanosSpec{
+				BlockDuration: "1h",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, vol := range container.VolumeMounts {
+				if vol.Name == testKey {
+					found = true
+				}
+			}
+		}
+	}
+	require.True(t, found, "VolumeClaimTemplate name not found on thanos-sidecar volumeMounts")
+}
+
 func TestThanosTracing(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 
@@ -1497,7 +1554,6 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -1553,7 +1609,6 @@ func TestSidecarResources(t *testing.T) {
 		require.NoError(t, err)
 
 		sset, err := makeStatefulSet(
-			logger,
 			"test",
 			&p,
 			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
@@ -1958,7 +2013,6 @@ func TestConfigReloader(t *testing.T) {
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
-		logger,
 		"test",
 		&p,
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,

@@ -19,7 +19,7 @@ import (
 	"os"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -73,7 +73,7 @@ func (f *Framework) scaleDownReplicationController(ctx context.Context, namespac
 		return err
 	}
 
-	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		currentRC, err := rCAPI.Get(ctx, rC.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err

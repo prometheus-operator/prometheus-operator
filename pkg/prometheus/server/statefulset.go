@@ -21,11 +21,11 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -37,10 +37,61 @@ import (
 const (
 	defaultRetention      = "24h"
 	defaultQueryLogVolume = "query-log-file"
+	prometheusMode        = "server"
+	governingServiceName  = "prometheus-operated"
 )
 
+// TODO(ArthurSens): generalize it enough to be used by both server and agent.
+func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
+	p = p.DeepCopy()
+
+	if p.Spec.PortName == "" {
+		p.Spec.PortName = prompkg.DefaultPortName
+	}
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: governingServiceName,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name:       p.GetName(),
+					Kind:       p.Kind,
+					APIVersion: p.APIVersion,
+					UID:        p.GetUID(),
+				},
+			},
+			Annotations: config.Annotations.AnnotationsMap,
+			Labels: config.Labels.Merge(map[string]string{
+				"operated-prometheus": "true",
+			}),
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: "None",
+			Ports: []v1.ServicePort{
+				{
+					Name:       p.Spec.PortName,
+					Port:       9090,
+					TargetPort: intstr.FromString(p.Spec.PortName),
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name": "prometheus",
+			},
+		},
+	}
+
+	if p.Spec.Thanos != nil {
+		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			Name:       "grpc",
+			Port:       10901,
+			TargetPort: intstr.FromString("grpc"),
+		})
+	}
+
+	return svc
+}
+
 func makeStatefulSet(
-	logger log.Logger,
 	name string,
 	p monitoringv1.PrometheusInterface,
 	baseImage, tag, sha string,
@@ -79,7 +130,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(logger, baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -99,12 +150,13 @@ func makeStatefulSet(
 	}
 	labels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 	labels[prompkg.PrometheusNameLabelName] = objMeta.GetName()
+	labels[prompkg.PrometheusModeLabeLName] = prometheusMode
 
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Labels:      config.Labels.Merge(labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,
@@ -133,7 +185,7 @@ func makeStatefulSet(
 	storageSpec := cpf.Storage
 	if storageSpec == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -141,7 +193,7 @@ func makeStatefulSet(
 	} else if storageSpec.EmptyDir != nil {
 		emptyDir := storageSpec.EmptyDir
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: emptyDir,
 			},
@@ -149,7 +201,7 @@ func makeStatefulSet(
 	} else if storageSpec.Ephemeral != nil {
 		ephemeral := storageSpec.Ephemeral
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(objMeta.GetName()),
+			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				Ephemeral: ephemeral,
 			},
@@ -157,7 +209,7 @@ func makeStatefulSet(
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = prompkg.VolumeName(objMeta.GetName())
+			pvcTemplate.Name = prompkg.VolumeName(p)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
 			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
@@ -179,7 +231,6 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	logger log.Logger,
 	baseImage, tag, sha string,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
@@ -219,7 +270,7 @@ func makeStatefulSetSpec(
 		webRoutePrefix = cpf.RoutePrefix
 	}
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI)
+	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -249,7 +300,7 @@ func makeStatefulSetSpec(
 			fields = cpf.Web.WebConfigFileFields
 		}
 
-		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(promName), fields)
+		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(p), fields)
 		if err != nil {
 			return nil, err
 		}
@@ -445,7 +496,7 @@ func makeStatefulSetSpec(
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         prompkg.GoverningServiceName,
+		ServiceName:         governingServiceName,
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
@@ -488,7 +539,9 @@ func appendServerArgs(
 	retentionSize monitoringv1.ByteSize,
 	rules monitoringv1.Rules,
 	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks, enableAdminAPI bool) []monitoringv1.Argument {
+	allowOverlappingBlocks,
+	enableAdminAPI bool,
+	walCompression *bool) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(retention)
@@ -548,6 +601,14 @@ func appendServerArgs(
 
 	if allowOverlappingBlocks {
 		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
+	}
+
+	if walCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
+		if *walCompression {
+			arg.Name = "storage.tsdb.wal-compression"
+		}
+		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
 	return promArgs
 }
@@ -683,7 +744,7 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeName(p.GetObjectMeta().GetName())
+			volName := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
 			container.VolumeMounts = append(
 				container.VolumeMounts,

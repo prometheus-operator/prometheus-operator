@@ -61,7 +61,7 @@ type ProbeSpec struct {
 	// If not specified Prometheus' global scrape interval is used.
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
-	// If not specified, the Prometheus global scrape interval is used.
+	// If not specified, the Prometheus global scrape timeout is used.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
@@ -166,7 +166,9 @@ type ProberSpec struct {
 	// Mandatory URL of the prober.
 	URL string `json:"url"`
 	// HTTP scheme to use for scraping.
-	// Defaults to `http`.
+	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
+	// If empty, Prometheus uses the default value `http`.
+	// +kubebuilder:validation:Enum=http;https
 	Scheme string `json:"scheme,omitempty"`
 	// Path to collect metrics from.
 	// Defaults to `/probe`.

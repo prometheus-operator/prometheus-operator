@@ -54,6 +54,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}
 
 	myrouteJSON, _ := json.Marshal(myroute)
+	pagerdutyURL := "example.pagerduty.com"
+	invalidPagerdutyURL := "://example.pagerduty.com"
 
 	tests := []struct {
 		name            string
@@ -281,6 +283,311 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "valid global config with OpsGenie API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				OpsGenieAPIURL: &corev1.SecretKeySelector{
+					Key: "url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "opsgenie",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIURL: parseURL(t, "https://opsgenie.example.com"),
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "global config with invalid OpsGenie API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				OpsGenieAPIURL: &corev1.SecretKeySelector{
+					Key: "invalid_url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "opsgenie",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "global config with missing OpsGenie API URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				OpsGenieAPIURL: &corev1.SecretKeySelector{
+					Key: "url",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "not_existing",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid global config with OpsGenie API KEY",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				OpsGenieAPIKey: &corev1.SecretKeySelector{
+					Key: "api_key",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "opsgenie",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					OpsGenieAPIKey: "mykey",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "global config with missing OpsGenie API KEY",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				OpsGenieAPIKey: &corev1.SecretKeySelector{
+					Key: "api_key",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "not_existing",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid global config with Pagerduty URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				PagerdutyURL: &pagerdutyURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					PagerdutyURL: parseURL(t, pagerdutyURL),
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "global config with invalid Pagerduty URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				PagerdutyURL: &invalidPagerdutyURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name: "missing route",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -366,6 +673,17 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Data: map[string][]byte{
 					"url":         []byte("https://slack.example.com"),
 					"invalid_url": []byte("://slack.example.com"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"url":         []byte("https://opsgenie.example.com"),
+					"invalid_url": []byte("://opsgenie.example.com"),
+					"api_key":     []byte("mykey"),
 				},
 			},
 		)

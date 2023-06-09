@@ -19,11 +19,12 @@ package v1
 // ThanosRulerStatusApplyConfiguration represents an declarative configuration of the ThanosRulerStatus type for use
 // with apply.
 type ThanosRulerStatusApplyConfiguration struct {
-	Paused              *bool  `json:"paused,omitempty"`
-	Replicas            *int32 `json:"replicas,omitempty"`
-	UpdatedReplicas     *int32 `json:"updatedReplicas,omitempty"`
-	AvailableReplicas   *int32 `json:"availableReplicas,omitempty"`
-	UnavailableReplicas *int32 `json:"unavailableReplicas,omitempty"`
+	Paused              *bool                         `json:"paused,omitempty"`
+	Replicas            *int32                        `json:"replicas,omitempty"`
+	UpdatedReplicas     *int32                        `json:"updatedReplicas,omitempty"`
+	AvailableReplicas   *int32                        `json:"availableReplicas,omitempty"`
+	UnavailableReplicas *int32                        `json:"unavailableReplicas,omitempty"`
+	Conditions          []ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // ThanosRulerStatusApplyConfiguration constructs an declarative configuration of the ThanosRulerStatus type for use with
@@ -69,5 +70,18 @@ func (b *ThanosRulerStatusApplyConfiguration) WithAvailableReplicas(value int32)
 // If called multiple times, the UnavailableReplicas field is set to the value of the last call.
 func (b *ThanosRulerStatusApplyConfiguration) WithUnavailableReplicas(value int32) *ThanosRulerStatusApplyConfiguration {
 	b.UnavailableReplicas = &value
+	return b
+}
+
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *ThanosRulerStatusApplyConfiguration) WithConditions(values ...*ConditionApplyConfiguration) *ThanosRulerStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
 	return b
 }

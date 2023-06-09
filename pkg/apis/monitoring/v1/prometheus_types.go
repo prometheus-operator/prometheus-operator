@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -36,6 +37,7 @@ type PrometheusInterface interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetCommonPrometheusFields() CommonPrometheusFields
 	SetCommonPrometheusFields(CommonPrometheusFields)
+	GetStatus() PrometheusStatus
 }
 
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
@@ -50,6 +52,10 @@ func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
 	return l.TypeMeta
 }
 
+func (l *Prometheus) GetStatus() PrometheusStatus {
+	return l.Status
+}
+
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
@@ -57,8 +63,8 @@ type CommonPrometheusFields struct {
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -71,8 +77,8 @@ type CommonPrometheusFields struct {
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -85,8 +91,8 @@ type CommonPrometheusFields struct {
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// *Experimental* Probes to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -96,6 +102,20 @@ type CommonPrometheusFields struct {
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
+	// *Experimental* ScrapeConfigs to be selected for target discovery.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is deprecated and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
+	// Namespace's labels to match for ScrapeConfig discovery. If nil, only
+	// check own namespace.
+	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
@@ -344,8 +364,9 @@ type CommonPrometheusFields struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
-	// Enable compression of the write-ahead log using Snappy. This flag is
-	// only available in versions of Prometheus >= 2.11.0.
+	// Configures compression of the write-ahead log using Snappy.
+	// This flag is only available in versions of Prometheus >= 2.11.0.
+	// WAL compression is enabled by default for Prometheus >= 2.20.0
 	WALCompression *bool `json:"walCompression,omitempty"`
 	// List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.
@@ -357,6 +378,9 @@ type CommonPrometheusFields struct {
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 	// PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// +optional
+	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
 }
 
 // +genclient
@@ -494,7 +518,7 @@ type PrometheusSpec struct {
 	// For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 	// AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-	// This is still experimental in Prometheus so it may change in any upcoming release.
+	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 	// Exemplars related settings that are runtime reloadable.
 	// It requires to enable the exemplar storage feature to be effective.
@@ -512,6 +536,43 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
+}
+
+type PrometheusTracingConfig struct {
+	// Client used to export the traces. Supported values are `http` or `grpc`.
+	//+kubebuilder:validation:Enum=http;grpc
+	// +optional
+	ClientType *string `json:"clientType"`
+
+	// Endpoint to send the traces to. Should be provided in format <host>:<port>.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Endpoint string `json:"endpoint"`
+
+	// Sets the probability a given trace will be sampled. Must be a float from 0 through 1.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction"`
+
+	// If disabled, the client will use a secure connection.
+	// +optional
+	Insecure *bool `json:"insecure"`
+
+	// Key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers map[string]string `json:"headers"`
+
+	// Compression key for supported compression types. The only supported value is `gzip`.
+	//+kubebuilder:validation:Enum=gzip
+	// +optional
+	Compression *string `json:"compression"`
+
+	// Maximum time the exporter will wait for each batch export.
+	// +optional
+	Timeout *Duration `json:"timeout"`
+
+	// TLS Config to use when sending traces.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.
@@ -699,6 +760,9 @@ type RemoteWriteSpec struct {
 	// for exemplars to be scraped in the first place.  Only valid in
 	// Prometheus versions 2.27.0 and newer.
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
+	// Enables sending of native histograms, also known as sparse histograms
+	// over remote write. Only valid in Prometheus versions 2.40.0 and newer.
+	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
 	// Timeout for requests to the remote write endpoint.
 	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote write request.
@@ -806,6 +870,10 @@ type RemoteReadSpec struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// Requires Prometheus v2.26.0 and above.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to use the external labels as selectors for the remote read endpoint.
 	// Requires Prometheus v2.34.0 and above.
 	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`

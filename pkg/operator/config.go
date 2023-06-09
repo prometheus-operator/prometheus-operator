@@ -28,6 +28,7 @@ type Config struct {
 	Host                         string
 	ClusterDomain                string
 	KubeletObject                string
+	KubeletSelector              string
 	ListenAddress                string
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig
@@ -37,6 +38,7 @@ type Config struct {
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
 	Namespaces                   Namespaces
+	Annotations                  Annotations
 	Labels                       Labels
 	LocalHost                    string
 	LogLevel                     string
@@ -55,6 +57,46 @@ type ContainerConfig struct {
 	MemoryRequest string
 	MemoryLimit   string
 	Image         string
+	EnableProbes  bool
+}
+
+type Annotations struct {
+	AnnotationsString string
+	AnnotationsMap    map[string]string
+}
+
+// Implement the flag.Value interface
+func (annotations *Annotations) String() string {
+	return annotations.AnnotationsString
+}
+
+// Merge annotations create a new map with annotations merged.
+func (annotations *Annotations) Merge(otherAnnotations map[string]string) map[string]string {
+	mergedAnnotations := map[string]string{}
+
+	for key, value := range otherAnnotations {
+		mergedAnnotations[key] = value
+	}
+
+	for key, value := range annotations.AnnotationsMap {
+		mergedAnnotations[key] = value
+	}
+	return mergedAnnotations
+}
+
+// Set implements the flag.Set interface.
+func (annotations *Annotations) Set(value string) error {
+	m := map[string]string{}
+	if value != "" {
+		splited := strings.Split(value, ",")
+		for _, pair := range splited {
+			sp := strings.Split(pair, "=")
+			m[sp[0]] = sp[1]
+		}
+	}
+	(*annotations).AnnotationsMap = m
+	(*annotations).AnnotationsString = value
+	return nil
 }
 
 type Labels struct {

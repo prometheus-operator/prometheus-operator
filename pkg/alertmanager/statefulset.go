@@ -110,7 +110,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         am.APIVersion,
@@ -181,7 +181,8 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
+			Name:        governingServiceName,
+			Annotations: config.Annotations.AnnotationsMap,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-alertmanager": "true",
 			}),
@@ -269,6 +270,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
 	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
+
+	web := a.Spec.Web
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.GetConcurrency != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.get-concurrency=%d", *web.GetConcurrency))
+	}
+
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.Timeout != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.timeout=%d", *web.Timeout))
+	}
 
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
 		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
@@ -765,6 +775,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
+				AutomountServiceAccountToken:  a.Spec.AutomountServiceAccountToken,
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
