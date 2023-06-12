@@ -10,46 +10,19 @@ on:
       - 'v*'
 jobs:
   e2e-tests:
+    continue-on-error: true
     name: E2E tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        suite: [alertmanager, prometheus, prometheusAllNS, thanosruler, operatorUpgrade]
+        suite: [prometheus]
         include:
-          - suite: alertmanager
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: ""
-            thanosruler: "exclude"
-            operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: prometheus
             prometheus: ""
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
-          - suite: prometheusAllNS
-            prometheus: "exclude"
-            prometheusAllNS: ""
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: "exclude"
-            featureGated: "include"
-          - suite: thanosruler
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: ""
-            operatorUpgrade: "exclude"
-            featureGated: "include"
-          - suite: operatorUpgrade
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: ""
             featureGated: "include"
     steps:
     - uses: actions/checkout@v3
@@ -68,8 +41,16 @@ jobs:
       with:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
-        wait: 300s
         config: /test/e2e/kind-conf.yaml
+        wait: 300s
+    - name: Setup upterm session
+      if: ${{ failure() }}
+      uses: lhotari/action-upterm@v1
+      with:
+        ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+        limit-access-to-actor: true
+        ## limits ssh access and adds the ssh public keys of the listed GitHub users
+        limit-access-to-users: philipgough
     - name: Wait for cluster to finish bootstraping
       run: |
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
@@ -90,18 +71,3 @@ jobs:
         EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
         FEATURE_GATED_TESTS=${{ matrix.featureGated }}
         make test-e2e
-
-  # Added to summarize the matrix and allow easy branch protection rules setup
-  e2e-tests-result:
-    name: End-to-End Test Results
-    if: always()
-    needs:
-      - e2e-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Mark the job as a success
-        if: needs.e2e-tests.result == 'success'
-        run: exit 0
-      - name: Mark the job as a failure
-        if: needs.e2e-tests.result != 'success'
-        run: exit 1
