@@ -1411,7 +1411,7 @@ func checkWebexConfigs(
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
-		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 		webexConfigKey := fmt.Sprintf("%s/webex/%d", key, i)
