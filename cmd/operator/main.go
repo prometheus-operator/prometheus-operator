@@ -262,14 +262,7 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
-		cancel()
-		return 1
-	}
-
-	var pao *prometheusagentcontroller.Operator
+	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
 	verbs := map[string][]string{
 		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
 		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
@@ -282,8 +275,34 @@ func Main() int {
 		return 1
 	}
 
+	var scrapeConfigSupported bool
 	err = cc.CheckPrerequisites(ctx,
-		namespaces(cfg.Namespaces.AllowList).asSlice(),
+		allowedNamespaces,
+		verbs,
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
+	case err != nil:
+		level.Error(logger).Log("msg", "failed to check prerequisites for the ScrapeConfig CRD ", "err", err)
+		cancel()
+		return 1
+	default:
+		scrapeConfigSupported = true
+	}
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		cancel()
+		return 1
+	}
+
+	var pao *prometheusagentcontroller.Operator
+
+	err = cc.CheckPrerequisites(ctx,
+		allowedNamespaces,
 		verbs,
 		monitoringv1alpha1.SchemeGroupVersion.String(),
 		monitoringv1alpha1.PrometheusAgentName)
