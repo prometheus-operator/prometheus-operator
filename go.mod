@@ -12,7 +12,7 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/go-kit/log v0.2.1
-	github.com/go-openapi/swag v0.22.3
+	github.com/go-openapi/swag v0.22.4
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.9
