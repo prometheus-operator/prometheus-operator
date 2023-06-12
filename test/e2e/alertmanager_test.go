@@ -811,10 +811,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// create 2 namespaces:
 	//
 	// 1. "ns" ns:
-	//   - hosts the Alertmanager CR which which should be reconciled
+	//   - hosts the Alertmanager CR which should be reconciled
 	//
 	// 2. "configNs" ns:
-	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	//   - hosts the AlertmanagerConfig CRs which should be reconciled
 	// 		thanks to the label monitored: "true" which is removed in the second
 	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
