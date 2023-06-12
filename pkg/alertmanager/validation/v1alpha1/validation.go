@@ -306,13 +306,13 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 
 func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 	for _, config := range configs {
-		if config.APIURL != "" {
+		if config.APIURL == "" {
 			if _, err := validation.ValidateURL(config.APIURL); err != nil {
 				return errors.Wrap(err, "invalid 'apiURL'")
 			}
 		}
 
-		if config.RoomID != "" {
+		if config.RoomID == "" {
 			return fmt.Errorf("mandatory field %q is empty", "roomID")
 		}
 
