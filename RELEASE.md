@@ -58,6 +58,7 @@ A couple of days before the release, consider submitting a PR against the `main`
 
 ```bash
 make update-go-deps
+make tidy
 ```
 
 ## Update operand versions
