@@ -27,6 +27,9 @@ import (
 )
 
 func TestPrometheusRuleCRDValidation(t *testing.T) {
+	keepFiringFor := monitoringv1.ImprovedDuration("5m")
+	emptyDuration := monitoringv1.ImprovedDuration("")
+
 	skipPrometheusTests(t)
 	t.Parallel()
 
@@ -148,6 +151,41 @@ func TestPrometheusRuleCRDValidation(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "valid-keep-firing-for",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "test",
+						Rules: []monitoringv1.Rule{
+							{
+								Record:        "rule1",
+								Expr:          intstr.FromString("vector(0)"),
+								KeepFiringFor: &keepFiringFor,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid-keep-firing-for",
+			promRuleSpec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "test",
+						Rules: []monitoringv1.Rule{
+							{
+								Record:        "rule1",
+								Expr:          intstr.FromString("vector(0)"),
+								KeepFiringFor: &emptyDuration,
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
 		},
 	}
 
