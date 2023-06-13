@@ -203,7 +203,7 @@ func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
 }
 
 func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
-	duration := monitoringv1.ImprovedDuration("5m")
+	duration := monitoringv1.NonEmptyDuration("5m")
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -228,7 +228,7 @@ func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
 }
 
 func shouldDropKeepFiringForThanos(t *testing.T) {
-	duration := monitoringv1.ImprovedDuration("5m")
+	duration := monitoringv1.NonEmptyDuration("5m")
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -253,7 +253,7 @@ func shouldDropKeepFiringForThanos(t *testing.T) {
 }
 
 func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
-	duration := monitoringv1.ImprovedDuration("5m")
+	duration := monitoringv1.NonEmptyDuration("5m")
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{

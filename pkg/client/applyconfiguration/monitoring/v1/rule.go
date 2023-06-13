@@ -28,7 +28,7 @@ type RuleApplyConfiguration struct {
 	Alert         *string              `json:"alert,omitempty"`
 	Expr          *intstr.IntOrString  `json:"expr,omitempty"`
 	For           *v1.Duration         `json:"for,omitempty"`
-	KeepFiringFor *v1.ImprovedDuration `json:"keep_firing_for,omitempty"`
+	KeepFiringFor *v1.NonEmptyDuration `json:"keep_firing_for,omitempty"`
 	Labels        map[string]string    `json:"labels,omitempty"`
 	Annotations   map[string]string    `json:"annotations,omitempty"`
 }
@@ -74,7 +74,7 @@ func (b *RuleApplyConfiguration) WithFor(value v1.Duration) *RuleApplyConfigurat
 // WithKeepFiringFor sets the KeepFiringFor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepFiringFor field is set to the value of the last call.
-func (b *RuleApplyConfiguration) WithKeepFiringFor(value v1.ImprovedDuration) *RuleApplyConfiguration {
+func (b *RuleApplyConfiguration) WithKeepFiringFor(value v1.NonEmptyDuration) *RuleApplyConfiguration {
 	b.KeepFiringFor = &value
 	return b
 }

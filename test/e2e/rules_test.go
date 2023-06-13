@@ -27,8 +27,8 @@ import (
 )
 
 func TestPrometheusRuleCRDValidation(t *testing.T) {
-	keepFiringFor := monitoringv1.ImprovedDuration("5m")
-	emptyDuration := monitoringv1.ImprovedDuration("")
+	keepFiringFor := monitoringv1.NonEmptyDuration("5m")
+	emptyDuration := monitoringv1.NonEmptyDuration("")
 
 	skipPrometheusTests(t)
 	t.Parallel()
