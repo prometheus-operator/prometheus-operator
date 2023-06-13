@@ -131,7 +131,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "additionalArgs": {
-                    "description": "AdditionalArgs allows setting additional arguments for the Prometheus container. It is intended for e.g. activating hidden flags which are not supported by the dedicated configuration options yet. The arguments are passed as-is to the Prometheus container which may cause issues if they are invalid or not supported by the given Prometheus version. In case of an argument conflict (e.g. an argument which is already set by the operator itself) or when providing an invalid argument the reconciliation will fail and an error will be logged.",
+                    "description": "AdditionalArgs allows setting additional arguments for the 'prometheus' container. \n It is intended for e.g. activating hidden flags which are not supported by the dedicated configuration options yet. The arguments are passed as-is to the Prometheus container which may cause issues if they are invalid or not supported by the given Prometheus version. \n In case of an argument conflict (e.g. an argument which is already set by the operator itself) or when providing an invalid argument the reconciliation will fail and an error will be logged.",
                     "items": {
                       "description": "Argument as part of the AdditionalArgs list.",
                       "properties": {
@@ -175,7 +175,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "affinity": {
-                    "description": "If specified, the pod's scheduling constraints.",
+                    "description": "Defines the Pods' affinity scheduling rules if specified.",
                     "properties": {
                       "nodeAffinity": {
                         "description": "Describes node affinity scheduling rules for the pod.",
@@ -1135,7 +1135,7 @@
                     "type": "boolean"
                   },
                   "apiserverConfig": {
-                    "description": "APIServerConfig allows specifying a host and auth methods to access apiserver. If left empty, Prometheus is assumed to run inside of the cluster and will discover API servers automatically and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
+                    "description": "APIServerConfig allows specifying a host and auth methods to access the Kuberntees API server. If null, Prometheus is assumed to run inside of the cluster: it will discover the API servers automatically and use the Pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
                     "properties": {
                       "authorization": {
                         "description": "Authorization section for accessing apiserver",
@@ -1390,7 +1390,7 @@
                     "type": "object"
                   },
                   "arbitraryFSAccessThroughSMs": {
-                    "description": "ArbitraryFSAccessThroughSMs configures whether configuration based on a service monitor can access arbitrary files on the file system of the Prometheus container e.g. bearer token files.",
+                    "description": "When true, ServiceMonitor, PodMonitor and Probe object are forbidden to reference arbitrary files on the file system of the 'prometheus' container. When a ServiceMonitor's endpoint specifies a `bearerTokenFile` value (e.g.  '/var/run/secrets/kubernetes.io/serviceaccount/token'), a malicious target can get access to the Prometheus service account's token in the Prometheus' scrape request. Setting `spec.arbitraryFSAccessThroughSM` to 'true' would prevent the attack. Users should instead provide the credentials using the `spec.bearerTokenSecret` field.",
                     "properties": {
                       "deny": {
                         "type": "boolean"
@@ -1410,7 +1410,7 @@
                     "type": "array"
                   },
                   "containers": {
-                    "description": "Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to a Prometheus pod or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. The current container names are: `prometheus`, `config-reloader`, and `thanos-sidecar`. Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice.",
+                    "description": "Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to the Pods or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. \n The names of containers managed by the operator are: * `prometheus` * `config-reloader` * `thanos-sidecar` \n Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -2592,47 +2592,47 @@
                     "type": "boolean"
                   },
                   "enableFeatures": {
-                    "description": "Enable access to Prometheus disabled features. By default, no features are enabled. Enabling disabled features is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. For more information see https://prometheus.io/docs/prometheus/latest/disabled_features/",
+                    "description": "Enable access to Prometheus feature flags. By default, no features are enabled. \n Enabling features which are disabled by default is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. \n For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "enableRemoteWriteReceiver": {
-                    "description": "Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`. WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver Only valid in Prometheus versions 2.33.0 and newer.",
+                    "description": "Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. \n WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver \n It requires Prometheus >= v2.33.0.",
                     "type": "boolean"
                   },
                   "enforcedBodySizeLimit": {
-                    "description": "EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer.",
+                    "description": "When defined, enforcedBodySizeLimit specifies a global limit on the size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. \n It requires Prometheus >= v2.28.0.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
                   "enforcedLabelLimit": {
-                    "description": "Per-scrape limit on number of labels that will be accepted for a sample. If more than this number of labels are present post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "When defined, enforcedLabelLimit specifies a global limit on the number of labels per sample. The value overrides any `spec.labelLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is greater than zero and less than `spec.enforcedLabelLimit`. \n It requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "enforcedLabelNameLengthLimit": {
-                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample. If a label name is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "When defined, enforcedLabelNameLengthLimit specifies a global limit on the length of labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is greater than zero and less than `spec.enforcedLabelNameLengthLimit`. \n It requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "enforcedLabelValueLengthLimit": {
-                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "When not null, enforcedLabelValueLengthLimit defines a global limit on the length of labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is greater than zero and less than `spec.enforcedLabelValueLengthLimit`. \n It requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "enforcedNamespaceLabel": {
-                    "description": "EnforcedNamespaceLabel If set, a label will be added to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `Probe` objects) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to * alerting & recording rules and * the metrics used in their expressions (`expr`). \n Label name is this field's value. Label value is the namespace of the created object (mentioned above).",
+                    "description": "When not empty, a label will be added to \n 1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects. 2. All metrics generated from recording rules defined in `PrometheusRule` objects. 3. All alerts generated from alerting rules defined in `PrometheusRule` objects. 4. All vector selectors of PromQL expressions defined in `PrometheusRule` objects. \n The label will not added for objects referenced in `spec.excludedFromEnforcement`. \n The label's name is this field's value. The label's value is the namespace of the `ServiceMonitor`, `PodMonitor`, `Probe` or `PrometheusRule` object.",
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
-                    "description": "EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead.",
+                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number of scraped samples that will be accepted. This overrides any `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.sampleLimit` is greater than zero and less than than `spec.enforcedSampleLimit`. \n It is meant to be used by admins to keep the overall number of samples/series under a desired limit.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "enforcedTargetLimit": {
-                    "description": "EnforcedTargetLimit defines a global limit on the number of scraped targets.  This overrides any TargetLimit set per ServiceMonitor or/and PodMonitor.  It is meant to be used by admins to enforce the TargetLimit to keep the overall number of targets under the desired limit. Note that if TargetLimit is lower, that value will be taken instead, except if either value is zero, in which case the non-zero value will be used.  If both values are zero, no limit is enforced.",
+                    "description": "When defined, enforcedTargetLimit specifies a global limit on the number of scraped targets. The value overrides any `spec.targetLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is greater than zero and less than `spec.enforcedTargetLimit`. \n It is meant to be used by admins to to keep the overall number of targets under a desired limit.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -2643,7 +2643,7 @@
                     "type": "string"
                   },
                   "excludedFromEnforcement": {
-                    "description": "List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects to be excluded from enforcing a namespace label of origin. Applies only if enforcedNamespaceLabel set to true.",
+                    "description": "List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects to be excluded from enforcing a namespace label of origin. \n It is only applicable if `spec.enforcedNamespaceLabel` set to true.",
                     "items": {
                       "description": "ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.",
                       "properties": {
@@ -2698,15 +2698,15 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager).",
+                    "description": "The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). Labels defined by `spec.replicaExternalLabelName` and `spec.prometheusExternalLabelName` take precedence over this list.",
                     "type": "object"
                   },
                   "externalUrl": {
-                    "description": "The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name.",
+                    "description": "The external URL under which the Prometheus service is externally available. This is necessary to generate correct URLs (for instance if Prometheus is accessible behind an Ingress resource).",
                     "type": "string"
                   },
                   "hostAliases": {
-                    "description": "Pods' hostAliases configuration",
+                    "description": "Optional list of hosts and IPs that will be injected into the Pod's hosts file if specified.",
                     "items": {
                       "description": "HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the pod's hosts file.",
                       "properties": {
@@ -2735,15 +2735,15 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostNetwork": {
-                    "description": "Use the host's network namespace if true. Make sure to understand the security implications if you want to enable it. When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.",
+                    "description": "Use the host's network namespace if true. \n Make sure to understand the security implications if you want to enable it (https://kubernetes.io/docs/concepts/configuration/overview/). \n When hostNetwork is enabled, this will set the DNS policy to `ClusterFirstWithHostNet` automatically.",
                     "type": "boolean"
                   },
                   "ignoreNamespaceSelectors": {
-                    "description": "IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from all PodMonitor, ServiceMonitor and Probe objects. They will only discover endpoints within the namespace of the PodMonitor, ServiceMonitor and Probe objects. Defaults to false.",
+                    "description": "When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor and Probe objects will be ignored. They will only discover targets within the namespace of the PodMonitor, ServiceMonitor and Probe objec.",
                     "type": "boolean"
                   },
                   "image": {
-                    "description": "Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Prometheus is being configured.",
+                    "description": "Container image name for Prometheus. If specified, it takes precedence over the `spec.baseImage`, `spec.tag` and `spec.sha` fields. Specifying `spec.version` is still necessary to ensure the Prometheus Operator knows which version of Prometheus is being configured. If neither `spec.image` nor `spec.baseImage` are defined, the operator will use the latest upstream version of Prometheus available at the time when the operator was released.",
                     "type": "string"
                   },
                   "imagePullPolicy": {
@@ -2757,7 +2757,7 @@
                     "type": "string"
                   },
                   "imagePullSecrets": {
-                    "description": "An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod",
+                    "description": "An optional list of references to Secrets in the same namespace to use for pulling images from registries. See http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod",
                     "items": {
                       "description": "LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.",
                       "properties": {
@@ -2772,7 +2772,7 @@
                     "type": "array"
                   },
                   "initContainers": {
-                    "description": "InitContainers allows adding initContainers to the pod definition. Those can be used to e.g. fetch secrets for injection into the Prometheus configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ InitContainers described here modify an operator generated init containers if they share the same name and modifications are done via a strategic merge patch. The current init container name is: `init-config-reloader`. Overriding init containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice.",
+                    "description": "InitContainers allows injecting initContainers to the Pod definition. Those can be used to e.g.  fetch secrets for injection into the Prometheus configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ InitContainers described here modify an operator generated init containers if they share the same name and modifications are done via a strategic merge patch. \n The names of init container name managed by the operator are: * `init-config-reloader`. \n Overriding init containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -3946,11 +3946,11 @@
                     "type": "array"
                   },
                   "listenLocal": {
-                    "description": "ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP.",
+                    "description": "When true, the Prometheus server listens on the loopback address instead of the Pod IP's address.",
                     "type": "boolean"
                   },
                   "logFormat": {
-                    "description": "Log format for Prometheus to be configured with.",
+                    "description": "Log format for Log level for Prometheus and the config-reloader sidecar.",
                     "enum": [
                       "",
                       "logfmt",
@@ -3959,7 +3959,7 @@
                     "type": "string"
                   },
                   "logLevel": {
-                    "description": "Log level for Prometheus to be configured with.",
+                    "description": "Log level for Prometheus and the config-reloader sidecar.",
                     "enum": [
                       "",
                       "debug",
@@ -3970,7 +3970,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
+                    "description": "Minimum number of seconds for which a newly created Pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) \n This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
                     "format": "int32",
                     "type": "integer"
                   },
@@ -3978,7 +3978,7 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Define which Nodes the Pods are scheduled on.",
+                    "description": "Defines on which Nodes the Pods are scheduled.",
                     "type": "object"
                   },
                   "overrideHonorLabels": {
@@ -3994,7 +3994,7 @@
                     "type": "boolean"
                   },
                   "podMetadata": {
-                    "description": "PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.",
+                    "description": "PodMetadata configures labels and annotations which are propagated to the Prometheus pods.",
                     "properties": {
                       "annotations": {
                         "additionalProperties": {
@@ -4018,7 +4018,7 @@
                     "type": "object"
                   },
                   "podMonitorNamespaceSelector": {
-                    "description": "Namespace's labels to match for PodMonitor discovery. If nil, only check own namespace.",
+                    "description": "Namespaces to match for PodMonitors discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4061,7 +4061,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "podMonitorSelector": {
-                    "description": "*Experimental* PodMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* PodMonitors to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4104,7 +4104,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "podTargetLabels": {
-                    "description": "PodTargetLabels are added to all Pod/ServiceMonitors' podTargetLabels",
+                    "description": "PodTargetLabels are appended to the `spec.podTargetLabels` field of all PodMonitor and ServiceMonitor objects.",
                     "items": {
                       "type": "string"
                     },
@@ -4112,15 +4112,15 @@
                   },
                   "portName": {
                     "default": "web",
-                    "description": "Port name used for the pods and governing service. Defaults to `web`.",
+                    "description": "Port name used for the pods and governing service. Default: \"web\"",
                     "type": "string"
                   },
                   "priorityClassName": {
-                    "description": "Priority class assigned to the Pods",
+                    "description": "Priority class assigned to the Pods.",
                     "type": "string"
                   },
                   "probeNamespaceSelector": {
-                    "description": "*Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.",
+                    "description": "*Experimental* Namespaces to match for Probe discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4163,7 +4163,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "probeSelector": {
-                    "description": "*Experimental* Probes to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* Probes to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4206,7 +4206,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "prometheusExternalLabelName": {
-                    "description": "Name of Prometheus external label used to denote Prometheus instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`\"\"`).",
+                    "description": "Name of Prometheus external label used to denote the Prometheus instance name. The external label will _not_ be added when the field is set to the empty string (`\"\"`). \n Default: \"prometheus\"",
                     "type": "string"
                   },
                   "prometheusRulesExcludedFromEnforce": {
@@ -4662,7 +4662,7 @@
                     "type": "array"
                   },
                   "remoteWrite": {
-                    "description": "remoteWrite is the list of remote write configurations.",
+                    "description": "Defines the list of remote write configurations.",
                     "items": {
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus to a remote endpoint.",
                       "properties": {
@@ -5239,16 +5239,16 @@
                     "type": "array"
                   },
                   "replicaExternalLabelName": {
-                    "description": "Name of Prometheus external label used to denote replica name. Defaults to the value of `prometheus_replica`. External label will _not_ be added when value is set to empty string (`\"\"`).",
+                    "description": "Name of Prometheus external label used to denote the replica name. The external label will _not_ be added when the field is set to the empty string (`\"\"`). \n Default: \"prometheus_replica\"",
                     "type": "string"
                   },
                   "replicas": {
-                    "description": "Number of replicas of each shard to deploy for a Prometheus deployment. Number of replicas multiplied by shards is the total number of Pods created.",
+                    "description": "Number of replicas of each shard to deploy for a Prometheus deployment. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Default: 1.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "resources": {
-                    "description": "Define resources requests and limits for single Pods.",
+                    "description": "Defines the resources requests and limits of the 'prometheus' container.",
                     "properties": {
                       "claims": {
                         "description": "Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. \n This is an alpha field and requires enabling the DynamicResourceAllocation feature gate. \n This field is immutable. It can only be set for containers.",
@@ -5317,7 +5317,7 @@
                     "type": "string"
                   },
                   "routePrefix": {
-                    "description": "The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`.",
+                    "description": "The route prefix Prometheus registers HTTP handlers for. \n This is useful when using `spec.externalURL`, and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`.",
                     "type": "string"
                   },
                   "ruleNamespaceSelector": {
@@ -5431,7 +5431,7 @@
                     "type": "object"
                   },
                   "scrapeConfigNamespaceSelector": {
-                    "description": "Namespace's labels to match for ScrapeConfig discovery. If nil, only check own namespace.",
+                    "description": "Namespaces to match for ScrapeConfig discovery. An empty label selector matches all namespaces. A null label selector matches the current current namespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5474,7 +5474,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "scrapeConfigSelector": {
-                    "description": "*Experimental* ScrapeConfigs to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "*Experimental* ScrapeConfigs to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5518,12 +5518,12 @@
                   },
                   "scrapeInterval": {
                     "default": "30s",
-                    "description": "Interval between consecutive scrapes. Default: `30s`",
+                    "description": "Interval between consecutive scrapes. \n Default: \"30s\"",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "scrapeTimeout": {
-                    "description": "Number of seconds to wait for target to respond before erroring.",
+                    "description": "Number of seconds to wait until a scrape request times out.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
@@ -5659,7 +5659,7 @@
                     "type": "string"
                   },
                   "serviceMonitorNamespaceSelector": {
-                    "description": "Namespace's labels to match for ServiceMonitor discovery. If nil, only check own namespace.",
+                    "description": "Namespaces to match for ServicedMonitors discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5702,7 +5702,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "serviceMonitorSelector": {
-                    "description": "ServiceMonitors to be selected for target discovery. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is deprecated and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "ServiceMonitors to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5749,12 +5749,12 @@
                     "type": "string"
                   },
                   "shards": {
-                    "description": "EXPERIMENTAL: Number of shards to distribute targets onto. Number of replicas multiplied by shards is the total number of Pods created. Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally use Thanos sidecar and Thanos querier or remote write data to a central location. Sharding is done on the content of the `__address__` target meta-label.",
+                    "description": "EXPERIMENTAL: Number of shards to distribute targets onto. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally, use Thanos sidecar and Thanos querier or remote write data to a central location. \n Sharding is performed on the content of the `__address__` target meta-label for PodMonitors and ServiceMonitors and `__param_target__` for Probes. \n Default: 1",
                     "format": "int32",
                     "type": "integer"
                   },
                   "storage": {
-                    "description": "Storage spec to specify how storage shall be used.",
+                    "description": "Storage defines the storage used by Prometheus.",
                     "properties": {
                       "disableMountSubPath": {
                         "description": "Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary. DisableMountSubPath allows to remove any subPath usage in volume mounts.",
@@ -6694,7 +6694,7 @@
                     "type": "object"
                   },
                   "tolerations": {
-                    "description": "If specified, the pod's tolerations.",
+                    "description": "Defines the Pods' tolerations if specified.",
                     "items": {
                       "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
                       "properties": {
@@ -6725,7 +6725,7 @@
                     "type": "array"
                   },
                   "topologySpreadConstraints": {
-                    "description": "If specified, the pod's topology spread constraints.",
+                    "description": "Defines the pod's topology spread constraints if specified.",
                     "items": {
                       "description": "TopologySpreadConstraint specifies how to spread matching pods among the given topology.",
                       "properties": {
@@ -6817,7 +6817,7 @@
                     "type": "array"
                   },
                   "tracingConfig": {
-                    "description": "TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+                    "description": "EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.",
                     "properties": {
                       "clientType": {
                         "description": "Client used to export the traces. Supported values are `http` or `grpc`.",
@@ -7034,11 +7034,11 @@
                     "type": "object"
                   },
                   "version": {
-                    "description": "Version of Prometheus to be deployed.",
+                    "description": "Version of Prometheus to be deployed. If not specified, the operator assumes the latest upstream version of Prometheus available at the time when the version of the operator was released.",
                     "type": "string"
                   },
                   "volumeMounts": {
-                    "description": "VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the prometheus container, that are generated as a result of StorageSpec objects.",
+                    "description": "VolumeMounts allows the configuration of additional VolumeMounts. \n VolumeMounts will be appended to other VolumeMounts in the 'prometheus' container, that are generated as a result of StorageSpec objects.",
                     "items": {
                       "description": "VolumeMount describes a mounting of a Volume within a container.",
                       "properties": {
@@ -7076,7 +7076,7 @@
                     "type": "array"
                   },
                   "volumes": {
-                    "description": "Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects.",
+                    "description": "Volumes allows the configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects.",
                     "items": {
                       "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
                       "properties": {
@@ -8403,11 +8403,11 @@
                     "type": "array"
                   },
                   "walCompression": {
-                    "description": "Configures compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. WAL compression is enabled by default for Prometheus >= 2.20.0",
+                    "description": "Configures compression of the write-ahead log (WAL) using Snappy. \n WAL compression is enabled by default for Prometheus >= 2.20.0 \n Requires Prometheus v2.11.0 and above.",
                     "type": "boolean"
                   },
                   "web": {
-                    "description": "Defines the web command line flags when starting Prometheus.",
+                    "description": "Defines the configuration of the Prometheus web server.",
                     "properties": {
                       "httpConfig": {
                         "description": "Defines HTTP parameters for web server.",
