@@ -1189,6 +1189,12 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkDiscordConfigs(ctx, receiver.DiscordConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
+		}
+
 		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
 			return err
@@ -1306,6 +1312,28 @@ func checkOpsGenieResponder(opsgenieResponder []monitoringv1alpha1.OpsGenieConfi
 			return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
 		}
 	}
+	return nil
+}
+
+func checkDiscordConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.DiscordConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
+	for i, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+		discordConfigKey := fmt.Sprintf("%s/discord/%d", key, i)
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, discordConfigKey, store); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

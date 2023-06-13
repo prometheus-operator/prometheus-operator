@@ -253,6 +253,16 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 	}
 }
 
+func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
+	return v1alpha1.DiscordConfig{
+		APIURL:       in.APIURL,
+		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		Title:        in.Title,
+		Message:      in.Message,
+		SendResolved: in.SendResolved,
+	}
+}
+
 func convertSlackFieldsTo(in []SlackField) []v1alpha1.SlackField {
 	out := make([]v1alpha1.SlackField, len(in))
 
@@ -447,6 +457,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.PagerDutyConfigs = append(
 				out.PagerDutyConfigs,
 				convertPagerDutyConfigTo(in),
+			)
+		}
+
+		for _, in := range in.DiscordConfigs {
+			out.DiscordConfigs = append(
+				out.DiscordConfigs,
+				convertDiscordConfigTo(in),
 			)
 		}
 

@@ -501,7 +501,6 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 // convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver
 func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
-
 	if l := len(in.PagerDutyConfigs); l > 0 {
 		pagerdutyConfigs = make([]*pagerdutyConfig, l)
 		for i := range in.PagerDutyConfigs {
@@ -510,6 +509,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 				return nil, errors.Wrapf(err, "PagerDutyConfig[%d]", i)
 			}
 			pagerdutyConfigs[i] = receiver
+		}
+	}
+
+	var discordConfigs []*discordConfig
+	if l := len(in.DiscordConfigs); l > 0 {
+		discordConfigs = make([]*discordConfig, l)
+		for i := range in.SlackConfigs {
+			receiver, err := cb.convertDiscordConfig(ctx, in.DiscordConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "SlackConfig[%d]", i)
+			}
+			discordConfigs[i] = receiver
 		}
 	}
 
@@ -625,6 +636,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
+		DiscordConfigs:   discordConfigs,
 		SlackConfigs:     slackConfigs,
 		WebhookConfigs:   webhookConfigs,
 		WeChatConfigs:    weChatConfigs,
@@ -665,6 +677,32 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 
 	if in.MaxAlerts > 0 {
 		out.MaxAlerts = in.MaxAlerts
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoringv1alpha1.DiscordConfig, crKey types.NamespacedName) (*discordConfig, error) {
+	out := &discordConfig{
+		VSendResolved: in.SendResolved,
+		Title:         *in.Title,
+		Message:       *in.Message,
+	}
+
+	if in.APIURL != nil {
+		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
+		if err != nil {
+			return nil, err
+		}
+		out.WebhookURL = url
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
 	}
 
 	return out, nil
