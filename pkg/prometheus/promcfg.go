@@ -1930,12 +1930,24 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 
 func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
-	slice = append(slice, yaml.MapItem{Key: "body_size_limit", Value: cpf.BodySizeLimit})
-	slice = append(slice, yaml.MapItem{Key: "sample_limit", Value: *cpf.SampleLimit})
-	slice = append(slice, yaml.MapItem{Key: "target_limit", Value: *cpf.TargetLimit})
-	slice = append(slice, yaml.MapItem{Key: "label_limit", Value: *cpf.LabelLimit})
-	slice = append(slice, yaml.MapItem{Key: "label_name_length_limit", Value: *cpf.LabelNameLengthLimit})
-	slice = append(slice, yaml.MapItem{Key: "label_value_length_limit", Value: *cpf.LabelValueLengthLimit})
+	if cpf.BodySizeLimit != "" {
+		slice = append(slice, yaml.MapItem{Key: "body_size_limit", Value: cpf.BodySizeLimit})
+	}
+	if cpf.SampleLimit != nil {
+		slice = append(slice, yaml.MapItem{Key: "sample_limit", Value: *cpf.SampleLimit})
+	}
+	if cpf.TargetLimit != nil {
+		slice = append(slice, yaml.MapItem{Key: "target_limit", Value: *cpf.TargetLimit})
+	}
+	if cpf.LabelLimit != nil {
+		slice = append(slice, yaml.MapItem{Key: "label_limit", Value: *cpf.LabelLimit})
+	}
+	if cpf.LabelNameLengthLimit != nil {
+		slice = append(slice, yaml.MapItem{Key: "label_name_length_limit", Value: *cpf.LabelNameLengthLimit})
+	}
+	if cpf.LabelValueLengthLimit != nil {
+		slice = append(slice, yaml.MapItem{Key: "label_value_length_limit", Value: *cpf.LabelValueLengthLimit})
+	}
 
 	return slice
 }
