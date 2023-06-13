@@ -205,8 +205,8 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == 0 && enforcedLimit == nil {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	if limit == nil && enforcedLimit == nil {
 		return cfg
 	}
 
@@ -1346,14 +1346,14 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user uint64, enforced *uint64) uint64 {
+func getLimit(user *uint64, enforced *uint64) uint64 {
 	if enforced != nil {
-		if user < *enforced && user != 0 || *enforced == 0 {
-			return user
+		if user != nil && *user < *enforced && *user != 0 || *enforced == 0 {
+			return *user
 		}
 		return *enforced
 	}
-	return user
+	return 0
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {

@@ -79,18 +79,23 @@ type ProbeSpec struct {
 	// Authorization section for this endpoint
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	SampleLimit uint64 `json:"sampleLimit,omitempty"`
+	// +optional
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
-	TargetLimit uint64 `json:"targetLimit,omitempty"`
+	// +optional
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelLimit uint64 `json:"labelLimit,omitempty"`
+	// +optional
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
 	// Per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelNameLengthLimit uint64 `json:"labelNameLengthLimit,omitempty"`
+	// +optional
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelValueLengthLimit uint64 `json:"labelValueLengthLimit,omitempty"`
+	// +optional
+	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.
