@@ -30,18 +30,6 @@ import (
 	"syscall"
 	"time"
 
-	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
-	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
-	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
-	"github.com/prometheus-operator/prometheus-operator/pkg/server"
-	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
-
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -53,6 +41,18 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	klog "k8s.io/klog/v2"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
+	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
+	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
+	"github.com/prometheus-operator/prometheus-operator/pkg/server"
+	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 const (

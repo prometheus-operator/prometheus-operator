@@ -39,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/utils/pointer"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,7 +47,6 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-	"k8s.io/utils/pointer"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {

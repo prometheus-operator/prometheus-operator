@@ -18,7 +18,6 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -26,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 )
 
 // InformLister is the interface that both exposes a shared index informer

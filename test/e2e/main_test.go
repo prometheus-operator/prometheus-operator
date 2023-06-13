@@ -25,10 +25,10 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
-	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 var (
