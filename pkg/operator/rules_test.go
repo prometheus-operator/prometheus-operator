@@ -37,6 +37,9 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldAcceptRuleWithLimitThanos", shouldAcceptRuleWithLimitThanos)
 	t.Run("shouldDropLimitFieldForUnsupportedPrometheusVersion", shouldDropLimitFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
+	t.Run("shouldAcceptRuleWithKeepFiringForPrometheus", shouldAcceptRuleWithKeepFiringForPrometheus)
+	t.Run("shouldDropKeepFiringForThanos", shouldDropKeepFiringForThanos)
+	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
@@ -196,6 +199,81 @@ func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
 	content, _ := pr.generateRulesConfiguration(rules)
 	if strings.Contains(content, "partial_response_strategy") {
 		t.Fatalf("expected `partial_response_strategy` removed from PrometheusRule")
+	}
+}
+
+func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
+	duration := monitoringv1.NonEmptyDuration("5m")
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:         "alert",
+						Expr:          intstr.FromString("vector(1)"),
+						KeepFiringFor: &duration,
+					},
+				},
+			},
+		}},
+	}
+
+	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+	if !strings.Contains(content, "keep_firing_for") {
+		t.Fatalf("expected `keep_firing_for` to be present in PrometheusRule")
+	}
+}
+
+func shouldDropKeepFiringForThanos(t *testing.T) {
+	duration := monitoringv1.NonEmptyDuration("5m")
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:         "alert",
+						Expr:          intstr.FromString("vector(1)"),
+						KeepFiringFor: &duration,
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+	if strings.Contains(content, "keep_firing_for") {
+		t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
+	}
+}
+
+func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
+	duration := monitoringv1.NonEmptyDuration("5m")
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:         "alert",
+						Expr:          intstr.FromString("vector(1)"),
+						KeepFiringFor: &duration,
+					},
+				},
+			},
+		}},
+	}
+
+	promVersion, _ := semver.ParseTolerant("v2.30.0")
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+	if strings.Contains(content, "keep_firing_for") {
+		t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
 	}
 }
 

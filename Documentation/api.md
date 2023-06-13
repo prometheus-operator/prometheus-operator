@@ -7211,6 +7211,17 @@ list restricting them.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+</p>
+<div>
+<p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
+Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
+Supported units: y, w, d, h, m, s, ms
+Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</code></p>
+</div>
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
@@ -10933,6 +10944,20 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>Alerts are considered firing once they have been returned for this long.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keep_firing_for</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.</p>
 </td>
 </tr>
 <tr>
