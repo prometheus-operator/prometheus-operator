@@ -206,15 +206,16 @@ var (
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
 func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == nil && enforcedLimit == nil {
+	finalLimit := getLimit(limit, enforcedLimit)
+	if finalLimit == nil {
 		return cfg
 	}
 
 	if k.minVersion == "" {
-		return cg.AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+		return cg.AppendMapItem(cfg, k.prometheusField, finalLimit)
 	}
 
-	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, finalLimit)
 }
 
 // AddHonorTimestamps adds the honor_timestamps field into scrape configurations.
@@ -1346,14 +1347,20 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user *uint64, enforced *uint64) uint64 {
-	if enforced != nil {
-		if user != nil && *user < *enforced && *user != 0 || *enforced == 0 {
-			return *user
-		}
-		return *enforced
+func getLimit(user *uint64, enforced *uint64) *uint64 {
+	if enforced == nil {
+		return user
 	}
-	return 0
+
+	if user == nil {
+		return enforced
+	}
+
+	if *enforced > *user {
+		return user
+	}
+
+	return enforced
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
