@@ -99,6 +99,21 @@ func (n namespaces) asSlice() []string {
 	return ns
 }
 
+// Helper function for checking CRD prerequisites
+func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDChecker, allowedNamespaces []string, verbs map[string][]string, groupVersion, resourceName string) (bool, error) {
+	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD disabled because prerequisites are not met", resourceName), "err", err)
+		return false, nil
+	case err != nil:
+		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
+		return false, err
+	default:
+		return true, nil
+	}
+}
+
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
 		level.Info(logger).Log("msg", "Starting insecure server on "+listener.Addr().String())
@@ -275,21 +290,10 @@ func Main() int {
 		return 1
 	}
 
-	var scrapeConfigSupported bool
-	err = cc.CheckPrerequisites(ctx,
-		allowedNamespaces,
-		verbs,
-		monitoringv1alpha1.SchemeGroupVersion.String(),
-		monitoringv1alpha1.ScrapeConfigName)
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
-	case err != nil:
-		level.Error(logger).Log("msg", "failed to check prerequisites for the ScrapeConfig CRD ", "err", err)
+	scrapeConfigSupported, err := checkPrerequisites(ctx, logger, cc, allowedNamespaces, verbs, monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.ScrapeConfigName)
+	if err != nil {
 		cancel()
 		return 1
-	default:
-		scrapeConfigSupported = true
 	}
 
 	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
@@ -299,22 +303,14 @@ func Main() int {
 		return 1
 	}
 
-	var pao *prometheusagentcontroller.Operator
-
-	err = cc.CheckPrerequisites(ctx,
-		allowedNamespaces,
-		verbs,
-		monitoringv1alpha1.SchemeGroupVersion.String(),
-		monitoringv1alpha1.PrometheusAgentName)
-
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", "Prometheus agent controller disabled because prerequisites not met", "err", err)
-	case err != nil:
-		level.Error(logger).Log("msg", "failed to check prerequisites for prometheus-agent controller ", "err", err)
+	prometheusAgentSupported, err := checkPrerequisites(ctx, logger, cc, allowedNamespaces, verbs, monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.PrometheusAgentName)
+	if err != nil {
 		cancel()
 		return 1
-	default:
+	}
+
+	var pao *prometheusagentcontroller.Operator
+	if prometheusAgentSupported {
 		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
