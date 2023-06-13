@@ -578,14 +578,14 @@ type HTTPConfig struct {
 type WebexConfig struct {
 	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *string `json:"apiURL,omitempty"`
 	// The HTTP client's configuration.
 	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// Message template
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// ID of the Webex Teams room where to send the messages.
 	RoomID string `json:"roomID"`
 	// Whether to notify about resolved alerts.
