@@ -41,6 +41,8 @@ const (
 	kubernetesSDRoleEndpointSlice = "endpointslice"
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
+
+	defaultReplicaExternalLabelName = "prometheus_replica"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -397,7 +399,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 
 	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
-		m[replicaExternalLabelName] = "$(POD_NAME)"
+		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
 	for n, v := range cpf.ExternalLabels {
@@ -1372,7 +1374,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 		{Key: "action", Value: "hashmod"},
 	}, yaml.MapSlice{
 		{Key: "source_labels", Value: []string{"__tmp_hash"}},
-		{Key: "regex", Value: "$(SHARD)"},
+		{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
 		{Key: "action", Value: "keep"},
 	})
 }
