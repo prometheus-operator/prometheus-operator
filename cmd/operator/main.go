@@ -290,7 +290,18 @@ func Main() int {
 		return 1
 	}
 
-	scrapeConfigSupported, err := checkPrerequisites(ctx, logger, cc, allowedNamespaces, verbs, monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.ScrapeConfigName)
+	scrapeConfigSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+		},
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName,
+	)
+
 	if err != nil {
 		cancel()
 		return 1
@@ -303,7 +314,18 @@ func Main() int {
 		return 1
 	}
 
-	prometheusAgentSupported, err := checkPrerequisites(ctx, logger, cc, allowedNamespaces, verbs, monitoringv1alpha1.SchemeGroupVersion.String(), monitoringv1alpha1.PrometheusAgentName)
+	prometheusAgentSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+			fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+		},
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.PrometheusAgentName,
+	)
 	if err != nil {
 		cancel()
 		return 1
