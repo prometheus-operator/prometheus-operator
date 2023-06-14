@@ -308,6 +308,7 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	if tls.KeyFile != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
 	}
+
 	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 
 	return cfg
@@ -2285,6 +2286,24 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			Value: configs,
 		})
 	}
+
+	// KubernetesSDConfig
+	if len(sc.Spec.KubernetesSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.KubernetesSDConfigs))
+		for i, config := range sc.Spec.KubernetesSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "role",
+					Value: strings.ToLower(config.Role),
+				},
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "kubernetes_sd_configs",
+			Value: configs,
+		})
+	}
+
 	return cfg
 }
 
