@@ -278,10 +278,6 @@ func Main() int {
 	k8sutil.MustRegisterClientGoMetrics(r)
 
 	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
-	verbs := map[string][]string{
-		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
-		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
-	}
 
 	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
