@@ -8967,6 +8967,67 @@ scrape_configs:
 `,
 		},
 		{
+			name: "tlsconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-ca-global",
+							},
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: true,
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca-http",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  tls_config:
+    insecure_skip_verify: false
+    ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
+    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
+    key_file: /etc/prometheus/certs/secret_default_secret_key
+  http_sd_configs:
+  - url: http://localhost:9100/sd.json
+    tls_config:
+      insecure_skip_verify: true
+      ca_file: /etc/prometheus/certs/secret_default_secret-ca-http_
+`,
+		},
+		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				Scheme: pointer.String("HTTPS"),

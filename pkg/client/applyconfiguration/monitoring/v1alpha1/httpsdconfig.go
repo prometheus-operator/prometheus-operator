@@ -28,6 +28,7 @@ type HTTPSDConfigApplyConfiguration struct {
 	RefreshInterval *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	TLSConfig       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 }
 
 // HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
@@ -65,5 +66,13 @@ func (b *HTTPSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.Basic
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *HTTPSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *HTTPSDConfigApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.TLSConfig = value
 	return b
 }
