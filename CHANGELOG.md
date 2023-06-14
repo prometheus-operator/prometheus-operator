@@ -4,7 +4,7 @@ After research, we noticed how the default CPU requests of the config-reloader c
 
 * [CHANGE] Decrease the default CPU requests for the config-reloader container from `100m` to `10m`. #5539
 * [FEATURE] Add `spec.alertmanagerConfiguration.global.PagerdutyURL` to the `Alertmanager` CRD. #5469
-* [FEATURE] Add `spec.valumeMounts` to the `ThanosRuler` CRD. #5541
+* [FEATURE] Add `spec.volumeMounts` to the `ThanosRuler` CRD. #5541
 * [FEATURE] Add `spec.remoteWrite.sendNativeHistograms` to `Prometheus` and `PrometheusAgent` CRDs. #5564
 * [FEATURE] Add `spec.tracingConfig` to `Prometheus` and `PrometheusAgent` CRDs. #5591 #5640
 * [FEATURE] Add `followRedirects` field to the `RemoteRead` configuration. #5612
@@ -18,7 +18,7 @@ After research, we noticed how the default CPU requests of the config-reloader c
 * [BUGFIX] Fix config-reloader not handling SIGTERM signal. #5617
 * [BUGFIX] Fix Thanos volume name when using VolumeClaimTemplate in `Prometheus` CRD. #5596
 * [BUGFIX] Fix WAL Compression configuration for `PrometheusAgent` CRD. #5625
-* [BUGFIX] FiX DNS name resolution for individual ThanosRuler pods. #5632
+* [BUGFIX] Fix DNS name resolution for individual ThanosRuler pods. #5632
 
 ## 0.65.2 / 2023-05-31
 
