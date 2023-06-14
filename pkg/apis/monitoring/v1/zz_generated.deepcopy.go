@@ -1716,11 +1716,6 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = make([]PrometheusRuleExcludeConfig, len(*in))
 		copy(*out, *in)
 	}
-	if in.Query != nil {
-		in, out := &in.Query, &out.Query
-		*out = new(QuerySpec)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.RuleSelector != nil {
 		in, out := &in.RuleSelector, &out.RuleSelector
 		*out = new(metav1.LabelSelector)
@@ -1731,17 +1726,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Query != nil {
+		in, out := &in.Query, &out.Query
+		*out = new(QuerySpec)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Alerting != nil {
 		in, out := &in.Alerting, &out.Alerting
 		*out = new(AlertingSpec)
 		(*in).DeepCopyInto(*out)
-	}
-	if in.RemoteRead != nil {
-		in, out := &in.RemoteRead, &out.RemoteRead
-		*out = make([]RemoteReadSpec, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
 	}
 	if in.AdditionalAlertRelabelConfigs != nil {
 		in, out := &in.AdditionalAlertRelabelConfigs, &out.AdditionalAlertRelabelConfigs
@@ -1752,6 +1745,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		in, out := &in.AdditionalAlertManagerConfigs, &out.AdditionalAlertManagerConfigs
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.RemoteRead != nil {
+		in, out := &in.RemoteRead, &out.RemoteRead
+		*out = make([]RemoteReadSpec, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	if in.Thanos != nil {
 		in, out := &in.Thanos, &out.Thanos
@@ -1968,14 +1968,14 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 			(*out)[key] = val
 		}
 	}
-	if in.BasicAuth != nil {
-		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.OAuth2 != nil {
 		in, out := &in.OAuth2, &out.OAuth2
 		*out = new(OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.BasicAuth != nil {
+		in, out := &in.BasicAuth, &out.BasicAuth
+		*out = new(BasicAuth)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Authorization != nil {

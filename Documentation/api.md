@@ -1463,9 +1463,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed. If not specified, the operator
-assumes the latest upstream version of Prometheus available at the time
-when the version of the operator was released.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -1488,13 +1490,14 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Container image name for Prometheus. If specified, it takes precedence
-over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.
-Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
-Operator knows which version of Prometheus is being configured.
-If neither <code>spec.image</code> nor <code>spec.baseImage</code> are
-defined, the operator will use the latest upstream version of
-Prometheus available at the time when the operator was released.</p>
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -1538,7 +1541,7 @@ int32
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
 <code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
-<p>Default: 1.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -2268,7 +2271,7 @@ the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
 by the given Prometheus version.</p>
 <p>In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -2354,8 +2357,7 @@ string
 </em>
 </td>
 <td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -2366,10 +2368,8 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -2380,11 +2380,8 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
+specified as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -2397,9 +2394,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
-retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
-(milliseconds seconds minutes hours days weeks years).</p>
+<p>How long to retain the Prometheus data.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -2412,7 +2408,7 @@ ByteSize
 </em>
 </td>
 <td>
-<p>Maximum amount of disk space used by blocks.</p>
+<p>Maximum number of bytes used by the Prometheus data.</p>
 </td>
 </tr>
 <tr>
@@ -2423,7 +2419,7 @@ bool
 </em>
 </td>
 <td>
-<p>Disable prometheus compaction.</p>
+<p>When true, the Prometheus compaction is disabled.</p>
 </td>
 </tr>
 <tr>
@@ -2436,7 +2432,7 @@ Rules
 </em>
 </td>
 <td>
-<p>/&ndash;rules.*/ command-line arguments.</p>
+<p>Defines the configuration of the Prometheus rules&rsquo; engine.</p>
 </td>
 </tr>
 <tr>
@@ -2449,23 +2445,11 @@ Rules
 </em>
 </td>
 <td>
-<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-Make sure both ruleNamespace and ruleName are set for each pair.
-Deprecated: use excludedFromEnforcement instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>query</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QuerySpec">
-QuerySpec
-</a>
-</em>
-</td>
-<td>
-<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
+<em>(Optional)</em>
+<p>Defines the list of PrometheusRule objects to which the namespace label
+enforcement doesn&rsquo;t apply.
+This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
+<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -2478,11 +2462,10 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>A selector to select which PrometheusRules to mount for loading alerting/recording
-rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
-resources selected by RuleSelector. Make sure it does not match any config
-maps that you do not want to be migrated.</p>
+<em>(Optional)</em>
+<p>PrometheusRule objects to be selected for rule evaluation. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 </td>
 </tr>
 <tr>
@@ -2495,8 +2478,24 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
-the same namespace as the Prometheus object is in is used.</p>
+<em>(Optional)</em>
+<p>Namespaces to match for PrometheusRule discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QuerySpec">
+QuerySpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QuerySpec defines the configuration of the Promethus query service.</p>
 </td>
 </tr>
 <tr>
@@ -2509,20 +2508,8 @@ AlertingSpec
 </em>
 </td>
 <td>
-<p>Define details regarding alerting.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteRead</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
-[]RemoteReadSpec
-</a>
-</em>
-</td>
-<td>
-<p>remoteRead is the list of remote read configurations.</p>
+<em>(Optional)</em>
+<p>Defines the settings related to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -2535,16 +2522,17 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
-additional Prometheus alert relabel configurations. Alert relabel configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Alert relabel configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
-As alert relabel configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible alert relabel configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertRelabelConfigs specifies a key of a Secret containing
+additional Prometheus alert relabel configurations. The alert relabel
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible alert relabel configs are going to break
 Prometheus after the upgrade.</p>
 </td>
 </tr>
@@ -2558,17 +2546,32 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
-additional Prometheus AlertManager configurations. AlertManager configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Job configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
-As AlertManager configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible AlertManager configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertManagerConfigs specifies a key of a Secret containing
+additional Prometheus Alertmanager configurations. The Alertmanager
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible AlertManager configs are going to break
 Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteRead</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
+[]RemoteReadSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote read configurations.</p>
 </td>
 </tr>
 <tr>
@@ -2581,8 +2584,8 @@ ThanosSpec
 </em>
 </td>
 <td>
-<p>Thanos configuration allows configuring various aspects of a Prometheus
-server in a Thanos environment.</p>
+<em>(Optional)</em>
+<p>Defines the configuration of the optional Thanos sidecar.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
 </td>
@@ -2595,14 +2598,16 @@ string
 </em>
 </td>
 <td>
-<p>QueryLogFile specifies the file to which PromQL queries are logged.
-If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
-emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
-in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
-Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
-query information to the default Prometheus log stream.
-This is only available in versions of Prometheus &gt;= 2.16.0.
-For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
+<p>queryLogFile specifies where the file to which PromQL queries are logged.</p>
+<p>If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/query.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+This is because the prometheus container runs with a read-only root
+filesystem for security reasons.
+Alternatively, the location can be set to a standard I/O stream, e.g.
+<code>/dev/stdout</code>, to log query information to the default Prometheus log
+stream.</p>
 </td>
 </tr>
 <tr>
@@ -2613,8 +2618,9 @@ bool
 </em>
 </td>
 <td>
-<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
+<p>AllowOverlappingBlocks enables vertical compaction and vertical query
+merge in Prometheus.</p>
+<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
 </td>
 </tr>
 <tr>
@@ -2627,8 +2633,9 @@ Exemplars
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Exemplars related settings that are runtime reloadable.
-It requires to enable the exemplar storage feature to be effective.</p>
+It requires to enable the <code>exemplar-storage</code> feature flag to be effective.</p>
 </td>
 </tr>
 <tr>
@@ -2641,7 +2648,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+<p>Interval between rule evaluations.
+Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -2652,12 +2660,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+<p>Enables access to the Prometheus web admin API.</p>
+<p>WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 shutdown Prometheus, and more. Enabling this should be done with care and the
 user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
+ensure only clients authorized to perform these actions can do so.</p>
+<p>For more information:
+<a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -5456,9 +5465,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed. If not specified, the operator
-assumes the latest upstream version of Prometheus available at the time
-when the version of the operator was released.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -5481,13 +5492,14 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Container image name for Prometheus. If specified, it takes precedence
-over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.
-Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
-Operator knows which version of Prometheus is being configured.
-If neither <code>spec.image</code> nor <code>spec.baseImage</code> are
-defined, the operator will use the latest upstream version of
-Prometheus available at the time when the operator was released.</p>
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -5531,7 +5543,7 @@ int32
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
 <code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
-<p>Default: 1.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -6261,7 +6273,7 @@ the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
 by the given Prometheus version.</p>
 <p>In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -6612,7 +6624,7 @@ Kubernetes core/v1.PersistentVolumeClaimSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Spec defines the desired characteristics of a volume requested by a pod author.
+<p>Defines the desired characteristics of a volume requested by a pod author.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims">https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims</a></p>
 <br/>
 <br/>
@@ -6775,9 +6787,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Status represents the current information/status of a persistent volume claim.
-Read-only.
-More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims">https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims</a></p>
+<p><em>Deprecated: this field is never set.</em></p>
 </td>
 </tr>
 </tbody>
@@ -7530,7 +7540,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the referent. When not set, all resources are matched.</p>
+<p>Name of the referent. When not set, all resources in the namespace are matched.</p>
 </td>
 </tr>
 </tbody>
@@ -8617,8 +8627,9 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
-<p>PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
-to be ignored while enforcing namespace label for alerts and metrics.</p>
+<p>PrometheusRuleExcludeConfig enables users to configure excluded
+PrometheusRule names and their namespaces to be ignored while enforcing
+namespace label for alerts and metrics.</p>
 </div>
 <table>
 <thead>
@@ -8636,7 +8647,7 @@ string
 </em>
 </td>
 <td>
-<p>RuleNamespace - namespace of excluded rule</p>
+<p>Namespace of the excluded PrometheusRule object.</p>
 </td>
 </tr>
 <tr>
@@ -8647,7 +8658,7 @@ string
 </em>
 </td>
 <td>
-<p>RuleNamespace - name of excluded rule</p>
+<p>Name of the excluded PrometheusRule object.</p>
 </td>
 </tr>
 </tbody>
@@ -8872,9 +8883,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed. If not specified, the operator
-assumes the latest upstream version of Prometheus available at the time
-when the version of the operator was released.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -8897,13 +8910,14 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Container image name for Prometheus. If specified, it takes precedence
-over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.
-Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
-Operator knows which version of Prometheus is being configured.
-If neither <code>spec.image</code> nor <code>spec.baseImage</code> are
-defined, the operator will use the latest upstream version of
-Prometheus available at the time when the operator was released.</p>
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -8947,7 +8961,7 @@ int32
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
 <code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
-<p>Default: 1.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -9677,7 +9691,7 @@ the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
 by the given Prometheus version.</p>
 <p>In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -9763,8 +9777,7 @@ string
 </em>
 </td>
 <td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -9775,10 +9788,8 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -9789,11 +9800,8 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
+specified as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -9806,9 +9814,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
-retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
-(milliseconds seconds minutes hours days weeks years).</p>
+<p>How long to retain the Prometheus data.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -9821,7 +9828,7 @@ ByteSize
 </em>
 </td>
 <td>
-<p>Maximum amount of disk space used by blocks.</p>
+<p>Maximum number of bytes used by the Prometheus data.</p>
 </td>
 </tr>
 <tr>
@@ -9832,7 +9839,7 @@ bool
 </em>
 </td>
 <td>
-<p>Disable prometheus compaction.</p>
+<p>When true, the Prometheus compaction is disabled.</p>
 </td>
 </tr>
 <tr>
@@ -9845,7 +9852,7 @@ Rules
 </em>
 </td>
 <td>
-<p>/&ndash;rules.*/ command-line arguments.</p>
+<p>Defines the configuration of the Prometheus rules&rsquo; engine.</p>
 </td>
 </tr>
 <tr>
@@ -9858,23 +9865,11 @@ Rules
 </em>
 </td>
 <td>
-<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-Make sure both ruleNamespace and ruleName are set for each pair.
-Deprecated: use excludedFromEnforcement instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>query</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QuerySpec">
-QuerySpec
-</a>
-</em>
-</td>
-<td>
-<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
+<em>(Optional)</em>
+<p>Defines the list of PrometheusRule objects to which the namespace label
+enforcement doesn&rsquo;t apply.
+This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
+<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -9887,11 +9882,10 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>A selector to select which PrometheusRules to mount for loading alerting/recording
-rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
-resources selected by RuleSelector. Make sure it does not match any config
-maps that you do not want to be migrated.</p>
+<em>(Optional)</em>
+<p>PrometheusRule objects to be selected for rule evaluation. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 </td>
 </tr>
 <tr>
@@ -9904,8 +9898,24 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
-the same namespace as the Prometheus object is in is used.</p>
+<em>(Optional)</em>
+<p>Namespaces to match for PrometheusRule discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QuerySpec">
+QuerySpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QuerySpec defines the configuration of the Promethus query service.</p>
 </td>
 </tr>
 <tr>
@@ -9918,20 +9928,8 @@ AlertingSpec
 </em>
 </td>
 <td>
-<p>Define details regarding alerting.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteRead</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
-[]RemoteReadSpec
-</a>
-</em>
-</td>
-<td>
-<p>remoteRead is the list of remote read configurations.</p>
+<em>(Optional)</em>
+<p>Defines the settings related to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -9944,16 +9942,17 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
-additional Prometheus alert relabel configurations. Alert relabel configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Alert relabel configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
-As alert relabel configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible alert relabel configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertRelabelConfigs specifies a key of a Secret containing
+additional Prometheus alert relabel configurations. The alert relabel
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible alert relabel configs are going to break
 Prometheus after the upgrade.</p>
 </td>
 </tr>
@@ -9967,17 +9966,32 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
-additional Prometheus AlertManager configurations. AlertManager configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Job configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
-As AlertManager configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible AlertManager configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertManagerConfigs specifies a key of a Secret containing
+additional Prometheus Alertmanager configurations. The Alertmanager
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible AlertManager configs are going to break
 Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteRead</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
+[]RemoteReadSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote read configurations.</p>
 </td>
 </tr>
 <tr>
@@ -9990,8 +10004,8 @@ ThanosSpec
 </em>
 </td>
 <td>
-<p>Thanos configuration allows configuring various aspects of a Prometheus
-server in a Thanos environment.</p>
+<em>(Optional)</em>
+<p>Defines the configuration of the optional Thanos sidecar.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
 </td>
@@ -10004,14 +10018,16 @@ string
 </em>
 </td>
 <td>
-<p>QueryLogFile specifies the file to which PromQL queries are logged.
-If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
-emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
-in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
-Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
-query information to the default Prometheus log stream.
-This is only available in versions of Prometheus &gt;= 2.16.0.
-For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
+<p>queryLogFile specifies where the file to which PromQL queries are logged.</p>
+<p>If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/query.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+This is because the prometheus container runs with a read-only root
+filesystem for security reasons.
+Alternatively, the location can be set to a standard I/O stream, e.g.
+<code>/dev/stdout</code>, to log query information to the default Prometheus log
+stream.</p>
 </td>
 </tr>
 <tr>
@@ -10022,8 +10038,9 @@ bool
 </em>
 </td>
 <td>
-<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
+<p>AllowOverlappingBlocks enables vertical compaction and vertical query
+merge in Prometheus.</p>
+<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
 </td>
 </tr>
 <tr>
@@ -10036,8 +10053,9 @@ Exemplars
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Exemplars related settings that are runtime reloadable.
-It requires to enable the exemplar storage feature to be effective.</p>
+It requires to enable the <code>exemplar-storage</code> feature flag to be effective.</p>
 </td>
 </tr>
 <tr>
@@ -10050,7 +10068,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+<p>Interval between rule evaluations.
+Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -10061,12 +10080,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+<p>Enables access to the Prometheus web admin API.</p>
+<p>WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 shutdown Prometheus, and more. Enabling this should be done with care and the
 user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
+ensure only clients authorized to perform these actions can do so.</p>
+<p>For more information:
+<a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -10314,7 +10334,7 @@ TLSConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>PrometheusWebSpec defines the web command line flags when starting Prometheus.</p>
+<p>PrometheusWebSpec defines the configuration of the Prometheus web server.</p>
 </div>
 <table>
 <thead>
@@ -10358,7 +10378,8 @@ string
 </em>
 </td>
 <td>
-<p>The prometheus web page title</p>
+<em>(Optional)</em>
+<p>The prometheus web page title.</p>
 </td>
 </tr>
 <tr>
@@ -10369,6 +10390,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Defines the maximum number of simultaneous connections
 A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
 </td>
@@ -10399,6 +10421,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The delta difference allowed for retrieving metrics during expression evaluations.</p>
 </td>
 </tr>
@@ -10410,6 +10433,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of concurrent queries that can be run at once.</p>
 </td>
 </tr>
@@ -10421,7 +10445,10 @@ int32
 </em>
 </td>
 <td>
-<p>Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.</p>
+<em>(Optional)</em>
+<p>Maximum number of samples a single query can load into memory. Note that
+queries will fail if they would load more samples than this into memory,
+so this also limits the number of samples a query can return.</p>
 </td>
 </tr>
 <tr>
@@ -10434,6 +10461,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Maximum time a query may take before being aborted.</p>
 </td>
 </tr>
@@ -10464,7 +10492,8 @@ int
 </em>
 </td>
 <td>
-<p>Capacity is the number of samples to buffer per shard before we start dropping them.</p>
+<p>Capacity is the number of samples to buffer per shard before we start
+dropping them.</p>
 </td>
 </tr>
 <tr>
@@ -10698,9 +10727,10 @@ string
 </em>
 </td>
 <td>
-<p>The name of the remote read queue, it must be unique if specified. The name
-is used in metrics and logging in order to differentiate read
-configurations.  Only valid in Prometheus versions 2.15.0 and newer.</p>
+<p>The name of the remote read queue, it must be unique if specified. The
+name is used in metrics and logging in order to differentiate read
+configurations.</p>
+<p>It requires Prometheus &gt;= v2.15.0.</p>
 </td>
 </tr>
 <tr>
@@ -10711,6 +10741,7 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>An optional list of equality matchers which have to be present
 in a selector to query the remote read endpoint.</p>
 </td>
@@ -10736,6 +10767,7 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each remote read request.
 Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.
 Only valid in Prometheus versions 2.26.0 and newer.</p>
@@ -10755,19 +10787,6 @@ the local storage should have complete data for.</p>
 </tr>
 <tr>
 <td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<p>BasicAuth for the URL.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>oauth2</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.OAuth2">
@@ -10776,18 +10795,25 @@ OAuth2
 </em>
 </td>
 <td>
-<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>OAuth2 configuration for the URL.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>bearerToken</code><br/>
+<code>basicAuth</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
 </em>
 </td>
 <td>
-<p>Bearer token for remote read.</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for the URL.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10798,7 +10824,8 @@ string
 </em>
 </td>
 <td>
-<p>File to read bearer token for remote read.</p>
+<p>File from which to read bearer token for the URL.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -10811,7 +10838,23 @@ Authorization
 </em>
 </td>
 <td>
-<p>Authorization section for remote read</p>
+<em>(Optional)</em>
+<p>Authorization section for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
+clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -10824,7 +10867,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for remote read.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for the URL.</p>
 </td>
 </tr>
 <tr>
@@ -10847,8 +10891,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether HTTP requests follow HTTP 3xx redirects.
-Requires Prometheus v2.26.0 and above.</p>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -10859,8 +10903,9 @@ bool
 </em>
 </td>
 <td>
-<p>Whether to use the external labels as selectors for the remote read endpoint.
-Requires Prometheus v2.34.0 and above.</p>
+<em>(Optional)</em>
+<p>Whether to use the external labels as selectors for the remote read endpoint.</p>
+<p>It requires Prometheus &gt;= v2.34.0.</p>
 </td>
 </tr>
 </tbody>
@@ -10902,8 +10947,8 @@ string
 </td>
 <td>
 <p>The name of the remote write queue, it must be unique if specified. The
-name is used in metrics and logging in order to differentiate queues.
-Only valid in Prometheus versions 2.15.0 and newer.</p>
+name is used in metrics and logging in order to differentiate queues.</p>
+<p>It requires Prometheus &gt;= v2.15.0.</p>
 </td>
 </tr>
 <tr>
@@ -10914,10 +10959,11 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enables sending of exemplars over remote write. Note that
-exemplar-storage itself must be enabled using the enableFeature option
-for exemplars to be scraped in the first place.  Only valid in
-Prometheus versions 2.27.0 and newer.</p>
+exemplar-storage itself must be enabled using the <code>spec.enableFeature</code>
+option for exemplars to be scraped in the first place.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -10928,8 +10974,10 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enables sending of native histograms, also known as sparse histograms
-over remote write. Only valid in Prometheus versions 2.40.0 and newer.</p>
+over remote write.</p>
+<p>It requires Prometheus &gt;= v2.40.0.</p>
 </td>
 </tr>
 <tr>
@@ -10953,9 +11001,10 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each remote write request.
-Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.
-Only valid in Prometheus versions 2.25.0 and newer.</p>
+Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -10968,6 +11017,7 @@ Only valid in Prometheus versions 2.25.0 and newer.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The list of remote write relabel configurations.</p>
 </td>
 </tr>
@@ -10981,7 +11031,10 @@ OAuth2
 </em>
 </td>
 <td>
-<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>OAuth2 configuration for the URL.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10994,18 +11047,9 @@ BasicAuth
 </em>
 </td>
 <td>
-<p>BasicAuth for the URL.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerToken</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bearer token for remote write.</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for the URL.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11016,7 +11060,8 @@ string
 </em>
 </td>
 <td>
-<p>File to read bearer token for remote write.</p>
+<p>File from which to read bearer token for the URL.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -11029,7 +11074,10 @@ Authorization
 </em>
 </td>
 <td>
-<p>Authorization section for remote write</p>
+<em>(Optional)</em>
+<p>Authorization section for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11042,7 +11090,23 @@ Sigv4
 </em>
 </td>
 <td>
-<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4</p>
+<em>(Optional)</em>
+<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
+clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -11055,7 +11119,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for remote write.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for the URL.</p>
 </td>
 </tr>
 <tr>
@@ -11079,6 +11144,7 @@ QueueConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>QueueConfig allows tuning of the remote write queue parameters.</p>
 </td>
 </tr>
@@ -11092,6 +11158,7 @@ MetadataConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetadataConfig configures the sending of series metadata to the remote storage.</p>
 </td>
 </tr>
@@ -11810,7 +11877,7 @@ int32
 </p>
 <div>
 <p>Sigv4 optionally configures AWS&rsquo;s Signature Verification 4 signing process to
-sign requests. Cannot be set at the same time as basic_auth or authorization.</p>
+sign requests.</p>
 </div>
 <table>
 <thead>
@@ -11841,7 +11908,9 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AccessKey is the AWS API key. If blank, the environment variable <code>AWS_ACCESS_KEY_ID</code> is used.</p>
+<em>(Optional)</em>
+<p>AccessKey is the AWS API key. If not specified, the environment variable
+<code>AWS_ACCESS_KEY_ID</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -11854,7 +11923,9 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>SecretKey is the AWS API secret. If blank, the environment variable <code>AWS_SECRET_ACCESS_KEY</code> is used.</p>
+<em>(Optional)</em>
+<p>SecretKey is the AWS API secret. If not specified, the environment
+variable <code>AWS_SECRET_ACCESS_KEY</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -11888,8 +11959,11 @@ string
 </p>
 <div>
 <p>StorageSpec defines the configured storage for a group Prometheus servers.
-If no storage option is specified, then by default an <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">EmptyDir</a> will be used.
-If multiple storage options are specified, priority will be given as follows: EmptyDir, Ephemeral, and lastly VolumeClaimTemplate.</p>
+If no storage option is specified, then by default an <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">EmptyDir</a> will be used.</p>
+<p>If multiple storage options are specified, priority will be given as follows:
+1. emptyDir
+2. ephemeral
+3. volumeClaimTemplate</p>
 </div>
 <table>
 <thead>
@@ -11907,8 +11981,7 @@ bool
 </em>
 </td>
 <td>
-<p>Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary.
-DisableMountSubPath allows to remove any subPath usage in volume mounts.</p>
+<p><em>Deprecated: subPath usage will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -11921,8 +11994,9 @@ Kubernetes core/v1.EmptyDirVolumeSource
 </em>
 </td>
 <td>
-<p>EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
-info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
+<p>EmptyDirVolumeSource to be used by the StatefulSet.
+If specified, it takes precedence over <code>ephemeral</code> and <code>volumeClaimTemplate</code>.
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
 </td>
 </tr>
 <tr>
@@ -11936,7 +12010,8 @@ Kubernetes core/v1.EphemeralVolumeSource
 </td>
 <td>
 <p>EphemeralVolumeSource to be used by the StatefulSet.
-This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
+This is a beta field in k8s 1.21 and GA in 1.15.
+For lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes">https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes</a></p>
 </td>
 </tr>
@@ -11950,8 +12025,9 @@ EmbeddedPersistentVolumeClaim
 </em>
 </td>
 <td>
-<p>A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
-(for whatever reason) is to use a label selector alongside manually created PersistentVolumes.</p>
+<p>Defines the PVC spec to be used by the Prometheus StatefulSets.
+The easiest way to use a volume that cannot be automatically provisioned
+is to use a label selector alongside manually created PersistentVolumes.</p>
 </td>
 </tr>
 </tbody>
@@ -12920,7 +12996,7 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
 </p>
 <div>
-<p>ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.</p>
+<p>ThanosSpec defines the configuration of the Thanos sidecar.</p>
 </div>
 <table>
 <thead>
@@ -12938,10 +13014,15 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Thanos is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Thanos. If specified, it takes precedence over
+the <code>spec.thanos.baseImage</code>, <code>spec.thanos.tag</code> and <code>spec.thanos.sha</code>
+fields.</p>
+<p>Specifying <code>spec.thanos.version</code> is still necessary to ensure the
+Prometheus Operator knows which version of Thanos is being configured.</p>
+<p>If neither <code>spec.thanos.image</code> nor <code>spec.thanos.baseImage</code> are defined,
+the operator will use the latest upstream version of Thanos available at
+the time when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -12952,7 +13033,12 @@ string
 </em>
 </td>
 <td>
-<p>Version describes the version of Thanos to use.</p>
+<em>(Optional)</em>
+<p>Version of Thanos being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream release of
+Thanos available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -12963,10 +13049,9 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Thanos sidecar container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as
+part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -12977,11 +13062,9 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Thanos container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -12992,8 +13075,8 @@ string
 </em>
 </td>
 <td>
-<p>Thanos base image if other than default.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -13006,8 +13089,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Resources defines the resource requirements for the Thanos sidecar.
-If not provided, no requests/limits will be set</p>
+<p>Defines the resources requests and limits of the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -13020,8 +13102,10 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>ObjectStorageConfig configures object storage in Thanos.
-Alternative to ObjectStorageConfigFile, and lower order priority.</p>
+<em>(Optional)</em>
+<p>Defines the Thanos sidecar&rsquo;s configuration to upload TSDB blocks to object storage.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/storage.md/">https://thanos.io/tip/thanos/storage.md/</a></p>
+<p>objectStorageConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -13032,8 +13116,10 @@ string
 </em>
 </td>
 <td>
-<p>ObjectStorageConfigFile specifies the path of the object storage configuration file.
-When used alongside with ObjectStorageConfig, ObjectStorageConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>Defines the Thanos sidecar&rsquo;s configuration file to upload TSDB blocks to object storage.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/storage.md/">https://thanos.io/tip/thanos/storage.md/</a></p>
+<p>This field takes precedence over objectStorageConfig.</p>
 </td>
 </tr>
 <tr>
@@ -13044,10 +13130,7 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the HTTP and gRPC endpoints.
-It takes precedence over <code>grpcListenLocal</code> and <code>httpListenLocal</code>.
-Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
+<p><em>Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -13058,9 +13141,9 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the gRPC endpoints.
-It has no effect if <code>listenLocal</code> is true.</p>
+<p>When true, the Thanos sidecar listens on the loopback interface instead
+of the Pod IP&rsquo;s address for the gRPC endpoints.</p>
+<p>It has no effect if <code>listenLocal</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -13071,9 +13154,9 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the HTTP endpoints.
-It has no effect if <code>listenLocal</code> is true.</p>
+<p>When true, the Thanos sidecar listens on the loopback interface instead
+of the Pod IP&rsquo;s address for the HTTP endpoints.</p>
+<p>It has no effect if <code>listenLocal</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -13086,7 +13169,12 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>Defines the tracing configuration for the Thanos sidecar.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
+<p>This is an experimental feature, it may change in any upcoming release
+in a breaking way.</p>
+<p>tracingConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -13097,8 +13185,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<p>Defines the tracing configuration file for the Thanos sidecar.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
+<p>This is an experimental feature, it may change in any upcoming release
+in a breaking way.</p>
+<p>This field takes precedence over tracingConfig.</p>
 </td>
 </tr>
 <tr>
@@ -13111,10 +13202,9 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>GRPCServerTLSConfig configures the TLS parameters for the gRPC server
-providing the StoreAPI.
-Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
+<em>(Optional)</em>
+<p>Configures the TLS parameters for the gRPC server providing the StoreAPI.</p>
+<p>Note: Currently only the <code>caFile</code>, <code>certFile</code>, and <code>keyFile</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -13125,7 +13215,7 @@ string
 </em>
 </td>
 <td>
-<p>LogLevel for Thanos sidecar to be configured with.</p>
+<p>Log level for the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -13136,7 +13226,7 @@ string
 </em>
 </td>
 <td>
-<p>LogFormat for Thanos sidecar to be configured with.</p>
+<p>Log format for the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -13147,7 +13237,10 @@ string
 </em>
 </td>
 <td>
-<p>MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.</p>
+<p>Defines the start of time range limit served by the Thanos sidecar&rsquo;s StoreAPI.
+The field&rsquo;s value should be a constant time in RFC3339 format or a time
+duration relative to current time, such as -1d or 2h45m. Valid duration
+units are ms, s, m, h, d, w, y.</p>
 </td>
 </tr>
 <tr>
@@ -13160,8 +13253,13 @@ Duration
 </em>
 </td>
 <td>
-<p>BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
-WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.</p>
+<p>BlockDuration controls the size of TSDB blocks produced by Prometheus.
+The default value is 2h to match the upstream Prometheus defaults.</p>
+<p>WARNING: Changing the block duration can impact the performance and
+efficiency of the entire Prometheus/Thanos stack due to how it interacts
+with memory and Thanos compactors. It is recommended to keep this value
+set to a multiple of 120 times your longest scrape or rule interval. For
+example, 30s * 120 = 1h.</p>
 </td>
 </tr>
 <tr>
@@ -13174,7 +13272,8 @@ Duration
 </em>
 </td>
 <td>
-<p>ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m</p>
+<p>ReadyTimeout is the maximum time that the Thanos sidecar will wait for
+Prometheus to start.</p>
 </td>
 </tr>
 <tr>
@@ -13213,8 +13312,10 @@ Duration
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.</p>
+<em>(Optional)</em>
+<p>VolumeMounts allows configuration of additional VolumeMounts for Thanos.
+VolumeMounts specified will be appended to other VolumeMounts in the
+&lsquo;thanos-sidecar&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -13227,11 +13328,12 @@ VolumeMounts specified will be appended to other VolumeMounts in the thanos-side
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalArgs allows setting additional arguments for the Thanos container.
 The arguments are passed as-is to the Thanos container which may cause issues
 if they are invalid or not supported the given Thanos version.
 In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -13931,9 +14033,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed. If not specified, the operator
-assumes the latest upstream version of Prometheus available at the time
-when the version of the operator was released.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -13956,13 +14060,14 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Container image name for Prometheus. If specified, it takes precedence
-over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.
-Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
-Operator knows which version of Prometheus is being configured.
-If neither <code>spec.image</code> nor <code>spec.baseImage</code> are
-defined, the operator will use the latest upstream version of
-Prometheus available at the time when the operator was released.</p>
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -14006,7 +14111,7 @@ int32
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
 <code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
-<p>Default: 1.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -14736,7 +14841,7 @@ the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
 by the given Prometheus version.</p>
 <p>In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -16677,9 +16782,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed. If not specified, the operator
-assumes the latest upstream version of Prometheus available at the time
-when the version of the operator was released.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -16702,13 +16809,14 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Container image name for Prometheus. If specified, it takes precedence
-over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.
-Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
-Operator knows which version of Prometheus is being configured.
-If neither <code>spec.image</code> nor <code>spec.baseImage</code> are
-defined, the operator will use the latest upstream version of
-Prometheus available at the time when the operator was released.</p>
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -16752,7 +16860,7 @@ int32
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
 <code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
-<p>Default: 1.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -17482,7 +17590,7 @@ the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
 by the given Prometheus version.</p>
 <p>In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>

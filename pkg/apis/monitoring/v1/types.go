@@ -73,12 +73,13 @@ type HostAlias struct {
 	Hostnames []string `json:"hostnames"`
 }
 
-// PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
-// to be ignored while enforcing namespace label for alerts and metrics.
+// PrometheusRuleExcludeConfig enables users to configure excluded
+// PrometheusRule names and their namespaces to be ignored while enforcing
+// namespace label for alerts and metrics.
 type PrometheusRuleExcludeConfig struct {
-	// RuleNamespace - namespace of excluded rule
+	// Namespace of the excluded PrometheusRule object.
 	RuleNamespace string `json:"ruleNamespace"`
-	// RuleNamespace - name of excluded rule
+	// Name of the excluded PrometheusRule object.
 	RuleName string `json:"ruleName"`
 }
 
@@ -98,7 +99,7 @@ type ObjectReference struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Namespace string `json:"namespace"`
-	// Name of the referent. When not set, all resources are matched.
+	// Name of the referent. When not set, all resources in the namespace are matched.
 	// +optional
 	Name string `json:"name,omitempty"`
 }
@@ -206,14 +207,12 @@ type EmbeddedPersistentVolumeClaim struct {
 	// EmbeddedMetadata contains metadata relevant to an EmbeddedResource.
 	EmbeddedObjectMetadata `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	// Spec defines the desired characteristics of a volume requested by a pod author.
+	// Defines the desired characteristics of a volume requested by a pod author.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
 	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 
-	// Status represents the current information/status of a persistent volume claim.
-	// Read-only.
-	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+	// *Deprecated: this field is never set.*
 	// +optional
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
