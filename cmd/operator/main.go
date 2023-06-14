@@ -104,7 +104,7 @@ func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDC
 	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
 	switch {
 	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported because prerequisites are not met", resourceName), "err", err)
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported", resourceName), "reason", err)
 		return false, nil
 	case err != nil:
 		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
