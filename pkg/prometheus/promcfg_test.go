@@ -8961,6 +8961,22 @@ scrape_configs:
       credentials: http-sd-secret
 `,
 		},
+		{
+			name: "scheme",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				Scheme: pointer.String("HTTPS"),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  scheme: https
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

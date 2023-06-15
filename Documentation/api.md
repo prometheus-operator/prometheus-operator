@@ -15094,6 +15094,19 @@ bool
 </tr>
 <tr>
 <td>
+<code>scheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the protocol scheme used for requests.
+If empty, Prometheus uses HTTP by default.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
@@ -18440,6 +18453,19 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the protocol scheme used for requests.
+If empty, Prometheus uses HTTP by default.</p>
 </td>
 </tr>
 <tr>
