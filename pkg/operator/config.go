@@ -15,9 +15,11 @@
 package operator
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/maps"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -38,8 +40,8 @@ type Config struct {
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
 	Namespaces                   Namespaces
-	Annotations                  Annotations
-	Labels                       Labels
+	Annotations                  Map
+	Labels                       Map
 	LocalHost                    string
 	LogLevel                     string
 	LogFormat                    string
@@ -60,91 +62,69 @@ type ContainerConfig struct {
 	EnableProbes  bool
 }
 
-type Annotations struct {
-	AnnotationsString string
-	AnnotationsMap    map[string]string
-}
+type Map map[string]string
 
 // Implement the flag.Value interface
-func (annotations *Annotations) String() string {
-	return annotations.AnnotationsString
+func (m *Map) String() string {
+	if m == nil {
+		return ""
+	}
+
+	kv := make([]string, 0, len(*m))
+	for _, k := range m.SortedKeys() {
+		kv = append(kv, fmt.Sprintf("%s=%s", k, (*m)[k]))
+	}
+
+	return strings.Join(kv, ",")
 }
 
-// Merge annotations create a new map with annotations merged.
-func (annotations *Annotations) Merge(otherAnnotations map[string]string) map[string]string {
-	mergedAnnotations := map[string]string{}
+// Merge returns a map which is a merge of the original map and the other parameter.
+// The keys of the original map take precedence over other.
+func (m *Map) Merge(other map[string]string) map[string]string {
+	merged := map[string]string{}
 
-	for key, value := range otherAnnotations {
-		mergedAnnotations[key] = value
+	for key, value := range other {
+		merged[key] = value
 	}
 
-	for key, value := range annotations.AnnotationsMap {
-		mergedAnnotations[key] = value
+	if m == nil {
+		return merged
 	}
-	return mergedAnnotations
+
+	for key, value := range *m {
+		merged[key] = value
+	}
+
+	return merged
 }
 
 // Set implements the flag.Set interface.
-func (annotations *Annotations) Set(value string) error {
-	m := map[string]string{}
-	if value != "" {
-		splited := strings.Split(value, ",")
-		for _, pair := range splited {
-			sp := strings.Split(pair, "=")
-			m[sp[0]] = sp[1]
-		}
+func (m *Map) Set(value string) error {
+	if value == "" {
+		return nil
 	}
-	(*annotations).AnnotationsMap = m
-	(*annotations).AnnotationsString = value
+
+	if *m == nil {
+		*m = map[string]string{}
+	}
+
+	for _, pair := range strings.Split(value, ",") {
+		pair := strings.Split(pair, "=")
+		(*m)[pair[0]] = pair[1]
+	}
+
 	return nil
 }
 
-type Labels struct {
-	LabelsString string
-	LabelsMap    map[string]string
-}
-
-// Implement the flag.Value interface
-func (labels *Labels) String() string {
-	return labels.LabelsString
-}
-
-// Merge labels create a new map with labels merged.
-func (labels *Labels) Merge(otherLabels map[string]string) map[string]string {
-	mergedLabels := map[string]string{}
-
-	for key, value := range otherLabels {
-		mergedLabels[key] = value
+// SortedKeys returns a slice of the keys in increasing order.
+func (m *Map) SortedKeys() []string {
+	if m == nil {
+		return nil
 	}
 
-	for key, value := range labels.LabelsMap {
-		mergedLabels[key] = value
-	}
-	return mergedLabels
-}
-
-// Set implements the flag.Set interface.
-func (labels *Labels) Set(value string) error {
-	m := map[string]string{}
-	if value != "" {
-		splited := strings.Split(value, ",")
-		for _, pair := range splited {
-			sp := strings.Split(pair, "=")
-			m[sp[0]] = sp[1]
-		}
-	}
-	(*labels).LabelsMap = m
-	(*labels).LabelsString = value
-	return nil
-}
-
-// Returns an arrary with the keys of the label map sorted
-func (labels *Labels) SortedKeys() []string {
-	keys := make([]string, 0, len(labels.LabelsMap))
-	for key := range labels.LabelsMap {
-		keys = append(keys, key)
-	}
+	keys := maps.Keys(*m)
 	sort.Strings(keys)
+
 	return keys
 }
 

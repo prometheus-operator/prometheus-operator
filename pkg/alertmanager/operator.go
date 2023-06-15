@@ -95,8 +95,8 @@ type Config struct {
 	ReloaderConfig               operator.ContainerConfig
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   operator.Namespaces
-	Annotations                  operator.Annotations
-	Labels                       operator.Labels
+	Annotations                  operator.Map
+	Labels                       operator.Map
 	AlertManagerSelector         string
 	SecretListWatchSelector      string
 }
@@ -995,7 +995,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	generatedConfigSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        generatedConfigSecretName(am.Name),
-			Annotations: c.config.Annotations.AnnotationsMap,
+			Annotations: c.config.Annotations,
 			Labels:      c.config.Labels.Merge(managedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -1674,7 +1674,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		Name:               a.Name,
 		UID:                a.UID,
 	}
-	secretAnnotations := c.config.Annotations.AnnotationsMap
+	secretAnnotations := c.config.Annotations
 	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {

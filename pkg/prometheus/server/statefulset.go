@@ -60,7 +60,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 					UID:        p.GetUID(),
 				},
 			},
-			Annotations: config.Annotations.AnnotationsMap,
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),

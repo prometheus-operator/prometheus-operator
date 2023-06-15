@@ -917,7 +917,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-	secretAnnotations := c.config.Annotations.AnnotationsMap
+	secretAnnotations := c.config.Annotations
 	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
