@@ -31449,6 +31449,13 @@ spec:
                       type: string
                   type: object
                 type: array
+              scheme:
+                description: Configures the protocol scheme used for requests. If
+                  empty, Prometheus uses HTTP by default.
+                enum:
+                - HTTP
+                - HTTPS
+                type: string
               staticConfigs:
                 description: StaticConfigs defines a list of static targets with a
                   common label set.

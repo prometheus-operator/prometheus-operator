@@ -31,6 +31,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	MetricsPath     *string                                           `json:"metricsPath,omitempty"`
 	HonorTimestamps *bool                                             `json:"honorTimestamps,omitempty"`
 	HonorLabels     *bool                                             `json:"honorLabels,omitempty"`
+	Scheme          *string                                           `json:"scheme,omitempty"`
 	BasicAuth       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 }
@@ -114,6 +115,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHonorTimestamps(value bool) *Sc
 // If called multiple times, the HonorLabels field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithHonorLabels(value bool) *ScrapeConfigSpecApplyConfiguration {
 	b.HonorLabels = &value
+	return b
+}
+
+// WithScheme sets the Scheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Scheme field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScheme(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.Scheme = &value
 	return b
 }
 

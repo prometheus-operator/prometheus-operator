@@ -847,6 +847,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Scheme != nil {
+		in, out := &in.Scheme, &out.Scheme
+		*out = new(string)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(monitoringv1.BasicAuth)
