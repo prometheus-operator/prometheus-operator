@@ -4,6 +4,7 @@ run:
 linters:
   enable:
   - revive
+  - gci
 
 issues:
   exclude-rules:
@@ -18,3 +19,8 @@ issues:
 linters-settings:
   errcheck:
     exclude: scripts/errcheck_excludes.txt
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/prometheus-operator/prometheus-operator)
