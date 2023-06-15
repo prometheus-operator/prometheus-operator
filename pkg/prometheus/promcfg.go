@@ -2163,8 +2163,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = cg.AddHonorLabels(cfg, *sc.Spec.HonorLabels)
 	}
 
-	if sc.Spec.MetricsPath != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	if sc.Spec.MetricsPath != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: *sc.Spec.MetricsPath})
 	}
 
 	if sc.Spec.RelabelConfigs != nil {
