@@ -368,6 +368,13 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	out := &globalConfig{}
+
+	if in.SMTPConfig != nil {
+		if err := cb.convertSMTPConfig(ctx, out, *in.SMTPConfig, crKey); err != nil {
+			return nil, errors.Wrap(err, "invalid global smtpConfig")
+		}
+	}
+
 	if in.HTTPConfig != nil {
 		httpConfig, err := cb.convertHTTPConfigForV1(ctx, *in.HTTPConfig, crKey)
 		if err != nil {
@@ -1297,6 +1304,45 @@ func makeNamespacedString(in string, crKey types.NamespacedName) string {
 		return ""
 	}
 	return crKey.Namespace + "/" + crKey.Name + "/" + in
+}
+
+func (cb *configBuilder) convertSMTPConfig(ctx context.Context, out *globalConfig, in monitoringv1.GlobalSMTPConfig, crKey types.NamespacedName) error {
+	if in.From != nil {
+		out.SMTPFrom = *in.From
+	}
+	if in.Hello != nil {
+		out.SMTPHello = *in.Hello
+	}
+	if in.AuthUsername != nil {
+		out.SMTPAuthUsername = *in.AuthUsername
+	}
+	if in.AuthIdentity != nil {
+		out.SMTPAuthIdentity = *in.AuthIdentity
+	}
+	out.SMTPRequireTLS = in.RequireTLS
+
+	if in.SmartHost != nil {
+		out.SMTPSmarthost.Host = in.SmartHost.Host
+		out.SMTPSmarthost.Port = in.SmartHost.Port
+	}
+
+	if in.AuthPassword != nil {
+		authPassword, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthPassword)
+		if err != nil {
+			return err
+		}
+		out.SMTPAuthPassword = authPassword
+	}
+
+	if in.AuthSecret != nil {
+		authSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthSecret)
+		if err != nil {
+			return err
+		}
+		out.SMTPAuthSecret = authSecret
+	}
+
+	return nil
 }
 
 func (cb *configBuilder) convertHTTPConfigForV1(ctx context.Context, in monitoringv1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {

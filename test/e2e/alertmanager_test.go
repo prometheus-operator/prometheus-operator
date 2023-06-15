@@ -41,6 +41,8 @@ import (
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/pointer"
 
+	"k8s.io/utils/pointer"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1560,6 +1562,29 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
+			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+				From: pointer.String("from"),
+				SmartHost: &monitoringv1.HostPort{
+					Host: "smtp.example.org",
+					Port: "587",
+				},
+				Hello:        pointer.String("smtp.example.org"),
+				AuthUsername: pointer.String("dev@smtp.example.org"),
+				AuthPassword: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "smtp-auth",
+					},
+					Key: "password",
+				},
+				AuthIdentity: pointer.String("dev@smtp.example.org"),
+				AuthSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "smtp-auth",
+					},
+					Key: "secret",
+				},
+				RequireTLS: pointer.Bool(true),
+			},
 			ResolveTimeout: "30s",
 			HTTPConfig: &monitoringv1.HTTPConfig{
 				OAuth2: &monitoringv1.OAuth2{
@@ -1615,6 +1640,16 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": "clientID",
 		},
 	}
+	smtp := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "smtp-auth",
+			Namespace: ns,
+		},
+		Data: map[string][]byte{
+			"password": []byte("password"),
+			"secret":   []byte("secret"),
+		},
+	}
 	sec := v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "webhook-client-secret",
@@ -1645,6 +1680,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &smtp, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
@@ -1671,6 +1709,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
       endpoint_params:
         some: value
     follow_redirects: true
+  smtp_from: from
+  smtp_hello: smtp.example.org
+  smtp_smarthost: smtp.example.org:587
+  smtp_auth_username: dev@smtp.example.org
+  smtp_auth_password: password
+  smtp_auth_secret: secret
+  smtp_auth_identity: dev@smtp.example.org
+  smtp_require_tls: true
 route:
   receiver: %[1]s
   routes:
