@@ -8768,7 +8768,7 @@ scrape_configs:
 		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: "/metrics",
+				MetricsPath: pointer.String("/metrics"),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
