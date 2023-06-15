@@ -2075,6 +2075,83 @@ func TestConfigReloader(t *testing.T) {
 	}
 }
 
+func TestConfigReloaderWithSignal(t *testing.T) {
+	expectedShardNum := 0
+	logger := newLogger()
+	p := monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ReloadStrategy: func(r monitoringv1.ReloadStrategyType) *monitoringv1.ReloadStrategyType { return &r }(monitoringv1.ProcessSignalReloadStrategyType),
+			},
+		},
+	}
+
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	require.NoError(t, err)
+
+	sset, err := makeStatefulSet(
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		int32(expectedShardNum),
+		nil)
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-method=signal",
+		"--runtimeinfo-url=http://localhost:9090/api/v1/status/runtimeinfo",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		switch c.Name {
+		case "config-reloader":
+			require.Equal(t, expectedArgsConfigReloader, c.Args)
+			for _, env := range c.Env {
+				if env.Name == "SHARD" {
+					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+
+		case "prometheus":
+			require.NotContains(t, c.Args, "--web.enable-lifecycle")
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.InitContainers {
+		if c.Name == "init-config-reloader" {
+			require.Equal(t, expectedArgsInitConfigReloader, c.Args)
+			for _, env := range c.Env {
+				if env.Name == "SHARD" {
+					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+		}
+	}
+}
+
 func TestThanosGetConfigInterval(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{

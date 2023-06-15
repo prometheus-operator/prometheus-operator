@@ -4366,6 +4366,14 @@ spec:
                   when the field is set to the empty string (`\"\"`). \n Default:
                   \"prometheus\""
                 type: string
+              reloadStrategy:
+                description: Defines the strategy used to reload the Prometheus configuration.
+                  If not specified, the configuration is reloaded using the /-/reload
+                  HTTP endpoint.
+                enum:
+                - HTTP
+                - ProcessSignal
+                type: string
               remoteWrite:
                 description: Defines the list of remote write configurations.
                 items:

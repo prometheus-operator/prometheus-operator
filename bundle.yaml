@@ -18963,6 +18963,14 @@ spec:
                   when the field is set to the empty string (`\"\"`). \n Default:
                   \"prometheus\""
                 type: string
+              reloadStrategy:
+                description: Defines the strategy used to reload the Prometheus configuration.
+                  If not specified, the configuration is reloaded using the /-/reload
+                  HTTP endpoint.
+                enum:
+                - HTTP
+                - ProcessSignal
+                type: string
               remoteWrite:
                 description: Defines the list of remote write configurations.
                 items:
@@ -27960,6 +27968,14 @@ spec:
                   root filesystem for security reasons. Alternatively, the location
                   can be set to a standard I/O stream, e.g. `/dev/stdout`, to log
                   query information to the default Prometheus log stream."
+                type: string
+              reloadStrategy:
+                description: Defines the strategy used to reload the Prometheus configuration.
+                  If not specified, the configuration is reloaded using the /-/reload
+                  HTTP endpoint.
+                enum:
+                - HTTP
+                - ProcessSignal
                 type: string
               remoteRead:
                 description: Defines the list of remote read configurations.

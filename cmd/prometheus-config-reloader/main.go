@@ -49,6 +49,9 @@ const (
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
 
+	httpReloadMethod   = "http"
+	signalReloadMethod = "signal"
+
 	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
 
@@ -66,6 +69,9 @@ func main() {
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
+
+	reloadMethod := app.Flag("reload-method", "method used to reload the configuration").Default(httpReloadMethod).Enum(httpReloadMethod, signalReloadMethod)
+	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").Default("prometheus").String()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
@@ -93,8 +99,11 @@ func main() {
 		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", "))).
 		Default(logging.LevelInfo).StringVar(&logConfig.Level)
 
-	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
+	reloadURL := app.Flag("reload-url", "URL to trigger the configuration").
 		Default("http://127.0.0.1:9090/-/reload").URL()
+
+	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
+		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
 	versionutil.RegisterIntoKingpinFlags(app)
 
@@ -140,22 +149,29 @@ func main() {
 	)
 
 	{
+		opts := reloader.Options{
+			CfgFile:       *cfgFile,
+			CfgOutputFile: *cfgSubstFile,
+			WatchedDirs:   *watchedDir,
+			DelayInterval: *delayInterval,
+			WatchInterval: *watchInterval,
+			RetryInterval: *retryInterval,
+		}
+
+		switch *reloadMethod {
+		case signalReloadMethod:
+			opts.RuntimeInfoURL = *runtimeInfoURL
+			opts.ProcessName = *processName
+		default:
+			opts.ReloadURL = *reloadURL
+			opts.HTTPClient = createHTTPClient(reloadTimeout)
+		}
+
 		rel := reloader.New(
 			logger,
 			r,
-			&reloader.Options{
-				ReloadURL:     *reloadURL,
-				CfgFile:       *cfgFile,
-				CfgOutputFile: *cfgSubstFile,
-				WatchedDirs:   *watchedDir,
-				DelayInterval: *delayInterval,
-				WatchInterval: *watchInterval,
-				RetryInterval: *retryInterval,
-			},
+			&opts,
 		)
-
-		client := createHTTPClient(reloadTimeout)
-		rel.SetHttpClient(client)
 
 		g.Add(func() error {
 			return rel.Watch(ctx)

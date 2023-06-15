@@ -3886,6 +3886,14 @@
                     "description": "Name of Prometheus external label used to denote the Prometheus instance name. The external label will _not_ be added when the field is set to the empty string (`\"\"`). \n Default: \"prometheus\"",
                     "type": "string"
                   },
+                  "reloadStrategy": {
+                    "description": "Defines the strategy used to reload the Prometheus configuration. If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.",
+                    "enum": [
+                      "HTTP",
+                      "ProcessSignal"
+                    ],
+                    "type": "string"
+                  },
                   "remoteWrite": {
                     "description": "Defines the list of remote write configurations.",
                     "items": {
