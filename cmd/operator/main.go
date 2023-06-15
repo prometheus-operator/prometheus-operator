@@ -99,6 +99,21 @@ func (n namespaces) asSlice() []string {
 	return ns
 }
 
+// Helper function for checking CRD prerequisites
+func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDChecker, allowedNamespaces []string, verbs map[string][]string, groupVersion, resourceName string) (bool, error) {
+	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported", resourceName), "reason", err)
+		return false, nil
+	case err != nil:
+		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
+		return false, err
+	default:
+		return true, nil
+	}
+}
+
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
 		level.Info(logger).Log("msg", "Starting insecure server on "+listener.Addr().String())
@@ -262,18 +277,7 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
-		cancel()
-		return 1
-	}
-
-	var pao *prometheusagentcontroller.Operator
-	verbs := map[string][]string{
-		monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
-		fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
-	}
+	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
 
 	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
@@ -282,20 +286,49 @@ func Main() int {
 		return 1
 	}
 
-	err = cc.CheckPrerequisites(ctx,
-		namespaces(cfg.Namespaces.AllowList).asSlice(),
-		verbs,
+	scrapeConfigSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+		},
 		monitoringv1alpha1.SchemeGroupVersion.String(),
-		monitoringv1alpha1.PrometheusAgentName)
+		monitoringv1alpha1.ScrapeConfigName,
+	)
 
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", "Prometheus agent controller disabled because prerequisites not met", "err", err)
-	case err != nil:
-		level.Error(logger).Log("msg", "failed to check prerequisites for prometheus-agent controller ", "err", err)
+	if err != nil {
 		cancel()
 		return 1
-	default:
+	}
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		cancel()
+		return 1
+	}
+
+	prometheusAgentSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+			fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+		},
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.PrometheusAgentName,
+	)
+	if err != nil {
+		cancel()
+		return 1
+	}
+
+	var pao *prometheusagentcontroller.Operator
+	if prometheusAgentSupported {
 		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
