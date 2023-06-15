@@ -1327,6 +1327,31 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 	}
 	in.Selector.DeepCopyInto(&out.Selector)
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
+	if in.SampleLimit != nil {
+		in, out := &in.SampleLimit, &out.SampleLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.TargetLimit != nil {
+		in, out := &in.TargetLimit, &out.TargetLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelLimit != nil {
+		in, out := &in.LabelLimit, &out.LabelLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelNameLengthLimit != nil {
+		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelValueLengthLimit != nil {
+		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.AttachMetadata != nil {
 		in, out := &in.AttachMetadata, &out.AttachMetadata
 		*out = new(AttachMetadata)
@@ -1426,6 +1451,31 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		in, out := &in.Authorization, &out.Authorization
 		*out = new(SafeAuthorization)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.SampleLimit != nil {
+		in, out := &in.SampleLimit, &out.SampleLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.TargetLimit != nil {
+		in, out := &in.TargetLimit, &out.TargetLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelLimit != nil {
+		in, out := &in.LabelLimit, &out.LabelLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelNameLengthLimit != nil {
+		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelValueLengthLimit != nil {
+		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
 	}
 }
 
@@ -2337,6 +2387,31 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	}
 	in.Selector.DeepCopyInto(&out.Selector)
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
+	if in.SampleLimit != nil {
+		in, out := &in.SampleLimit, &out.SampleLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.TargetLimit != nil {
+		in, out := &in.TargetLimit, &out.TargetLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelLimit != nil {
+		in, out := &in.LabelLimit, &out.LabelLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelNameLengthLimit != nil {
+		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.LabelValueLengthLimit != nil {
+		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.AttachMetadata != nil {
 		in, out := &in.AttachMetadata, &out.AttachMetadata
 		*out = new(AttachMetadata)

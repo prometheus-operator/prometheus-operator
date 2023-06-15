@@ -5127,7 +5127,8 @@ scrape_configs:
 				},
 			}
 			if tc.limit >= 0 {
-				serviceMonitor.Spec.SampleLimit = uint64(tc.limit)
+				sampleLimit := uint64(tc.limit)
+				serviceMonitor.Spec.SampleLimit = &sampleLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -5383,7 +5384,8 @@ scrape_configs:
 				},
 			}
 			if tc.limit >= 0 {
-				serviceMonitor.Spec.TargetLimit = uint64(tc.limit)
+				limit := uint64(tc.limit)
+				serviceMonitor.Spec.TargetLimit = &limit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6387,7 +6389,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelLimit >= 0 {
-				serviceMonitor.Spec.LabelLimit = uint64(tc.labelLimit)
+				labelLimit := uint64(tc.labelLimit)
+				serviceMonitor.Spec.LabelLimit = &labelLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6604,7 +6607,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelNameLengthLimit >= 0 {
-				podMonitor.Spec.LabelNameLengthLimit = uint64(tc.labelNameLengthLimit)
+				labelNameLengthLimit := uint64(tc.labelNameLengthLimit)
+				podMonitor.Spec.LabelNameLengthLimit = &labelNameLengthLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6803,7 +6807,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelValueLengthLimit >= 0 {
-				probe.Spec.LabelValueLengthLimit = uint64(tc.labelValueLengthLimit)
+				labelValueLengthLimit := uint64(tc.labelValueLengthLimit)
+				probe.Spec.LabelValueLengthLimit = &labelValueLengthLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
