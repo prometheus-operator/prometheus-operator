@@ -3919,7 +3919,6 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 }
 
 func testPromMinReadySeconds(t *testing.T) {
-	runFeatureGatedTests(t)
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
