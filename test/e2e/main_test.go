@@ -68,6 +68,9 @@ func skipOperatorUpgradeTests(t *testing.T) {
 }
 
 // feature gated tests need to be explicitly included
+// not currently in use
+//
+// nolint:all
 func runFeatureGatedTests(t *testing.T) {
 	if os.Getenv("FEATURE_GATED_TESTS") != "include" {
 		t.Skip("Skipping Feature Gated tests")

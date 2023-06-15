@@ -216,7 +216,6 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 }
 
 func testTRMinReadySeconds(t *testing.T) {
-	runFeatureGatedTests(t)
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)

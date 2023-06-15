@@ -2184,7 +2184,6 @@ func testAMWeb(t *testing.T) {
 func testAlertManagerMinReadySeconds(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	runFeatureGatedTests(t)
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
