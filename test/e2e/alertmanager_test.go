@@ -41,8 +41,6 @@ import (
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/pointer"
 
-	"k8s.io/utils/pointer"
-
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
