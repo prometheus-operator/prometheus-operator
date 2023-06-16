@@ -1038,6 +1038,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						return &res
 					}(),
 					RoomID: "testingRoomID",
+					Message: func() *string {
+						res := "testingMessage"
+						return &res
+					}(),
 				}},
 			}},
 		},
@@ -1387,6 +1391,7 @@ receivers:
   webex_configs:
   - api_url: https://webex.api.url
     room_id: testingRoomID
+	message: testingMessage
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url

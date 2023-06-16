@@ -355,8 +355,8 @@ type discordConfig struct {
 type webexConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
-	APIURL        string            `yaml:"api_url,omitempty"`
-	Message       string            `yaml:"message,omitempty"`
+	APIURL        *string           `yaml:"api_url,omitempty"`
+	Message       *string           `yaml:"message,omitempty"`
 	RoomID        string            `yaml:"room_id"`
 }
 
