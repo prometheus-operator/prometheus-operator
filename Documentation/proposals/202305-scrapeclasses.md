@@ -8,8 +8,8 @@
   * https://github.com/prometheus-operator/prometheus-operator/issues/3922
 
 This proposal aims to introduce the concept of *scrape classes*, to enable users to leverage scrape configuration data
-that is provided by the administrator. For example, to allow pod monitors and probes to safely use
-unsafe TLS configuration fields (e.g. `keyFile`).
+that is provided by the administrator. For example, to allow pod monitors and probes to reference
+TLS configuration (client key and certificate) provided by the administrator.
 
 ## Why
 
