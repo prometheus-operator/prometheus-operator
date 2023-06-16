@@ -515,7 +515,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	var discordConfigs []*discordConfig
 	if l := len(in.DiscordConfigs); l > 0 {
 		discordConfigs = make([]*discordConfig, l)
-		for i := range in.SlackConfigs {
+		for i := range in.DiscordConfigs {
 			receiver, err := cb.convertDiscordConfig(ctx, in.DiscordConfigs[i], crKey)
 			if err != nil {
 				return nil, errors.Wrapf(err, "DiscordConfig[%d]", i)
