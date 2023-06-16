@@ -84,7 +84,7 @@ func NewCRDChecker(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfi
 func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	switch pod.Status.Phase {
 	case v1.PodFailed, v1.PodSucceeded:
-		return false, fmt.Errorf("pod completed")
+		return false, fmt.Errorf("pod completed with phase %s", pod.Status.Phase)
 	case v1.PodRunning:
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type != v1.PodReady {
