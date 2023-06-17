@@ -1318,6 +1318,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 
 		expected := fmt.Sprintf(`global:
   resolve_timeout: 5m
+  smtp_from: alertmanager@example.org
+  smtp_smarthost: localhost:25
 route:
   receiver: "null"
   group_by:
@@ -1413,13 +1415,13 @@ receivers:
     bot_token: bipbop
     chat_id: 12345
   webex_configs:
-  - api_url: https://webex.api.url
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: super-secret-token
+    api_url: https://webex.api.url
+    message: testingMessage
     room_id: testingRoomID
-	message: testingMessage
-	http_config:
-	  authorization:
-		type: "Bearer"
-	    credentials: botToken
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -1475,6 +1477,8 @@ templates: []
 		}
 		expected := `global:
   resolve_timeout: 5m
+  smtp_from: alertmanager@example.org
+  smtp_smarthost: localhost:25
 route:
   receiver: "null"
   group_by:
