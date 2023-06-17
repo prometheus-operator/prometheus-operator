@@ -19129,7 +19129,6 @@ HTTPConfig
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>The HTTP client&rsquo;s configuration.
 You must use this configuration to supply the bot token as part of the HTTP <code>Authorization</code> header.</p>
 </td>
@@ -22546,7 +22545,6 @@ HTTPConfig
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>The HTTP client&rsquo;s configuration.
 You must use this configuration to supply the bot token as part of the HTTP <code>Authorization</code> header.</p>
 </td>

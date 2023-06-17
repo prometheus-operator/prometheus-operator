@@ -889,6 +889,19 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	webexAPIToken := "super-secret-token"
+	webexAPITokenSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "webex-api-token",
+		},
+		Data: map[string][]byte{
+			"api-token": []byte(webexAPIToken),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1042,6 +1055,17 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						res := "testingMessage"
 						return &res
 					}(),
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Type: "Bearer",
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webex-api-token",
+								},
+								Key: "api-token",
+							},
+						},
+					},
 				}},
 			}},
 		},
@@ -1392,6 +1416,10 @@ receivers:
   - api_url: https://webex.api.url
     room_id: testingRoomID
 	message: testingMessage
+	http_config:
+	  authorization:
+		type: "Bearer"
+	    credentials: botToken
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
