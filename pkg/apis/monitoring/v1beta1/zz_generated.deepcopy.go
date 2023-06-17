@@ -21,7 +21,6 @@ package v1beta1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
@@ -135,11 +134,7 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.APIURL != nil {
-		in, out := &in.APIURL, &out.APIURL
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.APIURL.DeepCopyInto(&out.APIURL)
 	if in.Title != nil {
 		in, out := &in.Title, &out.Title
 		*out = new(string)

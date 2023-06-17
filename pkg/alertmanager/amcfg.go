@@ -689,13 +689,11 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 		Message:       *in.Message,
 	}
 
-	if in.APIURL != nil {
-		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
-		if err != nil {
-			return nil, err
-		}
-		out.WebhookURL = url
+	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
+	if err != nil {
+		return nil, err
 	}
+	out.WebhookURL = url
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
