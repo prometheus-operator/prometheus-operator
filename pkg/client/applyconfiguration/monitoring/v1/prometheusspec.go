@@ -34,13 +34,13 @@ type PrometheusSpecApplyConfiguration struct {
 	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
 	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
 	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
-	Query                                    *QuerySpecApplyConfiguration                    `json:"query,omitempty"`
 	RuleSelector                             *metav1.LabelSelector                           `json:"ruleSelector,omitempty"`
 	RuleNamespaceSelector                    *metav1.LabelSelector                           `json:"ruleNamespaceSelector,omitempty"`
+	Query                                    *QuerySpecApplyConfiguration                    `json:"query,omitempty"`
 	Alerting                                 *AlertingSpecApplyConfiguration                 `json:"alerting,omitempty"`
-	RemoteRead                               []RemoteReadSpecApplyConfiguration              `json:"remoteRead,omitempty"`
 	AdditionalAlertRelabelConfigs            *corev1.SecretKeySelector                       `json:"additionalAlertRelabelConfigs,omitempty"`
 	AdditionalAlertManagerConfigs            *corev1.SecretKeySelector                       `json:"additionalAlertManagerConfigs,omitempty"`
+	RemoteRead                               []RemoteReadSpecApplyConfiguration              `json:"remoteRead,omitempty"`
 	Thanos                                   *ThanosSpecApplyConfiguration                   `json:"thanos,omitempty"`
 	QueryLogFile                             *string                                         `json:"queryLogFile,omitempty"`
 	AllowOverlappingBlocks                   *bool                                           `json:"allowOverlappingBlocks,omitempty"`
@@ -715,14 +715,6 @@ func (b *PrometheusSpecApplyConfiguration) WithPrometheusRulesExcludedFromEnforc
 	return b
 }
 
-// WithQuery sets the Query field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Query field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithQuery(value *QuerySpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
-	b.Query = value
-	return b
-}
-
 // WithRuleSelector sets the RuleSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleSelector field is set to the value of the last call.
@@ -739,24 +731,19 @@ func (b *PrometheusSpecApplyConfiguration) WithRuleNamespaceSelector(value metav
 	return b
 }
 
+// WithQuery sets the Query field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Query field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithQuery(value *QuerySpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.Query = value
+	return b
+}
+
 // WithAlerting sets the Alerting field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Alerting field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithAlerting(value *AlertingSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.Alerting = value
-	return b
-}
-
-// WithRemoteRead adds the given value to the RemoteRead field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the RemoteRead field.
-func (b *PrometheusSpecApplyConfiguration) WithRemoteRead(values ...*RemoteReadSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithRemoteRead")
-		}
-		b.RemoteRead = append(b.RemoteRead, *values[i])
-	}
 	return b
 }
 
@@ -773,6 +760,19 @@ func (b *PrometheusSpecApplyConfiguration) WithAdditionalAlertRelabelConfigs(val
 // If called multiple times, the AdditionalAlertManagerConfigs field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithAdditionalAlertManagerConfigs(value corev1.SecretKeySelector) *PrometheusSpecApplyConfiguration {
 	b.AdditionalAlertManagerConfigs = &value
+	return b
+}
+
+// WithRemoteRead adds the given value to the RemoteRead field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RemoteRead field.
+func (b *PrometheusSpecApplyConfiguration) WithRemoteRead(values ...*RemoteReadSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRemoteRead")
+		}
+		b.RemoteRead = append(b.RemoteRead, *values[i])
+	}
 	return b
 }
 

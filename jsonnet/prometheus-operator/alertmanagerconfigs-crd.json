@@ -2845,7 +2845,7 @@
                                 "description": "Configures AWS's Signature Verification 4 signing process to sign requests.",
                                 "properties": {
                                   "accessKey": {
-                                    "description": "AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used.",
+                                    "description": "AccessKey is the AWS API key. If not specified, the environment variable `AWS_ACCESS_KEY_ID` is used.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2879,7 +2879,7 @@
                                     "type": "string"
                                   },
                                   "secretKey": {
-                                    "description": "SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used.",
+                                    "description": "SecretKey is the AWS API secret. If not specified, the environment variable `AWS_SECRET_ACCESS_KEY` is used.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",

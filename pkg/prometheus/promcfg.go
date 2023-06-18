@@ -41,6 +41,8 @@ const (
 	kubernetesSDRoleEndpointSlice = "endpointslice"
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
+
+	defaultReplicaExternalLabelName = "prometheus_replica"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -205,16 +207,17 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == 0 && enforcedLimit == nil {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	finalLimit := getLimit(limit, enforcedLimit)
+	if finalLimit == nil {
 		return cfg
 	}
 
 	if k.minVersion == "" {
-		return cg.AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+		return cg.AppendMapItem(cfg, k.prometheusField, finalLimit)
 	}
 
-	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, finalLimit)
 }
 
 // AddHonorTimestamps adds the honor_timestamps field into scrape configurations.
@@ -397,7 +400,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 
 	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
-		m[replicaExternalLabelName] = "$(POD_NAME)"
+		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
 	for n, v := range cpf.ExternalLabels {
@@ -1346,14 +1349,20 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user uint64, enforced *uint64) uint64 {
-	if enforced != nil {
-		if user < *enforced && user != 0 || *enforced == 0 {
-			return user
-		}
-		return *enforced
+func getLimit(user *uint64, enforced *uint64) *uint64 {
+	if enforced == nil {
+		return user
 	}
-	return user
+
+	if user == nil {
+		return enforced
+	}
+
+	if *enforced > *user {
+		return user
+	}
+
+	return enforced
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
@@ -1372,7 +1381,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 		{Key: "action", Value: "hashmod"},
 	}, yaml.MapSlice{
 		{Key: "source_labels", Value: []string{"__tmp_hash"}},
-		{Key: "regex", Value: "$(SHARD)"},
+		{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
 		{Key: "action", Value: "keep"},
 	})
 }
@@ -2161,13 +2170,17 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = cg.AddHonorLabels(cfg, *sc.Spec.HonorLabels)
 	}
 
-	if sc.Spec.MetricsPath != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	if sc.Spec.MetricsPath != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: *sc.Spec.MetricsPath})
 	}
 
 	if sc.Spec.RelabelConfigs != nil {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+	}
+
+	if sc.Spec.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
 	}
 
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)

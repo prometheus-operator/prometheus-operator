@@ -94,6 +94,13 @@ spec:
                               been returned for this long.
                             pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                             type: string
+                          keep_firing_for:
+                            description: KeepFiringFor defines how long an alert will
+                              continue firing after the condition that triggered it
+                              has cleared.
+                            minLength: 1
+                            pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                            type: string
                           labels:
                             additionalProperties:
                               type: string

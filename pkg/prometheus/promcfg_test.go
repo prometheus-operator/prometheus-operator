@@ -24,20 +24,18 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-
-	"gopkg.in/yaml.v2"
-
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
 )
 
 func defaultPrometheus() *monitoringv1.Prometheus {
@@ -5129,7 +5127,8 @@ scrape_configs:
 				},
 			}
 			if tc.limit >= 0 {
-				serviceMonitor.Spec.SampleLimit = uint64(tc.limit)
+				sampleLimit := uint64(tc.limit)
+				serviceMonitor.Spec.SampleLimit = &sampleLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -5385,7 +5384,8 @@ scrape_configs:
 				},
 			}
 			if tc.limit >= 0 {
-				serviceMonitor.Spec.TargetLimit = uint64(tc.limit)
+				limit := uint64(tc.limit)
+				serviceMonitor.Spec.TargetLimit = &limit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6389,7 +6389,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelLimit >= 0 {
-				serviceMonitor.Spec.LabelLimit = uint64(tc.labelLimit)
+				labelLimit := uint64(tc.labelLimit)
+				serviceMonitor.Spec.LabelLimit = &labelLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6606,7 +6607,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelNameLengthLimit >= 0 {
-				podMonitor.Spec.LabelNameLengthLimit = uint64(tc.labelNameLengthLimit)
+				labelNameLengthLimit := uint64(tc.labelNameLengthLimit)
+				podMonitor.Spec.LabelNameLengthLimit = &labelNameLengthLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6805,7 +6807,8 @@ scrape_configs:
 				},
 			}
 			if tc.labelValueLengthLimit >= 0 {
-				probe.Spec.LabelValueLengthLimit = uint64(tc.labelValueLengthLimit)
+				labelValueLengthLimit := uint64(tc.labelValueLengthLimit)
+				probe.Spec.LabelValueLengthLimit = &labelValueLengthLimit
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -8770,7 +8773,7 @@ scrape_configs:
 		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: "/metrics",
+				MetricsPath: pointer.String("/metrics"),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -8961,6 +8964,22 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials: http-sd-secret
+`,
+		},
+		{
+			name: "scheme",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				Scheme: pointer.String("HTTPS"),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  scheme: https
 `,
 		},
 	} {

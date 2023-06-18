@@ -893,6 +893,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -904,6 +905,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -916,6 +918,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -928,6 +931,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -1177,6 +1181,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
 </td>
 </tr>
@@ -1188,6 +1193,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -1199,6 +1205,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -1211,6 +1218,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -1223,6 +1231,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -1301,7 +1310,7 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
 </td>
 </tr>
 <tr>
@@ -1314,13 +1323,14 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery.</p>
+<p>ServiceMonitors to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -1335,8 +1345,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ServicedMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -1349,13 +1360,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -1370,8 +1383,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for PodMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -1384,13 +1398,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p><em>Experimental</em> Probes to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -1405,7 +1421,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+selector matches all namespaces. A null label selector matches the
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -1418,13 +1436,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
+empty label selector matches all objects. A null label selector matches
+no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -1439,8 +1459,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ScrapeConfig discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -1451,7 +1472,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -1474,10 +1499,14 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Prometheus is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Prometheus. If specified, it takes precedence
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -1504,9 +1533,9 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </em>
 </td>
 <td>
-<p>An optional list of references to secrets in the same namespace
-to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+<p>An optional list of references to Secrets in the same namespace
+to use for pulling images from registries.
+See <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
 </tr>
 <tr>
@@ -1517,9 +1546,11 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
-Number of replicas multiplied by shards is the total number of Pods
+<code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -1530,14 +1561,17 @@ int32
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
-replicas multiplied by shards is the total number of Pods created. Note
-that scaling down shards will not reshard data onto remaining instances,
-it must be manually moved. Increasing shards will not reshard data
-either but it will continue to be available from the same instances. To
-query globally use Thanos sidecar and Thanos querier or remote write
-data to a central location. Sharding is done on the content of the
-<code>__address__</code> target meta-label.</p>
+<em>(Optional)</em>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
+<p>Note that scaling down shards will not reshard data onto remaining
+instances, it must be manually moved. Increasing shards will not reshard
+data either but it will continue to be available from the same
+instances. To query globally, use Thanos sidecar and Thanos querier or
+remote write data to a central location.</p>
+<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
+for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -1548,9 +1582,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote replica name.
-Defaults to the value of <code>prometheus_replica</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the replica name.
+The external label will <em>not</em> be added when the field is set to the
+empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus_replica&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -1561,9 +1597,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote Prometheus instance
-name. Defaults to the value of <code>prometheus</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the Prometheus instance
+name. The external label will <em>not</em> be added when the field is set to
+the empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -1574,7 +1612,7 @@ string
 </em>
 </td>
 <td>
-<p>Log level for Prometheus to be configured with.</p>
+<p>Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -1585,7 +1623,7 @@ string
 </em>
 </td>
 <td>
-<p>Log format for Prometheus to be configured with.</p>
+<p>Log format for Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -1598,7 +1636,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+<p>Interval between consecutive scrapes.</p>
+<p>Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -1611,7 +1650,7 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait for target to respond before erroring.</p>
+<p>Number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -1623,7 +1662,9 @@ map[string]string
 </td>
 <td>
 <p>The labels to add to any time series or alerts when communicating with
-external systems (federation, remote storage, Alertmanager).</p>
+external systems (federation, remote storage, Alertmanager).
+Labels defined by <code>spec.replicaExternalLabelName</code> and
+<code>spec.prometheusExternalLabelName</code> take precedence over this list.</p>
 </td>
 </tr>
 <tr>
@@ -1634,13 +1675,14 @@ bool
 </em>
 </td>
 <td>
-<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
-WARNING: This is not considered an efficient way of ingesting samples.
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote
+write protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
 Use it with caution for specific low-volume use cases.
 It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
-Only valid in Prometheus versions 2.33.0 and newer.</p>
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.33.0.</p>
 </td>
 </tr>
 <tr>
@@ -1651,11 +1693,11 @@ Only valid in Prometheus versions 2.33.0 and newer.</p>
 </em>
 </td>
 <td>
-<p>Enable access to Prometheus disabled features. By default, no features are enabled.
-Enabling disabled features is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+<p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://prometheus.io/docs/prometheus/latest/feature_flags/">https://prometheus.io/docs/prometheus/latest/feature_flags/</a></p>
 </td>
 </tr>
 <tr>
@@ -1666,9 +1708,9 @@ string
 </em>
 </td>
 <td>
-<p>The external URL the Prometheus instances will be available under. This is
-necessary to generate correct URLs. This is necessary if Prometheus is not
-served from root of a DNS name.</p>
+<p>The external URL under which the Prometheus service is externally
+available. This is necessary to generate correct URLs (for instance if
+Prometheus is accessible behind an Ingress resource).</p>
 </td>
 </tr>
 <tr>
@@ -1679,10 +1721,11 @@ string
 </em>
 </td>
 <td>
-<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
-if using ExternalURL and a proxy is rewriting HTTP routes of a request,
-and the actual ExternalURL is still true, but the server serves requests
-under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+<p>The route prefix Prometheus registers HTTP handlers for.</p>
+<p>This is useful when using <code>spec.externalURL</code>, and a proxy is rewriting
+HTTP routes of a request, and the actual ExternalURL is still true, but
+the server serves requests under a different route prefix. For example
+for use with <code>kubectl proxy</code>.</p>
 </td>
 </tr>
 <tr>
@@ -1695,7 +1738,7 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>Storage defines the storage used by Prometheus.</p>
 </td>
 </tr>
 <tr>
@@ -1708,8 +1751,9 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
-be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+<p>Volumes allows the configuration of additional volumes on the output
+StatefulSet definition. Volumes specified will be appended to other
+volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -1722,9 +1766,9 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
-that are generated as a result of StorageSpec objects.</p>
+<p>VolumeMounts allows the configuration of additional VolumeMounts.</p>
+<p>VolumeMounts will be appended to other VolumeMounts in the &lsquo;prometheus&rsquo;
+container, that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -1737,7 +1781,7 @@ PrometheusWebSpec
 </em>
 </td>
 <td>
-<p>Defines the web command line flags when starting Prometheus.</p>
+<p>Defines the configuration of the Prometheus web server.</p>
 </td>
 </tr>
 <tr>
@@ -1750,7 +1794,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Define resources requests and limits for single Pods.</p>
+<p>Defines the resources requests and limits of the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -1761,7 +1805,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>Defines on which Nodes the Pods are scheduled.</p>
 </td>
 </tr>
 <tr>
@@ -1814,7 +1858,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; affinity scheduling rules if specified.</p>
 </td>
 </tr>
 <tr>
@@ -1827,7 +1872,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; tolerations if specified.</p>
 </td>
 </tr>
 <tr>
@@ -1840,7 +1886,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+<em>(Optional)</em>
+<p>Defines the pod&rsquo;s topology spread constraints if specified.</p>
 </td>
 </tr>
 <tr>
@@ -1853,7 +1900,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>remoteWrite is the list of remote write configurations.</p>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
 </td>
 </tr>
 <tr>
@@ -1866,6 +1914,7 @@ Kubernetes core/v1.PodSecurityContext
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
@@ -1878,8 +1927,8 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Prometheus server listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>When true, the Prometheus server listens on the loopback address
+instead of the Pod IP&rsquo;s address.</p>
 </td>
 </tr>
 <tr>
@@ -1892,16 +1941,20 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Containers allows injecting additional containers or modifying operator
 generated containers. This can be used to allow adding an authentication
-proxy to a Prometheus pod or to change the behavior of an operator
-generated container. Containers described here modify an operator
-generated container if they share the same name and modifications are
-done via a strategic merge patch. The current container names are:
-<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
-containers is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.</p>
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>prometheus</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -1914,15 +1967,20 @@ time without notice.</p>
 </em>
 </td>
 <td>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Prometheus configuration from external sources. Any errors
-during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<em>(Optional)</em>
+<p>InitContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -1935,6 +1993,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
 additional Prometheus scrape configurations. Scrape configurations
 specified are appended to the configurations generated by the Prometheus
@@ -1958,9 +2017,11 @@ APIServerConfig
 </em>
 </td>
 <td>
-<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
-If left empty, Prometheus is assumed to run inside of the cluster
-and will discover API servers automatically and use the pod&rsquo;s CA certificate
+<em>(Optional)</em>
+<p>APIServerConfig allows specifying a host and auth methods to access the
+Kuberntees API server.
+If null, Prometheus is assumed to run inside of the cluster: it will
+discover the API servers automatically and use the Pod&rsquo;s CA certificate
 and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
 </td>
 </tr>
@@ -1972,7 +2033,7 @@ string
 </em>
 </td>
 <td>
-<p>Priority class assigned to the Pods</p>
+<p>Priority class assigned to the Pods.</p>
 </td>
 </tr>
 <tr>
@@ -1984,7 +2045,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-Defaults to <code>web</code>.</p>
+Default: &ldquo;web&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -1997,9 +2058,16 @@ ArbitraryFSAccessThroughSMsConfig
 </em>
 </td>
 <td>
-<p>ArbitraryFSAccessThroughSMs configures whether configuration
-based on a service monitor can access arbitrary files on the file system
-of the Prometheus container e.g. bearer token files.</p>
+<p>When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+reference arbitrary files on the file system of the &lsquo;prometheus&rsquo;
+container.
+When a ServiceMonitor&rsquo;s endpoint specifies a <code>bearerTokenFile</code> value
+(e.g.  &lsquo;/var/run/secrets/kubernetes.io/serviceaccount/token&rsquo;), a
+malicious target can get access to the Prometheus service account&rsquo;s
+token in the Prometheus&rsquo; scrape request. Setting
+<code>spec.arbitraryFSAccessThroughSM</code> to &lsquo;true&rsquo; would prevent the attack.
+Users should instead provide the credentials using the
+<code>spec.bearerTokenSecret</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -2037,11 +2105,10 @@ bool
 </em>
 </td>
 <td>
-<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They will
-only discover endpoints within the namespace of the PodMonitor,
-ServiceMonitor and Probe objects.
-Defaults to false.</p>
+<p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
+and Probe objects will be ignored. They will only discover targets
+within the namespace of the PodMonitor, ServiceMonitor and Probe
+objec.</p>
 </td>
 </tr>
 <tr>
@@ -2052,17 +2119,17 @@ string
 </em>
 </td>
 <td>
-<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<p>When not empty, a label will be added to</p>
 <ol>
-<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
-<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
-<ul>
-<li>alerting &amp; recording rules and</li>
-<li>the metrics used in their expressions (<code>expr</code>).</li>
-</ul></li>
+<li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
+<li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All alerts generated from alerting rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All vector selectors of PromQL expressions defined in <code>PrometheusRule</code> objects.</li>
 </ol>
-<p>Label name is this field&rsquo;s value.
-Label value is the namespace of the created object (mentioned above).</p>
+<p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
+<p>The label&rsquo;s name is this field&rsquo;s value.
+The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
+<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -2073,12 +2140,14 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedSampleLimit defines global limit on number of scraped samples
-that will be accepted. This overrides any SampleLimit set per
-ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
-enforce the SampleLimit to keep overall number of samples/series under
-the desired limit.
-Note that if SampleLimit is lower that value will be taken instead.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedSampleLimit specifies a global limit on the number
+of scraped samples that will be accepted. This overrides any
+<code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
+unless <code>spec.sampleLimit</code> is greater than zero and less than than
+<code>spec.enforcedSampleLimit</code>.</p>
+<p>It is meant to be used by admins to keep the overall number of
+samples/series under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -2089,13 +2158,13 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedTargetLimit defines a global limit on the number of scraped
-targets.  This overrides any TargetLimit set per ServiceMonitor or/and
-PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
-to keep the overall number of targets under the desired limit.
-Note that if TargetLimit is lower, that value will be taken instead,
-except if either value is zero, in which case the non-zero value will be
-used.  If both values are zero, no limit is enforced.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedTargetLimit specifies a global limit on the number
+of scraped targets. The value overrides any <code>spec.targetLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> is
+greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
+<p>It is meant to be used by admins to to keep the overall number of
+targets under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -2106,10 +2175,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample. If
-more than this number of labels are present post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelLimit specifies a global limit on the number
+of labels per sample. The value overrides any <code>spec.labelLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -2120,10 +2191,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-If a label name is longer than this number post metric-relabeling, the entire
-scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
+of labels name per sample. The value overrides any <code>spec.labelNameLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -2134,10 +2207,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-If a label value is longer than this number post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When not null, enforcedLabelValueLengthLimit defines a global limit on the length
+of labels value per sample. The value overrides any <code>spec.labelValueLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -2150,13 +2225,11 @@ ByteSize
 </em>
 </td>
 <td>
-<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
-that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
-will cause the scrape to fail. Example: 100MB.
-If defined, the limit will apply to all service/pod monitors and probes.
-This is an experimental feature, this behaviour could
-change or be removed in the future.
-Only valid in Prometheus versions 2.28.0 and newer.</p>
+<p>When defined, enforcedBodySizeLimit specifies a global limit on the size
+of uncompressed response body that will be accepted by Prometheus.
+Targets responding with a body larger than this many bytes will cause
+the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -2168,10 +2241,11 @@ uint32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>Minimum number of seconds for which a newly created Pod should be ready
 without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
+enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -2184,7 +2258,9 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>Pods&rsquo; hostAliases configuration</p>
+<em>(Optional)</em>
+<p>Optional list of hosts and IPs that will be injected into the Pod&rsquo;s
+hosts file if specified.</p>
 </td>
 </tr>
 <tr>
@@ -2197,13 +2273,14 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
-It is intended for e.g. activating hidden flags which are not supported by
+<em>(Optional)</em>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;prometheus&rsquo; container.</p>
+<p>It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
-by the given Prometheus version.
-In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+by the given Prometheus version.</p>
+<p>In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -2215,9 +2292,10 @@ bool
 </em>
 </td>
 <td>
-<p>Configures compression of the write-ahead log using Snappy.
-This flag is only available in versions of Prometheus &gt;= 2.11.0.
-WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<em>(Optional)</em>
+<p>Configures compression of the write-ahead log (WAL) using Snappy.</p>
+<p>WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<p>Requires Prometheus v2.11.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -2230,9 +2308,10 @@ WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
+to be excluded from enforcing a namespace label of origin.</p>
+<p>It is only applicable if <code>spec.enforcedNamespaceLabel</code> set to true.</p>
 </td>
 </tr>
 <tr>
@@ -2243,9 +2322,11 @@ bool
 </em>
 </td>
 <td>
-<p>Use the host&rsquo;s network namespace if true.
-Make sure to understand the security implications if you want to enable it.
-When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+<p>Use the host&rsquo;s network namespace if true.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically.</p>
 </td>
 </tr>
 <tr>
@@ -2256,7 +2337,9 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </em>
 </td>
 <td>
-<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<em>(Optional)</em>
+<p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
+PodMonitor and ServiceMonitor objects.</p>
 </td>
 </tr>
 <tr>
@@ -2270,7 +2353,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
+experimental feature, it may change in any upcoming release in a
+breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -2281,8 +2366,7 @@ string
 </em>
 </td>
 <td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -2293,10 +2377,8 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -2307,11 +2389,8 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
+specified as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -2324,9 +2403,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
-retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
-(milliseconds seconds minutes hours days weeks years).</p>
+<p>How long to retain the Prometheus data.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -2339,7 +2417,7 @@ ByteSize
 </em>
 </td>
 <td>
-<p>Maximum amount of disk space used by blocks.</p>
+<p>Maximum number of bytes used by the Prometheus data.</p>
 </td>
 </tr>
 <tr>
@@ -2350,7 +2428,7 @@ bool
 </em>
 </td>
 <td>
-<p>Disable prometheus compaction.</p>
+<p>When true, the Prometheus compaction is disabled.</p>
 </td>
 </tr>
 <tr>
@@ -2363,7 +2441,7 @@ Rules
 </em>
 </td>
 <td>
-<p>/&ndash;rules.*/ command-line arguments.</p>
+<p>Defines the configuration of the Prometheus rules&rsquo; engine.</p>
 </td>
 </tr>
 <tr>
@@ -2376,23 +2454,11 @@ Rules
 </em>
 </td>
 <td>
-<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-Make sure both ruleNamespace and ruleName are set for each pair.
-Deprecated: use excludedFromEnforcement instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>query</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QuerySpec">
-QuerySpec
-</a>
-</em>
-</td>
-<td>
-<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
+<em>(Optional)</em>
+<p>Defines the list of PrometheusRule objects to which the namespace label
+enforcement doesn&rsquo;t apply.
+This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
+<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -2405,11 +2471,10 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>A selector to select which PrometheusRules to mount for loading alerting/recording
-rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
-resources selected by RuleSelector. Make sure it does not match any config
-maps that you do not want to be migrated.</p>
+<em>(Optional)</em>
+<p>PrometheusRule objects to be selected for rule evaluation. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 </td>
 </tr>
 <tr>
@@ -2422,8 +2487,24 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
-the same namespace as the Prometheus object is in is used.</p>
+<em>(Optional)</em>
+<p>Namespaces to match for PrometheusRule discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QuerySpec">
+QuerySpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QuerySpec defines the configuration of the Promethus query service.</p>
 </td>
 </tr>
 <tr>
@@ -2436,20 +2517,8 @@ AlertingSpec
 </em>
 </td>
 <td>
-<p>Define details regarding alerting.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteRead</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
-[]RemoteReadSpec
-</a>
-</em>
-</td>
-<td>
-<p>remoteRead is the list of remote read configurations.</p>
+<em>(Optional)</em>
+<p>Defines the settings related to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -2462,16 +2531,17 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
-additional Prometheus alert relabel configurations. Alert relabel configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Alert relabel configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
-As alert relabel configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible alert relabel configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertRelabelConfigs specifies a key of a Secret containing
+additional Prometheus alert relabel configurations. The alert relabel
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible alert relabel configs are going to break
 Prometheus after the upgrade.</p>
 </td>
 </tr>
@@ -2485,17 +2555,32 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
-additional Prometheus AlertManager configurations. AlertManager configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Job configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
-As AlertManager configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible AlertManager configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertManagerConfigs specifies a key of a Secret containing
+additional Prometheus Alertmanager configurations. The Alertmanager
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible AlertManager configs are going to break
 Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteRead</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
+[]RemoteReadSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote read configurations.</p>
 </td>
 </tr>
 <tr>
@@ -2508,8 +2593,8 @@ ThanosSpec
 </em>
 </td>
 <td>
-<p>Thanos configuration allows configuring various aspects of a Prometheus
-server in a Thanos environment.</p>
+<em>(Optional)</em>
+<p>Defines the configuration of the optional Thanos sidecar.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
 </td>
@@ -2522,14 +2607,16 @@ string
 </em>
 </td>
 <td>
-<p>QueryLogFile specifies the file to which PromQL queries are logged.
-If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
-emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
-in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
-Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
-query information to the default Prometheus log stream.
-This is only available in versions of Prometheus &gt;= 2.16.0.
-For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
+<p>queryLogFile specifies where the file to which PromQL queries are logged.</p>
+<p>If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/query.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+This is because the prometheus container runs with a read-only root
+filesystem for security reasons.
+Alternatively, the location can be set to a standard I/O stream, e.g.
+<code>/dev/stdout</code>, to log query information to the default Prometheus log
+stream.</p>
 </td>
 </tr>
 <tr>
@@ -2540,8 +2627,9 @@ bool
 </em>
 </td>
 <td>
-<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
+<p>AllowOverlappingBlocks enables vertical compaction and vertical query
+merge in Prometheus.</p>
+<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
 </td>
 </tr>
 <tr>
@@ -2554,8 +2642,9 @@ Exemplars
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Exemplars related settings that are runtime reloadable.
-It requires to enable the exemplar storage feature to be effective.</p>
+It requires to enable the <code>exemplar-storage</code> feature flag to be effective.</p>
 </td>
 </tr>
 <tr>
@@ -2568,7 +2657,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+<p>Interval between rule evaluations.
+Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -2579,12 +2669,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+<p>Enables access to the Prometheus web admin API.</p>
+<p>WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 shutdown Prometheus, and more. Enabling this should be done with care and the
 user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
+ensure only clients authorized to perform these actions can do so.</p>
+<p>For more information:
+<a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -2840,6 +2931,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
 </td>
 </tr>
@@ -2851,6 +2943,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -2862,6 +2955,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -2874,6 +2968,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -2886,6 +2981,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -4056,6 +4152,20 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configura
 <tbody>
 <tr>
 <td>
+<code>smtp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">
+GlobalSMTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures global SMTP parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resolveTimeout</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -5221,7 +5331,7 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
 </td>
 </tr>
 <tr>
@@ -5234,13 +5344,14 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery.</p>
+<p>ServiceMonitors to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -5255,8 +5366,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ServicedMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -5269,13 +5381,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -5290,8 +5404,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for PodMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -5304,13 +5419,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p><em>Experimental</em> Probes to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -5325,7 +5442,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+selector matches all namespaces. A null label selector matches the
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -5338,13 +5457,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
+empty label selector matches all objects. A null label selector matches
+no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -5359,8 +5480,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ScrapeConfig discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -5371,7 +5493,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -5394,10 +5520,14 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Prometheus is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Prometheus. If specified, it takes precedence
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -5424,9 +5554,9 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </em>
 </td>
 <td>
-<p>An optional list of references to secrets in the same namespace
-to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+<p>An optional list of references to Secrets in the same namespace
+to use for pulling images from registries.
+See <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
 </tr>
 <tr>
@@ -5437,9 +5567,11 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
-Number of replicas multiplied by shards is the total number of Pods
+<code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -5450,14 +5582,17 @@ int32
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
-replicas multiplied by shards is the total number of Pods created. Note
-that scaling down shards will not reshard data onto remaining instances,
-it must be manually moved. Increasing shards will not reshard data
-either but it will continue to be available from the same instances. To
-query globally use Thanos sidecar and Thanos querier or remote write
-data to a central location. Sharding is done on the content of the
-<code>__address__</code> target meta-label.</p>
+<em>(Optional)</em>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
+<p>Note that scaling down shards will not reshard data onto remaining
+instances, it must be manually moved. Increasing shards will not reshard
+data either but it will continue to be available from the same
+instances. To query globally, use Thanos sidecar and Thanos querier or
+remote write data to a central location.</p>
+<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
+for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -5468,9 +5603,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote replica name.
-Defaults to the value of <code>prometheus_replica</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the replica name.
+The external label will <em>not</em> be added when the field is set to the
+empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus_replica&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -5481,9 +5618,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote Prometheus instance
-name. Defaults to the value of <code>prometheus</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the Prometheus instance
+name. The external label will <em>not</em> be added when the field is set to
+the empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -5494,7 +5633,7 @@ string
 </em>
 </td>
 <td>
-<p>Log level for Prometheus to be configured with.</p>
+<p>Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -5505,7 +5644,7 @@ string
 </em>
 </td>
 <td>
-<p>Log format for Prometheus to be configured with.</p>
+<p>Log format for Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -5518,7 +5657,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+<p>Interval between consecutive scrapes.</p>
+<p>Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -5531,7 +5671,7 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait for target to respond before erroring.</p>
+<p>Number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -5543,7 +5683,9 @@ map[string]string
 </td>
 <td>
 <p>The labels to add to any time series or alerts when communicating with
-external systems (federation, remote storage, Alertmanager).</p>
+external systems (federation, remote storage, Alertmanager).
+Labels defined by <code>spec.replicaExternalLabelName</code> and
+<code>spec.prometheusExternalLabelName</code> take precedence over this list.</p>
 </td>
 </tr>
 <tr>
@@ -5554,13 +5696,14 @@ bool
 </em>
 </td>
 <td>
-<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
-WARNING: This is not considered an efficient way of ingesting samples.
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote
+write protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
 Use it with caution for specific low-volume use cases.
 It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
-Only valid in Prometheus versions 2.33.0 and newer.</p>
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.33.0.</p>
 </td>
 </tr>
 <tr>
@@ -5571,11 +5714,11 @@ Only valid in Prometheus versions 2.33.0 and newer.</p>
 </em>
 </td>
 <td>
-<p>Enable access to Prometheus disabled features. By default, no features are enabled.
-Enabling disabled features is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+<p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://prometheus.io/docs/prometheus/latest/feature_flags/">https://prometheus.io/docs/prometheus/latest/feature_flags/</a></p>
 </td>
 </tr>
 <tr>
@@ -5586,9 +5729,9 @@ string
 </em>
 </td>
 <td>
-<p>The external URL the Prometheus instances will be available under. This is
-necessary to generate correct URLs. This is necessary if Prometheus is not
-served from root of a DNS name.</p>
+<p>The external URL under which the Prometheus service is externally
+available. This is necessary to generate correct URLs (for instance if
+Prometheus is accessible behind an Ingress resource).</p>
 </td>
 </tr>
 <tr>
@@ -5599,10 +5742,11 @@ string
 </em>
 </td>
 <td>
-<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
-if using ExternalURL and a proxy is rewriting HTTP routes of a request,
-and the actual ExternalURL is still true, but the server serves requests
-under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+<p>The route prefix Prometheus registers HTTP handlers for.</p>
+<p>This is useful when using <code>spec.externalURL</code>, and a proxy is rewriting
+HTTP routes of a request, and the actual ExternalURL is still true, but
+the server serves requests under a different route prefix. For example
+for use with <code>kubectl proxy</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5615,7 +5759,7 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>Storage defines the storage used by Prometheus.</p>
 </td>
 </tr>
 <tr>
@@ -5628,8 +5772,9 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
-be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+<p>Volumes allows the configuration of additional volumes on the output
+StatefulSet definition. Volumes specified will be appended to other
+volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -5642,9 +5787,9 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
-that are generated as a result of StorageSpec objects.</p>
+<p>VolumeMounts allows the configuration of additional VolumeMounts.</p>
+<p>VolumeMounts will be appended to other VolumeMounts in the &lsquo;prometheus&rsquo;
+container, that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -5657,7 +5802,7 @@ PrometheusWebSpec
 </em>
 </td>
 <td>
-<p>Defines the web command line flags when starting Prometheus.</p>
+<p>Defines the configuration of the Prometheus web server.</p>
 </td>
 </tr>
 <tr>
@@ -5670,7 +5815,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Define resources requests and limits for single Pods.</p>
+<p>Defines the resources requests and limits of the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -5681,7 +5826,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>Defines on which Nodes the Pods are scheduled.</p>
 </td>
 </tr>
 <tr>
@@ -5734,7 +5879,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; affinity scheduling rules if specified.</p>
 </td>
 </tr>
 <tr>
@@ -5747,7 +5893,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; tolerations if specified.</p>
 </td>
 </tr>
 <tr>
@@ -5760,7 +5907,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+<em>(Optional)</em>
+<p>Defines the pod&rsquo;s topology spread constraints if specified.</p>
 </td>
 </tr>
 <tr>
@@ -5773,7 +5921,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>remoteWrite is the list of remote write configurations.</p>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
 </td>
 </tr>
 <tr>
@@ -5786,6 +5935,7 @@ Kubernetes core/v1.PodSecurityContext
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
@@ -5798,8 +5948,8 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Prometheus server listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>When true, the Prometheus server listens on the loopback address
+instead of the Pod IP&rsquo;s address.</p>
 </td>
 </tr>
 <tr>
@@ -5812,16 +5962,20 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Containers allows injecting additional containers or modifying operator
 generated containers. This can be used to allow adding an authentication
-proxy to a Prometheus pod or to change the behavior of an operator
-generated container. Containers described here modify an operator
-generated container if they share the same name and modifications are
-done via a strategic merge patch. The current container names are:
-<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
-containers is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.</p>
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>prometheus</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -5834,15 +5988,20 @@ time without notice.</p>
 </em>
 </td>
 <td>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Prometheus configuration from external sources. Any errors
-during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<em>(Optional)</em>
+<p>InitContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -5855,6 +6014,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
 additional Prometheus scrape configurations. Scrape configurations
 specified are appended to the configurations generated by the Prometheus
@@ -5878,9 +6038,11 @@ APIServerConfig
 </em>
 </td>
 <td>
-<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
-If left empty, Prometheus is assumed to run inside of the cluster
-and will discover API servers automatically and use the pod&rsquo;s CA certificate
+<em>(Optional)</em>
+<p>APIServerConfig allows specifying a host and auth methods to access the
+Kuberntees API server.
+If null, Prometheus is assumed to run inside of the cluster: it will
+discover the API servers automatically and use the Pod&rsquo;s CA certificate
 and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
 </td>
 </tr>
@@ -5892,7 +6054,7 @@ string
 </em>
 </td>
 <td>
-<p>Priority class assigned to the Pods</p>
+<p>Priority class assigned to the Pods.</p>
 </td>
 </tr>
 <tr>
@@ -5904,7 +6066,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-Defaults to <code>web</code>.</p>
+Default: &ldquo;web&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -5917,9 +6079,16 @@ ArbitraryFSAccessThroughSMsConfig
 </em>
 </td>
 <td>
-<p>ArbitraryFSAccessThroughSMs configures whether configuration
-based on a service monitor can access arbitrary files on the file system
-of the Prometheus container e.g. bearer token files.</p>
+<p>When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+reference arbitrary files on the file system of the &lsquo;prometheus&rsquo;
+container.
+When a ServiceMonitor&rsquo;s endpoint specifies a <code>bearerTokenFile</code> value
+(e.g.  &lsquo;/var/run/secrets/kubernetes.io/serviceaccount/token&rsquo;), a
+malicious target can get access to the Prometheus service account&rsquo;s
+token in the Prometheus&rsquo; scrape request. Setting
+<code>spec.arbitraryFSAccessThroughSM</code> to &lsquo;true&rsquo; would prevent the attack.
+Users should instead provide the credentials using the
+<code>spec.bearerTokenSecret</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -5957,11 +6126,10 @@ bool
 </em>
 </td>
 <td>
-<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They will
-only discover endpoints within the namespace of the PodMonitor,
-ServiceMonitor and Probe objects.
-Defaults to false.</p>
+<p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
+and Probe objects will be ignored. They will only discover targets
+within the namespace of the PodMonitor, ServiceMonitor and Probe
+objec.</p>
 </td>
 </tr>
 <tr>
@@ -5972,17 +6140,17 @@ string
 </em>
 </td>
 <td>
-<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<p>When not empty, a label will be added to</p>
 <ol>
-<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
-<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
-<ul>
-<li>alerting &amp; recording rules and</li>
-<li>the metrics used in their expressions (<code>expr</code>).</li>
-</ul></li>
+<li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
+<li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All alerts generated from alerting rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All vector selectors of PromQL expressions defined in <code>PrometheusRule</code> objects.</li>
 </ol>
-<p>Label name is this field&rsquo;s value.
-Label value is the namespace of the created object (mentioned above).</p>
+<p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
+<p>The label&rsquo;s name is this field&rsquo;s value.
+The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
+<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -5993,12 +6161,14 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedSampleLimit defines global limit on number of scraped samples
-that will be accepted. This overrides any SampleLimit set per
-ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
-enforce the SampleLimit to keep overall number of samples/series under
-the desired limit.
-Note that if SampleLimit is lower that value will be taken instead.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedSampleLimit specifies a global limit on the number
+of scraped samples that will be accepted. This overrides any
+<code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
+unless <code>spec.sampleLimit</code> is greater than zero and less than than
+<code>spec.enforcedSampleLimit</code>.</p>
+<p>It is meant to be used by admins to keep the overall number of
+samples/series under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -6009,13 +6179,13 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedTargetLimit defines a global limit on the number of scraped
-targets.  This overrides any TargetLimit set per ServiceMonitor or/and
-PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
-to keep the overall number of targets under the desired limit.
-Note that if TargetLimit is lower, that value will be taken instead,
-except if either value is zero, in which case the non-zero value will be
-used.  If both values are zero, no limit is enforced.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedTargetLimit specifies a global limit on the number
+of scraped targets. The value overrides any <code>spec.targetLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> is
+greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
+<p>It is meant to be used by admins to to keep the overall number of
+targets under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -6026,10 +6196,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample. If
-more than this number of labels are present post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelLimit specifies a global limit on the number
+of labels per sample. The value overrides any <code>spec.labelLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -6040,10 +6212,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-If a label name is longer than this number post metric-relabeling, the entire
-scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
+of labels name per sample. The value overrides any <code>spec.labelNameLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -6054,10 +6228,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-If a label value is longer than this number post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When not null, enforcedLabelValueLengthLimit defines a global limit on the length
+of labels value per sample. The value overrides any <code>spec.labelValueLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -6070,13 +6246,11 @@ ByteSize
 </em>
 </td>
 <td>
-<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
-that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
-will cause the scrape to fail. Example: 100MB.
-If defined, the limit will apply to all service/pod monitors and probes.
-This is an experimental feature, this behaviour could
-change or be removed in the future.
-Only valid in Prometheus versions 2.28.0 and newer.</p>
+<p>When defined, enforcedBodySizeLimit specifies a global limit on the size
+of uncompressed response body that will be accepted by Prometheus.
+Targets responding with a body larger than this many bytes will cause
+the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -6088,10 +6262,11 @@ uint32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>Minimum number of seconds for which a newly created Pod should be ready
 without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
+enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -6104,7 +6279,9 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>Pods&rsquo; hostAliases configuration</p>
+<em>(Optional)</em>
+<p>Optional list of hosts and IPs that will be injected into the Pod&rsquo;s
+hosts file if specified.</p>
 </td>
 </tr>
 <tr>
@@ -6117,13 +6294,14 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
-It is intended for e.g. activating hidden flags which are not supported by
+<em>(Optional)</em>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;prometheus&rsquo; container.</p>
+<p>It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
-by the given Prometheus version.
-In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+by the given Prometheus version.</p>
+<p>In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -6135,9 +6313,10 @@ bool
 </em>
 </td>
 <td>
-<p>Configures compression of the write-ahead log using Snappy.
-This flag is only available in versions of Prometheus &gt;= 2.11.0.
-WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<em>(Optional)</em>
+<p>Configures compression of the write-ahead log (WAL) using Snappy.</p>
+<p>WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<p>Requires Prometheus v2.11.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -6150,9 +6329,10 @@ WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
+to be excluded from enforcing a namespace label of origin.</p>
+<p>It is only applicable if <code>spec.enforcedNamespaceLabel</code> set to true.</p>
 </td>
 </tr>
 <tr>
@@ -6163,9 +6343,11 @@ bool
 </em>
 </td>
 <td>
-<p>Use the host&rsquo;s network namespace if true.
-Make sure to understand the security implications if you want to enable it.
-When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+<p>Use the host&rsquo;s network namespace if true.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically.</p>
 </td>
 </tr>
 <tr>
@@ -6176,7 +6358,9 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </em>
 </td>
 <td>
-<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<em>(Optional)</em>
+<p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
+PodMonitor and ServiceMonitor objects.</p>
 </td>
 </tr>
 <tr>
@@ -6190,7 +6374,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
+experimental feature, it may change in any upcoming release in a
+breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -6466,7 +6652,7 @@ Kubernetes core/v1.PersistentVolumeClaimSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Spec defines the desired characteristics of a volume requested by a pod author.
+<p>Defines the desired characteristics of a volume requested by a pod author.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims">https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims</a></p>
 <br/>
 <br/>
@@ -6629,9 +6815,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Status represents the current information/status of a persistent volume claim.
-Read-only.
-More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims">https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims</a></p>
+<p><em>Deprecated: this field is never set.</em></p>
 </td>
 </tr>
 </tbody>
@@ -6947,6 +7131,128 @@ A value of zero or less than zero disables the storage.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalSMTPConfig configures global SMTP parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>from</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP From header field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>smartHost</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HostPort">
+HostPort
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP smarthost used for sending emails.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hello</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default hostname to identify to the SMTP server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authUsername</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn&rsquo;t authenticate to the SMTP server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authPassword</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using LOGIN and PLAIN.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authIdentity</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using PLAIN</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using CRAM-MD5.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>requireTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default SMTP TLS requirement.
+Note that Go does not support unencrypted connections to remote SMTP endpoints.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
@@ -7116,6 +7422,46 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.HostPort">HostPort
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig</a>)
+</p>
+<div>
+<p>HostPort represents a &ldquo;host:port&rdquo; network address.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>host</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the host&rsquo;s address, it can be a DNS name or a literal IP address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the host&rsquo;s port, it can be a literal port number or a port name.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.LabelName">LabelName
 (<code>string</code> alias)</h3>
 <p>
@@ -7211,6 +7557,17 @@ list restricting them.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+</p>
+<div>
+<p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
+Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
+Supported units: y, w, d, h, m, s, ms
+Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</code></p>
+</div>
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
@@ -7373,7 +7730,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the referent. When not set, all resources are matched.</p>
+<p>Name of the referent. When not set, all resources in the namespace are matched.</p>
 </td>
 </tr>
 </tbody>
@@ -7823,6 +8180,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -7834,6 +8192,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -7846,6 +8205,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -7858,6 +8218,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -8062,6 +8423,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
 </td>
 </tr>
@@ -8073,6 +8435,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -8084,6 +8447,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -8096,6 +8460,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -8108,6 +8473,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -8460,8 +8826,9 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
-<p>PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
-to be ignored while enforcing namespace label for alerts and metrics.</p>
+<p>PrometheusRuleExcludeConfig enables users to configure excluded
+PrometheusRule names and their namespaces to be ignored while enforcing
+namespace label for alerts and metrics.</p>
 </div>
 <table>
 <thead>
@@ -8479,7 +8846,7 @@ string
 </em>
 </td>
 <td>
-<p>RuleNamespace - namespace of excluded rule</p>
+<p>Namespace of the excluded PrometheusRule object.</p>
 </td>
 </tr>
 <tr>
@@ -8490,7 +8857,7 @@ string
 </em>
 </td>
 <td>
-<p>RuleNamespace - name of excluded rule</p>
+<p>Name of the excluded PrometheusRule object.</p>
 </td>
 </tr>
 </tbody>
@@ -8553,7 +8920,7 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
 </td>
 </tr>
 <tr>
@@ -8566,13 +8933,14 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery.</p>
+<p>ServiceMonitors to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -8587,8 +8955,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ServicedMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -8601,13 +8970,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -8622,8 +8993,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for PodMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -8636,13 +9008,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p><em>Experimental</em> Probes to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -8657,7 +9031,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+selector matches all namespaces. A null label selector matches the
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -8670,13 +9046,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
+empty label selector matches all objects. A null label selector matches
+no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -8691,8 +9069,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ScrapeConfig discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -8703,7 +9082,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -8726,10 +9109,14 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Prometheus is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Prometheus. If specified, it takes precedence
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -8756,9 +9143,9 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </em>
 </td>
 <td>
-<p>An optional list of references to secrets in the same namespace
-to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+<p>An optional list of references to Secrets in the same namespace
+to use for pulling images from registries.
+See <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
 </tr>
 <tr>
@@ -8769,9 +9156,11 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
-Number of replicas multiplied by shards is the total number of Pods
+<code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -8782,14 +9171,17 @@ int32
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
-replicas multiplied by shards is the total number of Pods created. Note
-that scaling down shards will not reshard data onto remaining instances,
-it must be manually moved. Increasing shards will not reshard data
-either but it will continue to be available from the same instances. To
-query globally use Thanos sidecar and Thanos querier or remote write
-data to a central location. Sharding is done on the content of the
-<code>__address__</code> target meta-label.</p>
+<em>(Optional)</em>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
+<p>Note that scaling down shards will not reshard data onto remaining
+instances, it must be manually moved. Increasing shards will not reshard
+data either but it will continue to be available from the same
+instances. To query globally, use Thanos sidecar and Thanos querier or
+remote write data to a central location.</p>
+<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
+for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -8800,9 +9192,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote replica name.
-Defaults to the value of <code>prometheus_replica</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the replica name.
+The external label will <em>not</em> be added when the field is set to the
+empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus_replica&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -8813,9 +9207,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote Prometheus instance
-name. Defaults to the value of <code>prometheus</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the Prometheus instance
+name. The external label will <em>not</em> be added when the field is set to
+the empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -8826,7 +9222,7 @@ string
 </em>
 </td>
 <td>
-<p>Log level for Prometheus to be configured with.</p>
+<p>Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -8837,7 +9233,7 @@ string
 </em>
 </td>
 <td>
-<p>Log format for Prometheus to be configured with.</p>
+<p>Log format for Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -8850,7 +9246,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+<p>Interval between consecutive scrapes.</p>
+<p>Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -8863,7 +9260,7 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait for target to respond before erroring.</p>
+<p>Number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -8875,7 +9272,9 @@ map[string]string
 </td>
 <td>
 <p>The labels to add to any time series or alerts when communicating with
-external systems (federation, remote storage, Alertmanager).</p>
+external systems (federation, remote storage, Alertmanager).
+Labels defined by <code>spec.replicaExternalLabelName</code> and
+<code>spec.prometheusExternalLabelName</code> take precedence over this list.</p>
 </td>
 </tr>
 <tr>
@@ -8886,13 +9285,14 @@ bool
 </em>
 </td>
 <td>
-<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
-WARNING: This is not considered an efficient way of ingesting samples.
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote
+write protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
 Use it with caution for specific low-volume use cases.
 It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
-Only valid in Prometheus versions 2.33.0 and newer.</p>
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.33.0.</p>
 </td>
 </tr>
 <tr>
@@ -8903,11 +9303,11 @@ Only valid in Prometheus versions 2.33.0 and newer.</p>
 </em>
 </td>
 <td>
-<p>Enable access to Prometheus disabled features. By default, no features are enabled.
-Enabling disabled features is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+<p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://prometheus.io/docs/prometheus/latest/feature_flags/">https://prometheus.io/docs/prometheus/latest/feature_flags/</a></p>
 </td>
 </tr>
 <tr>
@@ -8918,9 +9318,9 @@ string
 </em>
 </td>
 <td>
-<p>The external URL the Prometheus instances will be available under. This is
-necessary to generate correct URLs. This is necessary if Prometheus is not
-served from root of a DNS name.</p>
+<p>The external URL under which the Prometheus service is externally
+available. This is necessary to generate correct URLs (for instance if
+Prometheus is accessible behind an Ingress resource).</p>
 </td>
 </tr>
 <tr>
@@ -8931,10 +9331,11 @@ string
 </em>
 </td>
 <td>
-<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
-if using ExternalURL and a proxy is rewriting HTTP routes of a request,
-and the actual ExternalURL is still true, but the server serves requests
-under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+<p>The route prefix Prometheus registers HTTP handlers for.</p>
+<p>This is useful when using <code>spec.externalURL</code>, and a proxy is rewriting
+HTTP routes of a request, and the actual ExternalURL is still true, but
+the server serves requests under a different route prefix. For example
+for use with <code>kubectl proxy</code>.</p>
 </td>
 </tr>
 <tr>
@@ -8947,7 +9348,7 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>Storage defines the storage used by Prometheus.</p>
 </td>
 </tr>
 <tr>
@@ -8960,8 +9361,9 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
-be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+<p>Volumes allows the configuration of additional volumes on the output
+StatefulSet definition. Volumes specified will be appended to other
+volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -8974,9 +9376,9 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
-that are generated as a result of StorageSpec objects.</p>
+<p>VolumeMounts allows the configuration of additional VolumeMounts.</p>
+<p>VolumeMounts will be appended to other VolumeMounts in the &lsquo;prometheus&rsquo;
+container, that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -8989,7 +9391,7 @@ PrometheusWebSpec
 </em>
 </td>
 <td>
-<p>Defines the web command line flags when starting Prometheus.</p>
+<p>Defines the configuration of the Prometheus web server.</p>
 </td>
 </tr>
 <tr>
@@ -9002,7 +9404,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Define resources requests and limits for single Pods.</p>
+<p>Defines the resources requests and limits of the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -9013,7 +9415,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>Defines on which Nodes the Pods are scheduled.</p>
 </td>
 </tr>
 <tr>
@@ -9066,7 +9468,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; affinity scheduling rules if specified.</p>
 </td>
 </tr>
 <tr>
@@ -9079,7 +9482,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; tolerations if specified.</p>
 </td>
 </tr>
 <tr>
@@ -9092,7 +9496,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+<em>(Optional)</em>
+<p>Defines the pod&rsquo;s topology spread constraints if specified.</p>
 </td>
 </tr>
 <tr>
@@ -9105,7 +9510,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>remoteWrite is the list of remote write configurations.</p>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
 </td>
 </tr>
 <tr>
@@ -9118,6 +9524,7 @@ Kubernetes core/v1.PodSecurityContext
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
@@ -9130,8 +9537,8 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Prometheus server listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>When true, the Prometheus server listens on the loopback address
+instead of the Pod IP&rsquo;s address.</p>
 </td>
 </tr>
 <tr>
@@ -9144,16 +9551,20 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Containers allows injecting additional containers or modifying operator
 generated containers. This can be used to allow adding an authentication
-proxy to a Prometheus pod or to change the behavior of an operator
-generated container. Containers described here modify an operator
-generated container if they share the same name and modifications are
-done via a strategic merge patch. The current container names are:
-<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
-containers is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.</p>
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>prometheus</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -9166,15 +9577,20 @@ time without notice.</p>
 </em>
 </td>
 <td>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Prometheus configuration from external sources. Any errors
-during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<em>(Optional)</em>
+<p>InitContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -9187,6 +9603,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
 additional Prometheus scrape configurations. Scrape configurations
 specified are appended to the configurations generated by the Prometheus
@@ -9210,9 +9627,11 @@ APIServerConfig
 </em>
 </td>
 <td>
-<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
-If left empty, Prometheus is assumed to run inside of the cluster
-and will discover API servers automatically and use the pod&rsquo;s CA certificate
+<em>(Optional)</em>
+<p>APIServerConfig allows specifying a host and auth methods to access the
+Kuberntees API server.
+If null, Prometheus is assumed to run inside of the cluster: it will
+discover the API servers automatically and use the Pod&rsquo;s CA certificate
 and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
 </td>
 </tr>
@@ -9224,7 +9643,7 @@ string
 </em>
 </td>
 <td>
-<p>Priority class assigned to the Pods</p>
+<p>Priority class assigned to the Pods.</p>
 </td>
 </tr>
 <tr>
@@ -9236,7 +9655,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-Defaults to <code>web</code>.</p>
+Default: &ldquo;web&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -9249,9 +9668,16 @@ ArbitraryFSAccessThroughSMsConfig
 </em>
 </td>
 <td>
-<p>ArbitraryFSAccessThroughSMs configures whether configuration
-based on a service monitor can access arbitrary files on the file system
-of the Prometheus container e.g. bearer token files.</p>
+<p>When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+reference arbitrary files on the file system of the &lsquo;prometheus&rsquo;
+container.
+When a ServiceMonitor&rsquo;s endpoint specifies a <code>bearerTokenFile</code> value
+(e.g.  &lsquo;/var/run/secrets/kubernetes.io/serviceaccount/token&rsquo;), a
+malicious target can get access to the Prometheus service account&rsquo;s
+token in the Prometheus&rsquo; scrape request. Setting
+<code>spec.arbitraryFSAccessThroughSM</code> to &lsquo;true&rsquo; would prevent the attack.
+Users should instead provide the credentials using the
+<code>spec.bearerTokenSecret</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -9289,11 +9715,10 @@ bool
 </em>
 </td>
 <td>
-<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They will
-only discover endpoints within the namespace of the PodMonitor,
-ServiceMonitor and Probe objects.
-Defaults to false.</p>
+<p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
+and Probe objects will be ignored. They will only discover targets
+within the namespace of the PodMonitor, ServiceMonitor and Probe
+objec.</p>
 </td>
 </tr>
 <tr>
@@ -9304,17 +9729,17 @@ string
 </em>
 </td>
 <td>
-<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<p>When not empty, a label will be added to</p>
 <ol>
-<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
-<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
-<ul>
-<li>alerting &amp; recording rules and</li>
-<li>the metrics used in their expressions (<code>expr</code>).</li>
-</ul></li>
+<li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
+<li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All alerts generated from alerting rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All vector selectors of PromQL expressions defined in <code>PrometheusRule</code> objects.</li>
 </ol>
-<p>Label name is this field&rsquo;s value.
-Label value is the namespace of the created object (mentioned above).</p>
+<p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
+<p>The label&rsquo;s name is this field&rsquo;s value.
+The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
+<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -9325,12 +9750,14 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedSampleLimit defines global limit on number of scraped samples
-that will be accepted. This overrides any SampleLimit set per
-ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
-enforce the SampleLimit to keep overall number of samples/series under
-the desired limit.
-Note that if SampleLimit is lower that value will be taken instead.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedSampleLimit specifies a global limit on the number
+of scraped samples that will be accepted. This overrides any
+<code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
+unless <code>spec.sampleLimit</code> is greater than zero and less than than
+<code>spec.enforcedSampleLimit</code>.</p>
+<p>It is meant to be used by admins to keep the overall number of
+samples/series under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -9341,13 +9768,13 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedTargetLimit defines a global limit on the number of scraped
-targets.  This overrides any TargetLimit set per ServiceMonitor or/and
-PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
-to keep the overall number of targets under the desired limit.
-Note that if TargetLimit is lower, that value will be taken instead,
-except if either value is zero, in which case the non-zero value will be
-used.  If both values are zero, no limit is enforced.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedTargetLimit specifies a global limit on the number
+of scraped targets. The value overrides any <code>spec.targetLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> is
+greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
+<p>It is meant to be used by admins to to keep the overall number of
+targets under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -9358,10 +9785,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample. If
-more than this number of labels are present post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelLimit specifies a global limit on the number
+of labels per sample. The value overrides any <code>spec.labelLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -9372,10 +9801,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-If a label name is longer than this number post metric-relabeling, the entire
-scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
+of labels name per sample. The value overrides any <code>spec.labelNameLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -9386,10 +9817,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-If a label value is longer than this number post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When not null, enforcedLabelValueLengthLimit defines a global limit on the length
+of labels value per sample. The value overrides any <code>spec.labelValueLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -9402,13 +9835,11 @@ ByteSize
 </em>
 </td>
 <td>
-<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
-that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
-will cause the scrape to fail. Example: 100MB.
-If defined, the limit will apply to all service/pod monitors and probes.
-This is an experimental feature, this behaviour could
-change or be removed in the future.
-Only valid in Prometheus versions 2.28.0 and newer.</p>
+<p>When defined, enforcedBodySizeLimit specifies a global limit on the size
+of uncompressed response body that will be accepted by Prometheus.
+Targets responding with a body larger than this many bytes will cause
+the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -9420,10 +9851,11 @@ uint32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>Minimum number of seconds for which a newly created Pod should be ready
 without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
+enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -9436,7 +9868,9 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>Pods&rsquo; hostAliases configuration</p>
+<em>(Optional)</em>
+<p>Optional list of hosts and IPs that will be injected into the Pod&rsquo;s
+hosts file if specified.</p>
 </td>
 </tr>
 <tr>
@@ -9449,13 +9883,14 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
-It is intended for e.g. activating hidden flags which are not supported by
+<em>(Optional)</em>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;prometheus&rsquo; container.</p>
+<p>It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
-by the given Prometheus version.
-In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+by the given Prometheus version.</p>
+<p>In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -9467,9 +9902,10 @@ bool
 </em>
 </td>
 <td>
-<p>Configures compression of the write-ahead log using Snappy.
-This flag is only available in versions of Prometheus &gt;= 2.11.0.
-WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<em>(Optional)</em>
+<p>Configures compression of the write-ahead log (WAL) using Snappy.</p>
+<p>WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<p>Requires Prometheus v2.11.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -9482,9 +9918,10 @@ WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
+to be excluded from enforcing a namespace label of origin.</p>
+<p>It is only applicable if <code>spec.enforcedNamespaceLabel</code> set to true.</p>
 </td>
 </tr>
 <tr>
@@ -9495,9 +9932,11 @@ bool
 </em>
 </td>
 <td>
-<p>Use the host&rsquo;s network namespace if true.
-Make sure to understand the security implications if you want to enable it.
-When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+<p>Use the host&rsquo;s network namespace if true.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically.</p>
 </td>
 </tr>
 <tr>
@@ -9508,7 +9947,9 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </em>
 </td>
 <td>
-<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<em>(Optional)</em>
+<p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
+PodMonitor and ServiceMonitor objects.</p>
 </td>
 </tr>
 <tr>
@@ -9522,7 +9963,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
+experimental feature, it may change in any upcoming release in a
+breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -9533,8 +9976,7 @@ string
 </em>
 </td>
 <td>
-<p>Base image to use for a Prometheus deployment.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -9545,10 +9987,8 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -9559,11 +9999,8 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Prometheus container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
+specified as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -9576,9 +10013,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration Prometheus shall retain data for. Default is &lsquo;24h&rsquo; if
-retentionSize is not set, and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code>
-(milliseconds seconds minutes hours days weeks years).</p>
+<p>How long to retain the Prometheus data.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -9591,7 +10027,7 @@ ByteSize
 </em>
 </td>
 <td>
-<p>Maximum amount of disk space used by blocks.</p>
+<p>Maximum number of bytes used by the Prometheus data.</p>
 </td>
 </tr>
 <tr>
@@ -9602,7 +10038,7 @@ bool
 </em>
 </td>
 <td>
-<p>Disable prometheus compaction.</p>
+<p>When true, the Prometheus compaction is disabled.</p>
 </td>
 </tr>
 <tr>
@@ -9615,7 +10051,7 @@ Rules
 </em>
 </td>
 <td>
-<p>/&ndash;rules.*/ command-line arguments.</p>
+<p>Defines the configuration of the Prometheus rules&rsquo; engine.</p>
 </td>
 </tr>
 <tr>
@@ -9628,23 +10064,11 @@ Rules
 </em>
 </td>
 <td>
-<p>PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
-Make sure both ruleNamespace and ruleName are set for each pair.
-Deprecated: use excludedFromEnforcement instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>query</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.QuerySpec">
-QuerySpec
-</a>
-</em>
-</td>
-<td>
-<p>QuerySpec defines the query command line flags when starting Prometheus.</p>
+<em>(Optional)</em>
+<p>Defines the list of PrometheusRule objects to which the namespace label
+enforcement doesn&rsquo;t apply.
+This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
+<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -9657,11 +10081,10 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>A selector to select which PrometheusRules to mount for loading alerting/recording
-rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
-resources selected by RuleSelector. Make sure it does not match any config
-maps that you do not want to be migrated.</p>
+<em>(Optional)</em>
+<p>PrometheusRule objects to be selected for rule evaluation. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 </td>
 </tr>
 <tr>
@@ -9674,8 +10097,24 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespaces to be selected for PrometheusRules discovery. If unspecified, only
-the same namespace as the Prometheus object is in is used.</p>
+<em>(Optional)</em>
+<p>Namespaces to match for PrometheusRule discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QuerySpec">
+QuerySpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QuerySpec defines the configuration of the Promethus query service.</p>
 </td>
 </tr>
 <tr>
@@ -9688,20 +10127,8 @@ AlertingSpec
 </em>
 </td>
 <td>
-<p>Define details regarding alerting.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteRead</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
-[]RemoteReadSpec
-</a>
-</em>
-</td>
-<td>
-<p>remoteRead is the list of remote read configurations.</p>
+<em>(Optional)</em>
+<p>Defines the settings related to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -9714,16 +10141,17 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing
-additional Prometheus alert relabel configurations. Alert relabel configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Alert relabel configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a>.
-As alert relabel configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible alert relabel configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertRelabelConfigs specifies a key of a Secret containing
+additional Prometheus alert relabel configurations. The alert relabel
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible alert relabel configs are going to break
 Prometheus after the upgrade.</p>
 </td>
 </tr>
@@ -9737,17 +10165,32 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AdditionalAlertManagerConfigs allows specifying a key of a Secret containing
-additional Prometheus AlertManager configurations. AlertManager configurations
-specified are appended to the configurations generated by the Prometheus
-Operator. Job configurations specified must have the form as specified
-in the official Prometheus documentation:
-<a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a>.
-As AlertManager configs are appended, the user is responsible to make sure it
-is valid. Note that using this feature may expose the possibility to
-break upgrades of Prometheus. It is advised to review Prometheus release
-notes to ensure that no incompatible AlertManager configs are going to break
+<em>(Optional)</em>
+<p>AdditionalAlertManagerConfigs specifies a key of a Secret containing
+additional Prometheus Alertmanager configurations. The Alertmanager
+configurations are appended to the configuration generated by the
+Prometheus Operator. They must be formatted according to the official
+Prometheus documentation:</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config</a></p>
+<p>The user is responsible for making sure that the configurations are valid</p>
+<p>Note that using this feature may expose the possibility to break
+upgrades of Prometheus. It is advised to review Prometheus release notes
+to ensure that no incompatible AlertManager configs are going to break
 Prometheus after the upgrade.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteRead</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteReadSpec">
+[]RemoteReadSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote read configurations.</p>
 </td>
 </tr>
 <tr>
@@ -9760,8 +10203,8 @@ ThanosSpec
 </em>
 </td>
 <td>
-<p>Thanos configuration allows configuring various aspects of a Prometheus
-server in a Thanos environment.</p>
+<em>(Optional)</em>
+<p>Defines the configuration of the optional Thanos sidecar.</p>
 <p>This section is experimental, it may change significantly without
 deprecation notice in any release.</p>
 </td>
@@ -9774,14 +10217,16 @@ string
 </em>
 </td>
 <td>
-<p>QueryLogFile specifies the file to which PromQL queries are logged.
-If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, prometheus-operator will mount the file into an
-emptyDir volume at <code>/var/log/prometheus</code>. If a full path is provided, e.g. /var/log/prometheus/query.log, you must mount a volume
-in the specified directory and it must be writable. This is because the prometheus container runs with a read-only root filesystem for security reasons.
-Alternatively, the location can be set to a stdout location such as <code>/dev/stdout</code> to log
-query information to the default Prometheus log stream.
-This is only available in versions of Prometheus &gt;= 2.16.0.
-For more details, see the Prometheus docs (<a href="https://prometheus.io/docs/guides/query-log/">https://prometheus.io/docs/guides/query-log/</a>)</p>
+<p>queryLogFile specifies where the file to which PromQL queries are logged.</p>
+<p>If the filename has an empty path, e.g. &lsquo;query.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/query.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+This is because the prometheus container runs with a read-only root
+filesystem for security reasons.
+Alternatively, the location can be set to a standard I/O stream, e.g.
+<code>/dev/stdout</code>, to log query information to the default Prometheus log
+stream.</p>
 </td>
 </tr>
 <tr>
@@ -9792,8 +10237,9 @@ bool
 </em>
 </td>
 <td>
-<p>AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
-Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
+<p>AllowOverlappingBlocks enables vertical compaction and vertical query
+merge in Prometheus.</p>
+<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
 </td>
 </tr>
 <tr>
@@ -9806,8 +10252,9 @@ Exemplars
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Exemplars related settings that are runtime reloadable.
-It requires to enable the exemplar storage feature to be effective.</p>
+It requires to enable the <code>exemplar-storage</code> feature flag to be effective.</p>
 </td>
 </tr>
 <tr>
@@ -9820,7 +10267,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive evaluations. Default: <code>30s</code></p>
+<p>Interval between rule evaluations.
+Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -9831,12 +10279,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enable access to prometheus web admin API. Defaults to the value of <code>false</code>.
-WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+<p>Enables access to the Prometheus web admin API.</p>
+<p>WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 shutdown Prometheus, and more. Enabling this should be done with care and the
 user is advised to add additional authentication authorization via a proxy to
-ensure only clients authorized to perform these actions can do so.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
+ensure only clients authorized to perform these actions can do so.</p>
+<p>For more information:
+<a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
 </td>
 </tr>
 <tr>
@@ -10084,7 +10533,7 @@ TLSConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>PrometheusWebSpec defines the web command line flags when starting Prometheus.</p>
+<p>PrometheusWebSpec defines the configuration of the Prometheus web server.</p>
 </div>
 <table>
 <thead>
@@ -10128,7 +10577,8 @@ string
 </em>
 </td>
 <td>
-<p>The prometheus web page title</p>
+<em>(Optional)</em>
+<p>The prometheus web page title.</p>
 </td>
 </tr>
 <tr>
@@ -10139,6 +10589,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Defines the maximum number of simultaneous connections
 A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
 </td>
@@ -10169,6 +10620,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The delta difference allowed for retrieving metrics during expression evaluations.</p>
 </td>
 </tr>
@@ -10180,6 +10632,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of concurrent queries that can be run at once.</p>
 </td>
 </tr>
@@ -10191,7 +10644,10 @@ int32
 </em>
 </td>
 <td>
-<p>Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.</p>
+<em>(Optional)</em>
+<p>Maximum number of samples a single query can load into memory. Note that
+queries will fail if they would load more samples than this into memory,
+so this also limits the number of samples a query can return.</p>
 </td>
 </tr>
 <tr>
@@ -10204,6 +10660,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Maximum time a query may take before being aborted.</p>
 </td>
 </tr>
@@ -10234,7 +10691,8 @@ int
 </em>
 </td>
 <td>
-<p>Capacity is the number of samples to buffer per shard before we start dropping them.</p>
+<p>Capacity is the number of samples to buffer per shard before we start
+dropping them.</p>
 </td>
 </tr>
 <tr>
@@ -10468,9 +10926,10 @@ string
 </em>
 </td>
 <td>
-<p>The name of the remote read queue, it must be unique if specified. The name
-is used in metrics and logging in order to differentiate read
-configurations.  Only valid in Prometheus versions 2.15.0 and newer.</p>
+<p>The name of the remote read queue, it must be unique if specified. The
+name is used in metrics and logging in order to differentiate read
+configurations.</p>
+<p>It requires Prometheus &gt;= v2.15.0.</p>
 </td>
 </tr>
 <tr>
@@ -10481,6 +10940,7 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>An optional list of equality matchers which have to be present
 in a selector to query the remote read endpoint.</p>
 </td>
@@ -10506,6 +10966,7 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each remote read request.
 Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.
 Only valid in Prometheus versions 2.26.0 and newer.</p>
@@ -10525,19 +10986,6 @@ the local storage should have complete data for.</p>
 </tr>
 <tr>
 <td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<p>BasicAuth for the URL.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>oauth2</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.OAuth2">
@@ -10546,18 +10994,25 @@ OAuth2
 </em>
 </td>
 <td>
-<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>OAuth2 configuration for the URL.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>bearerToken</code><br/>
+<code>basicAuth</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
 </em>
 </td>
 <td>
-<p>Bearer token for remote read.</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for the URL.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10568,7 +11023,8 @@ string
 </em>
 </td>
 <td>
-<p>File to read bearer token for remote read.</p>
+<p>File from which to read bearer token for the URL.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -10581,7 +11037,23 @@ Authorization
 </em>
 </td>
 <td>
-<p>Authorization section for remote read</p>
+<em>(Optional)</em>
+<p>Authorization section for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
+clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -10594,7 +11066,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for remote read.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for the URL.</p>
 </td>
 </tr>
 <tr>
@@ -10617,8 +11090,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether HTTP requests follow HTTP 3xx redirects.
-Requires Prometheus v2.26.0 and above.</p>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -10629,8 +11102,9 @@ bool
 </em>
 </td>
 <td>
-<p>Whether to use the external labels as selectors for the remote read endpoint.
-Requires Prometheus v2.34.0 and above.</p>
+<em>(Optional)</em>
+<p>Whether to use the external labels as selectors for the remote read endpoint.</p>
+<p>It requires Prometheus &gt;= v2.34.0.</p>
 </td>
 </tr>
 </tbody>
@@ -10672,8 +11146,8 @@ string
 </td>
 <td>
 <p>The name of the remote write queue, it must be unique if specified. The
-name is used in metrics and logging in order to differentiate queues.
-Only valid in Prometheus versions 2.15.0 and newer.</p>
+name is used in metrics and logging in order to differentiate queues.</p>
+<p>It requires Prometheus &gt;= v2.15.0.</p>
 </td>
 </tr>
 <tr>
@@ -10684,10 +11158,11 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enables sending of exemplars over remote write. Note that
-exemplar-storage itself must be enabled using the enableFeature option
-for exemplars to be scraped in the first place.  Only valid in
-Prometheus versions 2.27.0 and newer.</p>
+exemplar-storage itself must be enabled using the <code>spec.enableFeature</code>
+option for exemplars to be scraped in the first place.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -10698,8 +11173,10 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enables sending of native histograms, also known as sparse histograms
-over remote write. Only valid in Prometheus versions 2.40.0 and newer.</p>
+over remote write.</p>
+<p>It requires Prometheus &gt;= v2.40.0.</p>
 </td>
 </tr>
 <tr>
@@ -10723,9 +11200,10 @@ map[string]string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each remote write request.
-Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.
-Only valid in Prometheus versions 2.25.0 and newer.</p>
+Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -10738,6 +11216,7 @@ Only valid in Prometheus versions 2.25.0 and newer.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The list of remote write relabel configurations.</p>
 </td>
 </tr>
@@ -10751,7 +11230,10 @@ OAuth2
 </em>
 </td>
 <td>
-<p>OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>OAuth2 configuration for the URL.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10764,18 +11246,9 @@ BasicAuth
 </em>
 </td>
 <td>
-<p>BasicAuth for the URL.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerToken</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bearer token for remote write.</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for the URL.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10786,7 +11259,8 @@ string
 </em>
 </td>
 <td>
-<p>File to read bearer token for remote write.</p>
+<p>File from which to read bearer token for the URL.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -10799,7 +11273,10 @@ Authorization
 </em>
 </td>
 <td>
-<p>Authorization section for remote write</p>
+<em>(Optional)</em>
+<p>Authorization section for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10812,7 +11289,23 @@ Sigv4
 </em>
 </td>
 <td>
-<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4</p>
+<em>(Optional)</em>
+<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
+clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -10825,7 +11318,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for remote write.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for the URL.</p>
 </td>
 </tr>
 <tr>
@@ -10849,6 +11343,7 @@ QueueConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>QueueConfig allows tuning of the remote write queue parameters.</p>
 </td>
 </tr>
@@ -10862,6 +11357,7 @@ MetadataConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetadataConfig configures the sending of series metadata to the remote storage.</p>
 </td>
 </tr>
@@ -10933,6 +11429,20 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>Alerts are considered firing once they have been returned for this long.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keep_firing_for</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.</p>
 </td>
 </tr>
 <tr>
@@ -11419,6 +11929,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.</p>
 </td>
 </tr>
@@ -11430,6 +11941,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
 </td>
 </tr>
@@ -11441,6 +11953,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -11453,6 +11966,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -11465,6 +11979,7 @@ uint64
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
 </td>
@@ -11566,7 +12081,7 @@ int32
 </p>
 <div>
 <p>Sigv4 optionally configures AWS&rsquo;s Signature Verification 4 signing process to
-sign requests. Cannot be set at the same time as basic_auth or authorization.</p>
+sign requests.</p>
 </div>
 <table>
 <thead>
@@ -11597,7 +12112,9 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>AccessKey is the AWS API key. If blank, the environment variable <code>AWS_ACCESS_KEY_ID</code> is used.</p>
+<em>(Optional)</em>
+<p>AccessKey is the AWS API key. If not specified, the environment variable
+<code>AWS_ACCESS_KEY_ID</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -11610,7 +12127,9 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>SecretKey is the AWS API secret. If blank, the environment variable <code>AWS_SECRET_ACCESS_KEY</code> is used.</p>
+<em>(Optional)</em>
+<p>SecretKey is the AWS API secret. If not specified, the environment
+variable <code>AWS_SECRET_ACCESS_KEY</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -11644,8 +12163,11 @@ string
 </p>
 <div>
 <p>StorageSpec defines the configured storage for a group Prometheus servers.
-If no storage option is specified, then by default an <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">EmptyDir</a> will be used.
-If multiple storage options are specified, priority will be given as follows: EmptyDir, Ephemeral, and lastly VolumeClaimTemplate.</p>
+If no storage option is specified, then by default an <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">EmptyDir</a> will be used.</p>
+<p>If multiple storage options are specified, priority will be given as follows:
+1. emptyDir
+2. ephemeral
+3. volumeClaimTemplate</p>
 </div>
 <table>
 <thead>
@@ -11663,8 +12185,7 @@ bool
 </em>
 </td>
 <td>
-<p>Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary.
-DisableMountSubPath allows to remove any subPath usage in volume mounts.</p>
+<p><em>Deprecated: subPath usage will be removed in a future release.</em></p>
 </td>
 </tr>
 <tr>
@@ -11677,8 +12198,9 @@ Kubernetes core/v1.EmptyDirVolumeSource
 </em>
 </td>
 <td>
-<p>EmptyDirVolumeSource to be used by the StatefulSet. If specified, used in place of any volumeClaimTemplate. More
-info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
+<p>EmptyDirVolumeSource to be used by the StatefulSet.
+If specified, it takes precedence over <code>ephemeral</code> and <code>volumeClaimTemplate</code>.
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a></p>
 </td>
 </tr>
 <tr>
@@ -11692,7 +12214,8 @@ Kubernetes core/v1.EphemeralVolumeSource
 </td>
 <td>
 <p>EphemeralVolumeSource to be used by the StatefulSet.
-This is a beta field in k8s 1.21, for lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
+This is a beta field in k8s 1.21 and GA in 1.15.
+For lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes">https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes</a></p>
 </td>
 </tr>
@@ -11706,8 +12229,9 @@ EmbeddedPersistentVolumeClaim
 </em>
 </td>
 <td>
-<p>A PVC spec to be used by the StatefulSet. The easiest way to use a volume that cannot be automatically provisioned
-(for whatever reason) is to use a label selector alongside manually created PersistentVolumes.</p>
+<p>Defines the PVC spec to be used by the Prometheus StatefulSets.
+The easiest way to use a volume that cannot be automatically provisioned
+is to use a label selector alongside manually created PersistentVolumes.</p>
 </td>
 </tr>
 </tbody>
@@ -12676,7 +13200,7 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
 </p>
 <div>
-<p>ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.</p>
+<p>ThanosSpec defines the configuration of the Thanos sidecar.</p>
 </div>
 <table>
 <thead>
@@ -12694,10 +13218,15 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Thanos is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Thanos. If specified, it takes precedence over
+the <code>spec.thanos.baseImage</code>, <code>spec.thanos.tag</code> and <code>spec.thanos.sha</code>
+fields.</p>
+<p>Specifying <code>spec.thanos.version</code> is still necessary to ensure the
+Prometheus Operator knows which version of Thanos is being configured.</p>
+<p>If neither <code>spec.thanos.image</code> nor <code>spec.thanos.baseImage</code> are defined,
+the operator will use the latest upstream version of Thanos available at
+the time when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -12708,7 +13237,12 @@ string
 </em>
 </td>
 <td>
-<p>Version describes the version of Thanos to use.</p>
+<em>(Optional)</em>
+<p>Version of Thanos being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream release of
+Thanos available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -12719,10 +13253,9 @@ string
 </em>
 </td>
 <td>
-<p>Tag of Thanos sidecar container image to be deployed. Defaults to the value of <code>version</code>.
-Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as
+part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -12733,11 +13266,9 @@ string
 </em>
 </td>
 <td>
-<p>SHA of Thanos container image to be deployed. Defaults to the value of <code>version</code>.
-Similar to a tag, but the SHA explicitly deploys an immutable container image.
-Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
+as part of the image name.</em></p>
 </td>
 </tr>
 <tr>
@@ -12748,8 +13279,8 @@ string
 </em>
 </td>
 <td>
-<p>Thanos base image if other than default.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+<em>(Optional)</em>
+<p><em>Deprecated: use &lsquo;image&rsquo; instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -12762,8 +13293,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Resources defines the resource requirements for the Thanos sidecar.
-If not provided, no requests/limits will be set</p>
+<p>Defines the resources requests and limits of the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -12776,8 +13306,10 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>ObjectStorageConfig configures object storage in Thanos.
-Alternative to ObjectStorageConfigFile, and lower order priority.</p>
+<em>(Optional)</em>
+<p>Defines the Thanos sidecar&rsquo;s configuration to upload TSDB blocks to object storage.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/storage.md/">https://thanos.io/tip/thanos/storage.md/</a></p>
+<p>objectStorageConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -12788,8 +13320,10 @@ string
 </em>
 </td>
 <td>
-<p>ObjectStorageConfigFile specifies the path of the object storage configuration file.
-When used alongside with ObjectStorageConfig, ObjectStorageConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>Defines the Thanos sidecar&rsquo;s configuration file to upload TSDB blocks to object storage.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/storage.md/">https://thanos.io/tip/thanos/storage.md/</a></p>
+<p>This field takes precedence over objectStorageConfig.</p>
 </td>
 </tr>
 <tr>
@@ -12800,10 +13334,7 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the HTTP and gRPC endpoints.
-It takes precedence over <code>grpcListenLocal</code> and <code>httpListenLocal</code>.
-Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
+<p><em>Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</em></p>
 </td>
 </tr>
 <tr>
@@ -12814,9 +13345,9 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the gRPC endpoints.
-It has no effect if <code>listenLocal</code> is true.</p>
+<p>When true, the Thanos sidecar listens on the loopback interface instead
+of the Pod IP&rsquo;s address for the gRPC endpoints.</p>
+<p>It has no effect if <code>listenLocal</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -12827,9 +13358,9 @@ bool
 </em>
 </td>
 <td>
-<p>If true, the Thanos sidecar listens on the loopback interface
-for the HTTP endpoints.
-It has no effect if <code>listenLocal</code> is true.</p>
+<p>When true, the Thanos sidecar listens on the loopback interface instead
+of the Pod IP&rsquo;s address for the HTTP endpoints.</p>
+<p>It has no effect if <code>listenLocal</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -12842,7 +13373,12 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>Defines the tracing configuration for the Thanos sidecar.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
+<p>This is an experimental feature, it may change in any upcoming release
+in a breaking way.</p>
+<p>tracingConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -12853,8 +13389,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<p>Defines the tracing configuration file for the Thanos sidecar.</p>
+<p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
+<p>This is an experimental feature, it may change in any upcoming release
+in a breaking way.</p>
+<p>This field takes precedence over tracingConfig.</p>
 </td>
 </tr>
 <tr>
@@ -12867,10 +13406,9 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>GRPCServerTLSConfig configures the TLS parameters for the gRPC server
-providing the StoreAPI.
-Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
+<em>(Optional)</em>
+<p>Configures the TLS parameters for the gRPC server providing the StoreAPI.</p>
+<p>Note: Currently only the <code>caFile</code>, <code>certFile</code>, and <code>keyFile</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -12881,7 +13419,7 @@ string
 </em>
 </td>
 <td>
-<p>LogLevel for Thanos sidecar to be configured with.</p>
+<p>Log level for the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -12892,7 +13430,7 @@ string
 </em>
 </td>
 <td>
-<p>LogFormat for Thanos sidecar to be configured with.</p>
+<p>Log format for the Thanos sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -12903,7 +13441,10 @@ string
 </em>
 </td>
 <td>
-<p>MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.</p>
+<p>Defines the start of time range limit served by the Thanos sidecar&rsquo;s StoreAPI.
+The field&rsquo;s value should be a constant time in RFC3339 format or a time
+duration relative to current time, such as -1d or 2h45m. Valid duration
+units are ms, s, m, h, d, w, y.</p>
 </td>
 </tr>
 <tr>
@@ -12916,8 +13457,13 @@ Duration
 </em>
 </td>
 <td>
-<p>BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
-WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.</p>
+<p>BlockDuration controls the size of TSDB blocks produced by Prometheus.
+The default value is 2h to match the upstream Prometheus defaults.</p>
+<p>WARNING: Changing the block duration can impact the performance and
+efficiency of the entire Prometheus/Thanos stack due to how it interacts
+with memory and Thanos compactors. It is recommended to keep this value
+set to a multiple of 120 times your longest scrape or rule interval. For
+example, 30s * 120 = 1h.</p>
 </td>
 </tr>
 <tr>
@@ -12930,7 +13476,8 @@ Duration
 </em>
 </td>
 <td>
-<p>ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m</p>
+<p>ReadyTimeout is the maximum time that the Thanos sidecar will wait for
+Prometheus to start.</p>
 </td>
 </tr>
 <tr>
@@ -12969,8 +13516,10 @@ Duration
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.</p>
+<em>(Optional)</em>
+<p>VolumeMounts allows configuration of additional VolumeMounts for Thanos.
+VolumeMounts specified will be appended to other VolumeMounts in the
+&lsquo;thanos-sidecar&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -12983,11 +13532,12 @@ VolumeMounts specified will be appended to other VolumeMounts in the thanos-side
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalArgs allows setting additional arguments for the Thanos container.
 The arguments are passed as-is to the Thanos container which may cause issues
 if they are invalid or not supported the given Thanos version.
 In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -13525,7 +14075,7 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
 </td>
 </tr>
 <tr>
@@ -13538,13 +14088,14 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery.</p>
+<p>ServiceMonitors to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -13559,8 +14110,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ServicedMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -13573,13 +14125,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -13594,8 +14148,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for PodMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -13608,13 +14163,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p><em>Experimental</em> Probes to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -13629,7 +14186,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+selector matches all namespaces. A null label selector matches the
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -13642,13 +14201,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
+empty label selector matches all objects. A null label selector matches
+no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -13663,8 +14224,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ScrapeConfig discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -13675,7 +14237,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -13698,10 +14264,14 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Prometheus is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Prometheus. If specified, it takes precedence
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -13728,9 +14298,9 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </em>
 </td>
 <td>
-<p>An optional list of references to secrets in the same namespace
-to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+<p>An optional list of references to Secrets in the same namespace
+to use for pulling images from registries.
+See <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
 </tr>
 <tr>
@@ -13741,9 +14311,11 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
-Number of replicas multiplied by shards is the total number of Pods
+<code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -13754,14 +14326,17 @@ int32
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
-replicas multiplied by shards is the total number of Pods created. Note
-that scaling down shards will not reshard data onto remaining instances,
-it must be manually moved. Increasing shards will not reshard data
-either but it will continue to be available from the same instances. To
-query globally use Thanos sidecar and Thanos querier or remote write
-data to a central location. Sharding is done on the content of the
-<code>__address__</code> target meta-label.</p>
+<em>(Optional)</em>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
+<p>Note that scaling down shards will not reshard data onto remaining
+instances, it must be manually moved. Increasing shards will not reshard
+data either but it will continue to be available from the same
+instances. To query globally, use Thanos sidecar and Thanos querier or
+remote write data to a central location.</p>
+<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
+for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -13772,9 +14347,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote replica name.
-Defaults to the value of <code>prometheus_replica</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the replica name.
+The external label will <em>not</em> be added when the field is set to the
+empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus_replica&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -13785,9 +14362,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote Prometheus instance
-name. Defaults to the value of <code>prometheus</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the Prometheus instance
+name. The external label will <em>not</em> be added when the field is set to
+the empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -13798,7 +14377,7 @@ string
 </em>
 </td>
 <td>
-<p>Log level for Prometheus to be configured with.</p>
+<p>Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -13809,7 +14388,7 @@ string
 </em>
 </td>
 <td>
-<p>Log format for Prometheus to be configured with.</p>
+<p>Log format for Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -13822,7 +14401,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+<p>Interval between consecutive scrapes.</p>
+<p>Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -13835,7 +14415,7 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait for target to respond before erroring.</p>
+<p>Number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -13847,7 +14427,9 @@ map[string]string
 </td>
 <td>
 <p>The labels to add to any time series or alerts when communicating with
-external systems (federation, remote storage, Alertmanager).</p>
+external systems (federation, remote storage, Alertmanager).
+Labels defined by <code>spec.replicaExternalLabelName</code> and
+<code>spec.prometheusExternalLabelName</code> take precedence over this list.</p>
 </td>
 </tr>
 <tr>
@@ -13858,13 +14440,14 @@ bool
 </em>
 </td>
 <td>
-<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
-WARNING: This is not considered an efficient way of ingesting samples.
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote
+write protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
 Use it with caution for specific low-volume use cases.
 It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
-Only valid in Prometheus versions 2.33.0 and newer.</p>
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.33.0.</p>
 </td>
 </tr>
 <tr>
@@ -13875,11 +14458,11 @@ Only valid in Prometheus versions 2.33.0 and newer.</p>
 </em>
 </td>
 <td>
-<p>Enable access to Prometheus disabled features. By default, no features are enabled.
-Enabling disabled features is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+<p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://prometheus.io/docs/prometheus/latest/feature_flags/">https://prometheus.io/docs/prometheus/latest/feature_flags/</a></p>
 </td>
 </tr>
 <tr>
@@ -13890,9 +14473,9 @@ string
 </em>
 </td>
 <td>
-<p>The external URL the Prometheus instances will be available under. This is
-necessary to generate correct URLs. This is necessary if Prometheus is not
-served from root of a DNS name.</p>
+<p>The external URL under which the Prometheus service is externally
+available. This is necessary to generate correct URLs (for instance if
+Prometheus is accessible behind an Ingress resource).</p>
 </td>
 </tr>
 <tr>
@@ -13903,10 +14486,11 @@ string
 </em>
 </td>
 <td>
-<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
-if using ExternalURL and a proxy is rewriting HTTP routes of a request,
-and the actual ExternalURL is still true, but the server serves requests
-under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+<p>The route prefix Prometheus registers HTTP handlers for.</p>
+<p>This is useful when using <code>spec.externalURL</code>, and a proxy is rewriting
+HTTP routes of a request, and the actual ExternalURL is still true, but
+the server serves requests under a different route prefix. For example
+for use with <code>kubectl proxy</code>.</p>
 </td>
 </tr>
 <tr>
@@ -13919,7 +14503,7 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>Storage defines the storage used by Prometheus.</p>
 </td>
 </tr>
 <tr>
@@ -13932,8 +14516,9 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
-be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+<p>Volumes allows the configuration of additional volumes on the output
+StatefulSet definition. Volumes specified will be appended to other
+volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -13946,9 +14531,9 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
-that are generated as a result of StorageSpec objects.</p>
+<p>VolumeMounts allows the configuration of additional VolumeMounts.</p>
+<p>VolumeMounts will be appended to other VolumeMounts in the &lsquo;prometheus&rsquo;
+container, that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -13961,7 +14546,7 @@ PrometheusWebSpec
 </em>
 </td>
 <td>
-<p>Defines the web command line flags when starting Prometheus.</p>
+<p>Defines the configuration of the Prometheus web server.</p>
 </td>
 </tr>
 <tr>
@@ -13974,7 +14559,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Define resources requests and limits for single Pods.</p>
+<p>Defines the resources requests and limits of the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -13985,7 +14570,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>Defines on which Nodes the Pods are scheduled.</p>
 </td>
 </tr>
 <tr>
@@ -14038,7 +14623,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; affinity scheduling rules if specified.</p>
 </td>
 </tr>
 <tr>
@@ -14051,7 +14637,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; tolerations if specified.</p>
 </td>
 </tr>
 <tr>
@@ -14064,7 +14651,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+<em>(Optional)</em>
+<p>Defines the pod&rsquo;s topology spread constraints if specified.</p>
 </td>
 </tr>
 <tr>
@@ -14077,7 +14665,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>remoteWrite is the list of remote write configurations.</p>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
 </td>
 </tr>
 <tr>
@@ -14090,6 +14679,7 @@ Kubernetes core/v1.PodSecurityContext
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
@@ -14102,8 +14692,8 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Prometheus server listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>When true, the Prometheus server listens on the loopback address
+instead of the Pod IP&rsquo;s address.</p>
 </td>
 </tr>
 <tr>
@@ -14116,16 +14706,20 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Containers allows injecting additional containers or modifying operator
 generated containers. This can be used to allow adding an authentication
-proxy to a Prometheus pod or to change the behavior of an operator
-generated container. Containers described here modify an operator
-generated container if they share the same name and modifications are
-done via a strategic merge patch. The current container names are:
-<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
-containers is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.</p>
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>prometheus</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -14138,15 +14732,20 @@ time without notice.</p>
 </em>
 </td>
 <td>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Prometheus configuration from external sources. Any errors
-during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<em>(Optional)</em>
+<p>InitContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -14159,6 +14758,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
 additional Prometheus scrape configurations. Scrape configurations
 specified are appended to the configurations generated by the Prometheus
@@ -14182,9 +14782,11 @@ APIServerConfig
 </em>
 </td>
 <td>
-<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
-If left empty, Prometheus is assumed to run inside of the cluster
-and will discover API servers automatically and use the pod&rsquo;s CA certificate
+<em>(Optional)</em>
+<p>APIServerConfig allows specifying a host and auth methods to access the
+Kuberntees API server.
+If null, Prometheus is assumed to run inside of the cluster: it will
+discover the API servers automatically and use the Pod&rsquo;s CA certificate
 and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
 </td>
 </tr>
@@ -14196,7 +14798,7 @@ string
 </em>
 </td>
 <td>
-<p>Priority class assigned to the Pods</p>
+<p>Priority class assigned to the Pods.</p>
 </td>
 </tr>
 <tr>
@@ -14208,7 +14810,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-Defaults to <code>web</code>.</p>
+Default: &ldquo;web&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -14221,9 +14823,16 @@ ArbitraryFSAccessThroughSMsConfig
 </em>
 </td>
 <td>
-<p>ArbitraryFSAccessThroughSMs configures whether configuration
-based on a service monitor can access arbitrary files on the file system
-of the Prometheus container e.g. bearer token files.</p>
+<p>When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+reference arbitrary files on the file system of the &lsquo;prometheus&rsquo;
+container.
+When a ServiceMonitor&rsquo;s endpoint specifies a <code>bearerTokenFile</code> value
+(e.g.  &lsquo;/var/run/secrets/kubernetes.io/serviceaccount/token&rsquo;), a
+malicious target can get access to the Prometheus service account&rsquo;s
+token in the Prometheus&rsquo; scrape request. Setting
+<code>spec.arbitraryFSAccessThroughSM</code> to &lsquo;true&rsquo; would prevent the attack.
+Users should instead provide the credentials using the
+<code>spec.bearerTokenSecret</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -14261,11 +14870,10 @@ bool
 </em>
 </td>
 <td>
-<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They will
-only discover endpoints within the namespace of the PodMonitor,
-ServiceMonitor and Probe objects.
-Defaults to false.</p>
+<p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
+and Probe objects will be ignored. They will only discover targets
+within the namespace of the PodMonitor, ServiceMonitor and Probe
+objec.</p>
 </td>
 </tr>
 <tr>
@@ -14276,17 +14884,17 @@ string
 </em>
 </td>
 <td>
-<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<p>When not empty, a label will be added to</p>
 <ol>
-<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
-<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
-<ul>
-<li>alerting &amp; recording rules and</li>
-<li>the metrics used in their expressions (<code>expr</code>).</li>
-</ul></li>
+<li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
+<li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All alerts generated from alerting rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All vector selectors of PromQL expressions defined in <code>PrometheusRule</code> objects.</li>
 </ol>
-<p>Label name is this field&rsquo;s value.
-Label value is the namespace of the created object (mentioned above).</p>
+<p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
+<p>The label&rsquo;s name is this field&rsquo;s value.
+The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
+<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -14297,12 +14905,14 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedSampleLimit defines global limit on number of scraped samples
-that will be accepted. This overrides any SampleLimit set per
-ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
-enforce the SampleLimit to keep overall number of samples/series under
-the desired limit.
-Note that if SampleLimit is lower that value will be taken instead.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedSampleLimit specifies a global limit on the number
+of scraped samples that will be accepted. This overrides any
+<code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
+unless <code>spec.sampleLimit</code> is greater than zero and less than than
+<code>spec.enforcedSampleLimit</code>.</p>
+<p>It is meant to be used by admins to keep the overall number of
+samples/series under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -14313,13 +14923,13 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedTargetLimit defines a global limit on the number of scraped
-targets.  This overrides any TargetLimit set per ServiceMonitor or/and
-PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
-to keep the overall number of targets under the desired limit.
-Note that if TargetLimit is lower, that value will be taken instead,
-except if either value is zero, in which case the non-zero value will be
-used.  If both values are zero, no limit is enforced.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedTargetLimit specifies a global limit on the number
+of scraped targets. The value overrides any <code>spec.targetLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> is
+greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
+<p>It is meant to be used by admins to to keep the overall number of
+targets under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -14330,10 +14940,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample. If
-more than this number of labels are present post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelLimit specifies a global limit on the number
+of labels per sample. The value overrides any <code>spec.labelLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -14344,10 +14956,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-If a label name is longer than this number post metric-relabeling, the entire
-scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
+of labels name per sample. The value overrides any <code>spec.labelNameLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -14358,10 +14972,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-If a label value is longer than this number post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When not null, enforcedLabelValueLengthLimit defines a global limit on the length
+of labels value per sample. The value overrides any <code>spec.labelValueLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -14374,13 +14990,11 @@ ByteSize
 </em>
 </td>
 <td>
-<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
-that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
-will cause the scrape to fail. Example: 100MB.
-If defined, the limit will apply to all service/pod monitors and probes.
-This is an experimental feature, this behaviour could
-change or be removed in the future.
-Only valid in Prometheus versions 2.28.0 and newer.</p>
+<p>When defined, enforcedBodySizeLimit specifies a global limit on the size
+of uncompressed response body that will be accepted by Prometheus.
+Targets responding with a body larger than this many bytes will cause
+the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -14392,10 +15006,11 @@ uint32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>Minimum number of seconds for which a newly created Pod should be ready
 without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
+enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -14408,7 +15023,9 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>Pods&rsquo; hostAliases configuration</p>
+<em>(Optional)</em>
+<p>Optional list of hosts and IPs that will be injected into the Pod&rsquo;s
+hosts file if specified.</p>
 </td>
 </tr>
 <tr>
@@ -14421,13 +15038,14 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
-It is intended for e.g. activating hidden flags which are not supported by
+<em>(Optional)</em>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;prometheus&rsquo; container.</p>
+<p>It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
-by the given Prometheus version.
-In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+by the given Prometheus version.</p>
+<p>In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -14439,9 +15057,10 @@ bool
 </em>
 </td>
 <td>
-<p>Configures compression of the write-ahead log using Snappy.
-This flag is only available in versions of Prometheus &gt;= 2.11.0.
-WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<em>(Optional)</em>
+<p>Configures compression of the write-ahead log (WAL) using Snappy.</p>
+<p>WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<p>Requires Prometheus v2.11.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -14454,9 +15073,10 @@ WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
+to be excluded from enforcing a namespace label of origin.</p>
+<p>It is only applicable if <code>spec.enforcedNamespaceLabel</code> set to true.</p>
 </td>
 </tr>
 <tr>
@@ -14467,9 +15087,11 @@ bool
 </em>
 </td>
 <td>
-<p>Use the host&rsquo;s network namespace if true.
-Make sure to understand the security implications if you want to enable it.
-When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+<p>Use the host&rsquo;s network namespace if true.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically.</p>
 </td>
 </tr>
 <tr>
@@ -14480,7 +15102,9 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </em>
 </td>
 <td>
-<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<em>(Optional)</em>
+<p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
+PodMonitor and ServiceMonitor objects.</p>
 </td>
 </tr>
 <tr>
@@ -14494,7 +15118,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
+experimental feature, it may change in any upcoming release in a
+breaking way.</p>
 </td>
 </tr>
 </table>
@@ -14668,6 +15294,19 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the protocol scheme used for requests.
+If empty, Prometheus uses HTTP by default.</p>
 </td>
 </tr>
 <tr>
@@ -16198,7 +16837,7 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
 </td>
 </tr>
 <tr>
@@ -16211,13 +16850,14 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>ServiceMonitors to be selected for target discovery.</p>
+<p>ServiceMonitors to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -16232,8 +16872,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ServiceMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ServicedMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -16246,13 +16887,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery.</p>
+<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -16267,8 +16910,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for PodMonitor discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for PodMonitors discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -16281,13 +16925,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery.</p>
+<p><em>Experimental</em> Probes to be selected for target discovery. An empty
+label selector matches all objects. A null label selector matches no
+objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -16302,7 +16948,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to be selected for Probe discovery. If nil, only check own namespace.</p>
+<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+selector matches all namespaces. A null label selector matches the
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -16315,13 +16963,15 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery.</p>
+<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
+empty label selector matches all objects. A null label selector matches
+no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
 Secret exists, but it is the responsibility of the user to provide the raw
 gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
-This behavior is deprecated and will be removed in the next major version
+This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
 </td>
@@ -16336,8 +16986,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Namespace&rsquo;s labels to match for ScrapeConfig discovery. If nil, only
-check own namespace.</p>
+<p>Namespaces to match for ScrapeConfig discovery. An empty label selector
+matches all namespaces. A null label selector matches the current
+current namespace only.</p>
 </td>
 </tr>
 <tr>
@@ -16348,7 +16999,11 @@ string
 </em>
 </td>
 <td>
-<p>Version of Prometheus to be deployed.</p>
+<p>Version of Prometheus being deployed. The operator uses this information
+to generate the Prometheus StatefulSet + configuration files.</p>
+<p>If not specified, the operator assumes the latest upstream version of
+Prometheus available at the time when the version of the operator was
+released.</p>
 </td>
 </tr>
 <tr>
@@ -16371,10 +17026,14 @@ string
 </em>
 </td>
 <td>
-<p>Image if specified has precedence over baseImage, tag and sha
-combinations. Specifying the version is still necessary to ensure the
-Prometheus Operator knows what version of Prometheus is being
-configured.</p>
+<em>(Optional)</em>
+<p>Container image name for Prometheus. If specified, it takes precedence
+over the <code>spec.baseImage</code>, <code>spec.tag</code> and <code>spec.sha</code> fields.</p>
+<p>Specifying <code>spec.version</code> is still necessary to ensure the Prometheus
+Operator knows which version of Prometheus is being configured.</p>
+<p>If neither <code>spec.image</code> nor <code>spec.baseImage</code> are defined, the operator
+will use the latest upstream version of Prometheus available at the time
+when the operator was released.</p>
 </td>
 </tr>
 <tr>
@@ -16401,9 +17060,9 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </em>
 </td>
 <td>
-<p>An optional list of references to secrets in the same namespace
-to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+<p>An optional list of references to Secrets in the same namespace
+to use for pulling images from registries.
+See <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
 </tr>
 <tr>
@@ -16414,9 +17073,11 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Number of replicas of each shard to deploy for a Prometheus deployment.
-Number of replicas multiplied by shards is the total number of Pods
+<code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 created.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -16427,14 +17088,17 @@ int32
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. Number of
-replicas multiplied by shards is the total number of Pods created. Note
-that scaling down shards will not reshard data onto remaining instances,
-it must be manually moved. Increasing shards will not reshard data
-either but it will continue to be available from the same instances. To
-query globally use Thanos sidecar and Thanos querier or remote write
-data to a central location. Sharding is done on the content of the
-<code>__address__</code> target meta-label.</p>
+<em>(Optional)</em>
+<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
+<p>Note that scaling down shards will not reshard data onto remaining
+instances, it must be manually moved. Increasing shards will not reshard
+data either but it will continue to be available from the same
+instances. To query globally, use Thanos sidecar and Thanos querier or
+remote write data to a central location.</p>
+<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
+for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
+<p>Default: 1</p>
 </td>
 </tr>
 <tr>
@@ -16445,9 +17109,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote replica name.
-Defaults to the value of <code>prometheus_replica</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the replica name.
+The external label will <em>not</em> be added when the field is set to the
+empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus_replica&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -16458,9 +17124,11 @@ string
 </em>
 </td>
 <td>
-<p>Name of Prometheus external label used to denote Prometheus instance
-name. Defaults to the value of <code>prometheus</code>. External label will
-<em>not</em> be added when value is set to empty string (<code>&quot;&quot;</code>).</p>
+<em>(Optional)</em>
+<p>Name of Prometheus external label used to denote the Prometheus instance
+name. The external label will <em>not</em> be added when the field is set to
+the empty string (<code>&quot;&quot;</code>).</p>
+<p>Default: &ldquo;prometheus&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -16471,7 +17139,7 @@ string
 </em>
 </td>
 <td>
-<p>Log level for Prometheus to be configured with.</p>
+<p>Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -16482,7 +17150,7 @@ string
 </em>
 </td>
 <td>
-<p>Log format for Prometheus to be configured with.</p>
+<p>Log format for Log level for Prometheus and the config-reloader sidecar.</p>
 </td>
 </tr>
 <tr>
@@ -16495,7 +17163,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Interval between consecutive scrapes. Default: <code>30s</code></p>
+<p>Interval between consecutive scrapes.</p>
+<p>Default: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -16508,7 +17177,7 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait for target to respond before erroring.</p>
+<p>Number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -16520,7 +17189,9 @@ map[string]string
 </td>
 <td>
 <p>The labels to add to any time series or alerts when communicating with
-external systems (federation, remote storage, Alertmanager).</p>
+external systems (federation, remote storage, Alertmanager).
+Labels defined by <code>spec.replicaExternalLabelName</code> and
+<code>spec.prometheusExternalLabelName</code> take precedence over this list.</p>
 </td>
 </tr>
 <tr>
@@ -16531,13 +17202,14 @@ bool
 </em>
 </td>
 <td>
-<p>Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of <code>false</code>.
-WARNING: This is not considered an efficient way of ingesting samples.
+<p>Enable Prometheus to be used as a receiver for the Prometheus remote
+write protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
 Use it with caution for specific low-volume use cases.
 It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a>
-Only valid in Prometheus versions 2.33.0 and newer.</p>
+For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.33.0.</p>
 </td>
 </tr>
 <tr>
@@ -16548,11 +17220,11 @@ Only valid in Prometheus versions 2.33.0 and newer.</p>
 </em>
 </td>
 <td>
-<p>Enable access to Prometheus disabled features. By default, no features are enabled.
-Enabling disabled features is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.
-For more information see <a href="https://prometheus.io/docs/prometheus/latest/disabled_features/">https://prometheus.io/docs/prometheus/latest/disabled_features/</a></p>
+<p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://prometheus.io/docs/prometheus/latest/feature_flags/">https://prometheus.io/docs/prometheus/latest/feature_flags/</a></p>
 </td>
 </tr>
 <tr>
@@ -16563,9 +17235,9 @@ string
 </em>
 </td>
 <td>
-<p>The external URL the Prometheus instances will be available under. This is
-necessary to generate correct URLs. This is necessary if Prometheus is not
-served from root of a DNS name.</p>
+<p>The external URL under which the Prometheus service is externally
+available. This is necessary to generate correct URLs (for instance if
+Prometheus is accessible behind an Ingress resource).</p>
 </td>
 </tr>
 <tr>
@@ -16576,10 +17248,11 @@ string
 </em>
 </td>
 <td>
-<p>The route prefix Prometheus registers HTTP handlers for. This is useful,
-if using ExternalURL and a proxy is rewriting HTTP routes of a request,
-and the actual ExternalURL is still true, but the server serves requests
-under a different route prefix. For example for use with <code>kubectl proxy</code>.</p>
+<p>The route prefix Prometheus registers HTTP handlers for.</p>
+<p>This is useful when using <code>spec.externalURL</code>, and a proxy is rewriting
+HTTP routes of a request, and the actual ExternalURL is still true, but
+the server serves requests under a different route prefix. For example
+for use with <code>kubectl proxy</code>.</p>
 </td>
 </tr>
 <tr>
@@ -16592,7 +17265,7 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>Storage defines the storage used by Prometheus.</p>
 </td>
 </tr>
 <tr>
@@ -16605,8 +17278,9 @@ StorageSpec
 </em>
 </td>
 <td>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
-be appended to other volumes that are generated as a result of StorageSpec objects.</p>
+<p>Volumes allows the configuration of additional volumes on the output
+StatefulSet definition. Volumes specified will be appended to other
+volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -16619,9 +17293,9 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </em>
 </td>
 <td>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
-VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
-that are generated as a result of StorageSpec objects.</p>
+<p>VolumeMounts allows the configuration of additional VolumeMounts.</p>
+<p>VolumeMounts will be appended to other VolumeMounts in the &lsquo;prometheus&rsquo;
+container, that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
 <tr>
@@ -16634,7 +17308,7 @@ PrometheusWebSpec
 </em>
 </td>
 <td>
-<p>Defines the web command line flags when starting Prometheus.</p>
+<p>Defines the configuration of the Prometheus web server.</p>
 </td>
 </tr>
 <tr>
@@ -16647,7 +17321,7 @@ Kubernetes core/v1.ResourceRequirements
 </em>
 </td>
 <td>
-<p>Define resources requests and limits for single Pods.</p>
+<p>Defines the resources requests and limits of the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -16658,7 +17332,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>Defines on which Nodes the Pods are scheduled.</p>
 </td>
 </tr>
 <tr>
@@ -16711,7 +17385,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; affinity scheduling rules if specified.</p>
 </td>
 </tr>
 <tr>
@@ -16724,7 +17399,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<em>(Optional)</em>
+<p>Defines the Pods&rsquo; tolerations if specified.</p>
 </td>
 </tr>
 <tr>
@@ -16737,7 +17413,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>If specified, the pod&rsquo;s topology spread constraints.</p>
+<em>(Optional)</em>
+<p>Defines the pod&rsquo;s topology spread constraints if specified.</p>
 </td>
 </tr>
 <tr>
@@ -16750,7 +17427,8 @@ Kubernetes core/v1.Affinity
 </em>
 </td>
 <td>
-<p>remoteWrite is the list of remote write configurations.</p>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
 </td>
 </tr>
 <tr>
@@ -16763,6 +17441,7 @@ Kubernetes core/v1.PodSecurityContext
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
@@ -16775,8 +17454,8 @@ bool
 </em>
 </td>
 <td>
-<p>ListenLocal makes the Prometheus server listen on loopback, so that it
-does not bind against the Pod IP.</p>
+<p>When true, the Prometheus server listens on the loopback address
+instead of the Pod IP&rsquo;s address.</p>
 </td>
 </tr>
 <tr>
@@ -16789,16 +17468,20 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Containers allows injecting additional containers or modifying operator
 generated containers. This can be used to allow adding an authentication
-proxy to a Prometheus pod or to change the behavior of an operator
-generated container. Containers described here modify an operator
-generated container if they share the same name and modifications are
-done via a strategic merge patch. The current container names are:
-<code>prometheus</code>, <code>config-reloader</code>, and <code>thanos-sidecar</code>. Overriding
-containers is entirely outside the scope of what the maintainers will
-support and by doing so, you accept that this behaviour may break at any
-time without notice.</p>
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>prometheus</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -16811,15 +17494,20 @@ time without notice.</p>
 </em>
 </td>
 <td>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Prometheus configuration from external sources. Any errors
-during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<em>(Optional)</em>
+<p>InitContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers is entirely outside the scope of what the
+maintainers will support and by doing so, you accept that this behaviour
+may break at any time without notice.</p>
 </td>
 </tr>
 <tr>
@@ -16832,6 +17520,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalScrapeConfigs allows specifying a key of a Secret containing
 additional Prometheus scrape configurations. Scrape configurations
 specified are appended to the configurations generated by the Prometheus
@@ -16855,9 +17544,11 @@ APIServerConfig
 </em>
 </td>
 <td>
-<p>APIServerConfig allows specifying a host and auth methods to access apiserver.
-If left empty, Prometheus is assumed to run inside of the cluster
-and will discover API servers automatically and use the pod&rsquo;s CA certificate
+<em>(Optional)</em>
+<p>APIServerConfig allows specifying a host and auth methods to access the
+Kuberntees API server.
+If null, Prometheus is assumed to run inside of the cluster: it will
+discover the API servers automatically and use the Pod&rsquo;s CA certificate
 and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.</p>
 </td>
 </tr>
@@ -16869,7 +17560,7 @@ string
 </em>
 </td>
 <td>
-<p>Priority class assigned to the Pods</p>
+<p>Priority class assigned to the Pods.</p>
 </td>
 </tr>
 <tr>
@@ -16881,7 +17572,7 @@ string
 </td>
 <td>
 <p>Port name used for the pods and governing service.
-Defaults to <code>web</code>.</p>
+Default: &ldquo;web&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -16894,9 +17585,16 @@ ArbitraryFSAccessThroughSMsConfig
 </em>
 </td>
 <td>
-<p>ArbitraryFSAccessThroughSMs configures whether configuration
-based on a service monitor can access arbitrary files on the file system
-of the Prometheus container e.g. bearer token files.</p>
+<p>When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+reference arbitrary files on the file system of the &lsquo;prometheus&rsquo;
+container.
+When a ServiceMonitor&rsquo;s endpoint specifies a <code>bearerTokenFile</code> value
+(e.g.  &lsquo;/var/run/secrets/kubernetes.io/serviceaccount/token&rsquo;), a
+malicious target can get access to the Prometheus service account&rsquo;s
+token in the Prometheus&rsquo; scrape request. Setting
+<code>spec.arbitraryFSAccessThroughSM</code> to &lsquo;true&rsquo; would prevent the attack.
+Users should instead provide the credentials using the
+<code>spec.bearerTokenSecret</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -16934,11 +17632,10 @@ bool
 </em>
 </td>
 <td>
-<p>IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
-settings from all PodMonitor, ServiceMonitor and Probe objects. They will
-only discover endpoints within the namespace of the PodMonitor,
-ServiceMonitor and Probe objects.
-Defaults to false.</p>
+<p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
+and Probe objects will be ignored. They will only discover targets
+within the namespace of the PodMonitor, ServiceMonitor and Probe
+objec.</p>
 </td>
 </tr>
 <tr>
@@ -16949,17 +17646,17 @@ string
 </em>
 </td>
 <td>
-<p>EnforcedNamespaceLabel If set, a label will be added to</p>
+<p>When not empty, a label will be added to</p>
 <ol>
-<li>all user-metrics (created by <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects) and</li>
-<li>in all <code>PrometheusRule</code> objects (except the ones excluded in <code>prometheusRulesExcludedFromEnforce</code>) to
-<ul>
-<li>alerting &amp; recording rules and</li>
-<li>the metrics used in their expressions (<code>expr</code>).</li>
-</ul></li>
+<li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
+<li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All alerts generated from alerting rules defined in <code>PrometheusRule</code> objects.</li>
+<li>All vector selectors of PromQL expressions defined in <code>PrometheusRule</code> objects.</li>
 </ol>
-<p>Label name is this field&rsquo;s value.
-Label value is the namespace of the created object (mentioned above).</p>
+<p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
+<p>The label&rsquo;s name is this field&rsquo;s value.
+The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
+<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -16970,12 +17667,14 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedSampleLimit defines global limit on number of scraped samples
-that will be accepted. This overrides any SampleLimit set per
-ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
-enforce the SampleLimit to keep overall number of samples/series under
-the desired limit.
-Note that if SampleLimit is lower that value will be taken instead.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedSampleLimit specifies a global limit on the number
+of scraped samples that will be accepted. This overrides any
+<code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
+unless <code>spec.sampleLimit</code> is greater than zero and less than than
+<code>spec.enforcedSampleLimit</code>.</p>
+<p>It is meant to be used by admins to keep the overall number of
+samples/series under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -16986,13 +17685,13 @@ uint64
 </em>
 </td>
 <td>
-<p>EnforcedTargetLimit defines a global limit on the number of scraped
-targets.  This overrides any TargetLimit set per ServiceMonitor or/and
-PodMonitor.  It is meant to be used by admins to enforce the TargetLimit
-to keep the overall number of targets under the desired limit.
-Note that if TargetLimit is lower, that value will be taken instead,
-except if either value is zero, in which case the non-zero value will be
-used.  If both values are zero, no limit is enforced.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedTargetLimit specifies a global limit on the number
+of scraped targets. The value overrides any <code>spec.targetLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> is
+greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
+<p>It is meant to be used by admins to to keep the overall number of
+targets under a desired limit.</p>
 </td>
 </tr>
 <tr>
@@ -17003,10 +17702,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on number of labels that will be accepted for a sample. If
-more than this number of labels are present post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelLimit specifies a global limit on the number
+of labels per sample. The value overrides any <code>spec.labelLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -17017,10 +17718,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-If a label name is longer than this number post metric-relabeling, the entire
-scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
+of labels name per sample. The value overrides any <code>spec.labelNameLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -17031,10 +17734,12 @@ uint64
 </em>
 </td>
 <td>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-If a label value is longer than this number post metric-relabeling, the
-entire scrape will be treated as failed. 0 means no limit.
-Only valid in Prometheus versions 2.27.0 and newer.</p>
+<em>(Optional)</em>
+<p>When not null, enforcedLabelValueLengthLimit defines a global limit on the length
+of labels value per sample. The value overrides any <code>spec.labelValueLengthLimit</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
+greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
+<p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -17047,13 +17752,11 @@ ByteSize
 </em>
 </td>
 <td>
-<p>EnforcedBodySizeLimit defines the maximum size of uncompressed response body
-that will be accepted by Prometheus. Targets responding with a body larger than this many bytes
-will cause the scrape to fail. Example: 100MB.
-If defined, the limit will apply to all service/pod monitors and probes.
-This is an experimental feature, this behaviour could
-change or be removed in the future.
-Only valid in Prometheus versions 2.28.0 and newer.</p>
+<p>When defined, enforcedBodySizeLimit specifies a global limit on the size
+of uncompressed response body that will be accepted by Prometheus.
+Targets responding with a body larger than this many bytes will cause
+the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -17065,10 +17768,11 @@ uint32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>Minimum number of seconds for which a newly created Pod should be ready
 without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
+enabling the StatefulSetMinReadySeconds feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -17081,7 +17785,9 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>Pods&rsquo; hostAliases configuration</p>
+<em>(Optional)</em>
+<p>Optional list of hosts and IPs that will be injected into the Pod&rsquo;s
+hosts file if specified.</p>
 </td>
 </tr>
 <tr>
@@ -17094,13 +17800,14 @@ This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling t
 </em>
 </td>
 <td>
-<p>AdditionalArgs allows setting additional arguments for the Prometheus container.
-It is intended for e.g. activating hidden flags which are not supported by
+<em>(Optional)</em>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;prometheus&rsquo; container.</p>
+<p>It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Prometheus container which may cause issues if they are invalid or not supported
-by the given Prometheus version.
-In case of an argument conflict (e.g. an argument which is already set by the
-operator itself) or when providing an invalid argument the reconciliation will
+by the given Prometheus version.</p>
+<p>In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
@@ -17112,9 +17819,10 @@ bool
 </em>
 </td>
 <td>
-<p>Configures compression of the write-ahead log using Snappy.
-This flag is only available in versions of Prometheus &gt;= 2.11.0.
-WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<em>(Optional)</em>
+<p>Configures compression of the write-ahead log (WAL) using Snappy.</p>
+<p>WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
+<p>Requires Prometheus v2.11.0 and above.</p>
 </td>
 </tr>
 <tr>
@@ -17127,9 +17835,10 @@ WAL compression is enabled by default for Prometheus &gt;= 2.20.0</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
-to be excluded from enforcing a namespace label of origin.
-Applies only if enforcedNamespaceLabel set to true.</p>
+to be excluded from enforcing a namespace label of origin.</p>
+<p>It is only applicable if <code>spec.enforcedNamespaceLabel</code> set to true.</p>
 </td>
 </tr>
 <tr>
@@ -17140,9 +17849,11 @@ bool
 </em>
 </td>
 <td>
-<p>Use the host&rsquo;s network namespace if true.
-Make sure to understand the security implications if you want to enable it.
-When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet automatically.</p>
+<p>Use the host&rsquo;s network namespace if true.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically.</p>
 </td>
 </tr>
 <tr>
@@ -17153,7 +17864,9 @@ When hostNetwork is enabled, this will set dnsPolicy to ClusterFirstWithHostNet 
 </em>
 </td>
 <td>
-<p>PodTargetLabels are added to all Pod/ServiceMonitors&rsquo; podTargetLabels</p>
+<em>(Optional)</em>
+<p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
+PodMonitor and ServiceMonitor objects.</p>
 </td>
 </tr>
 <tr>
@@ -17167,7 +17880,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
+experimental feature, it may change in any upcoming release in a
+breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -17955,6 +18670,19 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the protocol scheme used for requests.
+If empty, Prometheus uses HTTP by default.</p>
 </td>
 </tr>
 <tr>

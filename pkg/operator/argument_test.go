@@ -16,9 +16,11 @@ package operator
 
 import (
 	"fmt"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"golang.org/x/exp/slices"
 	"testing"
+
+	"golang.org/x/exp/slices"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestBuildArgs(t *testing.T) {

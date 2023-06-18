@@ -88,13 +88,18 @@ type ScrapeConfigSpec struct {
 	RelabelConfigs []*v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	// +optional
-	MetricsPath string `json:"metricsPath,omitempty"`
+	MetricsPath *string `json:"metricsPath,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// Configures the protocol scheme used for requests.
+	// If empty, Prometheus uses HTTP by default.
+	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// +optional
+	Scheme *string `json:"scheme,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`

@@ -270,6 +270,10 @@ type AlertmanagerConfiguration struct {
 // AlertmanagerGlobalConfig configures parameters that are valid in all other configuration contexts.
 // See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type AlertmanagerGlobalConfig struct {
+	// Configures global SMTP parameters.
+	// +optional
+	SMTPConfig *GlobalSMTPConfig `json:"smtp,omitempty"`
+
 	// ResolveTimeout is the default value used by alertmanager if the alert does
 	// not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.
 	// This has no impact on alerts from Prometheus, as they always include EndsAt.
@@ -341,6 +345,53 @@ type AlertmanagerWebSpec struct {
 	// `--web.timeout` flag.
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
+}
+
+// GlobalSMTPConfig configures global SMTP parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalSMTPConfig struct {
+	// The default SMTP From header field.
+	// +optional
+	From *string `json:"from,omitempty"`
+
+	// The default SMTP smarthost used for sending emails.
+	// +optional
+	SmartHost *HostPort `json:"smartHost,omitempty"`
+
+	// The default hostname to identify to the SMTP server.
+	// +optional
+	Hello *string `json:"hello,omitempty"`
+
+	// SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.
+	// +optional
+	AuthUsername *string `json:"authUsername,omitempty"`
+
+	// SMTP Auth using LOGIN and PLAIN.
+	// +optional
+	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
+
+	// SMTP Auth using PLAIN
+	// +optional
+	AuthIdentity *string `json:"authIdentity,omitempty"`
+
+	// SMTP Auth using CRAM-MD5.
+	// +optional
+	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
+
+	// The default SMTP TLS requirement.
+	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
+	// +optional
+	RequireTLS *bool `json:"requireTLS,omitempty"`
+}
+
+// HostPort represents a "host:port" network address.
+type HostPort struct {
+	// Defines the host's address, it can be a DNS name or a literal IP address.
+	// +kubebuilder:validation:MinLength=1
+	Host string `json:"host"`
+	// Defines the host's port, it can be a literal port number or a port name.
+	// +kubebuilder:validation:MinLength=1
+	Port string `json:"port"`
 }
 
 // HTTPConfig defines a client HTTP configuration.

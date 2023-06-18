@@ -844,6 +844,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 			}
 		}
 	}
+	if in.MetricsPath != nil {
+		in, out := &in.MetricsPath, &out.MetricsPath
+		*out = new(string)
+		**out = **in
+	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
@@ -852,6 +857,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	if in.HonorLabels != nil {
 		in, out := &in.HonorLabels, &out.HonorLabels
 		*out = new(bool)
+		**out = **in
+	}
+	if in.Scheme != nil {
+		in, out := &in.Scheme, &out.Scheme
+		*out = new(string)
 		**out = **in
 	}
 	if in.BasicAuth != nil {

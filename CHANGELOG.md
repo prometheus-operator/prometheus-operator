@@ -1,3 +1,25 @@
+## 0.66.0 / 2023-06-14
+
+After research, we noticed how the default CPU requests of the config-reloader container were too high compared to the effective usage. We decided to decrease the default CPU requests from `100m` to `10m`. For most environments, this won't make a difference but if you need to increase the values, you can use the `-config-reloader-cpu-request` and `-config-reloader-cpu-limit` CLI arguments of the Prometheus operator.
+
+* [CHANGE] Decrease the default CPU requests for the config-reloader container from `100m` to `10m`. #5539
+* [FEATURE] Add `spec.alertmanagerConfiguration.global.PagerdutyURL` to the `Alertmanager` CRD. #5469
+* [FEATURE] Add `spec.volumeMounts` to the `ThanosRuler` CRD. #5541
+* [FEATURE] Add `spec.remoteWrite.sendNativeHistograms` to `Prometheus` and `PrometheusAgent` CRDs. #5564
+* [FEATURE] Add `spec.tracingConfig` to `Prometheus` and `PrometheusAgent` CRDs. #5591 #5640
+* [FEATURE] Add `followRedirects` field to the `RemoteRead` configuration. #5612
+* [FEATURE] Add `spec.automountServiceAccountToken` to the `Alertmanager` CRD. #5474
+* [FEATURE] Support `keep_firing_for` fields for `PrometheusRule` CRD. #5651
+* [FEATURE] Allow to add custom annotations to all resources managed by the operator. #5626
+* [FEATURE] Add `BasicAuth` and `Authorization` support to `ScrapeConfig` CRD. #5642
+* [ENHANCEMENT] Add `-kubelet-selector` CLI argument to filter the Kubernetes nodes by labels. #5641
+* [BUGFIX] Fix bug with logs that don't end with new line(`\n`) characters. #5566
+* [BUGFIX] Fix Prometheus and Alertmanager not picking up the web server's certificate after renewal. #5535
+* [BUGFIX] Fix config-reloader not handling SIGTERM signal. #5617
+* [BUGFIX] Fix Thanos volume name when using VolumeClaimTemplate in `Prometheus` CRD. #5596
+* [BUGFIX] Fix WAL Compression configuration for `PrometheusAgent` CRD. #5625
+* [BUGFIX] Fix DNS name resolution for individual ThanosRuler pods. #5632
+
 ## 0.65.2 / 2023-05-31
 
 * [BUGFIX] Fix relabeling issue in `ScrapeConfig` CRD. #5611
