@@ -106,7 +106,14 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.</p>
+<p>PodMetadata configures Labels and Annotations which are propagated to the Alertmanager pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;alertmanager&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Alertmanager version.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;alertmanager&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -1338,7 +1345,16 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -3238,7 +3254,13 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.</p>
+<p>PodMetadata contains Labels and Annotations gets propagated to the ThanosRuler pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;thanos-ruler&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;thanos-ruler&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -4443,7 +4465,14 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.</p>
+<p>PodMetadata configures Labels and Annotations which are propagated to the Alertmanager pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;alertmanager&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Alertmanager version.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;alertmanager&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -5545,7 +5574,16 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -9305,7 +9343,16 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -12985,7 +13032,13 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.</p>
+<p>PodMetadata contains Labels and Annotations gets propagated to the ThanosRuler pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;thanos-ruler&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;thanos-ruler&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -14613,7 +14666,16 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -18282,7 +18344,16 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
+out of which, the following are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
