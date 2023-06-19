@@ -78,8 +78,8 @@ type Config struct {
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
 	Namespaces             operator.Namespaces
-	Annotations            operator.Annotations
-	Labels                 operator.Labels
+	Annotations            operator.Map
+	Labels                 operator.Map
 	LocalHost              string
 	LogLevel               string
 	LogFormat              string

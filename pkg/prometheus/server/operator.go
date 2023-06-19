@@ -622,7 +622,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
-			Annotations: c.config.Annotations.AnnotationsMap,
+			Annotations: c.config.Annotations,
 			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app":                      "kubelet",
 				"app.kubernetes.io/name":       "kubelet",
@@ -1690,7 +1690,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-	secretAnnotations := c.config.Annotations.AnnotationsMap
+	secretAnnotations := c.config.Annotations
 	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
