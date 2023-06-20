@@ -269,8 +269,10 @@ type DiscordConfig struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIURL v1.SecretKeySelector `json:"apiURL"`
+	// The template of the message's title.
 	// +optional
 	Title *string `json:"title,omitempty"`
+	// The template of the message's body.
 	// +optional
 	Message *string `json:"message,omitempty"`
 
