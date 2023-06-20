@@ -1,7 +1,5 @@
 # See https://kind.sigs.k8s.io/docs/user/configuration/
-# This allows starting a kind cluster with specific feature gates enabled
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: kind
-featureGates:
-  "StatefulSetMinReadySeconds": true
+

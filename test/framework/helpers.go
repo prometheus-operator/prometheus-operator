@@ -94,7 +94,7 @@ func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, time
 		for _, p := range pl.Items {
 			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
 			if err != nil {
-				return false, err
+				return false, nil
 			}
 
 			if isRunningAndReady {
