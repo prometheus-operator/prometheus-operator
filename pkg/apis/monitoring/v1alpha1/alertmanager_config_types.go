@@ -268,7 +268,7 @@ type DiscordConfig struct {
 	// The secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
+	APIURL v1.SecretKeySelector `json:"apiURL"`
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// +optional
