@@ -434,12 +434,32 @@ func run() int {
 		}
 	}
 
-	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
+	promRuleMutationTiggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_mutation_triggered_total",
+		Help: "Number of times a prometheusRule object triggered mutation",
+	})
+
+	promRuleMutationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_mutation_errors_total",
+		Help: "Number of errors that occurred while mutating a prometheusRules object",
+	})
+
+	promValidationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_prometheus_validation_triggered_total",
+		Help: "Number of times a prometheus object triggered validation",
+	})
+
+	promValidationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_prometheus_validation_errors_total",
+		Help: "Number of errors that occurred while validating a prometheus object",
+	})
+
+	promRuleValidationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
 		Help: "DEPRECATED, removed in v0.57.0: Number of times a prometheusRule object triggered validation",
 	})
 
-	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
+	promRuleValidationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_errors_total",
 		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a prometheusRules object",
 	})
@@ -457,16 +477,24 @@ func run() int {
 	r.MustRegister(
 		collectors.NewGoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		validationTriggeredCounter,
-		validationErrorsCounter,
+		promRuleMutationTiggeredCounter,
+		promRuleMutationErrorsCounter,
+		promValidationTriggeredCounter,
+		promValidationErrorsCounter,
+		promRuleValidationTriggeredCounter,
+		promRuleValidationErrorsCounter,
 		alertManagerConfigValidationTriggered,
 		alertManagerConfigValidationError,
 		version.NewCollector("prometheus_operator"),
 	)
 
 	admit.RegisterMetrics(
-		validationTriggeredCounter,
-		validationErrorsCounter,
+		promRuleMutationTiggeredCounter,
+		promRuleMutationErrorsCounter,
+		promValidationTriggeredCounter,
+		promValidationErrorsCounter,
+		promRuleValidationTriggeredCounter,
+		promRuleValidationErrorsCounter,
 		alertManagerConfigValidationTriggered,
 		alertManagerConfigValidationError,
 	)

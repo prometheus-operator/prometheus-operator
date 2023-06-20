@@ -24,6 +24,7 @@ const (
 	PrometheusRuleKind    = "PrometheusRule"
 	PrometheusRuleName    = "prometheusrules"
 	PrometheusRuleKindKey = "prometheusrule"
+	PrometheusKind        = "Prometheus"
 )
 
 // +genclient

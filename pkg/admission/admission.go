@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
@@ -43,15 +44,17 @@ const (
 	addAdditionalAnnotationPatch = `{ "op": "add", "path": "/metadata/annotations/prometheus-operator-validated", "value": "true" }`
 	errUnmarshalAdmission        = "Cannot unmarshal admission request"
 	errUnmarshalRules            = "Cannot unmarshal rules from spec"
-	errUnmarshalConfig           = "Cannot unmarhsal config from spec"
 
-	group                  = "monitoring.coreos.com"
+	group = "monitoring.coreos.com"
+
 	prometheusRuleResource = monitoringv1.PrometheusRuleName
-	prometheusRuleVersion  = monitoringv1.Version
 
 	alertManagerConfigResource = monitoringv1beta1.AlertmanagerConfigName
 	alertManagerConfigKind     = monitoringv1beta1.AlertmanagerConfigKind
+	prometheusRuleKind         = monitoringv1.PrometheusRuleKind
+	prometheusKind             = monitoringv1.PrometheusKind
 
+	prometheusValidatePath         = "/admission-prometheus/validate"
 	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
 	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"
 	alertmanagerConfigValidatePath = "/admission-alertmanagerconfigs/validate"
@@ -59,23 +62,15 @@ const (
 )
 
 var (
-	deserializer      = kscheme.Codecs.UniversalDeserializer()
-	prometheusRuleGVR = metav1.GroupVersionResource{
-		Group:    group,
-		Version:  prometheusRuleVersion,
-		Resource: prometheusRuleResource,
-	}
-	alertManagerConfigGR = metav1.GroupResource{
-		Group:    group,
-		Resource: alertManagerConfigResource,
-	}
+	deserializer = kscheme.Codecs.UniversalDeserializer()
 )
 
-// Admission control for:
-// 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Promethues
-// 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring
 type Admission struct {
+	promRuleMutationTriggeredCounter   prometheus.Counter
+	promRuleMutationErrorsCounter      prometheus.Counter
+	promValidationErrorsCounter        prometheus.Counter
 	promRuleValidationErrorsCounter    prometheus.Counter
+	promValidationTriggeredCounter     prometheus.Counter
 	promRuleValidationTriggeredCounter prometheus.Counter
 	amConfValidationErrorsCounter      prometheus.Counter
 	amConfValidationTriggeredCounter   prometheus.Counter
@@ -85,6 +80,10 @@ type Admission struct {
 
 func New(logger log.Logger) *Admission {
 	scheme := runtime.NewScheme()
+
+	if err := monitoringv1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
 
 	if err := monitoringv1alpha1.AddToScheme(scheme); err != nil {
 		panic(err)
@@ -101,6 +100,7 @@ func New(logger log.Logger) *Admission {
 }
 
 func (a *Admission) Register(mux *http.ServeMux) {
+	mux.HandleFunc(prometheusValidatePath, a.servePrometheusValidate)
 	mux.HandleFunc(prometheusRuleValidatePath, a.servePrometheusRulesValidate)
 	mux.HandleFunc(prometheusRuleMutatePath, a.servePrometheusRulesMutate)
 	mux.HandleFunc(alertmanagerConfigValidatePath, a.serveAlertmanagerConfigValidate)
@@ -108,13 +108,21 @@ func (a *Admission) Register(mux *http.ServeMux) {
 }
 
 func (a *Admission) RegisterMetrics(
+	prometheusRuleMutationTriggeredCounter,
+	prometheusRuleMutationErrorsCounter,
 	prometheusValidationTriggeredCounter,
 	prometheusValidationErrorsCounter,
+	prometheusRuleValidationTriggeredCounter,
+	prometheusRuleValidationErrorsCounter,
 	alertManagerConfValidationTriggeredCounter,
 	alertManagerConfValidationErrorsCounter prometheus.Counter,
 ) {
-	a.promRuleValidationTriggeredCounter = prometheusValidationTriggeredCounter
-	a.promRuleValidationErrorsCounter = prometheusValidationErrorsCounter
+	a.promRuleMutationTriggeredCounter = prometheusRuleMutationTriggeredCounter
+	a.promRuleMutationErrorsCounter = prometheusRuleMutationErrorsCounter
+	a.promValidationTriggeredCounter = prometheusValidationTriggeredCounter
+	a.promValidationErrorsCounter = prometheusValidationErrorsCounter
+	a.promRuleValidationTriggeredCounter = prometheusRuleValidationTriggeredCounter
+	a.promRuleValidationErrorsCounter = prometheusRuleValidationErrorsCounter
 	a.amConfValidationTriggeredCounter = alertManagerConfValidationTriggeredCounter
 	a.amConfValidationErrorsCounter = alertManagerConfValidationErrorsCounter
 }
@@ -123,6 +131,10 @@ type admitFunc func(ar v1.AdmissionReview) *v1.AdmissionResponse
 
 func (a *Admission) servePrometheusRulesMutate(w http.ResponseWriter, r *http.Request) {
 	a.serveAdmission(w, r, a.mutatePrometheusRules)
+}
+
+func (a *Admission) servePrometheusValidate(w http.ResponseWriter, r *http.Request) {
+	a.serveAdmission(w, r, a.validatePrometheus)
 }
 
 func (a *Admission) servePrometheusRulesValidate(w http.ResponseWriter, r *http.Request) {
@@ -208,21 +220,22 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 }
 
 func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	level.Debug(a.logger).Log("msg", "Mutating prometheusrules")
-
-	if ar.Request.Resource != prometheusRuleGVR {
-		err := fmt.Errorf("expected resource to be %v, but received %v", prometheusRuleResource, ar.Request.Resource)
-		level.Warn(a.logger).Log("err", err)
-		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []error{err})
+	promRule, res := a.unmarshalResource(ar,
+		&PrometheusRules{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       prometheusRuleKind,
+				APIVersion: monitoringv1.SchemeGroupVersion.String(),
+			},
+		},
+		a.promRuleMutationTriggeredCounter,
+		a.promRuleMutationErrorsCounter,
+		false)
+	if res != nil {
+		return res
 	}
+	typedPromRule := promRule.(*PrometheusRules)
 
-	rule := &PrometheusRules{}
-	if err := json.Unmarshal(ar.Request.Object.Raw, rule); err != nil {
-		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
-		return toAdmissionResponseFailure(errUnmarshalAdmission, prometheusRuleResource, []error{err})
-	}
-
-	patches, err := generatePatchesForNonStringLabelsAnnotations(rule.Spec.Raw)
+	patches, err := generatePatchesForNonStringLabelsAnnotations(typedPromRule.Spec.Raw)
 	if err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
@@ -230,7 +243,7 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 
 	reviewResponse := &v1.AdmissionResponse{Allowed: true}
 
-	if len(rule.Annotations) == 0 {
+	if len(typedPromRule.Annotations) == 0 {
 		patches = append(patches, addFirstAnnotationPatch)
 	} else {
 		patches = append(patches, addAdditionalAnnotationPatch)
@@ -241,28 +254,70 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 	return reviewResponse
 }
 
+func (a *Admission) validatePrometheus(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	prom, res := a.unmarshalResource(ar,
+		&monitoringv1.Prometheus{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       prometheusKind,
+				APIVersion: monitoringv1.SchemeGroupVersion.String(),
+			},
+		},
+		a.promValidationTriggeredCounter,
+		a.promValidationErrorsCounter,
+		false)
+	if res != nil {
+		return res
+	}
+	typedProm := prom.(*monitoringv1.Prometheus)
+
+	var fields [][2]string
+	{
+		if typedProm.Spec.BaseImage != "" {
+			fields = append(fields, [2]string{"spec.baseImage", "spec.image"})
+		}
+		if typedProm.Spec.Tag != "" {
+			fields = append(fields, [2]string{"spec.tag", "spec.image"})
+		}
+		if typedProm.Spec.SHA != "" {
+			fields = append(fields, [2]string{"spec.sha", "spec.image"})
+		}
+	}
+	if len(fields) != 0 {
+		var warnings []string
+		for _, field := range fields {
+			warnings = append(warnings, fmt.Sprintf("field %q is deprecated, field %q should be used instead", field[0], field[1]))
+		}
+		level.Info(a.logger).Log("msg", warnings)
+		a.incrementCounter(a.promValidationErrorsCounter)
+		return &v1.AdmissionResponse{
+			Allowed:  true,
+			Warnings: warnings,
+		}
+	}
+
+	return &v1.AdmissionResponse{Allowed: true}
+}
+
 func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	a.incrementCounter(a.promRuleValidationTriggeredCounter)
-	level.Debug(a.logger).Log("msg", "Validating prometheusrules")
-
-	if ar.Request.Resource != prometheusRuleGVR {
-		err := fmt.Errorf("expected resource to be %v, but received %v", prometheusRuleResource, ar.Request.Resource)
-		level.Warn(a.logger).Log("err", err)
-		a.incrementCounter(a.promRuleValidationErrorsCounter)
-		return toAdmissionResponseFailure("Unexpected resource kind", prometheusRuleResource, []error{err})
+	promRule, res := a.unmarshalResource(ar,
+		&monitoringv1.PrometheusRule{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       prometheusRuleKind,
+				APIVersion: monitoringv1.SchemeGroupVersion.String(),
+			},
+		},
+		a.promRuleValidationTriggeredCounter,
+		a.promRuleValidationErrorsCounter,
+		false)
+	if res != nil {
+		return res
 	}
+	typedPromRule := promRule.(*monitoringv1.PrometheusRule)
 
-	promRule := &monitoringv1.PrometheusRule{}
-	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
-		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
-		a.incrementCounter(a.promRuleValidationErrorsCounter)
-		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
-	}
-
-	errors := promoperator.ValidateRule(promRule.Spec)
+	errors := promoperator.ValidateRule(typedPromRule.Spec)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
-		level.Debug(a.logger).Log("msg", m, "content", promRule.Spec)
+		level.Debug(a.logger).Log("msg", m, "content", typedPromRule.Spec)
 		for _, err := range errors {
 			level.Info(a.logger).Log("msg", m, "err", err)
 		}
@@ -275,37 +330,37 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 }
 
 func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	a.incrementCounter(a.amConfValidationTriggeredCounter)
-	level.Debug(a.logger).Log("msg", "Validating alertmanagerconfigs")
-
-	gr := metav1.GroupResource{Group: ar.Request.Resource.Group, Resource: ar.Request.Resource.Resource}
-	if gr != alertManagerConfigGR {
-		err := fmt.Errorf("expected resource to be %v, but received %v", alertManagerConfigResource, ar.Request.Resource)
-		level.Warn(a.logger).Log("err", err)
-		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []error{err})
-	}
-
 	var amConf interface{}
 	switch ar.Request.Resource.Version {
 	case monitoringv1alpha1.Version:
-		amConf = &monitoringv1alpha1.AlertmanagerConfig{}
+		amConf = &monitoringv1alpha1.AlertmanagerConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       alertManagerConfigKind,
+				APIVersion: monitoringv1.SchemeGroupVersion.String(),
+			},
+		}
 	case monitoringv1beta1.Version:
-		amConf = &monitoringv1beta1.AlertmanagerConfig{}
+		amConf = &monitoringv1beta1.AlertmanagerConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       alertManagerConfigKind,
+				APIVersion: monitoringv1.SchemeGroupVersion.String(),
+			},
+		}
 	default:
 		err := fmt.Errorf("expected resource version to be 'v1alpha1' or 'v1beta1', but received %v", ar.Request.Resource.Version)
 		return toAdmissionResponseFailure("Unexpected resource version", alertManagerConfigResource, []error{err})
 	}
 
-	if err := json.Unmarshal(ar.Request.Object.Raw, amConf); err != nil {
-		level.Info(a.logger).Log("msg", errUnmarshalConfig, "err", err)
-		a.incrementCounter(a.amConfValidationErrorsCounter)
-		return toAdmissionResponseFailure(errUnmarshalConfig, alertManagerConfigResource, []error{err})
+	amConf, res := a.unmarshalResource(ar,
+		amConf,
+		a.amConfValidationTriggeredCounter,
+		a.amConfValidationErrorsCounter,
+		true)
+	if res != nil {
+		return res
 	}
 
-	var (
-		err error
-	)
+	var err error
 	switch ar.Request.Resource.Version {
 	case monitoringv1alpha1.Version:
 		err = validationv1alpha1.ValidateAlertmanagerConfig(amConf.(*monitoringv1alpha1.AlertmanagerConfig))
@@ -332,4 +387,68 @@ func (a *Admission) incrementCounter(counter prometheus.Counter) {
 	if counter != nil {
 		counter.Inc()
 	}
+}
+
+func (a *Admission) unmarshalResource(ar v1.AdmissionReview,
+	r interface{},
+	didTriggerCounter prometheus.Counter,
+	gotErrorCounter prometheus.Counter,
+	skipVersionCheck bool) (interface{}, *v1.AdmissionResponse) {
+
+	// Create a typed struct to unmarshal the received resource into.
+	typedResource := r
+
+	// Convert the received resource into an unstructured object to be able to work with it.
+	r, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
+	if err != nil {
+		level.Error(a.logger).Log("err", err)
+		a.incrementCounter(gotErrorCounter)
+		return nil, toAdmissionResponseFailure("Unexpected error", "", []error{err})
+	}
+	r = &unstructured.Unstructured{Object: r.(map[string]interface{})}
+	rUnstructured := r.(*unstructured.Unstructured)
+
+	// Tick the counter to indicate that we are commencing the procedure.
+	a.incrementCounter(didTriggerCounter)
+	level.Debug(a.logger).Log("msg", fmt.Sprintf("Triggered webhook for %s", rUnstructured.GetKind()))
+
+	// Check if the requests' resource is of the expected kind.
+	rGVK := rUnstructured.GroupVersionKind()
+	rGVKmeta := metav1.GroupVersionKind{
+		Group:   rGVK.Group,
+		Version: rGVK.Version,
+		Kind:    rGVK.Kind,
+	}
+	// ar.Request.Kind.Kind is the converted GVK after conversion of the original ar.Request.RequestKind.Kind GVK (if multiple
+	// versions of the same resource exist). For instance, in case of monitoringv1alpha1.AlertmanagerConfig, this will
+	// be upgraded to monitoringv1beta1.AlertmanagerConfig.
+	// Prefer GVK over GVR to avoid leaning on meta.UnsafeGuessKindToResource.
+	comparator := ar.Request.Kind.String() != rGVKmeta.String()
+	if skipVersionCheck {
+		rGKmeta := metav1.GroupKind{
+			Group: rGVK.Group,
+			Kind:  rGVK.Kind,
+		}
+		gk := metav1.GroupKind{
+			Group: ar.Request.Kind.Group,
+			Kind:  ar.Request.Kind.Kind,
+		}
+		comparator = gk.String() != rGKmeta.String()
+	}
+	if comparator {
+		err := fmt.Errorf("expected resource to be %s, but received %s", rGVKmeta.String(), ar.Request.Kind.String())
+		level.Error(a.logger).Log("err", err)
+		a.incrementCounter(gotErrorCounter)
+		return nil, toAdmissionResponseFailure("Unexpected resource kind", rGVKmeta.Kind, []error{err})
+	}
+
+	// Unmarshal the received resource into the typed struct.
+	err = json.Unmarshal(ar.Request.Object.Raw, typedResource)
+	if err != nil {
+		level.Error(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
+		a.incrementCounter(gotErrorCounter)
+		return nil, toAdmissionResponseFailure(errUnmarshalAdmission, rGVKmeta.Kind, []error{err})
+	}
+
+	return typedResource, nil
 }
