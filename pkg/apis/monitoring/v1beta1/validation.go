@@ -346,3 +346,12 @@ func parseRange(in string) (start, end string, err error) {
 	}
 	return parts[0], parts[1], nil
 }
+
+// Validate the URL
+func (u URL) Validate() error {
+	regex := regexp.MustCompile(`^https?://.+$`)
+	if !regex.MatchString(string(u)) {
+		return fmt.Errorf("invalid url: %s", u)
+	}
+	return nil
+}
