@@ -325,7 +325,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 
 func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
 	return WebexConfig{
-		APIURL:       (*URL)(in.APIURL),
+		APIURL:       in.APIURL,
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		Message:      in.Message,
 		RoomID:       in.RoomID,

@@ -3634,7 +3634,6 @@
                         properties: {
                           apiURL: {
                             description: 'The Webex Teams API URL i.e. https://webexapis.com/v1/messages',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           httpConfig: {

@@ -572,7 +572,7 @@ type HTTPConfig struct {
 type WebexConfig struct {
 	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
 	// +optional
-	APIURL *URL `json:"apiURL,omitempty"`
+	APIURL *string `json:"apiURL,omitempty"`
 	// The HTTP client's configuration.
 	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
@@ -1098,7 +1098,3 @@ var monthsInv = map[int]Month{
 	11: November,
 	12: December,
 }
-
-// URL represents a valid URL
-// +kubebuilder:validation:Pattern=`^https?://.+$`
-type URL string

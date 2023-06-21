@@ -3592,12 +3592,11 @@ spec:
                         properties:
                           apiURL:
                             description: The Webex Teams API URL i.e. https://webexapis.com/v1/messages
-                            pattern: ^https?://.+$
                             type: string
                           httpConfig:
                             description: The HTTP client's configuration. You must
-                              supply the bot token via the `httpConfig.authorization`
-                              field.
+                              use this configuration to supply the bot token as part
+                              of the HTTP `Authorization` header.
                             properties:
                               authorization:
                                 description: Authorization header configuration for
@@ -3947,7 +3946,6 @@ spec:
                           roomID:
                             description: ID of the Webex Teams room where to send
                               the messages.
-                            minLength: 1
                             type: string
                           sendResolved:
                             description: Whether to notify about resolved alerts.

@@ -16,14 +16,10 @@
 
 package v1alpha1
 
-import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-)
-
 // WebexConfigApplyConfiguration represents an declarative configuration of the WebexConfig type for use
 // with apply.
 type WebexConfigApplyConfiguration struct {
-	APIURL       *v1alpha1.URL                 `json:"apiURL,omitempty"`
+	APIURL       *string                       `json:"apiURL,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 	Message      *string                       `json:"message,omitempty"`
 	RoomID       *string                       `json:"roomID,omitempty"`
@@ -39,7 +35,7 @@ func WebexConfig() *WebexConfigApplyConfiguration {
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *WebexConfigApplyConfiguration) WithAPIURL(value v1alpha1.URL) *WebexConfigApplyConfiguration {
+func (b *WebexConfigApplyConfiguration) WithAPIURL(value string) *WebexConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
