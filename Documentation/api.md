@@ -19520,6 +19520,14 @@ Time
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.URL">URL
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+</p>
+<div>
+<p>URL represents a valid URL</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig
 </h3>
 <p>
@@ -19839,7 +19847,9 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_con
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -19858,7 +19868,7 @@ HTTPConfig
 </td>
 <td>
 <p>The HTTP client&rsquo;s configuration.
-You must use this configuration to supply the bot token as part of the HTTP <code>Authorization</code> header.</p>
+You must supply the bot token via the <code>httpConfig.authorization</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -22936,6 +22946,14 @@ Time
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1beta1.URL">URL
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+</p>
+<div>
+<p>URL represents a valid URL</p>
+</div>
 <h3 id="monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig
 </h3>
 <p>
@@ -23255,7 +23273,9 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_con
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
