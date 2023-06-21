@@ -586,6 +586,7 @@ type WebexConfig struct {
 	// +optional
 	Message *string `json:"message,omitempty"`
 	// ID of the Webex Teams room where to send the messages.
+	// +kubebuilder:validation:MinLength=1
 	RoomID string `json:"roomID"`
 	// Whether to notify about resolved alerts.
 	// +optional
