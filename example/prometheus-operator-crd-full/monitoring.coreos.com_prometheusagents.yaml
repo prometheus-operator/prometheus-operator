@@ -955,11 +955,12 @@ spec:
                   and use the Pod''s CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.'
                 properties:
                   authorization:
-                    description: Authorization section for accessing apiserver
+                    description: "Authorization section for the API server. \n Cannot
+                      be set at the same time as `basicAuth`, `bearerToken`, or `bearerTokenFile`."
                     properties:
                       credentials:
-                        description: The secret's key that contains the credentials
-                          of the request
+                        description: Selects a key of a Secret in the namespace that
+                          contains the credentials for authentication.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -979,16 +980,18 @@ spec:
                         x-kubernetes-map-type: atomic
                       credentialsFile:
                         description: File to read a secret from, mutually exclusive
-                          with Credentials (from SafeAuthorization)
+                          with `credentials`.
                         type: string
                       type:
-                        description: Set the authentication type. Defaults to Bearer,
-                          Basic will cause an error
+                        description: "Defines the authentication type. The value is
+                          case-insensitive. \n \"Basic\" is not a supported value.
+                          \n Default: \"Bearer\""
                         type: string
                     type: object
                   basicAuth:
-                    description: BasicAuth allow an endpoint to authenticate over
-                      basic authentication
+                    description: "BasicAuth configuration for the API server. \n Cannot
+                      be set at the same time as `authorization`, `bearerToken`, or
+                      `bearerTokenFile`."
                     properties:
                       password:
                         description: The secret in the service monitor namespace that
@@ -1032,17 +1035,22 @@ spec:
                         x-kubernetes-map-type: atomic
                     type: object
                   bearerToken:
-                    description: Bearer token for accessing apiserver.
+                    description: "*Warning: this field shouldn't be used because the
+                      token value appears in clear-text. Prefer using `authorization`.*
+                      \n *Deprecated: this will be removed in a future release.*"
                     type: string
                   bearerTokenFile:
-                    description: File to read bearer token for accessing apiserver.
+                    description: "File to read bearer token for accessing apiserver.
+                      \n Cannot be set at the same time as `basicAuth`, `authorization`,
+                      or `bearerToken`. \n *Deprecated: this will be removed in a
+                      future release. Prefer using `authorization`.*"
                     type: string
                   host:
-                    description: Host of apiserver. A valid string consisting of a
-                      hostname or IP followed by an optional port number
+                    description: Kubernetes API address consisting of a hostname or
+                      IP address followed by an optional port number.
                     type: string
                   tlsConfig:
-                    description: TLS Config to use for accessing apiserver.
+                    description: TLS Config to use for the API server.
                     properties:
                       ca:
                         description: Certificate authority used when verifying server
@@ -4272,8 +4280,8 @@ spec:
                         `sigv4`, `basicAuth`, or `oauth2`."
                       properties:
                         credentials:
-                          description: The secret's key that contains the credentials
-                            of the request
+                          description: Selects a key of a Secret in the namespace
+                            that contains the credentials for authentication.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4293,11 +4301,12 @@ spec:
                           x-kubernetes-map-type: atomic
                         credentialsFile:
                           description: File to read a secret from, mutually exclusive
-                            with Credentials (from SafeAuthorization)
+                            with `credentials`.
                           type: string
                         type:
-                          description: Set the authentication type. Defaults to Bearer,
-                            Basic will cause an error
+                          description: "Defines the authentication type. The value
+                            is case-insensitive. \n \"Basic\" is not a supported value.
+                            \n Default: \"Bearer\""
                           type: string
                       type: object
                     basicAuth:
@@ -4346,8 +4355,8 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     bearerToken:
-                      description: "*Warning: this field shouldn't used because the
-                        token value appears in clear-text. Prefer using `authorization`.*
+                      description: "*Warning: this field shouldn't be used because
+                        the token value appears in clear-text. Prefer using `authorization`.*
                         \n *Deprecated: this will be removed in a future release.*"
                       type: string
                     bearerTokenFile:
@@ -4368,12 +4377,12 @@ spec:
                         metadata to the remote storage.
                       properties:
                         send:
-                          description: Whether metric metadata is sent to the remote
-                            storage or not.
+                          description: Defines whether metric metadata is sent to
+                            the remote storage or not.
                           type: boolean
                         sendInterval:
-                          description: How frequently metric metadata is sent to the
-                            remote storage.
+                          description: Defines how frequently metric metadata is sent
+                            to the remote storage.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                       type: object
@@ -4724,16 +4733,16 @@ spec:
                     writeRelabelConfigs:
                       description: The list of remote write relabel configurations.
                       items:
-                        description: 'RelabelConfig allows dynamic rewriting of the
-                          label set, being applied to samples before ingestion. It
-                          defines `<metric_relabel_configs>`-section of Prometheus
-                          configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
+                        description: "RelabelConfig allows dynamic rewriting of the
+                          label set for targets, alerts, scraped samples and remote
+                          write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
                         properties:
                           action:
                             default: replace
-                            description: Action to perform based on regex matching.
-                              Default is 'replace'. uppercase and lowercase actions
-                              require Prometheus >= 2.36.
+                            description: "Action to perform based on the regex matching.
+                              \n `Uppercase` and `Lowercase` actions require Prometheus
+                              >= v2.36.0. `DropEqual` and `KeepEqual` actions require
+                              Prometheus >= v2.41.0. \n Default: \"Replace\""
                             enum:
                             - replace
                             - Replace
@@ -4759,28 +4768,29 @@ spec:
                             - DropEqual
                             type: string
                           modulus:
-                            description: Modulus to take of the hash of the source
-                              label values.
+                            description: "Modulus to take of the hash of the source
+                              label values. \n Only applicable when the action is
+                              `HashMod`."
                             format: int64
                             type: integer
                           regex:
                             description: Regular expression against which the extracted
-                              value is matched. Default is '(.*)'
+                              value is matched.
                             type: string
                           replacement:
-                            description: Replacement value against which a regex replace
-                              is performed if the regular expression matches. Regex
-                              capture groups are available. Default is '$1'
+                            description: "Replacement value against which a Replace
+                              action is performed if the regular expression matches.
+                              \n Regex capture groups are available."
                             type: string
                           separator:
-                            description: Separator placed between concatenated source
-                              label values. default is ';'.
+                            description: Separator is the string between concatenated
+                              SourceLabels.
                             type: string
                           sourceLabels:
                             description: The source labels select values from existing
                               labels. Their content is concatenated using the configured
-                              separator and matched against the configured regular
-                              expression for the replace, keep, and drop actions.
+                              Separator and matched against the configured regular
+                              expression.
                             items:
                               description: LabelName is a valid Prometheus label name
                                 which may only contain ASCII letters, numbers, as
@@ -4789,9 +4799,10 @@ spec:
                               type: string
                             type: array
                           targetLabel:
-                            description: Label to which the resulting value is written
-                              in a replace action. It is mandatory for replace actions.
-                              Regex capture groups are available.
+                            description: "Label to which the resulting string is written
+                              in a replacement. \n It is mandatory for `Replace`,
+                              `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
+                              `DropEqual` actions. \n Regex capture groups are available."
                             type: string
                         type: object
                       type: array

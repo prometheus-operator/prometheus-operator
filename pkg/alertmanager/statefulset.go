@@ -182,7 +182,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        governingServiceName,
-			Annotations: config.Annotations.AnnotationsMap,
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-alertmanager": "true",
 			}),

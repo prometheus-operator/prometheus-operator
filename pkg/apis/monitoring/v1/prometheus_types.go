@@ -1104,8 +1104,8 @@ type RemoteWriteSpec struct {
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
-	// *Warning: this field shouldn't used because the token value appears in
-	// clear-text. Prefer using `authorization`.*
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
 	//
 	// *Deprecated: this will be removed in a future release.*
 	BearerToken string `json:"bearerToken,omitempty"`
@@ -1219,7 +1219,7 @@ type RemoteReadSpec struct {
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// File from which to read bearer token for the URL.
+	// File from which to read the bearer token for the URL.
 	//
 	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
@@ -1232,8 +1232,8 @@ type RemoteReadSpec struct {
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
 
-	// *Warning: this field shouldn't used because the token value appears in
-	// clear-text. Prefer using `authorization`.*
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
 	//
 	// *Deprecated: this will be removed in a future release.*
 	BearerToken string `json:"bearerToken,omitempty"`
@@ -1260,109 +1260,194 @@ type RemoteReadSpec struct {
 	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`
 }
 
-// RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
-// It defines `<metric_relabel_configs>`-section of Prometheus configuration.
-// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+// RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+// scraped samples and remote write samples.
+//
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+//
 // +k8s:openapi-gen=true
 type RelabelConfig struct {
-	// The source labels select values from existing labels. Their content is concatenated
-	// using the configured separator and matched against the configured regular expression
-	// for the replace, keep, and drop actions.
+	// The source labels select values from existing labels. Their content is
+	// concatenated using the configured Separator and matched against the
+	// configured regular expression.
+	//
+	// +optional
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
-	// Separator placed between concatenated source label values. default is ';'.
+
+	// Separator is the string between concatenated SourceLabels.
 	Separator string `json:"separator,omitempty"`
-	// Label to which the resulting value is written in a replace action.
-	// It is mandatory for replace actions. Regex capture groups are available.
+
+	// Label to which the resulting string is written in a replacement.
+	//
+	// It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
+	// `KeepEqual` and `DropEqual` actions.
+	//
+	// Regex capture groups are available.
 	TargetLabel string `json:"targetLabel,omitempty"`
-	// Regular expression against which the extracted value is matched. Default is '(.*)'
+
+	// Regular expression against which the extracted value is matched.
 	Regex string `json:"regex,omitempty"`
+
 	// Modulus to take of the hash of the source label values.
+	//
+	// Only applicable when the action is `HashMod`.
 	Modulus uint64 `json:"modulus,omitempty"`
-	// Replacement value against which a regex replace is performed if the
-	// regular expression matches. Regex capture groups are available. Default is '$1'
+
+	// Replacement value against which a Replace action is performed if the
+	// regular expression matches.
+	//
+	// Regex capture groups are available.
 	Replacement string `json:"replacement,omitempty"`
-	//Action to perform based on regex matching. Default is 'replace'.
-	//uppercase and lowercase actions require Prometheus >= 2.36.
-	//+kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
-	//+kubebuilder:default=replace
+
+	// Action to perform based on the regex matching.
+	//
+	// `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
+	// `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
+	//
+	// Default: "Replace"
+	//
+	// +kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
+	// +kubebuilder:default=replace
 	Action string `json:"action,omitempty"`
 }
 
-// APIServerConfig defines a host and auth methods to access apiserver.
+// APIServerConfig defines how the Prometheus server connects to the Kubernetes API server.
+//
 // More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+//
 // +k8s:openapi-gen=true
 type APIServerConfig struct {
-	// Host of apiserver.
-	// A valid string consisting of a hostname or IP followed by an optional port number
+	// Kubernetes API address consisting of a hostname or IP address followed
+	// by an optional port number.
 	Host string `json:"host"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
+
+	// BasicAuth configuration for the API server.
+	//
+	// Cannot be set at the same time as `authorization`, `bearerToken`, or
+	// `bearerTokenFile`.
+	//
+	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// Bearer token for accessing apiserver.
-	BearerToken string `json:"bearerToken,omitempty"`
+
 	// File to read bearer token for accessing apiserver.
+	//
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`.
+	//
+	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-	// TLS Config to use for accessing apiserver.
+
+	// TLS Config to use for the API server.
+	//
+	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// Authorization section for accessing apiserver
+
+	// Authorization section for the API server.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerToken`, or
+	// `bearerTokenFile`.
+	//
+	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
+
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
+	//
+	// *Deprecated: this will be removed in a future release.*
+	BearerToken string `json:"bearerToken,omitempty"`
 }
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
-// containing alertmanager IPs to fire alerts against.
+// containing Alertmanager IPs to fire alerts against.
 // +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
-	// Namespace of Endpoints object.
+	// Namespace of the Endpoints object.
 	Namespace string `json:"namespace"`
-	// Name of Endpoints object in Namespace.
+	// Name of the Endpoints object in the namespace.
 	Name string `json:"name"`
-	// Port the Alertmanager API is exposed on.
+
+	// Port on which the Alertmanager API is exposed.
 	Port intstr.IntOrString `json:"port"`
+
 	// Scheme to use when firing alerts.
 	Scheme string `json:"scheme,omitempty"`
+
 	// Prefix for the HTTP path alerts are pushed to.
 	PathPrefix string `json:"pathPrefix,omitempty"`
-	// TLS Config to use for alertmanager connection.
+
+	// TLS Config to use for Alertmanager.
+	//
+	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
+
+	// BasicAuth configuration for Alertmanager.
+	//
+	// Cannot be set at the same time as `bearerTokenFile`, or `authorization`.
+	//
+	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// BearerTokenFile to read from filesystem to use when authenticating to
-	// Alertmanager.
+
+	// File to read bearer token for Alertmanager.
+	//
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	//
+	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-	// Authorization section for this alertmanager endpoint
+
+	// Authorization section for Alertmanager.
+	//
+	// Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`.
+	//
+	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// Version of the Alertmanager API that Prometheus uses to send alerts. It
-	// can be "v1" or "v2".
+
+	// Version of the Alertmanager API that Prometheus uses to send alerts.
+	// It can be "v1" or "v2".
 	APIVersion string `json:"apiVersion,omitempty"`
+
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
+	//
+	// +optional
 	Timeout *Duration `json:"timeout,omitempty"`
+
 	// Whether to enable HTTP2.
+	//
+	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 }
 
-// /--rules.*/ command-line arguments
 // +k8s:openapi-gen=true
 type Rules struct {
+	// Defines the parameters of the Prometheus rules' engine.
+	//
+	// Any update to these parameters trigger a restart of the pods.
 	Alert RulesAlert `json:"alert,omitempty"`
 }
 
-// /--rules.alert.*/ command-line arguments
 // +k8s:openapi-gen=true
 type RulesAlert struct {
-	// Max time to tolerate prometheus outage for restoring 'for' state of alert.
+	// Max time to tolerate prometheus outage for restoring 'for' state of
+	// alert.
 	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
+
 	// Minimum duration between alert and restored 'for' state.
-	// This is maintained only for alerts with configured 'for' time greater than grace period.
+	//
+	// This is maintained only for alerts with a configured 'for' time greater
+	// than the grace period.
 	ForGracePeriod string `json:"forGracePeriod,omitempty"`
-	// Minimum amount of time to wait before resending an alert to Alertmanager.
+
+	// Minimum amount of time to wait before resending an alert to
+	// Alertmanager.
 	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
 // MetadataConfig configures the sending of series metadata to the remote storage.
+//
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
-	// Whether metric metadata is sent to the remote storage or not.
+	// Defines whether metric metadata is sent to the remote storage or not.
 	Send bool `json:"send,omitempty"`
-	// How frequently metric metadata is sent to the remote storage.
+
+	// Defines how frequently metric metadata is sent to the remote storage.
 	SendInterval Duration `json:"sendInterval,omitempty"`
 }
 
@@ -1383,30 +1468,45 @@ type ShardStatus struct {
 }
 
 type TSDBSpec struct {
-	// Configures how old an out-of-order/out-of-bounds sample can be w.r.t.
-	// the TSDB max time.
+	// Configures how old an out-of-order/out-of-bounds sample can be with
+	// respect to the TSDB max time.
+	//
 	// An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
 	// the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).
-	// Out of order ingestion is an experimental feature and requires
-	// Prometheus >= v2.39.0.
+	//
+	// Out of order ingestion is an experimental feature.
+	//
+	// It requires Prometheus >= v2.39.0.
 	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 type Exemplars struct {
 	// Maximum number of exemplars stored in memory for all series.
-	// If not set, Prometheus uses its default value.
-	// A value of zero or less than zero disables the storage.
+	//
+	// exemplar-storage itself must be enabled using the `spec.enableFeature`
+	// option for exemplars to be scraped in the first place.
+	//
+	// If not set, Prometheus uses its default value. A value of zero or less
+	// than zero disables the storage.
+	//
+	// +optional
 	MaxSize *int64 `json:"maxSize,omitempty"`
 }
 
 // SafeAuthorization specifies a subset of the Authorization struct, that is
-// safe for use in Endpoints (no CredentialsFile field)
+// safe for use because it doesn't provide access to the Prometheus container's
+// filesystem.
+//
 // +k8s:openapi-gen=true
 type SafeAuthorization struct {
-	// Set the authentication type. Defaults to Bearer, Basic will cause an
-	// error
+	// Defines the authentication type. The value is case-insensitive.
+	//
+	// "Basic" is not a supported value.
+	//
+	// Default: "Bearer"
 	Type string `json:"type,omitempty"`
-	// The secret's key that contains the credentials of the request
+
+	// Selects a key of a Secret in the namespace that contains the credentials for authentication.
 	Credentials *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
@@ -1425,11 +1525,10 @@ func (c *SafeAuthorization) Validate() error {
 	return nil
 }
 
-// Authorization contains optional `Authorization` header configuration.
-// This section is only understood by versions of Prometheus >= 2.26.0.
 type Authorization struct {
 	SafeAuthorization `json:",inline"`
-	// File to read a secret from, mutually exclusive with Credentials (from SafeAuthorization)
+
+	// File to read a secret from, mutually exclusive with `credentials`.
 	CredentialsFile string `json:"credentialsFile,omitempty"`
 }
 

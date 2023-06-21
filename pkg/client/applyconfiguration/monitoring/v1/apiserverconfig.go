@@ -21,10 +21,10 @@ package v1
 type APIServerConfigApplyConfiguration struct {
 	Host            *string                          `json:"host,omitempty"`
 	BasicAuth       *BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
-	BearerToken     *string                          `json:"bearerToken,omitempty"`
 	BearerTokenFile *string                          `json:"bearerTokenFile,omitempty"`
 	TLSConfig       *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Authorization   *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	BearerToken     *string                          `json:"bearerToken,omitempty"`
 }
 
 // APIServerConfigApplyConfiguration constructs an declarative configuration of the APIServerConfig type for use with
@@ -49,14 +49,6 @@ func (b *APIServerConfigApplyConfiguration) WithBasicAuth(value *BasicAuthApplyC
 	return b
 }
 
-// WithBearerToken sets the BearerToken field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BearerToken field is set to the value of the last call.
-func (b *APIServerConfigApplyConfiguration) WithBearerToken(value string) *APIServerConfigApplyConfiguration {
-	b.BearerToken = &value
-	return b
-}
-
 // WithBearerTokenFile sets the BearerTokenFile field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BearerTokenFile field is set to the value of the last call.
@@ -78,5 +70,13 @@ func (b *APIServerConfigApplyConfiguration) WithTLSConfig(value *TLSConfigApplyC
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *APIServerConfigApplyConfiguration) WithAuthorization(value *AuthorizationApplyConfiguration) *APIServerConfigApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithBearerToken sets the BearerToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BearerToken field is set to the value of the last call.
+func (b *APIServerConfigApplyConfiguration) WithBearerToken(value string) *APIServerConfigApplyConfiguration {
+	b.BearerToken = &value
 	return b
 }

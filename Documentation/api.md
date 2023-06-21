@@ -3763,8 +3763,8 @@ More info:
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>APIServerConfig defines a host and auth methods to access apiserver.
-More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
+<p>APIServerConfig defines how the Prometheus server connects to the Kubernetes API server.</p>
+<p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -3782,8 +3782,8 @@ string
 </em>
 </td>
 <td>
-<p>Host of apiserver.
-A valid string consisting of a hostname or IP followed by an optional port number</p>
+<p>Kubernetes API address consisting of a hostname or IP address followed
+by an optional port number.</p>
 </td>
 </tr>
 <tr>
@@ -3796,18 +3796,10 @@ BasicAuth
 </em>
 </td>
 <td>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerToken</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bearer token for accessing apiserver.</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for the API server.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerToken</code>, or
+<code>bearerTokenFile</code>.</p>
 </td>
 </tr>
 <tr>
@@ -3819,6 +3811,8 @@ string
 </td>
 <td>
 <p>File to read bearer token for accessing apiserver.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>bearerToken</code>.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -3831,7 +3825,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for accessing apiserver.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for the API server.</p>
 </td>
 </tr>
 <tr>
@@ -3844,7 +3839,23 @@ Authorization
 </em>
 </td>
 <td>
-<p>Authorization section for accessing apiserver</p>
+<em>(Optional)</em>
+<p>Authorization section for the API server.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerToken</code>, or
+<code>bearerTokenFile</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
+in clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
 </tbody>
@@ -3977,7 +3988,7 @@ AlertmanagerGlobalConfig
 </p>
 <div>
 <p>AlertmanagerEndpoints defines a selection of a single Endpoints object
-containing alertmanager IPs to fire alerts against.</p>
+containing Alertmanager IPs to fire alerts against.</p>
 </div>
 <table>
 <thead>
@@ -3995,7 +4006,7 @@ string
 </em>
 </td>
 <td>
-<p>Namespace of Endpoints object.</p>
+<p>Namespace of the Endpoints object.</p>
 </td>
 </tr>
 <tr>
@@ -4006,7 +4017,7 @@ string
 </em>
 </td>
 <td>
-<p>Name of Endpoints object in Namespace.</p>
+<p>Name of the Endpoints object in the namespace.</p>
 </td>
 </tr>
 <tr>
@@ -4019,7 +4030,7 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 </em>
 </td>
 <td>
-<p>Port the Alertmanager API is exposed on.</p>
+<p>Port on which the Alertmanager API is exposed.</p>
 </td>
 </tr>
 <tr>
@@ -4054,7 +4065,8 @@ TLSConfig
 </em>
 </td>
 <td>
-<p>TLS Config to use for alertmanager connection.</p>
+<em>(Optional)</em>
+<p>TLS Config to use for Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -4067,7 +4079,9 @@ BasicAuth
 </em>
 </td>
 <td>
-<p>BasicAuth allow an endpoint to authenticate over basic authentication</p>
+<em>(Optional)</em>
+<p>BasicAuth configuration for Alertmanager.</p>
+<p>Cannot be set at the same time as <code>bearerTokenFile</code>, or <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4078,8 +4092,9 @@ string
 </em>
 </td>
 <td>
-<p>BearerTokenFile to read from filesystem to use when authenticating to
-Alertmanager.</p>
+<p>File to read bearer token for Alertmanager.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
+<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 <tr>
@@ -4092,7 +4107,9 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>Authorization section for this alertmanager endpoint</p>
+<em>(Optional)</em>
+<p>Authorization section for Alertmanager.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>bearerTokenFile</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4103,8 +4120,8 @@ string
 </em>
 </td>
 <td>
-<p>Version of the Alertmanager API that Prometheus uses to send alerts. It
-can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.</p>
+<p>Version of the Alertmanager API that Prometheus uses to send alerts.
+It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -4117,6 +4134,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Timeout is a per-target Alertmanager timeout when pushing alerts.</p>
 </td>
 </tr>
@@ -4128,6 +4146,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
@@ -5174,8 +5193,6 @@ bool
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
 </p>
 <div>
-<p>Authorization contains optional <code>Authorization</code> header configuration.
-This section is only understood by versions of Prometheus &gt;= 2.26.0.</p>
 </div>
 <table>
 <thead>
@@ -5193,8 +5210,9 @@ string
 </em>
 </td>
 <td>
-<p>Set the authentication type. Defaults to Bearer, Basic will cause an
-error</p>
+<p>Defines the authentication type. The value is case-insensitive.</p>
+<p>&ldquo;Basic&rdquo; is not a supported value.</p>
+<p>Default: &ldquo;Bearer&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -5207,7 +5225,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the credentials of the request</p>
+<p>Selects a key of a Secret in the namespace that contains the credentials for authentication.</p>
 </td>
 </tr>
 <tr>
@@ -5218,7 +5236,7 @@ string
 </em>
 </td>
 <td>
-<p>File to read a secret from, mutually exclusive with Credentials (from SafeAuthorization)</p>
+<p>File to read a secret from, mutually exclusive with <code>credentials</code>.</p>
 </td>
 </tr>
 </tbody>
@@ -7124,9 +7142,12 @@ int64
 </em>
 </td>
 <td>
-<p>Maximum number of exemplars stored in memory for all series.
-If not set, Prometheus uses its default value.
-A value of zero or less than zero disables the storage.</p>
+<em>(Optional)</em>
+<p>Maximum number of exemplars stored in memory for all series.</p>
+<p>exemplar-storage itself must be enabled using the <code>spec.enableFeature</code>
+option for exemplars to be scraped in the first place.</p>
+<p>If not set, Prometheus uses its default value. A value of zero or less
+than zero disables the storage.</p>
 </td>
 </tr>
 </tbody>
@@ -7494,7 +7515,7 @@ bool
 </em>
 </td>
 <td>
-<p>Whether metric metadata is sent to the remote storage or not.</p>
+<p>Defines whether metric metadata is sent to the remote storage or not.</p>
 </td>
 </tr>
 <tr>
@@ -7507,7 +7528,7 @@ Duration
 </em>
 </td>
 <td>
-<p>How frequently metric metadata is sent to the remote storage.</p>
+<p>Defines how frequently metric metadata is sent to the remote storage.</p>
 </td>
 </tr>
 </tbody>
@@ -10792,9 +10813,9 @@ This is experimental feature and might change in the future.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
-It defines <code>&lt;metric_relabel_configs&gt;</code>-section of Prometheus configuration.
-More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs</a></p>
+<p>RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+scraped samples and remote write samples.</p>
+<p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
 </div>
 <table>
 <thead>
@@ -10814,9 +10835,10 @@ More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/c
 </em>
 </td>
 <td>
-<p>The source labels select values from existing labels. Their content is concatenated
-using the configured separator and matched against the configured regular expression
-for the replace, keep, and drop actions.</p>
+<em>(Optional)</em>
+<p>The source labels select values from existing labels. Their content is
+concatenated using the configured Separator and matched against the
+configured regular expression.</p>
 </td>
 </tr>
 <tr>
@@ -10827,7 +10849,7 @@ string
 </em>
 </td>
 <td>
-<p>Separator placed between concatenated source label values. default is &lsquo;;&rsquo;.</p>
+<p>Separator is the string between concatenated SourceLabels.</p>
 </td>
 </tr>
 <tr>
@@ -10838,8 +10860,10 @@ string
 </em>
 </td>
 <td>
-<p>Label to which the resulting value is written in a replace action.
-It is mandatory for replace actions. Regex capture groups are available.</p>
+<p>Label to which the resulting string is written in a replacement.</p>
+<p>It is mandatory for <code>Replace</code>, <code>HashMod</code>, <code>Lowercase</code>, <code>Uppercase</code>,
+<code>KeepEqual</code> and <code>DropEqual</code> actions.</p>
+<p>Regex capture groups are available.</p>
 </td>
 </tr>
 <tr>
@@ -10850,7 +10874,7 @@ string
 </em>
 </td>
 <td>
-<p>Regular expression against which the extracted value is matched. Default is &lsquo;(.*)&rsquo;</p>
+<p>Regular expression against which the extracted value is matched.</p>
 </td>
 </tr>
 <tr>
@@ -10862,6 +10886,7 @@ uint64
 </td>
 <td>
 <p>Modulus to take of the hash of the source label values.</p>
+<p>Only applicable when the action is <code>HashMod</code>.</p>
 </td>
 </tr>
 <tr>
@@ -10872,8 +10897,9 @@ string
 </em>
 </td>
 <td>
-<p>Replacement value against which a regex replace is performed if the
-regular expression matches. Regex capture groups are available. Default is &lsquo;$1&rsquo;</p>
+<p>Replacement value against which a Replace action is performed if the
+regular expression matches.</p>
+<p>Regex capture groups are available.</p>
 </td>
 </tr>
 <tr>
@@ -10884,8 +10910,10 @@ string
 </em>
 </td>
 <td>
-<p>Action to perform based on regex matching. Default is &lsquo;replace&rsquo;.
-uppercase and lowercase actions require Prometheus &gt;= 2.36.</p>
+<p>Action to perform based on the regex matching.</p>
+<p><code>Uppercase</code> and <code>Lowercase</code> actions require Prometheus &gt;= v2.36.0.
+<code>DropEqual</code> and <code>KeepEqual</code> actions require Prometheus &gt;= v2.41.0.</p>
+<p>Default: &ldquo;Replace&rdquo;</p>
 </td>
 </tr>
 </tbody>
@@ -11023,7 +11051,7 @@ string
 </em>
 </td>
 <td>
-<p>File from which to read bearer token for the URL.</p>
+<p>File from which to read the bearer token for the URL.</p>
 <p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
@@ -11051,8 +11079,8 @@ string
 </em>
 </td>
 <td>
-<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
-clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
+in clear-text. Prefer using <code>authorization</code>.</em></p>
 <p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
@@ -11303,8 +11331,8 @@ string
 </em>
 </td>
 <td>
-<p><em>Warning: this field shouldn&rsquo;t used because the token value appears in
-clear-text. Prefer using <code>authorization</code>.</em></p>
+<p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
+in clear-text. Prefer using <code>authorization</code>.</em></p>
 <p><em>Deprecated: this will be removed in a future release.</em></p>
 </td>
 </tr>
@@ -11560,7 +11588,6 @@ Limit is supported starting with Prometheus &gt;= 2.31 and Thanos Ruler &gt;= 0.
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
 </p>
 <div>
-<p>/&ndash;rules.*/ command-line arguments</p>
 </div>
 <table>
 <thead>
@@ -11580,6 +11607,8 @@ RulesAlert
 </em>
 </td>
 <td>
+<p>Defines the parameters of the Prometheus rules&rsquo; engine.</p>
+<p>Any update to these parameters trigger a restart of the pods.</p>
 </td>
 </tr>
 </tbody>
@@ -11590,7 +11619,6 @@ RulesAlert
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rules">Rules</a>)
 </p>
 <div>
-<p>/&ndash;rules.alert.*/ command-line arguments</p>
 </div>
 <table>
 <thead>
@@ -11608,7 +11636,8 @@ string
 </em>
 </td>
 <td>
-<p>Max time to tolerate prometheus outage for restoring &lsquo;for&rsquo; state of alert.</p>
+<p>Max time to tolerate prometheus outage for restoring &lsquo;for&rsquo; state of
+alert.</p>
 </td>
 </tr>
 <tr>
@@ -11619,8 +11648,9 @@ string
 </em>
 </td>
 <td>
-<p>Minimum duration between alert and restored &lsquo;for&rsquo; state.
-This is maintained only for alerts with configured &lsquo;for&rsquo; time greater than grace period.</p>
+<p>Minimum duration between alert and restored &lsquo;for&rsquo; state.</p>
+<p>This is maintained only for alerts with a configured &lsquo;for&rsquo; time greater
+than the grace period.</p>
 </td>
 </tr>
 <tr>
@@ -11631,7 +11661,8 @@ string
 </em>
 </td>
 <td>
-<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+<p>Minimum amount of time to wait before resending an alert to
+Alertmanager.</p>
 </td>
 </tr>
 </tbody>
@@ -11643,7 +11674,8 @@ string
 </p>
 <div>
 <p>SafeAuthorization specifies a subset of the Authorization struct, that is
-safe for use in Endpoints (no CredentialsFile field)</p>
+safe for use because it doesn&rsquo;t provide access to the Prometheus container&rsquo;s
+filesystem.</p>
 </div>
 <table>
 <thead>
@@ -11661,8 +11693,9 @@ string
 </em>
 </td>
 <td>
-<p>Set the authentication type. Defaults to Bearer, Basic will cause an
-error</p>
+<p>Defines the authentication type. The value is case-insensitive.</p>
+<p>&ldquo;Basic&rdquo; is not a supported value.</p>
+<p>Default: &ldquo;Bearer&rdquo;</p>
 </td>
 </tr>
 <tr>
@@ -11675,7 +11708,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>The secret&rsquo;s key that contains the credentials of the request</p>
+<p>Selects a key of a Secret in the namespace that contains the credentials for authentication.</p>
 </td>
 </tr>
 </tbody>
@@ -12399,12 +12432,12 @@ Duration
 </em>
 </td>
 <td>
-<p>Configures how old an out-of-order/out-of-bounds sample can be w.r.t.
-the TSDB max time.
-An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
-the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).
-Out of order ingestion is an experimental feature and requires
-Prometheus &gt;= v2.39.0.</p>
+<p>Configures how old an out-of-order/out-of-bounds sample can be with
+respect to the TSDB max time.</p>
+<p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
+the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
+<p>Out of order ingestion is an experimental feature.</p>
+<p>It requires Prometheus &gt;= v2.39.0.</p>
 </td>
 </tr>
 </tbody>
