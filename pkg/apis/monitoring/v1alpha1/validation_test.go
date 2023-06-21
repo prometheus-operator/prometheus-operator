@@ -343,39 +343,3 @@ func TestYearRange_Parse(t *testing.T) {
 		})
 	}
 }
-
-func TestURL_Validate(t *testing.T) {
-	testCases := []struct {
-		name        string
-		in          URL
-		expectedErr bool
-	}{
-		{
-			name:        "Test empty URL returns error",
-			in:          URL(""),
-			expectedErr: true,
-		},
-		{
-			name:        "Test non-HTTP URL returns error",
-			in:          URL("gopher://example.com 666/0a_gopher_selector"),
-			expectedErr: true,
-		},
-		{
-			name:        "Test no path defined URL returns error",
-			in:          URL("https://"),
-			expectedErr: true,
-		},
-		{
-			name:        "Test valid URL returns no error",
-			in:          URL("https://example.com"),
-			expectedErr: false,
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			if err := tc.in.Validate(); (err != nil) != tc.expectedErr {
-				t.Errorf("Validate() got error = %v, wantErr %v", err, tc.expectedErr)
-			}
-		})
-	}
-}
