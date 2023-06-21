@@ -580,7 +580,7 @@ type WebexConfig struct {
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 	// The HTTP client's configuration.
-	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
+	// You must supply the bot token via the `httpConfig.authorization` field.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// Message template
 	// +optional
