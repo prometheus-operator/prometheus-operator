@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/pointer"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -9181,6 +9182,327 @@ scrape_configs:
 						"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
 					},
 				},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedCfg, string(cfg))
+		})
+
+	}
+}
+
+func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"proxy-header": []byte("value"),
+				"token":        []byte("value"),
+			},
+		},
+	)
+	for _, tc := range []struct {
+		name        string
+		patchProm   func(*monitoringv1.Prometheus)
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		expectedCfg string
+	}{
+		{
+			name: "consul_scrape_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:       "localhost:8500",
+						Datacenter:   pointer.String("we1"),
+						Namespace:    pointer.String("observability"),
+						Partition:    pointer.String("1"),
+						Scheme:       pointer.String("https"),
+						Services:     []string{"prometheus", "alertmanager"},
+						Tags:         []string{"tag1"},
+						TagSeparator: pointer.String(";"),
+						NodeMeta: map[string]string{
+							"name": "node_name",
+						},
+						AllowStale:           pointer.Bool(false),
+						RefreshInterval:      (*monitoringv1.Duration)(pointer.String("30s")),
+						ProxyUrl:             pointer.String("http://no-proxy.com"),
+						NoProxy:              pointer.String("0.0.0.0"),
+						ProxyFromEnvironment: pointer.Bool(true),
+						ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							"header": {
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
+							},
+						},
+						FollowRedirects: pointer.Bool(true),
+						EnableHttp2:     pointer.Bool(true),
+						Token: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "token",
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  consul_sd_configs:
+  - server: localhost:8500
+    token: value
+    datacenter: we1
+    namespace: observability
+    partition: "1"
+    scheme: https
+    services:
+    - prometheus
+    - alertmanager
+    tags:
+    - tag1
+    tag_separator: ;
+    node_meta:
+      name: node_name
+    allow_stale: false
+    refresh_interval: 30s
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: true
+    proxy_connect_header:
+      header: value
+    follow_redirects: true
+    enable_http2: true
+`,
+		}, {
+			name: "consul_scrape_config_basic_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "localhost:8500",
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  consul_sd_configs:
+  - basic_auth:
+      username: consul-sd-bob
+      password: consul-sd-alice
+    server: localhost:8500
+`,
+		}, {
+			name: "consul_scrape_config_authorization",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "localhost:8500",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "credential",
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  consul_sd_configs:
+  - authorization:
+      type: Bearer
+      credentials: authorization
+    server: localhost:8500
+`,
+		}, {
+			name: "consul_scrape_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "localhost:8500",
+						Oauth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  consul_sd_configs:
+  - oauth2:
+      client_id: client-id
+      client_secret: client-secret
+      token_url: http://test.url
+      scopes:
+      - scope 1
+      - scope 2
+      endpoint_params:
+        param1: value1
+        param2: value2
+    server: localhost:8500
+`,
+		}, {
+			name: "consul_scrape_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "localhost:8500",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca-global",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  consul_sd_configs:
+  - tls_config:
+      insecure_skip_verify: false
+      ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
+      cert_file: /etc/prometheus/certs/secret_default_secret-cert_
+      key_file: /etc/prometheus/certs/secret_default_secret_key
+    server: localhost:8500
+`,
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
+				"scrapeconfig/default/testscrapeconfig1/consulsdconfig/0": {
+					Username: "consul-sd-bob",
+					Password: "consul-sd-alice",
+				},
+			}
+
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"scrapeconfig/default/testscrapeconfig1/consulsdconfig/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
+
+			store.TokenAssets = map[string]assets.Token{
+				"scrapeconfig/auth/default/testscrapeconfig1/consulsdconfig/0": assets.Token("authorization"),
+			}
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			if tc.patchProm != nil {
+				tc.patchProm(p)
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
 				nil,
 				nil,
 				nil,

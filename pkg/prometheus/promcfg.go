@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"regexp"
@@ -2295,7 +2296,171 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
-			Key:   "kubernetes_sd_configs",
+			Key: "kubernetes_sd_configs",
+		})
+	}
+	//ConsulSDConfig
+	if len(sc.Spec.ConsulSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
+		for i, config := range sc.Spec.ConsulSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.Oauth2, store.OAuth2Assets, fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i))
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "server",
+				Value: config.Server,
+			})
+
+			if config.Token != nil {
+				value, err := store.GetKey(context.Background(), sc.Namespace, monitoringv1.SecretOrConfigMap{
+					Secret: config.Token,
+				})
+
+				if err != nil {
+					level.Error(cg.logger).Log("failed to read %s secret %s", config.Token.Name, jobName)
+					continue
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "token",
+					Value: value,
+				})
+			}
+
+			if config.Datacenter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "datacenter",
+					Value: config.Datacenter,
+				})
+			}
+
+			if config.Namespace != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "namespace",
+					Value: config.Namespace,
+				})
+			}
+
+			if config.Partition != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "partition",
+					Value: config.Partition,
+				})
+			}
+
+			if config.Scheme != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "scheme",
+					Value: config.Scheme,
+				})
+			}
+
+			if len(config.Services) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "services",
+					Value: config.Services,
+				})
+			}
+
+			if len(config.Tags) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tags",
+					Value: config.Tags,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+
+			if len(config.NodeMeta) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "node_meta",
+					Value: config.NodeMeta,
+				})
+			}
+
+			if config.AllowStale != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "allow_stale",
+					Value: config.AllowStale,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.ProxyUrl != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "proxy_url",
+					Value: config.ProxyUrl,
+				})
+			}
+
+			if config.NoProxy != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "no_proxy",
+					Value: config.NoProxy,
+				})
+			}
+
+			if config.ProxyFromEnvironment != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "proxy_from_environment",
+					Value: config.ProxyFromEnvironment,
+				})
+			}
+
+			if config.ProxyConnectHeader != nil {
+				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
+
+				for k, v := range config.ProxyConnectHeader {
+					value, err := store.GetKey(context.Background(), sc.Namespace, monitoringv1.SecretOrConfigMap{
+						Secret: &v,
+					})
+
+					if err != nil {
+						level.Error(cg.logger).Log("failed to read %s secret %s", v.Name, jobName)
+						continue
+					}
+					proxyConnectHeader[k] = value
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "proxy_connect_header",
+					Value: proxyConnectHeader,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHttp2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHttp2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "consul_sd_configs",
 			Value: configs,
 		})
 	}
