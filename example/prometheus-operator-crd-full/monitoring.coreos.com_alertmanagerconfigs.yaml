@@ -3612,8 +3612,8 @@ spec:
                             type: string
                           httpConfig:
                             description: The HTTP client's configuration. You must
-                              use this configuration to supply the bot token as part
-                              of the HTTP `Authorization` header.
+                              supply the bot token via the `httpConfig.authorization`
+                              field.
                             properties:
                               authorization:
                                 description: Authorization header configuration for
@@ -3964,6 +3964,7 @@ spec:
                           roomID:
                             description: ID of the Webex Teams room where to send
                               the messages.
+                            minLength: 1
                             type: string
                           sendResolved:
                             description: Whether to notify about resolved alerts.

@@ -3783,7 +3783,7 @@
                                 "type": "string"
                               },
                               "httpConfig": {
-                                "description": "The HTTP client's configuration. You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.",
+                                "description": "The HTTP client's configuration. You must supply the bot token via the `httpConfig.authorization` field.",
                                 "properties": {
                                   "authorization": {
                                     "description": "Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
@@ -4143,6 +4143,7 @@
                               },
                               "roomID": {
                                 "description": "ID of the Webex Teams room where to send the messages.",
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "sendResolved": {
