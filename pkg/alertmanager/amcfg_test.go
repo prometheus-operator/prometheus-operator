@@ -2679,10 +2679,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						WebexConfigs: []*webexConfig{
 							{
-								APIURL: func() *string {
-									res := "http://example.com"
-									return &res
-								}(),
+								APIURL: "http://example.com",
 								RoomID: "foo",
 							},
 						},
@@ -2694,10 +2691,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						WebexConfigs: []*webexConfig{
 							{
-								APIURL: func() *string {
-									res := "http://example.com"
-									return &res
-								}(),
+								APIURL: "http://example.com",
 								RoomID: "foo",
 							},
 						},
@@ -2713,10 +2707,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						WebexConfigs: []*webexConfig{
 							{
-								APIURL: func() *string {
-									res := "http://example.com"
-									return &res
-								}(),
+								APIURL: "http://example.com",
 							},
 						},
 					},
@@ -2732,10 +2723,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						WebexConfigs: []*webexConfig{
 							{
-								APIURL: func() *string {
-									res := "http://example.com"
-									return &res
-								}(),
+								APIURL: "http://example.com",
 							},
 						},
 					},
