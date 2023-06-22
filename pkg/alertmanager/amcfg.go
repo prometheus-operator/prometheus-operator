@@ -685,8 +685,14 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoringv1alpha1.DiscordConfig, crKey types.NamespacedName) (*discordConfig, error) {
 	out := &discordConfig{
 		VSendResolved: in.SendResolved,
-		Title:         *in.Title,
-		Message:       *in.Message,
+	}
+	
+	if in.Title != nil && *in.Title != "" {
+		out.Title = *in.Title
+	}
+	
+	if in.Message != nil && *in.Message != "" {
+		out.Message = *in.Message
 	}
 
 	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
