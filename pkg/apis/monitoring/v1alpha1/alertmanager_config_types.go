@@ -577,8 +577,9 @@ type HTTPConfig struct {
 // See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
 type WebexConfig struct {
 	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
+	// Provide if different from the default API URL.
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// The HTTP client's configuration.
 	// You must supply the bot token via the `httpConfig.authorization` field.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
