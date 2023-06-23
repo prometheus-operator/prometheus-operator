@@ -1,1 +1,6 @@
 **/zz_generated.*.go linguist-generated=true
+bundle.yaml linguist-generated=true
+example/prometheus-operator-crd-full/* linguist-generated=true
+example/prometheus-operator-crd/* linguist-generated=true
+example/jsonnet/prometheus-operator/* linguist-generated=true
+Documentation/api.md linguist-generated=true
