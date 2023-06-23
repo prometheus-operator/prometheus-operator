@@ -918,7 +918,7 @@ func (in *WebexConfig) DeepCopyInto(out *WebexConfig) {
 	*out = *in
 	if in.APIURL != nil {
 		in, out := &in.APIURL, &out.APIURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.HTTPConfig != nil {

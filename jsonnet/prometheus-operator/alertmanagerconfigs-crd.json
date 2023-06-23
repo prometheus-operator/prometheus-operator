@@ -3779,7 +3779,8 @@
                             "description": "WebexConfig configures notification via Cisco Webex See https://prometheus.io/docs/alerting/latest/configuration/#webex_config",
                             "properties": {
                               "apiURL": {
-                                "description": "The Webex Teams API URL i.e. https://webexapis.com/v1/messages",
+                                "description": "The Webex Teams API URL i.e. https://webexapis.com/v1/messages Provide if different from the default API URL.",
+                                "pattern": "^https?://.+$",
                                 "type": "string"
                               },
                               "httpConfig": {
