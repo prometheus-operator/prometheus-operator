@@ -1047,7 +1047,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
 					APIURL: func() *monitoringv1alpha1.URL {
-						res := monitoringv1alpha1.URL("https://webex.example.com")
+						res := monitoringv1alpha1.URL("https://webex.api.url")
 						return &res
 					}(),
 					RoomID: "testingRoomID",
