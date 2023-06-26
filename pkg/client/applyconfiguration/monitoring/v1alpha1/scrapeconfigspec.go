@@ -34,6 +34,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	Scheme          *string                                           `json:"scheme,omitempty"`
 	BasicAuth       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	TLSConfig       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -139,5 +140,13 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithBasicAuth(value *monitoringv1.B
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	b.TLSConfig = value
 	return b
 }

@@ -2195,6 +2195,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
+	if sc.Spec.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig)
+	}
+
 	// StaticConfig
 	if len(sc.Spec.StaticConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.StaticConfigs))
@@ -2261,6 +2265,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
 
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",
