@@ -9111,6 +9111,30 @@ scrape_configs:
   scheme: https
 `,
 		},
+		{
+			name: "limits",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				SampleLimit:           pointer.Uint64(10000),
+				TargetLimit:           pointer.Uint64(1000),
+				LabelLimit:            pointer.Uint64(50),
+				LabelNameLengthLimit:  pointer.Uint64(40),
+				LabelValueLengthLimit: pointer.Uint64(30),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  sample_limit: 10000
+  target_limit: 1000
+  label_limit: 50
+  label_name_length_limit: 40
+  label_value_length_limit: 30
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
