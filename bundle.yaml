@@ -31630,6 +31630,23 @@ spec:
                   - url
                   type: object
                 type: array
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               metricsPath:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
@@ -31710,6 +31727,11 @@ spec:
                       type: string
                   type: object
                 type: array
+              sampleLimit:
+                description: SampleLimit defines per-scrape limit on number of scraped
+                  samples that will be accepted.
+                format: int64
+                type: integer
               scheme:
                 description: Configures the protocol scheme used for requests. If
                   empty, Prometheus uses HTTP by default.
@@ -31740,6 +31762,11 @@ spec:
                       type: array
                   type: object
                 type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
               tlsConfig:
                 description: TLS configuration to use on every scrape request
                 properties:
