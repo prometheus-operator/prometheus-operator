@@ -957,6 +957,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
+		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	case m.Spec.Targets.Ingress != nil:
