@@ -473,11 +473,9 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	var (
 		scrapeConfigs   []yaml.MapSlice
 		apiserverConfig = cpf.APIServerConfig
-		shards          = int32(1)
+		shards          = shardsNumber(cg.prom)
 	)
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
+
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
@@ -2093,11 +2091,9 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	var (
 		scrapeConfigs   []yaml.MapSlice
 		apiserverConfig = cpf.APIServerConfig
-		shards          = int32(1)
+		shards          = shardsNumber(cg.prom)
 	)
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
+
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)

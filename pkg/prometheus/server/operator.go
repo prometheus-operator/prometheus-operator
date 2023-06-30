@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1469,7 +1470,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 		}
 	}
 
-	if sks.Optional == nil || !*sks.Optional {
+	if !pointer.BoolDeref(sks.Optional, true) {
 		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
 	}
 
