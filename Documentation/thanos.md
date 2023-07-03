@@ -86,8 +86,7 @@ responsible for compactions on a global, object storage level.
 ## Thanos Ruler
 
 The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) component allows recording and alerting rules to be processed across
-multiple Prometheus instances. A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos rulers.
-
+multiple Prometheus instances. A `ThanosRuler` instance requires at least one `queryEndpoints` which points to the location of Thanos Queriers or Prometheus instances. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos rulers. The `alertmanagersConfig` allows you to provide the Alertmanager definition, so you can use Ruler to evaluate alerting rules defined on `PrometheusRule`. The `alertmanagersConfig` then will allow you to define your `--alertmanagers.config` argument via secret.
 ```yaml
 ...
 apiVersion: monitoring.coreos.com/v1
@@ -104,10 +103,23 @@ spec:
       role: my-thanos-rules
   queryEndpoints:
     - dnssrv+_http._tcp.my-thanos-querier.monitoring.svc.cluster.local
+  alertmanagersConfig:
+    key: alertmanager-configs.yaml
+    name: thanosruler-alertmanager-config
 ```
 
-The recording and alerting rules used by a `ThanosRuler` component, are configured using the same `PrometheusRule` objects which are used by Prometheus. In the given example, the rules contained in any `PrometheusRule` object which match the label `role=my-thanos-rules` will be loaded by the Thanos Ruler pods.
+More context for your Alertmanager configuration can be found in the [Thanos documentation](https://thanos.io/tip/components/rule.md/#alertmanager). An example:
 
+```yaml
+ alertmanagers:
+- static_configs: ["alertmanager-dns"]
+  api_version: v1
+```
+Can be saved as `/tmp/alertmanager-configs.yaml`, and you can create in your namespace, for example `monitoring` as `thanosruler-alertmanager-config` imperatively with:
+```sh
+kubectl -n monitoring create secret generic thanosruler-alertmanager-config --from-file=/tmp/alertmanager-configs.yaml
+```
+The recording and alerting rules used by a `ThanosRuler` component, are configured using the same `PrometheusRule` objects which are used by Prometheus. In the given example, the rules contained in any `PrometheusRule` object which match the label `role=my-thanos-rules` will be loaded by the Thanos Ruler pods.
 ## Other Thanos Components
 
 Deploying the sidecar was the first step towards getting Thanos up and running, but there are more components to be deployed to get a complete Thanos setup.
