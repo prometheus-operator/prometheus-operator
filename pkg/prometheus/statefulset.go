@@ -15,12 +15,14 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -144,6 +146,22 @@ func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config
 			ConfigFilename: {},
 		},
 	}
+}
+
+func MakeCompressedSecretForPrometheus(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
+
+	s := MakeConfigSecret(p, config)
+	s.ObjectMeta.Annotations = config.Annotations.Merge(map[string]string{
+		"generated": "true",
+	})
+
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, data); err != nil {
+		return nil, errors.Wrap(err, "failed to gzip config")
+	}
+	s.Data[ConfigFilename] = buf.Bytes()
+
+	return s, nil
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
