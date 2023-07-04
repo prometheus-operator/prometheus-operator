@@ -85,7 +85,7 @@ responsible for compactions on a global, object storage level.
 
 ## Thanos Ruler
 
-The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) component evaluates Prometheus recording and alerting rules against chosen query API. A `ThanosRuler` instance requires at least one `queryEndpoints` which points to the location of Thanos Queriers. The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos rulers. The `alertmanagersConfig` allows you to provide the Alertmanager definition, so you can use Ruler to evaluate alerting rules defined on `PrometheusRule`. The `alertmanagersConfig` then will allow you to define your `--alertmanagers.config` argument via secret.
+The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) component evaluates Prometheus recording and alerting rules against chosen query API. A `ThanosRuler` instance requires at least one Query API server defined either by the `.spec.queryConfig` field or the `.spec.queryEndpoints` field.  It can also be configured to send alerts to Alertmanager with the `.spec.alertmanagersConfig`.
 
 ```yaml
 ...
