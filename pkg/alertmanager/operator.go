@@ -1323,14 +1323,22 @@ func checkDiscordConfigs(
 	store *assets.Store,
 	amVersion semver.Version,
 ) error {
+	if amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	}
+
 	for i, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
-		discordConfigKey := fmt.Sprintf("%s/discord/%d", key, i)
 
+		discordConfigKey := fmt.Sprintf("%s/discord/%d", key, i)
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, discordConfigKey, store); err != nil {
 			return err
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.APIURL); err != nil {
+			return fmt.Errorf("failed to retrieve API URL: %w", err)
 		}
 	}
 
@@ -1550,7 +1558,6 @@ func checkTelegramConfigs(
 	if len(configs) == 0 {
 		return nil
 	}
-
 	if amVersion.LT(semver.MustParse("0.24.0")) {
 		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}

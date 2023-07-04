@@ -91,6 +91,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -269,6 +273,15 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
 		}
 
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
+	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

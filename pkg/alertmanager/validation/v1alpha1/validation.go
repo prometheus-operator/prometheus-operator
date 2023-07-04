@@ -64,10 +64,6 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, errors.Wrapf(err, "failed to validate 'opsGenieConfig' - receiver %s", receiver.Name)
 		}
 
-		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
-		}
-
 		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'slackConfig' - receiver %s", receiver.Name)
 		}
@@ -100,6 +96,9 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
 		}
 
+		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
