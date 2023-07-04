@@ -206,7 +206,7 @@ type ConsulSDConfig struct {
 	// A valid string consisting of a hostname or IP followed by an optional port number.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
-	Server string `json:"server,omitempty"`
+	Server string `json:"server"`
 	// Consul ACL Token, If not provided it will use the ACL from the local Consul Agent.
 	// +optional
 	Token *corev1.SecretKeySelector `json:"token,omitempty"`
