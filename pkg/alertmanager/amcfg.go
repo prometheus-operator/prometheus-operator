@@ -686,11 +686,11 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 	out := &discordConfig{
 		VSendResolved: in.SendResolved,
 	}
-	
+
 	if in.Title != nil && *in.Title != "" {
 		out.Title = *in.Title
 	}
-	
+
 	if in.Message != nil && *in.Message != "" {
 		out.Message = *in.Message
 	}
