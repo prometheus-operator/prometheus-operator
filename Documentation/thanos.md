@@ -113,7 +113,7 @@ More context for your Alertmanager configuration can be found in the [Thanos doc
 ```yaml
  alertmanagers:
 - static_configs: ["alertmanager-dns"]
-  api_version: v1
+  api_version: v2
 ```
 
 Can be saved as `/tmp/alertmanager-configs.yaml`, and you can create in your namespace, for example `monitoring` as `thanosruler-alertmanager-config` imperatively with:
