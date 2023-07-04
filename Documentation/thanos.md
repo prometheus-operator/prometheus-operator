@@ -85,7 +85,7 @@ responsible for compactions on a global, object storage level.
 
 ## Thanos Ruler
 
-The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) component evaluates Prometheus recording and alerting rules against chosen query API. A `ThanosRuler` instance requires at least one Query API server defined either by the `.spec.queryConfig` field or the `.spec.queryEndpoints` field.  It can also be configured to send alerts to Alertmanager with the `.spec.alertmanagersConfig`.
+The [Thanos Ruler](https://thanos.io/tip/components/rule.md/) component evaluates Prometheus recording and alerting rules against chosen query API. A `ThanosRuler` instance requires at least one Query API server defined either by the `.spec.queryConfig` field or the `.spec.queryEndpoints` field.  It can also be configured to send alerts to Alertmanager with the `.spec.alertmanagersConfig`.
 
 ```yaml
 ...
@@ -111,10 +111,16 @@ spec:
 More context for your Alertmanager configuration can be found in the [Thanos documentation](https://thanos.io/tip/components/rule.md/#alertmanager). An example:
 
 ```yaml
- alertmanagers:
-- static_configs:
-  - "dnssrv+_web._tcp.alertmanager-operated.monitoring.svc.cluster.local"
-  api_version: v2
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanosruler-alertmanager-config
+stringData:
+  alertmanager-configs.yaml: |-
+    alertmanagers:
+    - static_configs:
+      - "dnssrv+_web._tcp.alertmanager-operated.monitoring.svc.cluster.local"
+      api_version: v2
 ```
 
 Can be saved as `/tmp/alertmanager-configs.yaml`, and you can create in your namespace, for example `monitoring` as `thanosruler-alertmanager-config` imperatively with:
