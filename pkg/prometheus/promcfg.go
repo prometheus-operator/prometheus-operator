@@ -2303,12 +2303,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.ConsulSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
 		for i, config := range sc.Spec.ConsulSDConfigs {
-			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.Oauth2, store.OAuth2Assets, fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.Namespace, sc.Name, i))
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+
+			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.Oauth2, store.OAuth2Assets, assetStoreKey)
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -2316,15 +2318,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: config.Server,
 			})
 
-			if config.Token != nil {
-				value, err := store.GetKey(context.Background(), sc.Namespace, monitoringv1.SecretOrConfigMap{
-					Secret: config.Token,
+			if config.TokenRef != nil {
+				value, _ := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.TokenRef,
 				})
-
-				if err != nil {
-					level.Error(cg.logger).Log("failed to read %s secret %s", config.Token.Name, jobName)
-					continue
-				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "token",
@@ -2427,14 +2424,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
 
 				for k, v := range config.ProxyConnectHeader {
-					value, err := store.GetKey(context.Background(), sc.Namespace, monitoringv1.SecretOrConfigMap{
+					value, _ := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 						Secret: &v,
 					})
 
-					if err != nil {
-						level.Error(cg.logger).Log("failed to read %s secret %s", v.Name, jobName)
-						continue
-					}
 					proxyConnectHeader[k] = value
 				}
 

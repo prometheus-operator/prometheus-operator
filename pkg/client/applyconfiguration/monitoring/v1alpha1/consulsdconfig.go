@@ -26,7 +26,7 @@ import (
 // with apply.
 type ConsulSDConfigApplyConfiguration struct {
 	Server               *string                                                             `json:"server,omitempty"`
-	Token                *v1.SecretKeySelector                                               `json:"token,omitempty"`
+	TokenRef             *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
 	Datacenter           *string                                                             `json:"datacenter,omitempty"`
 	Namespace            *string                                                             `json:"namespace,omitempty"`
 	Partition            *string                                                             `json:"partition,omitempty"`
@@ -63,11 +63,11 @@ func (b *ConsulSDConfigApplyConfiguration) WithServer(value string) *ConsulSDCon
 	return b
 }
 
-// WithToken sets the Token field in the declarative configuration to the given value
+// WithTokenRef sets the TokenRef field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Token field is set to the value of the last call.
-func (b *ConsulSDConfigApplyConfiguration) WithToken(value v1.SecretKeySelector) *ConsulSDConfigApplyConfiguration {
-	b.Token = &value
+// If called multiple times, the TokenRef field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithTokenRef(value v1.SecretKeySelector) *ConsulSDConfigApplyConfiguration {
+	b.TokenRef = &value
 	return b
 }
 

@@ -677,6 +677,45 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			}
 		}
 
+		for i, config := range sc.Spec.ConsulSDConfigs {
+			configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+				rejectFn(sc, err)
+				continue
+			}
+
+			configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+				rejectFn(sc, err)
+				continue
+			}
+
+			if err = rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+				rejectFn(sc, err)
+				continue
+			}
+
+			tokenRef := monitoringv1.SecretOrConfigMap{
+				Secret: config.TokenRef,
+			}
+
+			if _, err = rs.store.GetKey(ctx, sc.GetNamespace(), tokenRef); err != nil {
+				rejectFn(sc, err)
+				continue
+			}
+
+			for _, v := range config.ProxyConnectHeader {
+				_, err := rs.store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: &v,
+				})
+
+				if err != nil {
+					rejectFn(sc, err)
+					continue
+				}
+			}
+		}
+
 		res[scName] = sc
 	}
 

@@ -15556,7 +15556,7 @@ the resource&rsquo;s namespace.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>HTTPSDConfig defines a prometheus HTTP service discovery configuration
+<p>ConsulSDConfig defines a Consul service discovery configuration
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config</a></p>
 </div>
 <table>
@@ -15580,7 +15580,7 @@ string
 </tr>
 <tr>
 <td>
-<code>token</code><br/>
+<code>tokenRef</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
@@ -15589,7 +15589,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Consul ACL Token, If not provided it will use the ACL from the local Consul Agent.</p>
+<p>Consul ACL TokenRef, If not provided it will use the ACL from the local Consul Agent.</p>
 </td>
 </tr>
 <tr>
@@ -15674,7 +15674,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The string by which Consul tags are joined into the tag label.
-default &ldquo;,&rdquo;</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>
@@ -15699,7 +15699,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Allow stale Consul results (see <a href="https://www.consul.io/api/features/consistency.html">https://www.consul.io/api/features/consistency.html</a>). Will reduce load on Consul.
-default true</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>
@@ -15712,9 +15712,10 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The time after which the provided names are refreshed.
 On large setup it might be a good idea to increase this value because the catalog will change all the time.
-default &ldquo;30s&rdquo;</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>
@@ -15796,7 +15797,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
-default false</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>
@@ -15823,7 +15824,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Configure whether HTTP requests follow HTTP 3xx redirects.
-default true</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>
@@ -15836,7 +15837,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to enable HTTP2.
-default true</p>
+If unset, Prometheus uses its default value.</p>
 </td>
 </tr>
 <tr>

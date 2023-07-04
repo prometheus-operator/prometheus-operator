@@ -9244,7 +9244,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						},
 						FollowRedirects: pointer.Bool(true),
 						EnableHttp2:     pointer.Bool(true),
-						Token: &v1.SecretKeySelector{
+						TokenRef: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "foo",
 							},

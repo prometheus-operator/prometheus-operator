@@ -31770,12 +31770,13 @@ spec:
                 description: ConsulSDConfigs defines a list of Consul service discovery
                   configurations.
                 items:
-                  description: HTTPSDConfig defines a prometheus HTTP service discovery
-                    configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
+                  description: ConsulSDConfig defines a Consul service discovery configuration
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
                   properties:
                     allow_stale:
                       description: Allow stale Consul results (see https://www.consul.io/api/features/consistency.html).
-                        Will reduce load on Consul. default true
+                        Will reduce load on Consul. If unset, Prometheus uses its
+                        default value.
                       type: boolean
                     authorization:
                       description: Authorization header configuration to authenticate
@@ -31857,11 +31858,12 @@ spec:
                         use the local Consul Agent Datacenter.
                       type: string
                     enable_http2:
-                      description: Whether to enable HTTP2. default true
+                      description: Whether to enable HTTP2. If unset, Prometheus uses
+                        its default value.
                       type: boolean
                     follow_redirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
-                        redirects. default true
+                        redirects. If unset, Prometheus uses its default value.
                       type: boolean
                     namespace:
                       description: Namespaces are only supported in Consul Enterprise.
@@ -31877,6 +31879,7 @@ spec:
                       description: Node metadata key/value pairs to filter nodes for
                         a given service.
                       type: object
+                      x-kubernetes-map-type: atomic
                     oauth2:
                       description: Optional OAuth 2.0 configuration.
                       properties:
@@ -31991,7 +31994,7 @@ spec:
                     proxy_from_environment:
                       description: Use proxy URL indicated by environment variables
                         (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
-                        default false
+                        If unset, Prometheus uses its default value.
                       type: boolean
                     proxy_url:
                       description: Optional proxy URL.
@@ -31999,11 +32002,15 @@ spec:
                     refresh_interval:
                       description: The time after which the provided names are refreshed.
                         On large setup it might be a good idea to increase this value
-                        because the catalog will change all the time. default "30s"
+                        because the catalog will change all the time. If unset, Prometheus
+                        uses its default value.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     scheme:
                       description: HTTP Scheme default "http"
+                      enum:
+                      - http
+                      - https
                       type: string
                     server:
                       description: A valid string consisting of a hostname or IP followed
@@ -32016,9 +32023,10 @@ spec:
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: atomic
                     tag_separator:
                       description: The string by which Consul tags are joined into
-                        the tag label. default ","
+                        the tag label. If unset, Prometheus uses its default value.
                       type: string
                     tags:
                       description: An optional list of tags used to filter nodes for
@@ -32026,6 +32034,7 @@ spec:
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: atomic
                     tlsConfig:
                       description: TLS Config
                       properties:
@@ -32145,9 +32154,9 @@ spec:
                           description: Used to verify the hostname for the targets.
                           type: string
                       type: object
-                    token:
-                      description: Consul ACL Token, If not provided it will use the
-                        ACL from the local Consul Agent.
+                    tokenRef:
+                      description: Consul ACL TokenRef, If not provided it will use
+                        the ACL from the local Consul Agent.
                       properties:
                         key:
                           description: The key of the secret to select from.  Must
@@ -32164,6 +32173,8 @@ spec:
                       required:
                       - key
                       type: object
+                  required:
+                  - server
                   type: object
                 type: array
               fileSDConfigs:

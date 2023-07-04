@@ -207,9 +207,9 @@ type ConsulSDConfig struct {
 	// +kubebuilder:validation:MinLength:=1
 	// +required
 	Server string `json:"server"`
-	// Consul ACL Token, If not provided it will use the ACL from the local Consul Agent.
+	// Consul ACL TokenRef, If not provided it will use the ACL from the local Consul Agent.
 	// +optional
-	Token *corev1.SecretKeySelector `json:"token,omitempty"`
+	TokenRef *corev1.SecretKeySelector `json:"tokenRef,omitempty"`
 	// Consul Datacenter name, If not provided it will use the local Consul Agent Datacenter.
 	// +optional
 	Datacenter *string `json:"datacenter,omitempty"`
@@ -220,28 +220,33 @@ type ConsulSDConfig struct {
 	// +optional
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
+	// +kubebuilder:validation:Enum=http;https
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
+	// +listType:=atomic
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+	//+listType:=atomic
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// The string by which Consul tags are joined into the tag label.
-	// default ","
+	// If unset, Prometheus uses its default value.
 	// +optional
 	TagSeparator *string `json:"tag_separator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
+	// +mapType:=atomic
 	// +optional
 	NodeMeta map[string]string `json:"node_meta,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
-	// default true
+	// If unset, Prometheus uses its default value.
 	// +optional
-	AllowStale *bool `json:"allow_stale"`
+	AllowStale *bool `json:"allow_stale,omitempty"`
 	// The time after which the provided names are refreshed.
 	// On large setup it might be a good idea to increase this value because the catalog will change all the time.
-	// default "30s"
+	// If unset, Prometheus uses its default value.
+	// +optional
 	RefreshInterval *v1.Duration `json:"refresh_interval,omitempty"`
 	// BasicAuth information to authenticate against the Consul Server.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
@@ -262,18 +267,18 @@ type ConsulSDConfig struct {
 	// +optional
 	NoProxy *string `json:"no_proxy,omitempty"`
 	// Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
-	// default false
+	// If unset, Prometheus uses its default value.
 	// +optional
 	ProxyFromEnvironment *bool `json:"proxy_from_environment,omitempty"`
 	// Specifies headers to send to proxies during CONNECT requests.
 	// +optional
 	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxy_connect_header,omitempty"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
-	// default true
+	// If unset, Prometheus uses its default value.
 	// +optional
 	FollowRedirects *bool `json:"follow_redirects,omitempty"`
 	// Whether to enable HTTP2.
-	// default true
+	// If unset, Prometheus uses its default value.
 	// +optional
 	EnableHttp2 *bool `json:"enable_http2,omitempty"`
 	// TLS Config
