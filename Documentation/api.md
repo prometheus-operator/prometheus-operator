@@ -14875,6 +14875,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>The template of the message&rsquo;s title.</p>
 </td>
 </tr>
 <tr>
@@ -14886,6 +14887,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>The template of the message&rsquo;s body.</p>
 </td>
 </tr>
 <tr>
