@@ -112,7 +112,8 @@ More context for your Alertmanager configuration can be found in the [Thanos doc
 
 ```yaml
  alertmanagers:
-- static_configs: ["alertmanager-dns"]
+- static_configs:
+  - "dnssrv+_web._tcp.alertmanager-operated.monitoring.svc.cluster.local"
   api_version: v2
 ```
 
