@@ -121,7 +121,9 @@ Can be saved as `/tmp/alertmanager-configs.yaml`, and you can create in your nam
 ```sh
 kubectl -n monitoring create secret generic thanosruler-alertmanager-config --from-file=alertmanager-configs.yaml=/tmp/alertmanager-configs.yaml
 ```
+
 The recording and alerting rules used by a `ThanosRuler` component, are configured using the same `PrometheusRule` objects which are used by Prometheus. In the given example, the rules contained in any `PrometheusRule` object which match the label `role=my-thanos-rules` will be loaded by the Thanos Ruler pods.
+
 ## Other Thanos Components
 
 Deploying the sidecar was the first step towards getting Thanos up and running, but there are more components to be deployed to get a complete Thanos setup.
