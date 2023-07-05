@@ -481,8 +481,12 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
-	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
+	if err != nil {
+		return nil, errors.Wrap(err, "generate scrape configs")
+	}
+
+	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
@@ -2099,8 +2103,12 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
-	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
+	if err != nil {
+		return nil, errors.Wrap(err, "generate scrape configs")
+	}
+
+	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate additional scrape configs")
 	}
@@ -2129,7 +2137,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 func (cg *ConfigGenerator) appendScrapeConfigs(
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store) []yaml.MapSlice {
+	store *assets.Store) ([]yaml.MapSlice, error) {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
 	i := 0
 	for k := range scrapeConfigs {
@@ -2141,21 +2149,23 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	sort.Strings(scrapeConfigIdentifiers)
 
 	for _, identifier := range scrapeConfigIdentifiers {
-		slices = append(slices,
-			cg.WithKeyVals("scrapeconfig", identifier).generateScrapeConfig(
-				scrapeConfigs[identifier],
-				store,
-			),
-		)
+		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store)
+
+		if err != nil {
+			return slices, err
+		}
+
+		slices = append(slices, scrapeConfig)
 	}
 
-	return slices
+	return slices, nil
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
-) yaml.MapSlice {
+) (yaml.MapSlice, error) {
 	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -2319,9 +2329,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.TokenRef != nil {
-				value, _ := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+				value, err := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 					Secret: config.TokenRef,
 				})
+
+				if err != nil {
+					return cfg, errors.Wrapf(err, "failed to read %s secret %s", config.TokenRef.Name, jobName)
+				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "token",
@@ -2424,9 +2438,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
 
 				for k, v := range config.ProxyConnectHeader {
-					value, _ := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					value, err := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 						Secret: &v,
 					})
+
+					if err != nil {
+						return cfg, errors.Wrapf(err, "failed to read %s secret %s", v.Name, jobName)
+					}
 
 					proxyConnectHeader[k] = value
 				}
@@ -2458,7 +2476,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
-	return cfg
+	return cfg, nil
 }
 
 func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {

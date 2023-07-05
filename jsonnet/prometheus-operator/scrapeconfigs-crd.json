@@ -374,7 +374,8 @@
                             "type": "object"
                           },
                           "description": "Specifies headers to send to proxies during CONNECT requests.",
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         },
                         "proxy_from_environment": {
                           "description": "Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy) If unset, Prometheus uses its default value.",
@@ -392,8 +393,8 @@
                         "scheme": {
                           "description": "HTTP Scheme default \"http\"",
                           "enum": [
-                            "http",
-                            "https"
+                            "HTTP",
+                            "HTTPS"
                           ],
                           "type": "string"
                         },

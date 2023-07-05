@@ -271,6 +271,7 @@ type ConsulSDConfig struct {
 	// +optional
 	ProxyFromEnvironment *bool `json:"proxy_from_environment,omitempty"`
 	// Specifies headers to send to proxies during CONNECT requests.
+	// +mapType:=atomic
 	// +optional
 	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxy_connect_header,omitempty"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.

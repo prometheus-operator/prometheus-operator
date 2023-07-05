@@ -695,19 +695,13 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				continue
 			}
 
-			tokenRef := monitoringv1.SecretOrConfigMap{
-				Secret: config.TokenRef,
-			}
-
-			if _, err = rs.store.GetKey(ctx, sc.GetNamespace(), tokenRef); err != nil {
+			if _, err = rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
 				rejectFn(sc, err)
 				continue
 			}
 
 			for _, v := range config.ProxyConnectHeader {
-				_, err := rs.store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: &v,
-				})
+				_, err := rs.store.GetSecretKey(context.Background(), sc.GetNamespace(), v)
 
 				if err != nil {
 					rejectFn(sc, err)

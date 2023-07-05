@@ -339,6 +339,7 @@ spec:
                       description: Specifies headers to send to proxies during CONNECT
                         requests.
                       type: object
+                      x-kubernetes-map-type: atomic
                     proxy_from_environment:
                       description: Use proxy URL indicated by environment variables
                         (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
@@ -357,8 +358,8 @@ spec:
                     scheme:
                       description: HTTP Scheme default "http"
                       enum:
-                      - http
-                      - https
+                      - HTTP
+                      - HTTPS
                       type: string
                     server:
                       description: A valid string consisting of a hostname or IP followed
