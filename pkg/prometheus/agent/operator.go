@@ -743,7 +743,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	// Compress config to avoid 1mb secret limit for a while
-	s, err := prompkg.MakeCompressedSecretForPrometheus(p, c.config, conf)
+	s, err := prompkg.MakeConfigurationSecret(p, c.config, conf)
 	if err != nil {
 		return errors.Wrap(err, "creating compressed secret failed")
 	}
