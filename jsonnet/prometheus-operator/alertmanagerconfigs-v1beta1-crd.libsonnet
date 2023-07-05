@@ -140,7 +140,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -162,7 +162,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
