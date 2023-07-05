@@ -220,7 +220,7 @@ type ConsulSDConfig struct {
 	// +optional
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
-	// +kubebuilder:validation:Enum=http;https
+	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
