@@ -88,19 +88,45 @@ type ScrapeConfigSpec struct {
 	RelabelConfigs []*v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	// +optional
-	MetricsPath string `json:"metricsPath,omitempty"`
+	MetricsPath *string `json:"metricsPath,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// Configures the protocol scheme used for requests.
+	// If empty, Prometheus uses HTTP by default.
+	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// +optional
+	Scheme *string `json:"scheme,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
 	// Authorization header to use on every scrape request.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// TLS configuration to use on every scrape request
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	// +optional
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
+	// +optional
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	// Per-scrape limit on number of labels that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +optional
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	// Per-scrape limit on length of labels name that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +optional
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	// Per-scrape limit on length of labels value that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +optional
+	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.
@@ -150,4 +176,7 @@ type HTTPSDConfig struct {
 	// Authorization header configuration to authenticate against the target HTTP endpoint.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }

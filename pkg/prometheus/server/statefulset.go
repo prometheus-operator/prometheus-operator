@@ -60,7 +60,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 					UID:        p.GetUID(),
 				},
 			},
-			Annotations: config.Annotations.AnnotationsMap,
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),
@@ -119,13 +119,7 @@ func makeStatefulSet(
 		cpf.PortName = prompkg.DefaultPortName
 	}
 
-	if cpf.Replicas == nil {
-		cpf.Replicas = &prompkg.MinReplicas
-	}
-	intZero := int32(0)
-	if cpf.Replicas != nil && *cpf.Replicas < 0 {
-		cpf.Replicas = &intZero
-	}
+	cpf.Replicas = prompkg.ReplicasNumberPtr(p)
 
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.

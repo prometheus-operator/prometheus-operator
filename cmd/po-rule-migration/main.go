@@ -22,16 +22,15 @@ import (
 	"path"
 	"path/filepath"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
-
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
-
-	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
+
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 func main() {

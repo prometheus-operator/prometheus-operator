@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"path"
 
+	corev1 "k8s.io/api/core/v1"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (

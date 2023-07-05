@@ -45,8 +45,8 @@ spec:
                 description: Authorization header to use on every scrape request.
                 properties:
                   credentials:
-                    description: The secret's key that contains the credentials of
-                      the request
+                    description: Selects a key of a Secret in the namespace that contains
+                      the credentials for authentication.
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -65,8 +65,8 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                   type:
-                    description: Set the authentication type. Defaults to Bearer,
-                      Basic will cause an error
+                    description: "Defines the authentication type. The value is case-insensitive.
+                      \n \"Basic\" is not a supported value. \n Default: \"Bearer\""
                     type: string
                 type: object
               basicAuth:
@@ -161,8 +161,8 @@ spec:
                         against the target HTTP endpoint.
                       properties:
                         credentials:
-                          description: The secret's key that contains the credentials
-                            of the request
+                          description: Selects a key of a Secret in the namespace
+                            that contains the credentials for authentication.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -181,8 +181,9 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         type:
-                          description: Set the authentication type. Defaults to Bearer,
-                            Basic will cause an error
+                          description: "Defines the authentication type. The value
+                            is case-insensitive. \n \"Basic\" is not a supported value.
+                            \n Default: \"Bearer\""
                           type: string
                       type: object
                     basicAuth:
@@ -236,6 +237,125 @@ spec:
                         target list.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    tlsConfig:
+                      description: TLS configuration applying to the target HTTP endpoint.
+                      properties:
+                        ca:
+                          description: Certificate authority used when verifying server
+                            certificates.
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
+                        cert:
+                          description: Client certificate to present when doing client-authentication.
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
+                        insecureSkipVerify:
+                          description: Disable target certificate validation.
+                          type: boolean
+                        keySecret:
+                          description: Secret containing the client key file for the
+                            targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        serverName:
+                          description: Used to verify the hostname for the targets.
+                          type: string
+                      type: object
                     url:
                       description: URL from which the targets are fetched.
                       minLength: 1
@@ -245,6 +365,23 @@ spec:
                   - url
                   type: object
                 type: array
+              labelLimit:
+                description: Per-scrape limit on number of labels that will be accepted
+                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                format: int64
+                type: integer
+              labelNameLengthLimit:
+                description: Per-scrape limit on length of labels name that will be
+                  accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
+              labelValueLengthLimit:
+                description: Per-scrape limit on length of labels value that will
+                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
+                  and newer.
+                format: int64
+                type: integer
               metricsPath:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
@@ -256,15 +393,16 @@ spec:
                   name is available via the `__tmp_prometheus_job_name` label. More
                   info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                 items:
-                  description: 'RelabelConfig allows dynamic rewriting of the label
-                    set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section
-                    of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
+                  description: "RelabelConfig allows dynamic rewriting of the label
+                    set for targets, alerts, scraped samples and remote write samples.
+                    \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
                   properties:
                     action:
                       default: replace
-                      description: Action to perform based on regex matching. Default
-                        is 'replace'. uppercase and lowercase actions require Prometheus
-                        >= 2.36.
+                      description: "Action to perform based on the regex matching.
+                        \n `Uppercase` and `Lowercase` actions require Prometheus
+                        >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus
+                        >= v2.41.0. \n Default: \"Replace\""
                       enum:
                       - replace
                       - Replace
@@ -290,28 +428,26 @@ spec:
                       - DropEqual
                       type: string
                     modulus:
-                      description: Modulus to take of the hash of the source label
-                        values.
+                      description: "Modulus to take of the hash of the source label
+                        values. \n Only applicable when the action is `HashMod`."
                       format: int64
                       type: integer
                     regex:
                       description: Regular expression against which the extracted
-                        value is matched. Default is '(.*)'
+                        value is matched.
                       type: string
                     replacement:
-                      description: Replacement value against which a regex replace
-                        is performed if the regular expression matches. Regex capture
-                        groups are available. Default is '$1'
+                      description: "Replacement value against which a Replace action
+                        is performed if the regular expression matches. \n Regex capture
+                        groups are available."
                       type: string
                     separator:
-                      description: Separator placed between concatenated source label
-                        values. default is ';'.
+                      description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
                       description: The source labels select values from existing labels.
-                        Their content is concatenated using the configured separator
-                        and matched against the configured regular expression for
-                        the replace, keep, and drop actions.
+                        Their content is concatenated using the configured Separator
+                        and matched against the configured regular expression.
                       items:
                         description: LabelName is a valid Prometheus label name which
                           may only contain ASCII letters, numbers, as well as underscores.
@@ -319,12 +455,25 @@ spec:
                         type: string
                       type: array
                     targetLabel:
-                      description: Label to which the resulting value is written in
-                        a replace action. It is mandatory for replace actions. Regex
-                        capture groups are available.
+                      description: "Label to which the resulting string is written
+                        in a replacement. \n It is mandatory for `Replace`, `HashMod`,
+                        `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
+                        \n Regex capture groups are available."
                       type: string
                   type: object
                 type: array
+              sampleLimit:
+                description: SampleLimit defines per-scrape limit on number of scraped
+                  samples that will be accepted.
+                format: int64
+                type: integer
+              scheme:
+                description: Configures the protocol scheme used for requests. If
+                  empty, Prometheus uses HTTP by default.
+                enum:
+                - HTTP
+                - HTTPS
+                type: string
               staticConfigs:
                 description: StaticConfigs defines a list of static targets with a
                   common label set.
@@ -348,6 +497,123 @@ spec:
                       type: array
                   type: object
                 type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
+              tlsConfig:
+                description: TLS configuration to use on every scrape request
+                properties:
+                  ca:
+                    description: Certificate authority used when verifying server
+                      certificates.
+                    properties:
+                      configMap:
+                        description: ConfigMap containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      secret:
+                        description: Secret containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                  cert:
+                    description: Client certificate to present when doing client-authentication.
+                    properties:
+                      configMap:
+                        description: ConfigMap containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      secret:
+                        description: Secret containing data to use for the targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                  insecureSkipVerify:
+                    description: Disable target certificate validation.
+                    type: boolean
+                  keySecret:
+                    description: Secret containing the client key file for the targets.
+                    properties:
+                      key:
+                        description: The key of the secret to select from.  Must be
+                          a valid secret key.
+                        type: string
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                      optional:
+                        description: Specify whether the Secret or its key must be
+                          defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  serverName:
+                    description: Used to verify the hostname for the targets.
+                    type: string
+                type: object
             type: object
         required:
         - spec

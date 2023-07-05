@@ -15,9 +15,10 @@
 package prometheus
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var (
@@ -72,16 +73,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p v1.PrometheusInterface) {
-	replicas := float64(MinReplicas)
-	cpf := p.GetCommonPrometheusFields()
 	namespace := p.GetObjectMeta().GetNamespace()
 	name := p.GetObjectMeta().GetName()
+	replicas := float64(*ReplicasNumberPtr(p))
 
-	if cpf.Replicas != nil {
-		replicas = float64(*cpf.Replicas)
-	}
 	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, namespace, name)
+
 	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
+	cpf := p.GetCommonPrometheusFields()
 	if cpf.EnforcedSampleLimit != nil {
 		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*cpf.EnforcedSampleLimit), namespace, name)
 	}

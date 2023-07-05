@@ -25,9 +25,6 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/pkg/errors"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
@@ -44,6 +41,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // KubeConfigEnv (optionally) specify the location of kubeconfig file
@@ -83,7 +84,7 @@ func NewCRDChecker(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfi
 func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	switch pod.Status.Phase {
 	case v1.PodFailed, v1.PodSucceeded:
-		return false, fmt.Errorf("pod completed")
+		return false, fmt.Errorf("pod completed with phase %s", pod.Status.Phase)
 	case v1.PodRunning:
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type != v1.PodReady {

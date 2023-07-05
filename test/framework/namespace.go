@@ -21,10 +21,11 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *TestCtx) string {

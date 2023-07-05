@@ -15,22 +15,10 @@
 package prometheusagent
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
 	"time"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
-	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -45,6 +33,18 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/pointer"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -84,7 +84,7 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -107,35 +107,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
-	}
-
-	// Check prerequisites for ScrapeConfig
-	verbs := map[string][]string{
-		monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
-	}
-	var scrapeConfigSupported bool
-	cc, err := k8sutil.NewCRDChecker(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new CRDChecker object")
-	}
-
-	var namespaces = make([]string, 0, len(conf.Namespaces.AllowList))
-	for k := range conf.Namespaces.AllowList {
-		namespaces = append(namespaces, k)
-	}
-
-	err = cc.CheckPrerequisites(ctx,
-		namespaces,
-		verbs,
-		monitoringv1alpha1.SchemeGroupVersion.String(),
-		monitoringv1alpha1.ScrapeConfigName)
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", "ScrapeConfig CRD disabled because prerequisites are not met", "err", err)
-	case err != nil:
-		return nil, errors.Wrap(err, "failed to check prerequisites for the ScrapeConfig CRD ")
-	default:
-		scrapeConfigSupported = true
 	}
 
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
@@ -745,35 +716,12 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	for i, remote := range p.Spec.RemoteWrite {
-		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		key := fmt.Sprintf("remoteWrite/%d", i)
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
+	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
+		return err
 	}
 
-	if p.Spec.APIServerConfig != nil {
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
-			return errors.Wrap(err, "apiserver config")
-		}
-		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
-			return errors.Wrapf(err, "apiserver config")
-		}
+	if err := prompkg.AddAPIServerConfigToStore(ctx, store, p.GetNamespace(), p.Spec.APIServerConfig); err != nil {
+		return err
 	}
 
 	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
@@ -794,20 +742,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s := prompkg.MakeConfigSecret(p, c.config)
-	s.ObjectMeta.Annotations = map[string]string{
-		"generated": "true",
-	}
-
 	// Compress config to avoid 1mb secret limit for a while
-	var buf bytes.Buffer
-	if err = operator.GzipConfig(&buf, conf); err != nil {
-		return errors.Wrap(err, "couldn't gzip config")
+	s, err := prompkg.MakeCompressedSecretForPrometheus(p, c.config, conf)
+	if err != nil {
+		return errors.Wrap(err, "creating compressed secret failed")
 	}
-	s.Data[prompkg.ConfigFilename] = buf.Bytes()
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
@@ -917,7 +858,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		Name:               p.Name,
 		UID:                p.UID,
 	}
-	secretAnnotations := c.config.Annotations.AnnotationsMap
+	secretAnnotations := c.config.Annotations
 	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
@@ -942,7 +883,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 		}
 	}
 
-	if sks.Optional == nil || !*sks.Optional {
+	if !pointer.BoolDeref(sks.Optional, true) {
 		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
 	}
 

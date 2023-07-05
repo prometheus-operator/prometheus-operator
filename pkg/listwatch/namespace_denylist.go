@@ -19,7 +19,6 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

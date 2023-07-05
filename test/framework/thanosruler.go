@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -28,8 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
@@ -108,25 +107,6 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 }
 
 func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
-	if f.operatorVersion.LT(semver.MustParse("0.65.0")) {
-		var pollErr error
-
-		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
-			st, _, pollErr := thanos.RulerStatus(context.Background(), f.KubeClient, tr)
-
-			if pollErr != nil {
-				return false, nil
-			}
-
-			if st.UpdatedReplicas == *tr.Spec.Replicas {
-				return true, nil
-			}
-
-			return false, nil
-		})
-		return errors.Wrapf(pollErr, "waiting for ThanosRuler %v/%v: %v", tr.Namespace, tr.Name, err)
-	}
-
 	expected := *tr.Spec.Replicas
 
 	if err := f.WaitForResourceAvailable(

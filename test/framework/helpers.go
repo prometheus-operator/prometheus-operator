@@ -24,15 +24,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/model/labels"
+	"github.com/prometheus/prometheus/model/textparse"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus/prometheus/model/labels"
-	"github.com/prometheus/prometheus/model/textparse"
 )
 
 func SourceToIOReader(source string) (io.Reader, error) {
@@ -94,7 +94,7 @@ func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, time
 		for _, p := range pl.Items {
 			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
 			if err != nil {
-				return false, err
+				return false, nil
 			}
 
 			if isRunningAndReady {

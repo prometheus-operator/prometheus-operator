@@ -41,6 +41,8 @@ const (
 	kubernetesSDRoleEndpointSlice = "endpointslice"
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
+
+	defaultReplicaExternalLabelName = "prometheus_replica"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -205,16 +207,17 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == 0 && enforcedLimit == nil {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	finalLimit := getLimit(limit, enforcedLimit)
+	if finalLimit == nil {
 		return cfg
 	}
 
 	if k.minVersion == "" {
-		return cg.AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+		return cg.AppendMapItem(cfg, k.prometheusField, finalLimit)
 	}
 
-	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, getLimit(limit, enforcedLimit))
+	return cg.WithMinimumVersion(k.minVersion).AppendMapItem(cfg, k.prometheusField, finalLimit)
 }
 
 // AddHonorTimestamps adds the honor_timestamps field into scrape configurations.
@@ -397,7 +400,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 
 	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
-		m[replicaExternalLabelName] = "$(POD_NAME)"
+		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
 	for n, v := range cpf.ExternalLabels {
@@ -470,11 +473,9 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	var (
 		scrapeConfigs   []yaml.MapSlice
 		apiserverConfig = cpf.APIServerConfig
-		shards          = int32(1)
+		shards          = shardsNumber(cg.prom)
 	)
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
+
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
@@ -844,6 +845,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	return cfg
 }
 
+// generateProbeConfig builds the prometheus configuration for a probe. This function
+// assumes that it will never receive a probe with empty targets, since the
+// operator filters those in the validation step in SelectProbes().
 func (cg *ConfigGenerator) generateProbeConfig(
 	m *monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -905,7 +909,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
-	if m.Spec.Targets.StaticConfig != nil {
+	// As stated in the CRD documentation, if both StaticConfig and Ingress are
+	// defined, the former takes precedence which is why the first case statement
+	// checks for m.Spec.Targets.StaticConfig.
+	switch {
+	case m.Spec.Targets.StaticConfig != nil:
 		// Generate static_config section.
 		staticConfig := yaml.MapSlice{
 			{Key: "targets", Value: m.Spec.Targets.StaticConfig.Targets},
@@ -948,7 +956,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	} else {
+
+	case m.Spec.Targets.Ingress != nil:
 		// Generate kubernetes_sd_config section for the ingress resources.
 
 		// Filter targets by ingresses selected by the monitor.
@@ -1346,14 +1355,20 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user uint64, enforced *uint64) uint64 {
-	if enforced != nil {
-		if user < *enforced && user != 0 || *enforced == 0 {
-			return user
-		}
-		return *enforced
+func getLimit(user *uint64, enforced *uint64) *uint64 {
+	if enforced == nil {
+		return user
 	}
-	return user
+
+	if user == nil {
+		return enforced
+	}
+
+	if *enforced > *user {
+		return user
+	}
+
+	return enforced
 }
 
 func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
@@ -1372,7 +1387,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 		{Key: "action", Value: "hashmod"},
 	}, yaml.MapSlice{
 		{Key: "source_labels", Value: []string{"__tmp_hash"}},
-		{Key: "regex", Value: "$(SHARD)"},
+		{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
 		{Key: "action", Value: "keep"},
 	})
 }
@@ -2076,11 +2091,9 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	var (
 		scrapeConfigs   []yaml.MapSlice
 		apiserverConfig = cpf.APIServerConfig
-		shards          = int32(1)
+		shards          = shardsNumber(cg.prom)
 	)
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
+
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
@@ -2161,8 +2174,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = cg.AddHonorLabels(cfg, *sc.Spec.HonorLabels)
 	}
 
-	if sc.Spec.MetricsPath != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: sc.Spec.MetricsPath})
+	if sc.Spec.MetricsPath != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: *sc.Spec.MetricsPath})
 	}
 
 	if sc.Spec.RelabelConfigs != nil {
@@ -2170,9 +2183,27 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
 
+	if sc.Spec.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
+	}
+
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
+
+	if sc.Spec.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig)
+	}
+
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, sc.Spec.TargetLimit, cpf.EnforcedTargetLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, sc.Spec.LabelLimit, cpf.EnforcedLabelLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, sc.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, sc.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+
+	if cpf.EnforcedBodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	}
 
 	// StaticConfig
 	if len(sc.Spec.StaticConfigs) > 0 {
@@ -2240,6 +2271,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
 
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",

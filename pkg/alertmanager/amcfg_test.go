@@ -68,6 +68,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "valid global config",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringingv1.GlobalSMTPConfig{
+					From: pointer.String("from"),
+					SmartHost: &monitoringingv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        pointer.String("smtp.example.org"),
+					AuthUsername: pointer.String("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: pointer.String("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: pointer.Bool(true),
+				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringingv1.HTTPConfig{
 					OAuth2: &monitoringingv1.OAuth2{
@@ -121,6 +144,17 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
+					SMTPFrom:       "from",
+					SMTPSmarthost: config.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					SMTPHello:        "smtp.example.org",
+					SMTPAuthUsername: "dev@smtp.example.org",
+					SMTPAuthPassword: "password",
+					SMTPAuthIdentity: "dev@smtp.example.org",
+					SMTPAuthSecret:   "secret",
+					SMTPRequireTLS:   pointer.Bool(true),
 					HTTPConfig: &httpClientConfig{
 						OAuth2: &oauth2{
 							ClientID:     "clientID",
@@ -654,6 +688,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string]string{
 					"test": "clientID",
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "smtp-auth",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"password": []byte("password"),
+					"secret":   []byte("secret"),
 				},
 			},
 			&corev1.Secret{

@@ -22,14 +22,15 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
@@ -192,9 +193,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	trVolumeMounts := []v1.VolumeMount{}
 
 	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="$(POD_NAME)"`, defaultReplicaLabelName)})
-	labels := operator.Labels{LabelsMap: tr.Spec.Labels}
+	labels := operator.Map(tr.Spec.Labels)
 	for _, k := range labels.SortedKeys() {
-		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="%s"`, k, labels.LabelsMap[k])})
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="%s"`, k, labels[k])})
 	}
 
 	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.label-drop", Value: defaultReplicaLabelName})
@@ -480,7 +481,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        governingServiceName,
-			Annotations: config.Annotations.AnnotationsMap,
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-thanos-ruler": "true",
 			}),

@@ -73,8 +73,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.EndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):
 		return &monitoringv1.ExemplarsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
+		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HostPort"):
+		return &monitoringv1.HostPortApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):
