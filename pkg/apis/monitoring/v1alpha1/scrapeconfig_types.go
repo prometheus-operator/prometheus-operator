@@ -207,7 +207,7 @@ type ConsulSDConfig struct {
 	// +kubebuilder:validation:MinLength:=1
 	// +required
 	Server string `json:"server"`
-	// Consul ACL TokenRef, If not provided it will use the ACL from the local Consul Agent.
+	// Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
 	// +optional
 	TokenRef *corev1.SecretKeySelector `json:"tokenRef,omitempty"`
 	// Consul Datacenter name, If not provided it will use the local Consul Agent Datacenter.
