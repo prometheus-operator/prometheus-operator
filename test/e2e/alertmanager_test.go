@@ -496,6 +496,89 @@ An Alert test
 	}
 }
 
+func testAMTmplateReloadConfig(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager(ns, "reload-config", 1)
+	firstConfig := `
+global:
+  resolve_timeout: 5m
+  http_config: {}
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://firstConfigWebHook:30500/'
+`
+	template := `
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>An Alert</title>
+  <style>
+  </style>
+</head>
+`
+
+	secondTemplate := `
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>An Alert</title>
+  <style>
+  </style>
+</head>
+
+<body>
+An Alert test
+</body>
+`
+
+	cfg := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
+		},
+		Data: map[string][]byte{
+			"alertmanager.yaml": []byte(firstConfig),
+			"Template_1":        []byte(template),
+		},
+	}
+
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	priorToReloadTime := time.Now()
+	cfg.Data["Template_1"] = []byte(secondTemplate)
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+	}
+}
+
 func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
