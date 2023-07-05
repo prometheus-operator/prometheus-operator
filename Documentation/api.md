@@ -15589,7 +15589,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Consul ACL TokenRef, If not provided it will use the ACL from the local Consul Agent.</p>
+<p>Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.</p>
 </td>
 </tr>
 <tr>
@@ -15601,7 +15601,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Consul Datacenter name, If not provided it will use the local Consul Agent Datacenter.</p>
+<p>Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.</p>
 </td>
 </tr>
 <tr>

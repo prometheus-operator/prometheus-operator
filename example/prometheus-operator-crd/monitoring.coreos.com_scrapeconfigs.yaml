@@ -201,7 +201,7 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     datacenter:
-                      description: Consul Datacenter name, If not provided it will
+                      description: Consul Datacenter name, if not provided it will
                         use the local Consul Agent Datacenter.
                       type: string
                     enable_http2:
@@ -503,7 +503,7 @@ spec:
                           type: string
                       type: object
                     tokenRef:
-                      description: Consul ACL TokenRef, If not provided it will use
+                      description: Consul ACL TokenRef, if not provided it will use
                         the ACL from the local Consul Agent.
                       properties:
                         key:

@@ -536,7 +536,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	level.Info(logger).Log("msg", "sync prometheus")
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(ctx, c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}

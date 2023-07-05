@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -66,10 +67,9 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	if p == nil {
 		p = &monitoringv1.Prometheus{}
 	}
-
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
+	cg, err := NewConfigGenerator(context.TODO(), log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
 
 	return cg
@@ -9218,7 +9218,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
-						Server:       "localhost:8500",
+						Server:       "localhost",
 						Datacenter:   pointer.String("we1"),
 						Namespace:    pointer.String("observability"),
 						Partition:    pointer.String("1"),
@@ -9227,7 +9227,8 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						Tags:         []string{"tag1"},
 						TagSeparator: pointer.String(";"),
 						NodeMeta: map[string]string{
-							"name": "node_name",
+							"service": "service_name",
+							"name":    "node_name",
 						},
 						AllowStale:           pointer.Bool(false),
 						RefreshInterval:      (*monitoringv1.Duration)(pointer.String("30s")),
@@ -9262,7 +9263,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:
-  - server: localhost:8500
+  - server: localhost
     token: value
     datacenter: we1
     namespace: observability
@@ -9276,6 +9277,7 @@ scrape_configs:
     tag_separator: ;
     node_meta:
       name: node_name
+      service: service_name
     allow_stale: false
     refresh_interval: 30s
     proxy_url: http://no-proxy.com

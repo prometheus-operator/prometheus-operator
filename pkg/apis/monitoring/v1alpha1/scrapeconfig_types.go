@@ -204,13 +204,13 @@ type KubernetesSDConfig struct {
 // +k8s:openapi-gen=true
 type ConsulSDConfig struct {
 	// A valid string consisting of a hostname or IP followed by an optional port number.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
 	// Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
 	// +optional
 	TokenRef *corev1.SecretKeySelector `json:"tokenRef,omitempty"`
-	// Consul Datacenter name, If not provided it will use the local Consul Agent Datacenter.
+	// Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.
 	// +optional
 	Datacenter *string `json:"datacenter,omitempty"`
 	// Namespaces are only supported in Consul Enterprise.

@@ -60,10 +60,11 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
+	ctx                    context.Context
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(ctx context.Context, logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -85,6 +86,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		version:                version,
 		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
+		ctx:                    ctx,
 	}, nil
 }
 
@@ -269,6 +271,27 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	}
 
 	return res
+}
+
+func sortStringMap(m map[string]string) map[string]string {
+	if len(m) < 1 {
+		return m
+	}
+
+	keys := make([]string, 0, len(m))
+	result := make(map[string]string, len(m))
+
+	for key := range m {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		result[key] = m[key]
+	}
+
+	return result
 }
 
 func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
@@ -2329,7 +2352,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.TokenRef != nil {
-				value, err := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+				value, err := store.GetKey(cg.ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 					Secret: config.TokenRef,
 				})
 
@@ -2395,7 +2418,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.NodeMeta) > 0 {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "node_meta",
-					Value: config.NodeMeta,
+					Value: sortStringMap(config.NodeMeta),
 				})
 			}
 
@@ -2438,7 +2461,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
 
 				for k, v := range config.ProxyConnectHeader {
-					value, err := store.GetKey(context.Background(), sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					value, err := store.GetKey(cg.ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 						Secret: &v,
 					})
 
@@ -2451,7 +2474,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "proxy_connect_header",
-					Value: proxyConnectHeader,
+					Value: sortStringMap(proxyConnectHeader),
 				})
 			}
 
