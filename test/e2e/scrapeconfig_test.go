@@ -216,7 +216,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
 	require.NoError(t, err)
-	require.Lenf(t, restarts, 1, "expected to get 1 container but got %d", len(restarts))
+	require.Emptyf(t, restarts, "expected to get 1 container but got %d", len(restarts))
 
 	for _, restart := range restarts {
 		require.Emptyf(t, restart, "expected Prometheus Operator to never restart during entire test execution but got %d restarts", restart)
