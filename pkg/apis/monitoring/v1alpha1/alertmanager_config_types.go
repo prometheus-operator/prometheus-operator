@@ -576,22 +576,28 @@ type HTTPConfig struct {
 // WebexConfig configures notification via Cisco Webex
 // See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
 type WebexConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
 	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
 	// Provide if different from the default API URL.
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
+
 	// The HTTP client's configuration.
 	// You must supply the bot token via the `httpConfig.authorization` field.
+	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
 	// Message template
 	// +optional
 	Message *string `json:"message,omitempty"`
+
 	// ID of the Webex Teams room where to send the messages.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	RoomID string `json:"roomID"`
-	// Whether to notify about resolved alerts.
-	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
 }
 
 // WeChatConfig configures notifications via WeChat.

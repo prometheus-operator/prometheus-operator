@@ -941,9 +941,15 @@ func (cb *configBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 func (cb *configBuilder) convertWebexConfig(ctx context.Context, in monitoringv1alpha1.WebexConfig, crKey types.NamespacedName) (*webexConfig, error) {
 	out := &webexConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        string(*in.APIURL),
 		RoomID:        in.RoomID,
-		Message:       *in.Message,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
 	}
 
 	if in.HTTPConfig != nil {

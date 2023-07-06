@@ -3997,6 +3997,7 @@
                           },
                           roomID: {
                             description: 'ID of the Webex Teams room where to send the messages.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {

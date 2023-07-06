@@ -91,6 +91,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'webexConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -267,6 +271,21 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 	for _, config := range configs {
 		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
 			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
+	for _, config := range configs {
+		if *config.APIURL != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

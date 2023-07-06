@@ -19878,6 +19878,18 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_con
 <tbody>
 <tr>
 <td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>apiURL</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.URL">
@@ -19901,6 +19913,7 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The HTTP client&rsquo;s configuration.
 You must supply the bot token via the <code>httpConfig.authorization</code> field.</p>
 </td>
@@ -19926,18 +19939,6 @@ string
 </td>
 <td>
 <p>ID of the Webex Teams room where to send the messages.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sendResolved</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to notify about resolved alerts.</p>
 </td>
 </tr>
 </tbody>
@@ -23305,6 +23306,18 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#webex_con
 <tbody>
 <tr>
 <td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>apiURL</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.URL">
@@ -23352,18 +23365,6 @@ string
 </td>
 <td>
 <p>ID of the Webex Teams room where to send the messages.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sendResolved</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to notify about resolved alerts.</p>
 </td>
 </tr>
 </tbody>

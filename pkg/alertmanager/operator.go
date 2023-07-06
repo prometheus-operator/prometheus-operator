@@ -1410,12 +1410,15 @@ func checkWebexConfigs(
 	store *assets.Store,
 	amVersion semver.Version,
 ) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+	}
+
 	for i, config := range configs {
-
-		if amVersion.LT(semver.MustParse("0.25.0")) {
-			return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
-		}
-
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
