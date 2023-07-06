@@ -1401,8 +1401,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 
 		expected := fmt.Sprintf(`global:
   resolve_timeout: 5m
-  smtp_from: alertmanager@example.org
-  smtp_smarthost: localhost:25
 route:
   receiver: "null"
   group_by:
@@ -1560,8 +1558,6 @@ templates: []
 		}
 		expected := `global:
   resolve_timeout: 5m
-  smtp_from: alertmanager@example.org
-  smtp_smarthost: localhost:25
 route:
   receiver: "null"
   group_by:
