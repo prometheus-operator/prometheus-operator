@@ -5383,11 +5383,13 @@ spec:
                                 type: object
                             type: object
                           message:
+                            description: The template of the message's body.
                             type: string
                           sendResolved:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
                           title:
+                            description: The template of the message's title.
                             type: string
                         type: object
                       type: array

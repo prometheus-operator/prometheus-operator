@@ -488,6 +488,7 @@
                             type: 'object',
                           },
                           message: {
+                            description: "The template of the message's body.",
                             type: 'string',
                           },
                           sendResolved: {
@@ -495,6 +496,7 @@
                             type: 'boolean',
                           },
                           title: {
+                            description: "The template of the message's title.",
                             type: 'string',
                           },
                         },
