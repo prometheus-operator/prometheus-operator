@@ -389,6 +389,7 @@ func TestListenTLS(t *testing.T) {
 		"--reload-url=https://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+		"--watched-dir=/etc/alertmanager/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1141,6 +1142,7 @@ func TestConfigReloader(t *testing.T) {
 		"--reload-url=http://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+		"--watched-dir=/etc/alertmanager/config",
 	}
 
 	for _, c := range baseSet.Spec.Template.Spec.Containers {

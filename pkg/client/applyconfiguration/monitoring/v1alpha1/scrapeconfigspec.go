@@ -24,16 +24,22 @@ import (
 // ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
-	StaticConfigs   []StaticConfigApplyConfiguration                  `json:"staticConfigs,omitempty"`
-	FileSDConfigs   []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
-	HTTPSDConfigs   []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
-	RelabelConfigs  []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
-	MetricsPath     *string                                           `json:"metricsPath,omitempty"`
-	HonorTimestamps *bool                                             `json:"honorTimestamps,omitempty"`
-	HonorLabels     *bool                                             `json:"honorLabels,omitempty"`
-	Scheme          *string                                           `json:"scheme,omitempty"`
-	BasicAuth       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	StaticConfigs         []StaticConfigApplyConfiguration                  `json:"staticConfigs,omitempty"`
+	FileSDConfigs         []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
+	HTTPSDConfigs         []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
+	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
+	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
+	HonorTimestamps       *bool                                             `json:"honorTimestamps,omitempty"`
+	HonorLabels           *bool                                             `json:"honorLabels,omitempty"`
+	Scheme                *string                                           `json:"scheme,omitempty"`
+	BasicAuth             *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization         *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	TLSConfig             *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	SampleLimit           *uint64                                           `json:"sampleLimit,omitempty"`
+	TargetLimit           *uint64                                           `json:"targetLimit,omitempty"`
+	LabelLimit            *uint64                                           `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit  *uint64                                           `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit *uint64                                           `json:"labelValueLengthLimit,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -139,5 +145,53 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithBasicAuth(value *monitoringv1.B
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	b.TLSConfig = value
+	return b
+}
+
+// WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SampleLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithSampleLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.SampleLimit = &value
+	return b
+}
+
+// WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TargetLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithTargetLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.TargetLimit = &value
+	return b
+}
+
+// WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.LabelLimit = &value
+	return b
+}
+
+// WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.LabelNameLengthLimit = &value
+	return b
+}
+
+// WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.LabelValueLengthLimit = &value
 	return b
 }

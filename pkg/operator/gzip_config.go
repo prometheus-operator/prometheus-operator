@@ -22,6 +22,10 @@ import (
 )
 
 func GzipConfig(w io.Writer, conf []byte) error {
+	if len(conf) == 0 {
+		return nil
+	}
+
 	buf := gzip.NewWriter(w)
 	defer buf.Close()
 	if _, err := buf.Write(conf); err != nil {

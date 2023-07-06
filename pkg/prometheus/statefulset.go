@@ -15,15 +15,18 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -50,11 +53,9 @@ const (
 )
 
 var (
-	minShards                   int32 = 1
-	MinReplicas                 int32 = 1
-	managedByOperatorLabel            = "managed-by"
-	managedByOperatorLabelValue       = "prometheus-operator"
-	ManagedByOperatorLabels           = map[string]string{
+	managedByOperatorLabel      = "managed-by"
+	managedByOperatorLabelValue = "prometheus-operator"
+	ManagedByOperatorLabels     = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	ShardLabelName                = "operator.prometheus.io/shard"
@@ -67,19 +68,39 @@ var (
 func ExpectedStatefulSetShardNames(
 	p monitoringv1.PrometheusInterface,
 ) []string {
-	cpf := p.GetCommonPrometheusFields()
-
 	res := []string{}
-	shards := minShards
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
-
-	for i := int32(0); i < shards; i++ {
+	for i := int32(0); i < shardsNumber(p); i++ {
 		res = append(res, prometheusNameByShard(p, i))
 	}
 
 	return res
+}
+
+// shardsNumber returns the normalized number of shards.
+func shardsNumber(
+	p monitoringv1.PrometheusInterface,
+) int32 {
+	cpf := p.GetCommonPrometheusFields()
+
+	if pointer.Int32Deref(cpf.Shards, 1) <= 1 {
+		return 1
+	}
+
+	return *cpf.Shards
+}
+
+// ReplicasNumberPtr returns a pointer to the normalized number of replicas.
+func ReplicasNumberPtr(
+	p monitoringv1.PrometheusInterface,
+) *int32 {
+	cpf := p.GetCommonPrometheusFields()
+
+	replicas := pointer.Int32Deref(cpf.Replicas, 1)
+	if replicas < 0 {
+		replicas = 1
+	}
+
+	return &replicas
 }
 
 func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
@@ -90,41 +111,41 @@ func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) stri
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func MakeEmptyConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config) (*v1.Secret, error) {
-	s := MakeConfigSecret(p, config)
-
-	s.ObjectMeta.Annotations = map[string]string{
-		"empty": "true",
+func compress(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, data); err != nil {
+		return nil, errors.Wrap(err, "failed to gzip config")
 	}
 
-	return s, nil
+	return buf.Bytes(), nil
 }
 
-func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config) *v1.Secret {
+func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
+	promConfig, err := compress(data)
+	if err != nil {
+		return nil, err
+	}
+
 	objMeta := p.GetObjectMeta()
 	typeMeta := p.GetTypeMeta()
-
-	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        ConfigSecretName(p),
 			Annotations: config.Annotations,
 			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
+			OwnerReferences: []metav1.OwnerReference{{
+				APIVersion:         typeMeta.APIVersion,
+				BlockOwnerDeletion: pointer.Bool(true),
+				Controller:         pointer.Bool(true),
+				Kind:               typeMeta.Kind,
+				Name:               objMeta.GetName(),
+				UID:                objMeta.GetUID(),
+			}},
 		},
 		Data: map[string][]byte{
-			ConfigFilename: {},
+			ConfigFilename: promConfig,
 		},
-	}
+	}, nil
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {

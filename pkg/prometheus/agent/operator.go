@@ -15,7 +15,6 @@
 package prometheusagent
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -716,35 +716,12 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	for i, remote := range p.Spec.RemoteWrite {
-		if err := prompkg.ValidateRemoteWriteSpec(remote); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		key := fmt.Sprintf("remoteWrite/%d", i)
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
-		if err := store.AddSigV4(ctx, p.GetNamespace(), remote.Sigv4, key); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
+	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
+		return err
 	}
 
-	if p.Spec.APIServerConfig != nil {
-		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
-			return errors.Wrap(err, "apiserver config")
-		}
-		if err := store.AddAuthorizationCredentials(ctx, p.GetNamespace(), p.Spec.APIServerConfig.Authorization, "apiserver/auth"); err != nil {
-			return errors.Wrapf(err, "apiserver config")
-		}
+	if err := prompkg.AddAPIServerConfigToStore(ctx, store, p.GetNamespace(), p.Spec.APIServerConfig); err != nil {
+		return err
 	}
 
 	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
@@ -765,20 +742,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s := prompkg.MakeConfigSecret(p, c.config)
-	s.ObjectMeta.Annotations = map[string]string{
-		"generated": "true",
-	}
-
 	// Compress config to avoid 1mb secret limit for a while
-	var buf bytes.Buffer
-	if err = operator.GzipConfig(&buf, conf); err != nil {
-		return errors.Wrap(err, "couldn't gzip config")
+	s, err := prompkg.MakeConfigurationSecret(p, c.config, conf)
+	if err != nil {
+		return errors.Wrap(err, "creating compressed secret failed")
 	}
-	s.Data[prompkg.ConfigFilename] = buf.Bytes()
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
@@ -913,7 +883,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 		}
 	}
 
-	if sks.Optional == nil || !*sks.Optional {
+	if !pointer.BoolDeref(sks.Optional, true) {
 		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
 	}
 

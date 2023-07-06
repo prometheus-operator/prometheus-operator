@@ -417,110 +417,6 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	require.Equal(t, expected, string(s))
 }
 
-func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
-	p := defaultPrometheus()
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme:   "http",
-						URL:      "blackbox.exporter.io",
-						Path:     "/probe",
-						ProxyURL: "socks://myproxy:9095",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
-							Targets: []string{
-								"prometheus.io",
-								"promcon.io",
-							},
-							Labels: map[string]string{
-								"static": "label",
-							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
-								{
-									TargetLabel: "foo",
-									Replacement: "bar",
-									Action:      "replace",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		nil,
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  proxy_url: socks://myproxy:9095
-  params:
-    module:
-    - http_2xx
-  static_configs:
-  - targets:
-    - prometheus.io
-    - promcon.io
-    labels:
-      namespace: default
-      static: label
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - target_label: foo
-    replacement: bar
-    action: replace
-  metric_relabel_configs: []
-`
-
-	require.Equal(t, expected, string(cfg))
-}
-
 func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
@@ -8671,6 +8567,178 @@ scrape_configs:
 	require.Equal(t, expected, string(cfg))
 }
 
+// When adding new test cases the developer should specify a name, a Probe Spec
+// (pbSpec) and an expectedConfig. (Optional) It's also possible to specify a
+// function that modifies the default Prometheus CR used if necessary for the test
+// case.
+func TestProbeSpecConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		patchProm   func(*monitoringv1.Prometheus)
+		pbSpec      monitoringv1.ProbeSpec
+		expectedCfg string
+	}{
+		{
+			name:   "empty_probe",
+			pbSpec: monitoringv1.ProbeSpec{},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "prober_spec",
+			pbSpec: monitoringv1.ProbeSpec{
+				ProberSpec: monitoringv1.ProberSpec{
+					Scheme:   "http",
+					URL:      "example.com",
+					Path:     "/probe",
+					ProxyURL: "socks://myproxy:9095",
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  proxy_url: socks://myproxy:9095
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "targets_static_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				Targets: monitoringv1.ProbeTargets{
+					StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+						Targets: []string{
+							"prometheus.io",
+							"promcon.io",
+						},
+						Labels: map[string]string{
+							"static": "label",
+						},
+						RelabelConfigs: []*monitoringv1.RelabelConfig{
+							{
+								TargetLabel: "foo",
+								Replacement: "bar",
+								Action:      "replace",
+							},
+						},
+					},
+				}},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+      static: label
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: ""
+  - target_label: foo
+    replacement: bar
+    action: replace
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "module_config",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/probe1
+  honor_timestamps: true
+  metrics_path: ""
+  params:
+    module:
+    - http_2xx
+  metric_relabel_configs: []
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pbs := map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "probe1",
+						Namespace: "default",
+					},
+					Spec: tc.pbSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			if tc.patchProm != nil {
+				tc.patchProm(p)
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				pbs,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedCfg, string(cfg))
+		})
+
+	}
+}
+
 // When adding new test cases the developer should specify a name, a ScrapeConfig Spec
 // (scSpec) and an expectedConfig. (Optional) It's also possible to specify a
 // function (patchProm) that modifies the default Prometheus CR used if necessary for the test
@@ -8967,6 +9035,67 @@ scrape_configs:
 `,
 		},
 		{
+			name: "tlsconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-ca-global",
+							},
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: true,
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca-http",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  tls_config:
+    insecure_skip_verify: false
+    ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
+    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
+    key_file: /etc/prometheus/certs/secret_default_secret_key
+  http_sd_configs:
+  - url: http://localhost:9100/sd.json
+    tls_config:
+      insecure_skip_verify: true
+      ca_file: /etc/prometheus/certs/secret_default_secret-ca-http_
+`,
+		},
+		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				Scheme: pointer.String("HTTPS"),
@@ -8980,6 +9109,30 @@ scrape_configs:
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   scheme: https
+`,
+		},
+		{
+			name: "limits",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				SampleLimit:           pointer.Uint64(10000),
+				TargetLimit:           pointer.Uint64(1000),
+				LabelLimit:            pointer.Uint64(50),
+				LabelNameLengthLimit:  pointer.Uint64(40),
+				LabelValueLengthLimit: pointer.Uint64(30),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  sample_limit: 10000
+  target_limit: 1000
+  label_limit: 50
+  label_name_length_limit: 40
+  label_value_length_limit: 30
 `,
 		},
 	} {
