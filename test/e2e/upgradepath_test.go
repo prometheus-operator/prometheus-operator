@@ -37,7 +37,7 @@ func testOperatorUpgrade(t *testing.T) {
 	}
 
 	// Create Prometheus Operator with previous stable minor version
-	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true)
+	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,8 +122,8 @@ func testOperatorUpgrade(t *testing.T) {
 		},
 	}
 
-	alertmanager := previousVersionFramework.MakeBasicAlertmanager(name, 1)
-	_, err = previousVersionFramework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, alertmanager)
+	alertmanager := previousVersionFramework.MakeBasicAlertmanager(ns, name, 1)
+	_, err = previousVersionFramework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func testOperatorUpgrade(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	// Update Prometheus Operator to current version
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,7 @@ func testOperatorUpgrade(t *testing.T) {
 	// Wait for the updated Prometheus Operator to take effect on Alertmanager, Prometheus, and ThanosRuler.
 	time.Sleep(time.Minute)
 
-	err = framework.WaitForAlertmanagerReady(context.Background(), ns, alertmanager, int(*alertmanager.Spec.Replicas))
+	err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +186,7 @@ func testOperatorUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = framework.WaitForThanosRulerReady(thanosRuler, 5*time.Minute)
+	err = framework.WaitForThanosRulerReady(context.Background(), ns, thanosRuler, 5*time.Minute)
 	if err != nil {
 		t.Fatal(err)
 	}

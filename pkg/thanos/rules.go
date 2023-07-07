@@ -22,17 +22,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const labelThanosRulerName = "thanos-ruler-name"
@@ -51,9 +50,39 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return nil, err
 	}
 
-	newRules, err := o.selectRules(t, namespaces)
+	excludedFromEnforcement := t.Spec.ExcludedFromEnforcement
+	// append the deprecated PrometheusRulesExcludedFromEnforce
+	for _, rule := range t.Spec.PrometheusRulesExcludedFromEnforce {
+		excludedFromEnforcement = append(excludedFromEnforcement,
+			monitoringv1.ObjectReference{
+				Namespace: rule.RuleNamespace,
+				Group:     monitoring.GroupName,
+				Resource:  monitoringv1.PrometheusRuleName,
+				Name:      rule.RuleName,
+			})
+	}
+	nsLabeler := namespacelabeler.New(
+		t.Spec.EnforcedNamespaceLabel,
+		excludedFromEnforcement,
+		false,
+	)
+
+	logger := log.With(o.logger, "thanos", t.Name, "namespace", t.Namespace)
+	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
+
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, logger)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "initializing PrometheusRules failed")
+	}
+
+	newRules, rejected, err := promRuleSelector.Select(namespaces)
+	if err != nil {
+		return nil, errors.Wrap(err, "selecting PrometheusRules failed")
+	}
+
+	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
+		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(newRules))
+		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rejected)
 	}
 
 	currentConfigMapList, err := cClient.List(ctx, prometheusRulesConfigMapSelector(t.Name))
@@ -148,7 +177,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		namespaces, err = o.listMatchingNamespaces(ruleNamespaceSelector)
+		namespaces, err = operator.ListMatchingNamespaces(ruleNamespaceSelector, o.nsRuleInf)
 		if err != nil {
 			return nil, err
 		}
@@ -162,79 +191,6 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 	)
 
 	return namespaces, nil
-}
-
-func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string) (map[string]string, error) {
-	rules := map[string]string{}
-
-	ruleSelector, err := metav1.LabelSelectorAsSelector(t.Spec.RuleSelector)
-	if err != nil {
-		return rules, errors.Wrap(err, "convert rule label selector to selector")
-	}
-
-	excludedFromEnforcement := t.Spec.ExcludedFromEnforcement
-	// append the deprecated PrometheusRulesExcludedFromEnforce
-	for _, rule := range t.Spec.PrometheusRulesExcludedFromEnforce {
-		excludedFromEnforcement = append(excludedFromEnforcement,
-			monitoringv1.ObjectReference{
-				Namespace: rule.RuleNamespace,
-				Group:     monitoring.GroupName,
-				Resource:  monitoringv1.PrometheusRuleName,
-				Name:      rule.RuleName,
-			})
-	}
-	nsLabeler := namespacelabeler.New(
-		t.Spec.EnforcedNamespaceLabel,
-		excludedFromEnforcement,
-		false,
-	)
-
-	for _, ns := range namespaces {
-		var marshalErr error
-		err := o.ruleInfs.ListAllByNamespace(ns, ruleSelector, func(obj interface{}) {
-			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
-			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
-				level.Error(o.logger).Log("msg", "failed to set PrometheusRule type information", "namespace", ns, "err", err)
-				return
-			}
-
-			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
-				marshalErr = err
-				return
-			}
-
-			content, err := operator.GenerateRulesConfiguration(promRule.Spec, o.logger)
-			if err != nil {
-				marshalErr = err
-				return
-			}
-			rules[fmt.Sprintf("%v-%v.yaml", promRule.Namespace, promRule.Name)] = content
-		})
-		if err != nil {
-			return nil, err
-		}
-		if marshalErr != nil {
-			return nil, marshalErr
-		}
-	}
-
-	ruleNames := []string{}
-	for name := range rules {
-		ruleNames = append(ruleNames, name)
-	}
-
-	level.Debug(o.logger).Log(
-		"msg", "selected Rules",
-		"rules", strings.Join(ruleNames, ","),
-		"namespace", t.Namespace,
-		"thanos", t.Name,
-	)
-
-	if tKey, ok := o.keyFunc(t); ok {
-		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules))
-		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, 0)
-	}
-	return rules, nil
 }
 
 // makeRulesConfigMaps takes a ThanosRuler configuration and rule files and

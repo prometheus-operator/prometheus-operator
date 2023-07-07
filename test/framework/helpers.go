@@ -24,15 +24,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/model/labels"
+	"github.com/prometheus/prometheus/model/textparse"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus/prometheus/model/labels"
-	"github.com/prometheus/prometheus/model/textparse"
 )
 
 func SourceToIOReader(source string) (io.Reader, error) {
@@ -61,7 +61,7 @@ func URLToIOReader(url string) (io.Reader, error) {
 	var resp *http.Response
 	timeout := 30 * time.Second
 
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var err error
 		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == 200 {
@@ -84,7 +84,7 @@ func URLToIOReader(url string) (io.Reader, error) {
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
 func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
-	return wait.Poll(time.Second, timeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return false, err
@@ -94,7 +94,7 @@ func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, time
 		for _, p := range pl.Items {
 			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
 			if err != nil {
-				return false, err
+				return false, nil
 			}
 
 			if isRunningAndReady {
@@ -110,7 +110,7 @@ func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, time
 }
 
 func (f *Framework) WaitForPodsRunImage(ctx context.Context, namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
-	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return false, err
@@ -132,7 +132,7 @@ func (f *Framework) WaitForPodsRunImage(ctx context.Context, namespace string, e
 
 func WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 	var resp *http.Response
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var err error
 		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == 200 {

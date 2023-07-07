@@ -27,8 +27,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -83,6 +85,10 @@ type ResourceReconciler struct {
 
 	g errgroup.Group
 }
+
+var (
+	_ = cache.ResourceEventHandler(&ResourceReconciler{})
+)
 
 // NewResourceReconciler returns a reconciler for the "kind" resource.
 func NewResourceReconciler(
@@ -211,7 +217,7 @@ func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 }
 
 // OnAdd implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnAdd(obj interface{}) {
+func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 	if _, ok := obj.(*appsv1.StatefulSet); ok {
 		rr.onStatefulSetAdd(obj.(*appsv1.StatefulSet))
 		return
@@ -422,4 +428,17 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 	rr.statusQ.AddRateLimited(key)
 
 	return true
+}
+
+// ListMatchingNamespaces lists all the namespaces that match the provided
+// selector.
+func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInformer) ([]string, error) {
+	var ns []string
+	err := cache.ListAll(nsInf.GetStore(), selector, func(obj interface{}) {
+		ns = append(ns, obj.(*v1.Namespace).Name)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list namespaces")
+	}
+	return ns, nil
 }

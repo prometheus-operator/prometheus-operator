@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"time"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGroup) *monitoringv1.PrometheusRule {
@@ -47,7 +48,7 @@ func (f *Framework) CreateRule(ctx context.Context, ns string, ar *monitoringv1.
 		err  error
 	)
 
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
 		rule, err = f.MonClientV1.PrometheusRules(ns).Create(ctx, ar, metav1.CreateOptions{})
 		if err != nil {
 			return false, err
@@ -114,7 +115,7 @@ func (f *Framework) MakeAndCreateInvalidRule(ctx context.Context, ns, name, aler
 // WaitForRule waits for a rule file with a given name to exist in a given
 // namespace.
 func (f *Framework) WaitForRule(ctx context.Context, ns, name string) error {
-	return wait.Poll(time.Second, f.DefaultTimeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		_, err := f.MonClientV1.PrometheusRules(ns).Get(ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -131,7 +132,7 @@ func (f *Framework) UpdateRule(ctx context.Context, ns string, ar *monitoringv1.
 		err  error
 	)
 
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
 		rule, err = f.MonClientV1.PrometheusRules(ns).Update(ctx, ar, metav1.UpdateOptions{})
 		if err != nil {
 			return false, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)

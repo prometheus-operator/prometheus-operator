@@ -91,6 +91,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -276,6 +280,15 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 	return nil
 }
 
+func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
+	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // validateAlertManagerRoutes verifies that the given route and all its children are semantically valid.
 // because of the self-referential issues mentioned in https://github.com/kubernetes/kubernetes/issues/62872
 // it is not currently possible to apply OpenAPI validation to a v1beta1.Route
@@ -308,6 +321,12 @@ func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeInter
 	}
 
 	for _, namedTimeInterval := range r.MuteTimeIntervals {
+		if _, found := timeIntervals[namedTimeInterval]; !found {
+			return errors.Errorf("time interval %q not found", namedTimeInterval)
+		}
+	}
+
+	for _, namedTimeInterval := range r.ActiveTimeIntervals {
 		if _, found := timeIntervals[namedTimeInterval]; !found {
 			return errors.Errorf("time interval %q not found", namedTimeInterval)
 		}

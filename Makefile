@@ -18,9 +18,16 @@ TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/podmonitor_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/probe_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/prometheus_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/servicemonitor_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
 TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/prometheusagent_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/scrapeconfig_types.go
 TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
@@ -39,7 +46,7 @@ API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
 
 
-K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
+K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
@@ -124,15 +131,23 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 
 .PHONY: k8s-client-gen
 k8s-client-gen: $(K8S_GEN_DEPS)
-	rm -rf pkg/client/{versioned,informers,listers}
+	rm -rf pkg/client/{versioned,informers,listers,applyconfiguration}
+	@echo ">> generating pkg/client/applyconfiguration..."
+	$(APPLYCONFIGURATION_GEN_BINARY) \
+		$(K8S_GEN_ARGS) \
+		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package  "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--output-base    "."
+	mv $(GO_PKG)/pkg/client/applyconfiguration pkg/client
 	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
-		--input-base     "" \
-		--clientset-name "versioned" \
-		--input          "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package "$(GO_PKG)/pkg/client" \
-		--output-base    "."
+		--input-base                  "" \
+		--apply-configuration-package "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--clientset-name              "versioned" \
+		--input                       "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
+		--output-package              "$(GO_PKG)/pkg/client" \
+		--output-base                 "."
 	@echo ">> generating pkg/client/listers..."
 	$(LISTER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
@@ -273,7 +288,7 @@ Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck
+format: go-fmt jsonnet-fmt check-license shellcheck docs
 
 .PHONY: go-fmt
 go-fmt:
@@ -281,8 +296,7 @@ go-fmt:
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)
-	# *.*sonnet will match *.jsonnet and *.libsonnet files but nothing else in this repository
-	find . -name *.jsonnet -not -path "*/vendor/*" -print0 | xargs -0 $(JSONNETFMT_BINARY) -i
+	find . -name *.jsonnet -or -name *.libsonnet -not -path "*/vendor/*" -print0 | xargs -0 $(JSONNETFMT_BINARY) -i
 
 .PHONY: check-license
 check-license:
@@ -299,6 +313,10 @@ check-metrics: $(PROMLINTER_BINARY)
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run
+
+.PHONY: fix-golang
+fix-golang: $(GOLANGCILINTER_BINARY)
+	$(GOLANGCILINTER_BINARY) run --fix
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
 MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))

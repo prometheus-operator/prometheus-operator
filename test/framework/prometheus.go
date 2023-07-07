@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,13 +34,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
-
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 )
 
 const (
@@ -385,72 +383,23 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 		expected = expected * *p.Spec.Shards
 	}
 
-	var pollErr error
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
-		var current *monitoringv1.Prometheus
-		current, pollErr = f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
-		if pollErr != nil {
-			return false, nil
-		}
-
-		status := current.Status
-
-		if status.UpdatedReplicas != expected {
-			pollErr = errors.Errorf("expected %d updated replicas, got %d", expected, status.UpdatedReplicas)
-			return false, nil
-		}
-
-		var reconciled, available *monitoringv1.PrometheusCondition
-		for _, cond := range status.Conditions {
-			if cond.Type == monitoringv1.PrometheusAvailable {
-				available = &cond
+	if err := f.WaitForResourceAvailable(
+		ctx,
+		func(ctx context.Context) (resourceStatus, error) {
+			current, err := f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
+			if err != nil {
+				return resourceStatus{}, err
 			}
-			if cond.Type == monitoringv1.PrometheusReconciled {
-				reconciled = &cond
-			}
-			if f.operatorVersion.GTE(semver.MustParse("0.60.0")) && cond.ObservedGeneration != current.Generation {
-				pollErr = errors.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
-					cond.ObservedGeneration,
-					cond.Type,
-					current.Generation)
-				return false, nil
-			}
-		}
-
-		if reconciled == nil {
-			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
-			return false, nil
-		}
-
-		if reconciled.Status != monitoringv1.PrometheusConditionTrue {
-			pollErr = errors.Errorf(
-				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
-				reconciled.Status,
-				reconciled.Reason,
-				reconciled.Message,
-			)
-			return false, nil
-		}
-
-		if available == nil {
-			pollErr = errors.Errorf("failed to find Available condition in status subresource")
-			return false, nil
-		}
-
-		if available.Status != monitoringv1.PrometheusConditionTrue {
-			pollErr = errors.Errorf(
-				"expected Available condition to be 'True', got %q (reason %s, %q)",
-				available.Status,
-				available.Reason,
-				available.Message,
-			)
-			return false, nil
-		}
-		return true, nil
-	})
-
-	if err != nil {
-		return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+			return resourceStatus{
+				expectedReplicas: expected,
+				generation:       current.Generation,
+				replicas:         current.Status.UpdatedReplicas,
+				conditions:       current.Status.Conditions,
+			}, nil
+		},
+		timeout,
+	); err != nil {
+		return errors.Wrapf(err, "prometheus %v/%v failed to become available", p.Namespace, p.Name)
 	}
 
 	return nil
@@ -503,7 +452,7 @@ func promImage(version string) string {
 func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var targets []*Target
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var err error
 		targets, err = f.GetActiveTargets(ctx, ns, svcName)
 		if err != nil {
@@ -527,7 +476,7 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var targets []*Target
 		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
 		if loopErr != nil {
@@ -551,7 +500,7 @@ func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName strin
 func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, prometheusName string) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
@@ -724,7 +673,7 @@ func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *mo
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
 		firing, loopError = f.CheckPrometheusFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil

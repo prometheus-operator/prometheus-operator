@@ -306,8 +306,10 @@ type ParsedRange struct {
 	End int `json:"end,omitempty"`
 }
 
-var validTime = "^((([01][0-9])|(2[0-3])):[0-5][0-9])$|(^24:00$)"
-var validTimeRE = regexp.MustCompile(validTime)
+var (
+	validTime   = "^((([01][0-9])|(2[0-3])):[0-5][0-9])$|(^24:00$)"
+	validTimeRE = regexp.MustCompile(validTime)
+)
 
 // Converts a string of the form "HH:MM" into the number of minutes elapsed in the day.
 func parseTime(in string) (mins int, err error) {

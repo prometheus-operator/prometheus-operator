@@ -24,12 +24,19 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *TestCtx) string {
-	name := testCtx.GetObjID()
+	name := testCtx.ID()
+	rn := k8sutil.ResourceNamer{}
+	name, err := rn.UniqueDNS1123Label(name)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, fmt.Sprintf("failed to generate a namespace name %v", name)))
+	}
 
-	_, err := f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},

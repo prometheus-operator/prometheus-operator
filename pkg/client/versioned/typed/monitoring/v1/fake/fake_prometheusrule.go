@@ -18,8 +18,11 @@ package fake
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -120,6 +123,28 @@ func (c *FakePrometheusRules) DeleteCollection(ctx context.Context, opts v1.Dele
 func (c *FakePrometheusRules) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.PrometheusRule, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, name, pt, data, subresources...), &monitoringv1.PrometheusRule{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*monitoringv1.PrometheusRule), err
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied prometheusRule.
+func (c *FakePrometheusRules) Apply(ctx context.Context, prometheusRule *applyconfigurationmonitoringv1.PrometheusRuleApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1.PrometheusRule, err error) {
+	if prometheusRule == nil {
+		return nil, fmt.Errorf("prometheusRule provided to Apply must not be nil")
+	}
+	data, err := json.Marshal(prometheusRule)
+	if err != nil {
+		return nil, err
+	}
+	name := prometheusRule.Name
+	if name == nil {
+		return nil, fmt.Errorf("prometheusRule.Name must be provided to Apply")
+	}
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, *name, types.ApplyPatchType, data), &monitoringv1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err

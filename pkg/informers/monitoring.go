@@ -17,11 +17,12 @@ package informers
 import (
 	"time"
 
-	informers "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions"
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	informers "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 )
 
 // NewMonitoringInformerFactories creates factories for monitoring resources
@@ -50,8 +51,8 @@ func NewMonitoringInformerFactories(
 
 type monitoringInformersForNamespaces map[string]informers.SharedInformerFactory
 
-func (i monitoringInformersForNamespaces) Namespaces() sets.String {
-	return sets.StringKeySet(i)
+func (i monitoringInformersForNamespaces) Namespaces() sets.Set[string] {
+	return sets.KeySet(i)
 }
 
 func (i monitoringInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {

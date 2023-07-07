@@ -22,13 +22,13 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
-	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
-
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
@@ -36,16 +36,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	"gopkg.in/alecthomas/kingpin.v2"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 const (
-	defaultWatchInterval = 3 * time.Minute // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
-	defaultDelayInterval = 1 * time.Second // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
-	defaultRetryInterval = 5 * time.Second // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultWatchInterval = 3 * time.Minute  // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultDelayInterval = 1 * time.Second  // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
+	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
 
-	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
-	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
+	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
 
 func main() {
@@ -59,13 +62,14 @@ func main() {
 	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories; when set to 0, the program runs only once and exits").Default(defaultWatchInterval.String()).Duration()
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
+	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
 		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
-		Default(statefulsetOrdinalFromEnvvarDefault).String()
+		Default(operator.PodNameEnvVar).String()
 
 	listenAddress := app.Flag(
 		"listen-address",
@@ -117,9 +121,12 @@ func main() {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	var g run.Group
+	var (
+		g           run.Group
+		ctx, cancel = context.WithCancel(context.Background())
+	)
+
 	{
-		ctx, cancel := context.WithCancel(context.Background())
 		rel := reloader.New(
 			logger,
 			r,
@@ -134,7 +141,7 @@ func main() {
 			},
 		)
 
-		client := createHTTPClient()
+		client := createHTTPClient(reloadTimeout)
 		rel.SetHttpClient(client)
 
 		g.Add(func() error {
@@ -145,14 +152,33 @@ func main() {
 	}
 
 	if *listenAddress != "" && *watchInterval != 0 {
+		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"up"}`))
+		})
+
+		srv := http.Server{Addr: *listenAddress}
+
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-			return http.ListenAndServe(*listenAddress, nil)
-		}, func(err error) {
-			level.Error(logger).Log("err", err)
+			return srv.ListenAndServe()
+		}, func(error) {
+			srv.Close()
 		})
 	}
+
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	g.Add(func() error {
+		select {
+		case <-term:
+			level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
+		case <-ctx.Done():
+		}
+
+		return nil
+	}, func(error) {})
 
 	if err := g.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -160,12 +186,12 @@ func main() {
 	}
 }
 
-func createHTTPClient() http.Client {
+func createHTTPClient(timeout *time.Duration) http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
-		Timeout:   30 * time.Second, // Default Timeout as of http.DefaultTransport
-		KeepAlive: -1,               // Keep alive probe is unnecessary
+		Timeout:   *timeout, // How long should we wait to connect to Prometheus
+		KeepAlive: -1,       // Keep alive probe is unnecessary
 	}).DialContext
 
 	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
@@ -176,7 +202,7 @@ func createHTTPClient() http.Client {
 	}
 
 	return http.Client{
-		Timeout:   30 * time.Second, // Construct with a 30 second timeout. This timeout is unchanged related to the Dialer Timeout and is subject for change. Other timeouts are neglected.
+		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
 		Transport: transport,
 	}
 }

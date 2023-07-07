@@ -24,7 +24,7 @@ import (
 )
 
 type TestCtx struct {
-	ID         string
+	id         string
 	cleanUpFns []FinalizerFn
 }
 
@@ -44,16 +44,16 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 
 	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36)
 	return &TestCtx{
-		ID: id,
+		id: id,
 	}
 }
 
-// GetObjID returns an ascending ID based on the length of cleanUpFns. It is
+// ID returns an ascending ID based on the length of cleanUpFns. It is
 // based on the premise that every new object also appends a new finalizerFn on
 // cleanUpFns. This can e.g. be used to create multiple namespaces in the same
 // test context.
-func (ctx *TestCtx) GetObjID() string {
-	return ctx.ID + "-" + strconv.Itoa(len(ctx.cleanUpFns))
+func (ctx *TestCtx) ID() string {
+	return ctx.id + "-" + strconv.Itoa(len(ctx.cleanUpFns))
 }
 
 func (ctx *TestCtx) Cleanup(t *testing.T) {

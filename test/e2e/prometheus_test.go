@@ -31,7 +31,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
+	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,17 +44,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
-
-	"google.golang.org/protobuf/proto"
+	"k8s.io/utils/pointer"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -755,7 +755,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
 				}
 			}
-
 		})
 	}
 }
@@ -908,8 +907,8 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -975,8 +974,8 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 		t.Errorf("incorrect volume claim annotation, want: %v, got: %v", "bar", val)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -1044,8 +1043,8 @@ func testPromStorageUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(p.Name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(p.Name))
 		if err != nil {
 			return false, err
 		}
@@ -1274,8 +1273,8 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
-		response, err := framework.PrometheusSVCGetRequest(context.Background(), ns, svc.Name, "http", "/api/v1/alertmanagers", map[string]string{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+		response, err := framework.PrometheusSVCGetRequest(ctx, ns, svc.Name, "http", "/api/v1/alertmanagers", map[string]string{})
 		if err != nil {
 			return true, err
 		}
@@ -1459,9 +1458,9 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 
 	for _, file := range ruleFiles {
 		var loopError error
-		err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 			var firing bool
-			firing, loopError = framework.CheckPrometheusFiringAlert(context.Background(), file.ns, pSVC.Name, file.alertName)
+			firing, loopError = framework.CheckPrometheusFiringAlert(ctx, file.ns, pSVC.Name, file.alertName)
 			return !firing, nil
 		})
 
@@ -1589,6 +1588,33 @@ func testInvalidRulesAreRejected(t *testing.T) {
 	_, err := framework.MakeAndCreateInvalidRule(context.Background(), ns, name, admissionAlert)
 	if err == nil {
 		t.Fatal("Expected invalid prometheusrule to be rejected")
+	}
+}
+
+func testPromReconcileStatusWhenInvalidRuleCreated(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	ruleFilesNamespaceSelector := map[string]string{"excludeFromWebhook": "true", "role": "rulefile"}
+
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleFilesNamespaceSelector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ruleName := "invalidrule"
+	alertName := "invalidalert"
+
+	_, err = framework.MakeAndCreateInvalidRule(context.Background(), ns, ruleName, alertName)
+	if err != nil {
+		t.Fatalf("expected invalid rule to be created in namespace %v", err)
+	}
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
 	}
 }
 
@@ -2170,7 +2196,7 @@ func testShardingProvisioning(t *testing.T) {
 	}
 
 	for _, p := range pods {
-		stdout, _, err := framework.ExecWithOptions(testFramework.ExecOptions{
+		stdout, _, err := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
 			Command: []string{
 				"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml",
 			},
@@ -2264,8 +2290,8 @@ func testResharding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(time.Second, 1*time.Minute, func() (bool, error) {
-		_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+		_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return false, err
 		}
@@ -2314,7 +2340,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatalf("Generated Secret could not be retrieved: %v", err)
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2322,7 +2348,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "creating Alertmanager service failed"))
 	}
 
-	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(context.Background(), ns, svc.Name, alertmanagerName))
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus Alertmanager discovery failed"))
 	}
@@ -2522,13 +2548,13 @@ func testThanos(t *testing.T) {
 		t.Fatal("Creating Thanos query service failed: ", err)
 	}
 
-	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
 		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
 			"query": "prometheus_build_info",
 			"dedup": "false",
 		})
-		b, err := request.DoRaw(context.Background())
+		b, err := request.DoRaw(ctx)
 		if err != nil {
 			t.Logf("Error performing request against Thanos query: %v\n\nretrying...", err)
 			return false, nil
@@ -2739,7 +2765,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{mainNS}, nil, nil, nil, false, true)
+		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{mainNS}, nil, nil, nil, false, true, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2810,7 +2836,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{prometheusNS, ruleNS}, nil, nil, nil, false, true)
+		_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNS, []string{prometheusNS, ruleNS}, nil, nil, nil, false, true, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -3369,8 +3395,8 @@ func testPromStaticProbe(t *testing.T) {
 	q.Set("target", targets[0])
 	expectedURL.RawQuery = q.Encode()
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		activeTargets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	if err := wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+		activeTargets, err := framework.GetActiveTargets(ctx, ns, svc.Name)
 		if err != nil {
 			return false, err
 		}
@@ -3680,8 +3706,8 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		promPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		promPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -3799,10 +3825,100 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
 	}
+
+	// Simulate a certificate renewal and check that the new certificate is in place
+	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		promPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(promPods.Items) == 0 {
+			pollErr = fmt.Errorf("No prometheus pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := promPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9090")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9090", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		// The prometheus certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the prometheus instance is configured properly.
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		err = http2.ConfigureTransport(transport)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		httpClient := http.Client{
+			Transport: transport,
+		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if resp.ProtoMajor != 2 {
+			pollErr = fmt.Errorf("expected ProtoMajor to be 2 but got %d", resp.ProtoMajor)
+			return false, nil
+		}
+
+		receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytes, certBytesNew) {
+			pollErr = fmt.Errorf("certificate received from prometheus instance does not match the one which is configured after certificate renewal")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
+	}
 }
 
 func testPromMinReadySeconds(t *testing.T) {
-	runFeatureGatedTests(t)
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -3845,8 +3961,8 @@ func testPromMinReadySeconds(t *testing.T) {
 		t.Fatal("Updating prometheus failed: ", err)
 	}
 
-	err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -3969,7 +4085,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4121,7 +4237,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.Poll(5*time.Second, 1*time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4351,6 +4467,80 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "max-connections",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					Web: &monitoringv1.PrometheusWebSpec{
+						MaxConnections: proto.Int32(100),
+					},
+				},
+			},
+		},
+		{
+			name: "max-connections-negative-value",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					Web: &monitoringv1.PrometheusWebSpec{
+						MaxConnections: proto.Int32(-1),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "max-concurrency",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Query: &monitoringv1.QuerySpec{
+					MaxConcurrency: pointer.Int32(100),
+				},
+			},
+		},
+		{
+			name: "max-concurrency-zero-value",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Query: &monitoringv1.QuerySpec{
+					MaxConcurrency: pointer.Int32(0),
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -4493,146 +4683,6 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 	}
 }
 
-func testPrometheusRuleCRDValidation(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name          string
-		promRuleSpec  monitoringv1.PrometheusRuleSpec
-		expectedError bool
-	}{
-		{
-			name: "duplicate-rule-name",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:  "rule1",
-						Rules: []monitoringv1.Rule{},
-					},
-					{
-						Name:  "rule1",
-						Rules: []monitoringv1.Rule{},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "invalid-partial-rsp",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "invalid",
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "valid-rule-names",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:  "rule1",
-						Rules: []monitoringv1.Rule{},
-					},
-					{
-						Name:  "rule2",
-						Rules: []monitoringv1.Rule{},
-					},
-				},
-			},
-		},
-		{
-			name: "valid-partial-rsp-1",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "abort",
-					},
-				},
-			},
-		},
-		{
-			name: "valid-partial-rsp-2",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "ABORT",
-					},
-				},
-			},
-		},
-		{
-			name: "valid-partial-rsp-3",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "Warn",
-					},
-				},
-			},
-		},
-		{
-			name: "valid-partial-rsp-4",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "WaRn",
-					},
-				},
-			},
-		},
-		{
-			name: "valid-partial-rsp-5",
-			promRuleSpec: monitoringv1.PrometheusRuleSpec{
-				Groups: []monitoringv1.RuleGroup{
-					{
-						Name:                    "test",
-						Rules:                   []monitoringv1.Rule{},
-						PartialResponseStrategy: "",
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			testCtx := framework.NewTestCtx(t)
-			defer testCtx.Cleanup(t)
-			ns := framework.CreateNamespace(context.Background(), t, testCtx)
-
-			promRule := framework.MakeBasicRule(ns, "prometheus-rule", test.promRuleSpec.Groups)
-			_, err := framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), promRule, metav1.CreateOptions{})
-
-			if err == nil {
-				if test.expectedError {
-					t.Fatal("expected error but got nil")
-				}
-				return
-			}
-
-			if !apierrors.IsInvalid(err) {
-				t.Fatalf("expected Invalid error but got %v", err)
-			}
-		})
-	}
-}
-
 func testPromQueryLogFile(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -4644,6 +4694,64 @@ func testPromQueryLogFile(t *testing.T) {
 	p.Spec.QueryLogFile = "query.log"
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testPromUnavailableConditionStatus(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, "test", "", 2)
+	// A non-existing service account prevents the creation of the statefulset's pods.
+	p.Spec.ServiceAccountName = "does-not-exist"
+
+	_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), p, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
+		var current *monitoringv1.Prometheus
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
+		if pollErr != nil {
+			return false, nil
+		}
+
+		for _, cond := range current.Status.Conditions {
+			if cond.Type != monitoringv1.Available {
+				continue
+			}
+
+			if cond.Status != monitoringv1.ConditionFalse {
+				pollErr = errors.Errorf(
+					"expected Available condition to be 'False', got %q (reason %s, %q)",
+					cond.Status,
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			if cond.Reason != "NoPodReady" {
+				pollErr = errors.Errorf(
+					"expected Available condition's reason to be 'NoPodReady',  got %s (message %q)",
+					cond.Reason,
+					cond.Message,
+				)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		pollErr = errors.Errorf("failed to find Available condition in status subresource")
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for Prometheus %v/%v: %v: %v", p.Namespace, p.Name, err, pollErr)
 	}
 }
 
@@ -4659,7 +4767,9 @@ func testPromDegradedConditionStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Roll out a new version of the Prometheus object that triggers an error.
+	// Roll out a new version of the Prometheus object that references a
+	// non-existing container image which should trigger the
+	// "Available=Degraded" condition.
 	p, err := framework.PatchPrometheus(
 		context.Background(),
 		p.Name,
@@ -4678,19 +4788,19 @@ func testPromDegradedConditionStatus(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		var current *monitoringv1.Prometheus
-		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(context.Background(), p.Name, metav1.GetOptions{})
+		current, pollErr = framework.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 		if pollErr != nil {
 			return false, nil
 		}
 
 		for _, cond := range current.Status.Conditions {
-			if cond.Type != monitoringv1.PrometheusAvailable {
+			if cond.Type != monitoringv1.Available {
 				continue
 			}
 
-			if cond.Status != monitoringv1.PrometheusConditionDegraded {
+			if cond.Status != monitoringv1.ConditionDegraded {
 				pollErr = errors.Errorf(
 					"expected Available condition to be 'Degraded', got %q (reason %s, %q)",
 					cond.Status,
@@ -4776,9 +4886,9 @@ func testPromStrategicMergePatch(t *testing.T) {
 	}
 }
 
-func isAlertmanagerDiscoveryWorking(ctx context.Context, ns, promSVCName, alertmanagerName string) func() (bool, error) {
-	return func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(alertmanagerName))
+func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
+	return func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
 		if err != nil {
 			return false, err
 		}

@@ -19,7 +19,6 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,37 +55,37 @@ func newDenylistListerWatcher(l log.Logger, namespaces map[string]struct{}, next
 // but filtering denied namespaces from the result.
 func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	var (
-		l     = metav1.List{}
-		error = level.Error(w.logger)
-		debug = level.Debug(w.logger)
+		l      = metav1.List{}
+		errL   = level.Error(w.logger)
+		debugL = level.Debug(w.logger)
 	)
 
 	list, err := w.next.List(options)
 	if err != nil {
-		error.Log("msg", "error listing", "err", err)
+		errL.Log("msg", "error listing", "err", err)
 		return nil, err
 	}
 
 	objs, err := meta.ExtractList(list)
 	if err != nil {
-		error.Log("msg", "error extracting list", "err", err)
+		errL.Log("msg", "error extracting list", "err", err)
 		return nil, err
 	}
 
 	metaObj, err := meta.ListAccessor(list)
 	if err != nil {
-		error.Log("msg", "error getting list accessor", "err", err)
+		errL.Log("msg", "error getting list accessor", "err", err)
 		return nil, err
 	}
 
 	for _, obj := range objs {
 		acc, err := meta.Accessor(obj)
 		if err != nil {
-			error.Log("msg", "error getting meta accessor accessor", "obj", fmt.Sprintf("%v", obj), "err", err)
+			errL.Log("msg", "error getting meta accessor accessor", "obj", fmt.Sprintf("%v", obj), "err", err)
 			return nil, err
 		}
 
-		debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
+		debugDetailed := log.With(debugL, "selflink", acc.GetSelfLink())
 
 		if _, denied := w.denylist[getNamespace(acc)]; denied {
 			debugDetailed.Log("msg", "denied")

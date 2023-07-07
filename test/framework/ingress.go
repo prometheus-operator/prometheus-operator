@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -130,7 +130,7 @@ func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend(ctx context.Co
 
 func (f *Framework) GetIngressIP(ctx context.Context, namespace string, ingressName string) (*string, error) {
 	var ingress *networkv1.Ingress
-	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Millisecond*500, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var err error
 		ingress, err = f.KubeClient.NetworkingV1().Ingresses(namespace).Get(ctx, ingressName, metav1.GetOptions{})
 		if err != nil {

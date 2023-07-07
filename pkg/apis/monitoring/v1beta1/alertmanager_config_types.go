@@ -22,6 +22,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -126,9 +127,12 @@ type Route struct {
 	// an alternative type to circumvent the limitation. The downside is that
 	// the Kube API can't validate the data beyond the fact that it is a valid
 	// JSON representation.
-	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	// MuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
+	// ActiveTimeIntervals is a list of TimeInterval names when this route should be active.
+	// +optional
+	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.
@@ -153,6 +157,8 @@ type Receiver struct {
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
+	// List of Slack configurations.
+	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// List of Slack configurations.
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
@@ -249,6 +255,32 @@ type PagerDutyLinkConfig struct {
 	// Text that describes the purpose of the link, and can be used as the link's text.
 	// +optional
 	Text string `json:"alt,omitempty"`
+}
+
+// DiscordConfig configures notifications via Discord.
+// See https://prometheus.io/docs/alerting/latest/configuration/#discord_config
+type DiscordConfig struct {
+	// Whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The secret's key that contains the Discord webhook URL.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// +required
+	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
+
+	// The template of the message's title.
+	// +optional
+	Title *string `json:"title,omitempty"`
+
+	// The template of the message's body.
+	// +optional
+	Message *string `json:"message,omitempty"`
+
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.

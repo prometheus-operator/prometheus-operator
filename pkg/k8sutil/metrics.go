@@ -75,14 +75,14 @@ func MustRegisterClientGoMetrics(registerer prometheus.Registerer) {
 	registerer.MustRegister(httpMetrics.count, httpMetrics.duration, rateLimiterMetrics.duration)
 }
 
-func (a *clientGoHTTPMetricAdapter) Increment(_ context.Context, code string, method string, host string) {
+func (a *clientGoHTTPMetricAdapter) Increment(_ context.Context, code string, _ string, _ string) {
 	a.count.WithLabelValues(code).Inc()
 }
 
-func (a *clientGoHTTPMetricAdapter) Observe(_ context.Context, verb string, u url.URL, latency time.Duration) {
+func (a *clientGoHTTPMetricAdapter) Observe(_ context.Context, _ string, u url.URL, latency time.Duration) {
 	a.duration.WithLabelValues(u.EscapedPath()).Observe(latency.Seconds())
 }
 
-func (a *clientGoRateLimiterMetricAdapter) Observe(_ context.Context, verb string, u url.URL, latency time.Duration) {
+func (a *clientGoRateLimiterMetricAdapter) Observe(_ context.Context, _ string, u url.URL, latency time.Duration) {
 	a.duration.WithLabelValues(u.EscapedPath()).Observe(latency.Seconds())
 }

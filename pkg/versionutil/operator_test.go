@@ -33,6 +33,11 @@ func TestOperatorBuildContext(t *testing.T) {
 	restore := setAllVersionFieldsTo("test-value")
 	defer restore()
 
-	expOut := "(go=test-value, user=test-value, date=test-value)"
-	assert.Equal(t, expOut, version.BuildContext())
+	for _, expected := range []string{
+		"go=test-value",
+		"user=test-value",
+		"date=test-value",
+	} {
+		assert.Contains(t, version.BuildContext(), expected)
+	}
 }

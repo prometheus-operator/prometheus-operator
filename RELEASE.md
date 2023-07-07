@@ -29,8 +29,12 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.59   | 2022-08-24                                 | Philip Gough (GitHub: @PhilipGough)     |
 | v0.60   | 2022-10-05                                 | Simon Pasquier (GitHub: @simonpasquier) |
 | v0.61   | 2022-11-16                                 | Filip Petkovski (Github: @fpetkovski)   |
-| v0.62   | 2022-12-28                                 | **searching for volunteer**             |
-| v0.63   | 2023-02-08                                 | **searching for volunteer**             |
+| v0.62   | 2022-12-28                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.63   | 2023-02-08                                 | Philip Gough (GitHub: @PhilipGough)     |
+| v0.64   | 2023-03-22                                 | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.65   | 2023-05-03                                 | Philip Gough (GitHub: @PhilipGough)     |
+| v0.66   | 2023-06-14                                 | Arthur Sens (Github: @ArthurSens)       |
+| v0.67   | 2023-07-26                                 | **searching for volunteer**             |
 
 # How to cut a new release
 
@@ -54,6 +58,7 @@ A couple of days before the release, consider submitting a PR against the `main`
 
 ```bash
 make update-go-deps
+make tidy
 ```
 
 ## Update operand versions

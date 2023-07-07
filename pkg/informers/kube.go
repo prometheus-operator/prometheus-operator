@@ -22,6 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
+	"k8s.io/client-go/metadata/metadatainformer"
 )
 
 // NewKubeInformerFactories creates factories for kube resources
@@ -44,16 +46,46 @@ func NewKubeInformerFactories(
 		opts = append(opts, informers.WithNamespace(namespace))
 		ret[namespace] = informers.NewSharedInformerFactoryWithOptions(kubeClient, defaultResync, opts...)
 	}
+	return ret
+}
+
+// NewMetadataInformerFactory creates metadatainformer factory for kube resources
+// for the given allowed, and denied namespaces (these parameters being mutually exclusive).
+// mdClient, defaultResync, and tweakListOptions are  passed to the underlying informer factory.
+// factories
+func NewMetadataInformerFactory(
+	allowNamespaces, denyNamespaces map[string]struct{},
+	mdClient metadata.Interface,
+	defaultResync time.Duration,
+	tweakListOptions func(*metav1.ListOptions),
+) FactoriesForNamespaces {
+
+	tweaks, namespaces := newInformerOptions(allowNamespaces, denyNamespaces, tweakListOptions)
+
+	ret := metadataInformersForNamespace{}
+	for _, namespace := range namespaces {
+		ret[namespace] = metadatainformer.NewFilteredSharedInformerFactory(mdClient, defaultResync, namespace, tweaks)
+	}
 
 	return ret
 }
 
 type kubeInformersForNamespaces map[string]informers.SharedInformerFactory
 
-func (i kubeInformersForNamespaces) Namespaces() sets.String {
-	return sets.StringKeySet(i)
+func (i kubeInformersForNamespaces) Namespaces() sets.Set[string] {
+	return sets.KeySet(i)
 }
 
 func (i kubeInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
 	return i[namespace].ForResource(resource)
+}
+
+type metadataInformersForNamespace map[string]metadatainformer.SharedInformerFactory
+
+func (i metadataInformersForNamespace) Namespaces() sets.Set[string] {
+	return sets.KeySet(i)
+}
+
+func (i metadataInformersForNamespace) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
+	return i[namespace].ForResource(resource), nil
 }

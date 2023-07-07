@@ -23,19 +23,19 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"github.com/prometheus/client_golang/prometheus"
+	v1 "k8s.io/api/admission/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	kscheme "k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
+
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	validationv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
-
-	v1 "k8s.io/api/admission/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kscheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
@@ -80,7 +80,7 @@ type Admission struct {
 	amConfValidationErrorsCounter      prometheus.Counter
 	amConfValidationTriggeredCounter   prometheus.Counter
 	logger                             log.Logger
-	wh                                 *conversion.Webhook
+	wh                                 http.Handler
 }
 
 func New(logger log.Logger) *Admission {
@@ -94,14 +94,9 @@ func New(logger log.Logger) *Admission {
 		panic(err)
 	}
 
-	wh := &conversion.Webhook{}
-	if err := wh.InjectScheme(scheme); err != nil {
-		panic(fmt.Sprintf("failed to inject scheme into the webhook handler: %s", err))
-	}
-
 	return &Admission{
 		logger: logger,
-		wh:     wh,
+		wh:     conversion.NewWebhookHandler(scheme),
 	}
 }
 

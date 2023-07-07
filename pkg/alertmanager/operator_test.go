@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -37,10 +38,6 @@ import (
 	monitoringfake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
-
-func strPtr(str string) *string {
-	return &str
-}
 
 func TestCreateStatefulSetInputHash(t *testing.T) {
 	falseVal := false
@@ -203,6 +200,11 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	}
 }
 
+// Test to exercise the function checkAlertmanagerConfigResource
+// and validate that semantic validation is in place for all the fields in the
+// AlertmanagerConfig CR. The validation is preformed by the operator
+// after selecting AlertmanagerConfig resources but before passing them to
+// addAlertmanagerConfigs
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	if err != nil {
@@ -480,7 +482,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: strPtr("http://test.local"),
+								URL: pointer.String("http://test.local"),
 							},
 						},
 					}},
@@ -996,6 +998,11 @@ func TestListOptions(t *testing.T) {
 	}
 }
 
+// Test to exercise the function provisionAlertmanagerConfiguration
+// and validate that the operator is able to generate an Alertmanager
+// configuration depending on the method chosen by the user.
+// Alertmanager can be configured using either the AlertmanagerConfig resource
+// or a Kubernetes secret.
 func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 	for _, tc := range []struct {
 		am      *monitoringv1.Alertmanager

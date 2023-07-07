@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 var cases = []struct {
@@ -40,8 +42,8 @@ var cases = []struct {
 func TestCreateOrdinalEnvVar(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.in, func(t *testing.T) {
-			os.Setenv(statefulsetOrdinalFromEnvvarDefault, tt.in)
-			s := createOrdinalEnvvar(statefulsetOrdinalFromEnvvarDefault)
+			os.Setenv(operator.PodNameEnvVar, tt.in)
+			s := createOrdinalEnvvar(operator.PodNameEnvVar)
 			if os.Getenv(statefulsetOrdinalEnvvar) != tt.out {
 				t.Errorf("got %v, want %s", s, tt.out)
 			}
@@ -70,7 +72,9 @@ func TestCreateHTTPClient(t *testing.T) {
 			Timeout:   30 * time.Second,
 		}
 
-		client := createHTTPClient()
+		timeoutDuration := 30 * time.Second
+
+		client := createHTTPClient(&timeoutDuration)
 
 		if diff := deep.Equal(client, expectedClient); diff != nil {
 			t.Errorf("found differences %v", diff)

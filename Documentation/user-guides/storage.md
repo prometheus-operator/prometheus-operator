@@ -22,7 +22,7 @@ PersistentVolume to be provisioned when requested.
 
 This document assumes a basic understanding of PersistentVolumes,
 PersistentVolumeClaims, and their
-[provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
+[provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#provisioning).
 
 ## Storage Provisioning on AWS
 
@@ -42,7 +42,7 @@ parameters:
 
 For best results, use volumes that have high I/O throughput. These examples use
 SSD EBS volumes. Read the Kubernetes [Persistent
-Volumes](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws)
+Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#provisioning)
 documentation to adapt this `StorageClass` to your needs.
 
 The `StorageClass` that was created can be specified in the `storage` section
@@ -112,7 +112,7 @@ kind: PersistentVolume
 metadata:
   name: my-pv-name
   labels:
-    app: my-example-prometheus
+    app.kubernetes.io/name: my-example-prometheus
 spec:
   capacity:
     storage: 50Gi
@@ -159,28 +159,26 @@ parameters:
 
 Even if the StorageClass supports resizing, Kubernetes doesn't support (yet)
 volume expansion through StatefulSets. This means that when you update the
-storage requests in the `spec.storage` field of a custom resource, it doesn't
-get propagated to the associated PVCs (more details in the [KEP
+storage requests in the `spec.storage` field of a custom resource such as
+Prometheus, the operator has to delete/recreate the underlying StatefulSet and
+the associated PVCs aren't expanded (more details in the [KEP
 issue](https://github.com/kubernetes/enhancements/issues/661)).
 
 It is still possible to fix the situation manually.
 
-First, update the storage request in the `spec.storage` field of the custom
-resource (assuming a Prometheus resource named `example`):
+First check that the storage class allows volume expansion:
 
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: example
-spec:
-  replicas: 1
-  storage:
-    volumeClaimTemplate:
-      spec:
-        resources:
-          requests:
-            storage: 10Gi
+```bash
+$ kubectl get storageclass -o custom-columns=NAME:.metadata.name,ALLOWVOLUMEEXPANSION:.allowVolumeExpansion
+NAME      ALLOWVOLUMEEXPANSION
+gp2-csi   true
+gp3-csi   true
+```
+
+Next, update the `spec.paused` field to `true` (to prevent the operator from recreating the StatefulSet) and update the storage request in the `spec.storage` field of the custom resource. Assuming a Prometheus resource named `example` for which you want to increase the storage size to 10Gi:
+
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": true, "storage": {"volumeClaimTemplate": {"spec": {"resources": {"requests": {"storage":"10Gi"}}}}}}}' --type merge
 ```
 
 Next, patch every PVC with the updated storage request (10Gi in this example):
@@ -191,10 +189,16 @@ for p in $(kubectl get pvc -l operator.prometheus.io/name=example -o jsonpath='{
 done
 ```
 
-Last, delete the underlying StatefulSet using the `orphan` deletion strategy:
+Next, delete the underlying StatefulSet using the `orphan` deletion strategy:
 
 ```bash
 kubectl delete statefulset -l operator.prometheus.io/name=example --cascade=orphan
+```
+
+Last, change `spec.paused` field of the custom resource back to `false`.
+
+```bash
+kubectl patch prometheus/example --patch '{"spec": {"paused": false}}' --type merge
 ```
 
 The operator should recreate the StatefulSet immediately, there will be no

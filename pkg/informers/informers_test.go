@@ -20,24 +20,24 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 type mockFactory struct {
-	namespaces sets.String
+	namespaces sets.Set[string]
 	objects    map[string]runtime.Object
 }
 
-func (m *mockFactory) List(selector labels.Selector) (ret []runtime.Object, err error) {
+func (m *mockFactory) List(_ labels.Selector) (ret []runtime.Object, err error) {
 	panic("implement me")
 }
 
@@ -49,7 +49,7 @@ func (m *mockFactory) Get(name string) (runtime.Object, error) {
 	return nil, errors.NewNotFound(schema.GroupResource{}, name)
 }
 
-func (m *mockFactory) ByNamespace(namespace string) cache.GenericNamespaceLister {
+func (m *mockFactory) ByNamespace(_ string) cache.GenericNamespaceLister {
 	panic("not implemented")
 }
 
@@ -61,11 +61,11 @@ func (m *mockFactory) Lister() cache.GenericLister {
 	return m
 }
 
-func (m *mockFactory) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
+func (m *mockFactory) ForResource(_ string, _ schema.GroupVersionResource) (InformLister, error) {
 	return m, nil
 }
 
-func (m *mockFactory) Namespaces() sets.String {
+func (m *mockFactory) Namespaces() sets.Set[string] {
 	return m.namespaces
 }
 
@@ -73,7 +73,7 @@ func TestInformers(t *testing.T) {
 	t.Run("TestGet", func(t *testing.T) {
 		ifs, err := NewInformersForResource(
 			&mockFactory{
-				namespaces: sets.NewString("foo", "bar"),
+				namespaces: sets.New[string]("foo", "bar"),
 				objects: map[string]runtime.Object{
 					"foo": &monitoringv1.Prometheus{
 						ObjectMeta: metav1.ObjectMeta{

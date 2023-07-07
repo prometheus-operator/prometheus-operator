@@ -22,94 +22,46 @@ The Prometheus Operator uses the official [Go client](https://github.com/kuberne
 The current version of the Prometheus operator uses the following Go client version:
 
 ```$ mdox-exec="go list -m  -f '{{ .Version }}' k8s.io/client-go"
-v0.25.4
+v0.27.3
 ```
 
 ## Prometheus
 
-The versions of Prometheus compatible with the Prometheus Operator are:
+Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's end-to-end tests verify that the operator can deploy the following Prometheus versions:
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility"
-* v2.0.0
-* v2.2.1
-* v2.3.1
-* v2.3.2
-* v2.4.0
-* v2.4.1
-* v2.4.2
-* v2.4.3
-* v2.5.0
-* v2.6.0
-* v2.6.1
-* v2.7.0
-* v2.7.1
-* v2.7.2
-* v2.8.1
-* v2.9.2
-* v2.10.0
-* v2.11.0
-* v2.14.0
-* v2.15.2
-* v2.16.0
-* v2.17.2
-* v2.18.0
-* v2.18.1
-* v2.18.2
-* v2.19.0
-* v2.19.1
-* v2.19.2
-* v2.19.3
-* v2.20.0
-* v2.20.1
-* v2.21.0
-* v2.22.0
-* v2.22.1
-* v2.22.2
-* v2.23.0
-* v2.24.0
-* v2.24.1
-* v2.25.0
-* v2.25.1
-* v2.25.2
-* v2.26.0
-* v2.26.1
-* v2.27.0
-* v2.27.1
-* v2.28.0
-* v2.28.1
-* v2.29.0
-* v2.29.1
-* v2.30.0
-* v2.30.1
-* v2.30.2
-* v2.30.3
-* v2.31.0
-* v2.31.1
-* v2.32.0
-* v2.32.1
-* v2.33.0
-* v2.33.1
-* v2.33.2
-* v2.33.3
-* v2.33.4
-* v2.33.5
-* v2.34.0
-* v2.35.0
-* v2.36.0
 * v2.37.0
 * v2.37.1
+* v2.37.2
+* v2.37.3
+* v2.37.4
+* v2.37.5
+* v2.37.6
+* v2.37.7
+* v2.37.8
 * v2.38.0
 * v2.39.0
 * v2.39.1
 * v2.39.2
 * v2.40.0
 * v2.40.1
+* v2.40.2
+* v2.40.3
+* v2.40.4
+* v2.40.5
+* v2.40.6
+* v2.40.7
+* v2.41.0
+* v2.42.0
+* v2.43.0
+* v2.43.1
+* v2.44.0
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v2.40.1
+* v2.44.0
 ```
 
 ## Alertmanager
@@ -119,7 +71,7 @@ The Prometheus Operator is compatible with Alertmanager v0.15 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
-* v0.24.0
+* v0.25.0
 ```
 
 ## Thanos
@@ -129,5 +81,5 @@ The Prometheus Operator is compatible with Thanos v0.10 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
-* v0.29.0
+* v0.31.0
 ```

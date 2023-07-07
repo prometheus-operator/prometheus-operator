@@ -23,3 +23,19 @@ type AlertmanagerConfigListerExpansion interface{}
 // AlertmanagerConfigNamespaceListerExpansion allows custom methods to be added to
 // AlertmanagerConfigNamespaceLister.
 type AlertmanagerConfigNamespaceListerExpansion interface{}
+
+// PrometheusAgentListerExpansion allows custom methods to be added to
+// PrometheusAgentLister.
+type PrometheusAgentListerExpansion interface{}
+
+// PrometheusAgentNamespaceListerExpansion allows custom methods to be added to
+// PrometheusAgentNamespaceLister.
+type PrometheusAgentNamespaceListerExpansion interface{}
+
+// ScrapeConfigListerExpansion allows custom methods to be added to
+// ScrapeConfigLister.
+type ScrapeConfigListerExpansion interface{}
+
+// ScrapeConfigNamespaceListerExpansion allows custom methods to be added to
+// ScrapeConfigNamespaceLister.
+type ScrapeConfigNamespaceListerExpansion interface{}

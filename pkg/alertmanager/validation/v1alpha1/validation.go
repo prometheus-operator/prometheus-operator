@@ -96,6 +96,9 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
 		}
 
+		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -130,6 +133,15 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 			}
 		}
 
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateDiscordConfigs(configs []monitoringv1alpha1.DiscordConfig) error {
+	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
@@ -334,6 +346,12 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 	for _, namedMuteTimeInterval := range r.MuteTimeIntervals {
 		if _, found := muteTimeIntervals[namedMuteTimeInterval]; !found {
 			return errors.Errorf("mute time interval %q not found", namedMuteTimeInterval)
+		}
+	}
+
+	for _, namedActiveTimeInterval := range r.ActiveTimeIntervals {
+		if _, found := muteTimeIntervals[namedActiveTimeInterval]; !found {
+			return errors.Errorf("time interval %q not found", namedActiveTimeInterval)
 		}
 	}
 
