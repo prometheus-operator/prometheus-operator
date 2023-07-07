@@ -3697,7 +3697,7 @@
                           "type": "string"
                         },
                         "follow_redirects": {
-                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.",
+                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects. Optional",
                           "type": "boolean"
                         },
                         "headers": {

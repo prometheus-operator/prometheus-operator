@@ -4366,7 +4366,7 @@ spec:
                       type: string
                     follow_redirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
-                        redirects.
+                        redirects. Optional
                       type: boolean
                     headers:
                       additionalProperties:

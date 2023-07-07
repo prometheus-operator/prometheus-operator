@@ -11414,7 +11414,8 @@ bool
 </em>
 </td>
 <td>
-<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+Optional</p>
 </td>
 </tr>
 </tbody>
