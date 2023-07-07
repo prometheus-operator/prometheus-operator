@@ -296,15 +296,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.AlertQueryURL != "" {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.query-url", Value: tr.Spec.AlertQueryURL})
 	}
-
-	containerArgs, err := operator.BuildArgs(trCLIArgs, tr.Spec.AdditionalArgs)
-	if err != nil {
-		return nil, err
-	}
-
-	// The first argument to thanos must be "rule" to start thanos ruler, e.g. "thanos rule --data-dir..."
-	containerArgs = append([]string{"rule"}, containerArgs...)
-
 	if len(tr.Spec.Version) > 0 {
 		version, err := semver.ParseTolerant(tr.Spec.Version)
 		if err != nil {
@@ -325,6 +316,14 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			}
 		}
 	}
+	containerArgs, err := operator.BuildArgs(trCLIArgs, tr.Spec.AdditionalArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	// The first argument to thanos must be "rule" to start thanos ruler, e.g. "thanos rule --data-dir..."
+	containerArgs = append([]string{"rule"}, containerArgs...)
+
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
