@@ -227,9 +227,6 @@ type ThanosRulerSpec struct {
 	// See https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write for more details.
 	// +optional
 	RemoteWrite []RemoteWriteSpecV2 `json:"remoteWrite,omitempty"`
-	// RemoteWriteConfigFile specifies the path of the remote write file.
-	// When used alongside with RemoteWriteConfig, remoteWriteConfigFile takes precedence.
-	RemoteWriteConfigFile *string `json:"remoteWriteConfigFile,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

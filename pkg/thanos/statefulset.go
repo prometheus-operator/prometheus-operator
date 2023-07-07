@@ -16,16 +16,16 @@ package thanos
 
 import (
 	"fmt"
+	"github.com/Masterminds/semver"
+	"gopkg.in/yaml.v2"
 	"net/url"
 	"path"
 	"strings"
 
-	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -300,9 +300,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			return nil, errors.Wrap(err, "failed to parse thanos ruler version")
 		}
 		if version.GTE(semver.MustParse("2.6.0")) {
-			if tr.Spec.RemoteWriteConfigFile != nil {
-				trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
-			} else if tr.Spec.RemoteWriteConfig != nil {
+			if tr.Spec.RemoteWriteConfig != nil {
 				remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to generate remote write spec")
