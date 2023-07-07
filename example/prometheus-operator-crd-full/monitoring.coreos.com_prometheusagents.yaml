@@ -4364,6 +4364,10 @@ spec:
                         \n *Deprecated: this will be removed in a future release.
                         Prefer using `authorization`.*"
                       type: string
+                    follow_redirects:
+                      description: Configure whether HTTP requests follow HTTP 3xx
+                        redirects.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string

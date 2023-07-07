@@ -4379,9 +4379,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 					},
 				},
 				RemoteWrite: []monitoringv1.RemoteWriteSpec{{
-					RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-						URL: "https://example.com/remote_write",
-					},
+					URL: "https://example.com/remote_write",
 				}},
 			},
 			RuleSelector: &metav1.LabelSelector{
@@ -5569,18 +5567,17 @@ func TestRemoteWriteConfig(t *testing.T) {
 		{
 			version: "v2.22.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MaxRetries:        3,
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-					},
+
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
 				},
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
@@ -5610,19 +5607,18 @@ remote_write:
 		{
 			version: "v2.23.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MaxRetries:        3,
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-					},
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
 				},
+
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
 					SendInterval: "1m",
@@ -5654,17 +5650,15 @@ remote_write:
 		{
 			version: "v2.23.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-					},
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
 				},
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
@@ -5697,18 +5691,16 @@ remote_write:
 		{
 			version: "v2.10.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MaxRetries:        3,
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-					},
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
 				},
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
@@ -5739,9 +5731,7 @@ remote_write:
 		{
 			version: "v2.27.1",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-				},
+				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
@@ -5771,9 +5761,7 @@ remote_write:
 		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-				},
+				URL: "http://example.com",
 				Authorization: &monitoringv1.Authorization{
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
@@ -5819,18 +5807,17 @@ remote_write:
 					},
 					Region: "us-central-0",
 				},
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MaxRetries:        3,
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-					},
+
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
 				},
 
 				MetadataConfig: &monitoringv1.MetadataConfig{
@@ -5870,11 +5857,9 @@ remote_write:
 		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL:           "http://example.com",
-					RemoteTimeout: "1s",
-				},
-				Sigv4: nil,
+				URL:           "http://example.com",
+				RemoteTimeout: "1s",
+				Sigv4:         nil,
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5891,11 +5876,9 @@ remote_write:
 		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL:           "http://example.com",
-					RemoteTimeout: "1s",
-				},
-				Sigv4: &monitoringv1.Sigv4{},
+				URL:           "http://example.com",
+				RemoteTimeout: "1s",
+				Sigv4:         &monitoringv1.Sigv4{},
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5913,19 +5896,17 @@ remote_write:
 		{
 			version: "v2.30.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				RemoteWriteSpecV2: monitoringv1.RemoteWriteSpecV2{
-					URL: "http://example.com",
-					QueueConfig: &monitoringv1.QueueConfig{
-						Capacity:          1000,
-						MinShards:         1,
-						MaxShards:         10,
-						MaxSamplesPerSend: 100,
-						BatchSendDeadline: "20s",
-						MaxRetries:        3,
-						MinBackoff:        "1s",
-						MaxBackoff:        "10s",
-						RetryOnRateLimit:  true,
-					},
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+					RetryOnRateLimit:  true,
 				},
 			},
 			expected: `global:

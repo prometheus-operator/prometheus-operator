@@ -40,6 +40,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
 	QueueConfig          *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
 	MetadataConfig       *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
+	FollowRedirects      *bool                             `json:"follow_redirects,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs an declarative configuration of the RemoteWriteSpec type for use with
@@ -192,5 +193,13 @@ func (b *RemoteWriteSpecApplyConfiguration) WithQueueConfig(value *QueueConfigAp
 // If called multiple times, the MetadataConfig field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithMetadataConfig(value *MetadataConfigApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.MetadataConfig = value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithFollowRedirects(value bool) *RemoteWriteSpecApplyConfiguration {
+	b.FollowRedirects = &value
 	return b
 }

@@ -16,7 +16,8 @@ package thanos
 
 import (
 	"fmt"
-	"github.com/Masterminds/semver"
+	"github.com/blang/semver/v4"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"gopkg.in/yaml.v2"
 	"net/url"
 	"path"
@@ -310,12 +311,17 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			return nil, errors.Wrap(err, "failed to parse thanos ruler version")
 		}
 		if version.GTE(semver.MustParse("0.24.0")) {
-			if tr.Spec.RemoteWriteConfig != nil {
-				remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWriteConfig))
+			if tr.Spec.RemoteWrite != nil {
+				for i, remote := range tr.Spec.RemoteWrite {
+					if err := prometheus.ValidateRemoteWriteSpec(remote); err != nil {
+						return nil, errors.Wrapf(err, "validate remote write %d", i)
+					}
+				}
+				remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWrite))
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to generate remote write spec")
 				}
-				trCLIArgs = append(trCLIArgs, fmt.Sprintf("--remote-write.config=%s", string(remoteWriteYaml)))
+				trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "remote-write.config", Value: string(remoteWriteYaml)})
 			}
 		}
 	}
@@ -566,13 +572,51 @@ func mountSecret(secretSelector *v1.SecretKeySelector, volumeName string, trVolu
 	return mountpath + "/" + path
 }
 
-func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpecV2) yaml.MapSlice {
+func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {
 	cfgs := []yaml.MapSlice{}
 	for _, spec := range remoteWrites {
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 			{Key: "name", Value: spec.Name},
 			{Key: "follow_redirects", Value: spec.FollowRedirects},
+		}
+		if spec.WriteRelabelConfigs != nil {
+			relabelings := []yaml.MapSlice{}
+			for _, c := range spec.WriteRelabelConfigs {
+				relabeling := yaml.MapSlice{}
+
+				if len(c.SourceLabels) > 0 {
+					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+				}
+
+				if c.Separator != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+				}
+
+				if c.TargetLabel != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+				}
+
+				if c.Regex != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+				}
+
+				if c.Modulus != uint64(0) {
+					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+				}
+
+				if c.Replacement != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+				}
+
+				if c.Action != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
+				}
+				relabelings = append(relabelings, relabeling)
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
+
 		}
 
 		if spec.RemoteTimeout != "" {
@@ -611,7 +655,12 @@ func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpecV2
 
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
-
+		if spec.MetadataConfig != nil {
+			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			if spec.MetadataConfig.SendInterval != "" {
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
+			}
+		}
 		cfgs = append(cfgs, cfg)
 	}
 

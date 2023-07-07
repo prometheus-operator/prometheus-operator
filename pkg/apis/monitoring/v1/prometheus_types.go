@@ -1124,6 +1124,9 @@ type RemoteWriteSpec struct {
 	// MetadataConfig configures the sending of series metadata to the remote storage.
 	// +optional
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
+
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects bool `json:"follow_redirects,omitempty"`
 }
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.

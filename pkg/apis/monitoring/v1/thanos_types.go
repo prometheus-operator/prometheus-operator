@@ -248,7 +248,7 @@ type ThanosRulerSpec struct {
 	// Note that Thanos Ruler ignores metadata configuration.
 	// See https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write for more details.
 	// +optional
-	RemoteWrite []RemoteWriteSpecV2 `json:"remoteWrite,omitempty"`
+	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
