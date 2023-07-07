@@ -5567,7 +5567,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 		{
 			version: "v2.22.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
@@ -5618,7 +5617,6 @@ remote_write:
 					MinBackoff:        "1s",
 					MaxBackoff:        "10s",
 				},
-
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
 					SendInterval: "1m",
@@ -5790,6 +5788,7 @@ remote_write:
 		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{
 					Profile: "profilename",
 					RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
@@ -5807,8 +5806,6 @@ remote_write:
 					},
 					Region: "us-central-0",
 				},
-
-				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -5819,7 +5816,6 @@ remote_write:
 					MinBackoff:        "1s",
 					MaxBackoff:        "10s",
 				},
-
 				MetadataConfig: &monitoringv1.MetadataConfig{
 					Send:         false,
 					SendInterval: "1m",
@@ -5877,8 +5873,8 @@ remote_write:
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
-				RemoteTimeout: "1s",
 				Sigv4:         &monitoringv1.Sigv4{},
+				RemoteTimeout: "1s",
 			},
 			expected: `global:
   evaluation_interval: 30s
