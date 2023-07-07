@@ -1126,6 +1126,7 @@ type RemoteWriteSpec struct {
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// Optional
 	FollowRedirects bool `json:"follow_redirects,omitempty"`
 }
 
