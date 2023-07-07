@@ -16,14 +16,14 @@ package thanos
 
 import (
 	"fmt"
-	"github.com/blang/semver/v4"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"gopkg.in/yaml.v2"
 	"net/url"
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
