@@ -654,12 +654,6 @@ func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) 
 
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
-		if spec.MetadataConfig != nil {
-			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
-			if spec.MetadataConfig.SendInterval != "" {
-				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
-			}
-		}
 		cfgs = append(cfgs, cfg)
 	}
 
