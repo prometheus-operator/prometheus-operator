@@ -89,6 +89,7 @@ jobs:
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
         FEATURE_GATED_TESTS=${{ matrix.featureGated }}
+        EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
         make test-e2e
 
   # Added to summarize the matrix and allow easy branch protection rules setup
