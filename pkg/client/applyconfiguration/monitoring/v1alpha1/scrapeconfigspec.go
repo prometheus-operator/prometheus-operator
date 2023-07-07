@@ -27,6 +27,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	StaticConfigs         []StaticConfigApplyConfiguration                  `json:"staticConfigs,omitempty"`
 	FileSDConfigs         []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
 	HTTPSDConfigs         []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
+	KubernetesSDConfigs   []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
 	HonorTimestamps       *bool                                             `json:"honorTimestamps,omitempty"`
@@ -83,6 +84,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHTTPSDConfigs(values ...*HTTPSD
 			panic("nil value passed to WithHTTPSDConfigs")
 		}
 		b.HTTPSDConfigs = append(b.HTTPSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithKubernetesSDConfigs adds the given value to the KubernetesSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the KubernetesSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithKubernetesSDConfigs(values ...*KubernetesSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithKubernetesSDConfigs")
+		}
+		b.KubernetesSDConfigs = append(b.KubernetesSDConfigs, *values[i])
 	}
 	return b
 }

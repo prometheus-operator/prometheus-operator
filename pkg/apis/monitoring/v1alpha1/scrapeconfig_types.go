@@ -80,6 +80,9 @@ type ScrapeConfigSpec struct {
 	// HTTPSDConfigs defines a list of HTTP service discovery configurations.
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
+	// KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
+	// +optional
+	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -179,4 +182,15 @@ type HTTPSDConfig struct {
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+// +k8s:openapi-gen=true
+type KubernetesSDConfig struct {
+	// Role of the Kubernetes entities that should be discovered.
+	// Currently the only supported role is "Node".
+	// +kubebuilder:validation:Enum=Node
+	// +required
+	Role string `json:"role"`
 }

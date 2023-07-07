@@ -15278,6 +15278,20 @@ ScrapeConfigSpec
 </tr>
 <tr>
 <td>
+<code>kubernetesSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">
+[]KubernetesSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -16204,6 +16218,37 @@ string
 </td>
 <td>
 <p>Value of the tuple.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>KubernetesSDConfig allows retrieving scrape targets from Kubernetes&rsquo; REST API.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>role</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Role of the Kubernetes entities that should be discovered.
+Currently the only supported role is &ldquo;Node&rdquo;.</p>
 </td>
 </tr>
 </tbody>
@@ -18826,6 +18871,20 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>HTTPSDConfigs defines a list of HTTP service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubernetesSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">
+[]KubernetesSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
 </td>
 </tr>
 <tr>
