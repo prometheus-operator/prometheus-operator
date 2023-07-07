@@ -299,7 +299,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse thanos ruler version")
 		}
-		if version.GTE(semver.MustParse("2.6.0")) {
+		if version.GTE(semver.MustParse("0.24.0")) {
 			if tr.Spec.RemoteWriteConfigFile != nil {
 				trCLIArgs = append(trCLIArgs, "--remote-write.config-file="+*tr.Spec.RemoteWriteConfigFile)
 			} else if tr.Spec.RemoteWriteConfig != nil {
