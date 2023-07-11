@@ -1607,7 +1607,7 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		}
 
-		cg, err := prompkg.NewConfigGenerator(context.TODO(), logger, &p, false)
+		cg, err := prompkg.NewConfigGenerator(context.Background(), logger, &p, false)
 		require.NoError(t, err)
 
 		sset, err := makeStatefulSet(
