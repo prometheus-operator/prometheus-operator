@@ -438,7 +438,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	logger := newLogger()
 
-	cg, err := prompkg.NewConfigGenerator(context.TODO(), logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(context.Background(), logger, &p, false)
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
