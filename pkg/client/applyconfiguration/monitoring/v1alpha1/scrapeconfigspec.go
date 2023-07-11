@@ -99,7 +99,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithKubernetesSDConfigs(values ...*
 		}
 		b.KubernetesSDConfigs = append(b.KubernetesSDConfigs, *values[i])
 	}
-	return nil
+	return b
 }
 
 // WithConsulSDConfigs adds the given value to the ConsulSDConfigs field in the declarative configuration

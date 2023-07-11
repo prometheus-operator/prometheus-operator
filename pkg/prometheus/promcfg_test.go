@@ -69,7 +69,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(context.Background(), log.With(logger, "test", t.Name()), p, false)
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
 
 	return cg
@@ -203,6 +203,7 @@ scrape_configs: []
 		cg := mustNewConfigGenerator(t, p)
 		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -424,6 +425,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -529,6 +531,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -620,6 +623,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -707,6 +711,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -839,6 +844,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -970,6 +976,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1212,6 +1219,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1385,6 +1393,7 @@ alerting:
 		cg := mustNewConfigGenerator(t, p)
 
 		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
 			p.Spec.EvaluationInterval,
 			p.Spec.QueryLogFile,
 			p.Spec.RuleSelector,
@@ -1430,6 +1439,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1502,6 +1512,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1698,6 +1709,7 @@ alerting:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -1728,6 +1740,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
 			p.Spec.EvaluationInterval,
 			p.Spec.QueryLogFile,
 			p.Spec.RuleSelector,
@@ -1893,6 +1906,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -1958,6 +1972,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2118,6 +2133,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cg.endpointSliceSupported = true
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2284,6 +2300,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2430,6 +2447,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2569,6 +2587,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2742,6 +2761,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2908,6 +2928,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -2971,6 +2992,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3097,6 +3119,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3205,6 +3228,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3331,6 +3355,7 @@ func TestSettingHonorLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3460,6 +3485,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3588,6 +3614,7 @@ func TestTargetLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -3847,6 +3874,7 @@ oauth2:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -3883,6 +3911,7 @@ func TestPodTargetLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -4010,6 +4039,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -4119,6 +4149,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -4227,6 +4258,7 @@ func TestEmptyEndpointPorts(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -4395,6 +4427,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 	}
 	cg := mustNewConfigGenerator(t, p)
 	return cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -5030,6 +5063,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -5287,6 +5321,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -5518,6 +5553,7 @@ remote_read:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6034,6 +6070,7 @@ remote_write:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6292,6 +6329,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6510,6 +6548,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6710,6 +6749,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6929,6 +6969,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -6965,6 +7006,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -7354,6 +7396,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -7589,6 +7632,7 @@ scrape_configs:
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -7880,6 +7924,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -7910,6 +7955,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -8206,6 +8252,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -8293,6 +8340,7 @@ scrape_configs: []
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -8379,6 +8427,7 @@ storage:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,
@@ -8407,6 +8456,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
@@ -8716,6 +8766,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				nil,
@@ -9155,6 +9206,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				nil,
@@ -9493,6 +9545,7 @@ scrape_configs:
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				nil,
@@ -9585,6 +9638,7 @@ tracing:
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				p.Spec.RuleSelector,

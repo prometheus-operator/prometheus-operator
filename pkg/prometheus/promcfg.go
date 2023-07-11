@@ -60,11 +60,10 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
-	ctx                    context.Context
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(ctx context.Context, logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -86,7 +85,6 @@ func NewConfigGenerator(ctx context.Context, logger log.Logger, p monitoringv1.P
 		version:                version,
 		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
-		ctx:                    ctx,
 	}, nil
 }
 
@@ -274,7 +272,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 }
 
 func sortStringMap(m map[string]string) map[string]string {
-	if len(m) < 1 {
+	if len(m) <= 1 {
 		return m
 	}
 
@@ -456,6 +454,7 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
+	ctx context.Context,
 	evaluationInterval monitoringv1.Duration,
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
@@ -504,7 +503,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
+	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate scrape configs")
 	}
@@ -2093,6 +2092,7 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 
 // GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateAgentConfiguration(
+	ctx context.Context,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
@@ -2126,7 +2126,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store)
+	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
 	if err != nil {
 		return nil, errors.Wrap(err, "generate scrape configs")
 	}
@@ -2158,6 +2158,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 }
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
+	ctx context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store) ([]yaml.MapSlice, error) {
@@ -2173,7 +2174,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
-		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(ctx, scrapeConfigs[identifier], store)
 
 		if err != nil {
 			return slices, err
@@ -2186,6 +2187,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
+	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 ) (yaml.MapSlice, error) {
@@ -2352,7 +2354,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.TokenRef != nil {
-				value, err := store.GetKey(cg.ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 					Secret: config.TokenRef,
 				})
 
@@ -2461,7 +2463,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
 
 				for k, v := range config.ProxyConnectHeader {
-					value, err := store.GetKey(cg.ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 						Secret: &v,
 					})
 

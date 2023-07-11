@@ -536,7 +536,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	level.Info(logger).Log("msg", "sync prometheus")
 
-	cg, err := prompkg.NewConfigGenerator(ctx, c.logger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
@@ -731,6 +731,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
+		ctx,
 		smons,
 		pmons,
 		bmons,

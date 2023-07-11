@@ -1017,6 +1017,7 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		in, out := &in.KubernetesSDConfigs, &out.KubernetesSDConfigs
 		*out = make([]KubernetesSDConfig, len(*in))
 		copy(*out, *in)
+	}
 	if in.ConsulSDConfigs != nil {
 		in, out := &in.ConsulSDConfigs, &out.ConsulSDConfigs
 		*out = make([]ConsulSDConfig, len(*in))

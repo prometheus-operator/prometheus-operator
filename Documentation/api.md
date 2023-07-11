@@ -15282,6 +15282,16 @@ ScrapeConfigSpec
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">
 []KubernetesSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>consulSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">
@@ -15291,7 +15301,6 @@ ScrapeConfigSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
 <p>ConsulSDConfigs defines a list of Consul service discovery configurations.</p>
 </td>
 </tr>
@@ -19190,6 +19199,16 @@ HTTPConfig
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">
 []KubernetesSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>consulSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">
@@ -19199,8 +19218,10 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.</p>
+<p>ConsulSDConfigs defines a list of Consul service discovery configurations.</p>
+</td>
 </tr>
+<tr>
 <td>
 <code>relabelings</code><br/>
 <em>

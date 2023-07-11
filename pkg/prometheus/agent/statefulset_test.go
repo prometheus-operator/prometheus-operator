@@ -15,7 +15,6 @@
 package prometheusagent
 
 import (
-	"context"
 	"os"
 	"reflect"
 	"testing"
@@ -193,7 +192,7 @@ func newLogger() log.Logger {
 
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
-	cg, err := prompkg.NewConfigGenerator(context.TODO(), logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
 	}

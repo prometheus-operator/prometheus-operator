@@ -284,5 +284,5 @@ type ConsulSDConfig struct {
 	EnableHttp2 *bool `json:"enable_http2,omitempty"`
 	// TLS Config
 	// +optional
-	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig"`
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
