@@ -942,7 +942,7 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
 	p.Spec.Storage = &monitoringv1.StorageSpec{
-		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+		VolumeClaimTemplates: []monitoringv1.EmbeddedPersistentVolumeClaim{monitoringv1.EmbeddedPersistentVolumeClaim{
 			EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 				Labels: map[string]string{
 					"test-label": "foo",
@@ -960,6 +960,7 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 				},
 			},
 		},
+		},
 	}
 
 	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
@@ -967,10 +968,10 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if val := p.Spec.Storage.VolumeClaimTemplate.Labels["test-label"]; val != "foo" {
+	if val := p.Spec.Storage.VolumeClaimTemplates[0].Labels["test-label"]; val != "foo" {
 		t.Errorf("incorrect volume claim label, want: %v, got: %v", "foo", val)
 	}
-	if val := p.Spec.Storage.VolumeClaimTemplate.Annotations["test-annotation"]; val != "bar" {
+	if val := p.Spec.Storage.VolumeClaimTemplates[0].Annotations["test-annotation"]; val != "bar" {
 		t.Errorf("incorrect volume claim annotation, want: %v, got: %v", "bar", val)
 	}
 
@@ -1025,7 +1026,7 @@ func testPromStorageUpdate(t *testing.T) {
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
-					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+					VolumeClaimTemplates: []monitoringv1.EmbeddedPersistentVolumeClaim{monitoringv1.EmbeddedPersistentVolumeClaim{
 						Spec: v1.PersistentVolumeClaimSpec{
 							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 							Resources: v1.ResourceRequirements{
@@ -1034,6 +1035,7 @@ func testPromStorageUpdate(t *testing.T) {
 								},
 							},
 						},
+					},
 					},
 				},
 			},

@@ -206,6 +206,8 @@ func TestStatefulSetPVC(t *testing.T) {
 		},
 	}
 
+	pvcTemplates := []monitoringv1.EmbeddedPersistentVolumeClaim{pvc}
+
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
@@ -214,7 +216,7 @@ func TestStatefulSetPVC(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
-					VolumeClaimTemplate: pvc,
+					VolumeClaimTemplates: pvcTemplates,
 				},
 			},
 		},
@@ -1328,11 +1330,12 @@ func TestThanosWithNamedPVC(t *testing.T) {
 		},
 	}
 
+	pvcTemplates := []monitoringv1.EmbeddedPersistentVolumeClaim{pvc}
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
-					VolumeClaimTemplate: pvc,
+					VolumeClaimTemplates: pvcTemplates,
 				},
 			},
 			Thanos: &monitoringv1.ThanosSpec{

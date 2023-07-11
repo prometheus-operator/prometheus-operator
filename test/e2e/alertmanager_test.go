@@ -143,7 +143,7 @@ func testAMStorageUpdate(t *testing.T) {
 		am.Namespace,
 		monitoringv1.AlertmanagerSpec{
 			Storage: &monitoringv1.StorageSpec{
-				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+				VolumeClaimTemplates: []monitoringv1.EmbeddedPersistentVolumeClaim{monitoringv1.EmbeddedPersistentVolumeClaim{
 					Spec: v1.PersistentVolumeClaimSpec{
 						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 						Resources: v1.ResourceRequirements{
@@ -152,6 +152,7 @@ func testAMStorageUpdate(t *testing.T) {
 							},
 						},
 					},
+				},
 				},
 			},
 		},

@@ -962,6 +962,7 @@ func TestStatefulSetPVC(t *testing.T) {
 			StorageClassName: &storageClass,
 		},
 	}
+	pvcTemplates := []monitoringv1.EmbeddedPersistentVolumeClaim{pvc}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
@@ -971,7 +972,7 @@ func TestStatefulSetPVC(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			Storage: &monitoringv1.StorageSpec{
-				VolumeClaimTemplate: pvc,
+				VolumeClaimTemplates: pvcTemplates,
 			},
 		},
 	}, defaultTestConfig, nil, "")
