@@ -138,18 +138,18 @@ func makeStatefulSet(
 			},
 		})
 	} else {
-		for _, promPvcTemplas := range storageSpec.VolumeClaimTemplates {
-			pvcTemplate := operator.MakeVolumeClaimTemplate(promPvcTemplas)
+		for _, promPvcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(promPvcTemplate)
 			if pvcTemplate.Name == "" {
 				pvcTemplate.Name = prompkg.VolumeName(p)
 			}
-			if promPvcTemplas.Spec.AccessModes == nil {
+			if promPvcTemplate.Spec.AccessModes == nil {
 				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
 			} else {
-				pvcTemplate.Spec.AccessModes = promPvcTemplas.Spec.AccessModes
+				pvcTemplate.Spec.AccessModes = promPvcTemplate.Spec.AccessModes
 			}
-			pvcTemplate.Spec.Resources = promPvcTemplas.Spec.Resources
-			pvcTemplate.Spec.Selector = promPvcTemplas.Spec.Selector
+			pvcTemplate.Spec.Resources = promPvcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = promPvcTemplate.Spec.Selector
 			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
 	}
