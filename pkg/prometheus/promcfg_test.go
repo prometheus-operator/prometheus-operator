@@ -69,7 +69,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(context.TODO(), log.With(logger, "test", t.Name()), p, false)
+	cg, err := NewConfigGenerator(context.Background(), log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
 
 	return cg
