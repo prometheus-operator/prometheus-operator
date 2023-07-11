@@ -189,6 +189,8 @@ func TestStatefulSetPVC(t *testing.T) {
 		},
 	}
 
+	pvcTemplates := []monitoringv1.EmbeddedPersistentVolumeClaim{pvc}
+
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
@@ -196,7 +198,7 @@ func TestStatefulSetPVC(t *testing.T) {
 		},
 		Spec: monitoringv1.AlertmanagerSpec{
 			Storage: &monitoringv1.StorageSpec{
-				VolumeClaimTemplate: pvc,
+				VolumeClaimTemplates: pvcTemplates,
 			},
 		},
 	}, defaultTestConfig, "", nil)

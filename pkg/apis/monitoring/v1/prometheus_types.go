@@ -837,7 +837,7 @@ type StorageSpec struct {
 	// Defines the PVC spec to be used by the Prometheus StatefulSets.
 	// The easiest way to use a volume that cannot be automatically provisioned
 	// is to use a label selector alongside manually created PersistentVolumes.
-	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	VolumeClaimTemplates []EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
 // QuerySpec defines the query command line flags when starting Prometheus.

@@ -133,18 +133,20 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 			},
 		})
 	} else {
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = volumeName(tr.Name)
+		for _, trPvcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(trPvcTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = volumeName(tr.Name)
+			}
+			if trPvcTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = trPvcTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = trPvcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = trPvcTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
-		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, tr.Spec.Volumes...)
@@ -368,14 +370,20 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	storageVolName := volumeName(tr.Name)
 	if tr.Spec.Storage != nil {
-		if tr.Spec.Storage.VolumeClaimTemplate.Name != "" {
-			storageVolName = tr.Spec.Storage.VolumeClaimTemplate.Name
+		for _, trPvcTemplate := range tr.Spec.Storage.VolumeClaimTemplates {
+			if trPvcTemplate.Name != "" {
+				trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+					Name:      trPvcTemplate.Name,
+					MountPath: storageDir,
+				})
+			} else {
+				trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+					Name:      storageVolName,
+					MountPath: storageDir,
+				})
+			}
 		}
 	}
-	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-		Name:      storageVolName,
-		MountPath: storageDir,
-	})
 
 	for _, name := range ruleConfigMapNames {
 		trVolumes = append(trVolumes, v1.Volume{

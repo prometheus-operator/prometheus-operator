@@ -154,18 +154,20 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 			},
 		})
 	} else {
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = volumeName(am.Name)
+		for _, amPvcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(amPvcTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = volumeName(am.Name)
+			}
+			if amPvcTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = amPvcTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = amPvcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = amPvcTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
-		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, am.Spec.Volumes...)
@@ -493,13 +495,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		},
 	}
 
-	volName := volumeName(a.Name)
-	if a.Spec.Storage != nil {
-		if a.Spec.Storage.VolumeClaimTemplate.Name != "" {
-			volName = a.Spec.Storage.VolumeClaimTemplate.Name
-		}
-	}
-
 	amVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      alertmanagerConfigVolumeName,
@@ -515,11 +510,25 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
-		{
-			Name:      volName,
-			MountPath: alertmanagerStorageDir,
-			SubPath:   subPathForStorage(a.Spec.Storage),
-		},
+	}
+
+	storageVolName := volumeName(a.Name)
+	if a.Spec.Storage != nil {
+		for _, amPvcTemplate := range a.Spec.Storage.VolumeClaimTemplates {
+			if amPvcTemplate.Name != "" {
+				amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+					Name:      amPvcTemplate.Name,
+					MountPath: alertmanagerStorageDir,
+					SubPath:   subPathForStorage(a.Spec.Storage),
+				})
+			} else {
+				amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+					Name:      storageVolName,
+					MountPath: alertmanagerStorageDir,
+					SubPath:   subPathForStorage(a.Spec.Storage),
+				})
+			}
+		}
 	}
 
 	amCfg := a.Spec.AlertmanagerConfiguration
