@@ -20,9 +20,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/utils/pointer"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -79,6 +81,16 @@ func testScrapeConfigCreation(t *testing.T) {
 							"/etc/prometheus/sd/file.yaml",
 						},
 						RefreshInterval: &fiveMins,
+					},
+				},
+			},
+		},
+		{
+			name: "kubernetes-sd-config-node-role",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Node",
 					},
 				},
 			},
@@ -224,5 +236,94 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 	// re-create Prometheus-Operator to reinstall the CRDs
 	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
+	require.NoError(t, err)
+}
+
+// testScrapeConfigKubernetesNodeRole tests whether Kubernetes node monitoring works as expected
+func testScrapeConfigKubernetesNodeRole(t *testing.T) {
+	skipPrometheusTests(t)
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	// Create cluster role and cluster role binding for "prometheus" service account
+	// so that it has access to 'node' resource cluster scope
+	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "scrapeconfig",
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	// For prometheus to be able to scrape nodes it needs to able to authenticate
+	// using mTLS certificates issued for the ServiceAccount "prometheus"
+	secretName := "scraping-tls"
+	createServiceAccountSecret(t, "prometheus", ns)
+	createMTLSSecret(t, secretName, ns)
+
+	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
+	sc.Spec.Scheme = pointer.String("HTTPS")
+	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
+		Credentials: &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "prometheus-sa-secret",
+			},
+			Key: "token",
+		},
+	}
+	sc.Spec.TLSConfig = &monitoringv1.SafeTLSConfig{
+		// since we cannot validate server name in cert
+		InsecureSkipVerify: true,
+		CA: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: "ca.crt",
+			},
+		},
+		Cert: monitoringv1.SecretOrConfigMap{
+			Secret: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: secretName,
+				},
+				Key: "cert.pem",
+			},
+		},
+		KeySecret: &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: secretName,
+			},
+			Key: "key.pem",
+		},
+	}
+
+	sc.Spec.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+		{
+			Role: "Node",
+		},
+	}
+	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
+	require.NoError(t, err)
+
+	// Check that the targets appear in Prometheus and does proper scrapping
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Remove the ScrapeConfig
+	err = framework.DeleteScrapeConfig(context.Background(), ns, "scrape-config")
+	require.NoError(t, err)
+
+	// Check that the targets disappeared in Prometheus
+	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 0)
 	require.NoError(t, err)
 }

@@ -25,9 +25,6 @@ import (
 )
 
 func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace string, remotes []monv1.RemoteWriteSpec) error {
-	if store == nil && len(remotes) > 0 {
-		return errors.New("remoteWrites cannot be added to a nil store")
-	}
 
 	for i, remote := range remotes {
 		if err := ValidateRemoteWriteSpec(remote); err != nil {
@@ -54,9 +51,6 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace 
 }
 
 func AddRemoteReadsToStore(ctx context.Context, store *assets.Store, namespace string, remotes []monv1.RemoteReadSpec) error {
-	if store == nil && len(remotes) > 0 {
-		return errors.New("remoteReads cannot be added to a nil store")
-	}
 
 	for i, remote := range remotes {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {

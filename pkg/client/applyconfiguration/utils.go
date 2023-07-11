@@ -189,6 +189,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DayOfMonthRange"):
 		return &monitoringv1alpha1.DayOfMonthRangeApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DiscordConfig"):
+		return &monitoringv1alpha1.DiscordConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1alpha1.EmailConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
@@ -201,6 +203,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KeyValue"):
 		return &monitoringv1alpha1.KeyValueApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("KubernetesSDConfig"):
+		return &monitoringv1alpha1.KubernetesSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
@@ -261,6 +265,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.AlertmanagerConfigSpecApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("DayOfMonthRange"):
 		return &monitoringv1beta1.DayOfMonthRangeApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("DiscordConfig"):
+		return &monitoringv1beta1.DiscordConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1beta1.EmailConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("HTTPConfig"):

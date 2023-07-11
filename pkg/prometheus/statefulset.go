@@ -111,57 +111,41 @@ func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) stri
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func MakeEmptyConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config) (*v1.Secret, error) {
-	s := MakeConfigSecret(p, config)
-
-	s.ObjectMeta.Annotations = map[string]string{
-		"empty": "true",
+func compress(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, data); err != nil {
+		return nil, errors.Wrap(err, "failed to gzip config")
 	}
 
-	return s, nil
+	return buf.Bytes(), nil
 }
 
-func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config) *v1.Secret {
+func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
+	promConfig, err := compress(data)
+	if err != nil {
+		return nil, err
+	}
+
 	objMeta := p.GetObjectMeta()
 	typeMeta := p.GetTypeMeta()
-
-	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        ConfigSecretName(p),
 			Annotations: config.Annotations,
 			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
+			OwnerReferences: []metav1.OwnerReference{{
+				APIVersion:         typeMeta.APIVersion,
+				BlockOwnerDeletion: pointer.Bool(true),
+				Controller:         pointer.Bool(true),
+				Kind:               typeMeta.Kind,
+				Name:               objMeta.GetName(),
+				UID:                objMeta.GetUID(),
+			}},
 		},
 		Data: map[string][]byte{
-			ConfigFilename: {},
+			ConfigFilename: promConfig,
 		},
-	}
-}
-
-func MakeCompressedSecretForPrometheus(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
-
-	s := MakeConfigSecret(p, config)
-	s.ObjectMeta.Annotations = config.Annotations.Merge(map[string]string{
-		"generated": "true",
-	})
-
-	var buf bytes.Buffer
-	if err := operator.GzipConfig(&buf, data); err != nil {
-		return nil, errors.Wrap(err, "failed to gzip config")
-	}
-	s.Data[ConfigFilename] = buf.Bytes()
-
-	return s, nil
+	}, nil
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {

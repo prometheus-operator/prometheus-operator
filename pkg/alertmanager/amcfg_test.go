@@ -3758,6 +3758,33 @@ templates: []
 				Templates: []string{},
 			},
 		},
+		{
+			name: "Discord url field",
+			rawConf: []byte(`route:
+  receiver: "discord"
+receivers:
+- name: "discord"
+  discord_configs:
+  - webhook_url: http://example.com
+templates: []
+`),
+			expected: &alertmanagerConfig{
+				Route: &route{
+					Receiver: "discord",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+				Templates: []string{},
+			},
+		},
 	}
 
 	for _, tc := range testCase {
