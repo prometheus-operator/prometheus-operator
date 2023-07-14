@@ -16,6 +16,7 @@ IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
 IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
+GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
 
 KIND_CONTEXT ?= e2e
 
@@ -170,25 +171,34 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 .PHONY: k8s-gen
 k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
+image-builder-version: .github/env
+	@echo $(GO_VERSION)
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		Dockerfile && rm Dockerfile.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		cmd/prometheus-config-reloader/Dockerfile && rm cmd/prometheus-config-reloader/Dockerfile.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		cmd/admission-webhook/Dockerfile && rm cmd/admission-webhook/Dockerfile.bak
+
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
-.hack-operator-image: Dockerfile operator
+.hack-operator-image: Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
-.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
+.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
+.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
@@ -216,7 +226,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
 
 .PHONY: generate
-generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
+generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
