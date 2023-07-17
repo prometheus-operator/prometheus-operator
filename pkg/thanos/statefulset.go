@@ -301,7 +301,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse thanos ruler version")
 		}
-		if version.GTE(semver.MustParse("0.24.0")) {
+		if thanosVersion.GTE(semver.MustParse("0.24.0")) {
 			if tr.Spec.RemoteWrite != nil {
 				for i, remote := range tr.Spec.RemoteWrite {
 					if err := prometheus.ValidateRemoteWriteSpec(remote); err != nil {
