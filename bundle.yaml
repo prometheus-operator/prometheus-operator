@@ -32026,6 +32026,23 @@ spec:
                   - url
                   type: object
                 type: array
+              kubernetesSDConfigs:
+                description: KubernetesSDConfigs defines a list of Kubernetes service
+                  discovery configurations.
+                items:
+                  description: KubernetesSDConfig allows retrieving scrape targets
+                    from Kubernetes' REST API. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+                  properties:
+                    role:
+                      description: Role of the Kubernetes entities that should be
+                        discovered. Currently the only supported role is "Node".
+                      enum:
+                      - Node
+                      type: string
+                  required:
+                  - role
+                  type: object
+                type: array
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.27.0 and newer.

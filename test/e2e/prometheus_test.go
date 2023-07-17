@@ -57,6 +57,31 @@ var (
 	certsDir = "../../test/e2e/remote_write_certs/"
 )
 
+func createMTLSSecret(t *testing.T, secretName, ns string) {
+	serverCert, err := os.ReadFile(certsDir + "ca.crt")
+	if err != nil {
+		t.Fatalf("failed to load %s: %v", "ca.crt", err)
+	}
+
+	scrapingKey, err := os.ReadFile(certsDir + "client.key")
+	if err != nil {
+		t.Fatalf("failed to load %s: %v", "client.key", err)
+	}
+
+	scrapingCert, err := os.ReadFile(certsDir + "client.crt")
+	if err != nil {
+		t.Fatalf("failed to load %s: %v", "client.crt", err)
+	}
+
+	s := testFramework.MakeSecretWithCert(ns, secretName,
+		[]string{"key.pem", "cert.pem", "ca.crt"}, [][]byte{scrapingKey, scrapingCert, serverCert})
+
+	_, err = framework.KubeClient.CoreV1().Secrets(s.ObjectMeta.Namespace).Create(context.Background(), s, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Key, cCert, ca testFramework.Cert) {
 	var clientKey, clientCert, serverKey, serverCert, caCert []byte
 	var err error
@@ -306,6 +331,30 @@ func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWrite
 	}
 
 	return prometheusCRD, prometheusReceiverSvc.Name, nil
+}
+
+func createServiceAccountSecret(t *testing.T, saName, ns string) {
+	// Create the secret object
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      saName + "-sa-secret",
+			Namespace: ns,
+			Annotations: map[string]string{
+				"kubernetes.io/service-account.name": saName,
+			},
+		},
+		Type: v1.SecretTypeServiceAccountToken,
+	}
+
+	// Create the secret
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		fmt.Printf("Failed to create secret: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func testPromRemoteWriteWithTLS(t *testing.T) {
