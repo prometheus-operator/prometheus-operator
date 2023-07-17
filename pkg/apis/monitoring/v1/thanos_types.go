@@ -243,7 +243,7 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
-	// RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+	// RemoteWrite configures Thanos Ruler to send samples to external systems using remote write.
 	// If the list is not empty, Thanos Ruler doesn't expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
 	// Note that Thanos Ruler ignores metadata configuration.
 	// See https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write for more details.
