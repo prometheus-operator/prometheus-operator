@@ -17,6 +17,10 @@ package thanos
 import (
 	"context"
 	"fmt"
+	"github.com/blang/semver/v4"
+	prometheus2 "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"gopkg.in/yaml.v2"
+	"k8s.io/utils/pointer"
 	"strings"
 	"time"
 
@@ -556,6 +560,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	//Create RemoteWrite Secret
+	err = o.createRemoteWriteSecret(ctx, tr, o.config)
+	if err != nil {
+		return err
+	}
 	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
 	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
@@ -792,4 +801,148 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			"err", err,
 		)
 	}
+}
+
+func (o *Operator) createRemoteWriteSecret(ctx context.Context, tr *monitoringv1.ThanosRuler, config Config) error {
+	thanosVersionCompare, err := semver.ParseTolerant(tr.Spec.Version)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse thanos ruler version")
+	}
+
+	if thanosVersionCompare.GTE(semver.MustParse("0.24.0")) {
+		if tr.Spec.RemoteWrite != nil {
+			for i, remote := range tr.Spec.RemoteWrite {
+				if err := prometheus2.ValidateRemoteWriteSpec(remote); err != nil {
+					return errors.Wrapf(err, "validate remote write %d", i)
+				}
+			}
+			remoteWriteYaml, err := yaml.Marshal(generateRemoteWriteConfigYaml(tr.Spec.RemoteWrite))
+			if err != nil {
+				return errors.Wrap(err, "failed to generate remote write spec")
+			}
+			remoteWriteConfig, err := prometheus2.Compress(remoteWriteYaml)
+			if err != nil {
+				return err
+			}
+
+			objMeta := tr.GetObjectMeta()
+			typeMeta := tr.TypeMeta
+			thanosRemoteWriteSecret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        fmt.Sprintf("thanos-ruler-remote-write-%s", objMeta.GetName()),
+					Annotations: config.Annotations,
+					Labels:      config.Labels.Merge(managedByOperatorLabels),
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         typeMeta.APIVersion,
+						BlockOwnerDeletion: pointer.Bool(true),
+						Controller:         pointer.Bool(true),
+						Kind:               typeMeta.Kind,
+						Name:               objMeta.GetName(),
+						UID:                objMeta.GetUID(),
+					}},
+				},
+				Data: map[string][]byte{
+					RemoteWriteConfigFilename: remoteWriteConfig,
+				},
+			}
+			secretClient := o.kclient.CoreV1().Secrets(tr.Namespace)
+			return k8sutil.CreateOrUpdateSecret(ctx, secretClient, thanosRemoteWriteSecret)
+		}
+	}
+	return nil
+}
+
+func generateRemoteWriteConfigYaml(remoteWrites []monitoringv1.RemoteWriteSpec) yaml.MapSlice {
+	cfgs := []yaml.MapSlice{}
+	for _, spec := range remoteWrites {
+		cfg := yaml.MapSlice{
+			{Key: "url", Value: spec.URL},
+			{Key: "name", Value: spec.Name},
+			{Key: "follow_redirects", Value: spec.FollowRedirects},
+		}
+		if spec.WriteRelabelConfigs != nil {
+			relabelings := []yaml.MapSlice{}
+			for _, c := range spec.WriteRelabelConfigs {
+				relabeling := yaml.MapSlice{}
+
+				if len(c.SourceLabels) > 0 {
+					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+				}
+
+				if c.Separator != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+				}
+
+				if c.TargetLabel != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+				}
+
+				if c.Regex != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+				}
+
+				if c.Modulus != uint64(0) {
+					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+				}
+
+				if c.Replacement != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+				}
+
+				if c.Action != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
+				}
+				relabelings = append(relabelings, relabeling)
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
+
+		}
+
+		if spec.RemoteTimeout != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: spec.RemoteTimeout})
+		}
+		if spec.QueueConfig != nil {
+			queueConfig := yaml.MapSlice{}
+
+			if spec.QueueConfig.Capacity != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
+			}
+
+			if spec.QueueConfig.MinShards != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
+			}
+
+			if spec.QueueConfig.MaxShards != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
+			}
+
+			if spec.QueueConfig.MaxSamplesPerSend != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
+			}
+
+			if spec.QueueConfig.BatchSendDeadline != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
+			}
+
+			if spec.QueueConfig.MinBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: spec.QueueConfig.MinBackoff})
+			}
+
+			if spec.QueueConfig.MaxBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
+		}
+		cfgs = append(cfgs, cfg)
+	}
+
+	var cfg yaml.MapSlice
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "remote_write",
+		Value: cfgs,
+	})
+	return cfg
+
 }

@@ -3924,12 +3924,11 @@ spec:
                   type: string
                 type: array
               remoteWrite:
-                description: RemoteWriteConfig configures Thanos Ruler to send samples
-                  to external systems using remote write. If the list is not empty,
-                  Thanos Ruler doesn't expose the Store API for querying data and
-                  `the storage is only used for keeping the write-ahead-log (WAL)
-                  data. Note that Thanos Ruler ignores metadata configuration. See
-                  https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write
+                description: RemoteWrite configures Thanos Ruler to send samples to
+                  external systems using remote write. If the list is not empty, Thanos
+                  Ruler doesn't expose the Store API for querying data and `the storage
+                  is only used for keeping the write-ahead-log (WAL) data. Note that
+                  Thanos Ruler ignores metadata configuration. See https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write
                   for more details.
                 items:
                   description: RemoteWriteSpec defines the configuration to write
@@ -4026,8 +4025,8 @@ spec:
                         Prefer using `authorization`.*"
                       type: string
                     follow_redirects:
-                      description: Configure whether HTTP requests follow HTTP 3xx
-                        redirects. Optional
+                      description: FollowRedirects configures whether HTTP requests
+                        follow HTTP 3xx redirects. Optional
                       type: boolean
                     headers:
                       additionalProperties:

@@ -3748,7 +3748,7 @@ fail and an error will be logged.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+<p>RemoteWrite configures Thanos Ruler to send samples to external systems using remote write.
 If the list is not empty, Thanos Ruler doesn&rsquo;t expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
 Note that Thanos Ruler ignores metadata configuration.
 See <a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a> for more details.</p>
@@ -11414,7 +11414,7 @@ bool
 </em>
 </td>
 <td>
-<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+<p>FollowRedirects configures whether HTTP requests follow HTTP 3xx redirects.
 Optional</p>
 </td>
 </tr>
@@ -13172,7 +13172,7 @@ fail and an error will be logged.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>RemoteWriteConfig configures Thanos Ruler to send samples to external systems using remote write.
+<p>RemoteWrite configures Thanos Ruler to send samples to external systems using remote write.
 If the list is not empty, Thanos Ruler doesn&rsquo;t expose the Store API for querying data and `the storage is only used for keeping the write-ahead-log (WAL) data.
 Note that Thanos Ruler ignores metadata configuration.
 See <a href="https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write">https://thanos.io/tip/components/rule.md/#stateless-ruler-via-remote-write</a> for more details.</p>

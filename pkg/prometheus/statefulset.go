@@ -111,7 +111,7 @@ func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) stri
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func compress(data []byte) ([]byte, error) {
+func Compress(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, data); err != nil {
 		return nil, errors.Wrap(err, "failed to gzip config")
@@ -121,7 +121,7 @@ func compress(data []byte) ([]byte, error) {
 }
 
 func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
-	promConfig, err := compress(data)
+	promConfig, err := Compress(data)
 	if err != nil {
 		return nil, err
 	}

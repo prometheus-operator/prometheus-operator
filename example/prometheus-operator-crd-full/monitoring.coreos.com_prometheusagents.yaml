@@ -4365,8 +4365,8 @@ spec:
                         Prefer using `authorization`.*"
                       type: string
                     follow_redirects:
-                      description: Configure whether HTTP requests follow HTTP 3xx
-                        redirects. Optional
+                      description: FollowRedirects configures whether HTTP requests
+                        follow HTTP 3xx redirects. Optional
                       type: boolean
                     headers:
                       additionalProperties:

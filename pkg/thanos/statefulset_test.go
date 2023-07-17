@@ -629,7 +629,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 
 	{
 		var containsArgConfigs bool
-		expectedArgConfigs := "--remote-write.config=remote_write:\n- url: http://example.com\n  name: \"\"\n  follow_redirects: false\n  queue_config:\n    capacity: 1000\n    min_shards: 1\n    max_shards: 10\n    max_samples_per_send: 100\n    batch_send_deadline: 20s\n    min_backoff: 1s\n    max_backoff: 10s\n"
+		expectedArgConfigs := "--remote-write.config-file=/etc/thanos/config/ruler-remoteWrite-config/remoteWrite.yaml.gz"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
