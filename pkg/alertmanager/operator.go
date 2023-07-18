@@ -243,32 +243,34 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
-		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
+		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+			// nsResyncPeriod is used to control how often the namespace informer
+			// should resync. If the unprivileged ListerWatcher is used, then the
+			// informer must resync more often because it cannot watch for
+			// namespace changes.
+			nsResyncPeriod := 15 * time.Second
+			// If the only namespace is v1.NamespaceAll, then the client must be
+			// privileged and a regular cache.ListWatch will be used. In this case
+			// watching works and we do not need to resync so frequently.
+			if listwatch.IsAllNamespaces(allowList) {
+				nsResyncPeriod = resyncPeriod
+			}
+			nsInf := cache.NewSharedIndexInformer(
+				o.metrics.NewInstrumentedListerWatcher(
+					listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				),
+				&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+			)
 
-		return nsInf
-	}
-	c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
-	if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
-		c.nsAlrtInf = c.nsAlrtCfgInf
-	} else {
-		c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
+			return nsInf
+		}
+		c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+		if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
+			c.nsAlrtInf = c.nsAlrtCfgInf
+		} else {
+			c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
+		}
 	}
 
 	return nil
@@ -291,19 +293,19 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
-
-	for _, inf := range []struct {
-		name     string
-		informer cache.SharedIndexInformer
-	}{
-		{"AlertmanagerNamespace", c.nsAlrtInf},
-		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
-	} {
-		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", inf.name), inf.informer) {
-			return errors.Errorf("failed to sync cache for %s informer", inf.name)
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
+		for _, inf := range []struct {
+			name     string
+			informer cache.SharedIndexInformer
+		}{
+			{"AlertmanagerNamespace", c.nsAlrtInf},
+			{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
+		} {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", inf.name), inf.informer) {
+				return errors.Errorf("failed to sync cache for %s informer", inf.name)
+			}
 		}
 	}
-
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
 	return nil
 }
@@ -330,9 +332,11 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on alertmanagerconfigs.
-	_, _ = c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: c.handleNamespaceUpdate,
-	})
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
+		_, _ = c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			UpdateFunc: c.handleNamespaceUpdate,
+		})
+	}
 }
 
 func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
@@ -416,44 +420,50 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsName string) {
-	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Alertmanager instances failed",
-			"err", err,
-		)
-		return
-	}
-	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
-		)
-		return
-	}
-	ns := nsObject.(*v1.Namespace)
+	var ns *v1.Namespace
 
-	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
+
+		nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", "get namespace to enqueue Alertmanager instances failed",
+				"err", err,
+			)
+			return
+		}
+		if !exists {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
+			)
+			return
+		}
+		ns = nsObject.(*v1.Namespace)
+	}
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
 			c.rr.EnqueueForReconciliation(am)
 			return
 		}
+		if !operator.IsSingleNamespace(c.config.Namespaces) {
 
-		// Check for Alertmanager instances selecting AlertmanagerConfigs in
-		// the namespace.
-		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
-				"err", err,
-			)
-			return
-		}
+			// Check for Alertmanager instances selecting AlertmanagerConfigs in
+			// the namespace.
+			acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"msg", fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
+					"err", err,
+				)
+				return
+			}
 
-		if acNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(am)
-			return
+			if acNSSelector.Matches(labels.Set(ns.Labels)) {
+				c.rr.EnqueueForReconciliation(am)
+				return
+			}
 		}
 	})
 	if err != nil {
@@ -494,11 +504,14 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.alrtCfgInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	go c.nsAlrtCfgInf.Run(ctx.Done())
-	if c.nsAlrtInf != c.nsAlrtCfgInf {
-		go c.nsAlrtInf.Run(ctx.Done())
+	
+	// Skip namespace alert in single namespace case.
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
+		go c.nsAlrtCfgInf.Run(ctx.Done())
+		if c.nsAlrtInf != c.nsAlrtCfgInf {
+			go c.nsAlrtInf.Run(ctx.Done())
+		}
 	}
-
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
@@ -1032,27 +1045,34 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
-	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
-	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
-		namespaces = append(namespaces, am.Namespace)
+	if !operator.IsSingleNamespace(c.config.Namespaces) {
 
-		level.Debug(c.logger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
+		// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
+		if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
+			namespaces = append(namespaces, am.Namespace)
+
+			level.Debug(c.logger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
+		} else {
+			amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+			if err != nil {
+				return nil, err
+			}
+
+			err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
+				namespaces = append(namespaces, obj.(*v1.Namespace).Name)
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to list namespaces")
+			}
+
+			level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
+		}
 	} else {
-		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
-		if err != nil {
-			return nil, err
+		for ns := range c.config.Namespaces.AllowList {
+			namespaces = append(namespaces, ns)
 		}
-
-		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
-			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to list namespaces")
-		}
-
-		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 	}
-
+	
 	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
 

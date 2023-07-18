@@ -18,11 +18,8 @@ package fake
 
 import (
 	"context"
-	json "encoding/json"
-	"fmt"
 
 	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -123,28 +120,6 @@ func (c *FakeAlertmanagerConfigs) DeleteCollection(ctx context.Context, opts v1.
 func (c *FakeAlertmanagerConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.AlertmanagerConfig, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, name, pt, data, subresources...), &v1beta1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1beta1.AlertmanagerConfig), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied alertmanagerConfig.
-func (c *FakeAlertmanagerConfigs) Apply(ctx context.Context, alertmanagerConfig *monitoringv1beta1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.AlertmanagerConfig, err error) {
-	if alertmanagerConfig == nil {
-		return nil, fmt.Errorf("alertmanagerConfig provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(alertmanagerConfig)
-	if err != nil {
-		return nil, err
-	}
-	name := alertmanagerConfig.Name
-	if name == nil {
-		return nil, fmt.Errorf("alertmanagerConfig.Name must be provided to Apply")
-	}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, *name, types.ApplyPatchType, data), &v1beta1.AlertmanagerConfig{})
 
 	if obj == nil {
 		return nil, err
