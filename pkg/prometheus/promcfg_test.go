@@ -9254,6 +9254,27 @@ scrape_configs:
   label_value_length_limit: 30
 `,
 		},
+		{
+			name: "params",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricsPath: pointer.String("/federate"),
+				Params:      map[string][]string{"match[]": {"{job=\"prometheus\"}", "{__name__=~\"job:.*\"}"}},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  metrics_path: /federate
+  params:
+    match[]:
+    - '{job="prometheus"}'
+    - '{__name__=~"job:.*"}'
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

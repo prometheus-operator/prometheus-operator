@@ -15679,6 +15679,18 @@ bool
 </tr>
 <tr>
 <td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional HTTP URL parameters</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scheme</code><br/>
 <em>
 string
@@ -19672,6 +19684,18 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional HTTP URL parameters</p>
 </td>
 </tr>
 <tr>

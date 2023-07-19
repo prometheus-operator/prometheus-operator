@@ -32536,6 +32536,14 @@ spec:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
                 type: string
+              params:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: Optional HTTP URL parameters
+                type: object
+                x-kubernetes-map-type: atomic
               relabelings:
                 description: 'RelabelConfigs defines how to rewrite the target''s
                   labels before scraping. Prometheus Operator automatically adds relabelings
