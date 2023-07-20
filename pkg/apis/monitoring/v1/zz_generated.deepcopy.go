@@ -792,6 +792,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(PrometheusTracingConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.BodySizeLimit != nil {
+		in, out := &in.BodySizeLimit, &out.BodySizeLimit
+		*out = new(ByteSize)
+		**out = **in
+	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
 		*out = new(uint64)
