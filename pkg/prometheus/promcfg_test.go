@@ -98,16 +98,31 @@ func TestConfigGeneration(t *testing.T) {
 }
 
 func TestGlobalSettings(t *testing.T) {
+	var (
+		expectedBodySizeLimit         monitoringv1.ByteSize = "1000MB"
+		expectedSampleLimit           uint64                = 10000
+		expectedTargetLimit           uint64                = 1000
+		expectedLabelLimit            uint64                = 50
+		expectedLabelNameLengthLimit  uint64                = 40
+		expectedLabelValueLengthLimit uint64                = 30
+	)
+
 	for _, tc := range []struct {
-		Scenario           string
-		EvaluationInterval monitoringv1.Duration
-		ScrapeInterval     monitoringv1.Duration
-		ScrapeTimeout      monitoringv1.Duration
-		ExternalLabels     map[string]string
-		QueryLogFile       string
-		Version            string
-		Expected           string
-		ExpectError        bool
+		Scenario              string
+		EvaluationInterval    monitoringv1.Duration
+		ScrapeInterval        monitoringv1.Duration
+		ScrapeTimeout         monitoringv1.Duration
+		ExternalLabels        map[string]string
+		QueryLogFile          string
+		Version               string
+		BodySizeLimit         *monitoringv1.ByteSize
+		SampleLimit           *uint64
+		TargetLimit           *uint64
+		LabelLimit            *uint64
+		LabelNameLengthLimit  *uint64
+		LabelValueLengthLimit *uint64
+		Expected              string
+		ExpectError           bool
 	}{
 		{
 			Scenario:           "valid config",
@@ -182,17 +197,70 @@ scrape_configs: []
 scrape_configs: []
 `,
 		},
+		{
+			Scenario:           "valid global limits",
+			Version:            "v2.16.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			BodySizeLimit:      &expectedBodySizeLimit,
+			SampleLimit:        &expectedSampleLimit,
+			TargetLimit:        &expectedTargetLimit,
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+  body_size_limit: 1000MB
+  sample_limit: 10000
+  target_limit: 1000
+scrape_configs: []
+`,
+		},
+		{
+			Scenario:              "valid global config with label limits",
+			Version:               "v2.16.0",
+			ScrapeInterval:        "30s",
+			EvaluationInterval:    "30s",
+			BodySizeLimit:         &expectedBodySizeLimit,
+			SampleLimit:           &expectedSampleLimit,
+			TargetLimit:           &expectedTargetLimit,
+			LabelLimit:            &expectedLabelLimit,
+			LabelNameLengthLimit:  &expectedLabelNameLengthLimit,
+			LabelValueLengthLimit: &expectedLabelValueLengthLimit,
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+  scrape_configs: []
+  body_size_limit: 1000MB
+  sample_limit: 10000
+  target_limit: 1000
+  label_limit: 50
+  label_name_length_limit: 40
+  label_value_length_limit: 30
+scrape_configs: []
+`,
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					ScrapeInterval: tc.ScrapeInterval,
-					ScrapeTimeout:  tc.ScrapeTimeout,
-					ExternalLabels: tc.ExternalLabels,
-					Version:        tc.Version,
-					TracingConfig:  nil,
+					ScrapeInterval:        tc.ScrapeInterval,
+					ScrapeTimeout:         tc.ScrapeTimeout,
+					ExternalLabels:        tc.ExternalLabels,
+					Version:               tc.Version,
+					TracingConfig:         nil,
+					BodySizeLimit:         tc.BodySizeLimit,
+					SampleLimit:           tc.SampleLimit,
+					TargetLimit:           tc.TargetLimit,
+					LabelLimit:            tc.LabelLimit,
+					LabelNameLengthLimit:  tc.LabelNameLengthLimit,
+					LabelValueLengthLimit: tc.LabelValueLengthLimit,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				QueryLogFile:       tc.QueryLogFile,
