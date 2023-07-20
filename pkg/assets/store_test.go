@@ -129,7 +129,7 @@ func TestAddBearerToken(t *testing.T) {
 			}
 
 			key := fmt.Sprintf("bearertoken/%d", i)
-			err := store.AddBearerToken(context.Background(), tc.ns, sel, key)
+			err := store.AddBearerToken(context.Background(), tc.ns, &sel, key)
 
 			if tc.err {
 				if err == nil {
