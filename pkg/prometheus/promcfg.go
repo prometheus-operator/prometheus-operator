@@ -1930,7 +1930,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 
 func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
-	if cpf.BodySizeLimit != "" {
+	if cpf.BodySizeLimit != nil {
 		slice = append(slice, yaml.MapItem{Key: "body_size_limit", Value: cpf.BodySizeLimit})
 	}
 	if cpf.SampleLimit != nil {
