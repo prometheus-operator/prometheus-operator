@@ -234,7 +234,6 @@ scrape_configs: []
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
-  scrape_configs: []
   body_size_limit: 1000MB
   sample_limit: 10000
   target_limit: 1000
