@@ -228,6 +228,69 @@ func TestStatefulSetPVC(t *testing.T) {
 
 }
 
+func TestStatefulSetMultiplePVCs(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Annotations: annotations,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	pvcSecond := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+			Annotations: annotations,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+	pvcSecond.Name = "test-prometheus"
+	pvcTemplates := []monitoringv1.EmbeddedPersistentVolumeClaim{pvc, pvcSecond}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplates: pvcTemplates,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	if !reflect.DeepEqual(2, len(sset.Spec.VolumeClaimTemplates)) {
+		t.Fatal("Error adding PVCs Spec to StatefulSetSpec")
+	} else {
+		ssetPvc := sset.Spec.VolumeClaimTemplates[0]
+		if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
+			t.Fatal("Error adding PVCs Spec to StatefulSetSpec")
+		}
+
+		ssetPvcSecond := sset.Spec.VolumeClaimTemplates[1]
+		if !reflect.DeepEqual(*pvcSecond.Spec.StorageClassName, *ssetPvcSecond.Spec.StorageClassName) {
+			t.Fatal("Error adding PVCs Spec to StatefulSetSpec")
+		}
+	}
+
+}
+
 func TestStatefulSetEmptyDir(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",

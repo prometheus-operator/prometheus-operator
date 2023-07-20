@@ -200,6 +200,21 @@ func makeStatefulSet(
 				Ephemeral: ephemeral,
 			},
 		})
+	} else if storageSpec.VolumeClaimTemplates != nil {
+		for _, specVcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(specVcTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = prompkg.VolumeName(p)
+			}
+			if specVcTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = specVcTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = specVcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = specVcTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
+		}
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
@@ -738,16 +753,18 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeClaimName(p, cpf)
+			volNames := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
-			container.VolumeMounts = append(
-				container.VolumeMounts,
-				v1.VolumeMount{
-					Name:      volName,
-					MountPath: prompkg.StorageDir,
-					SubPath:   prompkg.SubPathForStorage(cpf.Storage),
-				},
-			)
+			for _, volName := range volNames {
+				container.VolumeMounts = append(
+					container.VolumeMounts,
+					v1.VolumeMount{
+						Name:      volName,
+						MountPath: prompkg.StorageDir,
+						SubPath:   prompkg.SubPathForStorage(cpf.Storage),
+					},
+				)
+			}
 
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.

@@ -137,6 +137,22 @@ func makeStatefulSet(
 				Ephemeral: ephemeral,
 			},
 		})
+	} else if storageSpec.VolumeClaimTemplates != nil {
+		for _, specVcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(specVcTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = prompkg.VolumeName(p)
+			}
+			if specVcTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = specVcTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = specVcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = specVcTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
+		}
+
 	} else {
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {

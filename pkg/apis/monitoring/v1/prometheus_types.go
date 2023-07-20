@@ -838,6 +838,8 @@ type StorageSpec struct {
 	// The easiest way to use a volume that cannot be automatically provisioned
 	// is to use a label selector alongside manually created PersistentVolumes.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+
+	VolumeClaimTemplates []EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
 }
 
 // QuerySpec defines the query command line flags when starting Prometheus.
