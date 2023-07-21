@@ -199,7 +199,7 @@ scrape_configs: []
 		},
 		{
 			Scenario:           "valid global limits",
-			Version:            "v2.16.0",
+			Version:            "v2.45.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			BodySizeLimit:      &expectedBodySizeLimit,
@@ -219,7 +219,7 @@ scrape_configs: []
 		},
 		{
 			Scenario:              "valid global config with label limits",
-			Version:               "v2.16.0",
+			Version:               "v2.45.0",
 			ScrapeInterval:        "30s",
 			EvaluationInterval:    "30s",
 			BodySizeLimit:         &expectedBodySizeLimit,
