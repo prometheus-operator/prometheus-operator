@@ -905,6 +905,17 @@
                     "description": "MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).",
                     "type": "string"
                   },
+                  "params": {
+                    "additionalProperties": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "description": "Optional HTTP URL parameters",
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
+                  },
                   "relabelings": {
                     "description": "RelabelConfigs defines how to rewrite the target's labels before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                     "items": {

@@ -102,6 +102,10 @@ type ScrapeConfigSpec struct {
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// Optional HTTP URL parameters
+	// +optional
+	// +mapType:=atomic
+	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
 	// +kubebuilder:validation:Enum=HTTP;HTTPS
