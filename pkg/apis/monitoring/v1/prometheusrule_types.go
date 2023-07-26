@@ -21,8 +21,14 @@ import (
 )
 
 const (
-	PrometheusRuleKind    = "PrometheusRule"
-	PrometheusRuleName    = "prometheusrules"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PrometheusRuleKind = "PrometheusRule"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PrometheusRuleName = "prometheusrules"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	PrometheusRuleKindKey = "prometheusrule"
 )
 

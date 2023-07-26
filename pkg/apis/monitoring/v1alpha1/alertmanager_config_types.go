@@ -29,10 +29,14 @@ import (
 )
 
 const (
-	Version = "v1alpha1"
-
-	AlertmanagerConfigKind    = "AlertmanagerConfig"
-	AlertmanagerConfigName    = "alertmanagerconfigs"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	AlertmanagerConfigKind = "AlertmanagerConfig"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	AlertmanagerConfigName = "alertmanagerconfigs"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	AlertmanagerConfigKindKey = "alertmanagerconfig"
 )
 

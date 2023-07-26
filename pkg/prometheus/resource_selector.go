@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -188,8 +189,8 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	level.Debug(rs.l).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(smKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.ServiceMonitorsKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
+		rs.metrics.SetSelectedResources(pKey, monitoring.ServiceMonitorsKind, len(res))
+		rs.metrics.SetRejectedResources(pKey, monitoring.ServiceMonitorsKind, rejected)
 	}
 
 	return res, nil
@@ -437,8 +438,8 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	level.Debug(rs.l).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(pmKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.PodMonitorsKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.PodMonitorsKind, rejected)
+		rs.metrics.SetSelectedResources(pKey, monitoring.PodMonitorsKind, len(res))
+		rs.metrics.SetRejectedResources(pKey, monitoring.PodMonitorsKind, rejected)
 	}
 
 	return res, nil
@@ -583,8 +584,8 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 	level.Debug(rs.l).Log("msg", "selected Probes", "probes", strings.Join(probeKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, rejected)
+		rs.metrics.SetSelectedResources(pKey, monitoring.ProbesKind, len(res))
+		rs.metrics.SetRejectedResources(pKey, monitoring.ProbesKind, rejected)
 	}
 
 	return res, nil
@@ -750,8 +751,8 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
-		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
+		rs.metrics.SetSelectedResources(sKey, monitoring.ScrapeConfigsKind, len(res))
+		rs.metrics.SetRejectedResources(sKey, monitoring.ScrapeConfigsKind, rejected)
 	}
 
 	return res, nil

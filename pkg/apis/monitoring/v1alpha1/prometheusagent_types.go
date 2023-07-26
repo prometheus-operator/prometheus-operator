@@ -21,8 +21,14 @@ import (
 )
 
 const (
-	PrometheusAgentsKind   = "PrometheusAgent"
-	PrometheusAgentName    = "prometheusagents"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PrometheusAgentsKind = "PrometheusAgent"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PrometheusAgentName = "prometheusagents"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	PrometheusAgentKindKey = "prometheusagent"
 )
 

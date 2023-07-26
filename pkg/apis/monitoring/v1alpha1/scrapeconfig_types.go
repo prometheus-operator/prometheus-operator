@@ -22,8 +22,14 @@ import (
 )
 
 const (
-	ScrapeConfigsKind   = "ScrapeConfig"
-	ScrapeConfigName    = "scrapeconfigs"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ScrapeConfigsKind = "ScrapeConfig"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ScrapeConfigName = "scrapeconfigs"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	ScrapeConfigKindKey = "scrapeconfig"
 )
 

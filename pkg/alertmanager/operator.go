@@ -44,6 +44,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -160,7 +161,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.logger,
 		o,
 		o.metrics,
-		monitoringv1.AlertmanagersKind,
+		monitoring.AlertmanagersKind,
 		r,
 	)
 
@@ -190,7 +191,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 				options.LabelSelector = c.config.AlertManagerSelector
 			},
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.AlertmanagerName),
 	)
 	if err != nil {
 		return fmt.Errorf("error creating alertmanager informers: %w", err)
@@ -210,7 +211,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
+		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoring.AlertmanagerConfigName),
 	)
 	if err != nil {
 		return fmt.Errorf("error creating alertmanagerconfig informers: %w", err)
@@ -356,7 +357,7 @@ func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.AlertmanagerConfigKind, operator.AddEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -370,7 +371,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -380,7 +381,7 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -1114,8 +1115,8 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
-		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
-		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
+		c.metrics.SetSelectedResources(amKey, monitoring.AlertmanagerConfigKind, len(res))
+		c.metrics.SetRejectedResources(amKey, monitoring.AlertmanagerConfigKind, rejected)
 	}
 
 	return res, nil

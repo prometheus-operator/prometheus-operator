@@ -78,7 +78,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 	b, err := json.Marshal(
 		&monitoringv1.ThanosRuler{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       monitoringv1.ThanosRulerKind,
+				Kind:       monitoring.ThanosRulerKind,
 				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,

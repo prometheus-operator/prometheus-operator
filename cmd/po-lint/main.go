@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -57,7 +58,7 @@ func main() {
 		}
 
 		switch meta.Kind {
-		case v1.AlertmanagersKind:
+		case monitoring.AlertmanagersKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -71,7 +72,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("alertmanager is invalid: %v", err)
 			}
-		case v1.PrometheusesKind:
+		case monitoring.PrometheusesKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -85,7 +86,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("prometheus is invalid: %v", err)
 			}
-		case v1.PrometheusRuleKind:
+		case monitoring.PrometheusRuleKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -103,7 +104,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("prometheus rule validation failed: %v", err)
 			}
-		case v1.ServiceMonitorsKind:
+		case monitoring.ServiceMonitorsKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -117,7 +118,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("serviceMonitor is invalid: %v", err)
 			}
-		case v1.PodMonitorsKind:
+		case monitoring.PodMonitorsKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -131,7 +132,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("podMonitor is invalid: %v", err)
 			}
-		case v1.ProbesKind:
+		case monitoring.ProbesKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -144,7 +145,7 @@ func main() {
 			if err := decoder.Decode(&probe); err != nil {
 				log.Fatalf("probe is invalid: %v", err)
 			}
-		case v1.ThanosRulerKind:
+		case monitoring.ThanosRulerKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)
@@ -158,7 +159,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("thanosRuler is invalid: %v", err)
 			}
-		case v1alpha1.AlertmanagerConfigKind:
+		case monitoring.AlertmanagerConfigKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)

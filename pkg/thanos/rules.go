@@ -56,7 +56,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 			monitoringv1.ObjectReference{
 				Namespace: rule.RuleNamespace,
 				Group:     monitoring.GroupName,
-				Resource:  monitoringv1.PrometheusRuleName,
+				Resource:  monitoring.PrometheusRuleName,
 				Name:      rule.RuleName,
 			})
 	}
@@ -80,8 +80,8 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
-		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(newRules))
-		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rejected)
+		o.metrics.SetSelectedResources(tKey, monitoring.PrometheusRuleKind, len(newRules))
+		o.metrics.SetRejectedResources(tKey, monitoring.PrometheusRuleKind, rejected)
 	}
 
 	currentConfigMapList, err := cClient.List(ctx, prometheusRulesConfigMapSelector(t.Name))

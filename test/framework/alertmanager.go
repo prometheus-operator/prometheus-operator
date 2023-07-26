@@ -260,7 +260,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 	b, err := json.Marshal(
 		&monitoringv1.Alertmanager{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       monitoringv1.AlertmanagersKind,
+				Kind:       monitoring.AlertmanagersKind,
 				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,

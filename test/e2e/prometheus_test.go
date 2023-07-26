@@ -46,6 +46,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
@@ -4300,7 +4301,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				{
 					Namespace: ns,
 					Group:     "monitoring.coreos.com",
-					Resource:  monitoringv1.ServiceMonitorName,
+					Resource:  monitoring.ServiceMonitorName,
 				},
 			}
 			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
