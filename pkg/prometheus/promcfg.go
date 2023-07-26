@@ -255,7 +255,9 @@ func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
 }
 
-func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
+// stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
+// the output is deterministic.
+func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0, len(m))
 
@@ -269,27 +271,6 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	}
 
 	return res
-}
-
-func sortStringMap(m map[string]string) map[string]string {
-	if len(m) <= 1 {
-		return m
-	}
-
-	keys := make([]string, 0, len(m))
-	result := make(map[string]string, len(m))
-
-	for key := range m {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		result[key] = m[key]
-	}
-
-	return result
 }
 
 func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
@@ -2446,7 +2427,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.NodeMeta) > 0 {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "node_meta",
-					Value: sortStringMap(config.NodeMeta),
+					Value: stringMapToMapSlice(config.NodeMeta),
 				})
 			}
 
@@ -2502,7 +2483,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "proxy_connect_header",
-					Value: sortStringMap(proxyConnectHeader),
+					Value: stringMapToMapSlice(proxyConnectHeader),
 				})
 			}
 
