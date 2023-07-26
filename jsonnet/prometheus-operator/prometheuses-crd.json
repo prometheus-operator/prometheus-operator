@@ -2675,7 +2675,8 @@
                             "prometheusrules",
                             "servicemonitors",
                             "podmonitors",
-                            "probes"
+                            "probes",
+                            "scrapeconfigs"
                           ],
                           "type": "string"
                         }

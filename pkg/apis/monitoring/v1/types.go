@@ -17,25 +17,17 @@ package v1
 import (
 	"fmt"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
 
 const (
 	Version = "v1"
 )
-
-var resourceToKind = map[string]string{
-	PrometheusName:     PrometheusesKind,
-	AlertmanagerName:   AlertmanagersKind,
-	ServiceMonitorName: ServiceMonitorsKind,
-	PodMonitorName:     PodMonitorsKind,
-	PrometheusRuleName: PrometheusRuleKind,
-	ProbeName:          ProbesKind,
-}
 
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 // Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
@@ -92,7 +84,7 @@ type ObjectReference struct {
 	Group string `json:"group"`
 	// Resource of the referent.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes
+	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes;scrapeconfigs
 	Resource string `json:"resource"`
 	// Namespace of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
@@ -112,12 +104,8 @@ func (obj *ObjectReference) GroupResource() schema.GroupResource {
 }
 
 func (obj *ObjectReference) GroupKind() schema.GroupKind {
-	_, found := resourceToKind[obj.Resource]
-	if !found {
-		panic(fmt.Sprintf("failed to map resource %q to a kind", obj.Resource))
-	}
 	return schema.GroupKind{
-		Kind:  resourceToKind[obj.Resource],
+		Kind:  monitoring.ResourceToKind(obj.Resource),
 		Group: obj.getGroup(),
 	}
 }
