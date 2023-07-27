@@ -677,6 +677,20 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			}
 		}
 
+		var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
+		if sc.Spec.ScrapeInterval != nil {
+			scrapeInterval = *sc.Spec.ScrapeInterval
+		}
+
+		if sc.Spec.ScrapeTimeout != nil {
+			scrapeTimeout = *sc.Spec.ScrapeTimeout
+		}
+
+		if err = validateScrapeIntervalAndTimeout(rs.p, scrapeInterval, scrapeTimeout); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
 		for i, config := range sc.Spec.ConsulSDConfigs {
 			configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
