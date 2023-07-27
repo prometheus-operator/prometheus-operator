@@ -703,11 +703,15 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+
+	// Ignoring changes to RevisionHistoryLimit field
+	ss.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		TR monitoringv1.ThanosRuler
 		C  Config
-		S  interface{}
+		S  appsv1.StatefulSetSpec
 		R  []string `hash:"set"`
 	}{tr, c, ss, ruleConfigMapNames},
 		nil,

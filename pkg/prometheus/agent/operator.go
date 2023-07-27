@@ -759,6 +759,9 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c operator.Config
 		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
 
+	// Ignoring changes to RevisionHistoryLimit field
+	ssSpec.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
 		PrometheusAnnotations map[string]string
