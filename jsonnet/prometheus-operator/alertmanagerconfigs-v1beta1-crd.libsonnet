@@ -4857,7 +4857,7 @@
                     type: 'array',
                   },
                   continue: {
-                    description: 'Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.',
+                    description: 'Boolean indicating whether an alert should continue matching subsequent sibling nodes.',
                     type: 'boolean',
                   },
                   groupBy: {

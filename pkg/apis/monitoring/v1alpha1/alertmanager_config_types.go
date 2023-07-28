@@ -115,8 +115,7 @@ type Route struct {
 	// +optional
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// Boolean indicating whether an alert should continue matching subsequent
-	// sibling nodes. It will always be overridden to true for the first-level
-	// route by the Prometheus operator.
+	// sibling nodes.
 	// +optional
 	Continue bool `json:"continue,omitempty"`
 	// Child routes.
