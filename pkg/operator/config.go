@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"golang.org/x/exp/maps"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -51,20 +53,76 @@ type Config struct {
 	SecretListWatchSelector      string
 }
 
+func DefaultConfig(cpu, memory string) Config {
+	return Config{
+		ReloaderConfig: ContainerConfig{
+			CPURequests:    Quantity{q: resource.MustParse(cpu)},
+			CPULimits:      Quantity{q: resource.MustParse(cpu)},
+			MemoryRequests: Quantity{q: resource.MustParse(memory)},
+			MemoryLimits:   Quantity{q: resource.MustParse(memory)},
+		},
+	}
+}
+
 // ContainerConfig holds some configuration for the ConfigReloader sidecar
 // that can be set through prometheus-operator command line arguments
 type ContainerConfig struct {
-	CPURequest    string
-	CPULimit      string
-	MemoryRequest string
-	MemoryLimit   string
-	Image         string
-	EnableProbes  bool
+	CPURequests    Quantity
+	CPULimits      Quantity
+	MemoryRequests Quantity
+	MemoryLimits   Quantity
+	Image          string
+	EnableProbes   bool
+}
+
+func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
+	resources := v1.ResourceRequirements{
+		Limits:   v1.ResourceList{},
+		Requests: v1.ResourceList{},
+	}
+
+	if cc.CPURequests.String() != "0" {
+		resources.Requests[v1.ResourceCPU] = cc.CPURequests.q
+	}
+	if cc.CPULimits.String() != "0" {
+		resources.Limits[v1.ResourceCPU] = cc.CPULimits.q
+	}
+	if cc.MemoryRequests.String() != "0" {
+		resources.Requests[v1.ResourceMemory] = cc.MemoryRequests.q
+	}
+	if cc.MemoryLimits.String() != "0" {
+		resources.Limits[v1.ResourceMemory] = cc.MemoryLimits.q
+	}
+
+	return resources
+}
+
+type Quantity struct {
+	q resource.Quantity
+}
+
+// String implements the flag.Value interface
+func (q *Quantity) String() string {
+	return q.q.String()
+}
+
+// Set implements the flag.Value interface.
+func (q *Quantity) Set(value string) error {
+	if value == "" {
+		return nil
+	}
+
+	quantity, err := resource.ParseQuantity(value)
+	if err == nil {
+		q.q = quantity
+	}
+
+	return err
 }
 
 type Map map[string]string
 
-// Implement the flag.Value interface
+// String implements the flag.Value interface
 func (m *Map) String() string {
 	if m == nil {
 		return ""
@@ -98,7 +156,7 @@ func (m *Map) Merge(other map[string]string) map[string]string {
 	return merged
 }
 
-// Set implements the flag.Set interface.
+// Set implements the flag.Value interface.
 func (m *Map) Set(value string) error {
 	if value == "" {
 		return nil

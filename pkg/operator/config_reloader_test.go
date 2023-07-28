@@ -21,14 +21,15 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var reloaderConfig = ContainerConfig{
-	CPURequest:    "100m",
-	CPULimit:      "100m",
-	MemoryRequest: "50Mi",
-	MemoryLimit:   "50Mi",
-	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+	CPURequests:    Quantity{q: resource.MustParse("100m")},
+	CPULimits:      Quantity{q: resource.MustParse("100m")},
+	MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+	MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+	Image:          "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 }
 
 func TestCreateConfigReloaderEnableProbes(t *testing.T) {
