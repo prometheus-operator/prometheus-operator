@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -137,7 +138,10 @@ func makeStatefulSet(
 				Ephemeral: ephemeral,
 			},
 		})
-	} else if storageSpec.VolumeClaimTemplates != nil {
+	} else {
+		if reflect.DeepEqual(storageSpec.VolumeClaimTemplate, monitoringv1.EmbeddedPersistentVolumeClaim{}) {
+			storageSpec.VolumeClaimTemplates = append([]monitoringv1.EmbeddedPersistentVolumeClaim{storageSpec.VolumeClaimTemplate}, storageSpec.VolumeClaimTemplates...)
+		}
 		for _, specVcTemplate := range storageSpec.VolumeClaimTemplates {
 			pvcTemplate := operator.MakeVolumeClaimTemplate(specVcTemplate)
 			if pvcTemplate.Name == "" {
@@ -153,19 +157,6 @@ func makeStatefulSet(
 			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
 
-	} else {
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = prompkg.VolumeName(p)
-		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
-		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
