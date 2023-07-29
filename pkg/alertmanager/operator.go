@@ -1451,7 +1451,7 @@ func checkWebexConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
 
 	for i, config := range configs {
