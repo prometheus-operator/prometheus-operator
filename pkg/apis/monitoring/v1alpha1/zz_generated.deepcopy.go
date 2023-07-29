@@ -1041,6 +1041,16 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ScrapeInterval != nil {
+		in, out := &in.ScrapeInterval, &out.ScrapeInterval
+		*out = new(monitoringv1.Duration)
+		**out = **in
+	}
+	if in.ScrapeTimeout != nil {
+		in, out := &in.ScrapeTimeout, &out.ScrapeTimeout
+		*out = new(monitoringv1.Duration)
+		**out = **in
+	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
@@ -1050,6 +1060,21 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		in, out := &in.HonorLabels, &out.HonorLabels
 		*out = new(bool)
 		**out = **in
+	}
+	if in.Params != nil {
+		in, out := &in.Params, &out.Params
+		*out = make(map[string][]string, len(*in))
+		for key, val := range *in {
+			var outVal []string
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				in, out := &val, &outVal
+				*out = make([]string, len(*in))
+				copy(*out, *in)
+			}
+			(*out)[key] = outVal
+		}
 	}
 	if in.Scheme != nil {
 		in, out := &in.Scheme, &out.Scheme

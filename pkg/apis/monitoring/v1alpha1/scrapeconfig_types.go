@@ -96,12 +96,22 @@ type ScrapeConfigSpec struct {
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
+	// ScrapeInterval is the interval between consecutive scrapes.
+	// +optional
+	ScrapeInterval *v1.Duration `json:"scrapeInterval,omitempty"`
+	// ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+	// +optional
+	ScrapeTimeout *v1.Duration `json:"scrapeTimeout,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// Optional HTTP URL parameters
+	// +optional
+	// +mapType:=atomic
+	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
 	// +kubebuilder:validation:Enum=HTTP;HTTPS

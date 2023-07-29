@@ -624,3 +624,51 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithTracingConfig(value *v1.Prom
 	b.TracingConfig = value
 	return b
 }
+
+// WithBodySizeLimit sets the BodySizeLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BodySizeLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithBodySizeLimit(value monitoringv1.ByteSize) *PrometheusAgentSpecApplyConfiguration {
+	b.BodySizeLimit = &value
+	return b
+}
+
+// WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SampleLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithSampleLimit(value uint64) *PrometheusAgentSpecApplyConfiguration {
+	b.SampleLimit = &value
+	return b
+}
+
+// WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TargetLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithTargetLimit(value uint64) *PrometheusAgentSpecApplyConfiguration {
+	b.TargetLimit = &value
+	return b
+}
+
+// WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithLabelLimit(value uint64) *PrometheusAgentSpecApplyConfiguration {
+	b.LabelLimit = &value
+	return b
+}
+
+// WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *PrometheusAgentSpecApplyConfiguration {
+	b.LabelNameLengthLimit = &value
+	return b
+}
+
+// WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *PrometheusAgentSpecApplyConfiguration {
+	b.LabelValueLengthLimit = &value
+	return b
+}

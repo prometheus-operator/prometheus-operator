@@ -5,6 +5,10 @@ local defaults = {
   version: error 'must provide version',
   image: error 'must provide image',
   configReloaderImage: error 'must provide configReloaderImage',
+  configReloaderResources: {
+    limits: { cpu: '', memory: '' },
+    requests: { cpu: '', memory: '' },
+  },
   port: 8080,
   resources: {
     limits: { cpu: '200m', memory: '200Mi' },
@@ -136,13 +140,20 @@ function(params) {
   },
 
   deployment:
+    local reloaderResourceArg(arg, value) =
+      if value != '' then [arg + '=' + value] else [];
+
     local container = {
       name: po.config.name,
       image: po.config.image,
       args: [
-        '--kubelet-service=kube-system/kubelet',
-        '--prometheus-config-reloader=' + po.config.configReloaderImage,
-      ],
+              '--kubelet-service=kube-system/kubelet',
+              '--prometheus-config-reloader=' + po.config.configReloaderImage,
+            ] +
+            reloaderResourceArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
+            reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
+            reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
+            reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory),
       ports: [{
         containerPort: po.config.port,
         name: 'http',

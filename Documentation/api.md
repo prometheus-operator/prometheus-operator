@@ -2360,6 +2360,86 @@ breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BodySizeLimit defines per-scrape on response body size.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -6397,6 +6477,86 @@ experimental feature, it may change in any upcoming release in a
 breaking way.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BodySizeLimit defines per-scrape on response body size.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -6556,7 +6716,7 @@ The possible status values for this condition type are:
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -9987,6 +10147,86 @@ PrometheusTracingConfig
 <p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
 experimental feature, it may change in any upcoming release in a
 breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BodySizeLimit defines per-scrape on response body size.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
 </td>
 </tr>
 <tr>
@@ -15156,6 +15396,86 @@ experimental feature, it may change in any upcoming release in a
 breaking way.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BodySizeLimit defines per-scrape on response body size.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -15335,6 +15655,34 @@ string
 </tr>
 <tr>
 <td>
+<code>scrapeInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ScrapeInterval is the interval between consecutive scrapes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorTimestamps</code><br/>
 <em>
 bool
@@ -15355,6 +15703,18 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional HTTP URL parameters</p>
 </td>
 </tr>
 <tr>
@@ -18458,6 +18818,86 @@ experimental feature, it may change in any upcoming release in a
 breaking way.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BodySizeLimit defines per-scrape on response body size.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelValueLengthLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.
+Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig
@@ -19252,6 +19692,34 @@ string
 </tr>
 <tr>
 <td>
+<code>scrapeInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ScrapeInterval is the interval between consecutive scrapes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorTimestamps</code><br/>
 <em>
 bool
@@ -19272,6 +19740,18 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorLabels chooses the metric&rsquo;s labels on collisions with target labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional HTTP URL parameters</p>
 </td>
 </tr>
 <tr>

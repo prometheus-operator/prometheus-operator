@@ -815,6 +815,14 @@ spec:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
                 type: string
+              params:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: Optional HTTP URL parameters
+                type: object
+                x-kubernetes-map-type: atomic
               relabelings:
                 description: 'RelabelConfigs defines how to rewrite the target''s
                   labels before scraping. Prometheus Operator automatically adds relabelings
@@ -902,6 +910,15 @@ spec:
                 enum:
                 - HTTP
                 - HTTPS
+                type: string
+              scrapeInterval:
+                description: ScrapeInterval is the interval between consecutive scrapes.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
+              scrapeTimeout:
+                description: ScrapeTimeout is the number of seconds to wait until
+                  a scrape request times out.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               staticConfigs:
                 description: StaticConfigs defines a list of static targets with a

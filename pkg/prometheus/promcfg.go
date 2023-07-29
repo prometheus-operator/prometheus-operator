@@ -255,7 +255,9 @@ func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
 }
 
-func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
+// stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
+// the output is deterministic.
+func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0, len(m))
 
@@ -269,27 +271,6 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	}
 
 	return res
-}
-
-func sortStringMap(m map[string]string) map[string]string {
-	if len(m) <= 1 {
-		return m
-	}
-
-	keys := make([]string, 0, len(m))
-	result := make(map[string]string, len(m))
-
-	for key := range m {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		result[key] = m[key]
-	}
-
-	return result
 }
 
 func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
@@ -488,6 +469,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
+	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Rule Files config
@@ -1954,6 +1936,30 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
+func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	if cpf.BodySizeLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.BodySizeLimit)
+	}
+	if cpf.SampleLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "sample_limit", *cpf.SampleLimit)
+	}
+	if cpf.TargetLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "target_limit", *cpf.TargetLimit)
+	}
+	if cpf.LabelLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_limit", *cpf.LabelLimit)
+	}
+	if cpf.LabelNameLengthLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_name_length_limit", *cpf.LabelNameLengthLimit)
+	}
+	if cpf.LabelValueLengthLimit != nil {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_value_length_limit", *cpf.LabelValueLengthLimit)
+	}
+
+	return slice
+}
+
 func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
 	slice = append(slice, yaml.MapItem{
 		Key:   "external_labels",
@@ -2114,6 +2120,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	globalItems := yaml.MapSlice{}
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
+	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Scrape config
@@ -2213,6 +2220,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.MetricsPath != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: *sc.Spec.MetricsPath})
+	}
+
+	if len(sc.Spec.Params) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: stringMapToMapSlice(sc.Spec.Params)})
+	}
+
+	if sc.Spec.ScrapeInterval != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: *sc.Spec.ScrapeInterval})
+	}
+
+	if sc.Spec.ScrapeTimeout != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
 	}
 
 	if sc.Spec.RelabelConfigs != nil {
@@ -2420,7 +2439,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.NodeMeta) > 0 {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "node_meta",
-					Value: sortStringMap(config.NodeMeta),
+					Value: stringMapToMapSlice(config.NodeMeta),
 				})
 			}
 
@@ -2476,7 +2495,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "proxy_connect_header",
-					Value: sortStringMap(proxyConnectHeader),
+					Value: stringMapToMapSlice(proxyConnectHeader),
 				})
 			}
 
