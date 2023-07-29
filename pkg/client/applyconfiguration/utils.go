@@ -209,6 +209,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.KubernetesSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
+		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfig"):
@@ -279,6 +281,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.KeyValueApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1beta1.MatcherApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
+		return &monitoringv1beta1.MSTeamsConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfig"):
 		return &monitoringv1beta1.OpsGenieConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):

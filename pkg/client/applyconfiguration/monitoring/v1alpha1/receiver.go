@@ -31,6 +31,7 @@ type ReceiverApplyConfiguration struct {
 	PushoverConfigs  []PushoverConfigApplyConfiguration  `json:"pushoverConfigs,omitempty"`
 	SNSConfigs       []SNSConfigApplyConfiguration       `json:"snsConfigs,omitempty"`
 	TelegramConfigs  []TelegramConfigApplyConfiguration  `json:"telegramConfigs,omitempty"`
+	MSTeamsConfigs   []MSTeamsConfigApplyConfiguration   `json:"msteamsConfigs,omitempty"`
 }
 
 // ReceiverApplyConfiguration constructs an declarative configuration of the Receiver type for use with
@@ -186,6 +187,19 @@ func (b *ReceiverApplyConfiguration) WithTelegramConfigs(values ...*TelegramConf
 			panic("nil value passed to WithTelegramConfigs")
 		}
 		b.TelegramConfigs = append(b.TelegramConfigs, *values[i])
+	}
+	return b
+}
+
+// WithMSTeamsConfigs adds the given value to the MSTeamsConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MSTeamsConfigs field.
+func (b *ReceiverApplyConfiguration) WithMSTeamsConfigs(values ...*MSTeamsConfigApplyConfiguration) *ReceiverApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMSTeamsConfigs")
+		}
+		b.MSTeamsConfigs = append(b.MSTeamsConfigs, *values[i])
 	}
 	return b
 }

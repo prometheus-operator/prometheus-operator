@@ -109,6 +109,7 @@ type receiver struct {
 	TelegramConfigs  []*telegramConfig  `yaml:"telegram_configs,omitempty" json:"telegram_configs,omitempty"`
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
+	MSTeamsConfigs   []*msteamsConfig   `yaml:"msteams_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -365,6 +366,14 @@ type sigV4Config struct {
 	SecretKey string `yaml:"secret_key,omitempty" json:"secret_key,omitempty"`
 	Profile   string `yaml:"profile,omitempty" json:"profile,omitempty"`
 	RoleARN   string `yaml:"role_arn,omitempty" json:"role_arn,omitempty"`
+}
+
+type msteamsConfig struct {
+	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL    string            `yaml:"webhook_url"`
+	Title         string            `yaml:"title,omitempty"`
+	Text          string            `yaml:"text,omitempty"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
 type duration time.Duration

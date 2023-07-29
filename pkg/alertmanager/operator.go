@@ -1234,6 +1234,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkMSTeamsConfigs(ctx, receiver.MSTeamsConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1576,6 +1581,36 @@ func checkTelegramConfigs(
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, telegramConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkMSTeamsConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.MSTeamsConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+	if amVersion.LT(semver.MustParse("0.25.1")) {
+		return fmt.Errorf(`msteamsConfigs is available in Alertmanager >= 0.25.1 only - current %s`, amVersion)
+	}
+
+	for i, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		msteamsConfigKey := fmt.Sprintf("%s/msteams/%d", key, i)
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, msteamsConfigKey, store); err != nil {
 			return err
 		}
 	}

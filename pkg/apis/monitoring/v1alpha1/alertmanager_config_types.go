@@ -177,6 +177,8 @@ type Receiver struct {
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
+	// List of MSTeams configurations.
+	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -840,6 +842,15 @@ type TelegramConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// MSTeamsConfig configures notifications via MS Teams.
+type MSTeamsConfig struct {
+	SendResolved *bool       `json:"sendResolved,omitempty"`
+	WebhookURL   string      `json:"webhookUrl"`
+	Title        string      `json:"title,omitempty"`
+	Text         string      `json:"text,omitempty"`
+	HTTPConfig   *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other

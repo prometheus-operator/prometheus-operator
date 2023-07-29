@@ -99,6 +99,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'msteamsConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -304,6 +308,16 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 			return fmt.Errorf("mandatory field %q is empty", "chatID")
 		}
 
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
+	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

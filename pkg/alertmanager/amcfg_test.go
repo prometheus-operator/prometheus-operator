@@ -763,6 +763,10 @@ func TestGenerateConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	version251, err := semver.ParseTolerant("v0.25.1")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
@@ -1690,7 +1694,6 @@ receivers:
 templates: []
 `,
 		},
-
 		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
@@ -1754,7 +1757,58 @@ receivers:
 templates: []
 `,
 		},
-
+		{
+			name:      "CR with MSTeams Receiver",
+			amVersion: &version251,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+									{
+										WebhookURL: "https://webhook.office.com/webhookb2/id/IncomingWebhook/id",
+										Title:      "test title",
+										Text:       "test text",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  msteams_configs:
+  - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
+    title: test title
+    text: test text
+templates: []
+`,
+		},
 		{
 
 			name:    "CR with Slack Receiver and global Slack URL",

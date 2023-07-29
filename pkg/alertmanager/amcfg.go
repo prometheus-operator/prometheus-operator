@@ -639,6 +639,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var msteamsConfigs []*msteamsConfig
+	if l := len(in.MSTeamsConfigs); l > 0 {
+		msteamsConfigs = make([]*msteamsConfig, l)
+		for i := range in.MSTeamsConfigs {
+			receiver, err := cb.convertMSTeamsConfig(ctx, in.MSTeamsConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "MSTeamsConfig[%d]", i)
+			}
+			msteamsConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -652,6 +664,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		PushoverConfigs:  pushoverConfigs,
 		SNSConfigs:       snsConfigs,
 		TelegramConfigs:  telegramConfigs,
+		MSTeamsConfigs:   msteamsConfigs,
 	}, nil
 }
 
@@ -1195,6 +1208,27 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			out.Sigv4.AccessKey = accessKey
 			out.Sigv4.SecretKey = secretKey
 		}
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertMSTeamsConfig(
+	ctx context.Context, in monitoringv1alpha1.MSTeamsConfig, crKey types.NamespacedName,
+) (*msteamsConfig, error) {
+	out := &msteamsConfig{
+		VSendResolved: in.SendResolved,
+		WebhookURL:    in.WebhookURL,
+		Title:         in.Title,
+		Text:          in.Text,
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
 	}
 
 	return out, nil
@@ -1770,6 +1804,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 		}
 	}
 
+	for _, conf := range r.MSTeamsConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -1974,6 +2014,19 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger log.Logger) err
 
 	if tc.RoomID == "" {
 		return errors.Errorf("mandatory field %q is empty", "room_id")
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *msteamsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	msteamsAllowed := amVersion.GTE(semver.MustParse("0.25.1"))
+	if !msteamsAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.25.1`)
+	}
+
+	if tc.WebhookURL == "" {
+		return errors.Errorf("mandatory field %q is empty", "webhook_url")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
