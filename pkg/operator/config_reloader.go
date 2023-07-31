@@ -237,6 +237,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		SecurityContext: &v1.SecurityContext{
 			AllowPrivilegeEscalation: &boolFalse,
 			ReadOnlyRootFilesystem:   &boolTrue,
+			RunAsNonRoot:             &boolTrue,
 			Capabilities: &v1.Capabilities{
 				Drop: []v1.Capability{"ALL"},
 			},
