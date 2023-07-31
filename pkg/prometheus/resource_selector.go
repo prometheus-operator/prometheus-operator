@@ -691,6 +691,15 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		for _, rl := range sc.Spec.MetricRelabelConfigs {
+			if rl.Action != "" {
+				if err = validateRelabelConfig(rs.p, *rl); err != nil {
+					rejectFn(sc, err)
+					continue
+				}
+			}
+		}
+
 		for i, config := range sc.Spec.ConsulSDConfigs {
 			configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {

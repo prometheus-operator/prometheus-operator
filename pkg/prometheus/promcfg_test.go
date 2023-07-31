@@ -8879,6 +8879,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
 `,
@@ -8901,6 +8902,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   static_configs:
@@ -8926,6 +8928,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   file_sd_configs:
@@ -8950,6 +8953,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   http_sd_configs:
@@ -8968,6 +8972,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+		metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /metrics
@@ -8984,6 +8989,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   relabel_configs:
@@ -9011,6 +9017,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   relabel_configs:
@@ -9052,6 +9059,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   honor_labels: true
@@ -9100,6 +9108,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   basic_auth:
@@ -9141,6 +9150,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   authorization:
@@ -9200,6 +9210,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   tls_config:
@@ -9225,6 +9236,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   scheme: https
@@ -9266,6 +9278,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   metrics_path: /federate
@@ -9302,9 +9315,35 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   scrape_timeout: 10s
+`,
+		},
+		{
+			name: "non_empty_metric_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						Regex:  "noisy_labels.*",
+						Action: "labeldrop",
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+  metric_relabel_configs:
+  - regex: noisy_labels.*
+    action: labeldrop
+  - target_label: namespace
+    replacement: default
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
 `,
 		},
 	} {
@@ -9432,6 +9471,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:
@@ -9489,6 +9529,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:
@@ -9520,6 +9561,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:
@@ -9565,6 +9607,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:
@@ -9617,6 +9660,7 @@ scrape_configs:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  metric_relabel_configs: []
 scrape_configs:
 - job_name: scrapeconfig/default/testscrapeconfig1
   consul_sd_configs:

@@ -2520,6 +2520,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
+
 	return cfg, nil
 }
 

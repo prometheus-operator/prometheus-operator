@@ -144,6 +144,8 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// MetricRelabelConfigs to apply to samples before ingestion.
+	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.
