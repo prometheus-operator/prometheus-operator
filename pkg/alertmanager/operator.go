@@ -821,6 +821,9 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
 
+	// Ignoring changes to RevisionHistoryLimit field
+	s.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		AlertmanagerLabels      map[string]string
 		AlertmanagerAnnotations map[string]string
