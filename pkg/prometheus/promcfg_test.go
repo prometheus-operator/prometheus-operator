@@ -9275,6 +9275,38 @@ scrape_configs:
     - '{__name__=~"job:.*"}'
 `,
 		},
+		{
+			name: "scrape_interval",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeInterval: (*monitoringv1.Duration)(pointer.String("15s")),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  scrape_interval: 15s
+`,
+		},
+		{
+			name: "scrape_timeout",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeTimeout: (*monitoringv1.Duration)(pointer.String("10s")),
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  scrape_timeout: 10s
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

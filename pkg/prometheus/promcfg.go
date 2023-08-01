@@ -2226,6 +2226,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: stringMapToMapSlice(sc.Spec.Params)})
 	}
 
+	if sc.Spec.ScrapeInterval != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: *sc.Spec.ScrapeInterval})
+	}
+
+	if sc.Spec.ScrapeTimeout != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
+	}
+
 	if sc.Spec.RelabelConfigs != nil {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})

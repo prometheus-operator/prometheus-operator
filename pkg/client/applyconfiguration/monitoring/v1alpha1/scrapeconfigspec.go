@@ -31,6 +31,8 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ConsulSDConfigs       []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
+	ScrapeInterval        *v1.Duration                                      `json:"scrapeInterval,omitempty"`
+	ScrapeTimeout         *v1.Duration                                      `json:"scrapeTimeout,omitempty"`
 	HonorTimestamps       *bool                                             `json:"honorTimestamps,omitempty"`
 	HonorLabels           *bool                                             `json:"honorLabels,omitempty"`
 	Params                map[string][]string                               `json:"params,omitempty"`
@@ -134,6 +136,22 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithRelabelConfigs(values ...**v1.R
 // If called multiple times, the MetricsPath field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithMetricsPath(value string) *ScrapeConfigSpecApplyConfiguration {
 	b.MetricsPath = &value
+	return b
+}
+
+// WithScrapeInterval sets the ScrapeInterval field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeInterval field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeInterval(value v1.Duration) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeInterval = &value
+	return b
+}
+
+// WithScrapeTimeout sets the ScrapeTimeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeTimeout field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeTimeout(value v1.Duration) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeTimeout = &value
 	return b
 }
 

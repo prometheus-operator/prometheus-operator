@@ -27,11 +27,11 @@ import (
 var (
 	DefaultReloaderTestConfig = &Config{
 		ReloaderConfig: ContainerConfig{
-			CPURequest:    "100m",
-			CPULimit:      "100m",
-			MemoryRequest: "50Mi",
-			MemoryLimit:   "50Mi",
-			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequests:    Quantity{q: resource.MustParse("100m")},
+			CPULimits:      Quantity{q: resource.MustParse("100m")},
+			MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+			MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+			Image:          "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 	}
 )
@@ -45,11 +45,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_resources",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "0",
-				CPULimit:      "0",
-				MemoryRequest: "0",
-				MemoryLimit:   "0",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("0")},
+				CPULimits:      Quantity{q: resource.MustParse("0")},
+				MemoryRequests: Quantity{q: resource.MustParse("0")},
+				MemoryLimits:   Quantity{q: resource.MustParse("0")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits:   v1.ResourceList{},
@@ -59,11 +59,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_requests",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "0",
-				CPULimit:      "100m",
-				MemoryRequest: "0",
-				MemoryLimit:   "50Mi",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("0")},
+				CPULimits:      Quantity{q: resource.MustParse("100m")},
+				MemoryRequests: Quantity{q: resource.MustParse("0")},
+				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -76,11 +76,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_limits",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "100m",
-				CPULimit:      "0",
-				MemoryRequest: "50Mi",
-				MemoryLimit:   "0",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("100m")},
+				CPULimits:      Quantity{q: resource.MustParse("0")},
+				MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+				MemoryLimits:   Quantity{q: resource.MustParse("0")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{},
@@ -93,11 +93,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_CPU_resources",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "0",
-				CPULimit:      "0",
-				MemoryRequest: "50Mi",
-				MemoryLimit:   "50Mi",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("0")},
+				CPULimits:      Quantity{q: resource.MustParse("0")},
+				MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -111,11 +111,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_CPU_requests",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "0",
-				CPULimit:      "100m",
-				MemoryRequest: "50Mi",
-				MemoryLimit:   "50Mi",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("0")},
+				CPULimits:      Quantity{q: resource.MustParse("100m")},
+				MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -130,11 +130,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_CPU_limits",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "100m",
-				CPULimit:      "0",
-				MemoryRequest: "50Mi",
-				MemoryLimit:   "50Mi",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("100m")},
+				CPULimits:      Quantity{q: resource.MustParse("0")},
+				MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -149,11 +149,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_memory_resources",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "100m",
-				CPULimit:      "100m",
-				MemoryRequest: "0",
-				MemoryLimit:   "0",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("100m")},
+				CPULimits:      Quantity{q: resource.MustParse("100m")},
+				MemoryRequests: Quantity{q: resource.MustParse("0")},
+				MemoryLimits:   Quantity{q: resource.MustParse("0")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -167,11 +167,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_memory_requests",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "100m",
-				CPULimit:      "100m",
-				MemoryRequest: "0",
-				MemoryLimit:   "50Mi",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("100m")},
+				CPULimits:      Quantity{q: resource.MustParse("100m")},
+				MemoryRequests: Quantity{q: resource.MustParse("0")},
+				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
@@ -186,11 +186,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 		{
 			name: "no_memory_limits",
 			reloaderConfig: ContainerConfig{
-				CPURequest:    "100m",
-				CPULimit:      "100m",
-				MemoryRequest: "50Mi",
-				MemoryLimit:   "0",
-				Image:         DefaultReloaderTestConfig.ReloaderConfig.Image,
+				CPURequests:    Quantity{q: resource.MustParse("100m")},
+				CPULimits:      Quantity{q: resource.MustParse("100m")},
+				MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+				MemoryLimits:   Quantity{q: resource.MustParse("0")},
+				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
 			expectedResources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
