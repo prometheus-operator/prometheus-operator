@@ -1,0 +1,64 @@
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1",
+  "request": {
+    "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
+    "kind": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "kind": "PrometheusRule"
+    },
+    "resource": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "resource": "prometheusrules"
+    },
+    "namespace": "monitoring",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "kubernetes-admin",
+      "groups": [
+        "system:masters",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "apiVersion": "monitoring.coreos.com/v1",
+      "kind": "PrometheusRule",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"monitoring.coreos.com/v1\",\"kind\":\"PrometheusRule\",\"metadata\":{\"annotations\":{},\"name\":\"test\",\"namespace\":\"monitoring\"},\"spec\":{\"groups\":[{\"name\":\"test.rules\",\"rules\":[{\"alert\":\"Test\",\"annotations\":{\"message\":\"Test rule\"},\"expr\":\"vector(1))\",\"for\":\"5m\",\"labels\":{\"severity\":\"critical\"}}]}]}}\n"
+        },
+        "creationTimestamp": "2019-03-27T13:02:09Z",
+        "generation": 1,
+        "name": "test",
+        "namespace": "monitoring",
+        "uid": "87c5d31d-5090-11e9-b9b4-02425473f309"
+      },
+      "spec": {
+        "groups": [
+          {
+            "name": "test.rules",
+            "partial_response_strategy": "abort",
+            "rules": [
+              {
+                "alert": "Test",
+                "annotations": {
+                  "message": "Test rule",
+                  "humanizePercentage": "Should work {{ $value | humanizePercentage }}"
+                },
+                "expr": "vector(1)",
+                "for": "5m",
+                "labels": {
+                  "severity": "critical"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "oldObject": null,
+    "dryRun": false
+  }
+}
