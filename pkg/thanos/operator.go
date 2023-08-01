@@ -704,29 +704,29 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
-    hash, err := hashstructure.Hash(struct {
-        ThanosRulerLabels      map[string]string
-        ThanosRulerAnnotations map[string]string
-        ThanosRulerSpec        monitoringv1.ThanosRulerSpec
-        Config                 Config
-        StatefulSetSpec        appsv1.StatefulSetSpec
-        RuleConfigMaps         []string `hash:"set"`
-    }{
-        ThanosRulerLabels:      tr.Labels,
-        ThanosRulerAnnotations: tr.Annotations,
-        ThanosRulerSpec:        tr.Spec,
-        Config:                 c,
-        StatefulSetSpec:        ss,
-        RuleConfigMaps:         ruleConfigMapNames,
-    },
-        nil,
-    )
-    if err != nil {
-        return "", errors.Wrap(
-            err,
-            "failed to calculate combined hash",
-        )
-    }
+	hash, err := hashstructure.Hash(struct {
+		ThanosRulerLabels      map[string]string
+		ThanosRulerAnnotations map[string]string
+		ThanosRulerSpec        monitoringv1.ThanosRulerSpec
+		Config                 Config
+		StatefulSetSpec        appsv1.StatefulSetSpec
+		RuleConfigMaps         []string `hash:"set"`
+	}{
+		ThanosRulerLabels:      tr.Labels,
+		ThanosRulerAnnotations: tr.Annotations,
+		ThanosRulerSpec:        tr.Spec,
+		Config:                 c,
+		StatefulSetSpec:        ss,
+		RuleConfigMaps:         ruleConfigMapNames,
+	},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(
+			err,
+			"failed to calculate combined hash",
+		)
+	}
 
 	return fmt.Sprintf("%d", hash), nil
 }
