@@ -202,7 +202,7 @@ func makeStatefulSet(
 			},
 		})
 	} else {
-		if reflect.DeepEqual(storageSpec.VolumeClaimTemplate, monitoringv1.EmbeddedPersistentVolumeClaim{}) {
+		if !reflect.DeepEqual(storageSpec.VolumeClaimTemplate, monitoringv1.EmbeddedPersistentVolumeClaim{}) {
 			storageSpec.VolumeClaimTemplates = append([]monitoringv1.EmbeddedPersistentVolumeClaim{storageSpec.VolumeClaimTemplate}, storageSpec.VolumeClaimTemplates...)
 		}
 
