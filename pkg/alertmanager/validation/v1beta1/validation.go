@@ -95,6 +95,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
 		}
+
+		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'webexConfig' - receiver %s", receiver.Name)
+		}
 	}
 
 	return receiverNames, nil
@@ -280,12 +284,29 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 	return nil
 }
 
+func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
+	for _, config := range configs {
+		if *config.APIURL != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
+			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

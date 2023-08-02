@@ -894,10 +894,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// create 2 namespaces:
 	//
 	// 1. "ns" ns:
-	//   - hosts the Alertmanager CR which which should be reconciled
+	//   - hosts the Alertmanager CR which should be reconciled
 	//
 	// 2. "configNs" ns:
-	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	//   - hosts the AlertmanagerConfig CRs which should be reconciled
 	// 		thanks to the label monitored: "true" which is removed in the second
 	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -969,6 +969,19 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	webexAPIToken := "super-secret-token"
+	webexAPITokenSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "webex-api-token",
+		},
+		Data: map[string][]byte{
+			"api-token": []byte(webexAPIToken),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1094,7 +1107,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					ChatID: 12345,
 				}},
-
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
@@ -1116,6 +1128,28 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						TopicARN: "test-topicARN",
 					},
 				},
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					APIURL: func() *monitoringv1alpha1.URL {
+						res := monitoringv1alpha1.URL("https://webex.api.url")
+						return &res
+					}(),
+					RoomID: "testingRoomID",
+					Message: func() *string {
+						res := "testingMessage"
+						return &res
+					}(),
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Type: "Bearer",
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webex-api-token",
+								},
+								Key: "api-token",
+							},
+						},
+					},
+				}},
 			}},
 		},
 	}
@@ -1461,6 +1495,14 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  webex_configs:
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: super-secret-token
+    api_url: https://webex.api.url
+    message: testingMessage
+    room_id: testingRoomID
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
