@@ -3,7 +3,7 @@ module github.com/prometheus-operator/prometheus-operator/pkg/client
 go 1.19
 
 require (
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.67.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.67.1
 	k8s.io/api v0.27.2
 	k8s.io/apiextensions-apiserver v0.27.2
 	k8s.io/apimachinery v0.27.2
