@@ -707,6 +707,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 	hash, err := hashstructure.Hash(struct {
 		ThanosRulerLabels      map[string]string
 		ThanosRulerAnnotations map[string]string
+		ThanosRulerGeneration  int64
 		ThanosRulerSpec        monitoringv1.ThanosRulerSpec
 		Config                 Config
 		StatefulSetSpec        appsv1.StatefulSetSpec
@@ -714,6 +715,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 	}{
 		ThanosRulerLabels:      tr.Labels,
 		ThanosRulerAnnotations: tr.Annotations,
+		ThanosRulerGeneration:  tr.Generation,
 		ThanosRulerSpec:        tr.Spec,
 		Config:                 c,
 		StatefulSetSpec:        ss,
