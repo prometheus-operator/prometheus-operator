@@ -1,4 +1,6 @@
 #!/bin/bash
+# This script updates the golden files for unit tests that import the 'gotest.tools/v3/golden' dependency in a Go project.
+# It lists all packages in the project, checks for the dependency in test imports, and runs unit tests with '-update' to update golden files.
 
 dependency="gotest.tools/v3/golden"
 
