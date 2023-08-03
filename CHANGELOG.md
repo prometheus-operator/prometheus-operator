@@ -1,3 +1,7 @@
+## 0.67.1 / 2023-08-03
+
+* [BUGFIX] Avoid skipping `AlertmanagerConfig` resources for Alertmanager versions prior v0.25.0. #5788
+
 ## 0.67.0 / 2023-07-27
 
 * [FEATURE] Add `spec.scheme` field to the ScrapeConfig CRD. #5679
