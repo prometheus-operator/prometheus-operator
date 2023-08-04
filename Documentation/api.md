@@ -15642,6 +15642,20 @@ ScrapeConfigSpec
 </tr>
 <tr>
 <td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -19688,6 +19702,20 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>ConsulSDConfigs defines a list of Consul service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
 </td>
 </tr>
 <tr>

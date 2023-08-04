@@ -87,6 +87,9 @@ type ScrapeConfigSpec struct {
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
+	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +optional
+	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.

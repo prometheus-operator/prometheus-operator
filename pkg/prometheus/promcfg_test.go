@@ -9119,6 +9119,52 @@ scrape_configs:
 `,
 		},
 		{
+			name: "empty_metrics_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  metric_relabel_configs: []
+`,
+		},
+		{
+			name: "non_empty_metrics_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						Regex:        "(.*)",
+						Replacement:  "prefix_$1",
+						SourceLabels: []monitoringv1.LabelName{"__name__"},
+						TargetLabel:  "__name__",
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  metric_relabel_configs:
+  - source_labels:
+    - __name__
+    target_label: __name__
+    regex: (.*)
+    replacement: prefix_$1
+    action: replace
+`,
+		},
+		{
 			name: "honor_timestamp",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HonorTimestamps: pointer.Bool(true),
