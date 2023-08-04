@@ -17,9 +17,9 @@ Kubernetes cluster or create scrape configurations that are not possible with th
 
 # Prerequisites
 * `prometheus-operator` `>v0.65.1`
-* `ScrapeConfig` installed in the cluster. Make sure to restart the operator after having pushed the CRD.
+* `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
 
-## Configure Prometheus or PrometheusAgent to select ScrapeConfigs
+# Configure Prometheus or PrometheusAgent to select ScrapeConfigs
 
 Both the Prometheus and PrometheusAgent CRD have a `scrapeConfigSelector` field. This field needs to be set to a list of
 labels to match `ScrapeConfigs`:
@@ -49,14 +49,16 @@ If you have an interest in another service discovery mechanism or you see someth
 
 ## `static_config`
 
-For example, to scrape a target located at `http://10.1.2.3:9100`, use the following:
+For example, to scrape the target located at `http://prometheus.demo.do.prometheus.io:9090`, use the following:
 
 ```yaml
 apiVersion: coreos.monitoring.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: my-scrape-config
+  name: static-config
   namespace: my-namespace
+  labels:
+    prometheus: system-monitoring-prometheus
 spec:
   staticConfigs:
     - labels:
@@ -75,6 +77,8 @@ kind: ConfigMap
 metadata:
   name: scrape-file-sd-targets
   namespace: monitoring
+  labels:
+    prometheus: system-monitoring-prometheus
 data:
   targets.yaml: |
     - labels:
@@ -95,6 +99,8 @@ kind: Prometheus
 metadata:
   name: your-prometheus
   namespace: my-namespace
+  labels:
+    prometheus: system-monitoring-prometheus
 spec:
   scrapeConfigSelector:
     prometheus: system-monitoring-prometheus
@@ -108,9 +114,10 @@ You can then use ScrapeConfig to reference that file and scrape the associated t
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: scrape-config-example
+  name: file-sd
   namespace: my-namespace
   labels:
+    prometheus: system-monitoring-prometheus
     app.kubernetes.io/name: scrape-config-example
 spec:
   fileSDConfigs:
@@ -126,9 +133,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: scrape-config-example
+  name: http-sd
   namespace: my-namespace
   labels:
+    prometheus: system-monitoring-prometheus
     app.kubernetes.io/name: scrape-config-example
 spec:
   httpSDConfigs:
