@@ -1,0 +1,9 @@
+route:
+  receiver: "opsgenie"
+receivers:
+- name: "opsgenie"
+  opsgenie_configs:
+  - entity: entity1
+    actions: action1,action2
+    api_key: xxx
+templates: []

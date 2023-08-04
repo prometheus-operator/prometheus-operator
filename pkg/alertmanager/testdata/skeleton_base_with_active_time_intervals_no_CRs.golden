@@ -1,0 +1,13 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: "null"
+    active_time_intervals:
+    - workdays
+receivers:
+- name: "null"
+time_intervals:
+- name: workdays
+  time_intervals:
+  - weekdays: ['monday:friday']
+templates: []
