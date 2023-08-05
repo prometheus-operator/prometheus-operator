@@ -96,6 +96,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
 		}
 
+		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'webexConfig' - receiver %s", receiver.Name)
+		}
+
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
 		}
@@ -318,6 +322,22 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 
 func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
 	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
+	for _, config := range configs {
+		if *config.APIURL != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return errors.Wrap(err, "invalid 'apiURL'")
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

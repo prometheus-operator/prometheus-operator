@@ -177,6 +177,8 @@ type Receiver struct {
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// List of MSTeams configurations.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// List of Webex configurations.
+	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -594,6 +596,31 @@ type HTTPConfig struct {
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+}
+
+// WebexConfig configures notification via Cisco Webex
+// See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
+type WebexConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The HTTP client's configuration.
+	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// Message template
+	// +optional
+	Message *string `json:"message,omitempty"`
+
+	// ID of the Webex Teams room where to send the messages.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	RoomID string `json:"roomID"`
 }
 
 // WeChatConfig configures notifications via WeChat.
@@ -1125,3 +1152,7 @@ var monthsInv = map[int]Month{
 	11: November,
 	12: December,
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern=`^https?://.+$`
+type URL string

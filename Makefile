@@ -346,6 +346,10 @@ test-unit:
 test-long:
 	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
 
+.PHONY: test-unit-update-golden
+test-unit-update-golden:
+	./scripts/update-golden-files.sh
+
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 

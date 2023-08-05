@@ -32,6 +32,7 @@ type ReceiverApplyConfiguration struct {
 	SNSConfigs       []SNSConfigApplyConfiguration       `json:"snsConfigs,omitempty"`
 	TelegramConfigs  []TelegramConfigApplyConfiguration  `json:"telegramConfigs,omitempty"`
 	MSTeamsConfigs   []MSTeamsConfigApplyConfiguration   `json:"msteamsConfigs,omitempty"`
+	WebexConfigs     []WebexConfigApplyConfiguration     `json:"webexConfigs,omitempty"`
 }
 
 // ReceiverApplyConfiguration constructs an declarative configuration of the Receiver type for use with
@@ -200,6 +201,19 @@ func (b *ReceiverApplyConfiguration) WithMSTeamsConfigs(values ...*MSTeamsConfig
 			panic("nil value passed to WithMSTeamsConfigs")
 		}
 		b.MSTeamsConfigs = append(b.MSTeamsConfigs, *values[i])
+	}
+	return b
+}
+
+// WithWebexConfigs adds the given value to the WebexConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the WebexConfigs field.
+func (b *ReceiverApplyConfiguration) WithWebexConfigs(values ...*WebexConfigApplyConfiguration) *ReceiverApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithWebexConfigs")
+		}
+		b.WebexConfigs = append(b.WebexConfigs, *values[i])
 	}
 	return b
 }

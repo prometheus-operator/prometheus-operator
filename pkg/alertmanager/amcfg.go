@@ -651,6 +651,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var webexConfigs []*webexConfig
+	if l := len(in.WebexConfigs); l > 0 {
+		webexConfigs = make([]*webexConfig, l)
+		for i := range in.WebexConfigs {
+			receiver, err := cb.convertWebexConfig(ctx, in.WebexConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "WebexConfig[%d]", i)
+			}
+			webexConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -665,6 +677,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		SNSConfigs:       snsConfigs,
 		TelegramConfigs:  telegramConfigs,
 		MSTeamsConfigs:   msteamsConfigs,
+		WebexConfigs:     webexConfigs,
 	}, nil
 }
 
@@ -967,6 +980,31 @@ func (cb *configBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 			return nil, errors.Wrap(err, "failed to get API secret")
 		}
 		out.APISecret = apiSecret
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertWebexConfig(ctx context.Context, in monitoringv1alpha1.WebexConfig, crKey types.NamespacedName) (*webexConfig, error) {
+	out := &webexConfig{
+		VSendResolved: in.SendResolved,
+		RoomID:        in.RoomID,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
 	}
 
 	if in.HTTPConfig != nil {
