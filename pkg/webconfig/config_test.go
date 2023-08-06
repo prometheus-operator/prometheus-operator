@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
+	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -34,12 +35,12 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 	tc := []struct {
 		name                string
 		webConfigFileFields monitoringv1.WebConfigFileFields
-		expectedData        string
+		golden              string
 	}{
 		{
 			name:                "tls config not defined",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{},
-			expectedData:        "",
+			golden:              "tls_config_not_defined.golden",
 		},
 		{
 			name: "minimal TLS config with certificate from secret",
@@ -61,10 +62,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/secret/test-secret-cert/tls.crt
-  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
-`,
+			golden: "minimal_TLS_config_with_certificate_from_secret.golden",
 		},
 		{
 			name: "minimal TLS config with certificate from configmap",
@@ -86,10 +84,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/configmap/test-configmap-cert/tls.crt
-  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
-`,
+			golden: "minimal_TLS_config_with_certificate_from_configmap.golden",
 		},
 		{
 			name: "minimal TLS config with client CA from configmap",
@@ -119,11 +114,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/configmap/test-configmap-cert/tls.crt
-  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.key
-  client_ca_file: /web_certs_path_prefix/configmap/test-configmap-ca/tls.client_ca
-`,
+			golden: "minimal_TLS_config_with_client_CA_from configmap.golden",
 		},
 		{
 			name: "TLS config with all parameters from secrets",
@@ -159,21 +150,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					CurvePreferences:         []string{"curve-1", "curve-2"},
 				},
 			},
-			expectedData: `tls_server_config:
-  cert_file: /web_certs_path_prefix/secret/test-secret-cert/tls.crt
-  key_file: /web_certs_path_prefix/secret/test-secret-key/tls.keySecret
-  client_auth_type: RequireAnyClientCert
-  client_ca_file: /web_certs_path_prefix/secret/test-secret-ca/tls.ca
-  min_version: TLS11
-  max_version: TLS13
-  cipher_suites:
-  - cipher-1
-  - cipher-2
-  prefer_server_cipher_suites: false
-  curve_preferences:
-  - curve-1
-  - curve-2
-`,
+			golden: "TLS_config_with_all_parameters_from secrets.golden",
 		},
 		{
 			name: "HTTP config with all parameters",
@@ -189,15 +166,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			expectedData: `http_server_config:
-  http2: false
-  headers:
-    Content-Security-Policy: test
-    Strict-Transport-Security: test
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: sameorigin
-    X-XSS-Protection: test
-`,
+			golden: "HTTP_config_with_all_parameters.golden",
 		},
 	}
 
@@ -221,9 +190,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if tt.expectedData != string(secret.Data["web-config.yaml"]) {
-				t.Fatalf("Got %s\nwant %s\n", secret.Data["web-config.yaml"], tt.expectedData)
-			}
+			golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
 		})
 	}
 }
