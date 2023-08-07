@@ -504,15 +504,6 @@ scrape_configs:
     - job
     target_label: __tmp_prometheus_job_name
   - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  - source_labels:
     - __address__
     target_label: __param_target
   - source_labels:
@@ -522,6 +513,15 @@ scrape_configs:
     replacement: blackbox.exporter.io
   - target_label: namespace
     replacement: default
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
@@ -610,6 +610,14 @@ scrape_configs:
   - target_label: job
     replacement: blackbox
   - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - source_labels:
     - __param_target
     target_label: __tmp_hash
     modulus: 1
@@ -618,14 +626,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
   metric_relabel_configs: []
 `
 
@@ -706,6 +706,14 @@ scrape_configs:
   - target_label: job
     replacement: blackbox
   - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - source_labels:
     - __param_target
     target_label: __tmp_hash
     modulus: 1
@@ -714,14 +722,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
   metric_relabel_configs: []
 `
 
@@ -809,15 +809,6 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -853,6 +844,15 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `
 
@@ -941,15 +941,6 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 2
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -985,6 +976,15 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 2
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `
 	require.Equal(t, expected, string(cfg))
@@ -1072,15 +1072,6 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -1118,6 +1109,15 @@ scrape_configs:
     action: replace
   - target_label: namespace
     replacement: default
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - target_label: namespace
     replacement: default
@@ -6589,6 +6589,14 @@ scrape_configs:
     - job
     target_label: __tmp_prometheus_job_name
   - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - source_labels:
     - __param_target
     target_label: __tmp_hash
     modulus: 1
@@ -6597,14 +6605,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
   metric_relabel_configs: []
 `
 
@@ -6636,6 +6636,14 @@ scrape_configs:
     - job
     target_label: __tmp_prometheus_job_name
   - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - source_labels:
     - __param_target
     target_label: __tmp_hash
     modulus: 1
@@ -6644,14 +6652,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
   metric_relabel_configs: []
 `
 
@@ -8707,15 +8707,6 @@ scrape_configs:
     - job
     target_label: __tmp_prometheus_job_name
   - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  - source_labels:
     - __address__
     target_label: __param_target
   - source_labels:
@@ -8726,6 +8717,15 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `,
 		},
