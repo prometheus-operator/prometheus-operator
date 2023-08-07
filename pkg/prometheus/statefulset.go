@@ -387,6 +387,9 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 		} else {
 			volNames = append(volNames, volName)
 		}
+	} else {
+		volName := VolumeName(p)
+		volNames = append(volNames, volName)
 	}
 	return volNames
 }
