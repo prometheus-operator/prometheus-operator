@@ -1417,6 +1417,11 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
 
+	// The controller should ignore any changes to RevisionHistoryLimit field because
+	// it may be modified by external actors.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
+	ssSpec.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
 		PrometheusAnnotations map[string]string

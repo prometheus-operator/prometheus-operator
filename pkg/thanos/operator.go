@@ -704,6 +704,12 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+
+	// The controller should ignore any changes to RevisionHistoryLimit field because
+	// it may be modified by external actors.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
+	ss.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		ThanosRulerLabels      map[string]string
 		ThanosRulerAnnotations map[string]string
