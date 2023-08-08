@@ -8636,6 +8636,19 @@ scrape_configs:
 - job_name: probe/default/probe1
   honor_timestamps: true
   metrics_path: ""
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `,
 		},
@@ -8661,6 +8674,19 @@ scrape_configs:
   metrics_path: /probe
   scheme: http
   proxy_url: socks://myproxy:9095
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `,
 		},
@@ -8747,6 +8773,19 @@ scrape_configs:
   params:
     module:
     - http_2xx
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 `,
 		},

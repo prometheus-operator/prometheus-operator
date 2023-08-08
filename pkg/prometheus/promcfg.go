@@ -1054,10 +1054,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
 	}
 
-	if m.Spec.Targets.StaticConfig != nil || m.Spec.Targets.Ingress != nil {
-		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	}
+	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
