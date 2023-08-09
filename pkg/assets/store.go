@@ -219,8 +219,8 @@ func (s *Store) addToken(ctx context.Context, ns string, sel v1.SecretKeySelecto
 	return nil
 }
 
-func (s *Store) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	err := s.addToken(ctx, ns, *sel, key)
+func (s *Store) AddBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
+	err := s.addToken(ctx, ns, sel, key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bearer token")
 	}
