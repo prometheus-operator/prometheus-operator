@@ -137,6 +137,6 @@ type Namespaces struct {
 
 // Check if this is a single namespace deployment, to use 'role' insteadof 'clusterrole'
 func IsSingleNamespace(ns Namespaces) bool {
-	// Only sigle namespace 
-	return len(ns.AllowList)==1 && len(ns.DenyList) == 0
+	// Only sigle namespace
+	return len(ns.AllowList) == 1 && len(ns.DenyList) == 0
 }

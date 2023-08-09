@@ -18,9 +18,12 @@ package v1alpha1
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 	"time"
 
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -44,6 +47,7 @@ type AlertmanagerConfigInterface interface {
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.AlertmanagerConfigList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AlertmanagerConfig, err error)
+	Apply(ctx context.Context, alertmanagerConfig *monitoringv1alpha1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.AlertmanagerConfig, err error)
 	AlertmanagerConfigExpansion
 }
 
@@ -169,6 +173,32 @@ func (c *alertmanagerConfigs) Patch(ctx context.Context, name string, pt types.P
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied alertmanagerConfig.
+func (c *alertmanagerConfigs) Apply(ctx context.Context, alertmanagerConfig *monitoringv1alpha1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
+	if alertmanagerConfig == nil {
+		return nil, fmt.Errorf("alertmanagerConfig provided to Apply must not be nil")
+	}
+	patchOpts := opts.ToPatchOptions()
+	data, err := json.Marshal(alertmanagerConfig)
+	if err != nil {
+		return nil, err
+	}
+	name := alertmanagerConfig.Name
+	if name == nil {
+		return nil, fmt.Errorf("alertmanagerConfig.Name must be provided to Apply")
+	}
+	result = &v1alpha1.AlertmanagerConfig{}
+	err = c.client.Patch(types.ApplyPatchType).
+		Namespace(c.ns).
+		Resource("alertmanagerconfigs").
+		Name(*name).
+		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

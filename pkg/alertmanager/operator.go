@@ -504,7 +504,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.alrtCfgInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	
+
 	// Skip namespace alert in single namespace case.
 	if !operator.IsSingleNamespace(c.config.Namespaces) {
 		go c.nsAlrtCfgInf.Run(ctx.Done())
@@ -1072,7 +1072,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			namespaces = append(namespaces, ns)
 		}
 	}
-	
+
 	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
 
