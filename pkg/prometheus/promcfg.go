@@ -965,7 +965,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	case m.Spec.Targets.Ingress != nil:
 		// Generate kubernetes_sd_config section for the ingress resources.
@@ -1061,11 +1060,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
-		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
-
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
 	}
+
+	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
