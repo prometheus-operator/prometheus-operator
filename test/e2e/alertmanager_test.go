@@ -1073,6 +1073,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{Key: "Subject", Value: "subject"},
 						{Key: "Comment", Value: "comment"},
 					},
+					// HTML field with an empty string must appear as-is in the generated configuration.
+					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
+					HTML: pointer.String(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &v1.SecretKeySelector{
@@ -1478,6 +1481,7 @@ receivers:
     headers:
       Comment: comment
       Subject: subject
+    html: ""
   pushover_configs:
   - user_key: 1234abc
     token: 1234abc

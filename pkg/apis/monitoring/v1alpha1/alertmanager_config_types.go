@@ -699,10 +699,10 @@ type EmailConfig struct {
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
-	HTML string `json:"html,omitempty"`
+	HTML *string `json:"html,omitempty"`
 	// The text body of the email notification.
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// The SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
