@@ -371,8 +371,8 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 
 func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) []string {
 	volNames := []string{}
+	var volName string
 	if cpf.Storage != nil {
-		volName := VolumeName(p)
 		if cpf.Storage.VolumeClaimTemplates != nil {
 			for _, pvcTemplate := range cpf.Storage.VolumeClaimTemplates {
 				volName = VolumeName(p)
@@ -385,10 +385,11 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 			volName = cpf.Storage.VolumeClaimTemplate.Name
 			volNames = append(volNames, volName)
 		} else {
+			volName = VolumeName(p)
 			volNames = append(volNames, volName)
 		}
 	} else {
-		volName := VolumeName(p)
+		volName = VolumeName(p)
 		volNames = append(volNames, volName)
 	}
 	return volNames

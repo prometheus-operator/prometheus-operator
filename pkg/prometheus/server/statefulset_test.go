@@ -276,13 +276,12 @@ func TestStatefulSetMultiplePVCs(t *testing.T) {
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(2, len(sset.Spec.VolumeClaimTemplates)) {
-		t.Fatal("Error adding PVCs Spec to StatefulSetSpec")
+		t.Fatalf("Expected %d PVCs, got %d", 2, len(sset.Spec.VolumeClaimTemplates))
 	} else {
 		ssetPvc := sset.Spec.VolumeClaimTemplates[0]
 		if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
 			t.Fatal("Error adding PVCs Spec to StatefulSetSpec")
 		}
-
 		ssetPvcSecond := sset.Spec.VolumeClaimTemplates[1]
 		if !reflect.DeepEqual(*pvcSecond.Spec.StorageClassName, *ssetPvcSecond.Spec.StorageClassName) {
 			t.Fatal("Error adding PVCs Spec to StatefulSetSpec")

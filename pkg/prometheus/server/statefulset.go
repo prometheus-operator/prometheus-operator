@@ -206,18 +206,18 @@ func makeStatefulSet(
 			storageSpec.VolumeClaimTemplates = append([]monitoringv1.EmbeddedPersistentVolumeClaim{storageSpec.VolumeClaimTemplate}, storageSpec.VolumeClaimTemplates...)
 		}
 
-		for _, specVcTemplate := range storageSpec.VolumeClaimTemplates {
-			pvcTemplate := operator.MakeVolumeClaimTemplate(specVcTemplate)
+		for _, vcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(vcTemplate)
 			if pvcTemplate.Name == "" {
 				pvcTemplate.Name = prompkg.VolumeName(p)
 			}
-			if specVcTemplate.Spec.AccessModes == nil {
+			if vcTemplate.Spec.AccessModes == nil {
 				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
 			} else {
-				pvcTemplate.Spec.AccessModes = specVcTemplate.Spec.AccessModes
+				pvcTemplate.Spec.AccessModes = vcTemplate.Spec.AccessModes
 			}
-			pvcTemplate.Spec.Resources = specVcTemplate.Spec.Resources
-			pvcTemplate.Spec.Selector = specVcTemplate.Spec.Selector
+			pvcTemplate.Spec.Resources = vcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = vcTemplate.Spec.Selector
 			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
 
