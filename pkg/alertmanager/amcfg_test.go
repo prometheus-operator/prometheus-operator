@@ -34,7 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringingv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -69,27 +69,27 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name: "valid global config",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringingv1.GlobalSMTPConfig{
-					From: pointer.String("from"),
+					From: ptr.To("from"),
 					SmartHost: &monitoringingv1.HostPort{
 						Host: "smtp.example.org",
 						Port: "587",
 					},
-					Hello:        pointer.String("smtp.example.org"),
-					AuthUsername: pointer.String("dev@smtp.example.org"),
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
 					AuthPassword: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "smtp-auth",
 						},
 						Key: "password",
 					},
-					AuthIdentity: pointer.String("dev@smtp.example.org"),
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
 					AuthSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "smtp-auth",
 						},
 						Key: "secret",
 					},
-					RequireTLS: pointer.Bool(true),
+					RequireTLS: ptr.To(true),
 				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringingv1.HTTPConfig{
@@ -114,7 +114,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							"some": "value",
 						},
 					},
-					FollowRedirects: pointer.Bool(true),
+					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -143,7 +143,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
-					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
+					ResolveTimeout: ptr.To(model.Duration(30 * time.Second)),
 					SMTPFrom:       "from",
 					SMTPSmarthost: config.HostPort{
 						Host: "smtp.example.org",
@@ -154,7 +154,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					SMTPAuthPassword: "password",
 					SMTPAuthIdentity: "dev@smtp.example.org",
 					SMTPAuthSecret:   "secret",
-					SMTPRequireTLS:   pointer.Bool(true),
+					SMTPRequireTLS:   ptr.To(true),
 					HTTPConfig: &httpClientConfig{
 						OAuth2: &oauth2{
 							ClientID:     "clientID",
@@ -165,7 +165,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								"some": "value",
 							},
 						},
-						FollowRedirects: pointer.Bool(true),
+						FollowRedirects: ptr.To(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -635,7 +635,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name: "globalConfig has null resolve timeout",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringingv1.HTTPConfig{
-					FollowRedirects: pointer.Bool(true),
+					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -660,7 +660,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
-						FollowRedirects: pointer.Bool(true),
+						FollowRedirects: ptr.To(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -785,7 +785,7 @@ func TestGenerateConfig(t *testing.T) {
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+					ResolveTimeout: ptr.To(model.Duration(time.Minute)),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -798,7 +798,7 @@ func TestGenerateConfig(t *testing.T) {
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SMTPRequireTLS: func(b bool) *bool { return &b }(false),
+					SMTPRequireTLS: ptr.To(false),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -811,7 +811,7 @@ func TestGenerateConfig(t *testing.T) {
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SMTPRequireTLS: func(b bool) *bool { return &b }(true),
+					SMTPRequireTLS: ptr.To(true),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -1261,9 +1261,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: func(s string) *string {
-									return &s
-								}("http://test.url"),
+								URL: ptr.To("http://test.url"),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 									OAuth2: &monitoringingv1.OAuth2{
 										ClientID: monitoringingv1.SecretOrConfigMap{
@@ -1286,7 +1284,7 @@ func TestGenerateConfig(t *testing.T) {
 											"some": "value",
 										},
 									},
-									FollowRedirects: pointer.Bool(true),
+									FollowRedirects: ptr.To(true),
 								},
 							}},
 						}},
@@ -2371,7 +2369,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",
@@ -2386,7 +2384,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",
@@ -2456,7 +2454,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS13",
 					MaxVersion: "TLS12",
@@ -2475,7 +2473,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS14",
 				},
@@ -2493,7 +2491,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MaxVersion: "TLS14",
 				},
@@ -2511,7 +2509,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",

@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -934,7 +934,7 @@ scrape_configs:
 
 func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 	p := defaultPrometheus()
-	p.Spec.Shards = pointer.Int32(2)
+	p.Spec.Shards = ptr.To(int32(2))
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
@@ -1599,7 +1599,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 				Namespace:  "default",
 				Port:       intstr.FromString("web"),
 				APIVersion: "v2",
-				Timeout:    (*monitoringv1.Duration)(pointer.String("60s")),
+				Timeout:    (*monitoringv1.Duration)(ptr.To("60s")),
 			},
 		},
 	}
@@ -1905,7 +1905,7 @@ scrape_configs:
 		},
 		{
 			name:   "one prometheus shard",
-			result: getCfg(pointer.Int32(1)),
+			result: getCfg(ptr.To(int32(1))),
 			expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -1932,7 +1932,7 @@ scrape_configs:
 		},
 		{
 			name:   "sharded prometheus",
-			result: getCfg(pointer.Int32(3)),
+			result: getCfg(ptr.To(int32(3))),
 			expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -4489,7 +4489,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 					"label2": "value2",
 				},
 				Version:  version,
-				Replicas: func(i int32) *int32 { return &i }(1),
+				Replicas: ptr.To(int32(1)),
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
@@ -5504,7 +5504,7 @@ remote_read:
 			version: "v2.25.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:             "http://example.com",
-				FollowRedirects: pointer.Bool(true),
+				FollowRedirects: ptr.To(true),
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5522,7 +5522,7 @@ remote_read:
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:             "http://example.com",
-				FollowRedirects: pointer.Bool(false),
+				FollowRedirects: ptr.To(false),
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5541,7 +5541,7 @@ remote_read:
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: pointer.Bool(true),
+				FilterExternalLabels: ptr.To(true),
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5576,7 +5576,7 @@ remote_read:
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: pointer.Bool(false),
+				FilterExternalLabels: ptr.To(false),
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -5595,7 +5595,7 @@ remote_read:
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: pointer.Bool(true),
+				FilterExternalLabels: ptr.To(true),
 			},
 			expected: `global:
   evaluation_interval: 30s
@@ -6396,7 +6396,7 @@ scrape_configs:
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelLimit >= 0 {
-				p.Spec.EnforcedLabelLimit = pointer.Uint64(uint64(tc.enforcedLabelLimit))
+				p.Spec.EnforcedLabelLimit = ptr.To(uint64(tc.enforcedLabelLimit))
 			}
 
 			serviceMonitor := monitoringv1.ServiceMonitor{
@@ -6615,7 +6615,7 @@ scrape_configs:
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelNameLengthLimit >= 0 {
-				p.Spec.EnforcedLabelNameLengthLimit = pointer.Uint64(uint64(tc.enforcedLabelNameLengthLimit))
+				p.Spec.EnforcedLabelNameLengthLimit = ptr.To(uint64(tc.enforcedLabelNameLengthLimit))
 			}
 
 			podMonitor := monitoringv1.PodMonitor{
@@ -6822,7 +6822,7 @@ scrape_configs:
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelValueLengthLimit >= 0 {
-				p.Spec.EnforcedLabelValueLengthLimit = pointer.Uint64(uint64(tc.enforcedLabelValueLengthLimit))
+				p.Spec.EnforcedLabelValueLengthLimit = ptr.To(uint64(tc.enforcedLabelValueLengthLimit))
 			}
 
 			probe := monitoringv1.Probe{
@@ -8400,7 +8400,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 		{
 			Scenario: "Exemplars maxSize is set to 5000000",
 			Exemplars: &monitoringv1.Exemplars{
-				MaxSize: pointer.Int64(5000000),
+				MaxSize: ptr.To(int64(5000000)),
 			},
 			ExpectedConfig: `global:
   evaluation_interval: 30s
@@ -8418,7 +8418,7 @@ storage:
 			Scenario: "max_exemplars is not set if version is less than v2.29.0",
 			Version:  "v2.28.0",
 			Exemplars: &monitoringv1.Exemplars{
-				MaxSize: pointer.Int64(5000000),
+				MaxSize: ptr.To(int64(5000000)),
 			},
 			ExpectedConfig: `global:
   evaluation_interval: 30s
@@ -9053,7 +9053,7 @@ scrape_configs:
 		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: pointer.String("/metrics"),
+				MetricsPath: ptr.To("/metrics"),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9121,7 +9121,7 @@ scrape_configs:
 		{
 			name: "honor_timestamp",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				HonorTimestamps: pointer.Bool(true),
+				HonorTimestamps: ptr.To(true),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9137,7 +9137,7 @@ scrape_configs:
 		{
 			name: "honor_labels",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				HonorLabels: pointer.Bool(true),
+				HonorLabels: ptr.To(true),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9310,7 +9310,7 @@ scrape_configs:
 		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				Scheme: pointer.String("HTTPS"),
+				Scheme: ptr.To("HTTPS"),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9326,11 +9326,11 @@ scrape_configs:
 		{
 			name: "limits",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				SampleLimit:           pointer.Uint64(10000),
-				TargetLimit:           pointer.Uint64(1000),
-				LabelLimit:            pointer.Uint64(50),
-				LabelNameLengthLimit:  pointer.Uint64(40),
-				LabelValueLengthLimit: pointer.Uint64(30),
+				SampleLimit:           ptr.To(uint64(10000)),
+				TargetLimit:           ptr.To(uint64(1000)),
+				LabelLimit:            ptr.To(uint64(50)),
+				LabelNameLengthLimit:  ptr.To(uint64(40)),
+				LabelValueLengthLimit: ptr.To(uint64(30)),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9350,7 +9350,7 @@ scrape_configs:
 		{
 			name: "params",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: pointer.String("/federate"),
+				MetricsPath: ptr.To("/federate"),
 				Params:      map[string][]string{"match[]": {"{job=\"prometheus\"}", "{__name__=~\"job:.*\"}"}},
 			},
 			expectedCfg: `global:
@@ -9371,7 +9371,7 @@ scrape_configs:
 		{
 			name: "scrape_interval",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeInterval: (*monitoringv1.Duration)(pointer.String("15s")),
+				ScrapeInterval: (*monitoringv1.Duration)(ptr.To("15s")),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9387,7 +9387,7 @@ scrape_configs:
 		{
 			name: "scrape_timeout",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeTimeout: (*monitoringv1.Duration)(pointer.String("10s")),
+				ScrapeTimeout: (*monitoringv1.Duration)(ptr.To("10s")),
 			},
 			expectedCfg: `global:
   evaluation_interval: 30s
@@ -9484,22 +9484,22 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:       "localhost",
-						Datacenter:   pointer.String("we1"),
-						Namespace:    pointer.String("observability"),
-						Partition:    pointer.String("1"),
-						Scheme:       pointer.String("https"),
+						Datacenter:   ptr.To("we1"),
+						Namespace:    ptr.To("observability"),
+						Partition:    ptr.To("1"),
+						Scheme:       ptr.To("https"),
 						Services:     []string{"prometheus", "alertmanager"},
 						Tags:         []string{"tag1"},
-						TagSeparator: pointer.String(";"),
+						TagSeparator: ptr.To(";"),
 						NodeMeta: map[string]string{
 							"service": "service_name",
 							"name":    "node_name",
 						},
-						AllowStale:           pointer.Bool(false),
-						RefreshInterval:      (*monitoringv1.Duration)(pointer.String("30s")),
-						ProxyUrl:             pointer.String("http://no-proxy.com"),
-						NoProxy:              pointer.String("0.0.0.0"),
-						ProxyFromEnvironment: pointer.Bool(true),
+						AllowStale:           ptr.To(false),
+						RefreshInterval:      (*monitoringv1.Duration)(ptr.To("30s")),
+						ProxyUrl:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(true),
 						ProxyConnectHeader: map[string]v1.SecretKeySelector{
 							"header": {
 								LocalObjectReference: v1.LocalObjectReference{
@@ -9508,8 +9508,8 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 								Key: "proxy-header",
 							},
 						},
-						FollowRedirects: pointer.Bool(true),
-						EnableHttp2:     pointer.Bool(true),
+						FollowRedirects: ptr.To(true),
+						EnableHttp2:     ptr.To(true),
 						TokenRef: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "foo",
@@ -9811,15 +9811,15 @@ tracing:
 		},
 		{
 			tracingConfig: &monitoringv1.PrometheusTracingConfig{
-				ClientType:       pointer.String("grpc"),
+				ClientType:       ptr.To("grpc"),
 				Endpoint:         "https://otel-collector.default.svc.local:3333",
 				SamplingFraction: &samplingTwo,
 				Headers: map[string]string{
 					"custom": "header",
 				},
-				Compression: pointer.String("gzip"),
-				Timeout:     (*monitoringv1.Duration)(pointer.String("10s")),
-				Insecure:    pointer.Bool(false),
+				Compression: ptr.To("gzip"),
+				Timeout:     (*monitoringv1.Duration)(ptr.To("10s")),
+				Insecure:    ptr.To(false),
 			},
 			name:        "Expect valid config",
 			expectedErr: false,

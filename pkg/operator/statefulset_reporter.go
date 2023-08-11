@@ -24,6 +24,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -182,7 +183,7 @@ func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, s
 			continue
 		}
 
-		stsReporter.Pods = append(stsReporter.Pods, (func(p Pod) *Pod { return &p })(Pod(p)))
+		stsReporter.Pods = append(stsReporter.Pods, ptr.To(Pod(p)))
 	}
 
 	return stsReporter, nil

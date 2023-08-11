@@ -39,7 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -1075,7 +1075,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					// HTML field with an empty string must appear as-is in the generated configuration.
 					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
-					HTML: pointer.String(""),
+					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &v1.SecretKeySelector{
@@ -1690,27 +1690,27 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
 			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
-				From: pointer.String("from"),
+				From: ptr.To("from"),
 				SmartHost: &monitoringv1.HostPort{
 					Host: "smtp.example.org",
 					Port: "587",
 				},
-				Hello:        pointer.String("smtp.example.org"),
-				AuthUsername: pointer.String("dev@smtp.example.org"),
+				Hello:        ptr.To("smtp.example.org"),
+				AuthUsername: ptr.To("dev@smtp.example.org"),
 				AuthPassword: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "password",
 				},
-				AuthIdentity: pointer.String("dev@smtp.example.org"),
+				AuthIdentity: ptr.To("dev@smtp.example.org"),
 				AuthSecret: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "secret",
 				},
-				RequireTLS: pointer.Bool(true),
+				RequireTLS: ptr.To(true),
 			},
 			ResolveTimeout: "30s",
 			HTTPConfig: &monitoringv1.HTTPConfig{
@@ -1735,7 +1735,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 						"some": "value",
 					},
 				},
-				FollowRedirects: pointer.Bool(true),
+				FollowRedirects: ptr.To(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
@@ -2025,7 +2025,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sset.Spec.Replicas = pointer.Int32(0)
+	sset.Spec.Replicas = ptr.To(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
