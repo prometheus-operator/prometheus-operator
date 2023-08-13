@@ -1,0 +1,51 @@
+{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example",
+      "wechatConfigs": [
+        {
+          "apiURL": "http://wechatserver:8080/",
+          "corpID": "wechat-corpid",
+          "apiSecret": {
+            "name": "wechat-config",
+            "key": "apiSecret"
+          }
+        }
+      ]
+    }
+  ],
+  "muteTimeIntervals": [
+    {
+      "name": "out-of-business-hours",
+      "timeIntervals": [
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ]
+        },
+        {
+          "times": [
+            {
+              "startTime": "00:00",
+              "endTime": "08:00"
+            },
+            {
+              "startTime": "18:00",
+              "endTime": "24:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+global:
+  smtp_require_tls: true
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []

@@ -1,0 +1,19 @@
+{
+  "route": {
+    "groupBy": [
+      "job"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "12h",
+    "receiver": "wechat-example"
+  },
+  "receivers": [
+    {
+      "name": "wechat-example"
+    },
+    {
+      "name": "wechat-example"
+    }
+  ]
+}

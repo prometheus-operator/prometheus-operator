@@ -1,0 +1,14 @@
+route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - alertname="TargetDown"
+  - namespace="mynamespace"
+  source_matchers:
+  - alertname=~"NodeNotReady"
+  - namespace="mynamespace"
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
