@@ -343,15 +343,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if tr.Spec.PodMetadata != nil {
-		if tr.Spec.PodMetadata.Labels != nil {
-			for k, v := range tr.Spec.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range tr.Spec.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if tr.Spec.PodMetadata.Annotations != nil {
-			for k, v := range tr.Spec.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range tr.Spec.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.

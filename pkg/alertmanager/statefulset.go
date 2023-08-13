@@ -360,15 +360,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		"alertmanager":                 a.Name,
 	}
 	if a.Spec.PodMetadata != nil {
-		if a.Spec.PodMetadata.Labels != nil {
-			for k, v := range a.Spec.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range a.Spec.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if a.Spec.PodMetadata.Annotations != nil {
-			for k, v := range a.Spec.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range a.Spec.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 	for k, v := range podSelectorLabels {
