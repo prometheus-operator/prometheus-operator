@@ -45,6 +45,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	LabelLimit            *uint64                                           `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                                           `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                                           `json:"labelValueLengthLimit,omitempty"`
+	MetricRelabelConfigs  []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -254,5 +255,18 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetricRelabelConfigs")
+		}
+		b.MetricRelabelConfigs = append(b.MetricRelabelConfigs, *values[i])
+	}
 	return b
 }
