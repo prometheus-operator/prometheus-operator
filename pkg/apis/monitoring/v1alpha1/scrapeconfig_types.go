@@ -145,6 +145,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +optional
 	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 }
 
