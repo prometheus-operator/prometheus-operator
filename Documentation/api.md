@@ -15845,6 +15845,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
 </td>
 </tr>
@@ -19895,6 +19896,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
 </td>
 </tr>
