@@ -12504,6 +12504,22 @@ EmbeddedPersistentVolumeClaim
 <td>
 <p>Defines the PVC spec to be used by the Prometheus StatefulSets.
 The easiest way to use a volume that cannot be automatically provisioned
+is to use a label selector alongside manually created PersistentVolumes.
+<em>DEPRECATED</em>: Please use <code>VolumeClaimTemplates</code> which allows for multiple VolumeClaim to be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeClaimTemplates</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EmbeddedPersistentVolumeClaim">
+[]EmbeddedPersistentVolumeClaim
+</a>
+</em>
+</td>
+<td>
+<p>Defines the PVC specs to be used by the Prometheus StatefulSets.
+The easiest way to use multiple volumes that cannot be automatically provisioned
 is to use a label selector alongside manually created PersistentVolumes.</p>
 </td>
 </tr>
