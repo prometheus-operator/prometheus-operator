@@ -418,15 +418,11 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 	}
 
 	if cpf.PodMetadata != nil {
-		if cpf.PodMetadata.Labels != nil {
-			for k, v := range cpf.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if cpf.PodMetadata.Annotations != nil {
-			for k, v := range cpf.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 
