@@ -294,7 +294,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 		},
 	}
 
-	volName := VolumeClaimName(p, cpf)
+	volNames := VolumeClaimName(p, cpf)
 
 	promVolumeMounts := []v1.VolumeMount{
 		{
@@ -307,11 +307,14 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
-		{
+	}
+
+	for _, volName := range volNames {
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
 			Name:      volName,
 			MountPath: StorageDir,
 			SubPath:   SubPathForStorage(cpf.Storage),
-		},
+		})
 	}
 
 	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)
@@ -366,14 +369,30 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 	return volumes, promVolumeMounts, nil
 }
 
-func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) string {
-	volName := VolumeName(p)
+func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) []string {
+	volNames := []string{}
+	var volName string
 	if cpf.Storage != nil {
-		if cpf.Storage.VolumeClaimTemplate.Name != "" {
+		if cpf.Storage.VolumeClaimTemplates != nil {
+			for _, pvcTemplate := range cpf.Storage.VolumeClaimTemplates {
+				volName = VolumeName(p)
+				if pvcTemplate.Name != "" {
+					volName = pvcTemplate.Name
+				}
+				volNames = append(volNames, volName)
+			}
+		} else if cpf.Storage.VolumeClaimTemplate.Name != "" {
 			volName = cpf.Storage.VolumeClaimTemplate.Name
+			volNames = append(volNames, volName)
+		} else {
+			volName = VolumeName(p)
+			volNames = append(volNames, volName)
 		}
+	} else {
+		volName = VolumeName(p)
+		volNames = append(volNames, volName)
 	}
-	return volName
+	return volNames
 }
 
 func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator, webRoutePrefix string) v1.ProbeHandler {

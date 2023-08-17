@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"reflect"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -201,18 +202,25 @@ func makeStatefulSet(
 			},
 		})
 	} else {
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = prompkg.VolumeName(p)
+		if !reflect.DeepEqual(storageSpec.VolumeClaimTemplate, monitoringv1.EmbeddedPersistentVolumeClaim{}) {
+			storageSpec.VolumeClaimTemplates = append([]monitoringv1.EmbeddedPersistentVolumeClaim{storageSpec.VolumeClaimTemplate}, storageSpec.VolumeClaimTemplates...)
 		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
+
+		for _, vcTemplate := range storageSpec.VolumeClaimTemplates {
+			pvcTemplate := operator.MakeVolumeClaimTemplate(vcTemplate)
+			if pvcTemplate.Name == "" {
+				pvcTemplate.Name = prompkg.VolumeName(p)
+			}
+			if vcTemplate.Spec.AccessModes == nil {
+				pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			} else {
+				pvcTemplate.Spec.AccessModes = vcTemplate.Spec.AccessModes
+			}
+			pvcTemplate.Spec.Resources = vcTemplate.Spec.Resources
+			pvcTemplate.Spec.Selector = vcTemplate.Spec.Selector
+			statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
+
 	}
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
@@ -738,16 +746,18 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeClaimName(p, cpf)
+			volNames := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
-			container.VolumeMounts = append(
-				container.VolumeMounts,
-				v1.VolumeMount{
-					Name:      volName,
-					MountPath: prompkg.StorageDir,
-					SubPath:   prompkg.SubPathForStorage(cpf.Storage),
-				},
-			)
+			for _, volName := range volNames {
+				container.VolumeMounts = append(
+					container.VolumeMounts,
+					v1.VolumeMount{
+						Name:      volName,
+						MountPath: prompkg.StorageDir,
+						SubPath:   prompkg.SubPathForStorage(cpf.Storage),
+					},
+				)
+			}
 
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
