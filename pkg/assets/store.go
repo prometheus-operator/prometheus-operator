@@ -204,12 +204,16 @@ func (s *Store) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.O
 }
 
 // AddToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *Store) addToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
+func (s *Store) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
+	if sel == nil {
+		return nil
+	}
+
 	if sel.Name == "" {
 		return nil
 	}
 
-	token, err := s.GetSecretKey(ctx, ns, sel)
+	token, err := s.GetSecretKey(ctx, ns, *sel)
 	if err != nil {
 		return errors.Wrap(err, "failed to get token from secret")
 	}
@@ -219,11 +223,7 @@ func (s *Store) addToken(ctx context.Context, ns string, sel v1.SecretKeySelecto
 	return nil
 }
 
-func (s *Store) AddBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
-	if sel == (v1.SecretKeySelector{}) {
-		return nil
-	}
-
+func (s *Store) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
 	err := s.addToken(ctx, ns, sel, key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bearer token")
@@ -240,7 +240,7 @@ func (s *Store) AddSafeAuthorizationCredentials(ctx context.Context, namespace s
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, *auth.Credentials, key)
+	err := s.addToken(ctx, namespace, auth.Credentials, key)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
 	}
@@ -256,7 +256,7 @@ func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace strin
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, *auth.Credentials, key)
+	err := s.addToken(ctx, namespace, auth.Credentials, key)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
 	}
