@@ -1665,7 +1665,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 
 	var err error
 	if httpConfig.BearerTokenSecret != nil {
-		if err = store.AddBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
+		if err = store.AddBearerToken(ctx, namespace, httpConfig.BearerTokenSecret, key); err != nil {
 			return err
 		}
 	}
