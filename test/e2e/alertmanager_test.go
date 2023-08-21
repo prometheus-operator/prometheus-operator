@@ -365,9 +365,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'firstConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'firstConfigWebHook'
   webhook_configs:
   - url: 'http://firstConfigWebHook:30500/'
 `
@@ -379,9 +379,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'secondConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'secondConfigWebHook'
   webhook_configs:
   - url: 'http://secondConfigWebHook:30500/'
 `
@@ -423,6 +423,7 @@ An Alert test
 			"alertmanager.yaml": []byte(firstConfig),
 		},
 	}
+	t.Log("firstConfig:", firstConfig)
 
 	templateFileKey := "test-emails.tmpl"
 	templateSecretFileKey := "test-emails-secret.tmpl"
@@ -514,9 +515,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'firstConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'firstConfigWebHook'
   webhook_configs:
   - url: 'http://firstConfigWebHook:30500/'
 `
