@@ -35,7 +35,7 @@ type resourceStatus struct {
 // If the resource isn't available within the given timeout, it returns an error.
 func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceStatus func(context.Context) (resourceStatus, error), timeout time.Duration) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var status resourceStatus
 		status, pollErr = getResourceStatus(ctx)
 		if pollErr != nil {
