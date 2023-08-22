@@ -310,6 +310,16 @@ func (in *EmailConfig) DeepCopyInto(out *EmailConfig) {
 		*out = make([]KeyValue, len(*in))
 		copy(*out, *in)
 	}
+	if in.HTML != nil {
+		in, out := &in.HTML, &out.HTML
+		*out = new(string)
+		**out = **in
+	}
+	if in.Text != nil {
+		in, out := &in.Text, &out.Text
+		*out = new(string)
+		**out = **in
+	}
 	if in.RequireTLS != nil {
 		in, out := &in.RequireTLS, &out.RequireTLS
 		*out = new(bool)
