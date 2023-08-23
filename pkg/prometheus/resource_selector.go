@@ -152,20 +152,14 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				break
 			}
 
-			for _, rl := range endpoint.RelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				err = fmt.Errorf("relabelConfigs: %w", err)
+				break
 			}
 
-			for _, rl := range endpoint.MetricRelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				err = fmt.Errorf("metricRelabelConfigs: %w", err)
+				break
 			}
 		}
 
@@ -225,21 +219,41 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 	return CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
 
+func validateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []*monitoringv1.RelabelConfig) error {
+	for i, rc := range rcs {
+		if rc == nil {
+			return fmt.Errorf("null relabel config")
+		}
+
+		if err := validateRelabelConfig(p, *rc); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.RelabelConfig) error {
 	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse Prometheus version")
 	}
+
 	minimumVersionCaseActions := version.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := version.GTE(semver.MustParse("2.41.0"))
+	if rc.Action == "" {
+		rc.Action = string(relabel.Replace)
+	}
+	action := strings.ToLower(rc.Action)
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
 		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
 	}
 
-	if (rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
+	if (action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
 		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
 	}
 
@@ -247,33 +261,33 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
 	}
 
-	if rc.Modulus == 0 && rc.Action == string(relabel.HashMod) {
+	if rc.Modulus == 0 && action == string(relabel.HashMod) {
 		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
+	if (action == string(relabel.Replace) || action == string(relabel.HashMod) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
 		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
 		return errors.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
-	if rc.Action == string(relabel.LabelMap) {
+	if action == string(relabel.LabelMap) {
 		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
 			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
 		}
 	}
 
-	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
+	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual) {
+	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
 		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
@@ -285,7 +299,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		}
 	}
 
-	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
+	if action == string(relabel.LabelDrop) || action == string(relabel.LabelKeep) {
 		if len(rc.SourceLabels) != 0 ||
 			!(rc.TargetLabel == "" ||
 				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
@@ -385,20 +399,14 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				break
 			}
 
-			for _, rl := range endpoint.RelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				err = fmt.Errorf("relabelConfigs: %w", err)
+				break
 			}
 
-			for _, rl := range endpoint.MetricRelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				err = fmt.Errorf("metricRelabelConfigs: %w", err)
+				break
 			}
 		}
 
@@ -488,7 +496,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			level.Warn(rs.l).Log(
 				"msg", "skipping probe",
 				"error", err.Error(),
-				"probe", probe,
+				"probe", probeName,
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
@@ -532,19 +540,34 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			continue
 		}
 
-		for _, rl := range probe.Spec.MetricRelabelConfigs {
-			if rl.Action != "" {
-				if err = validateRelabelConfig(rs.p, *rl); err != nil {
-					rejectFn(probe, err)
-					continue
-				}
-			}
-		}
-		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
-			err := errors.Wrapf(err, "%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`", probe.Spec.ProberSpec.URL)
+		if err = validateRelabelConfigs(rs.p, probe.Spec.MetricRelabelConfigs); err != nil {
+			err = fmt.Errorf("metricRelabelConfigs: %w", err)
 			rejectFn(probe, err)
 			continue
 		}
+
+		if probe.Spec.Targets.StaticConfig != nil {
+			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
+				err = fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
+				rejectFn(probe, err)
+				continue
+			}
+		}
+
+		if probe.Spec.Targets.Ingress != nil {
+			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
+				err = fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
+				rejectFn(probe, err)
+				continue
+			}
+		}
+
+		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
+			err := fmt.Errorf("%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
+			rejectFn(probe, err)
+			continue
+		}
+
 		res[probeName] = probe
 	}
 
@@ -639,6 +662,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+		}
+
+		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
+			rejectFn(sc, fmt.Errorf("relabelConfigs: %w", err))
+			continue
 		}
 
 		scKey := fmt.Sprintf("scrapeconfig/%s/%s", sc.GetNamespace(), sc.GetName())
