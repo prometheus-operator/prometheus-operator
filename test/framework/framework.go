@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -712,7 +713,7 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 
 	// Deploy only 1 replica because the end-to-end environment (single node
 	// cluster) can't satisfy the anti-affinity rules.
-	deploy.Spec.Replicas = func(i int32) *int32 { return &i }(1)
+	deploy.Spec.Replicas = ptr.To(int32(1))
 	deploy.Spec.Template.Spec.Affinity = nil
 	deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
 

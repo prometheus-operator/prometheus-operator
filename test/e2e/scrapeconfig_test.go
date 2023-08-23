@@ -24,7 +24,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -270,7 +270,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	createMTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
-	sc.Spec.Scheme = pointer.String("HTTPS")
+	sc.Spec.Scheme = ptr.To("HTTPS")
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
 		Credentials: &v1.SecretKeySelector{
 			LocalObjectReference: v1.LocalObjectReference{

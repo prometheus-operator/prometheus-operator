@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -278,7 +278,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        pointer.Bool(true),
+			Force:        ptr.To(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -296,7 +296,7 @@ func (f *Framework) ScaleAlertmanagerAndWaitUntilReady(ctx context.Context, name
 		name,
 		ns,
 		monitoringv1.AlertmanagerSpec{
-			Replicas: pointer.Int32(replicas),
+			Replicas: ptr.To(replicas),
 		},
 	)
 }
@@ -471,7 +471,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 		}
 
 		for _, alert := range alerts {
-			if alert.Labels["alertname"] == alertName && alert.Status.State != pointer.String("firing") {
+			if alert.Labels["alertname"] == alertName && alert.Status.State != ptr.To("firing") {
 				return true, nil
 			}
 		}

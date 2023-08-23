@@ -44,7 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -4567,7 +4567,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 					},
 				},
 				Query: &monitoringv1.QuerySpec{
-					MaxConcurrency: pointer.Int32(100),
+					MaxConcurrency: ptr.To(int32(100)),
 				},
 			},
 		},
@@ -4585,7 +4585,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 					},
 				},
 				Query: &monitoringv1.QuerySpec{
-					MaxConcurrency: pointer.Int32(0),
+					MaxConcurrency: ptr.To(int32(0)),
 				},
 			},
 			expectedError: true,
