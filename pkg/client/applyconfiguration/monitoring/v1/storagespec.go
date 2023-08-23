@@ -23,11 +23,10 @@ import (
 // StorageSpecApplyConfiguration represents an declarative configuration of the StorageSpec type for use
 // with apply.
 type StorageSpecApplyConfiguration struct {
-	DisableMountSubPath  *bool                                             `json:"disableMountSubPath,omitempty"`
-	EmptyDir             *v1.EmptyDirVolumeSource                          `json:"emptyDir,omitempty"`
-	Ephemeral            *v1.EphemeralVolumeSource                         `json:"ephemeral,omitempty"`
-	VolumeClaimTemplate  *EmbeddedPersistentVolumeClaimApplyConfiguration  `json:"volumeClaimTemplate,omitempty"`
-	VolumeClaimTemplates []EmbeddedPersistentVolumeClaimApplyConfiguration `json:"volumeClaimTemplates,omitempty"`
+	DisableMountSubPath *bool                                            `json:"disableMountSubPath,omitempty"`
+	EmptyDir            *v1.EmptyDirVolumeSource                         `json:"emptyDir,omitempty"`
+	Ephemeral           *v1.EphemeralVolumeSource                        `json:"ephemeral,omitempty"`
+	VolumeClaimTemplate *EmbeddedPersistentVolumeClaimApplyConfiguration `json:"volumeClaimTemplate,omitempty"`
 }
 
 // StorageSpecApplyConfiguration constructs an declarative configuration of the StorageSpec type for use with
@@ -65,18 +64,5 @@ func (b *StorageSpecApplyConfiguration) WithEphemeral(value v1.EphemeralVolumeSo
 // If called multiple times, the VolumeClaimTemplate field is set to the value of the last call.
 func (b *StorageSpecApplyConfiguration) WithVolumeClaimTemplate(value *EmbeddedPersistentVolumeClaimApplyConfiguration) *StorageSpecApplyConfiguration {
 	b.VolumeClaimTemplate = value
-	return b
-}
-
-// WithVolumeClaimTemplates adds the given value to the VolumeClaimTemplates field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the VolumeClaimTemplates field.
-func (b *StorageSpecApplyConfiguration) WithVolumeClaimTemplates(values ...*EmbeddedPersistentVolumeClaimApplyConfiguration) *StorageSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithVolumeClaimTemplates")
-		}
-		b.VolumeClaimTemplates = append(b.VolumeClaimTemplates, *values[i])
-	}
 	return b
 }
