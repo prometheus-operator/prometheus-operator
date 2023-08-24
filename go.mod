@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.7.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.67.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.67.1
-	github.com/prometheus/alertmanager v0.25.0
+	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.46.0
@@ -52,7 +52,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.302 // indirect
+	github.com/aws/aws-sdk-go v1.44.317 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
