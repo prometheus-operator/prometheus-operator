@@ -719,13 +719,9 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		for _, rl := range sc.Spec.MetricRelabelConfigs {
-			if rl.Action != "" {
-				if err = validateRelabelConfig(rs.p, *rl); err != nil {
-					rejectFn(sc, err)
-					continue
-				}
-			}
+		if err = validateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
+			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
+			continue
 		}
 
 		for i, config := range sc.Spec.ConsulSDConfigs {
