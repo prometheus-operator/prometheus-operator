@@ -965,7 +965,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	case m.Spec.Targets.Ingress != nil:
 		// Generate kubernetes_sd_config section for the ingress resources.
@@ -1061,11 +1060,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
-		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
-
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
 	}
+
+	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
@@ -1155,7 +1153,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
 
-	if ep.BearerTokenSecret.Name != "" {
+	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
 		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}

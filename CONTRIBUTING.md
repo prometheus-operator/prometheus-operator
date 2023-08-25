@@ -61,6 +61,7 @@ This is a rough outline of what a contributor's workflow looks like:
 - Make sure your commit messages are in the proper format (see below).
 - Push your changes to a topic branch in your fork of the repository.
 - Make sure the tests pass, and add any new tests as appropriate.
+- If the tests are checking long strings such as YAML, JSON or any other complex content, ensure you're using [golden files](https://pkg.go.dev/gotest.tools/v3/golden).
 - Submit a pull request to the original repository.
 
 Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.

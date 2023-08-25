@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -188,7 +188,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 				t.Fatal("expected two Alertmanager CRDs to produce the same hash but got different hash")
 			}
 
-			a2Hash, err = createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{Replicas: func(i int32) *int32 { return &i }(2)})
+			a2Hash, err = createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -482,7 +482,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: pointer.String("http://test.local"),
+								URL: ptr.To("http://test.local"),
 							},
 						},
 					}},

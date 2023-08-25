@@ -177,6 +177,8 @@ type Receiver struct {
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
+	// List of Webex configurations.
+	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -600,6 +602,33 @@ type HTTPConfig struct {
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
+// WebexConfig configures notification via Cisco Webex
+// See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
+type WebexConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
+	// Provide if different from the default API URL.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The HTTP client's configuration.
+	// You must supply the bot token via the `httpConfig.authorization` field.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// Message template
+	// +optional
+	Message *string `json:"message,omitempty"`
+
+	// ID of the Webex Teams room where to send the messages.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	RoomID string `json:"roomID"`
+}
+
 // WeChatConfig configures notifications via WeChat.
 // See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
 type WeChatConfig struct {
@@ -670,10 +699,10 @@ type EmailConfig struct {
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
-	HTML string `json:"html,omitempty"`
+	HTML *string `json:"html,omitempty"`
 	// The text body of the email notification.
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// The SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
@@ -1104,3 +1133,7 @@ var monthsInv = map[int]Month{
 	11: November,
 	12: December,
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern=`^https?://.+$`
+type URL string

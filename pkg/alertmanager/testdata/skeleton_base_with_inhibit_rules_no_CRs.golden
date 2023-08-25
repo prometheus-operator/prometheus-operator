@@ -1,0 +1,12 @@
+route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - test!=dropped
+  - expect=~this-value
+  source_matchers:
+  - test!=dropped
+  - expect=~this-value
+receivers:
+- name: "null"
+templates: []

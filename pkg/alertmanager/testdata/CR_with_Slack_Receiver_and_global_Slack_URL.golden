@@ -1,0 +1,23 @@
+global:
+  slack_api_url: http://slack.example.com
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  slack_configs:
+  - fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
+templates: []

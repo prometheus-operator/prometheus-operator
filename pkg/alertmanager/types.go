@@ -68,6 +68,7 @@ type globalConfig struct {
 	VictorOpsAPIKey      string          `yaml:"victorops_api_key,omitempty" json:"victorops_api_key,omitempty"`
 	VictorOpsAPIKeyFile  string          `yaml:"victorops_api_key_file,omitempty" json:"victorops_api_key_file,omitempty"`
 	TelegramAPIURL       *config.URL     `yaml:"telegram_api_url,omitempty" json:"telegram_api_url,omitempty"`
+	WebexAPIURL          *config.URL     `yaml:"webex_api_url,omitempty" json:"webex_api_url,omitempty"`
 }
 
 type route struct {
@@ -297,8 +298,8 @@ type emailConfig struct {
 	AuthSecret       string            `yaml:"auth_secret,omitempty" json:"auth_secret,omitempty"`
 	AuthIdentity     string            `yaml:"auth_identity,omitempty" json:"auth_identity,omitempty"`
 	Headers          map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
-	HTML             string            `yaml:"html,omitempty" json:"html,omitempty"`
-	Text             string            `yaml:"text,omitempty" json:"text,omitempty"`
+	HTML             *string           `yaml:"html,omitempty" json:"html,omitempty"`
+	Text             *string           `yaml:"text,omitempty" json:"text,omitempty"`
 	RequireTLS       *bool             `yaml:"require_tls,omitempty" json:"require_tls,omitempty"`
 	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
 }

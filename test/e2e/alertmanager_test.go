@@ -39,7 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -365,9 +365,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'firstConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'firstConfigWebHook'
   webhook_configs:
   - url: 'http://firstConfigWebHook:30500/'
 `
@@ -379,9 +379,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'secondConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'secondConfigWebHook'
   webhook_configs:
   - url: 'http://secondConfigWebHook:30500/'
 `
@@ -514,9 +514,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'firstConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'firstConfigWebHook'
   webhook_configs:
   - url: 'http://firstConfigWebHook:30500/'
 `
@@ -894,10 +894,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// create 2 namespaces:
 	//
 	// 1. "ns" ns:
-	//   - hosts the Alertmanager CR which which should be reconciled
+	//   - hosts the Alertmanager CR which should be reconciled
 	//
 	// 2. "configNs" ns:
-	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	//   - hosts the AlertmanagerConfig CRs which should be reconciled
 	// 		thanks to the label monitored: "true" which is removed in the second
 	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -969,6 +969,19 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	webexAPIToken := "super-secret-token"
+	webexAPITokenSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "webex-api-token",
+		},
+		Data: map[string][]byte{
+			"api-token": []byte(webexAPIToken),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1060,6 +1073,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{Key: "Subject", Value: "subject"},
 						{Key: "Comment", Value: "comment"},
 					},
+					// HTML field with an empty string must appear as-is in the generated configuration.
+					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
+					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &v1.SecretKeySelector{
@@ -1094,7 +1110,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					ChatID: 12345,
 				}},
-
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
@@ -1116,6 +1131,28 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						TopicARN: "test-topicARN",
 					},
 				},
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					APIURL: func() *monitoringv1alpha1.URL {
+						res := monitoringv1alpha1.URL("https://webex.api.url")
+						return &res
+					}(),
+					RoomID: "testingRoomID",
+					Message: func() *string {
+						res := "testingMessage"
+						return &res
+					}(),
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Type: "Bearer",
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webex-api-token",
+								},
+								Key: "api-token",
+							},
+						},
+					},
+				}},
 			}},
 		},
 	}
@@ -1444,6 +1481,7 @@ receivers:
     headers:
       Comment: comment
       Subject: subject
+    html: ""
   pushover_configs:
   - user_key: 1234abc
     token: 1234abc
@@ -1461,6 +1499,14 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  webex_configs:
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: super-secret-token
+    api_url: https://webex.api.url
+    message: testingMessage
+    room_id: testingRoomID
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -1644,27 +1690,27 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
 			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
-				From: pointer.String("from"),
+				From: ptr.To("from"),
 				SmartHost: &monitoringv1.HostPort{
 					Host: "smtp.example.org",
 					Port: "587",
 				},
-				Hello:        pointer.String("smtp.example.org"),
-				AuthUsername: pointer.String("dev@smtp.example.org"),
+				Hello:        ptr.To("smtp.example.org"),
+				AuthUsername: ptr.To("dev@smtp.example.org"),
 				AuthPassword: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "password",
 				},
-				AuthIdentity: pointer.String("dev@smtp.example.org"),
+				AuthIdentity: ptr.To("dev@smtp.example.org"),
 				AuthSecret: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "secret",
 				},
-				RequireTLS: pointer.Bool(true),
+				RequireTLS: ptr.To(true),
 			},
 			ResolveTimeout: "30s",
 			HTTPConfig: &monitoringv1.HTTPConfig{
@@ -1689,7 +1735,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 						"some": "value",
 					},
 				},
-				FollowRedirects: pointer.Bool(true),
+				FollowRedirects: ptr.To(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
@@ -1979,7 +2025,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sset.Spec.Replicas = pointer.Int32(0)
+	sset.Spec.Replicas = ptr.To(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
