@@ -72,7 +72,7 @@ The Prometheus Operator is compatible with Alertmanager v0.15 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
-* v0.25.0
+* v0.26.0
 ```
 
 ## Thanos
@@ -82,5 +82,5 @@ The Prometheus Operator is compatible with Thanos v0.10 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
-* v0.31.0
+* v0.32.0
 ```
