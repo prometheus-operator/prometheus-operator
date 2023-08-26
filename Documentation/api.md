@@ -16939,7 +16939,8 @@ Currently the only supported role is &ldquo;Node&rdquo;.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>MSTeamsConfig configures notifications via MS Teams.</p>
+<p>MSTeamsConfig configures notifications via MS Teams.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#msteams_config">https://prometheus.io/docs/alerting/latest/configuration/#msteams_config</a></p>
 </div>
 <table>
 <thead>
@@ -16957,6 +16958,8 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
 </td>
 </tr>
 <tr>
@@ -16967,6 +16970,7 @@ string
 </em>
 </td>
 <td>
+<p>MSTeams webhook url</p>
 </td>
 </tr>
 <tr>
@@ -16977,6 +16981,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -16987,6 +16992,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -16999,6 +17005,8 @@ HTTPConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -22051,6 +22059,8 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
 </p>
 <div>
+<p>MSTeamsConfig configures notifications via MS Teams.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#msteams_config">https://prometheus.io/docs/alerting/latest/configuration/#msteams_config</a></p>
 </div>
 <table>
 <thead>
@@ -22091,6 +22101,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -22101,6 +22112,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>

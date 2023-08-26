@@ -763,7 +763,7 @@ func TestGenerateConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	version251, err := semver.ParseTolerant("v0.25.1")
+	version26, err := semver.ParseTolerant("v0.26.0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1489,7 +1489,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with MSTeams Receiver",
-			amVersion: &version251,
+			amVersion: &version26,
 			kclient:   fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
@@ -1522,22 +1522,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  msteams_configs:
-  - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
-    title: test title
-    text: test text
-templates: []
-`,
+			golden: "CR_with_MSTeams_Receiver.golden",
 		},
 		{
 

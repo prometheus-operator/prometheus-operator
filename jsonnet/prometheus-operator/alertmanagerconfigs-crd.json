@@ -886,10 +886,10 @@
                         "msteamsConfigs": {
                           "description": "List of MSTeams configurations.",
                           "items": {
-                            "description": "MSTeamsConfig configures notifications via MS Teams.",
+                            "description": "MSTeamsConfig configures notifications via MS Teams. See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config",
                             "properties": {
                               "httpConfig": {
-                                "description": "HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config",
+                                "description": "HTTP client configuration.",
                                 "properties": {
                                   "authorization": {
                                     "description": "Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
@@ -1244,6 +1244,7 @@
                                 "type": "object"
                               },
                               "sendResolved": {
+                                "description": "Whether to notify about resolved alerts.",
                                 "type": "boolean"
                               },
                               "text": {
@@ -1253,6 +1254,8 @@
                                 "type": "string"
                               },
                               "webhookUrl": {
+                                "description": "MSTeams webhook url",
+                                "pattern": "^http(s)?://.+$",
                                 "type": "string"
                               }
                             },

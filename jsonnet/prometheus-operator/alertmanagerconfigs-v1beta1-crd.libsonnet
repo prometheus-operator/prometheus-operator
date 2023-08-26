@@ -756,6 +756,7 @@
                     msteamsConfigs: {
                       description: 'List of MSTeams configurations.',
                       items: {
+                        description: 'MSTeamsConfig configures notifications via MS Teams. See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config',
                         properties: {
                           httpConfig: {
                             description: 'HTTP client configuration.',

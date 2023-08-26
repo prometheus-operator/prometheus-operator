@@ -1642,8 +1642,8 @@ func checkMSTeamsConfigs(
 	if len(configs) == 0 {
 		return nil
 	}
-	if amVersion.LT(semver.MustParse("0.25.1")) {
-		return fmt.Errorf(`msteamsConfigs is available in Alertmanager >= 0.25.1 only - current %s`, amVersion)
+	if amVersion.LT(semver.MustParse("0.26.0")) {
+		return fmt.Errorf(`msteamsConfigs is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 	}
 
 	for i, config := range configs {

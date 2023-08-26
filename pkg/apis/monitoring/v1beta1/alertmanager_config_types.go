@@ -865,6 +865,8 @@ type TelegramConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
+// MSTeamsConfig configures notifications via MS Teams.
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config
 type MSTeamsConfig struct {
 	// Whether to notify about resolved alerts.
 	// +optional
@@ -873,9 +875,9 @@ type MSTeamsConfig struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	WebhookUrl string `json:"webhookUrl"`
-	// +kubebuilder:validation:Required
+	// +optional
 	Title string `json:"title,omitempty"`
-	// +kubebuilder:validation:Required
+	// +optional
 	Text string `json:"text,omitempty"`
 	// HTTP client configuration.
 	// +optional

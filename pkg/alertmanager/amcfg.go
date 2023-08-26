@@ -2058,7 +2058,7 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger log.Logger) err
 }
 
 func (tc *msteamsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	if !amVersion.GTE(semver.MustParse("0.25.1")) {
+	if amVersion.LT(semver.MustParse("0.26.0")) {
 		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.25.1`)
 	}
 

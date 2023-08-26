@@ -874,12 +874,22 @@ type TelegramConfig struct {
 }
 
 // MSTeamsConfig configures notifications via MS Teams.
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config
 type MSTeamsConfig struct {
-	SendResolved *bool       `json:"sendResolved,omitempty"`
-	WebhookURL   string      `json:"webhookUrl"`
-	Title        string      `json:"title,omitempty"`
-	Text         string      `json:"text,omitempty"`
-	HTTPConfig   *HTTPConfig `json:"httpConfig,omitempty"`
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// MSTeams webhook url
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	WebhookURL string `json:"webhookUrl"`
+	// +optional
+	Title string `json:"title,omitempty"`
+	// +optional
+	Text string `json:"text,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
