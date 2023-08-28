@@ -24,12 +24,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -950,12 +953,110 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "HTTP SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "HTTP SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Consul SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Consul SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "wrong",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
+			cs := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte("val1"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "configmap",
+						Namespace: "test",
+					},
+					Data: map[string]string{
+						"key1": "val1",
+					},
+				},
+			)
+
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
-				nil,
+				&monitoringv1.Prometheus{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+					},
+				},
+				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 			)

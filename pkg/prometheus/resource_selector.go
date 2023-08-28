@@ -658,7 +658,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			level.Warn(rs.l).Log(
 				"msg", "skipping scrapeconfig",
 				"error", err.Error(),
-				"scrapeconfig", sc,
+				"scrapeconfig", scName,
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
@@ -686,25 +686,6 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		for i, config := range sc.Spec.HTTPSDConfigs {
-			configKey := fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-
-			configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-
-			if err = rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-		}
-
 		var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
 		if sc.Spec.ScrapeInterval != nil {
 			scrapeInterval = *sc.Spec.ScrapeInterval
@@ -724,37 +705,14 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		for i, config := range sc.Spec.ConsulSDConfigs {
-			configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
+		if err = rs.validateHTTPSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("httpSDConfigs: %w", err))
+			continue
+		}
 
-			configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-
-			if err = rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-
-			if _, err = rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
-
-			for _, v := range config.ProxyConnectHeader {
-				_, err := rs.store.GetSecretKey(context.Background(), sc.GetNamespace(), v)
-
-				if err != nil {
-					rejectFn(sc, err)
-					continue
-				}
-			}
+		if err = rs.validateConsulSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("consulSDConfigs: %w", err))
+			continue
 		}
 
 		res[scName] = sc
@@ -772,4 +730,53 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	}
 
 	return res, nil
+}
+
+func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.ConsulSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		for k, v := range config.ProxyConnectHeader {
+			if _, err := rs.store.GetSecretKey(context.Background(), sc.GetNamespace(), v); err != nil {
+				return fmt.Errorf("[%d]: header[%s]: %w", i, k, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.HTTPSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
 }
