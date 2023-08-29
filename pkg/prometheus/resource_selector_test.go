@@ -924,6 +924,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "valid metric relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  "valid",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid metric relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(

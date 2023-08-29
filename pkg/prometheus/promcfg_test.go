@@ -9400,6 +9400,29 @@ scrape_configs:
   scrape_timeout: 10s
 `,
 		},
+		{
+			name: "non_empty_metric_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						Regex:  "noisy_labels.*",
+						Action: "labeldrop",
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  metric_relabel_configs:
+  - regex: noisy_labels.*
+    action: labeldrop
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
