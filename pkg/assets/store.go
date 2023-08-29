@@ -242,7 +242,7 @@ func (s *Store) AddSafeAuthorizationCredentials(ctx context.Context, namespace s
 
 	err := s.addToken(ctx, namespace, auth.Credentials, key)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
+		return errors.Wrapf(err, "failed to get authorization token of type %q", auth.Type)
 	}
 	return nil
 }
@@ -258,7 +258,7 @@ func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace strin
 
 	err := s.addToken(ctx, namespace, auth.Credentials, key)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get authorization token of type %s", auth.Type)
+		return errors.Wrapf(err, "failed to get authorization token of type %q", auth.Type)
 	}
 	return nil
 }
