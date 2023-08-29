@@ -15,13 +15,20 @@ jobs:
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout
+        if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate Documentation/compatibility.md
         if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
         run: |
           make generate --always-make
-          git add Documentation/compatibility.md
-          git commit -m "Generate Documentation/compatibility.md"
-          git push
+          if ! git diff --exit-code; then
+            git add Documentation/compatibility.md
+            git commit -m "Generate Documentation/compatibility.md"
+            git push
+          fi
       - name: Enable auto-merge for Dependabot PRs
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
         run: |
