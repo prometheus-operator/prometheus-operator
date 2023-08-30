@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,8 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	"github.com/pkg/errors"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -227,8 +227,9 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
-					Interval: "30s",
+					Port:              "web",
+					Interval:          "30s",
+					BearerTokenSecret: &v1.SecretKeySelector{},
 				},
 			},
 		},
@@ -325,7 +326,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: func(i int32) *int32 { return &i }(replicas),
+				Replicas: ptr.To(int32(replicas)),
 			},
 		},
 	)
@@ -351,7 +352,7 @@ func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec m
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        func(b bool) *bool { return &b }(true),
+			Force:        ptr.To(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -384,7 +385,7 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 
 	if err := f.WaitForResourceAvailable(
 		ctx,
-		func() (resourceStatus, error) {
+		func(ctx context.Context) (resourceStatus, error) {
 			current, err := f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
 			if err != nil {
 				return resourceStatus{}, err
@@ -451,7 +452,7 @@ func promImage(version string) string {
 func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var targets []*Target
 
-	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var err error
 		targets, err = f.GetActiveTargets(ctx, ns, svcName)
 		if err != nil {
@@ -475,7 +476,7 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		var targets []*Target
 		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
 		if loopErr != nil {
@@ -499,7 +500,7 @@ func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName strin
 func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, prometheusName string) error {
 	var loopErr error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
@@ -672,7 +673,7 @@ func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *mo
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var firing bool
 		firing, loopError = f.CheckPrometheusFiringAlert(ctx, ns, svcName, alertName)
 		return firing, nil

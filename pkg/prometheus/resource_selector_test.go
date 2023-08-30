@@ -15,12 +15,30 @@
 package prometheus
 
 import (
-	"fmt"
+	"context"
+	"os"
 	"testing"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/relabel"
+	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/tools/cache"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+func newLogger() log.Logger {
+	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+}
 
 func TestValidateRelabelConfig(t *testing.T) {
 	defaultRegexp, err := relabel.DefaultRelabelConfig.Regex.MarshalYAML()
@@ -387,7 +405,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+		t.Run(tc.scenario, func(t *testing.T) {
 			err := validateRelabelConfig(&tc.prometheus, tc.relabelConfig)
 			if err != nil && !tc.expectedErr {
 				t.Fatalf("expected no error, got: %v", err)
@@ -399,77 +417,193 @@ func TestValidateRelabelConfig(t *testing.T) {
 	}
 }
 
-func TestValidateProberUrl(t *testing.T) {
+func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
-		scenario    string
-		proberSpec  monitoringv1.ProberSpec
-		expectedErr bool
+		scenario   string
+		updateSpec func(*monitoringv1.ProbeSpec)
+		selected   bool
 	}{
 		{
 			scenario: "url starting with http",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "http://blackbox-exporter.example.com",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "http://blackbox-exporter.example.com"
 			},
-			expectedErr: true,
+			selected: false,
 		},
 		{
 			scenario: "url starting with https",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "https://blackbox-exporter.example.com",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "https://blackbox-exporter.example.com"
 			},
-			expectedErr: true,
+			selected: false,
 		},
 		{
 			scenario: "url starting with ftp",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "ftp://fileserver.com",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "ftp://fileserver.com"
 			},
-			expectedErr: true,
+			selected: false,
 		},
 		{
 			scenario: "ip address as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "192.168.178.3",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "192.168.178.3"
 			},
+			selected: true,
 		},
 		{
 			scenario: "ip address:port as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "192.168.178.3:9090",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "192.168.178.3:9090"
 			},
+			selected: true,
 		},
 		{
 			scenario: "dnsname as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "blackbox-exporter.example.com",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "blackbox-exporter.example.com"
 			},
+			selected: true,
 		},
 		{
 			scenario: "dnsname:port as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "blackbox-exporter.example.com:8080",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "blackbox-exporter.example.com:8080"
 			},
+			selected: true,
 		},
 		{
 			scenario: "hostname as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "localhost",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "localhost"
 			},
+			selected: true,
 		},
 		{
 			scenario: "hostname starting with a digit as prober url",
-			proberSpec: monitoringv1.ProberSpec{
-				URL: "12-exporter.example.com",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "12-exporter.example.com"
+			},
+			selected: true,
+		},
+		{
+			scenario: "valid metric relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  "valid",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid metric relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
 			},
 		},
+		{
+			scenario: "valid static relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.RelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  "valid",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid static relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.RelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "valid ingress relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig = nil
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid ingress relabeling config",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
 	} {
-		t.Run(fmt.Sprintf("case %s %s", tc.scenario, tc.proberSpec.URL), func(t *testing.T) {
-			err := validateProberURL(tc.proberSpec.URL)
-			if err != nil && !tc.expectedErr {
-				t.Fatalf("expected no error, got: %v", err)
+		t.Run(tc.scenario, func(t *testing.T) {
+			rs := NewResourceSelector(
+				newLogger(),
+				&monitoringv1.Prometheus{},
+				nil,
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+			)
+
+			probe := &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						URL: "example.com:80",
+					},
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{},
+					},
+				},
 			}
-			if err == nil && tc.expectedErr {
-				t.Fatalf("expected an error, got nil")
+			tc.updateSpec(&probe.Spec)
+
+			probes, err := rs.SelectProbes(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(probe)
+				return nil
+			})
+
+			require.NoError(t, err)
+			if tc.selected {
+				require.Equal(t, 1, len(probes))
+			} else {
+				require.Equal(t, 0, len(probes))
 			}
 		})
 	}
@@ -547,7 +681,7 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 			expectedErr: true,
 		},
 	} {
-		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+		t.Run(tc.scenario, func(t *testing.T) {
 			for _, endpoint := range tc.smSpec.Endpoints {
 				err := validateScrapeIntervalAndTimeout(&tc.prometheus, endpoint.Interval, endpoint.ScrapeTimeout)
 				t.Logf("err %v", err)
@@ -557,6 +691,394 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 				if err == nil && tc.expectedErr {
 					t.Fatalf("expected an error, got nil")
 				}
+			}
+		})
+	}
+}
+
+func TestSelectServiceMonitors(t *testing.T) {
+	for _, tc := range []struct {
+		scenario   string
+		updateSpec func(*monitoringv1.ServiceMonitorSpec)
+		selected   bool
+	}{
+		{
+			scenario: "valid metric relabeling config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid metric relabeling config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "valid relabeling config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid relabeling config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			rs := NewResourceSelector(
+				newLogger(),
+				&monitoringv1.Prometheus{},
+				nil,
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+			)
+
+			sm := &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{},
+			}
+			tc.updateSpec(&sm.Spec)
+
+			sms, err := rs.SelectServiceMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(sm)
+				return nil
+			})
+
+			require.NoError(t, err)
+			if tc.selected {
+				require.Equal(t, 1, len(sms))
+			} else {
+				require.Equal(t, 0, len(sms))
+			}
+		})
+	}
+}
+
+func TestSelectPodMonitors(t *testing.T) {
+	for _, tc := range []struct {
+		scenario   string
+		updateSpec func(*monitoringv1.PodMonitorSpec)
+		selected   bool
+	}{
+		{
+			scenario: "valid metric relabeling config",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid metric relabeling config",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "valid relabeling config",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid relabeling config",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			rs := NewResourceSelector(
+				newLogger(),
+				&monitoringv1.Prometheus{},
+				nil,
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+			)
+
+			pm := &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+			}
+			tc.updateSpec(&pm.Spec)
+
+			sms, err := rs.SelectPodMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(pm)
+				return nil
+			})
+
+			require.NoError(t, err)
+			if tc.selected {
+				require.Equal(t, 1, len(sms))
+			} else {
+				require.Equal(t, 0, len(sms))
+			}
+		})
+	}
+}
+
+func TestSelectScrapeConfigs(t *testing.T) {
+	for _, tc := range []struct {
+		scenario   string
+		updateSpec func(*monitoringv1alpha1.ScrapeConfigSpec)
+		selected   bool
+	}{
+		{
+			scenario: "valid relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.RelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  "valid",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.RelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "valid metric relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  "valid",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid metric relabeling config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "HTTP SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "HTTP SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Consul SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Consul SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "wrong",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			cs := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte("val1"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "configmap",
+						Namespace: "test",
+					},
+					Data: map[string]string{
+						"key1": "val1",
+					},
+				},
+			)
+
+			rs := NewResourceSelector(
+				newLogger(),
+				&monitoringv1.Prometheus{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+					},
+				},
+				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+			)
+
+			sc := &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+			}
+			tc.updateSpec(&sc.Spec)
+
+			sms, err := rs.SelectScrapeConfigs(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(sc)
+				return nil
+			})
+
+			require.NoError(t, err)
+			if tc.selected {
+				require.Equal(t, 1, len(sms))
+			} else {
+				require.Equal(t, 0, len(sms))
 			}
 		})
 	}

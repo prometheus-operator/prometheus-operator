@@ -18,14 +18,15 @@ import (
 	"reflect"
 	"testing"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/kylelemons/godebug/pretty"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
-	"github.com/kylelemons/godebug/pretty"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestListOptions(t *testing.T) {
@@ -229,7 +230,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 				t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
 			}
 
-			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{Replicas: func(i int32) *int32 { return &i }(2)})
+			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
 			if err != nil {
 				t.Fatal(err)
 			}

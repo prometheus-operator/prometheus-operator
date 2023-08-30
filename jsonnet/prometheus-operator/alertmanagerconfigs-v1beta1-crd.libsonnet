@@ -106,6 +106,404 @@
                 items: {
                   description: 'Receiver defines one or more notification integrations.',
                   properties: {
+                    discordConfigs: {
+                      description: 'List of Slack configurations.',
+                      items: {
+                        description: 'DiscordConfig configures notifications via Discord. See https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
+                        properties: {
+                          apiURL: {
+                            description: "The secret's key that contains the Discord webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            properties: {
+                              key: {
+                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                type: 'string',
+                              },
+                              name: {
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                type: 'string',
+                              },
+                              optional: {
+                                description: 'Specify whether the Secret or its key must be defined',
+                                type: 'boolean',
+                              },
+                            },
+                            required: [
+                              'key',
+                            ],
+                            type: 'object',
+                            'x-kubernetes-map-type': 'atomic',
+                          },
+                          httpConfig: {
+                            description: 'HTTP client configuration.',
+                            properties: {
+                              authorization: {
+                                description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
+                                properties: {
+                                  credentials: {
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  type: {
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
+                                    type: 'string',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                              basicAuth: {
+                                description: 'BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.',
+                                properties: {
+                                  password: {
+                                    description: 'The secret in the service monitor namespace that contains the password for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  username: {
+                                    description: 'The secret in the service monitor namespace that contains the username for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                              bearerTokenSecret: {
+                                description: "The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                                properties: {
+                                  key: {
+                                    description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                  name: {
+                                    description: "The name of the secret in the object's namespace to select from.",
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                },
+                                required: [
+                                  'key',
+                                  'name',
+                                ],
+                                type: 'object',
+                              },
+                              followRedirects: {
+                                description: 'FollowRedirects specifies whether the client should follow HTTP 3xx redirects.',
+                                type: 'boolean',
+                              },
+                              oauth2: {
+                                description: 'OAuth2 client credentials used to fetch a token for the targets.',
+                                properties: {
+                                  clientId: {
+                                    description: 'The secret or configmap containing the OAuth2 client id',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  clientSecret: {
+                                    description: 'The secret containing the OAuth2 client secret',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  endpointParams: {
+                                    additionalProperties: {
+                                      type: 'string',
+                                    },
+                                    description: 'Parameters to append to the token URL',
+                                    type: 'object',
+                                  },
+                                  scopes: {
+                                    description: 'OAuth2 scopes used for the token request',
+                                    items: {
+                                      type: 'string',
+                                    },
+                                    type: 'array',
+                                  },
+                                  tokenUrl: {
+                                    description: 'The URL to fetch the token from',
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                },
+                                required: [
+                                  'clientId',
+                                  'clientSecret',
+                                  'tokenUrl',
+                                ],
+                                type: 'object',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.',
+                                type: 'string',
+                              },
+                              tlsConfig: {
+                                description: 'TLS configuration for the client.',
+                                properties: {
+                                  ca: {
+                                    description: 'Certificate authority used when verifying server certificates.',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  cert: {
+                                    description: 'Client certificate to present when doing client-authentication.',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  insecureSkipVerify: {
+                                    description: 'Disable target certificate validation.',
+                                    type: 'boolean',
+                                  },
+                                  keySecret: {
+                                    description: 'Secret containing the client key file for the targets.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  serverName: {
+                                    description: 'Used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                            },
+                            type: 'object',
+                          },
+                          message: {
+                            description: "The template of the message's body.",
+                            type: 'string',
+                          },
+                          sendResolved: {
+                            description: 'Whether or not to notify about resolved alerts.',
+                            type: 'boolean',
+                          },
+                          title: {
+                            description: "The template of the message's title.",
+                            type: 'string',
+                          },
+                        },
+                        type: 'object',
+                      },
+                      type: 'array',
+                    },
                     emailConfigs: {
                       description: 'List of Email configurations.',
                       items: {
@@ -431,7 +829,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -453,7 +851,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -903,7 +1301,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -925,7 +1323,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -1372,7 +1770,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1394,7 +1792,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -1926,7 +2324,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1948,7 +2346,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -2344,7 +2742,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2366,7 +2764,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -2707,7 +3105,7 @@
                             description: "Configures AWS's Signature Verification 4 signing process to sign requests.",
                             properties: {
                               accessKey: {
-                                description: 'AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used.',
+                                description: 'AccessKey is the AWS API key. If not specified, the environment variable `AWS_ACCESS_KEY_ID` is used.',
                                 properties: {
                                   key: {
                                     description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2741,7 +3139,7 @@
                                 type: 'string',
                               },
                               secretKey: {
-                                description: 'SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used.',
+                                description: 'SecretKey is the AWS API secret. If not specified, the environment variable `AWS_SECRET_ACCESS_KEY` is used.',
                                 properties: {
                                   key: {
                                     description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2827,7 +3225,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2849,7 +3247,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -3259,7 +3657,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -3281,7 +3679,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -3631,19 +4029,24 @@
                       },
                       type: 'array',
                     },
-                    webhookConfigs: {
-                      description: 'List of webhook configurations.',
+                    webexConfigs: {
+                      description: 'List of Webex configurations.',
                       items: {
-                        description: 'WebhookConfig configures notifications via a generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config',
+                        description: 'WebexConfig configures notification via Cisco Webex See https://prometheus.io/docs/alerting/latest/configuration/#webex_config',
                         properties: {
+                          apiURL: {
+                            description: 'The Webex Teams API URL i.e. https://webexapis.com/v1/messages',
+                            pattern: '^https?://.+$',
+                            type: 'string',
+                          },
                           httpConfig: {
-                            description: 'HTTP client configuration.',
+                            description: "The HTTP client's configuration. You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.",
                             properties: {
                               authorization: {
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -3665,7 +4068,387 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
+                                    type: 'string',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                              basicAuth: {
+                                description: 'BasicAuth for the client. This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.',
+                                properties: {
+                                  password: {
+                                    description: 'The secret in the service monitor namespace that contains the password for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  username: {
+                                    description: 'The secret in the service monitor namespace that contains the username for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                              bearerTokenSecret: {
+                                description: "The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                                properties: {
+                                  key: {
+                                    description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                  name: {
+                                    description: "The name of the secret in the object's namespace to select from.",
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                },
+                                required: [
+                                  'key',
+                                  'name',
+                                ],
+                                type: 'object',
+                              },
+                              followRedirects: {
+                                description: 'FollowRedirects specifies whether the client should follow HTTP 3xx redirects.',
+                                type: 'boolean',
+                              },
+                              oauth2: {
+                                description: 'OAuth2 client credentials used to fetch a token for the targets.',
+                                properties: {
+                                  clientId: {
+                                    description: 'The secret or configmap containing the OAuth2 client id',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  clientSecret: {
+                                    description: 'The secret containing the OAuth2 client secret',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  endpointParams: {
+                                    additionalProperties: {
+                                      type: 'string',
+                                    },
+                                    description: 'Parameters to append to the token URL',
+                                    type: 'object',
+                                  },
+                                  scopes: {
+                                    description: 'OAuth2 scopes used for the token request',
+                                    items: {
+                                      type: 'string',
+                                    },
+                                    type: 'array',
+                                  },
+                                  tokenUrl: {
+                                    description: 'The URL to fetch the token from',
+                                    minLength: 1,
+                                    type: 'string',
+                                  },
+                                },
+                                required: [
+                                  'clientId',
+                                  'clientSecret',
+                                  'tokenUrl',
+                                ],
+                                type: 'object',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.',
+                                type: 'string',
+                              },
+                              tlsConfig: {
+                                description: 'TLS configuration for the client.',
+                                properties: {
+                                  ca: {
+                                    description: 'Certificate authority used when verifying server certificates.',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  cert: {
+                                    description: 'Client certificate to present when doing client-authentication.',
+                                    properties: {
+                                      configMap: {
+                                        description: 'ConfigMap containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key to select.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the ConfigMap or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      secret: {
+                                        description: 'Secret containing data to use for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                    },
+                                    type: 'object',
+                                  },
+                                  insecureSkipVerify: {
+                                    description: 'Disable target certificate validation.',
+                                    type: 'boolean',
+                                  },
+                                  keySecret: {
+                                    description: 'Secret containing the client key file for the targets.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  serverName: {
+                                    description: 'Used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                },
+                                type: 'object',
+                              },
+                            },
+                            type: 'object',
+                          },
+                          message: {
+                            description: 'Message template',
+                            type: 'string',
+                          },
+                          roomID: {
+                            description: 'ID of the Webex Teams room where to send the messages.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          sendResolved: {
+                            description: 'Whether to notify about resolved alerts.',
+                            type: 'boolean',
+                          },
+                        },
+                        required: [
+                          'roomID',
+                        ],
+                        type: 'object',
+                      },
+                      type: 'array',
+                    },
+                    webhookConfigs: {
+                      description: 'List of webhook configurations.',
+                      items: {
+                        description: 'WebhookConfig configures notifications via a generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config',
+                        properties: {
+                          httpConfig: {
+                            description: 'HTTP client configuration.',
+                            properties: {
+                              authorization: {
+                                description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
+                                properties: {
+                                  credentials: {
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    properties: {
+                                      key: {
+                                        description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                        type: 'string',
+                                      },
+                                      name: {
+                                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                        type: 'string',
+                                      },
+                                      optional: {
+                                        description: 'Specify whether the Secret or its key must be defined',
+                                        type: 'boolean',
+                                      },
+                                    },
+                                    required: [
+                                      'key',
+                                    ],
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  type: {
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -4072,7 +4855,7 @@
                                 description: 'Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: "The secret's key that contains the credentials of the request",
+                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4094,7 +4877,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Set the authentication type. Defaults to Bearer, Basic will cause an error',
+                                    description: 'Defines the authentication type. The value is case-insensitive. \n "Basic" is not a supported value. \n Default: "Bearer"',
                                     type: 'string',
                                   },
                                 },

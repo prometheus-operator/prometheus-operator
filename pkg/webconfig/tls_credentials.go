@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"path"
 
+	corev1 "k8s.io/api/core/v1"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -122,11 +123,18 @@ func (a tlsCredentials) mountParamsForSecret(
 		},
 	})
 
+	// We're mounting the volume in full as subPath mounts can't receive updates. This is important when renewing
+	// certificates. Prometheus and Alertmanager then load certificates on every request, there is no need to tell them
+	// to reload their configuration.
+	//
+	// References:
+	// * https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
+	// * https://github.com/prometheus-operator/prometheus-operator/issues/5527
+	// * https://github.com/prometheus-operator/prometheus-operator/pull/5535#discussion_r1194940482
 	mounts = append(mounts, corev1.VolumeMount{
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
-		SubPath:   secret.Key,
 	})
 
 	return volumes, mounts, nil
@@ -156,11 +164,18 @@ func (a tlsCredentials) mountParamsForConfigmap(
 		},
 	})
 
+	// We're mounting the volume in full as subPath mounts can't receive updates. This is important when renewing
+	// certificates. Prometheus and Alertmanager then load certificates on every request, there is no need to tell them
+	// to reload their configuration.
+	//
+	// References:
+	// * https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
+	// * https://github.com/prometheus-operator/prometheus-operator/issues/5527
+	// * https://github.com/prometheus-operator/prometheus-operator/pull/5535#discussion_r1194940482
 	mounts = append(mounts, corev1.VolumeMount{
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
-		SubPath:   configMap.Key,
 	})
 
 	return volumes, mounts, nil
@@ -169,13 +184,29 @@ func (a tlsCredentials) mountParamsForConfigmap(
 // getKeyMountPath is the mount path of the TLS key inside a prometheus container.
 func (a tlsCredentials) getKeyMountPath() string {
 	secret := monitoringv1.SecretOrConfigMap{Secret: &a.keySecret}
-	return a.tlsPathForSelector(secret)
+	return a.tlsPathForSelector(secret, "key")
+}
+
+// getKeyFilename returns the filename (key) of the key
+func (a tlsCredentials) getKeyFilename() string {
+	return a.keySecret.Key
 }
 
 // getCertMountPath is the mount path of the TLS certificate inside a prometheus container,
 func (a tlsCredentials) getCertMountPath() string {
 	if a.cert.ConfigMap != nil || a.cert.Secret != nil {
-		return a.tlsPathForSelector(a.cert)
+		return a.tlsPathForSelector(a.cert, "cert")
+	}
+
+	return ""
+}
+
+// getCertFilename returns the filename (key) of the certificate
+func (a tlsCredentials) getCertFilename() string {
+	if a.cert.Secret != nil {
+		return a.cert.Secret.Key
+	} else if a.cert.ConfigMap != nil {
+		return a.cert.ConfigMap.Key
 	}
 
 	return ""
@@ -184,18 +215,29 @@ func (a tlsCredentials) getCertMountPath() string {
 // getCAMountPath is the mount path of the client CA certificate inside a prometheus container.
 func (a tlsCredentials) getCAMountPath() string {
 	if a.clientCA.ConfigMap != nil || a.clientCA.Secret != nil {
-		return a.tlsPathForSelector(a.clientCA)
+		return a.tlsPathForSelector(a.clientCA, "ca")
 	}
 
 	return ""
 }
 
-func (a *tlsCredentials) tlsPathForSelector(sel monitoringv1.SecretOrConfigMap) string {
+// getCAFilename is the mount path of the client CA certificate inside a prometheus container.
+func (a tlsCredentials) getCAFilename() string {
+	if a.clientCA.Secret != nil {
+		return a.clientCA.Secret.Key
+	} else if a.clientCA.ConfigMap != nil {
+		return a.clientCA.ConfigMap.Key
+	}
+
+	return ""
+}
+
+func (a *tlsCredentials) tlsPathForSelector(sel monitoringv1.SecretOrConfigMap, mountType string) string {
 	var filename string
 	if sel.Secret != nil {
-		filename = fmt.Sprintf("secret_%s_%s", sel.Secret.Name, sel.Secret.Key)
+		filename = fmt.Sprintf("secret/%s-%s", sel.Secret.Name, mountType)
 	} else {
-		filename = fmt.Sprintf("configmap_%s_%s", sel.ConfigMap.Name, sel.ConfigMap.Key)
+		filename = fmt.Sprintf("configmap/%s-%s", sel.ConfigMap.Name, mountType)
 	}
 
 	return path.Join(a.mountPath, filename)

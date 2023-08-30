@@ -20,7 +20,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-kit/log"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -41,7 +40,6 @@ const (
 )
 
 func makeStatefulSet(
-	logger log.Logger,
 	name string,
 	p monitoringv1.PrometheusInterface,
 	config *operator.Config,
@@ -58,18 +56,12 @@ func makeStatefulSet(
 		cpf.PortName = prompkg.DefaultPortName
 	}
 
-	if cpf.Replicas == nil {
-		cpf.Replicas = &prompkg.MinReplicas
-	}
-	intZero := int32(0)
-	if cpf.Replicas != nil && *cpf.Replicas < 0 {
-		cpf.Replicas = &intZero
-	}
+	cpf.Replicas = prompkg.ReplicasNumberPtr(p)
 
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(logger, p, config, cg, shard, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -95,7 +87,7 @@ func makeStatefulSet(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Labels:      config.Labels.Merge(labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,
@@ -170,7 +162,6 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	logger log.Logger,
 	p monitoringv1.PrometheusInterface,
 	c *operator.Config,
 	cg *prompkg.ConfigGenerator,
@@ -201,7 +192,7 @@ func makeStatefulSetSpec(
 
 	cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendAgentArgs(promArgs, cg)
+	promArgs = appendAgentArgs(promArgs, cg, cpf.WALCompression)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -450,6 +441,7 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 					UID:        p.GetUID(),
 				},
 			},
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),
@@ -473,11 +465,21 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 }
 
 // appendAgentArgs appends arguments that are only valid for the Prometheus agent.
-func appendAgentArgs(promArgs []monitoringv1.Argument, cg *prompkg.ConfigGenerator) []monitoringv1.Argument {
+func appendAgentArgs(
+	promArgs []monitoringv1.Argument,
+	cg *prompkg.ConfigGenerator,
+	walCompression *bool) []monitoringv1.Argument {
 
 	promArgs = append(promArgs,
 		monitoringv1.Argument{Name: "storage.agent.path", Value: prompkg.StorageDir},
 	)
 
+	if walCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.agent.wal-compression"}
+		if *walCompression {
+			arg.Name = "storage.agent.wal-compression"
+		}
+		promArgs = cg.AppendCommandlineArgument(promArgs, arg)
+	}
 	return promArgs
 }

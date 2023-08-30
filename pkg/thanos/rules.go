@@ -22,17 +22,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
+	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 )
 
 const labelThanosRulerName = "thanos-ruler-name"
@@ -69,7 +68,9 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	)
 
 	logger := log.With(o.logger, "thanos", t.Name, "namespace", t.Namespace)
-	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, logger)
+	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
+
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing PrometheusRules failed")
 	}

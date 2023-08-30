@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/go-kit/log"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,11 +33,11 @@ type mockListerWatcher struct {
 	stopped    bool
 }
 
-func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+func (m *mockListerWatcher) List(_ metav1.ListOptions) (runtime.Object, error) {
 	return m.listResult, nil
 }
 
-func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+func (m *mockListerWatcher) Watch(_ metav1.ListOptions) (watch.Interface, error) {
 	return m, nil
 }
 

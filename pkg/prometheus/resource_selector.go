@@ -32,45 +32,38 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 type ResourceSelector struct {
-	l                    log.Logger
-	p                    monitoringv1.PrometheusInterface
-	store                *assets.Store
-	podMonitorLister     ListAllByNamespacer
-	serviceMonitorLister ListAllByNamespacer
-	probeLister          ListAllByNamespacer
-	namespaceInformers   cache.SharedIndexInformer
-	metrics              *operator.Metrics
-	accessor             *operator.Accessor
+	l                  log.Logger
+	p                  monitoringv1.PrometheusInterface
+	store              *assets.Store
+	namespaceInformers cache.SharedIndexInformer
+	metrics            *operator.Metrics
+	accessor           *operator.Accessor
 }
 
-type ListAllByNamespacer interface {
-	ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
-}
+type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, podMonitorLister ListAllByNamespacer, serviceMonitorLister ListAllByNamespacer, probeLister ListAllByNamespacer, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
 	return &ResourceSelector{
-		l:                    l,
-		p:                    p,
-		store:                store,
-		podMonitorLister:     podMonitorLister,
-		serviceMonitorLister: serviceMonitorLister,
-		probeLister:          probeLister,
-		namespaceInformers:   namespaceInformers,
-		metrics:              metrics,
-		accessor:             operator.NewAccessor(l),
+		l:                  l,
+		p:                  p,
+		store:              store,
+		namespaceInformers: namespaceInformers,
+		metrics:            metrics,
+		accessor:           operator.NewAccessor(l),
 	}
 }
 
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -100,7 +93,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[stri
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.serviceMonitorLister.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
+		err := listFn(ns, servMonSelector, func(obj interface{}) {
 			k, ok := rs.accessor.MetaNamespaceKey(obj)
 			if ok {
 				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
@@ -159,20 +152,14 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context) (map[stri
 				break
 			}
 
-			for _, rl := range endpoint.RelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				err = fmt.Errorf("relabelConfigs: %w", err)
+				break
 			}
 
-			for _, rl := range endpoint.MetricRelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				err = fmt.Errorf("metricRelabelConfigs: %w", err)
+				break
 			}
 		}
 
@@ -232,21 +219,41 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 	return CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
 
+func validateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []*monitoringv1.RelabelConfig) error {
+	for i, rc := range rcs {
+		if rc == nil {
+			return fmt.Errorf("null relabel config")
+		}
+
+		if err := validateRelabelConfig(p, *rc); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.RelabelConfig) error {
 	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse Prometheus version")
 	}
+
 	minimumVersionCaseActions := version.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := version.GTE(semver.MustParse("2.41.0"))
+	if rc.Action == "" {
+		rc.Action = string(relabel.Replace)
+	}
+	action := strings.ToLower(rc.Action)
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
 		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
 	}
 
-	if (rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
+	if (action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
 		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
 	}
 
@@ -254,33 +261,33 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
 	}
 
-	if rc.Modulus == 0 && rc.Action == string(relabel.HashMod) {
+	if rc.Modulus == 0 && action == string(relabel.HashMod) {
 		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.HashMod) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
+	if (action == string(relabel.Replace) || action == string(relabel.HashMod) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
 		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Replace) || rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (rc.Action == string(relabel.Lowercase) || rc.Action == string(relabel.Uppercase) || rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
 		return errors.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
-	if rc.Action == string(relabel.LabelMap) {
+	if action == string(relabel.LabelMap) {
 		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
 			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
 		}
 	}
 
-	if rc.Action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
+	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
 		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if rc.Action == string(relabel.KeepEqual) || rc.Action == string(relabel.DropEqual) {
+	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
 		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
@@ -292,7 +299,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		}
 	}
 
-	if rc.Action == string(relabel.LabelDrop) || rc.Action == string(relabel.LabelKeep) {
+	if action == string(relabel.LabelDrop) || action == string(relabel.LabelKeep) {
 		if len(rc.SourceLabels) != 0 ||
 			!(rc.TargetLabel == "" ||
 				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
@@ -311,7 +318,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*monitoringv1.PodMonitor, error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.PodMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -341,7 +348,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.podMonitorLister.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
+		err := listFn(ns, podMonSelector, func(obj interface{}) {
 			k, ok := rs.accessor.MetaNamespaceKey(obj)
 			if ok {
 				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
@@ -365,7 +372,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 
-			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
+			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
 				break
 			}
 
@@ -392,20 +399,14 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 				break
 			}
 
-			for _, rl := range endpoint.RelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				err = fmt.Errorf("relabelConfigs: %w", err)
+				break
 			}
 
-			for _, rl := range endpoint.MetricRelabelConfigs {
-				if rl.Action != "" {
-					if err = validateRelabelConfig(rs.p, *rl); err != nil {
-						break
-					}
-				}
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				err = fmt.Errorf("metricRelabelConfigs: %w", err)
+				break
 			}
 		}
 
@@ -441,7 +442,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context) (map[string]*
 // SelectProbes selects Probes based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monitoringv1.Probe, error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.Probe, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -471,7 +472,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
 
 	for _, ns := range namespaces {
-		err := rs.probeLister.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
+		err := listFn(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
 				probe := obj.(*monitoringv1.Probe).DeepCopy()
 				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
@@ -495,7 +496,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 			level.Warn(rs.l).Log(
 				"msg", "skipping probe",
 				"error", err.Error(),
-				"probe", probe,
+				"probe", probeName,
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
@@ -507,7 +508,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 		}
 
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
-		if err = rs.store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
+		if err = rs.store.AddBearerToken(ctx, probe.GetNamespace(), &probe.Spec.BearerTokenSecret, pnKey); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
@@ -539,19 +540,34 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context) (map[string]*monit
 			continue
 		}
 
-		for _, rl := range probe.Spec.MetricRelabelConfigs {
-			if rl.Action != "" {
-				if err = validateRelabelConfig(rs.p, *rl); err != nil {
-					rejectFn(probe, err)
-					continue
-				}
-			}
-		}
-		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
-			err := errors.Wrapf(err, "%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`", probe.Spec.ProberSpec.URL)
+		if err = validateRelabelConfigs(rs.p, probe.Spec.MetricRelabelConfigs); err != nil {
+			err = fmt.Errorf("metricRelabelConfigs: %w", err)
 			rejectFn(probe, err)
 			continue
 		}
+
+		if probe.Spec.Targets.StaticConfig != nil {
+			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
+				err = fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
+				rejectFn(probe, err)
+				continue
+			}
+		}
+
+		if probe.Spec.Targets.Ingress != nil {
+			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
+				err = fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
+				rejectFn(probe, err)
+				continue
+			}
+		}
+
+		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
+			err := fmt.Errorf("%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
+			rejectFn(probe, err)
+			continue
+		}
+
 		res[probeName] = probe
 	}
 
@@ -582,5 +598,185 @@ func validateProberURL(url string) error {
 			return errors.Errorf("invalid port: %q", hostPort[1])
 		}
 	}
+	return nil
+}
+
+// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
+// returning only those with a valid configuration.
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
+	cpf := rs.p.GetCommonPrometheusFields()
+	objMeta := rs.p.GetObjectMeta()
+	namespaces := []string{}
+
+	// Selectors might overlap. Deduplicate them along the keyFunc.
+	scrapeConfigs := make(map[string]*monitoringv1alpha1.ScrapeConfig)
+
+	sConSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	// If 'ScrapeConfigNamespaceSelector' is nil only check own namespace.
+	if cpf.ScrapeConfigNamespaceSelector == nil {
+		namespaces = append(namespaces, objMeta.GetNamespace())
+	} else {
+		sConNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces, err = operator.ListMatchingNamespaces(sConNSSelector, rs.namespaceInformers)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	level.Debug(rs.l).Log("msg", "filtering namespaces to select ScrapeConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	for _, ns := range namespaces {
+		err := listFn(ns, sConSelector, func(obj interface{}) {
+			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
+				scrapeConfig := obj.(*monitoringv1alpha1.ScrapeConfig).DeepCopy()
+				if err := k8sutil.AddTypeInformationToObject(scrapeConfig); err != nil {
+					level.Error(rs.l).Log("msg", "failed to set ScrapeConfig type information", "namespace", ns, "err", err)
+					return
+				}
+				scrapeConfigs[k] = scrapeConfig
+			}
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list ScrapeConfigs in namespace %s", ns)
+		}
+	}
+
+	var rejected int
+	res := make(map[string]*monitoringv1alpha1.ScrapeConfig, len(scrapeConfigs))
+
+	for scName, sc := range scrapeConfigs {
+		rejectFn := func(sc *monitoringv1alpha1.ScrapeConfig, err error) {
+			rejected++
+			level.Warn(rs.l).Log(
+				"msg", "skipping scrapeconfig",
+				"error", err.Error(),
+				"scrapeconfig", scName,
+				"namespace", objMeta.GetNamespace(),
+				"prometheus", objMeta.GetName(),
+			)
+		}
+
+		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
+			rejectFn(sc, fmt.Errorf("relabelConfigs: %w", err))
+			continue
+		}
+
+		scKey := fmt.Sprintf("scrapeconfig/%s/%s", sc.GetNamespace(), sc.GetName())
+		if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth, scKey); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
+		scAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.GetNamespace(), sc.GetName())
+		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization, scAuthKey); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
+		if err = rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
+		var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
+		if sc.Spec.ScrapeInterval != nil {
+			scrapeInterval = *sc.Spec.ScrapeInterval
+		}
+
+		if sc.Spec.ScrapeTimeout != nil {
+			scrapeTimeout = *sc.Spec.ScrapeTimeout
+		}
+
+		if err = validateScrapeIntervalAndTimeout(rs.p, scrapeInterval, scrapeTimeout); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
+		if err = validateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
+			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateHTTPSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("httpSDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateConsulSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("consulSDConfigs: %w", err))
+			continue
+		}
+
+		res[scName] = sc
+	}
+
+	scrapeConfigKeys := make([]string, 0)
+	for k := range res {
+		scrapeConfigKeys = append(scrapeConfigKeys, k)
+	}
+	level.Debug(rs.l).Log("msg", "selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+
+	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
+		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
+		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
+	}
+
+	return res, nil
+}
+
+func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.ConsulSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		for k, v := range config.ProxyConnectHeader {
+			if _, err := rs.store.GetSecretKey(context.Background(), sc.GetNamespace(), v); err != nil {
+				return fmt.Errorf("[%d]: header[%s]: %w", i, k, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.HTTPSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
 	return nil
 }

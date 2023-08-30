@@ -38,6 +38,10 @@ func (l *PrometheusAgent) GetTypeMeta() metav1.TypeMeta {
 	return l.TypeMeta
 }
 
+func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
+	return l.Status
+}
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="promagent"

@@ -26,6 +26,8 @@ TYPES_V1_TARGET += pkg/apis/monitoring/v1/servicemonitor_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
 TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/prometheusagent_types.go
+TYPES_V1ALPHA1_TARGET += pkg/apis/monitoring/v1alpha1/scrapeconfig_types.go
 TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
@@ -286,7 +288,7 @@ Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck
+format: go-fmt jsonnet-fmt check-license shellcheck docs
 
 .PHONY: go-fmt
 go-fmt:
@@ -294,8 +296,7 @@ go-fmt:
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)
-	# *.*sonnet will match *.jsonnet and *.libsonnet files but nothing else in this repository
-	find . -name *.jsonnet -not -path "*/vendor/*" -print0 | xargs -0 $(JSONNETFMT_BINARY) -i
+	find . -name *.jsonnet -or -name *.libsonnet -not -path "*/vendor/*" -print0 | xargs -0 $(JSONNETFMT_BINARY) -i
 
 .PHONY: check-license
 check-license:
@@ -312,6 +313,10 @@ check-metrics: $(PROMLINTER_BINARY)
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run
+
+.PHONY: fix-golang
+fix-golang: $(GOLANGCILINTER_BINARY)
+	$(GOLANGCILINTER_BINARY) run --fix
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
 MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))
@@ -340,6 +345,10 @@ test-unit:
 .PHONY: test-long
 test-long:
 	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
+
+.PHONY: test-unit-update-golden
+test-unit-update-golden:
+	./scripts/update-golden-files.sh
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs

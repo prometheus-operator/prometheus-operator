@@ -32,6 +32,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	PodMonitorNamespaceSelector     *metav1.LabelSelector                                `json:"podMonitorNamespaceSelector,omitempty"`
 	ProbeSelector                   *metav1.LabelSelector                                `json:"probeSelector,omitempty"`
 	ProbeNamespaceSelector          *metav1.LabelSelector                                `json:"probeNamespaceSelector,omitempty"`
+	ScrapeConfigSelector            *metav1.LabelSelector                                `json:"scrapeConfigSelector,omitempty"`
+	ScrapeConfigNamespaceSelector   *metav1.LabelSelector                                `json:"scrapeConfigNamespaceSelector,omitempty"`
 	Version                         *string                                              `json:"version,omitempty"`
 	Paused                          *bool                                                `json:"paused,omitempty"`
 	Image                           *string                                              `json:"image,omitempty"`
@@ -89,6 +91,13 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ExcludedFromEnforcement         []ObjectReferenceApplyConfiguration                  `json:"excludedFromEnforcement,omitempty"`
 	HostNetwork                     *bool                                                `json:"hostNetwork,omitempty"`
 	PodTargetLabels                 []string                                             `json:"podTargetLabels,omitempty"`
+	TracingConfig                   *PrometheusTracingConfigApplyConfiguration           `json:"tracingConfig,omitempty"`
+	BodySizeLimit                   *monitoringv1.ByteSize                               `json:"bodySizeLimit,omitempty"`
+	SampleLimit                     *uint64                                              `json:"sampleLimit,omitempty"`
+	TargetLimit                     *uint64                                              `json:"targetLimit,omitempty"`
+	LabelLimit                      *uint64                                              `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit            *uint64                                              `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit           *uint64                                              `json:"labelValueLengthLimit,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -150,6 +159,22 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeSelector(value metav
 // If called multiple times, the ProbeNamespaceSelector field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeNamespaceSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
 	b.ProbeNamespaceSelector = &value
+	return b
+}
+
+// WithScrapeConfigSelector sets the ScrapeConfigSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeConfigSelector = &value
+	return b
+}
+
+// WithScrapeConfigNamespaceSelector sets the ScrapeConfigNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigNamespaceSelector(value metav1.LabelSelector) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeConfigNamespaceSelector = &value
 	return b
 }
 
@@ -660,5 +685,61 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithPodTargetLabels(values ..
 	for i := range values {
 		b.PodTargetLabels = append(b.PodTargetLabels, values[i])
 	}
+	return b
+}
+
+// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TracingConfig field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTracingConfig(value *PrometheusTracingConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.TracingConfig = value
+	return b
+}
+
+// WithBodySizeLimit sets the BodySizeLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BodySizeLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithBodySizeLimit(value monitoringv1.ByteSize) *CommonPrometheusFieldsApplyConfiguration {
+	b.BodySizeLimit = &value
+	return b
+}
+
+// WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SampleLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithSampleLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.SampleLimit = &value
+	return b
+}
+
+// WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TargetLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTargetLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.TargetLimit = &value
+	return b
+}
+
+// WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.LabelLimit = &value
+	return b
+}
+
+// WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelNameLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.LabelNameLengthLimit = &value
+	return b
+}
+
+// WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.LabelValueLengthLimit = &value
 	return b
 }

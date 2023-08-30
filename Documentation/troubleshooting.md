@@ -63,6 +63,18 @@ Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod
 kubectl -n monitoring get secret prometheus-k8s -ojson | jq -r '.data["prometheus.yaml.gz"]' | base64 -d | gunzip | grep "my-service-monitor"
 ```
 
+#### It is in the configuration but not on the Service Discovery page
+
+ServiceMonitors pointing to Services that do not exist (e.g. nothing matching `.spec.selector`) will lead to this ServiceMonitor not being added to the Service Discovery page. Check if you can find any Service with the selector you configured.
+
+If you use `.spec.selector.matchLabels` (instead of e.g. `.spec.selector.matchExpressions`), you can use this command to check for services matching the given label:
+
+```
+kubectl get services -l "$(kubectl get servicemonitors -n "<namespace of your ServiceMonitor>" "<name of your ServiceMonitor>" -o template='{{ $first := 1 }}{{ range $key, $value := .spec.selector.matchLabels }}{{ if eq $first 0 }},{{end}}{{ $key }}={{ $value }}{{ $first = 0 }}{{end}}')"
+```
+
+Note: this command does not take namespaces into account. If your ServiceMonitor selects a single namespace or all namespaces, you can just add that to the `kubectl get services` command (using `-n $namespace` or `-A` for all namespaces).
+
 ### Prometheus kubelet metrics server returned HTTP status 403 Forbidden
 
 Prometheus is installed, all looks good, however the `Targets` are all showing as down. All permissions seem to be good, yet no joy. Prometheus pulling metrics from all namespaces expect kube-system, and Prometheus has access to all namespaces including kube-system.

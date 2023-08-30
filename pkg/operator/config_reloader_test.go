@@ -21,14 +21,72 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var reloaderConfig = ContainerConfig{
-	CPURequest:    "100m",
-	CPULimit:      "100m",
-	MemoryRequest: "50Mi",
-	MemoryLimit:   "50Mi",
-	Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+	CPURequests:    Quantity{q: resource.MustParse("100m")},
+	CPULimits:      Quantity{q: resource.MustParse("100m")},
+	MemoryRequests: Quantity{q: resource.MustParse("50Mi")},
+	MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
+	Image:          "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+}
+
+func TestCreateConfigReloaderEnableProbes(t *testing.T) {
+	reloaderConfigCopy := reloaderConfig
+	reloaderConfigCopy.EnableProbes = true
+	containerName := "config-reloader"
+	var container = CreateConfigReloader(
+		containerName,
+		ReloaderConfig(reloaderConfigCopy),
+		ReloaderURL(url.URL{
+			Scheme: "http",
+			Host:   "localhost:9093",
+			Path:   "/-/reload",
+		}),
+		ListenLocal(true),
+		LocalHost("localhost"),
+	)
+
+	if container.Name != "config-reloader" {
+		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
+	}
+
+	if container.LivenessProbe == nil {
+		t.Errorf("expected LivenessProbe but got none")
+	}
+
+	if container.ReadinessProbe == nil {
+		t.Errorf("expected ReadinessProbe but got none")
+	}
+}
+
+func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
+	reloaderConfigCopy := reloaderConfig
+	reloaderConfigCopy.EnableProbes = true
+	initContainerName := "init-config-reloader"
+	var container = CreateConfigReloader(
+		initContainerName,
+		ReloaderConfig(reloaderConfigCopy),
+		ReloaderURL(url.URL{
+			Scheme: "http",
+			Host:   "localhost:9093",
+			Path:   "/-/reload",
+		}),
+		ReloaderRunOnce(),
+	)
+
+	if container.Name != "init-config-reloader" {
+		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
+	}
+
+	if container.LivenessProbe != nil {
+		t.Errorf("expected no LivenessProbe but got %v", container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe != nil {
+		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
+	}
 }
 
 func TestCreateInitConfigReloader(t *testing.T) {
@@ -48,6 +106,14 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	}
 	if container.ImagePullPolicy != expectedImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
+	}
+
+	if container.LivenessProbe != nil {
+		t.Errorf("expected no LivenessProbe but got %v", container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe != nil {
+		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
 	}
 }
 
@@ -117,6 +183,14 @@ func TestCreateConfigReloader(t *testing.T) {
 
 	if container.ImagePullPolicy != expectedImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
+	}
+
+	if container.LivenessProbe != nil {
+		t.Errorf("expected no LivenessProbe but got %v", container.LivenessProbe)
+	}
+
+	if container.ReadinessProbe != nil {
+		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
 	}
 }
 

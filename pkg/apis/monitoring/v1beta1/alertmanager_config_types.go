@@ -22,6 +22,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -157,6 +158,8 @@ type Receiver struct {
 	// List of PagerDuty configurations.
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Slack configurations.
+	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
+	// List of Slack configurations.
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
@@ -172,6 +175,8 @@ type Receiver struct {
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
+	// List of Webex configurations.
+	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -252,6 +257,32 @@ type PagerDutyLinkConfig struct {
 	// Text that describes the purpose of the link, and can be used as the link's text.
 	// +optional
 	Text string `json:"alt,omitempty"`
+}
+
+// DiscordConfig configures notifications via Discord.
+// See https://prometheus.io/docs/alerting/latest/configuration/#discord_config
+type DiscordConfig struct {
+	// Whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The secret's key that contains the Discord webhook URL.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// +required
+	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
+
+	// The template of the message's title.
+	// +optional
+	Title *string `json:"title,omitempty"`
+
+	// The template of the message's body.
+	// +optional
+	Message *string `json:"message,omitempty"`
+
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.
@@ -565,6 +596,31 @@ type HTTPConfig struct {
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
+// WebexConfig configures notification via Cisco Webex
+// See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
+type WebexConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The HTTP client's configuration.
+	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// Message template
+	// +optional
+	Message *string `json:"message,omitempty"`
+
+	// ID of the Webex Teams room where to send the messages.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	RoomID string `json:"roomID"`
+}
+
 // WeChatConfig configures notifications via WeChat.
 // See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
 type WeChatConfig struct {
@@ -635,10 +691,10 @@ type EmailConfig struct {
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
-	HTML string `json:"html,omitempty"`
+	HTML *string `json:"html,omitempty"`
 	// The text body of the email notification.
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// The SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
@@ -1080,3 +1136,7 @@ var monthsInv = map[int]Month{
 	11: November,
 	12: December,
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern=`^https?://.+$`
+type URL string

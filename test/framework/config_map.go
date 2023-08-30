@@ -18,13 +18,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-
-	"github.com/pkg/errors"
 )
 
 func MakeConfigMapWithCert(kubeClient kubernetes.Interface, ns, name, keyKey, certKey, caKey string,
@@ -52,7 +51,7 @@ func MakeConfigMapWithCert(kubeClient kubernetes.Interface, ns, name, keyKey, ce
 
 func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) (*v1.ConfigMap, error) {
 	var configMap *v1.ConfigMap
-	err := wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var err error
 		configMap, err = f.
 			KubeClient.
@@ -73,7 +72,7 @@ func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) 
 }
 
 func (f *Framework) WaitForConfigMapNotExist(ctx context.Context, ns, name string) error {
-	err := wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		var err error
 		_, err = f.
 			KubeClient.

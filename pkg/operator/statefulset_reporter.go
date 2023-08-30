@@ -16,11 +16,17 @@ package operator
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // Pod is an alias for the Kubernetes v1.Pod type.
@@ -96,6 +102,57 @@ func (sr *StatefulSetReporter) filterPods(f func(*Pod) bool) []*Pod {
 	return pods
 }
 
+type GoverningObject interface {
+	metav1.Object
+	ExpectedReplicas() int
+	SetReplicas(int)
+	SetUpdatedReplicas(int)
+	SetAvailableReplicas(int)
+	SetUnavailableReplicas(int)
+}
+
+func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Condition {
+	condition := monitoringv1.Condition{
+		Type:   monitoringv1.Available,
+		Status: monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+		ObservedGeneration: gObj.GetGeneration(),
+	}
+
+	var (
+		ready     = len(sr.ReadyPods())
+		updated   = len(sr.UpdatedPods())
+		available = len(sr.ReadyPods())
+	)
+	gObj.SetReplicas(len(sr.Pods))
+	gObj.SetUpdatedReplicas(updated)
+	gObj.SetAvailableReplicas(ready)
+	gObj.SetUnavailableReplicas(len(sr.Pods) - ready)
+
+	if ready < gObj.ExpectedReplicas() {
+		if available == 0 {
+			condition.Reason = "NoPodReady"
+			condition.Status = monitoringv1.ConditionFalse
+		} else {
+			condition.Reason = "SomePodsNotReady"
+			condition.Status = monitoringv1.ConditionDegraded
+		}
+	}
+
+	var messages []string
+	for _, p := range sr.Pods {
+		if m := p.Message(); m != "" {
+			messages = append(messages, fmt.Sprintf("pod %s: %s", p.Name, m))
+		}
+	}
+
+	condition.Message = strings.Join(messages, "\n")
+
+	return condition
+}
+
 // NewStatefulSetReporter returns a statefulset's reporter.
 func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (*StatefulSetReporter, error) {
 	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
@@ -126,7 +183,7 @@ func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, s
 			continue
 		}
 
-		stsReporter.Pods = append(stsReporter.Pods, (func(p Pod) *Pod { return &p })(Pod(p)))
+		stsReporter.Pods = append(stsReporter.Pods, ptr.To(Pod(p)))
 	}
 
 	return stsReporter, nil

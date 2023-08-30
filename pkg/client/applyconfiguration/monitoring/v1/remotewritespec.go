@@ -23,22 +23,23 @@ import (
 // RemoteWriteSpecApplyConfiguration represents an declarative configuration of the RemoteWriteSpec type for use
 // with apply.
 type RemoteWriteSpecApplyConfiguration struct {
-	URL                 *string                           `json:"url,omitempty"`
-	Name                *string                           `json:"name,omitempty"`
-	SendExemplars       *bool                             `json:"sendExemplars,omitempty"`
-	RemoteTimeout       *v1.Duration                      `json:"remoteTimeout,omitempty"`
-	Headers             map[string]string                 `json:"headers,omitempty"`
-	WriteRelabelConfigs []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
-	OAuth2              *OAuth2ApplyConfiguration         `json:"oauth2,omitempty"`
-	BasicAuth           *BasicAuthApplyConfiguration      `json:"basicAuth,omitempty"`
-	BearerToken         *string                           `json:"bearerToken,omitempty"`
-	BearerTokenFile     *string                           `json:"bearerTokenFile,omitempty"`
-	Authorization       *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	Sigv4               *Sigv4ApplyConfiguration          `json:"sigv4,omitempty"`
-	TLSConfig           *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	ProxyURL            *string                           `json:"proxyUrl,omitempty"`
-	QueueConfig         *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
-	MetadataConfig      *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
+	URL                  *string                           `json:"url,omitempty"`
+	Name                 *string                           `json:"name,omitempty"`
+	SendExemplars        *bool                             `json:"sendExemplars,omitempty"`
+	SendNativeHistograms *bool                             `json:"sendNativeHistograms,omitempty"`
+	RemoteTimeout        *v1.Duration                      `json:"remoteTimeout,omitempty"`
+	Headers              map[string]string                 `json:"headers,omitempty"`
+	WriteRelabelConfigs  []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
+	OAuth2               *OAuth2ApplyConfiguration         `json:"oauth2,omitempty"`
+	BasicAuth            *BasicAuthApplyConfiguration      `json:"basicAuth,omitempty"`
+	BearerTokenFile      *string                           `json:"bearerTokenFile,omitempty"`
+	Authorization        *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
+	Sigv4                *Sigv4ApplyConfiguration          `json:"sigv4,omitempty"`
+	BearerToken          *string                           `json:"bearerToken,omitempty"`
+	TLSConfig            *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
+	QueueConfig          *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
+	MetadataConfig       *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs an declarative configuration of the RemoteWriteSpec type for use with
@@ -68,6 +69,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithName(value string) *RemoteWriteS
 // If called multiple times, the SendExemplars field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithSendExemplars(value bool) *RemoteWriteSpecApplyConfiguration {
 	b.SendExemplars = &value
+	return b
+}
+
+// WithSendNativeHistograms sets the SendNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SendNativeHistograms field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithSendNativeHistograms(value bool) *RemoteWriteSpecApplyConfiguration {
+	b.SendNativeHistograms = &value
 	return b
 }
 
@@ -122,14 +131,6 @@ func (b *RemoteWriteSpecApplyConfiguration) WithBasicAuth(value *BasicAuthApplyC
 	return b
 }
 
-// WithBearerToken sets the BearerToken field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BearerToken field is set to the value of the last call.
-func (b *RemoteWriteSpecApplyConfiguration) WithBearerToken(value string) *RemoteWriteSpecApplyConfiguration {
-	b.BearerToken = &value
-	return b
-}
-
 // WithBearerTokenFile sets the BearerTokenFile field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BearerTokenFile field is set to the value of the last call.
@@ -151,6 +152,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithAuthorization(value *Authorizati
 // If called multiple times, the Sigv4 field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithSigv4(value *Sigv4ApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.Sigv4 = value
+	return b
+}
+
+// WithBearerToken sets the BearerToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BearerToken field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithBearerToken(value string) *RemoteWriteSpecApplyConfiguration {
+	b.BearerToken = &value
 	return b
 }
 

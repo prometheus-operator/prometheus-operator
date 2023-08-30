@@ -18,13 +18,14 @@ import (
 	"context"
 	"time"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
@@ -139,7 +140,7 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Con
 		return err
 	}
 
-	return wait.Poll(2*time.Second, f.DefaultTimeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
 		blackbox, err := deploymentInterface.Get(ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil

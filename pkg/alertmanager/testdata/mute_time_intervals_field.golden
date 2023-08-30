@@ -1,0 +1,13 @@
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+mute_time_intervals:
+- name: maintenance_windows
+  time_intervals:
+  - times:
+    - start_time: "17:00"
+      end_time: "24:00"
+    days_of_month: ["7", "18", "28"]
+    months: ["january"]
+templates: []

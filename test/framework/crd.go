@@ -22,13 +22,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/yaml"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
 
 // GetCRD gets a custom resource definition from the apiserver.
@@ -107,7 +108,7 @@ func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error)
 
 // WaitForCRDReady waits for a Custom Resource Definition to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
-	err := wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 3*time.Second, 10*time.Minute, false, func(ctx context.Context) (bool, error) {
 		_, err := listFunc(metav1.ListOptions{})
 		if err != nil {
 			if se, ok := err.(*apierrors.StatusError); ok {

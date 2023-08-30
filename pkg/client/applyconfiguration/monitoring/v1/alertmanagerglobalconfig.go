@@ -17,18 +17,20 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // AlertmanagerGlobalConfigApplyConfiguration represents an declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-	ResolveTimeout *v1.Duration                  `json:"resolveTimeout,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
-	SlackAPIURL    *corev1.SecretKeySelector     `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL *corev1.SecretKeySelector     `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey *corev1.SecretKeySelector     `json:"opsGenieApiKey,omitempty"`
+	SMTPConfig     *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
+	ResolveTimeout *monitoringv1.Duration              `json:"resolveTimeout,omitempty"`
+	HTTPConfig     *HTTPConfigApplyConfiguration       `json:"httpConfig,omitempty"`
+	SlackAPIURL    *corev1.SecretKeySelector           `json:"slackApiUrl,omitempty"`
+	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
+	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
+	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs an declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -37,10 +39,18 @@ func AlertmanagerGlobalConfig() *AlertmanagerGlobalConfigApplyConfiguration {
 	return &AlertmanagerGlobalConfigApplyConfiguration{}
 }
 
+// WithSMTPConfig sets the SMTPConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SMTPConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSMTPConfig(value *GlobalSMTPConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.SMTPConfig = value
+	return b
+}
+
 // WithResolveTimeout sets the ResolveTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ResolveTimeout field is set to the value of the last call.
-func (b *AlertmanagerGlobalConfigApplyConfiguration) WithResolveTimeout(value v1.Duration) *AlertmanagerGlobalConfigApplyConfiguration {
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithResolveTimeout(value monitoringv1.Duration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.ResolveTimeout = &value
 	return b
 }
@@ -74,5 +84,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithOpsGenieAPIURL(value co
 // If called multiple times, the OpsGenieAPIKey field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithOpsGenieAPIKey(value corev1.SecretKeySelector) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.OpsGenieAPIKey = &value
+	return b
+}
+
+// WithPagerdutyURL sets the PagerdutyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PagerdutyURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.PagerdutyURL = &value
 	return b
 }

@@ -47,9 +47,9 @@ jobs:
         with:
           go-version: '${{ env.golang-version }}'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.4.0
+        uses: golangci/golangci-lint-action@v3.7.0
         with:
-          version: v1.51.1
+          version: v1.53.1
           args: --timeout 10m0s
   check-metrics:
     runs-on: ubuntu-latest

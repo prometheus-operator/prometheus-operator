@@ -15,15 +15,18 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -32,12 +35,11 @@ import (
 )
 
 const (
-	defaultReplicaExternalLabelName = "prometheus_replica"
-	StorageDir                      = "/prometheus"
-	ConfDir                         = "/etc/prometheus/config"
-	ConfOutDir                      = "/etc/prometheus/config_out"
-	WebConfigDir                    = "/etc/prometheus/web_config"
-	tlsAssetsDir                    = "/etc/prometheus/certs"
+	StorageDir   = "/prometheus"
+	ConfDir      = "/etc/prometheus/config"
+	ConfOutDir   = "/etc/prometheus/config_out"
+	WebConfigDir = "/etc/prometheus/web_config"
+	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
 	RulesDir                 = "/etc/prometheus/rules"
@@ -51,11 +53,9 @@ const (
 )
 
 var (
-	minShards                   int32 = 1
-	MinReplicas                 int32 = 1
-	managedByOperatorLabel            = "managed-by"
-	managedByOperatorLabelValue       = "prometheus-operator"
-	ManagedByOperatorLabels           = map[string]string{
+	managedByOperatorLabel      = "managed-by"
+	managedByOperatorLabelValue = "prometheus-operator"
+	ManagedByOperatorLabels     = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	ShardLabelName                = "operator.prometheus.io/shard"
@@ -68,19 +68,39 @@ var (
 func ExpectedStatefulSetShardNames(
 	p monitoringv1.PrometheusInterface,
 ) []string {
-	cpf := p.GetCommonPrometheusFields()
-
 	res := []string{}
-	shards := minShards
-	if cpf.Shards != nil && *cpf.Shards > 1 {
-		shards = *cpf.Shards
-	}
-
-	for i := int32(0); i < shards; i++ {
+	for i := int32(0); i < shardsNumber(p); i++ {
 		res = append(res, prometheusNameByShard(p, i))
 	}
 
 	return res
+}
+
+// shardsNumber returns the normalized number of shards.
+func shardsNumber(
+	p monitoringv1.PrometheusInterface,
+) int32 {
+	cpf := p.GetCommonPrometheusFields()
+
+	if ptr.Deref(cpf.Shards, 1) <= 1 {
+		return 1
+	}
+
+	return *cpf.Shards
+}
+
+// ReplicasNumberPtr returns a ptr to the normalized number of replicas.
+func ReplicasNumberPtr(
+	p monitoringv1.PrometheusInterface,
+) *int32 {
+	cpf := p.GetCommonPrometheusFields()
+
+	replicas := ptr.Deref(cpf.Replicas, 1)
+	if replicas < 0 {
+		replicas = 1
+	}
+
+	return &replicas
 }
 
 func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
@@ -91,40 +111,41 @@ func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) stri
 	return fmt.Sprintf("%s-shard-%d", base, shard)
 }
 
-func MakeEmptyConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config) (*v1.Secret, error) {
-	s := MakeConfigSecret(p, config)
-
-	s.ObjectMeta.Annotations = map[string]string{
-		"empty": "true",
+func compress(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := operator.GzipConfig(&buf, data); err != nil {
+		return nil, errors.Wrap(err, "failed to gzip config")
 	}
 
-	return s, nil
+	return buf.Bytes(), nil
 }
 
-func MakeConfigSecret(p monitoringv1.PrometheusInterface, config operator.Config) *v1.Secret {
+func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
+	promConfig, err := compress(data)
+	if err != nil {
+		return nil, err
+	}
+
 	objMeta := p.GetObjectMeta()
 	typeMeta := p.GetTypeMeta()
-
-	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ConfigSecretName(p),
-			Labels: config.Labels.Merge(ManagedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
+			Name:        ConfigSecretName(p),
+			Annotations: config.Annotations,
+			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
+			OwnerReferences: []metav1.OwnerReference{{
+				APIVersion:         typeMeta.APIVersion,
+				BlockOwnerDeletion: ptr.To(true),
+				Controller:         ptr.To(true),
+				Kind:               typeMeta.Kind,
+				Name:               objMeta.GetName(),
+				UID:                objMeta.GetUID(),
+			}},
 		},
 		Data: map[string][]byte{
-			ConfigFilename: {},
+			ConfigFilename: promConfig,
 		},
-	}
+	}, nil
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
@@ -224,14 +245,6 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
 	}
 
-	if cpf.WALCompression != nil {
-		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
-		if *cpf.WALCompression {
-			arg.Name = "storage.tsdb.wal-compression"
-		}
-		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
-	}
-
 	if cpf.ListenLocal {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
 	}
@@ -281,12 +294,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 		},
 	}
 
-	volName := VolumeName(p)
-	if cpf.Storage != nil {
-		if cpf.Storage.VolumeClaimTemplate.Name != "" {
-			volName = cpf.Storage.VolumeClaimTemplate.Name
-		}
-	}
+	volName := VolumeClaimName(p, cpf)
 
 	promVolumeMounts := []v1.VolumeMount{
 		{
@@ -358,6 +366,16 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 	return volumes, promVolumeMounts, nil
 }
 
+func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) string {
+	volName := VolumeName(p)
+	if cpf.Storage != nil {
+		if cpf.Storage.VolumeClaimTemplate.Name != "" {
+			volName = cpf.Storage.VolumeClaimTemplate.Name
+		}
+	}
+	return volName
+}
+
 func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator, webRoutePrefix string) v1.ProbeHandler {
 	probePath = path.Clean(webRoutePrefix + probePath)
 	handler := v1.ProbeHandler{}
@@ -400,15 +418,11 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 	}
 
 	if cpf.PodMetadata != nil {
-		if cpf.PodMetadata.Labels != nil {
-			for k, v := range cpf.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if cpf.PodMetadata.Annotations != nil {
-			for k, v := range cpf.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 

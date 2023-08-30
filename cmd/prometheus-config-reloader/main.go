@@ -22,12 +22,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
-
-	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
@@ -37,6 +36,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/thanos-io/thanos/pkg/reloader"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 const (
@@ -45,8 +48,7 @@ const (
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
 
-	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
-	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
+	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
 
 func main() {
@@ -67,7 +69,7 @@ func main() {
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
 		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
-		Default(statefulsetOrdinalFromEnvvarDefault).String()
+		Default(operator.PodNameEnvVar).String()
 
 	listenAddress := app.Flag(
 		"listen-address",
@@ -119,9 +121,12 @@ func main() {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	var g run.Group
+	var (
+		g           run.Group
+		ctx, cancel = context.WithCancel(context.Background())
+	)
+
 	{
-		ctx, cancel := context.WithCancel(context.Background())
 		rel := reloader.New(
 			logger,
 			r,
@@ -147,14 +152,33 @@ func main() {
 	}
 
 	if *listenAddress != "" && *watchInterval != 0 {
+		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"up"}`))
+		})
+
+		srv := http.Server{Addr: *listenAddress}
+
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-			return http.ListenAndServe(*listenAddress, nil)
-		}, func(err error) {
-			level.Error(logger).Log("err", err)
+			return srv.ListenAndServe()
+		}, func(error) {
+			srv.Close()
 		})
 	}
+
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	g.Add(func() error {
+		select {
+		case <-term:
+			level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
+		case <-ctx.Done():
+		}
+
+		return nil
+	}, func(error) {})
 
 	if err := g.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

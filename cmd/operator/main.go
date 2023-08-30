@@ -30,17 +30,6 @@ import (
 	"syscall"
 	"time"
 
-	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
-	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
-	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
-	"github.com/prometheus-operator/prometheus-operator/pkg/server"
-	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
-	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
-
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -50,17 +39,23 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	klog "k8s.io/klog/v2"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
+	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
+	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
+	"github.com/prometheus-operator/prometheus-operator/pkg/server"
+	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 const (
 	defaultOperatorTLSDir = "/etc/tls/private"
-)
-
-const (
-	defaultReloaderCPU    = "100m"
-	defaultReloaderMemory = "50Mi"
 )
 
 var (
@@ -74,7 +69,7 @@ var (
 
 type namespaces map[string]struct{}
 
-// Set implements the flagset.Value interface.
+// Set implements the flag.Value interface.
 func (n namespaces) Set(value string) error {
 	if n == nil {
 		return errors.New("expected n of type namespaces to be initialized")
@@ -85,7 +80,7 @@ func (n namespaces) Set(value string) error {
 	return nil
 }
 
-// String implements the flagset.Value interface.
+// String implements the flag.Value interface.
 func (n namespaces) String() string {
 	return strings.Join(n.asSlice(), ",")
 }
@@ -96,6 +91,21 @@ func (n namespaces) asSlice() []string {
 		ns = append(ns, k)
 	}
 	return ns
+}
+
+// Helper function for checking CRD prerequisites
+func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDChecker, allowedNamespaces []string, verbs map[string][]string, groupVersion, resourceName string) (bool, error) {
+	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
+	switch {
+	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
+		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported", resourceName), "reason", err)
+		return false, nil
+	case err != nil:
+		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
+		return false, err
+	default:
+		return true, nil
+	}
 }
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
@@ -118,8 +128,13 @@ func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func()
 	}
 }
 
+const (
+	defaultReloaderCPU    = "10m"
+	defaultReloaderMemory = "50Mi"
+)
+
 var (
-	cfg = operator.Config{}
+	cfg = operator.DefaultConfig(defaultReloaderCPU, defaultReloaderMemory)
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -147,37 +162,47 @@ func init() {
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.CAFile, "ca-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.")
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
+	flagset.StringVar(&cfg.KubeletSelector, "kubelet-selector", "", "Label selector to filter nodes.")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
+
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", defaultReloaderCPU, "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
-	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", defaultReloaderCPU, "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", defaultReloaderMemory, "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", defaultReloaderMemory, "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
+	flagset.Var(&cfg.ReloaderConfig.CPURequests, "config-reloader-cpu-request", "Config Reloader CPU requests. Value \"0\" disables it and causes no request to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.CPULimits, "config-reloader-cpu-limit", "Config Reloader CPU limits. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.MemoryRequests, "config-reloader-memory-request", "Config Reloader memory requests. Value \"0\" disables it and causes no request to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.MemoryLimits, "config-reloader-memory-limit", "Config Reloader memory limits. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.BoolVar(&cfg.ReloaderConfig.EnableProbes, "enable-config-reloader-probes", false, "Enable liveness and readiness for the config-reloader container. Default: false")
+
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
+
 	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
 	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	flagset.Var(alertmanagerConfigNs, "alertmanager-config-namespaces", "Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.")
 	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
+
+	flagset.Var(&cfg.Annotations, "annotations", "Annotations to be add to all resources created by the operator")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
+
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")
+
 	flagset.StringVar(&cfg.LogLevel, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", ")))
+
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	flagset.StringVar(&cfg.SecretListWatchSelector, "secret-field-selector", "", "Field selector to filter Secrets to watch")
 }
 
-func Main() int {
+func run() int {
 	versionutil.RegisterFlags()
 	// No need to check for errors because Parse would exit on error.
 	_ = flagset.Parse(os.Args[1:])
@@ -190,27 +215,6 @@ func Main() int {
 	logger, err := logging.NewLogger(cfg.LogLevel, cfg.LogFormat)
 	if err != nil {
 		stdlog.Fatal(err)
-	}
-
-	// Check validity of reloader resource values given to flags
-	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
-	if err1 != nil {
-		fmt.Fprintf(os.Stderr, "The CPU limit specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.CPULimit, err1)
-	}
-	_, err2 := resource.ParseQuantity(cfg.ReloaderConfig.CPURequest)
-	if err2 != nil {
-		fmt.Fprintf(os.Stderr, "The CPU request specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.CPURequest, err2)
-	}
-	_, err3 := resource.ParseQuantity(cfg.ReloaderConfig.MemoryLimit)
-	if err3 != nil {
-		fmt.Fprintf(os.Stderr, "The Memory limit specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.MemoryLimit, err3)
-	}
-	_, err4 := resource.ParseQuantity(cfg.ReloaderConfig.MemoryRequest)
-	if err4 != nil {
-		fmt.Fprintf(os.Stderr, "The Memory request specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.MemoryRequest, err4)
-	}
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
-		return 1
 	}
 
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
@@ -258,30 +262,76 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
+	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
+
+	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
+		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
 		cancel()
 		return 1
 	}
 
-	pao, err := prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+	scrapeConfigSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
+		},
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.ScrapeConfigName,
+	)
+
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus-agent controller failed: ", err)
 		cancel()
 		return 1
+	}
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		cancel()
+		return 1
+	}
+
+	prometheusAgentSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		cc,
+		allowedNamespaces,
+		map[string][]string{
+			monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
+			fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
+		},
+		monitoringv1alpha1.SchemeGroupVersion.String(),
+		monitoringv1alpha1.PrometheusAgentName,
+	)
+	if err != nil {
+		cancel()
+		return 1
+	}
+
+	var pao *prometheusagentcontroller.Operator
+	if prometheusAgentSupported {
+		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
+			cancel()
+			return 1
+		}
 	}
 
 	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		cancel()
 		return 1
 	}
 
 	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
+		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()
 		return 1
 	}
@@ -292,7 +342,7 @@ func Main() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
 		cancel()
 		return 1
 	}
@@ -305,7 +355,7 @@ func Main() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprint(os.Stderr, "invalid TLS config", err)
+			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
 			cancel()
 			return 1
 		}
@@ -359,7 +409,9 @@ func Main() int {
 	}))
 
 	wg.Go(func() error { return po.Run(ctx) })
-	wg.Go(func() error { return pao.Run(ctx) })
+	if pao != nil {
+		wg.Go(func() error { return pao.Run(ctx) })
+	}
 	wg.Go(func() error { return ao.Run(ctx) })
 	wg.Go(func() error { return to.Run(ctx) })
 
@@ -370,7 +422,7 @@ func Main() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
 			cancel()
 			return 1
 		}
@@ -429,5 +481,5 @@ func Main() int {
 }
 
 func main() {
-	os.Exit(Main())
+	os.Exit(run())
 }

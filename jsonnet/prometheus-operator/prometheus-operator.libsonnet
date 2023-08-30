@@ -5,6 +5,10 @@ local defaults = {
   version: error 'must provide version',
   image: error 'must provide image',
   configReloaderImage: error 'must provide configReloaderImage',
+  configReloaderResources: {
+    limits: { cpu: '', memory: '' },
+    requests: { cpu: '', memory: '' },
+  },
   port: 8080,
   resources: {
     limits: { cpu: '200m', memory: '200Mi' },
@@ -33,13 +37,14 @@ function(params) {
                                                  if po.config.enableAlertmanagerConfigV1beta1 then
                                                    (import 'alertmanagerconfigs-v1beta1-crd.libsonnet')
                                                  else {},
-  '0prometheusagentCustomResourceDefinition': import 'prometheusagents-crd.json',                                                 
+  '0prometheusagentCustomResourceDefinition': import 'prometheusagents-crd.json',
   '0prometheusCustomResourceDefinition': import 'prometheuses-crd.json',
   '0servicemonitorCustomResourceDefinition': import 'servicemonitors-crd.json',
   '0podmonitorCustomResourceDefinition': import 'podmonitors-crd.json',
   '0probeCustomResourceDefinition': import 'probes-crd.json',
   '0prometheusruleCustomResourceDefinition': import 'prometheusrules-crd.json',
   '0thanosrulerCustomResourceDefinition': import 'thanosrulers-crd.json',
+  '0scrapeconfigCustomResourceDefinition': import 'scrapeconfigs-crd.json',
 
   clusterRoleBinding: {
     apiVersion: 'rbac.authorization.k8s.io/v1',
@@ -83,6 +88,8 @@ function(params) {
           'prometheusagents/status',
           'thanosrulers',
           'thanosrulers/finalizers',
+          'thanosrulers/status',
+          'scrapeconfigs',
           'servicemonitors',
           'podmonitors',
           'probes',
@@ -133,13 +140,20 @@ function(params) {
   },
 
   deployment:
+    local reloaderResourceArg(arg, value) =
+      if value != '' then [arg + '=' + value] else [];
+
     local container = {
       name: po.config.name,
       image: po.config.image,
       args: [
-        '--kubelet-service=kube-system/kubelet',
-        '--prometheus-config-reloader=' + po.config.configReloaderImage,
-      ],
+              '--kubelet-service=kube-system/kubelet',
+              '--prometheus-config-reloader=' + po.config.configReloaderImage,
+            ] +
+            reloaderResourceArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
+            reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
+            reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
+            reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory),
       ports: [{
         containerPort: po.config.port,
         name: 'http',
@@ -178,6 +192,7 @@ function(params) {
             securityContext: {
               runAsNonRoot: true,
               runAsUser: 65534,
+              seccompProfile: { type: 'RuntimeDefault' },
             },
             serviceAccountName: po.config.name,
             automountServiceAccountToken: true,

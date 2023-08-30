@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -61,6 +60,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 					UID:        p.GetUID(),
 				},
 			},
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),
@@ -92,7 +92,6 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSet(
-	logger log.Logger,
 	name string,
 	p monitoringv1.PrometheusInterface,
 	baseImage, tag, sha string,
@@ -120,18 +119,12 @@ func makeStatefulSet(
 		cpf.PortName = prompkg.DefaultPortName
 	}
 
-	if cpf.Replicas == nil {
-		cpf.Replicas = &prompkg.MinReplicas
-	}
-	intZero := int32(0)
-	if cpf.Replicas != nil && *cpf.Replicas < 0 {
-		cpf.Replicas = &intZero
-	}
+	cpf.Replicas = prompkg.ReplicasNumberPtr(p)
 
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(logger, baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -157,7 +150,7 @@ func makeStatefulSet(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Labels:      config.Labels.Merge(labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         typeMeta.APIVersion,
@@ -232,7 +225,6 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	logger log.Logger,
 	baseImage, tag, sha string,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
@@ -272,7 +264,7 @@ func makeStatefulSetSpec(
 		webRoutePrefix = cpf.RoutePrefix
 	}
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg, webRoutePrefix)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI)
+	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
 	var ports []v1.ContainerPort
 	if !cpf.ListenLocal {
@@ -541,7 +533,9 @@ func appendServerArgs(
 	retentionSize monitoringv1.ByteSize,
 	rules monitoringv1.Rules,
 	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks, enableAdminAPI bool) []monitoringv1.Argument {
+	allowOverlappingBlocks,
+	enableAdminAPI bool,
+	walCompression *bool) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(retention)
@@ -601,6 +595,14 @@ func appendServerArgs(
 
 	if allowOverlappingBlocks {
 		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
+	}
+
+	if walCompression != nil {
+		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
+		if *walCompression {
+			arg.Name = "storage.tsdb.wal-compression"
+		}
+		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
 	return promArgs
 }
@@ -736,7 +738,7 @@ func createThanosContainer(
 				})
 			}
 
-			volName := prompkg.VolumeName(p)
+			volName := prompkg.VolumeClaimName(p, cpf)
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
 			container.VolumeMounts = append(
 				container.VolumeMounts,

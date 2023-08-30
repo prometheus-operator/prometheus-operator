@@ -257,6 +257,16 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 	}
 }
 
+func convertDiscordConfigFrom(in v1alpha1.DiscordConfig) DiscordConfig {
+	return DiscordConfig{
+		APIURL:       in.APIURL,
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		Title:        in.Title,
+		Message:      in.Message,
+		SendResolved: in.SendResolved,
+	}
+}
+
 func convertSlackFieldsFrom(in []v1alpha1.SlackField) []SlackField {
 	out := make([]SlackField, len(in))
 
@@ -320,6 +330,16 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+	}
+}
+
+func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
+	return WebexConfig{
+		APIURL:       (*URL)(in.APIURL),
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		Message:      in.Message,
+		RoomID:       in.RoomID,
+		SendResolved: in.SendResolved,
 	}
 }
 
@@ -455,10 +475,24 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			)
 		}
 
+		for _, in := range in.DiscordConfigs {
+			out.DiscordConfigs = append(
+				out.DiscordConfigs,
+				convertDiscordConfigFrom(in),
+			)
+		}
+
 		for _, in := range in.SlackConfigs {
 			out.SlackConfigs = append(
 				out.SlackConfigs,
 				convertSlackConfigFrom(in),
+			)
+		}
+
+		for _, in := range in.WebexConfigs {
+			out.WebexConfigs = append(
+				out.WebexConfigs,
+				convertWebexConfigFrom(in),
 			)
 		}
 

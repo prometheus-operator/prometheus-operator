@@ -24,17 +24,17 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
-	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringingv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -54,6 +54,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}
 
 	myrouteJSON, _ := json.Marshal(myroute)
+	pagerdutyURL := "example.pagerduty.com"
+	invalidPagerdutyURL := "://example.pagerduty.com"
 
 	tests := []struct {
 		name            string
@@ -66,6 +68,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "valid global config",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringingv1.GlobalSMTPConfig{
+					From: ptr.To("from"),
+					SmartHost: &monitoringingv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: ptr.To(true),
+				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringingv1.HTTPConfig{
 					OAuth2: &monitoringingv1.OAuth2{
@@ -89,7 +114,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							"some": "value",
 						},
 					},
-					FollowRedirects: pointer.Bool(true),
+					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -118,7 +143,18 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
-					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(30 * time.Second)),
+					ResolveTimeout: ptr.To(model.Duration(30 * time.Second)),
+					SMTPFrom:       "from",
+					SMTPSmarthost: config.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					SMTPHello:        "smtp.example.org",
+					SMTPAuthUsername: "dev@smtp.example.org",
+					SMTPAuthPassword: "password",
+					SMTPAuthIdentity: "dev@smtp.example.org",
+					SMTPAuthSecret:   "secret",
+					SMTPRequireTLS:   ptr.To(true),
 					HTTPConfig: &httpClientConfig{
 						OAuth2: &oauth2{
 							ClientID:     "clientID",
@@ -129,7 +165,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								"some": "value",
 							},
 						},
-						FollowRedirects: pointer.Bool(true),
+						FollowRedirects: ptr.To(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -503,6 +539,89 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "valid global config with Pagerduty URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				PagerdutyURL: &pagerdutyURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					PagerdutyURL: parseURL(t, pagerdutyURL),
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+					Routes: []*route{
+						{
+							Receiver: "mynamespace/global-config/myreceiver",
+							Match: map[string]string{
+								"mykey": "myvalue",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "global config with invalid Pagerduty URL",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				PagerdutyURL: &invalidPagerdutyURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name: "missing route",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -516,7 +635,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name: "globalConfig has null resolve timeout",
 			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringingv1.HTTPConfig{
-					FollowRedirects: pointer.Bool(true),
+					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -541,7 +660,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
 					HTTPConfig: &httpClientConfig{
-						FollowRedirects: pointer.Bool(true),
+						FollowRedirects: ptr.To(true),
 					},
 				},
 				Receivers: []*receiver{
@@ -569,6 +688,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string]string{
 					"test": "clientID",
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "smtp-auth",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"password": []byte("password"),
+					"secret":   []byte("secret"),
 				},
 			},
 			&corev1.Secret{
@@ -628,7 +757,7 @@ func TestGenerateConfig(t *testing.T) {
 		amVersion       *semver.Version
 		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
 		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
-		expected        string
+		golden          string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	if err != nil {
@@ -649,72 +778,46 @@ func TestGenerateConfig(t *testing.T) {
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: "null"
-receivers:
-- name: "null"
-templates: []
-`,
+			golden:    "skeleton_base_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+					ResolveTimeout: ptr.To(model.Duration(time.Minute)),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `global:
-  resolve_timeout: 1m
-route:
-  receiver: "null"
-receivers:
-- name: "null"
-templates: []
-`,
+			golden:    "skeleton_base_with_global_send_revolved_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SMTPRequireTLS: func(b bool) *bool { return &b }(false),
+					SMTPRequireTLS: ptr.To(false),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `global:
-  smtp_require_tls: false
-route:
-  receiver: "null"
-receivers:
-- name: "null"
-templates: []
-`,
+			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_false,_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SMTPRequireTLS: func(b bool) *bool { return &b }(true),
+					SMTPRequireTLS: ptr.To(true),
 				},
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `global:
-  smtp_require_tls: true
-route:
-  receiver: "null"
-receivers:
-- name: "null"
-templates: []
-`,
+			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_true_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with inhibit rules, no CRs",
@@ -730,19 +833,7 @@ templates: []
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: "null"
-inhibit_rules:
-- target_matchers:
-  - test!=dropped
-  - expect=~this-value
-  source_matchers:
-  - test!=dropped
-  - expect=~this-value
-receivers:
-- name: "null"
-templates: []
-`,
+			golden:    "skeleton_base_with_inhibit_rules_no_CRs.golden",
 		},
 		{
 			name:    "base with sub route and matchers, no CRs",
@@ -761,17 +852,7 @@ templates: []
 				},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: custom
-    matchers:
-    - namespace=custom-test
-receivers:
-- name: "null"
-- name: custom
-templates: []
-`,
+			golden:    "base_with_sub_route_and_matchers_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with mute time intervals, no CRs",
@@ -824,20 +905,7 @@ templates: []
 				},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: "null"
-receivers:
-- name: "null"
-mute_time_intervals:
-- name: maintenance_windows
-  time_intervals:
-  - times:
-    - start_time: "17:00"
-      end_time: "24:00"
-    days_of_month: ["7", "18", "28"]
-    months: ["1"]
-templates: []
-`,
+			golden:    "skeleton_base_with_mute_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with sns receiver, no CRs",
@@ -867,24 +935,7 @@ templates: []
 				},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: sns-test
-receivers:
-- name: sns-test
-  sns_configs:
-  - api_url: https://sns.us-west-2.amazonaws.com
-    sigv4:
-      region: us-west-2
-      access_key: key
-      secret_key: secret
-      profile: dev
-      role_arn: arn:dev
-    topic_arn: arn:test
-    phone_number: "+12345"
-    target_arn: arn:target
-    subject: testing
-templates: []
-`,
+			golden:    "skeleton_base_with_sns_receiver_no_CRs.golden",
 		},
 		{
 			name:      "skeleton base with active_time_intervals, no CRs",
@@ -917,20 +968,7 @@ templates: []
 				},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: "null"
-    active_time_intervals:
-    - workdays
-receivers:
-- name: "null"
-time_intervals:
-- name: workdays
-  time_intervals:
-  - weekdays: ['monday:friday']
-templates: []
-`,
+			golden:    "skeleton_base_with_active_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base, simple CR",
@@ -954,20 +992,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    group_by:
-    - job
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-templates: []
-`,
+			golden: "skeleton_base_simple_CR.golden",
 		},
 		{
 			name:    "skeleton base, simple CR with namespaceMatcher disabled",
@@ -994,18 +1019,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    group_by:
-    - job
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-templates: []
-`,
+			golden: "skeleton_base_simple_CR_with_namespaceMatcher_disabled.golden",
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
@@ -1045,21 +1059,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-inhibit_rules:
-- target_match:
-    alertname: TargetDown
-    namespace: mynamespace
-  source_match:
-    alertname: NodeNotReady
-    namespace: mynamespace
-  equal:
-  - node
-receivers:
-- name: "null"
-templates: []
-`,
+			golden: "skeleton_base_CR_with_inhibition_rules_only_deprecated_matchers_not_converted.golden",
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers are converted)",
@@ -1096,21 +1096,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-inhibit_rules:
-- target_matchers:
-  - alertname="TargetDown"
-  - namespace="mynamespace"
-  source_matchers:
-  - alertname=~"NodeNotReady"
-  - namespace="mynamespace"
-  equal:
-  - node
-receivers:
-- name: "null"
-templates: []
-`,
+			golden: "skeleton_base_CR_with_inhibition_rules_only_deprecated_matchers_are_converted.golden",
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only",
@@ -1148,21 +1134,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-inhibit_rules:
-- target_matchers:
-  - alertname!="TargetDown"
-  - namespace="mynamespace"
-  source_matchers:
-  - alertname=~"NodeNotReady"
-  - namespace="mynamespace"
-  equal:
-  - node
-receivers:
-- name: "null"
-templates: []
-`,
+			golden: "skeleton_base,_CR_with_inhibition_rules_only.golden",
 		},
 		{
 			name:    "base with subroute - deprecated matching pattern, simple CR",
@@ -1188,19 +1160,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-  - receiver: "null"
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-templates: []
-`,
+			golden: "base_with_subroute_deprecated_matching_pattern_simple_CR.golden",
 		},
 		{
 			name: "CR with Pagerduty Receiver",
@@ -1258,27 +1218,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test-pd
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test-pd
-  pagerduty_configs:
-  - routing_key: 1234abc
-    images:
-    - src: https://some-image.com
-      alt: some-image
-      href: https://some-image.com
-    links:
-    - href: https://some-link.com
-      text: some-link
-templates: []
-`,
+			golden: "CR_with_Pagerduty_Receiver.golden",
 		},
 		{
 			name: "CR with Webhook Receiver and custom http config (oauth2)",
@@ -1321,9 +1261,7 @@ templates: []
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: func(s string) *string {
-									return &s
-								}("http://test.url"),
+								URL: ptr.To("http://test.url"),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 									OAuth2: &monitoringingv1.OAuth2{
 										ClientID: monitoringingv1.SecretOrConfigMap{
@@ -1346,37 +1284,14 @@ templates: []
 											"some": "value",
 										},
 									},
-									FollowRedirects: pointer.Bool(true),
+									FollowRedirects: ptr.To(true),
 								},
 							}},
 						}},
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  webhook_configs:
-  - url: http://test.url
-    http_config:
-      oauth2:
-        client_id: clientID
-        client_secret: clientSecret
-        scopes:
-        - any
-        token_url: https://test.com
-        endpoint_params:
-          some: value
-      follow_redirects: true
-templates: []
-`,
+			golden: "CR_with_Webhook_Receiver_and_custom_http_config_oauth2.golden",
 		},
 		{
 			name: "CR with Opsgenie Receiver",
@@ -1421,20 +1336,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  opsgenie_configs:
-  - api_key: 1234abc
-templates: []
-`,
+			golden: "CR_with_Opsgenie_Receiver.golden",
 		},
 		{
 			name: "CR with Opsgenie Team Responder",
@@ -1483,23 +1385,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  opsgenie_configs:
-  - api_key: 1234abc
-    responders:
-    - name: myname
-      type: team
-templates: []
-`,
+			golden: "CR_with_Opsgenie_Team_Responder.golden",
 		},
 		{
 			name: "CR with WeChat Receiver",
@@ -1545,21 +1431,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  wechat_configs:
-  - api_secret: wechatsecret
-    corp_id: wechatcorpid
-templates: []
-`,
+			golden: "CR_with_WeChat_Receiver.golden",
 		},
 
 		{
@@ -1608,24 +1480,8 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  telegram_configs:
-  - api_url: https://api.telegram.org
-    bot_token: bipbop
-    chat_id: 12345
-templates: []
-`,
+			golden: "CR_with_Telegram_Receiver.golden",
 		},
-
 		{
 
 			name:    "CR with Slack Receiver and global Slack URL",
@@ -1673,30 +1529,7 @@ templates: []
 					},
 				},
 			},
-			expected: `global:
-  slack_api_url: http://slack.example.com
-route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  slack_configs:
-  - fields:
-    - title: title
-      value: value
-    actions:
-    - type: type
-      text: text
-      name: my-action
-      confirm:
-        text: text
-templates: []
-`,
+			golden: "CR_with_Slack_Receiver_and_global_Slack_URL.golden",
 		},
 		{
 
@@ -1745,30 +1578,7 @@ templates: []
 					},
 				},
 			},
-			expected: `global:
-  slack_api_url_file: /etc/test
-route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  slack_configs:
-  - fields:
-    - title: title
-      value: value
-    actions:
-    - type: type
-      text: text
-      name: my-action
-      confirm:
-        text: text
-templates: []
-`,
+			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
 		},
 		{
 
@@ -1827,25 +1637,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  sns_configs:
-  - api_url: https://sns.us-east-2.amazonaws.com
-    sigv4:
-      region: us-east-2
-      access_key: xyz
-      secret_key: "123"
-    topic_arn: test-topicARN
-templates: []
-`,
+			golden: "CR_with_SNS_Receiver_with_Access_and_Key.golden",
 		},
 		{
 
@@ -1893,24 +1685,7 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  sns_configs:
-  - api_url: https://sns.us-east-2.amazonaws.com
-    sigv4:
-      region: us-east-2
-      role_arn: test-roleARN
-    topic_arn: test-topicARN
-templates: []
-`,
+			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
 		},
 		{
 
@@ -1991,42 +1766,7 @@ templates: []
 					},
 				},
 			},
-			expected: `global:
-  slack_api_url_file: /etc/test
-route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-    mute_time_intervals:
-    - mynamespace/myamc/test
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  slack_configs:
-  - fields:
-    - title: title
-      value: value
-    actions:
-    - type: type
-      text: text
-      name: my-action
-      confirm:
-        text: text
-mute_time_intervals:
-- name: mynamespace/myamc/test
-  time_intervals:
-  - times:
-    - start_time: "08:00"
-      end_time: "17:00"
-    weekdays: [saturday, sunday]
-    days_of_month: ["1:10"]
-    months: ["1:3"]
-    years: ['2030:2050']
-templates: []
-`,
+			golden: "CR_with_Mute_Time_Intervals.golden",
 		},
 		{
 			name:    "CR with Active Time Intervals",
@@ -2107,42 +1847,7 @@ templates: []
 					},
 				},
 			},
-			expected: `global:
-  slack_api_url_file: /etc/test
-route:
-  receiver: "null"
-  routes:
-  - receiver: mynamespace/myamc/test
-    matchers:
-    - namespace="mynamespace"
-    continue: true
-    active_time_intervals:
-    - mynamespace/myamc/test
-receivers:
-- name: "null"
-- name: mynamespace/myamc/test
-  slack_configs:
-  - fields:
-    - title: title
-      value: value
-    actions:
-    - type: type
-      text: text
-      name: my-action
-      confirm:
-        text: text
-mute_time_intervals:
-- name: mynamespace/myamc/test
-  time_intervals:
-  - times:
-    - start_time: "08:00"
-      end_time: "17:00"
-    weekdays: [saturday, sunday]
-    days_of_month: ["1:10"]
-    months: ["1:3"]
-    years: ['2030:2050']
-templates: []
-`,
+			golden: "CR_with_Active_Time_Intervals.golden",
 		},
 	}
 
@@ -2172,9 +1877,7 @@ templates: []
 			}
 
 			// Verify the generated yaml is as expected
-			if diff := cmp.Diff(tc.expected, string(cfgBytes)); diff != "" {
-				t.Errorf("Unexpected result (-want +got):\n%s", diff)
-			}
+			golden.Assert(t, string(cfgBytes), tc.golden)
 
 			// Verify the generated config is something that Alertmanager will be happy with
 			_, err = alertmanagerConfigFromBytes(cfgBytes)
@@ -2666,7 +2369,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",
@@ -2681,7 +2384,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",
@@ -2751,7 +2454,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS13",
 					MaxVersion: "TLS12",
@@ -2770,7 +2473,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS14",
 				},
@@ -2788,7 +2491,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MaxVersion: "TLS14",
 				},
@@ -2806,7 +2509,7 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 					ProxyURL:         "http://example.com/",
 				},
-				EnableHTTP2: pointer.Bool(false),
+				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 					MaxVersion: "TLS12",
@@ -3498,25 +3201,12 @@ func TestSanitizeRoute(t *testing.T) {
 func TestLoadConfig(t *testing.T) {
 	testCase := []struct {
 		name     string
-		rawConf  []byte
 		expected *alertmanagerConfig
+		golden   string
 	}{
 		{
-			name: "mute_time_intervals field",
-			rawConf: []byte(`route:
-  receiver: "null"
-receivers:
-- name: "null"
-mute_time_intervals:
-- name: maintenance_windows
-  time_intervals:
-  - times:
-    - start_time: "17:00"
-      end_time: "24:00"
-    days_of_month: ["7", "18", "28"]
-    months: ["january"]
-templates: []
-`),
+			name:   "mute_time_intervals field",
+			golden: "mute_time_intervals_field.golden",
 			expected: &alertmanagerConfig{
 				Global: nil,
 				Route: &route{
@@ -3574,15 +3264,8 @@ templates: []
 			},
 		},
 		{
-			name: "Global opsgenie_api_key_file field",
-			rawConf: []byte(`route:
-  receiver: "null"
-receivers:
-- name: "null"
-global:
-  opsgenie_api_key_file: "xxx"
-templates: []
-`),
+			name:   "Global opsgenie_api_key_file field",
+			golden: "Global_opsgenie_api_key_file_field.golden",
 			expected: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "xxx",
@@ -3599,17 +3282,8 @@ templates: []
 			},
 		},
 		{
-			name: "OpsGenie entity and actions fields",
-			rawConf: []byte(`route:
-  receiver: "opsgenie"
-receivers:
-- name: "opsgenie"
-  opsgenie_configs:
-  - entity: entity1
-    actions: action1,action2
-    api_key: xxx
-templates: []
-`),
+			name:   "OpsGenie entity and actions fields",
+			golden: "OpsGenie_entity_and_actions_fields.golden",
 			expected: &alertmanagerConfig{
 				Route: &route{
 					Receiver: "opsgenie",
@@ -3629,11 +3303,31 @@ templates: []
 				Templates: []string{},
 			},
 		},
+		{
+			name:   "Discord url field",
+			golden: "Discord_url_field.golden",
+			expected: &alertmanagerConfig{
+				Route: &route{
+					Receiver: "discord",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+				Templates: []string{},
+			},
+		},
 	}
 
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			ac, err := alertmanagerConfigFromBytes(tc.rawConf)
+			ac, err := alertmanagerConfigFromBytes(golden.Get(t, tc.golden))
 			if err != nil {
 				t.Fatalf("expecing no error, got %v", err)
 			}

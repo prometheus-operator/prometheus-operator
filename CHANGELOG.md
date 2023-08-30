@@ -1,3 +1,84 @@
+## 0.67.1 / 2023-08-03
+
+* [BUGFIX] Avoid skipping `AlertmanagerConfig` resources for Alertmanager versions prior v0.25.0. #5788
+
+## 0.67.0 / 2023-07-27
+
+* [FEATURE] Add `spec.scheme` field to the ScrapeConfig CRD. #5679
+* [FEATURE] Add `spec.params` field to the ScrapeConfig CRD. #5750
+* [FEATURE] Add `spec.scrapeInterval` and `spec.scrapeTimeout` fields to the ScrapeConfig CRD. #5742
+* [FEATURE] Add support for TLS configuration to the ScrapeConfig CRD. #5710
+* [FEATURE] Add support for scrape limits to the ScrapeConfig CRD. #5658
+* [FEATURE] Add support for Kubernetes node service discovery to the ScrapeConfig CRD. #5675
+* [FEATURE] Add support for Consul service discovery to the ScrapeConfig CRD. #5709
+* [FEATURE] Add support for ScrapeConfig objects to `spec.excludedFromEnforcement` (Prometheus CRD). #5577
+* [FEATURE] Add support for global scrape limits to the Prometheus CRD. #5646
+* [FEATURE] Add `spec.alertmanagerConfiguration.smtp` field to the Alertmanager CRD. #5649
+* [FEATURE] Add support for Discord integration to the AlertmanagerConfig CRD. #5671
+* [ENHANCEMENT] (jsonnet) expose resource settings for the reloader. #5768
+* [BUGFIX] Avoid deadlock of the config reloader when the initial configuration is invalid. #5743
+* [BUGFIX] Reload the Alertmanager configuration when templates are modified. #5727
+
+## 0.66.0 / 2023-06-14
+
+After research, we noticed how the default CPU requests of the config-reloader container were too high compared to the effective usage. We decided to decrease the default CPU requests from `100m` to `10m`. For most environments, this won't make a difference but if you need to increase the values, you can use the `-config-reloader-cpu-request` and `-config-reloader-cpu-limit` CLI arguments of the Prometheus operator.
+
+* [CHANGE] Decrease the default CPU requests for the config-reloader container from `100m` to `10m`. #5539
+* [FEATURE] Add `spec.alertmanagerConfiguration.global.PagerdutyURL` to the `Alertmanager` CRD. #5469
+* [FEATURE] Add `spec.volumeMounts` to the `ThanosRuler` CRD. #5541
+* [FEATURE] Add `spec.remoteWrite.sendNativeHistograms` to `Prometheus` and `PrometheusAgent` CRDs. #5564
+* [FEATURE] Add `spec.tracingConfig` to `Prometheus` and `PrometheusAgent` CRDs. #5591 #5640
+* [FEATURE] Add `followRedirects` field to the `RemoteRead` configuration. #5612
+* [FEATURE] Add `spec.automountServiceAccountToken` to the `Alertmanager` CRD. #5474
+* [FEATURE] Support `keep_firing_for` fields for `PrometheusRule` CRD. #5651
+* [FEATURE] Allow to add custom annotations to all resources managed by the operator. #5626
+* [FEATURE] Add `BasicAuth` and `Authorization` support to `ScrapeConfig` CRD. #5642
+* [ENHANCEMENT] Add `-kubelet-selector` CLI argument to filter the Kubernetes nodes by labels. #5641
+* [BUGFIX] Fix bug with logs that don't end with new line(`\n`) characters. #5566
+* [BUGFIX] Fix Prometheus and Alertmanager not picking up the web server's certificate after renewal. #5535
+* [BUGFIX] Fix config-reloader not handling SIGTERM signal. #5617
+* [BUGFIX] Fix Thanos volume name when using VolumeClaimTemplate in `Prometheus` CRD. #5596
+* [BUGFIX] Fix WAL Compression configuration for `PrometheusAgent` CRD. #5625
+* [BUGFIX] Fix DNS name resolution for individual ThanosRuler pods. #5632
+
+## 0.65.2 / 2023-05-31
+
+* [BUGFIX] Fix relabeling issue in `ScrapeConfig` CRD. #5611
+
+## 0.65.1 / 2023-05-05
+
+* [BUGFIX] Fix panic when ScrapeConfig CRD is not installed. #5550
+
+## 0.65.0 / 2023-05-04
+
+The main change introduced by this release is the new v1alpha1 `ScrapeConfig` CRD.
+This implements the [proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+documented in [#5279](https://github.com/prometheus-operator/prometheus-operator/pull/5279)
+and provides a Kubernetes native API to create and manage additional scrape configurations.
+
+To try it, follow the following steps:
+1. Install the new CRD in the cluster (see
+   `example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml`).
+2. Update the Prometheus operator's RBAC permissions to manage `ScrapeConfig` resources
+   (see `example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml`).
+
+**NOTE**: if these conditions aren't met, the operator will start but it won't
+be able to reconcile the `ScrapeConfig` resources.
+
+* [FEATURE] Add the `status` subresource for the `ThanosRuler` CRD. #5520
+* [FEATURE] Add `spec.web.timeout` and `spec.web.getConcurrency` to the `Alertmanager` CRD. #5478
+* [FEATURE] Add `spec.groups[].limit` to the `Prometheus` CRD. #4999
+* [FEATURE] Add ScrapeConfig CRD. #5335
+* [ENHANCEMENT] Set a default for `seccompProfile` on the operator and webhook Deployments to `RuntimeDefault`. #5477
+* [ENHANCEMENT] Add optional liveness and readiness probes to `prometheus-config-reloader`. This can be enabled via the `--enable-config-reloader-probes` CLI flag. #5449
+* [BUGFIX] Don't start the `PrometheusAgent` controller if the CRD isn't present or the operator lacks permissions. #5476
+* [BUGFIX] Declare `spec.rules` optional in `PrometheusRule` CRD. #5481
+* [BUGFIX] Fix incorrect metric counter value for failed sync status. #5533
+
+## 0.64.1 / 2023-04-24
+
+* [BUGFIX] Fix panic when scraping `/metrics` with PrometheusAgent resources declared. #5511
+
 ## 0.64.0 / 2023-03-29
 
 This release provides first-class support for running Prometheus in agent mode

@@ -39,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,7 +47,6 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-	"k8s.io/utils/pointer"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -160,8 +160,8 @@ func testAMStorageUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), alertmanager.ListOptions(name))
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -322,8 +322,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 	}
 
 	for i := 0; i < amClusterSize; i++ {
-		err = wait.Poll(time.Second, framework.DefaultTimeout, func() (bool, error) {
-			silences, err := framework.GetSilences(context.Background(), ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
+		err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+			silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
 			if err != nil {
 				return false, err
 			}
@@ -365,9 +365,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'firstConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'firstConfigWebHook'
   webhook_configs:
   - url: 'http://firstConfigWebHook:30500/'
 `
@@ -379,9 +379,9 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: 'secondConfigWebHook'
 receivers:
-- name: 'webhook'
+- name: 'secondConfigWebHook'
   webhook_configs:
   - url: 'http://secondConfigWebHook:30500/'
 `
@@ -488,6 +488,89 @@ An Alert test
 	priorToReloadTime = time.Now()
 	templateSecret.Data[templateSecretFileKey] = []byte(secondTemplate)
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), templateSecret, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+	}
+}
+
+func testAMTmplateReloadConfig(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager(ns, "reload-config", 1)
+	firstConfig := `
+global:
+  resolve_timeout: 5m
+  http_config: {}
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'firstConfigWebHook'
+receivers:
+- name: 'firstConfigWebHook'
+  webhook_configs:
+  - url: 'http://firstConfigWebHook:30500/'
+`
+	template := `
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>An Alert</title>
+  <style>
+  </style>
+</head>
+`
+
+	secondTemplate := `
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>An Alert</title>
+  <style>
+  </style>
+</head>
+
+<body>
+An Alert test
+</body>
+`
+
+	cfg := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
+		},
+		Data: map[string][]byte{
+			"alertmanager.yaml": []byte(firstConfig),
+			"Template_1":        []byte(template),
+		},
+	}
+
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	priorToReloadTime := time.Now()
+	cfg.Data["Template_1"] = []byte(secondTemplate)
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -811,10 +894,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// create 2 namespaces:
 	//
 	// 1. "ns" ns:
-	//   - hosts the Alertmanager CR which which should be reconciled
+	//   - hosts the Alertmanager CR which should be reconciled
 	//
 	// 2. "configNs" ns:
-	//   - hosts the AlertmanagerConfig CRs which which should be reconciled
+	//   - hosts the AlertmanagerConfig CRs which should be reconciled
 	// 		thanks to the label monitored: "true" which is removed in the second
 	//		part of the test
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -886,6 +969,19 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	webexAPIToken := "super-secret-token"
+	webexAPITokenSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "webex-api-token",
+		},
+		Data: map[string][]byte{
+			"api-token": []byte(webexAPIToken),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -977,6 +1073,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{Key: "Subject", Value: "subject"},
 						{Key: "Comment", Value: "comment"},
 					},
+					// HTML field with an empty string must appear as-is in the generated configuration.
+					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
+					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &v1.SecretKeySelector{
@@ -1011,7 +1110,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					ChatID: 12345,
 				}},
-
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
@@ -1033,6 +1131,28 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						TopicARN: "test-topicARN",
 					},
 				},
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					APIURL: func() *monitoringv1alpha1.URL {
+						res := monitoringv1alpha1.URL("https://webex.api.url")
+						return &res
+					}(),
+					RoomID: "testingRoomID",
+					Message: func() *string {
+						res := "testingMessage"
+						return &res
+					}(),
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Type: "Bearer",
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webex-api-token",
+								},
+								Key: "api-token",
+							},
+						},
+					},
+				}},
 			}},
 		},
 	}
@@ -1270,8 +1390,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// Wait for the change above to take effect.
 	var lastErr error
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), amConfigSecretName, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
 			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
 			return false, nil
@@ -1361,6 +1481,7 @@ receivers:
     headers:
       Comment: comment
       Subject: subject
+    html: ""
   pushover_configs:
   - user_key: 1234abc
     token: 1234abc
@@ -1378,6 +1499,14 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  webex_configs:
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: super-secret-token
+    api_url: https://webex.api.url
+    message: testingMessage
+    room_id: testingRoomID
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -1420,8 +1549,8 @@ templates: []
 		t.Fatal(err)
 	}
 
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), amConfigSecretName, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
 			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
 			return false, nil
@@ -1506,8 +1635,8 @@ inhibit_rules:
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, "alertmanager-user-amconfig-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			lastErr = err
 			return false, nil
@@ -1560,6 +1689,29 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
+			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+				From: ptr.To("from"),
+				SmartHost: &monitoringv1.HostPort{
+					Host: "smtp.example.org",
+					Port: "587",
+				},
+				Hello:        ptr.To("smtp.example.org"),
+				AuthUsername: ptr.To("dev@smtp.example.org"),
+				AuthPassword: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "smtp-auth",
+					},
+					Key: "password",
+				},
+				AuthIdentity: ptr.To("dev@smtp.example.org"),
+				AuthSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "smtp-auth",
+					},
+					Key: "secret",
+				},
+				RequireTLS: ptr.To(true),
+			},
 			ResolveTimeout: "30s",
 			HTTPConfig: &monitoringv1.HTTPConfig{
 				OAuth2: &monitoringv1.OAuth2{
@@ -1583,7 +1735,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 						"some": "value",
 					},
 				},
-				FollowRedirects: pointer.Bool(true),
+				FollowRedirects: ptr.To(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
@@ -1613,6 +1765,16 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		},
 		Data: map[string]string{
 			"test": "clientID",
+		},
+	}
+	smtp := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "smtp-auth",
+			Namespace: ns,
+		},
+		Data: map[string][]byte{
+			"password": []byte("password"),
+			"secret":   []byte("secret"),
 		},
 	}
 	sec := v1.Secret{
@@ -1645,6 +1807,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &smtp, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
@@ -1671,6 +1836,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
       endpoint_params:
         some: value
     follow_redirects: true
+  smtp_from: from
+  smtp_hello: smtp.example.org
+  smtp_smarthost: smtp.example.org:587
+  smtp_auth_username: dev@smtp.example.org
+  smtp_auth_password: password
+  smtp_auth_secret: secret
+  smtp_auth_identity: dev@smtp.example.org
+  smtp_require_tls: true
 route:
   receiver: %[1]s
   routes:
@@ -1693,8 +1866,8 @@ templates:
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, "alertmanager-user-amconfig-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			lastErr = err
 			return false, nil
@@ -1852,7 +2025,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sset.Spec.Replicas = pointer.Int32(0)
+	sset.Spec.Replicas = ptr.To(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -1860,8 +2033,8 @@ func testAMRollbackManualChanges(t *testing.T) {
 
 	// Wait for the operator to update the statefulset definition.
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		current, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		current, err := ssetClient.Get(ctx, "alertmanager-"+name, metav1.GetOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -1942,8 +2115,8 @@ func testAMWeb(t *testing.T) {
 	}
 
 	var pollErr error
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		amPods, err := kubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -2043,6 +2216,91 @@ func testAMWeb(t *testing.T) {
 			pollErr = fmt.Errorf("config reloader failed to reload once")
 			return false, nil
 		}
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
+	}
+
+	// Simulate a certificate renewal and check that the new certificate is in place
+	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if len(amPods.Items) == 0 {
+			pollErr = fmt.Errorf("No alertmanager pods found in namespace %s", ns)
+			return false, nil
+		}
+
+		cfg := framework.RestConfig
+		podName := amPods.Items[0].Name
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
+		if err != nil {
+			pollErr = fmt.Errorf("failed to start port forwarding: %v", err)
+			t.Log(pollErr)
+			return false, nil
+		}
+		defer closer()
+
+		// The alertmanager certificate is issued to <pod>.<namespace>.svc,
+		// but port-forwarding is done through localhost.
+		// This is why we use an http client which skips the TLS verification.
+		// In the test we will verify the TLS certificate manually to make sure
+		// the alertmanager instance is configured properly.
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		err = http2.ConfigureTransport(transport)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		httpClient := http.Client{
+			Transport: transport,
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "https://localhost:9093", nil)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		respNew, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		receivedCertBytesNew, err := certutil.EncodeCertificates(respNew.TLS.PeerCertificates...)
+		if err != nil {
+			pollErr = err
+			return false, nil
+		}
+
+		if !bytes.Equal(receivedCertBytesNew, certBytesNew) {
+			pollErr = fmt.Errorf("certificate received from alertmanager instance does not match the one which is configured after certificate renewal")
+			return false, nil
+		}
 
 		return true, nil
 	})
@@ -2055,7 +2313,6 @@ func testAMWeb(t *testing.T) {
 func testAlertManagerMinReadySeconds(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	runFeatureGatedTests(t)
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)

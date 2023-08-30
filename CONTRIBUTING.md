@@ -61,9 +61,23 @@ This is a rough outline of what a contributor's workflow looks like:
 - Make sure your commit messages are in the proper format (see below).
 - Push your changes to a topic branch in your fork of the repository.
 - Make sure the tests pass, and add any new tests as appropriate.
+- If the tests are checking long strings such as YAML, JSON or any other complex content, ensure you're using [golden files](https://pkg.go.dev/gotest.tools/v3/golden).
 - Submit a pull request to the original repository.
 
+Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
+
 Thanks for your contributions!
+
+### Changes to the APIs
+
+When designing Custom Resource Definitions (CRDs), please refer to the existing Kubernetes guidelines:
+* [API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
+* [API changes](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md).
+
+In particular, this project follows the API stability guidelines:
+* For alpha API versions (e.g. `v1alpha1`, `v1alpha2`, ...), we may allow to break forward and backward compatibility (but we'll try hard to avoid it).
+* For beta API versions (e.g. `v1beta1`, `v1beta2`, ...), we may allow to break backward compatibility but not forward compatibility.
+* For stable API versions (e.g. `v1`), we don't allow to break backward and forward compatibility.
 
 ### Format of the Commit Message
 
@@ -74,7 +88,7 @@ the body of the commit should describe the why.
 ```
 scripts: add the test-cluster command
 
-this uses tmux to setup a test cluster that you can easily kill and
+This uses tmux to setup a test cluster that you can easily kill and
 start for debugging.
 
 Fixes #38
@@ -93,7 +107,7 @@ The format can be described more formally as follows:
 The first line is the subject and should be no longer than 70 characters, the
 second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
-git tools.
+Git tools.
 
 # Proposal Process
 

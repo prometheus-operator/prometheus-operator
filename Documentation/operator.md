@@ -23,6 +23,8 @@ Usage of ./operator:
     	Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.
   -alertmanager-instance-selector string
     	Label selector to filter AlertManager Custom Resources to watch.
+  -annotations value
+    	Annotations to be add to all resources created by the operator
   -apiserver string
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -ca-file string
@@ -31,18 +33,22 @@ Usage of ./operator:
     	 - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.
   -cluster-domain string
     	The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.
-  -config-reloader-cpu-limit --config-reloader-cpu
-    	Config Reloader CPU limit. Value "0" disables it and causes no limit to be configured. Flag overrides --config-reloader-cpu for the CPU limit (default "100m")
-  -config-reloader-cpu-request --config-reloader-cpu
-    	Config Reloader CPU request. Value "0" disables it and causes no request to be configured. Flag overrides --config-reloader-cpu value for the CPU request (default "100m")
-  -config-reloader-memory-limit --config-reloader-memory
-    	Config Reloader Memory limit. Value "0" disables it and causes no limit to be configured. Flag overrides --config-reloader-memory for the memory limit (default "50Mi")
-  -config-reloader-memory-request --config-reloader-memory
-    	Config Reloader Memory request. Value "0" disables it and causes no request to be configured. Flag overrides --config-reloader-memory for the memory request (default "50Mi")
+  -config-reloader-cpu-limit value
+    	Config Reloader CPU limits. Value "0" disables it and causes no limit to be configured. (default 10m)
+  -config-reloader-cpu-request value
+    	Config Reloader CPU requests. Value "0" disables it and causes no request to be configured. (default 10m)
+  -config-reloader-memory-limit value
+    	Config Reloader memory limits. Value "0" disables it and causes no limit to be configured. (default 50Mi)
+  -config-reloader-memory-request value
+    	Config Reloader memory requests. Value "0" disables it and causes no request to be configured. (default 50Mi)
   -deny-namespaces value
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
+  -enable-config-reloader-probes
+    	Enable liveness and readiness for the config-reloader container. Default: false
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
+  -kubelet-selector string
+    	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
   -labels value
@@ -56,7 +62,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.64.0")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.67.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

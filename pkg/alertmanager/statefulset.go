@@ -20,14 +20,14 @@ import (
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -110,7 +110,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
-			Annotations: annotations,
+			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         am.APIVersion,
@@ -181,7 +181,8 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
+			Name:        governingServiceName,
+			Annotations: config.Annotations,
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-alertmanager": "true",
 			}),
@@ -270,6 +271,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	}
 	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
 
+	web := a.Spec.Web
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.GetConcurrency != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.get-concurrency=%d", *web.GetConcurrency))
+	}
+
+	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.Timeout != nil {
+		amArgs = append(amArgs, fmt.Sprintf("--web.timeout=%d", *web.Timeout))
+	}
+
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
 		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
 	}
@@ -350,15 +360,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		"alertmanager":                 a.Name,
 	}
 	if a.Spec.PodMetadata != nil {
-		if a.Spec.PodMetadata.Labels != nil {
-			for k, v := range a.Spec.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range a.Spec.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if a.Spec.PodMetadata.Annotations != nil {
-			for k, v := range a.Spec.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range a.Spec.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 	for k, v := range podSelectorLabels {
@@ -559,7 +565,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		})
 	}
 
-	watchedDirectories := []string{}
+	watchedDirectories := []string{alertmanagerConfigDir}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      alertmanagerConfigVolumeName,
@@ -765,6 +771,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
+				AutomountServiceAccountToken:  a.Spec.AutomountServiceAccountToken,
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,

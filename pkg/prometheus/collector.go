@@ -15,9 +15,10 @@
 package prometheus
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var (
@@ -66,22 +67,24 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	for _, s := range c.stores {
 		for _, p := range s.List() {
-			c.collectPrometheus(ch, p.(*v1.Prometheus))
+			c.collectPrometheus(ch, p.(v1.PrometheusInterface))
 		}
 	}
 }
 
-func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p *v1.Prometheus) {
-	replicas := float64(MinReplicas)
-	if p.Spec.Replicas != nil {
-		replicas = float64(*p.Spec.Replicas)
-	}
-	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, p.Namespace, p.Name)
+func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p v1.PrometheusInterface) {
+	namespace := p.GetObjectMeta().GetNamespace()
+	name := p.GetObjectMeta().GetName()
+	replicas := float64(*ReplicasNumberPtr(p))
+
+	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, namespace, name)
+
 	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
-	if p.Spec.EnforcedSampleLimit != nil {
-		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*p.Spec.EnforcedSampleLimit), p.Namespace, p.Name)
+	cpf := p.GetCommonPrometheusFields()
+	if cpf.EnforcedSampleLimit != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*cpf.EnforcedSampleLimit), namespace, name)
 	}
-	if p.Spec.Shards != nil {
-		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*p.Spec.Shards), p.Namespace, p.Name)
+	if cpf.Shards != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*cpf.Shards), namespace, name)
 	}
 }
