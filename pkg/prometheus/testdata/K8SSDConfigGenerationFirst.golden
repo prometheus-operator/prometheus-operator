@@ -1,0 +1,5 @@
+kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test

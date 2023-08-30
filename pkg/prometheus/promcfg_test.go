@@ -26,6 +26,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -122,28 +123,22 @@ func TestGlobalSettings(t *testing.T) {
 		LabelLimit            *uint64
 		LabelNameLengthLimit  *uint64
 		LabelValueLengthLimit *uint64
-		Expected              string
 		ExpectError           bool
+		Golden                string
 	}{
 		{
 			Scenario:           "valid config",
 			Version:            "v2.15.2",
 			ScrapeInterval:     "15s",
 			EvaluationInterval: "30s",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 15s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden:             "global_settings_valid_config_v2.15.2.golden",
 		},
 		{
 			Scenario:       "invalid scrape timeout specified when scrape interval specified",
 			Version:        "v2.30.0",
 			ScrapeInterval: "30s",
 			ScrapeTimeout:  "60s",
+			Golden:         "invalid_scrape_timeout_specified_when_scrape_interval_specified.golden",
 			ExpectError:    true,
 		},
 		{
@@ -152,15 +147,7 @@ scrape_configs: []
 			ScrapeInterval:     "60s",
 			ScrapeTimeout:      "10s",
 			EvaluationInterval: "30s",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 60s
-  scrape_timeout: 10s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden:             "valid_scrape_timeout_along_with_valid_scrape_interval_specified.golden",
 		},
 		{
 			Scenario:           "external label specified",
@@ -171,16 +158,7 @@ scrape_configs: []
 				"key1": "value1",
 				"key2": "value2",
 			},
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    key1: value1
-    key2: value2
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden: "external_label_specified.golden",
 		},
 		{
 			Scenario:           "query log file",
@@ -188,15 +166,7 @@ scrape_configs: []
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			QueryLogFile:       "test.log",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  query_log_file: /var/log/prometheus/test.log
-scrape_configs: []
-`,
+			Golden:             "query_log_file.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -206,17 +176,7 @@ scrape_configs: []
 			BodySizeLimit:      &expectedBodySizeLimit,
 			SampleLimit:        &expectedSampleLimit,
 			TargetLimit:        &expectedTargetLimit,
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  body_size_limit: 1000MB
-  sample_limit: 10000
-  target_limit: 1000
-scrape_configs: []
-`,
+			Golden:             "valid_global_limits.golden",
 		},
 		{
 			Scenario:              "valid global config with label limits",
@@ -229,20 +189,7 @@ scrape_configs: []
 			LabelLimit:            &expectedLabelLimit,
 			LabelNameLengthLimit:  &expectedLabelNameLengthLimit,
 			LabelValueLengthLimit: &expectedLabelValueLengthLimit,
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  body_size_limit: 1000MB
-  sample_limit: 10000
-  target_limit: 1000
-  label_limit: 50
-  label_name_length_limit: 40
-  label_value_length_limit: 30
-scrape_configs: []
-`,
+			Golden:                "valid_global_config_with_label_limits.golden",
 		},
 	} {
 
@@ -295,7 +242,7 @@ scrape_configs: []
 				require.NoError(t, err)
 			}
 
-			require.Equal(t, tc.Expected, string(cfg))
+			golden.Assert(t, string(cfg), tc.Golden)
 		})
 	}
 }
@@ -304,7 +251,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	type testCase struct {
 		ServiceMonitor           *monitoringv1.ServiceMonitor
 		IgnoreNamespaceSelectors bool
-		Expected                 string
+		Golden                   string
 	}
 
 	testcases := []testCase{
@@ -328,15 +275,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test1
-    - test2
-  attach_metadata:
-    node: true
-`,
+			Golden:                   "namespaces_from_MatchNames_are_returned_instead_of_the_current_namespace.golden",
 		},
 		// Test that 'Any' returns an empty list instead of the current namespace
 		{
@@ -355,9 +294,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-`,
+			Golden:                   "Any_returns_an_empty_list_instead_of_the_current_namespace.golden",
 		},
 		// Test that Any takes precedence over MatchNames
 		{
@@ -377,9 +314,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-`,
+			Golden:                   "Any_takes_precedence_over_MatchNames.golden",
 		},
 		// Test that IgnoreNamespaceSelectors overrides Any and MatchNames
 		{
@@ -399,12 +334,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: true,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - default
-`,
+			Golden:                   "IgnoreNamespaceSelectors_overrides_Any_and_MatchNames.golden",
 		},
 	}
 
@@ -431,7 +361,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
-		require.Equal(t, tc.Expected, string(s))
+		golden.Assert(t, string(s), tc.Golden)
 	}
 }
 
@@ -474,16 +404,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
 
-	expected := `kubernetes_sd_configs:
-- role: pod
-  namespaces:
-    names:
-    - test
-  attach_metadata:
-    node: true
-`
-
-	require.Equal(t, expected, string(s))
+	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
 }
 
 func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
@@ -547,59 +468,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  params:
-    module:
-    - http_2xx
-  static_configs:
-  - targets:
-    - prometheus.io
-    - promcon.io
-    labels:
-      namespace: custom
-      static: label
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - target_label: namespace
-    replacement: default
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs:
-  - regex: noisy_labels.*
-    action: labeldrop
-  - target_label: namespace
-    replacement: default
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeStaticTargetsConfigGenerationWithLabelEnforce.golden")
 }
 
 func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
@@ -653,54 +522,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  params:
-    module:
-    - http_2xx
-  static_configs:
-  - targets:
-    - prometheus.io
-    - promcon.io
-    labels:
-      namespace: default
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - target_label: job
-    replacement: blackbox
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs: []
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeStaticTargetsConfigGenerationWithJobName.golden")
 }
 
 func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
@@ -753,51 +575,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  static_configs:
-  - targets:
-    - prometheus.io
-    - promcon.io
-    labels:
-      namespace: default
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - target_label: job
-    replacement: blackbox
-  - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs: []
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeStaticTargetsConfigGenerationWithoutModule.golden")
 }
 
 func TestProbeIngressSDConfigGeneration(t *testing.T) {
@@ -862,74 +640,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  params:
-    module:
-    - http_2xx
-  kubernetes_sd_configs:
-  - role: ingress
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - action: keep
-    source_labels:
-    - __meta_kubernetes_ingress_label_prometheus_io_probe
-    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
-    regex: (true);true
-  - source_labels:
-    - __meta_kubernetes_ingress_scheme
-    - __address__
-    - __meta_kubernetes_ingress_path
-    separator: ;
-    regex: (.+);(.+);(.+)
-    target_label: __param_target
-    replacement: ${1}://${2}${3}
-    action: replace
-  - source_labels:
-    - __meta_kubernetes_namespace
-    target_label: namespace
-  - source_labels:
-    - __meta_kubernetes_ingress_name
-    target_label: ingress
-  - source_labels:
-    - __address__
-    separator: ;
-    regex: (.*)
-    target_label: __tmp_ingress_address
-    replacement: $1
-    action: replace
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - target_label: foo
-    replacement: bar
-    action: replace
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs: []
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeIngressSDConfigGeneration.golden")
 }
 
 func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
@@ -994,74 +705,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  params:
-    module:
-    - http_2xx
-  kubernetes_sd_configs:
-  - role: ingress
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - action: keep
-    source_labels:
-    - __meta_kubernetes_ingress_label_prometheus_io_probe
-    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
-    regex: (true);true
-  - source_labels:
-    - __meta_kubernetes_ingress_scheme
-    - __address__
-    - __meta_kubernetes_ingress_path
-    separator: ;
-    regex: (.+);(.+);(.+)
-    target_label: __param_target
-    replacement: ${1}://${2}${3}
-    action: replace
-  - source_labels:
-    - __meta_kubernetes_namespace
-    target_label: namespace
-  - source_labels:
-    - __meta_kubernetes_ingress_name
-    target_label: ingress
-  - source_labels:
-    - __address__
-    separator: ;
-    regex: (.*)
-    target_label: __tmp_ingress_address
-    replacement: $1
-    action: replace
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - target_label: foo
-    replacement: bar
-    action: replace
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 2
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs: []
-`
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeIngressSDConfigGenerationWithShards.golden")
 }
 
 func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
@@ -1126,79 +770,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: probe/default/testprobe1
-  honor_timestamps: true
-  metrics_path: /probe
-  scheme: http
-  params:
-    module:
-    - http_2xx
-  kubernetes_sd_configs:
-  - role: ingress
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - action: keep
-    source_labels:
-    - __meta_kubernetes_ingress_label_prometheus_io_probe
-    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
-    regex: (true);true
-  - source_labels:
-    - __meta_kubernetes_ingress_scheme
-    - __address__
-    - __meta_kubernetes_ingress_path
-    separator: ;
-    regex: (.+);(.+);(.+)
-    target_label: __param_target
-    replacement: ${1}://${2}${3}
-    action: replace
-  - source_labels:
-    - __meta_kubernetes_namespace
-    target_label: namespace
-  - source_labels:
-    - __meta_kubernetes_ingress_name
-    target_label: ingress
-  - source_labels:
-    - __address__
-    separator: ;
-    regex: (.*)
-    target_label: __tmp_ingress_address
-    replacement: $1
-    action: replace
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - target_label: foo
-    replacement: bar
-    action: replace
-  - target_label: namespace
-    replacement: default
-  - source_labels:
-    - __param_target
-    target_label: __tmp_hash
-    modulus: 1
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-  metric_relabel_configs:
-  - target_label: namespace
-    replacement: default
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "ProbeIngressSDConfigGenerationWithLabelEnforce.golden")
 }
 
 func TestK8SSDConfigGeneration(t *testing.T) {
@@ -1220,17 +792,12 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiserverConfig *monitoringv1.APIServerConfig
 		store           *assets.Store
-		expected        string
+		golden          string
 	}{
 		{
 			nil,
 			nil,
-			`kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test
-`,
+			"K8SSDConfigGenerationFirst.golden",
 		},
 		{
 			&monitoringv1.APIServerConfig{
@@ -1250,18 +817,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				OAuth2Assets: map[string]assets.OAuth2Credentials{},
 				TokenAssets:  map[string]assets.Token{},
 			},
-			`kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test
-  api_server: example.com
-  basic_auth:
-    username: foo
-    password: bar
-  bearer_token: bearer_token
-  bearer_token_file: bearer_token_file
-`,
+			"K8SSDConfigGenerationTwo.golden",
 		},
 	}
 
@@ -1294,7 +850,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
-		require.Equal(t, tc.expected, string(s))
+		golden.Assert(t, string(s), tc.golden)
 	}
 }
 
@@ -1332,42 +888,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-
-	// If this becomes an endless sink of maintenance, then we should just
-	// change this to check that just the `bearer_token_file` is set with
-	// something like json-path.
-	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    bearer_token_file: /some/file/on/disk
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`
-
-	require.Equal(t, expected, string(cfg))
+	golden.Assert(t, string(cfg), "AlertmanagerBearerToken.golden")
 }
 
 func TestAlertmanagerBasicAuth(t *testing.T) {
@@ -1375,75 +896,17 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 		name           string
 		version        string
 		expectedConfig string
+		golden         string
 	}{
 		{
 			name:    "Valid Prom Version",
 			version: "2.26.0",
-			expectedConfig: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    basic_auth:
-      username: bob
-      password: alice
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`,
+			golden:  "AlertmanagerBasicAuth_Valid_Prom_Version.golden",
 		},
 		{
 			name:    "Invalid Prom Version",
 			version: "2.25.0",
-			expectedConfig: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`,
+			golden:  "AlertmanagerBasicAuth_Invalid_Prom_Version.golden",
 		},
 	} {
 
@@ -1514,7 +977,7 @@ alerting:
 			t.Fatal(err)
 		}
 
-		require.Equal(t, tc.expectedConfig, string(cfg))
+		golden.Assert(t, string(cfg), tc.golden)
 	}
 }
 

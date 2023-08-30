@@ -1,0 +1,9 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    key1: value1
+    key2: value2
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
