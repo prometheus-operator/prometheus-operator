@@ -1,0 +1,8 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+  query_log_file: /var/log/prometheus/test.log
+scrape_configs: []

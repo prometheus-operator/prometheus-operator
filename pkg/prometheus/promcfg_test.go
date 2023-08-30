@@ -26,6 +26,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,26 +125,21 @@ func TestGlobalSettings(t *testing.T) {
 		LabelValueLengthLimit *uint64
 		Expected              string
 		ExpectError           bool
+		Golden                string
 	}{
 		{
 			Scenario:           "valid config",
 			Version:            "v2.15.2",
 			ScrapeInterval:     "15s",
 			EvaluationInterval: "30s",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 15s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden:             "global_settings_valid_config_v2.15.2.golden",
 		},
 		{
 			Scenario:       "invalid scrape timeout specified when scrape interval specified",
 			Version:        "v2.30.0",
 			ScrapeInterval: "30s",
 			ScrapeTimeout:  "60s",
+			Golden:         "invalid_scrape_timeout_specified_when_scrape_interval_specified.golden",
 			ExpectError:    true,
 		},
 		{
@@ -152,15 +148,7 @@ scrape_configs: []
 			ScrapeInterval:     "60s",
 			ScrapeTimeout:      "10s",
 			EvaluationInterval: "30s",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 60s
-  scrape_timeout: 10s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden:             "valid_scrape_timeout_along_with_valid_scrape_interval_specified.golden",
 		},
 		{
 			Scenario:           "external label specified",
@@ -171,16 +159,7 @@ scrape_configs: []
 				"key1": "value1",
 				"key2": "value2",
 			},
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    key1: value1
-    key2: value2
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-`,
+			Golden: "external_label_specified.golden",
 		},
 		{
 			Scenario:           "query log file",
@@ -188,15 +167,7 @@ scrape_configs: []
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			QueryLogFile:       "test.log",
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  query_log_file: /var/log/prometheus/test.log
-scrape_configs: []
-`,
+			Golden:             "query_log_file.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -206,17 +177,7 @@ scrape_configs: []
 			BodySizeLimit:      &expectedBodySizeLimit,
 			SampleLimit:        &expectedSampleLimit,
 			TargetLimit:        &expectedTargetLimit,
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  body_size_limit: 1000MB
-  sample_limit: 10000
-  target_limit: 1000
-scrape_configs: []
-`,
+			Golden:             "valid_global_limits.golden",
 		},
 		{
 			Scenario:              "valid global config with label limits",
@@ -229,20 +190,7 @@ scrape_configs: []
 			LabelLimit:            &expectedLabelLimit,
 			LabelNameLengthLimit:  &expectedLabelNameLengthLimit,
 			LabelValueLengthLimit: &expectedLabelValueLengthLimit,
-			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: /
-    prometheus_replica: $(POD_NAME)
-  body_size_limit: 1000MB
-  sample_limit: 10000
-  target_limit: 1000
-  label_limit: 50
-  label_name_length_limit: 40
-  label_value_length_limit: 30
-scrape_configs: []
-`,
+			Golden:                "valid_global_config_with_label_limits.golden",
 		},
 	} {
 
@@ -295,7 +243,7 @@ scrape_configs: []
 				require.NoError(t, err)
 			}
 
-			require.Equal(t, tc.Expected, string(cfg))
+			golden.Assert(t, string(cfg), tc.Golden)
 		})
 	}
 }
