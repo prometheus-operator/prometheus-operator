@@ -123,7 +123,6 @@ func TestGlobalSettings(t *testing.T) {
 		LabelLimit            *uint64
 		LabelNameLengthLimit  *uint64
 		LabelValueLengthLimit *uint64
-		Expected              string
 		ExpectError           bool
 		Golden                string
 	}{
@@ -252,7 +251,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	type testCase struct {
 		ServiceMonitor           *monitoringv1.ServiceMonitor
 		IgnoreNamespaceSelectors bool
-		Expected                 string
+		Golden                   string
 	}
 
 	testcases := []testCase{
@@ -276,15 +275,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test1
-    - test2
-  attach_metadata:
-    node: true
-`,
+			Golden:                   "namespaces_from_MatchNames_are_returned_instead_of_the_current_namespace.golden",
 		},
 		// Test that 'Any' returns an empty list instead of the current namespace
 		{
@@ -303,9 +294,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-`,
+			Golden:                   "Any_returns_an_empty_list_instead_of_the_current_namespace.golden",
 		},
 		// Test that Any takes precedence over MatchNames
 		{
@@ -325,9 +314,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-`,
+			Golden:                   "Any_takes_precedence_over_MatchNames.golden",
 		},
 		// Test that IgnoreNamespaceSelectors overrides Any and MatchNames
 		{
@@ -347,12 +334,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: true,
-			Expected: `kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - default
-`,
+			Golden:                   "IgnoreNamespaceSelectors_overrides_Any_and_MatchNames.golden",
 		},
 	}
 
@@ -379,7 +361,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
-		require.Equal(t, tc.Expected, string(s))
+		golden.Assert(t, string(s), tc.Golden)
 	}
 }
 
