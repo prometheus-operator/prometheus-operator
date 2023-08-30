@@ -771,7 +771,7 @@ type PushoverConfig struct {
 	URLTitle string `json:"urlTitle,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
-	Device string `json:"device,omitempty"`
+	Device *string `json:"device,omitempty"`
 	// The name of one of the sounds supported by device clients to override the user's default sound choice
 	// +optional
 	Sound string `json:"sound,omitempty"`
