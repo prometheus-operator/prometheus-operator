@@ -588,6 +588,46 @@
                     },
                     "type": "array"
                   },
+                  "dnsSDConfigs": {
+                    "description": "DNSSDConfigs defines a list of DNS service discovery configurations.",
+                    "items": {
+                      "description": "DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets. The DNS servers to be contacted are read from /etc/resolv.conf. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config",
+                      "properties": {
+                        "names": {
+                          "description": "A list of DNS domain names to be queried.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 1,
+                          "type": "array"
+                        },
+                        "port": {
+                          "description": "The port number used if the query type is not SRV Ignored for SRV records",
+                          "type": "integer"
+                        },
+                        "refreshInterval": {
+                          "description": "RefreshInterval configures the time after which the provided names are refreshed. If not set, Prometheus uses its default value.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "The type of DNS query to perform. One of SRV, A, AAAA or MX. If not set, Prometheus uses its default value.",
+                          "enum": [
+                            "SRV",
+                            "A",
+                            "AAAA",
+                            "MX"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "names"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "fileSDConfigs": {
                     "description": "FileSDConfigs defines a list of file service discovery configurations.",
                     "items": {

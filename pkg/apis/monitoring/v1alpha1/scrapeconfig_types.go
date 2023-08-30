@@ -87,6 +87,9 @@ type ScrapeConfigSpec struct {
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
+	//DNSSDConfigs defines a list of DNS service discovery configurations.
+	// +optional
+	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -298,4 +301,27 @@ type ConsulSDConfig struct {
 	// TLS Config
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.
+// The DNS servers to be contacted are read from /etc/resolv.conf.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config
+// +k8s:openapi-gen=true
+type DNSSDConfig struct {
+	// A list of DNS domain names to be queried.
+	// +kubebuilder:validation:MinItems:=1
+	Names []string `json:"names"`
+	// RefreshInterval configures the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The type of DNS query to perform. One of SRV, A, AAAA or MX.
+	// If not set, Prometheus uses its default value.
+	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX
+	// +optional
+	Type *string `json:"type"`
+	// The port number used if the query type is not SRV
+	// Ignored for SRV records
+	// +optional
+	Port *int `json:"port"`
 }

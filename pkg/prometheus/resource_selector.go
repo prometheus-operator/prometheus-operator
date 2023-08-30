@@ -715,6 +715,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateDNSSDConfigs(sc); err != nil {
+			rejectFn(sc, fmt.Errorf("dnsSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -778,5 +783,16 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 		}
 	}
 
+	return nil
+}
+
+func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.DNSSDConfigs {
+		if config.Type != nil {
+			if *config.Type != "SRV" && config.Port == nil {
+				return fmt.Errorf("[%d]: %s %q", i, "port required for record type", *config.Type)
+			}
+		}
+	}
 	return nil
 }
