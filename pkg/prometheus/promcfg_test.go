@@ -404,16 +404,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
 
-	expected := `kubernetes_sd_configs:
-- role: pod
-  namespaces:
-    names:
-    - test
-  attach_metadata:
-    node: true
-`
-
-	require.Equal(t, expected, string(s))
+	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
 }
 
 func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
