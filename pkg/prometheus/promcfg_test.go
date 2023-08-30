@@ -792,17 +792,12 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiserverConfig *monitoringv1.APIServerConfig
 		store           *assets.Store
-		expected        string
+		golden          string
 	}{
 		{
 			nil,
 			nil,
-			`kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test
-`,
+			"K8SSDConfigGenerationFirst.golden",
 		},
 		{
 			&monitoringv1.APIServerConfig{
@@ -822,18 +817,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				OAuth2Assets: map[string]assets.OAuth2Credentials{},
 				TokenAssets:  map[string]assets.Token{},
 			},
-			`kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test
-  api_server: example.com
-  basic_auth:
-    username: foo
-    password: bar
-  bearer_token: bearer_token
-  bearer_token_file: bearer_token_file
-`,
+			"K8SSDConfigGenerationTwo.golden",
 		},
 	}
 
@@ -866,7 +850,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
-		require.Equal(t, tc.expected, string(s))
+		golden.Assert(t, string(s), tc.golden)
 	}
 }
 

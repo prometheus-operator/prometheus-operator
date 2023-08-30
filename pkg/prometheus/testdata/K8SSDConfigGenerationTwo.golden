@@ -1,0 +1,11 @@
+kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+  api_server: example.com
+  basic_auth:
+    username: foo
+    password: bar
+  bearer_token: bearer_token
+  bearer_token_file: bearer_token_file
