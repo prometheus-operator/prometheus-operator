@@ -209,7 +209,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
-	if !operator.IsSingleNamespace(conf.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(conf.Namespaces) {
 		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 			// nsResyncPeriod is used to control how often the namespace informer
 			// should resync. If the unprivileged ListerWatcher is used, then the
@@ -258,7 +258,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
-	if !operator.IsSingleNamespace(o.config.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 		for _, inf := range []struct {
 			name     string
 			informer cache.SharedIndexInformer
@@ -296,7 +296,7 @@ func (o *Operator) addHandlers() {
 	// change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on rules.
-	if !operator.IsSingleNamespace(o.config.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 		_, _ = o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 			UpdateFunc: o.handleNamespaceUpdate,
 		})
@@ -332,7 +332,7 @@ func (o *Operator) Run(ctx context.Context) error {
 	go o.thanosRulerInfs.Start(ctx.Done())
 	go o.cmapInfs.Start(ctx.Done())
 	go o.ruleInfs.Start(ctx.Done())
-	if !operator.IsSingleNamespace(o.config.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 		go o.nsRuleInf.Run(ctx.Done())
 		if o.nsRuleInf != o.nsThanosRulerInf {
 			go o.nsThanosRulerInf.Run(ctx.Done())
@@ -748,7 +748,7 @@ func (o *Operator) enqueueForRulesNamespace(nsName string) {
 // given namespace or select objects in the given namespace.
 func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	var ns *v1.Namespace = nil
-	if !operator.IsSingleNamespace(o.config.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 		nsObject, exists, err := store.GetByKey(nsName)
 		if err != nil {
 			level.Error(o.logger).Log(
@@ -776,7 +776,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for ThanosRuler instances selecting PrometheusRules in
 		// the namespace.
-		if !operator.IsSingleNamespace(o.config.Namespaces) {
+		if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 
 			ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 			if err != nil {

@@ -168,7 +168,7 @@ func prometheusRulesConfigMapSelector(thanosRulerName string) metav1.ListOptions
 func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, error) {
 	namespaces := []string{}
 
-	if !operator.IsSingleNamespace(o.config.Namespaces) {
+	if !operator.IsThanosRulerInSingleNamespace(o.config.Namespaces) {
 		// If 'RuleNamespaceSelector' is nil, only check own namespace.
 		if p.Spec.RuleNamespaceSelector == nil {
 			namespaces = append(namespaces, p.Namespace)

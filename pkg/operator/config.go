@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"golang.org/x/exp/maps"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -135,8 +136,53 @@ type Namespaces struct {
 	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
 }
 
-// Check if this is a single namespace deployment, to use 'role' insteadof 'clusterrole'
-func IsSingleNamespace(ns Namespaces) bool {
-	// Only sigle namespace
-	return len(ns.AllowList) == 1 && len(ns.DenyList) == 0
+// Check if this is a single namespace deployment,
+func isSingleNamespace(ns map[string]struct{}) bool {
+	// Check if has a single namespace and different from v1.NamespaceAll
+	if len(ns) == 1 {
+		for k := range ns {
+			if k != v1.NamespaceAll {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// Check if this is a single namespace deployment,
+// to use 'role' instead of 'ClusterRole'
+// and 'rolebinding' instead of 'ClusterRoleBinding'
+// for the RBAC resources.
+// In prometheus-operator, validate the AllowList
+// In alertmanager-operator, validate the AlertmanagerAllowList
+// In thanos-operator, validate the ThanosRulerAllowList
+func IsAlertManagerInSingleNamespace(ns Namespaces) bool {
+	// Check if has a single namespace and different from v1.NamespaceAll
+	if len(ns.AlertmanagerAllowList) == 1 {
+		return isSingleNamespace(ns.AlertmanagerAllowList)
+	} else if len(ns.AlertmanagerAllowList) == 0 &&
+		len(ns.AlertmanagerConfigAllowList) == 1 {
+		return isSingleNamespace(ns.AlertmanagerConfigAllowList)
+	}
+
+	return isSingleNamespace(ns.AllowList)
+}
+
+func IsPrometheusInSingleNamespace(ns Namespaces) bool {
+	// Check if has a single namespace and different from v1.NamespaceAll
+	if len(ns.PrometheusAllowList) == 1 {
+		isSingleNamespace(ns.PrometheusAllowList)
+	}
+
+	return isSingleNamespace(ns.AllowList)
+}
+
+func IsThanosRulerInSingleNamespace(ns Namespaces) bool {
+	// Check if has a single namespace and different from v1.NamespaceAll
+	if len(ns.ThanosRulerAllowList) == 1 {
+		isSingleNamespace(ns.ThanosRulerAllowList)
+	}
+
+	return isSingleNamespace(ns.AllowList)
 }

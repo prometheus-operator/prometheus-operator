@@ -243,7 +243,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 			// nsResyncPeriod is used to control how often the namespace informer
 			// should resync. If the unprivileged ListerWatcher is used, then the
@@ -293,7 +293,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 		for _, inf := range []struct {
 			name     string
 			informer cache.SharedIndexInformer
@@ -332,7 +332,7 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on alertmanagerconfigs.
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 		_, _ = c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 			UpdateFunc: c.handleNamespaceUpdate,
 		})
@@ -422,7 +422,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 func (c *Operator) enqueueForNamespace(nsName string) {
 	var ns *v1.Namespace
 
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 
 		nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
 		if err != nil {
@@ -447,7 +447,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			c.rr.EnqueueForReconciliation(am)
 			return
 		}
-		if !operator.IsSingleNamespace(c.config.Namespaces) {
+		if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 
 			// Check for Alertmanager instances selecting AlertmanagerConfigs in
 			// the namespace.
@@ -506,7 +506,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.ssetInfs.Start(ctx.Done())
 
 	// Skip namespace alert in single namespace case.
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 		go c.nsAlrtCfgInf.Run(ctx.Done())
 		if c.nsAlrtInf != c.nsAlrtCfgInf {
 			go c.nsAlrtInf.Run(ctx.Done())
@@ -1045,7 +1045,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsAlertManagerInSingleNamespace(c.config.Namespaces) {
 
 		// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
 		if am.Spec.AlertmanagerConfigNamespaceSelector == nil {

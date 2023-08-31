@@ -321,7 +321,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 
 		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 			// nsResyncPeriod is used to control how often the namespace informer
@@ -401,7 +401,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 	}
 
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		for _, inf := range []struct {
 			name     string
 			informer cache.SharedIndexInformer
@@ -469,7 +469,7 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 			UpdateFunc: c.handleMonitorNamespaceUpdate,
 		})
@@ -513,7 +513,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		go c.nsMonInf.Run(ctx.Done())
 		if c.nsPromInf != c.nsMonInf {
 			go c.nsPromInf.Run(ctx.Done())
@@ -530,7 +530,8 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	c.addHandlers()
 
-	if c.kubeletSyncEnabled && !operator.IsSingleNamespace(c.config.Namespaces) {
+	// if c.kubeletSyncEnabled && !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
+	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(ctx)
 	}
 
@@ -978,13 +979,13 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
 	}
 }
 
 func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	if !operator.IsSingleNamespace(c.config.Namespaces) {
+	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
 	}
 }
