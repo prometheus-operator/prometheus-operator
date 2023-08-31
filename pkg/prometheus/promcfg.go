@@ -2348,7 +2348,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
-			Key: "kubernetes_sd_configs",
+			Key:   "kubernetes_sd_configs",
+			Value: configs,
 		})
 	}
 	//ConsulSDConfig

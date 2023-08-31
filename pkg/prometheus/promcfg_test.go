@@ -9051,6 +9051,27 @@ scrape_configs:
 `,
 		},
 		{
+			name: "kubernetes_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "node",
+					},
+				},
+			},
+			expectedCfg: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeconfig/default/testscrapeconfig1
+  kubernetes_sd_configs:
+  - role: node
+`,
+		},
+		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricsPath: ptr.To("/metrics"),
