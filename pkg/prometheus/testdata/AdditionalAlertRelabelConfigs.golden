@@ -1,0 +1,3 @@
+- action: drop
+  source_labels: [__meta_kubernetes_node_name]
+  regex: spot-(.+)
