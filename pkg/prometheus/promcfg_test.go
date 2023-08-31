@@ -1057,125 +1057,30 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 }
 
 func TestAlertmanagerEnableHttp2(t *testing.T) {
-	expectedWithHTTP2Unsupported := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    api_version: v2
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`
-
-	expectedWithHTTP2Disabled := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    enable_http2: false
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    api_version: v2
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`
-
-	expectedWithHTTP2Enabled := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs: []
-alerting:
-  alert_relabel_configs:
-  - action: labeldrop
-    regex: prometheus_replica
-  alertmanagers:
-  - path_prefix: /
-    scheme: http
-    enable_http2: true
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - default
-    api_version: v2
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_service_name
-      regex: alertmanager-main
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_endpoint_port_name
-      regex: web
-`
-
 	for _, tc := range []struct {
 		version     string
-		expected    string
 		enableHTTP2 bool
+		golden      string
 	}{
 		{
 			version:     "v2.34.0",
 			enableHTTP2: false,
-			expected:    expectedWithHTTP2Unsupported,
+			golden:      "AlertmanagerEnableHttp2_false_expectedWithHTTP2Unsupported.golden",
 		},
 		{
 			version:     "v2.34.0",
 			enableHTTP2: true,
-			expected:    expectedWithHTTP2Unsupported,
+			golden:      "AlertmanagerEnableHttp2_true_expectedWithHTTP2Unsupported.golden",
 		},
 		{
 			version:     "v2.35.0",
 			enableHTTP2: true,
-			expected:    expectedWithHTTP2Enabled,
+			golden:      "AlertmanagerEnableHttp2_true_expectedWithHTTP2Enabled.golden",
 		},
 		{
 			version:     "v2.35.0",
 			enableHTTP2: false,
-			expected:    expectedWithHTTP2Disabled,
+			golden:      "AlertmanagerEnableHttp2_false_expectedWithHTTP2Enabled.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("%s TestAlertmanagerEnableHttp2(%t)", tc.version, tc.enableHTTP2), func(t *testing.T) {
@@ -1214,7 +1119,7 @@ alerting:
 				nil,
 			)
 			require.NoError(t, err)
-			require.Equal(t, tc.expected, string(cfg))
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }
