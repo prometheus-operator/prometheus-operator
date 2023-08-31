@@ -241,8 +241,6 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 // testScrapeConfigKubernetesNodeRole tests whether Kubernetes node monitoring works as expected
 func testScrapeConfigKubernetesNodeRole(t *testing.T) {
-	skipPrometheusTests(t)
-
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
