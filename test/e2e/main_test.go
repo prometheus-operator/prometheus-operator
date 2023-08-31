@@ -310,6 +310,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
+		"PromCollectOperatorMetrics":                testMetricsFromOperatorWithAgentAndServer,
 	}
 
 	for name, f := range testFuncs {
