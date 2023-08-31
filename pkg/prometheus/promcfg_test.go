@@ -1144,21 +1144,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.Store{},
-			[]byte(`- job_name: prometheus
-  scrape_interval: 15s
-  static_configs:
-  - targets: ['localhost:9090']
-- job_name: gce_app_bar
-  scrape_interval: 5s
-  gce_sd_config:
-    - project: foo
-      zone: us-central1
-  relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_gce_label_app
-      regex: my_app
-`),
+			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -1169,117 +1155,31 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name     string
-		result   string
-		expected string
+		name   string
+		result string
+		golden string
 	}{
 		{
 			name:   "unsharded prometheus",
 			result: getCfg(nil),
-			expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: prometheus
-  scrape_interval: 15s
-  static_configs:
-  - targets:
-    - localhost:9090
-- job_name: gce_app_bar
-  scrape_interval: 5s
-  gce_sd_config:
-  - project: foo
-    zone: us-central1
-  relabel_configs:
-  - action: keep
-    source_labels:
-    - __meta_gce_label_app
-    regex: my_app
-`,
+			golden: "AdditionalScrapeConfigs_unsharded_prometheus.golden",
 		},
 		{
 			name:   "one prometheus shard",
 			result: getCfg(ptr.To(int32(1))),
-			expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: prometheus
-  scrape_interval: 15s
-  static_configs:
-  - targets:
-    - localhost:9090
-- job_name: gce_app_bar
-  scrape_interval: 5s
-  gce_sd_config:
-  - project: foo
-    zone: us-central1
-  relabel_configs:
-  - action: keep
-    source_labels:
-    - __meta_gce_label_app
-    regex: my_app
-`,
+			golden: "AdditionalScrapeConfigs_one_prometheus_shard.golden",
 		},
 		{
 			name:   "sharded prometheus",
 			result: getCfg(ptr.To(int32(3))),
-			expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: prometheus
-  scrape_interval: 15s
-  static_configs:
-  - targets:
-    - localhost:9090
-  relabel_configs:
-  - source_labels:
-    - __address__
-    target_label: __tmp_hash
-    modulus: 3
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-- job_name: gce_app_bar
-  scrape_interval: 5s
-  gce_sd_config:
-  - project: foo
-    zone: us-central1
-  relabel_configs:
-  - action: keep
-    source_labels:
-    - __meta_gce_label_app
-    regex: my_app
-  - source_labels:
-    - __address__
-    target_label: __tmp_hash
-    modulus: 3
-    action: hashmod
-  - source_labels:
-    - __tmp_hash
-    regex: $(SHARD)
-    action: keep
-`,
+			golden: "AdditionalScrapeConfigs_sharded prometheus.golden",
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.result, tt.expected)
-		},
-		)
+			golden.Assert(t, tt.result, tt.golden)
+		})
 	}
 }
 
