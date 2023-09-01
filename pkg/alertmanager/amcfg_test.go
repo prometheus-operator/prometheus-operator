@@ -2982,6 +2982,311 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeWebhookConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test webhook_url_file is dropped in webhook config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URLFile: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URLFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test url takes precedence in webhook config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL:     "foo",
+								URLFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
+func TestSanitizePushoverConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test pushover_user_key_file is dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKeyFile: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKeyFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test pushover_token_file is dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								TokenFile: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								TokenFile: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test user_key takes precedence in pushover config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:     "foo",
+								UserKeyFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test token takes precedence in pushover config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								Token:     "foo",
+								TokenFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								Token: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
+func TestSanitizeTelegramConfig(t *testing.T) {
+	logger := log.NewNopLogger()
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test telegram_bot_token_file is dropped in telegram config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								BotTokenFile: "foo",
+								BotToken: "bar",
+								ChatID: 123,
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								BotTokenFile: "",
+								BotToken: "bar",
+								ChatID: 123,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test bot_token takes precedence in telegram config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								BotToken:     "foo",
+								BotTokenFile: "bar",
+								ChatID: 123,
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								BotToken: "foo",
+								ChatID: 123,
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
+
 func TestSanitizePagerDutyConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 
