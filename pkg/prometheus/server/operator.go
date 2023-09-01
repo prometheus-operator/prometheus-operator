@@ -530,8 +530,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	c.addHandlers()
 
-	// if c.kubeletSyncEnabled && !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-	if c.kubeletSyncEnabled {
+	if c.kubeletSyncEnabled && !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
 		go c.reconcileNodeEndpoints(ctx)
 	}
 
@@ -979,20 +978,21 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
-	}
+	c.enqueueForNamespace(c.nsPromInf, nsName)
 }
 
 func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
-	}
+	c.enqueueForNamespace(c.nsMonInf, nsName)
 }
 
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
-func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
+func (c *Operator) enqueueForNamespace(nsInfo cache.SharedIndexInformer, nsName string) {
+	if operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
+		return
+	}
+
+	store := nsInfo.GetStore()
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
 		level.Error(c.logger).Log(
