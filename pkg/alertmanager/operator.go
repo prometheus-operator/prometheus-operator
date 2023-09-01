@@ -341,7 +341,7 @@ func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
 
-		c.enqueueForNamespace(o.GetNamespace())
+		c.enqueueForAlertmanagerConfigNamespace(o.GetNamespace())
 	}
 }
 
@@ -355,7 +355,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
 
-		c.enqueueForNamespace(o.GetNamespace())
+		c.enqueueForAlertmanagerConfigNamespace(o.GetNamespace())
 	}
 }
 
@@ -365,7 +365,7 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
 
-		c.enqueueForNamespace(o.GetNamespace())
+		c.enqueueForAlertmanagerConfigNamespace(o.GetNamespace())
 	}
 }
 
@@ -378,7 +378,7 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Secret deleted")
 	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-	c.enqueueForNamespace(o.GetNamespace())
+	c.enqueueForAlertmanagerNamespace(o.GetNamespace())
 }
 
 func (c *Operator) handleSecretUpdate(old, cur interface{}) {
@@ -399,7 +399,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 	level.Debug(c.logger).Log("msg", "Secret updated")
 	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 
-	c.enqueueForNamespace(curObj.GetNamespace())
+	c.enqueueForAlertmanagerNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
@@ -410,13 +410,21 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Secret added")
 	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-	c.enqueueForNamespace(o.GetNamespace())
+	c.enqueueForAlertmanagerNamespace(o.GetNamespace())
+}
+
+func (c *Operator) enqueueForAlertmanagerNamespace(nsName string) {
+	c.enqueueForNamespace(c.nsAlrtInf.GetStore(), nsName)
+}
+
+func (c *Operator) enqueueForAlertmanagerConfigNamespace(nsName string) {
+	c.enqueueForNamespace(c.nsAlrtCfgInf.GetStore(), nsName)
 }
 
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
 // given namespace or select objects in the given namespace.
-func (c *Operator) enqueueForNamespace(nsName string) {
-	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
+func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
+	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
 		level.Error(c.logger).Log(
 			"msg", "get namespace to enqueue Alertmanager instances failed",
@@ -424,12 +432,14 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		)
 		return
 	}
+
 	if !exists {
 		level.Error(c.logger).Log(
 			"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
 		)
 		return
 	}
+
 	ns := nsObject.(*v1.Namespace)
 
 	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
