@@ -3218,8 +3218,8 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 						TelegramConfigs: []*telegramConfig{
 							{
 								BotTokenFile: "foo",
-								BotToken: "bar",
-								ChatID: 123,
+								BotToken:     "bar",
+								ChatID:       123,
 							},
 						},
 					},
@@ -3231,8 +3231,8 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 						TelegramConfigs: []*telegramConfig{
 							{
 								BotTokenFile: "",
-								BotToken: "bar",
-								ChatID: 123,
+								BotToken:     "bar",
+								ChatID:       123,
 							},
 						},
 					},
@@ -3249,7 +3249,7 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 							{
 								BotToken:     "foo",
 								BotTokenFile: "bar",
-								ChatID: 123,
+								ChatID:       123,
 							},
 						},
 					},
@@ -3261,7 +3261,7 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 						TelegramConfigs: []*telegramConfig{
 							{
 								BotToken: "foo",
-								ChatID: 123,
+								ChatID:   123,
 							},
 						},
 					},
