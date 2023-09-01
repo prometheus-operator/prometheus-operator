@@ -475,6 +475,11 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.Device != nil {
+		in, out := &in.Device, &out.Device
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)
