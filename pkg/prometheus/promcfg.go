@@ -2519,6 +2519,44 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// DNSSDConfig
+	if len(sc.Spec.DNSSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DNSSDConfigs))
+		for i, config := range sc.Spec.DNSSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "names",
+					Value: config.Names,
+				},
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Type != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "type",
+					Value: config.Type,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "dns_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}

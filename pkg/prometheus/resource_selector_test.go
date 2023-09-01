@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1020,6 +1021,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							},
 							Key: "key1",
 						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "DNS SD config with port for type other than SRV record",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("A"),
+						Port:  ptr.To(9100),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "DNS SD config with no port specified for type other than SRV record",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("A"),
 					},
 				}
 			},
