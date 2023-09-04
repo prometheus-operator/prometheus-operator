@@ -2035,7 +2035,7 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 	}
 
 	if tc.BotToken == "" {
-		return fmt.Errorf("mandatory field %q is empty", "BotToken")
+		return fmt.Errorf("mandatory field %q is empty", "botToken")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
