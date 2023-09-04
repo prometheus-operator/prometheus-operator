@@ -403,7 +403,9 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 	return v1alpha1.PushoverConfig{
 		SendResolved: in.SendResolved,
 		UserKey:      convertSecretKeySelectorTo(in.UserKey),
+		UserKeyFile:  in.UserKeyFile,
 		Token:        convertSecretKeySelectorTo(in.Token),
+		TokenFile:    in.TokenFile,
 		Title:        in.Title,
 		Message:      in.Message,
 		URL:          in.URL,

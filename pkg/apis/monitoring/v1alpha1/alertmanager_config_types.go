@@ -758,21 +758,25 @@ type PushoverConfig struct {
 	// The secret's key that contains the recipient user's user key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// Either `userKey` or `userKeyFile` is required.
+	// +optional
 	UserKey *v1.SecretKeySelector `json:"userKey,omitempty"`
 	// The user key file that contains the recipient user's user key.
-	// The user key file needs to be in the same namespace as the AlertmanagerConfig
-	// object and accessible by the Prometheus Operator.
+	// Either `userKey` or `userKeyFile` is required.
+	// It requires Alertmanager >= v0.26.0.
 	// +optional
-	UserKeyFile string `json:"userKeyFile,omitempty"`
+	UserKeyFile *string `json:"userKeyFile,omitempty"`
 	// The secret's key that contains the registered application's API token, see https://pushover.net/apps.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// Either `token` or `tokenFile` is required.
+	// +optional
 	Token *v1.SecretKeySelector `json:"token,omitempty"`
 	// The token file that contains the registered application's API token, see https://pushover.net/apps.
-	// The token file needs to be in the same namespace as the AlertmanagerConfig
-	// object and accessible by the Prometheus Operator.
+	// Either `token` or `tokenFile` is required.
+	// It requires Alertmanager >= v0.26.0.
 	// +optional
-	TokenFile string `json:"tokenFile,omitempty"`
+	TokenFile *string `json:"tokenFile,omitempty"`
 	// Notification title.
 	// +optional
 	Title string `json:"title,omitempty"`

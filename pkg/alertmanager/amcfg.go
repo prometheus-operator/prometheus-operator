@@ -1920,7 +1920,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
-		msg := "'use_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
+		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		poc.UserKeyFile = ""
 	}
