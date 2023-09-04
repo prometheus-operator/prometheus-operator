@@ -337,6 +337,7 @@ type telegramConfig struct {
 	VSendResolved        *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	APIUrl               string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	BotToken             string            `yaml:"bot_token,omitempty" json:"bot_token,omitempty"`
+	BotTokenFile         string            `yaml:"bot_token_file,omitempty" json:"bot_token_file,omitempty"`
 	ChatID               int64             `yaml:"chat_id,omitempty" json:"chat_id,omitempty"`
 	Message              string            `yaml:"message,omitempty" json:"message,omitempty"`
 	DisableNotifications bool              `yaml:"disable_notifications,omitempty" json:"disable_notifications,omitempty"`

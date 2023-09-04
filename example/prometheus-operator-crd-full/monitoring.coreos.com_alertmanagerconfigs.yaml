@@ -3194,9 +3194,11 @@ spec:
                               If not specified, default API URL will be used.
                             type: string
                           botToken:
-                            description: Telegram bot token The secret needs to be
-                              in the same namespace as the AlertmanagerConfig object
-                              and accessible by the Prometheus Operator.
+                            description: "Telegram bot token. It is mutually exclusive
+                              with `botTokenFile`. The secret needs to be in the same
+                              namespace as the AlertmanagerConfig object and accessible
+                              by the Prometheus Operator. \n Either `botToken` or
+                              `botTokenFile` is required."
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -3215,6 +3217,12 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                          botTokenFile:
+                            description: "File to read the Telegram bot token from.
+                              It is mutually exclusive with `botToken`. Either `botToken`
+                              or `botTokenFile` is required. \n It requires Alertmanager
+                              >= v0.26.0."
+                            type: string
                           chatID:
                             description: The Telegram chat ID.
                             format: int64
@@ -8312,9 +8320,11 @@ spec:
                               If not specified, default API URL will be used.
                             type: string
                           botToken:
-                            description: Telegram bot token The secret needs to be
-                              in the same namespace as the AlertmanagerConfig object
-                              and accessible by the Prometheus Operator.
+                            description: "Telegram bot token. It is mutually exclusive
+                              with `botTokenFile`. The secret needs to be in the same
+                              namespace as the AlertmanagerConfig object and accessible
+                              by the Prometheus Operator. \n Either `botToken` or
+                              `botTokenFile` is required."
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -8330,6 +8340,12 @@ spec:
                             - key
                             - name
                             type: object
+                          botTokenFile:
+                            description: "File to read the Telegram bot token from.
+                              It is mutually exclusive with `botToken`. Either `botToken`
+                              or `botTokenFile` is required. \n It requires Alertmanager
+                              >= v0.26.0."
+                            type: string
                           chatID:
                             description: The Telegram chat ID.
                             format: int64

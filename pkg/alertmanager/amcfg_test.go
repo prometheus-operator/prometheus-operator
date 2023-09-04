@@ -1964,6 +1964,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
+	versionTelegramBotTokenFileAllowed := semver.Version{Major: 0, Minor: 26}
+	versionTelegramBotTokenFileNotAllowed := semver.Version{Major: 0, Minor: 25}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2357,6 +2360,129 @@ func TestSanitizeConfig(t *testing.T) {
 						WebexConfigs: []*webexConfig{
 							{
 								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "bot_token_file field for Telegram config",
+			againstVersion: versionTelegramBotTokenFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "bot_token_file and bot_token fields for Telegram config",
+			againstVersion: versionTelegramBotTokenFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotToken:     "test",
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{{
+							ChatID:   12345,
+							BotToken: "test",
+						}},
+					},
+				},
+			},
+		},
+		{
+			name:           "bot_token not specified and bot_token_file is dropped for unsupported versions",
+			againstVersion: versionTelegramBotTokenFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "bot_token specified and bot_token_file is dropped for unsupported versions",
+			againstVersion: versionTelegramBotTokenFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotToken:     "test",
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{{
+							ChatID:   12345,
+							BotToken: "test",
+						}},
+					},
+				},
+			},
+		},
+		{
+			name:           "bot_token and bot_token_file empty",
+			againstVersion: versionTelegramBotTokenFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID: 12345,
 							},
 						},
 					},
