@@ -2791,8 +2791,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
-								UserKey: "foo",
-								Token:   "bar",
+								UserKey:     "foo",
+								UserKeyFile: "",
+								Token:       "bar",
+								TokenFile:   "",
 							},
 						},
 					},
