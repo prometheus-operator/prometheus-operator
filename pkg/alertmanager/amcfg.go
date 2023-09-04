@@ -2030,24 +2030,12 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
 	}
 
-	if tc.BotTokenFile != "" && amVersion.LT(semver.MustParse("0.26.0")) {
-		msg := "'bot_token_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
-		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		tc.BotTokenFile = ""
-	}
-
 	if tc.ChatID == 0 {
 		return errors.Errorf("mandatory field %q is empty", "chatID")
 	}
 
-	if tc.BotToken == "" && amVersion.LT(semver.MustParse("0.26.0")) {
+	if tc.BotToken == "" {
 		return fmt.Errorf("mandatory field %q is empty", "BotToken")
-	}
-
-	if tc.BotToken != "" && tc.BotTokenFile != "" {
-		msg := "'bot_token' and 'bot_toke_file' are mutually exclusive for telegram receiver config - 'bot_token' has taken precedence"
-		level.Warn(logger).Log("msg", msg)
-		tc.BotTokenFile = ""
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
