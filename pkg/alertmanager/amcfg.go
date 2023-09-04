@@ -1917,6 +1917,31 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 }
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
+
+	if poc.UserKeyFile != "" && lessThanV0_26 {
+		msg := "'use_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.UserKeyFile = ""
+	}
+
+	if poc.TokenFile != "" && lessThanV0_26 {
+		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TokenFile = ""
+	}
+
+	if poc.UserKey != "" && poc.UserKeyFile != "" {
+		msg := "'user_key' and 'user_key_file' are mutually exclusive for pushover config - 'user_key' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		poc.UserKeyFile = ""
+	}
+
+	if poc.Token != "" && poc.TokenFile != "" {
+		msg := "'token' and 'token_file' are mutually exclusive for pushover config - 'token' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		poc.TokenFile = ""
+	}
 	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 

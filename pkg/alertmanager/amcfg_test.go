@@ -2759,7 +2759,64 @@ func TestTimeInterval(t *testing.T) {
 		})
 	}
 }
+func TestSanitizePushoverConfig(t *testing.T) {
+	logger := log.NewNopLogger()
 
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		expect         alertmanagerConfig
+		expectErr      bool
+	}{
+		{
+			name:           "Test pushover use_key_file/token_file takes precedence in pushover config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:     "foo",
+								UserKeyFile: "/path/use_key_file",
+								Token:       "bar",
+								TokenFile:   "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "foo",
+								Token:   "bar",
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %q", err)
+			}
+
+			require.Equal(t, tc.expect, *tc.in)
+		})
+	}
+}
 func TestSanitizeEmailConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 
