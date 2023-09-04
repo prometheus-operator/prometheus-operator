@@ -2158,6 +2158,10 @@
                             ],
                             type: 'object',
                           },
+                          tokenFile: {
+                            description: "The token file that contains the registered application's API token, see https://pushover.net/apps. The token file needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            type: 'string',
+                          },
                           url: {
                             description: 'A supplementary URL shown alongside the message.',
                             type: 'string',
@@ -2185,6 +2189,10 @@
                               'name',
                             ],
                             type: 'object',
+                          },
+                          userKeyFile: {
+                            description: "The user key file that contains the recipient user's user key. The user key file needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            type: 'string',
                           },
                         },
                         type: 'object',

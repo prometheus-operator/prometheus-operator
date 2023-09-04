@@ -19046,6 +19046,20 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+The user key file needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>token</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
@@ -19056,6 +19070,20 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+The token file needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
@@ -22878,6 +22906,20 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+The user key file needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>token</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.SecretKeySelector">
@@ -22888,6 +22930,20 @@ SecretKeySelector
 <td>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+The token file needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>

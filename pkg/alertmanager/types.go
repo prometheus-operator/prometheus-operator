@@ -308,7 +308,9 @@ type pushoverConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	UserKey       string            `yaml:"user_key,omitempty" json:"user_key,omitempty"`
+	UserKeyFile   string            `yaml:"user_key_file,omitempty" json:"user_key_file,omitempty"`
 	Token         string            `yaml:"token,omitempty" json:"token,omitempty"`
+	TokenFile     string            `yaml:"token_file,omitempty" json:"token_file,omitempty"`
 	Title         string            `yaml:"title,omitempty" json:"title,omitempty"`
 	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
