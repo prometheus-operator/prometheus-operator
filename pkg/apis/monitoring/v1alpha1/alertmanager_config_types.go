@@ -298,6 +298,9 @@ type SlackConfig struct {
 	// object and accessible by the Prometheus Operator.
 	// +optional
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// File path on the disk containing the Slack's webhook URL
+	// +optional
+	APIURLFile *string `json:"apiURLFile,omitempty"`
 	// The channel or user to send notifications to.
 	// +optional
 	Channel string `json:"channel,omitempty"`

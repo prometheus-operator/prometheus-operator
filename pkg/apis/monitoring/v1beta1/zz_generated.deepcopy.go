@@ -718,6 +718,11 @@ func (in *SlackConfig) DeepCopyInto(out *SlackConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.APIURLFile != nil {
+		in, out := &in.APIURLFile, &out.APIURLFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Fields != nil {
 		in, out := &in.Fields, &out.Fields
 		*out = make([]SlackField, len(*in))

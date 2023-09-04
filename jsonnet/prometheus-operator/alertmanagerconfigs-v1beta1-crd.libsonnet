@@ -2272,6 +2272,10 @@
                             ],
                             type: 'object',
                           },
+                          apiURLFile: {
+                            description: "File path on the disk containing the Slack's webhook URL",
+                            type: 'string',
+                          },
                           callbackId: {
                             type: 'string',
                           },

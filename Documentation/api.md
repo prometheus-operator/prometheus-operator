@@ -20160,6 +20160,18 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>apiURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File path on the disk containing the Slack&rsquo;s webhook URL</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>channel</code><br/>
 <em>
 string
@@ -23692,6 +23704,18 @@ SecretKeySelector
 <p>The secret&rsquo;s key that contains the Slack webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File path on the disk containing the Slack&rsquo;s webhook URL</p>
 </td>
 </tr>
 <tr>
