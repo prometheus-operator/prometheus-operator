@@ -321,35 +321,32 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-
-		newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-			// nsResyncPeriod is used to control how often the namespace informer
-			// should resync. If the unprivileged ListerWatcher is used, then the
-			// informer must resync more often because it cannot watch for
-			// namespace changes.
-			nsResyncPeriod := 15 * time.Second
-			// If the only namespace is v1.NamespaceAll, then the client must be
-			// privileged and a regular cache.ListWatch will be used. In this case
-			// watching works and we do not need to resync so frequently.
-			if listwatch.IsAllNamespaces(allowList) {
-				nsResyncPeriod = resyncPeriod
-			}
-			nsInf := cache.NewSharedIndexInformer(
-				o.metrics.NewInstrumentedListerWatcher(
-					listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
-				),
-				&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-			)
-
-			return nsInf
+	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+		// nsResyncPeriod is used to control how often the namespace informer
+		// should resync. If the unprivileged ListerWatcher is used, then the
+		// informer must resync more often because it cannot watch for
+		// namespace changes.
+		nsResyncPeriod := 15 * time.Second
+		// If the only namespace is v1.NamespaceAll, then the client must be
+		// privileged and a regular cache.ListWatch will be used. In this case
+		// watching works and we do not need to resync so frequently.
+		if listwatch.IsAllNamespaces(allowList) {
+			nsResyncPeriod = resyncPeriod
 		}
-		c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
-		if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
-			c.nsPromInf = c.nsMonInf
-		} else {
-			c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
-		}
+		nsInf := cache.NewSharedIndexInformer(
+			o.metrics.NewInstrumentedListerWatcher(
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+			),
+			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+		)
+
+		return nsInf
+	}
+	c.nsMonInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
+	if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.PrometheusAllowList) {
+		c.nsPromInf = c.nsMonInf
+	} else {
+		c.nsPromInf = newNamespaceInformer(c, c.config.Namespaces.PrometheusAllowList)
 	}
 
 	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(c.kclient.Discovery(), "discovery.k8s.io/v1", "endpointslices")
@@ -401,17 +398,15 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 	}
 
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		for _, inf := range []struct {
-			name     string
-			informer cache.SharedIndexInformer
-		}{
-			{"PromNamespace", c.nsPromInf},
-			{"MonNamespace", c.nsMonInf},
-		} {
-			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
-				return errors.Errorf("failed to sync cache for %s informer", inf.name)
-			}
+	for _, inf := range []struct {
+		name     string
+		informer cache.SharedIndexInformer
+	}{
+		{"PromNamespace", c.nsPromInf},
+		{"MonNamespace", c.nsMonInf},
+	} {
+		if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
+			return errors.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
@@ -469,11 +464,10 @@ func (c *Operator) addHandlers() {
 	// trigger a configuration change.
 	// It doesn't need to watch on addition/deletion though because it's
 	// already covered by the event handlers on service/pod monitors and rules.
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-			UpdateFunc: c.handleMonitorNamespaceUpdate,
-		})
-	}
+	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: c.handleMonitorNamespaceUpdate,
+	})
+
 }
 
 // Run the controller.
@@ -513,12 +507,11 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	if !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		go c.nsMonInf.Run(ctx.Done())
-		if c.nsPromInf != c.nsMonInf {
-			go c.nsPromInf.Run(ctx.Done())
-		}
+	go c.nsMonInf.Run(ctx.Done())
+	if c.nsPromInf != c.nsMonInf {
+		go c.nsPromInf.Run(ctx.Done())
 	}
+
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
@@ -988,10 +981,6 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsInfo cache.SharedIndexInformer, nsName string) {
-	if operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
-		return
-	}
-
 	store := nsInfo.GetStore()
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {

@@ -157,17 +157,17 @@ func isSingleNamespace(ns map[string]struct{}) bool {
 // In prometheus-operator, validate the AllowList
 // In alertmanager-operator, validate the AlertmanagerAllowList
 // In thanos-operator, validate the ThanosRulerAllowList
-func IsAlertManagerInSingleNamespace(ns Namespaces) bool {
-	// Check if has a single namespace and different from v1.NamespaceAll
-	if len(ns.AlertmanagerAllowList) == 1 {
-		return isSingleNamespace(ns.AlertmanagerAllowList)
-	} else if len(ns.AlertmanagerAllowList) == 0 &&
-		len(ns.AlertmanagerConfigAllowList) == 1 {
-		return isSingleNamespace(ns.AlertmanagerConfigAllowList)
-	}
+// func IsAlertManagerInSingleNamespace(ns Namespaces) bool {
+// 	// Check if has a single namespace and different from v1.NamespaceAll
+// 	if len(ns.AlertmanagerAllowList) == 1 {
+// 		return isSingleNamespace(ns.AlertmanagerAllowList)
+// 	} else if len(ns.AlertmanagerAllowList) == 0 &&
+// 		len(ns.AlertmanagerConfigAllowList) == 1 {
+// 		return isSingleNamespace(ns.AlertmanagerConfigAllowList)
+// 	}
 
-	return isSingleNamespace(ns.AllowList)
-}
+// 	return isSingleNamespace(ns.AllowList)
+// }
 
 func IsPrometheusInSingleNamespace(ns Namespaces) bool {
 	// Check if has a single namespace and different from v1.NamespaceAll
@@ -178,11 +178,11 @@ func IsPrometheusInSingleNamespace(ns Namespaces) bool {
 	return isSingleNamespace(ns.AllowList)
 }
 
-func IsThanosRulerInSingleNamespace(ns Namespaces) bool {
-	// Check if has a single namespace and different from v1.NamespaceAll
-	if len(ns.ThanosRulerAllowList) == 1 {
-		isSingleNamespace(ns.ThanosRulerAllowList)
-	}
+// func IsThanosRulerInSingleNamespace(ns Namespaces) bool {
+// 	// Check if has a single namespace and different from v1.NamespaceAll
+// 	if len(ns.ThanosRulerAllowList) == 1 {
+// 		isSingleNamespace(ns.ThanosRulerAllowList)
+// 	}
 
-	return isSingleNamespace(ns.AllowList)
-}
+// 	return isSingleNamespace(ns.AllowList)
+// }

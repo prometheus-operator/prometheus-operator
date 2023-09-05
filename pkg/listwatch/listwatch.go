@@ -74,6 +74,25 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, tweak)
 	}
 
+	if len(allowedNamespaces) == 1 && len(deniedNamespaces) == 0 {
+		listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
+			list := &v1.NamespaceList{}
+			for name := range allowedNamespaces {
+				list.Items = append(list.Items, v1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{Name: name},
+				})
+			}
+			return list, nil
+		}
+		watchFunc := func(_ metav1.ListOptions) (watch.Interface, error) {
+			// Since the client does not have Watch privileges, do not
+			// actually watch anything. Use a watch.FakeWatcher here to
+			// implement watch.Interface but not send any events.
+			return watch.NewFake(), nil
+		}
+		return &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
+	}
+
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		optionsModifier(&options)
 		list := &v1.NamespaceList{}
