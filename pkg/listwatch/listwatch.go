@@ -24,7 +24,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -50,14 +49,9 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 	l log.Logger,
 	c cache.Getter,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
-	fieldSelector fields.Selector,
 ) cache.ListerWatcher {
 	if l == nil {
 		l = log.NewNopLogger()
-	}
-
-	optionsModifier := func(options *metav1.ListOptions) {
-		options.FieldSelector = fieldSelector.String()
 	}
 
 	// If the only namespace given is `v1.NamespaceAll`, then this
@@ -66,8 +60,6 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 	// filtering the given denied namespaces.
 	if IsAllNamespaces(allowedNamespaces) {
 		tweak := func(options *metav1.ListOptions) {
-			optionsModifier(options)
-
 			DenyTweak(options, "metadata.name", deniedNamespaces)
 		}
 
@@ -75,7 +67,6 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 	}
 
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
-		optionsModifier(&options)
 		list := &v1.NamespaceList{}
 		for name := range allowedNamespaces {
 			result := &v1.Namespace{}
