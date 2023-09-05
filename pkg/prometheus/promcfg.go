@@ -43,7 +43,8 @@ const (
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
 
-	defaultReplicaExternalLabelName = "prometheus_replica"
+	defaultPrometheusExternalLabelName = "prometheus"
+	defaultReplicaExternalLabelName    = "prometheus_replica"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -387,7 +388,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	objMeta := cg.prom.GetObjectMeta()
 
-	prometheusExternalLabelName := "prometheus"
+	prometheusExternalLabelName := defaultPrometheusExternalLabelName
 	if cpf.PrometheusExternalLabelName != nil {
 		prometheusExternalLabelName = *cpf.PrometheusExternalLabelName
 	}
@@ -407,9 +408,14 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
-	for n, v := range cpf.ExternalLabels {
-		m[n] = v
+	for k, v := range cpf.ExternalLabels {
+		if _, found := m[k]; found {
+			level.Warn(cg.logger).Log("msg", "ignoring external label because it is a reserved key", "key", k)
+			continue
+		}
+		m[k] = v
 	}
+
 	return stringMapToMapSlice(m)
 }
 
