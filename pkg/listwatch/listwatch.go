@@ -74,7 +74,7 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, tweak)
 	}
 
-	if len(allowedNamespaces) == 1 && len(deniedNamespaces) == 0 {
+	if IsSingleNamespace(allowedNamespaces, deniedNamespaces) {
 		listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 			list := &v1.NamespaceList{}
 			for name := range allowedNamespaces {
@@ -164,4 +164,11 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 	}
 
 	options.FieldSelector = strings.Join(selectors, ",")
+}
+
+func IsSingleNamespace(
+	allowedNamespaces,
+	deniedNamespaces map[string]struct{},
+) bool {
+	return len(allowedNamespaces) == 1 && len(deniedNamespaces) == 0
 }
