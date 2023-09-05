@@ -1,0 +1,35 @@
+global:
+  slack_api_url_file: /etc/test
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+    active_time_intervals:
+    - mynamespace/myamc/test
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  slack_configs:
+  - fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
+mute_time_intervals:
+- name: mynamespace/myamc/test
+  time_intervals:
+  - times:
+    - start_time: "08:00"
+      end_time: "17:00"
+    weekdays: [saturday, sunday]
+    days_of_month: ["1:10"]
+    months: ["1:3"]
+    years: ['2030:2050']
+templates: []

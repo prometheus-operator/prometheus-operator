@@ -1,0 +1,65 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  kubernetes_sd_configs:
+  - role: ingress
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_ingress_label_prometheus_io_probe
+    - __meta_kubernetes_ingress_labelpresent_prometheus_io_probe
+    regex: (true);true
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
+    separator: ;
+    regex: (.+);(.+);(.+)
+    target_label: __param_target
+    replacement: ${1}://${2}${3}
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_ingress_name
+    target_label: ingress
+  - source_labels:
+    - __address__
+    separator: ;
+    regex: (.*)
+    target_label: __tmp_ingress_address
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - target_label: foo
+    replacement: bar
+    action: replace
+  - source_labels:
+    - __param_target
+    target_label: __tmp_hash
+    modulus: 2
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  metric_relabel_configs: []

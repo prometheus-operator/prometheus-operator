@@ -333,6 +333,16 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 	}
 }
 
+func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
+	return WebexConfig{
+		APIURL:       (*URL)(in.APIURL),
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		Message:      in.Message,
+		RoomID:       in.RoomID,
+		SendResolved: in.SendResolved,
+	}
+}
+
 func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 	return WebhookConfig{
 		SendResolved: in.SendResolved,
@@ -475,6 +485,13 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			out.SlackConfigs = append(
 				out.SlackConfigs,
 				convertSlackConfigFrom(in),
+			)
+		}
+
+		for _, in := range in.WebexConfigs {
+			out.WebexConfigs = append(
+				out.WebexConfigs,
+				convertWebexConfigFrom(in),
 			)
 		}
 

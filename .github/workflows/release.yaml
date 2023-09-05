@@ -10,7 +10,7 @@ jobs:
     name: Upload release assets
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
       - name: Install Go

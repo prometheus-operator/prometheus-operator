@@ -703,20 +703,34 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+
+	// The controller should ignore any changes to RevisionHistoryLimit field because
+	// it may be modified by external actors.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
+	ss.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
-		TR monitoringv1.ThanosRuler
-		C  Config
-		S  interface{}
-		R  []string `hash:"set"`
-	}{tr, c, ss, ruleConfigMapNames},
+		ThanosRulerLabels      map[string]string
+		ThanosRulerAnnotations map[string]string
+		ThanosRulerGeneration  int64
+		Config                 Config
+		StatefulSetSpec        appsv1.StatefulSetSpec
+		RuleConfigMaps         []string `hash:"set"`
+	}{
+		ThanosRulerLabels:      tr.Labels,
+		ThanosRulerAnnotations: tr.Annotations,
+		ThanosRulerGeneration:  tr.Generation,
+		Config:                 c,
+		StatefulSetSpec:        ss,
+		RuleConfigMaps:         ruleConfigMapNames,
+	},
 		nil,
 	)
 	if err != nil {
 		return "", errors.Wrap(
 			err,
-			"failed to calculate combined hash of ThanosRuler StatefulSet, ThanosRuler CRD, config and"+
-				" rule ConfigMap names",
+			"failed to calculate combined hash",
 		)
 	}
 

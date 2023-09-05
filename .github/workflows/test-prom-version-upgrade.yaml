@@ -1,0 +1,50 @@
+name: e2e
+on:
+  schedule:
+    - cron:  '37 15 * * *' # Every day 15:37
+
+jobs:
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Import environment variables from file
+      run: cat ".github/env" >> $GITHUB_ENV
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '${{ env.golang-version }}'
+    - name: Build images
+      run: |
+        export SHELL=/bin/bash
+        make build image
+    - name: Start KinD
+      uses: helm/kind-action@v1.8.0
+      with:
+        version: ${{ env.kind-version }}
+        node_image: ${{ env.kind-image }}
+        wait: 300s
+        config: ./test/e2e/kind-conf.yaml
+        cluster_name: e2e
+    - name: Wait for cluster to finish bootstraping
+      run: |
+        kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Load images
+      run: |
+        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+        kind load docker-image -n e2e quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
+        kubectl apply -f scripts/kind-rbac.yaml
+    - name: Run tests
+      run: >
+        EXCLUDE_ALL_NS_TESTS=exclude
+        EXCLUDE_ALERTMANAGER_TESTS=exclude
+        EXCLUDE_PROMETHEUS_TESTS=exclude
+        EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude
+        EXCLUDE_THANOSRULER_TESTS=exclude
+        EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude
+        FEATURE_GATED_TESTS=exclude 
+        make test-e2e

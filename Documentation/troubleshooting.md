@@ -11,6 +11,25 @@ draft: false
 description: Guide on troubleshooting the Prometheus Operator.
 ---
 
+### `CustomResourceDefinition "..." is invalid: metadata.annotations: Too long` issue
+
+When applying updated CRDs on a cluster, you may face the following error message:
+
+```bash
+$ kubectl apply -f $MANIFESTS
+The CustomResourceDefinition "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long: must have at most 262144 bytes
+```
+
+The reason is that apply runs in the client by default and saves information into the object annotations but there's a hard limit on the size of annotations.
+
+The workaround is to use server-side apply which requires Kubernetes v1.22 at least.
+
+```bash
+kubectl apply --server-side --force-conflicts -f $MANIFESTS
+```
+
+If using ArgoCD, please refer to their [documentation](https://argo-cd.readthedocs.io/en/latest/user-guide/sync-options/#server-side-apply).
+
 ### RBAC on Google Container Engine (GKE)
 
 When you try to create `ClusterRole` (`kube-state-metrics`, `prometheus` `prometheus-operator`, etc.) on GKE Kubernetes cluster running 1.6 version, you will probably run into permission errors:
@@ -62,6 +81,18 @@ Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod
 ```sh
 kubectl -n monitoring get secret prometheus-k8s -ojson | jq -r '.data["prometheus.yaml.gz"]' | base64 -d | gunzip | grep "my-service-monitor"
 ```
+
+#### It is in the configuration but not on the Service Discovery page
+
+ServiceMonitors pointing to Services that do not exist (e.g. nothing matching `.spec.selector`) will lead to this ServiceMonitor not being added to the Service Discovery page. Check if you can find any Service with the selector you configured.
+
+If you use `.spec.selector.matchLabels` (instead of e.g. `.spec.selector.matchExpressions`), you can use this command to check for services matching the given label:
+
+```
+kubectl get services -l "$(kubectl get servicemonitors -n "<namespace of your ServiceMonitor>" "<name of your ServiceMonitor>" -o template='{{ $first := 1 }}{{ range $key, $value := .spec.selector.matchLabels }}{{ if eq $first 0 }},{{end}}{{ $key }}={{ $value }}{{ $first = 0 }}{{end}}')"
+```
+
+Note: this command does not take namespaces into account. If your ServiceMonitor selects a single namespace or all namespaces, you can just add that to the `kubectl get services` command (using `-n $namespace` or `-A` for all namespaces).
 
 ### Prometheus kubelet metrics server returned HTTP status 403 Forbidden
 

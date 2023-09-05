@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -94,7 +95,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        func(b bool) *bool { return &b }(true),
+			Force:        ptr.To(true),
 			FieldManager: "e2e-test",
 		},
 	)

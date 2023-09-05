@@ -1,3 +1,24 @@
+## 0.67.1 / 2023-08-03
+
+* [BUGFIX] Avoid skipping `AlertmanagerConfig` resources for Alertmanager versions prior v0.25.0. #5788
+
+## 0.67.0 / 2023-07-27
+
+* [FEATURE] Add `spec.scheme` field to the ScrapeConfig CRD. #5679
+* [FEATURE] Add `spec.params` field to the ScrapeConfig CRD. #5750
+* [FEATURE] Add `spec.scrapeInterval` and `spec.scrapeTimeout` fields to the ScrapeConfig CRD. #5742
+* [FEATURE] Add support for TLS configuration to the ScrapeConfig CRD. #5710
+* [FEATURE] Add support for scrape limits to the ScrapeConfig CRD. #5658
+* [FEATURE] Add support for Kubernetes node service discovery to the ScrapeConfig CRD. #5675
+* [FEATURE] Add support for Consul service discovery to the ScrapeConfig CRD. #5709
+* [FEATURE] Add support for ScrapeConfig objects to `spec.excludedFromEnforcement` (Prometheus CRD). #5577
+* [FEATURE] Add support for global scrape limits to the Prometheus CRD. #5646
+* [FEATURE] Add `spec.alertmanagerConfiguration.smtp` field to the Alertmanager CRD. #5649
+* [FEATURE] Add support for Discord integration to the AlertmanagerConfig CRD. #5671
+* [ENHANCEMENT] (jsonnet) expose resource settings for the reloader. #5768
+* [BUGFIX] Avoid deadlock of the config reloader when the initial configuration is invalid. #5743
+* [BUGFIX] Reload the Alertmanager configuration when templates are modified. #5727
+
 ## 0.66.0 / 2023-06-14
 
 After research, we noticed how the default CPU requests of the config-reloader container were too high compared to the effective usage. We decided to decrease the default CPU requests from `100m` to `10m`. For most environments, this won't make a difference but if you need to increase the values, you can use the `-config-reloader-cpu-request` and `-config-reloader-cpu-limit` CLI arguments of the Prometheus operator.

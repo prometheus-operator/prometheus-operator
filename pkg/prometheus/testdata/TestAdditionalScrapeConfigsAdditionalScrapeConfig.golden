@@ -1,0 +1,14 @@
+- job_name: prometheus
+  scrape_interval: 15s
+  static_configs:
+    - targets: ["localhost:9090"]
+- job_name: gce_app_bar
+  scrape_interval: 5s
+  gce_sd_config:
+    - project: foo
+      zone: us-central1
+  relabel_configs:
+    - action: keep
+      source_labels:
+        - __meta_gce_label_app
+      regex: my_app

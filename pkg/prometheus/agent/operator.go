@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -731,6 +731,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
+		ctx,
 		smons,
 		pmons,
 		bmons,
@@ -757,6 +758,11 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c operator.Config
 	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
+
+	// The controller should ignore any changes to RevisionHistoryLimit field because
+	// it may be modified by external actors.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
+	ssSpec.RevisionHistoryLimit = nil
 
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
@@ -883,7 +889,7 @@ func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretL
 		}
 	}
 
-	if !pointer.BoolDeref(sks.Optional, true) {
+	if !ptr.Deref(sks.Optional, true) {
 		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
 	}
 

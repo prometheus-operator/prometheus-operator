@@ -1,0 +1,12 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+  - receiver: "null"
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+templates: []

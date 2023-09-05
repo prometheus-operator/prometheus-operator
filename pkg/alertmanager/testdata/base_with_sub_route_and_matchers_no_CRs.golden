@@ -1,0 +1,10 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: custom
+    matchers:
+    - namespace=custom-test
+receivers:
+- name: "null"
+- name: custom
+templates: []

@@ -39,7 +39,6 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	klog "k8s.io/klog/v2"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -59,11 +58,6 @@ const (
 	defaultOperatorTLSDir = "/etc/tls/private"
 )
 
-const (
-	defaultReloaderCPU    = "10m"
-	defaultReloaderMemory = "50Mi"
-)
-
 var (
 	ns                   = namespaces{}
 	deniedNs             = namespaces{}
@@ -75,7 +69,7 @@ var (
 
 type namespaces map[string]struct{}
 
-// Set implements the flagset.Value interface.
+// Set implements the flag.Value interface.
 func (n namespaces) Set(value string) error {
 	if n == nil {
 		return errors.New("expected n of type namespaces to be initialized")
@@ -86,7 +80,7 @@ func (n namespaces) Set(value string) error {
 	return nil
 }
 
-// String implements the flagset.Value interface.
+// String implements the flag.Value interface.
 func (n namespaces) String() string {
 	return strings.Join(n.asSlice(), ",")
 }
@@ -134,8 +128,13 @@ func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func()
 	}
 }
 
+const (
+	defaultReloaderCPU    = "10m"
+	defaultReloaderMemory = "50Mi"
+)
+
 var (
-	cfg = operator.Config{}
+	cfg = operator.DefaultConfig(defaultReloaderCPU, defaultReloaderMemory)
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -165,38 +164,45 @@ func init() {
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	flagset.StringVar(&cfg.KubeletSelector, "kubelet-selector", "", "Label selector to filter nodes.")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
+
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", defaultReloaderCPU, "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
-	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", defaultReloaderCPU, "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", defaultReloaderMemory, "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
-	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", defaultReloaderMemory, "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
+	flagset.Var(&cfg.ReloaderConfig.CPURequests, "config-reloader-cpu-request", "Config Reloader CPU requests. Value \"0\" disables it and causes no request to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.CPULimits, "config-reloader-cpu-limit", "Config Reloader CPU limits. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.MemoryRequests, "config-reloader-memory-request", "Config Reloader memory requests. Value \"0\" disables it and causes no request to be configured.")
+	flagset.Var(&cfg.ReloaderConfig.MemoryLimits, "config-reloader-memory-limit", "Config Reloader memory limits. Value \"0\" disables it and causes no limit to be configured.")
 	flagset.BoolVar(&cfg.ReloaderConfig.EnableProbes, "enable-config-reloader-probes", false, "Enable liveness and readiness for the config-reloader container. Default: false")
+
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
+
 	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
 	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	flagset.Var(alertmanagerConfigNs, "alertmanager-config-namespaces", "Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.")
 	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
+
 	flagset.Var(&cfg.Annotations, "annotations", "Annotations to be add to all resources created by the operator")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
+
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")
+
 	flagset.StringVar(&cfg.LogLevel, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", ")))
+
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager Custom Resources to watch.")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	flagset.StringVar(&cfg.SecretListWatchSelector, "secret-field-selector", "", "Field selector to filter Secrets to watch")
 }
 
-func Main() int {
+func run() int {
 	versionutil.RegisterFlags()
 	// No need to check for errors because Parse would exit on error.
 	_ = flagset.Parse(os.Args[1:])
@@ -209,27 +215,6 @@ func Main() int {
 	logger, err := logging.NewLogger(cfg.LogLevel, cfg.LogFormat)
 	if err != nil {
 		stdlog.Fatal(err)
-	}
-
-	// Check validity of reloader resource values given to flags
-	_, err1 := resource.ParseQuantity(cfg.ReloaderConfig.CPULimit)
-	if err1 != nil {
-		fmt.Fprintf(os.Stderr, "The CPU limit specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.CPULimit, err1)
-	}
-	_, err2 := resource.ParseQuantity(cfg.ReloaderConfig.CPURequest)
-	if err2 != nil {
-		fmt.Fprintf(os.Stderr, "The CPU request specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.CPURequest, err2)
-	}
-	_, err3 := resource.ParseQuantity(cfg.ReloaderConfig.MemoryLimit)
-	if err3 != nil {
-		fmt.Fprintf(os.Stderr, "The Memory limit specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.MemoryLimit, err3)
-	}
-	_, err4 := resource.ParseQuantity(cfg.ReloaderConfig.MemoryRequest)
-	if err4 != nil {
-		fmt.Fprintf(os.Stderr, "The Memory request specified for reloader \"%v\" is not a valid quantity! %v\n", cfg.ReloaderConfig.MemoryRequest, err4)
-	}
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
-		return 1
 	}
 
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
@@ -496,5 +481,5 @@ func Main() int {
 }
 
 func main() {
-	os.Exit(Main())
+	os.Exit(run())
 }

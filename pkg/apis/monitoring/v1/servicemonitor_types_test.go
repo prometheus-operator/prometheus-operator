@@ -41,7 +41,7 @@ func TestMarshallServiceMonitor(t *testing.T) {
 			},
 		},
 	}
-	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"endpoints":[{"port":"metric","bearerTokenSecret":{"key":""}}],"selector":{},"namespaceSelector":{"matchNames":["test"]}}}`
+	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"endpoints":[{"port":"metric"}],"selector":{},"namespaceSelector":{"matchNames":["test"]}}}`
 
 	r, err := json.Marshal(sm)
 	if err != nil {

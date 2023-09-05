@@ -187,10 +187,14 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfigSpec"):
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ConsulSDConfig"):
+		return &monitoringv1alpha1.ConsulSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DayOfMonthRange"):
 		return &monitoringv1alpha1.DayOfMonthRangeApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DiscordConfig"):
 		return &monitoringv1alpha1.DiscordConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DNSSDConfig"):
+		return &monitoringv1alpha1.DNSSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1alpha1.EmailConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
@@ -253,6 +257,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.TimeRangeApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("VictorOpsConfig"):
 		return &monitoringv1alpha1.VictorOpsConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("WebexConfig"):
+		return &monitoringv1alpha1.WebexConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("WebhookConfig"):
 		return &monitoringv1alpha1.WebhookConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("WeChatConfig"):
@@ -315,6 +321,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.TimeRangeApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("VictorOpsConfig"):
 		return &monitoringv1beta1.VictorOpsConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("WebexConfig"):
+		return &monitoringv1beta1.WebexConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("WebhookConfig"):
 		return &monitoringv1beta1.WebhookConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("WeChatConfig"):

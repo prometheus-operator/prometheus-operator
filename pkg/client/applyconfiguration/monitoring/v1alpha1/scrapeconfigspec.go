@@ -28,10 +28,15 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	FileSDConfigs         []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
 	HTTPSDConfigs         []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
 	KubernetesSDConfigs   []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
+	ConsulSDConfigs       []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
+	DNSSDConfigs          []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
+	ScrapeInterval        *v1.Duration                                      `json:"scrapeInterval,omitempty"`
+	ScrapeTimeout         *v1.Duration                                      `json:"scrapeTimeout,omitempty"`
 	HonorTimestamps       *bool                                             `json:"honorTimestamps,omitempty"`
 	HonorLabels           *bool                                             `json:"honorLabels,omitempty"`
+	Params                map[string][]string                               `json:"params,omitempty"`
 	Scheme                *string                                           `json:"scheme,omitempty"`
 	BasicAuth             *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization         *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -41,6 +46,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	LabelLimit            *uint64                                           `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                                           `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                                           `json:"labelValueLengthLimit,omitempty"`
+	MetricRelabelConfigs  []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -101,6 +107,32 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithKubernetesSDConfigs(values ...*
 	return b
 }
 
+// WithConsulSDConfigs adds the given value to the ConsulSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ConsulSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithConsulSDConfigs(values ...*ConsulSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConsulSDConfigs")
+		}
+		b.ConsulSDConfigs = append(b.ConsulSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithDNSSDConfigs adds the given value to the DNSSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the DNSSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithDNSSDConfigs(values ...*DNSSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithDNSSDConfigs")
+		}
+		b.DNSSDConfigs = append(b.DNSSDConfigs, *values[i])
+	}
+	return b
+}
+
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
@@ -122,6 +154,22 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithMetricsPath(value string) *Scra
 	return b
 }
 
+// WithScrapeInterval sets the ScrapeInterval field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeInterval field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeInterval(value v1.Duration) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeInterval = &value
+	return b
+}
+
+// WithScrapeTimeout sets the ScrapeTimeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeTimeout field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeTimeout(value v1.Duration) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeTimeout = &value
+	return b
+}
+
 // WithHonorTimestamps sets the HonorTimestamps field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HonorTimestamps field is set to the value of the last call.
@@ -135,6 +183,20 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHonorTimestamps(value bool) *Sc
 // If called multiple times, the HonorLabels field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithHonorLabels(value bool) *ScrapeConfigSpecApplyConfiguration {
 	b.HonorLabels = &value
+	return b
+}
+
+// WithParams puts the entries into the Params field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the Params field,
+// overwriting an existing map entries in Params field with the same key.
+func (b *ScrapeConfigSpecApplyConfiguration) WithParams(entries map[string][]string) *ScrapeConfigSpecApplyConfiguration {
+	if b.Params == nil && len(entries) > 0 {
+		b.Params = make(map[string][]string, len(entries))
+	}
+	for k, v := range entries {
+		b.Params[k] = v
+	}
 	return b
 }
 
@@ -207,5 +269,18 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetricRelabelConfigs")
+		}
+		b.MetricRelabelConfigs = append(b.MetricRelabelConfigs, *values[i])
+	}
 	return b
 }

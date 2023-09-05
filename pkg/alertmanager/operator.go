@@ -821,6 +821,11 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
 
+	// The controller should ignore any changes to RevisionHistoryLimit field because
+	// it may be modified by external actors.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
+	s.RevisionHistoryLimit = nil
+
 	hash, err := hashstructure.Hash(struct {
 		AlertmanagerLabels      map[string]string
 		AlertmanagerAnnotations map[string]string
@@ -1210,6 +1215,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
+		err = checkWebexConfigs(ctx, receiver.WebexConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
+		}
+
 		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), store)
 		if err != nil {
 			return err
@@ -1323,6 +1333,9 @@ func checkDiscordConfigs(
 	store *assets.Store,
 	amVersion semver.Version,
 ) error {
+	if len(configs) == 0 {
+		return nil
+	}
 	if amVersion.LT(semver.MustParse("0.25.0")) {
 		return fmt.Errorf(`discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
@@ -1426,6 +1439,36 @@ func checkWechatConfigs(
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, wechatConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkWebexConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.WebexConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	}
+
+	for i, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+		webexConfigKey := fmt.Sprintf("%s/webex/%d", key, i)
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, webexConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -1622,7 +1665,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 
 	var err error
 	if httpConfig.BearerTokenSecret != nil {
-		if err = store.AddBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
+		if err = store.AddBearerToken(ctx, namespace, httpConfig.BearerTokenSecret, key); err != nil {
 			return err
 		}
 	}

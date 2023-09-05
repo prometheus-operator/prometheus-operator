@@ -26,7 +26,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -82,20 +82,20 @@ func shardsNumber(
 ) int32 {
 	cpf := p.GetCommonPrometheusFields()
 
-	if pointer.Int32Deref(cpf.Shards, 1) <= 1 {
+	if ptr.Deref(cpf.Shards, 1) <= 1 {
 		return 1
 	}
 
 	return *cpf.Shards
 }
 
-// ReplicasNumberPtr returns a pointer to the normalized number of replicas.
+// ReplicasNumberPtr returns a ptr to the normalized number of replicas.
 func ReplicasNumberPtr(
 	p monitoringv1.PrometheusInterface,
 ) *int32 {
 	cpf := p.GetCommonPrometheusFields()
 
-	replicas := pointer.Int32Deref(cpf.Replicas, 1)
+	replicas := ptr.Deref(cpf.Replicas, 1)
 	if replicas < 0 {
 		replicas = 1
 	}
@@ -135,8 +135,8 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator
 			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
 			OwnerReferences: []metav1.OwnerReference{{
 				APIVersion:         typeMeta.APIVersion,
-				BlockOwnerDeletion: pointer.Bool(true),
-				Controller:         pointer.Bool(true),
+				BlockOwnerDeletion: ptr.To(true),
+				Controller:         ptr.To(true),
 				Kind:               typeMeta.Kind,
 				Name:               objMeta.GetName(),
 				UID:                objMeta.GetUID(),
@@ -418,15 +418,11 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 	}
 
 	if cpf.PodMetadata != nil {
-		if cpf.PodMetadata.Labels != nil {
-			for k, v := range cpf.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if cpf.PodMetadata.Annotations != nil {
-			for k, v := range cpf.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range cpf.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 

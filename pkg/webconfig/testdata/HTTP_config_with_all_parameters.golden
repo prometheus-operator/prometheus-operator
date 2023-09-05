@@ -1,0 +1,8 @@
+http_server_config:
+  http2: false
+  headers:
+    Content-Security-Policy: test
+    Strict-Transport-Security: test
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: sameorigin
+    X-XSS-Protection: test
