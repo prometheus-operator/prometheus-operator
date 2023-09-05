@@ -594,7 +594,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
-		return errors.Wrap(err, "making the statefulset, to update, failed")
+		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 
 	operator.SanitizeSTS(sset)
@@ -649,7 +649,7 @@ func (o *Operator) getThanosRulerFromKey(key string) (*monitoringv1.ThanosRuler,
 
 // getStatefulSetFromThanosRulerKey returns a copy of the StatefulSet object
 // corresponding to the ThanosRuler object identified by key.
-// If the object is not found, it returns a nil pointer.
+// If the object is not found, it returns a nil pointer without error.
 func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.StatefulSet, error) {
 	ssetName := thanosKeyToStatefulSetKey(key)
 
@@ -681,7 +681,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to get StatefulSet")
 	}
 
-	if sset == nil || o.rr.DeletionInProgress(sset) {
+	if sset != nil && o.rr.DeletionInProgress(sset) {
 		return nil
 	}
 

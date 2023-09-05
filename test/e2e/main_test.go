@@ -234,6 +234,7 @@ func testAllNSAlertmanager(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
+		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
 		"AMScaling":                               testAMScaling,
 		"AMVersionMigration":                      testAMVersionMigration,
 		"AMStorageUpdate":                         testAMStorageUpdate,
@@ -311,6 +312,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
 		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
+		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
 	}
 
 	for name, f := range testFuncs {
@@ -322,6 +324,7 @@ func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
+		"ThanosRulerWithStatefulsetCreationFailure":     testThanosRulerWithStatefulsetCreationFailure,
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
