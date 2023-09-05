@@ -209,6 +209,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 		// nsResyncPeriod is used to control how often the namespace informer
 		// should resync. If the unprivileged ListerWatcher is used, then the
@@ -257,6 +258,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
+
 	for _, inf := range []struct {
 		name     string
 		informer cache.SharedIndexInformer

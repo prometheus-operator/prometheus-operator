@@ -494,11 +494,11 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.alrtCfgInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-
 	go c.nsAlrtCfgInf.Run(ctx.Done())
 	if c.nsAlrtInf != c.nsAlrtCfgInf {
 		go c.nsAlrtInf.Run(ctx.Done())
 	}
+
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
