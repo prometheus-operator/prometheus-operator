@@ -138,16 +138,8 @@ type Namespaces struct {
 
 // Check if this is a single namespace deployment,
 func isSingleNamespace(ns map[string]struct{}) bool {
-	// Check if has a single namespace and different from v1.NamespaceAll
-	if len(ns) == 1 {
-		for k := range ns {
-			if k != v1.NamespaceAll {
-				return true
-			}
-		}
-	}
-
-	return false
+	_, ok := ns[v1.NamespaceAll]
+	return !ok && len(ns) == 1
 }
 
 // Check if this is a single namespace deployment,
@@ -163,4 +155,3 @@ func IsPrometheusInSingleNamespace(ns Namespaces) bool {
 
 	return isSingleNamespace(ns.AllowList)
 }
-

@@ -741,7 +741,6 @@ func (o *Operator) enqueueForRulesNamespace(nsName string) {
 // enqueueForNamespace enqueues all ThanosRuler object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	var ns *v1.Namespace = nil
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
 		level.Error(o.logger).Log(
@@ -757,7 +756,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	ns = nsObject.(*v1.Namespace)
+	ns := nsObject.(*v1.Namespace)
 
 	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for ThanosRuler instances in the namespace.
@@ -769,7 +768,6 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for ThanosRuler instances selecting PrometheusRules in
 		// the namespace.
-
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 		if err != nil {
 			level.Error(o.logger).Log(
@@ -785,7 +783,6 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			o.rr.EnqueueForReconciliation(tr)
 			return
 		}
-
 	})
 	if err != nil {
 		level.Error(o.logger).Log(

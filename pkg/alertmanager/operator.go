@@ -291,6 +291,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 			}
 		}
 	}
+
 	for _, inf := range []struct {
 		name     string
 		informer cache.SharedIndexInformer
@@ -415,8 +416,6 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsName string) {
-	var ns *v1.Namespace
-
 	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
 	if err != nil {
 		level.Error(c.logger).Log(
@@ -431,7 +430,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		)
 		return
 	}
-	ns = nsObject.(*v1.Namespace)
+	ns := nsObject.(*v1.Namespace)
 
 	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Alertmanager instances in the namespace.
@@ -456,7 +455,6 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			c.rr.EnqueueForReconciliation(am)
 			return
 		}
-
 	})
 	if err != nil {
 		level.Error(c.logger).Log(
@@ -497,7 +495,6 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
 
-	// Skip namespace alert in single namespace case.
 	go c.nsAlrtCfgInf.Run(ctx.Done())
 	if c.nsAlrtInf != c.nsAlrtCfgInf {
 		go c.nsAlrtInf.Run(ctx.Done())

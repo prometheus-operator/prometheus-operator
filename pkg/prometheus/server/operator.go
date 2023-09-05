@@ -971,17 +971,16 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsPromInf, nsName)
+	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
 }
 
 func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsMonInf, nsName)
+	c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
 }
 
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
-func (c *Operator) enqueueForNamespace(nsInfo cache.SharedIndexInformer, nsName string) {
-	store := nsInfo.GetStore()
+func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
 		level.Error(c.logger).Log(
