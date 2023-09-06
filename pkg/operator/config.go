@@ -192,23 +192,3 @@ type Namespaces struct {
 	// Allow list for prometheus/alertmanager custom resources.
 	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
 }
-
-// Check if this is a single namespace deployment,
-func isSingleNamespace(ns map[string]struct{}) bool {
-	_, ok := ns[v1.NamespaceAll]
-	return !ok && len(ns) == 1
-}
-
-// Check if this is a single namespace deployment,
-// to use 'role' instead of 'ClusterRole'
-// and 'rolebinding' instead of 'ClusterRoleBinding'
-// for the RBAC resources.
-
-func IsPrometheusInSingleNamespace(ns Namespaces) bool {
-	// Check if has a single namespace and different from v1.NamespaceAll
-	if len(ns.PrometheusAllowList) == 1 {
-		isSingleNamespace(ns.PrometheusAllowList)
-	}
-
-	return isSingleNamespace(ns.AllowList)
-}

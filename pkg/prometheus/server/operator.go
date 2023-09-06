@@ -523,7 +523,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	c.addHandlers()
 
-	if c.kubeletSyncEnabled && !operator.IsPrometheusInSingleNamespace(c.config.Namespaces) {
+	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(ctx)
 	}
 
