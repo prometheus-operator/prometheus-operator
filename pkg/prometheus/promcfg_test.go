@@ -110,21 +110,23 @@ func TestGlobalSettings(t *testing.T) {
 	)
 
 	for _, tc := range []struct {
-		Scenario              string
-		EvaluationInterval    monitoringv1.Duration
-		ScrapeInterval        monitoringv1.Duration
-		ScrapeTimeout         monitoringv1.Duration
-		ExternalLabels        map[string]string
-		QueryLogFile          string
-		Version               string
-		BodySizeLimit         *monitoringv1.ByteSize
-		SampleLimit           *uint64
-		TargetLimit           *uint64
-		LabelLimit            *uint64
-		LabelNameLengthLimit  *uint64
-		LabelValueLengthLimit *uint64
-		ExpectError           bool
-		Golden                string
+		Scenario                    string
+		EvaluationInterval          monitoringv1.Duration
+		ScrapeInterval              monitoringv1.Duration
+		ScrapeTimeout               monitoringv1.Duration
+		ExternalLabels              map[string]string
+		PrometheusExternalLabelName *string
+		ReplicaExternalLabelName    *string
+		QueryLogFile                string
+		Version                     string
+		BodySizeLimit               *monitoringv1.ByteSize
+		SampleLimit                 *uint64
+		TargetLimit                 *uint64
+		LabelLimit                  *uint64
+		LabelNameLengthLimit        *uint64
+		LabelValueLengthLimit       *uint64
+		ExpectError                 bool
+		Golden                      string
 	}{
 		{
 			Scenario:           "valid config",
@@ -159,6 +161,20 @@ func TestGlobalSettings(t *testing.T) {
 				"key2": "value2",
 			},
 			Golden: "external_label_specified.golden",
+		},
+		{
+			Scenario:           "external label specified along with reserved labels",
+			Version:            "v2.45.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"prometheus_replica": "1",
+				"prometheus":         "prometheus-k8s-1",
+				"some-other-key":     "some-value",
+			},
+			PrometheusExternalLabelName: ptr.To("prometheus"),
+			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
+			Golden:                      "external_label_specified_along_with_reserved_labels.golden",
 		},
 		{
 			Scenario:           "query log file",
@@ -197,17 +213,19 @@ func TestGlobalSettings(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					ScrapeInterval:        tc.ScrapeInterval,
-					ScrapeTimeout:         tc.ScrapeTimeout,
-					ExternalLabels:        tc.ExternalLabels,
-					Version:               tc.Version,
-					TracingConfig:         nil,
-					BodySizeLimit:         tc.BodySizeLimit,
-					SampleLimit:           tc.SampleLimit,
-					TargetLimit:           tc.TargetLimit,
-					LabelLimit:            tc.LabelLimit,
-					LabelNameLengthLimit:  tc.LabelNameLengthLimit,
-					LabelValueLengthLimit: tc.LabelValueLengthLimit,
+					ScrapeInterval:              tc.ScrapeInterval,
+					ScrapeTimeout:               tc.ScrapeTimeout,
+					ExternalLabels:              tc.ExternalLabels,
+					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
+					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
+					Version:                     tc.Version,
+					TracingConfig:               nil,
+					BodySizeLimit:               tc.BodySizeLimit,
+					SampleLimit:                 tc.SampleLimit,
+					TargetLimit:                 tc.TargetLimit,
+					LabelLimit:                  tc.LabelLimit,
+					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
+					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				QueryLogFile:       tc.QueryLogFile,
