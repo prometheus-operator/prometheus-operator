@@ -44,6 +44,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -805,11 +806,17 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	availableCondition := stsReporter.Update(a)
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
-	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
+	availableConditionAC := GetAppliedConfigFromCondition(&availableCondition)
+	reconciledConditionAC := GetAppliedConfigFromCondition(&reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
-	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).UpdateStatus(ctx, a, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+	asac := monitoringv1ac.AlertmanagerStatus()
+	GetAppliedConfigStatusFromStatus(a, asac, availableConditionAC, reconciledConditionAC)
+
+	aac := monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: a.Name}); err != nil {
+		return errors.Wrap(err, "failed to apply status subresource")
 	}
 
 	return nil
@@ -1789,4 +1796,29 @@ func ListOptions(name string) metav1.ListOptions {
 
 func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+}
+
+func GetAppliedConfigFromCondition(c *monitoringv1.Condition) *monitoringv1ac.ConditionApplyConfiguration {
+	return monitoringv1ac.Condition().
+		WithType(c.Type).
+		WithStatus(c.Status).
+		WithLastTransitionTime(c.LastTransitionTime).
+		WithReason(c.Reason).
+		WithMessage(c.Message).
+		WithObservedGeneration(c.ObservedGeneration)
+}
+
+func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monitoringv1ac.AlertmanagerStatusApplyConfiguration, values ...*monitoringv1ac.ConditionApplyConfiguration) {
+	asac.WithPaused(a.Status.Paused)
+	asac.WithReplicas(a.Status.Replicas)
+	asac.WithAvailableReplicas(a.Status.AvailableReplicas)
+	asac.WithUpdatedReplicas(a.Status.UpdatedReplicas)
+	asac.WithUnavailableReplicas(a.Status.UnavailableReplicas)
+
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed")
+		}
+		asac.WithConditions(values[i])
+	}
 }
