@@ -467,7 +467,6 @@ func (c *Operator) addHandlers() {
 	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
-
 }
 
 // Run the controller.
@@ -511,7 +510,6 @@ func (c *Operator) Run(ctx context.Context) error {
 	if c.nsPromInf != c.nsMonInf {
 		go c.nsPromInf.Run(ctx.Done())
 	}
-
 	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
