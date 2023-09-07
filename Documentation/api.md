@@ -938,6 +938,20 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>attachMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AttachMetadata">
@@ -1234,6 +1248,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </table>
@@ -2217,6 +2245,23 @@ greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.
 </tr>
 <tr>
 <td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedBodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
@@ -2436,6 +2481,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -3064,6 +3123,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -6336,6 +6409,23 @@ greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.
 </tr>
 <tr>
 <td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedBodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
@@ -6555,6 +6645,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </tbody>
@@ -8406,6 +8510,20 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>attachMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AttachMetadata">
@@ -8657,6 +8775,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </tbody>
@@ -10008,6 +10140,23 @@ greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.
 </tr>
 <tr>
 <td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedBodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
@@ -10227,6 +10376,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -12255,6 +12418,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -15255,6 +15432,23 @@ greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.
 </tr>
 <tr>
 <td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedBodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
@@ -15474,6 +15668,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </table>
@@ -15847,6 +16055,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -18777,6 +18999,23 @@ greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.
 </tr>
 <tr>
 <td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedBodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
@@ -18996,6 +19235,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </tbody>
@@ -19997,6 +20250,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>

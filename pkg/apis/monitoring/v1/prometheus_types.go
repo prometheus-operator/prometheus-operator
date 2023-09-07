@@ -472,6 +472,16 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	// When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+	// dropped by relabeling that will be kept in memory. The value overrides
+	// any `spec.keepDroppedTargets` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets` is
+	// greater than zero and less than `spec.enforcedKeepDroppedTargets`.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// When defined, enforcedBodySizeLimit specifies a global limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	// Targets responding with a body larger than this many bytes will cause
@@ -580,6 +590,13 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 }
 
 // +genclient

@@ -12725,6 +12725,12 @@ spec:
               jobLabel:
                 description: The label to use to retrieve the job name from.
                 type: string
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.27.0 and newer.
@@ -13499,6 +13505,12 @@ spec:
               jobName:
                 description: The job name assigned to scraped metrics by default.
                 type: string
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.27.0 and newer.
@@ -16615,6 +16627,15 @@ spec:
                   v2.28.0."
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
+              enforcedKeepDroppedTargets:
+                description: "When defined, enforcedKeepDroppedTargets specifies a
+                  global limit on the number of targets dropped by relabeling that
+                  will be kept in memory. The value overrides any `spec.keepDroppedTargets`
+                  set by ServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets`
+                  is greater than zero and less than `spec.enforcedKeepDroppedTargets`.
+                  \n It requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               enforcedLabelLimit:
                 description: "When defined, enforcedLabelLimit specifies a global
                   limit on the number of labels per sample. The value overrides any
@@ -18087,6 +18108,12 @@ spec:
                   - name
                   type: object
                 type: array
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.45.0 and newer.
@@ -25354,6 +25381,15 @@ spec:
                   v2.28.0."
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
+              enforcedKeepDroppedTargets:
+                description: "When defined, enforcedKeepDroppedTargets specifies a
+                  global limit on the number of targets dropped by relabeling that
+                  will be kept in memory. The value overrides any `spec.keepDroppedTargets`
+                  set by ServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets`
+                  is greater than zero and less than `spec.enforcedKeepDroppedTargets`.
+                  \n It requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               enforcedLabelLimit:
                 description: "When defined, enforcedLabelLimit specifies a global
                   limit on the number of labels per sample. The value overrides any
@@ -26845,6 +26881,12 @@ spec:
                   - name
                   type: object
                 type: array
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.45.0 and newer.
@@ -33147,6 +33189,12 @@ spec:
                   - url
                   type: object
                 type: array
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               kubernetesSDConfigs:
                 description: KubernetesSDConfigs defines a list of Kubernetes service
                   discovery configurations.
@@ -34116,6 +34164,12 @@ spec:
                   the given Service, the `job` label of the metrics defaults to the
                   name of the Kubernetes Service."
                 type: string
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.27.0 and newer.

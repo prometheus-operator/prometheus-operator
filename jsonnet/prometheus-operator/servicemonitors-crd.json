@@ -636,6 +636,11 @@
                     "description": "JobLabel selects the label from the associated Kubernetes service which will be used as the `job` label for all metrics. \n For example: If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`, then the `job=\"bar\"` label is added to all metrics. \n If the value of this field is empty or if the label doesn't exist for the given Service, the `job` label of the metrics defaults to the name of the Kubernetes Service.",
                     "type": "string"
                   },
+                  "keepDroppedTargets": {
+                    "description": "Per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit. \n It requires Prometheus >= v2.47.0.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
                   "labelLimit": {
                     "description": "Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",

@@ -557,6 +557,14 @@ func (b *PrometheusSpecApplyConfiguration) WithEnforcedLabelValueLengthLimit(val
 	return b
 }
 
+// WithEnforcedKeepDroppedTargets sets the EnforcedKeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnforcedKeepDroppedTargets field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithEnforcedKeepDroppedTargets(value uint64) *PrometheusSpecApplyConfiguration {
+	b.EnforcedKeepDroppedTargets = &value
+	return b
+}
+
 // WithEnforcedBodySizeLimit sets the EnforcedBodySizeLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedBodySizeLimit field is set to the value of the last call.
@@ -691,6 +699,14 @@ func (b *PrometheusSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *PrometheusSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *PrometheusSpecApplyConfiguration {
+	b.KeepDroppedTargets = &value
 	return b
 }
 

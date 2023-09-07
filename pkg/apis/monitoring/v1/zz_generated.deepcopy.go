@@ -755,6 +755,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.EnforcedKeepDroppedTargets != nil {
+		in, out := &in.EnforcedKeepDroppedTargets, &out.EnforcedKeepDroppedTargets
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
 		*out = new(uint32)
@@ -819,6 +824,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
 		*out = new(uint64)
 		**out = **in
 	}
@@ -1461,6 +1471,11 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.AttachMetadata != nil {
 		in, out := &in.AttachMetadata, &out.AttachMetadata
 		*out = new(AttachMetadata)
@@ -1583,6 +1598,11 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
 		*out = new(uint64)
 		**out = **in
 	}
@@ -2518,6 +2538,11 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
 		*out = new(uint64)
 		**out = **in
 	}
