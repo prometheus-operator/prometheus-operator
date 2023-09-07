@@ -39,11 +39,14 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 	klog "k8s.io/klog/v2"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -93,19 +96,40 @@ func (n namespaces) asSlice() []string {
 	return ns
 }
 
-// Helper function for checking CRD prerequisites
-func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDChecker, allowedNamespaces []string, verbs map[string][]string, groupVersion, resourceName string) (bool, error) {
-	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported", resourceName), "reason", err)
-		return false, nil
-	case err != nil:
-		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
-		return false, err
-	default:
-		return true, nil
+// checkPrerequisites verifies that the CRD is installed in the cluster and
+// that the operator has enough permissions to manage the resource.
+func checkPrerequisites(
+	ctx context.Context,
+	logger log.Logger,
+	kclient kubernetes.Interface,
+	allowedNamespaces []string,
+	groupVersion schema.GroupVersion,
+	resource string,
+	attributes ...k8sutil.ResourceAttribute,
+) (bool, error) {
+	installed, err := k8sutil.IsAPIGroupVersionResourceSupported(kclient.Discovery(), groupVersion, resource)
+	if err != nil {
+		return false, fmt.Errorf("failed to check presence of resource %q (group %q): %w", resource, groupVersion, err)
 	}
+
+	if !installed {
+		level.Warn(logger).Log("msg", fmt.Sprintf("resource %q (group: %q) not installed in the cluster", resource, groupVersion))
+		return false, nil
+	}
+
+	allowed, errs, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), allowedNamespaces, attributes...)
+	if err != nil {
+		return false, fmt.Errorf("failed to check permissions on resource %q (group %q): %w", resource, groupVersion, err)
+	}
+
+	if !allowed {
+		for _, reason := range errs {
+			level.Warn(logger).Log("msg", fmt.Sprintf("missing permission on resource %q (group: %q)", resource, groupVersion), "reason", reason)
+		}
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
@@ -265,8 +289,6 @@ func run() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
-
 	restConfig, err := k8sutil.NewClusterConfig(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig, cfg.ImpersonateUser)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
@@ -274,9 +296,9 @@ func run() int {
 		return 1
 	}
 
-	cc, err := k8sutil.NewCRDChecker(restConfig)
+	kclient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
+		level.Error(logger).Log("msg", "failed to create Kubernetes client", "err", err)
 		cancel()
 		return 1
 	}
@@ -284,13 +306,16 @@ func run() int {
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
 		logger,
-		cc,
-		allowedNamespaces,
-		map[string][]string{
-			monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
-		},
-		monitoringv1alpha1.SchemeGroupVersion.String(),
+		kclient,
+		namespaces(cfg.Namespaces.AllowList).asSlice(),
+		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.ScrapeConfigName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: monitoringv1alpha1.ScrapeConfigName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
 	)
 
 	if err != nil {
@@ -308,14 +333,22 @@ func run() int {
 	prometheusAgentSupported, err := checkPrerequisites(
 		ctx,
 		logger,
-		cc,
-		allowedNamespaces,
-		map[string][]string{
-			monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
-			fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
-		},
-		monitoringv1alpha1.SchemeGroupVersion.String(),
+		kclient,
+		namespaces(cfg.Namespaces.PrometheusAllowList).asSlice(),
+		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.PrometheusAgentName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: monitoringv1alpha1.PrometheusAgentName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName),
+			Verbs:    []string{"update"},
+		},
 	)
 	if err != nil {
 		cancel()
