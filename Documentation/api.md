@@ -20612,9 +20612,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>Telegram bot token
+<em>(Optional)</em>
+<p>Telegram bot token. It is mutually exclusive with <code>botTokenFile</code>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+<p>Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to read the Telegram bot token from. It is mutually exclusive with <code>botToken</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+<p>It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -24095,9 +24111,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
-<p>Telegram bot token
+<em>(Optional)</em>
+<p>Telegram bot token. It is mutually exclusive with <code>botTokenFile</code>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+<p>Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to read the Telegram bot token from. It is mutually exclusive with <code>botToken</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+<p>It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>

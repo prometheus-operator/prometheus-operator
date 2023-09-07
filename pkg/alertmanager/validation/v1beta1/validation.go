@@ -92,6 +92,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
 		}
 
+		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
+			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
+		}
+
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
 			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
 		}
@@ -281,6 +285,25 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
+	for _, config := range configs {
+
+		if config.BotToken == nil && config.BotTokenFile == nil {
+			return fmt.Errorf("mandatory field botToken or botTokenfile is empty")
+		}
+
+		if config.ChatID == 0 {
+			return fmt.Errorf("mandatory field %q is empty", "chatID")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
