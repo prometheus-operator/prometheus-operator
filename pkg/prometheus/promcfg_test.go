@@ -107,6 +107,7 @@ func TestGlobalSettings(t *testing.T) {
 		expectedLabelLimit            uint64                = 50
 		expectedLabelNameLengthLimit  uint64                = 40
 		expectedLabelValueLengthLimit uint64                = 30
+		expectedkeepDroppedTargets    uint64                = 50
 	)
 
 	for _, tc := range []struct {
@@ -125,6 +126,7 @@ func TestGlobalSettings(t *testing.T) {
 		LabelLimit                  *uint64
 		LabelNameLengthLimit        *uint64
 		LabelValueLengthLimit       *uint64
+		KeepDroppedTargets          *uint64
 		ExpectError                 bool
 		Golden                      string
 	}{
@@ -207,6 +209,14 @@ func TestGlobalSettings(t *testing.T) {
 			LabelValueLengthLimit: &expectedLabelValueLengthLimit,
 			Golden:                "valid_global_config_with_label_limits.golden",
 		},
+		{
+			Scenario:           "valid global config with keep dropped targets",
+			Version:            "v2.47.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			KeepDroppedTargets: &expectedkeepDroppedTargets,
+			Golden:             "valid_global_config_with_keep_dropped_targets.golden",
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
@@ -226,6 +236,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelLimit:                  tc.LabelLimit,
 					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
+					KeepDroppedTargets:          tc.KeepDroppedTargets,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				QueryLogFile:       tc.QueryLogFile,
@@ -5506,6 +5517,86 @@ scrape_configs:
 			)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, string(cfg))
+		})
+	}
+}
+
+func TestKeepDroppedTargets(t *testing.T) {
+	for _, tc := range []struct {
+		version                    string
+		enforcedKeepDroppedTargets *uint64
+		keepDroppedTargets         *uint64
+		golden                     string
+	}{
+		{
+			version:                    "v2.46.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(50)),
+			golden:                     "KeepDroppedTargetsNotAddedInConfig.golden",
+		},
+		{
+			version:                    "v2.47.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(2000)),
+			golden:                     "KeepDroppedTargetsOverridedWithEnforcedValue.golden",
+		},
+		{
+			version:                    "v2.47.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(500)),
+			golden:                     "KeepDroppedTargets.golden",
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedKeepDroppedTargets(%d) keepDroppedTargets(%d)", tc.version, tc.enforcedKeepDroppedTargets, tc.keepDroppedTargets), func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			p.Spec.EnforcedKeepDroppedTargets = tc.enforcedKeepDroppedTargets
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+
+			serviceMonitor.Spec.KeepDroppedTargets = tc.keepDroppedTargets
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }

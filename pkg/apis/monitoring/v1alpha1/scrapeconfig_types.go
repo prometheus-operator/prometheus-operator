@@ -147,6 +147,13 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	// +optional
 	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`

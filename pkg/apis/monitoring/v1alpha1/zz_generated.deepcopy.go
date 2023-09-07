@@ -1180,6 +1180,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
 		*out = make([]*monitoringv1.RelabelConfig, len(*in))

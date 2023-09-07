@@ -817,6 +817,12 @@ spec:
                   - url
                   type: object
                 type: array
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               kubernetesSDConfigs:
                 description: KubernetesSDConfigs defines a list of Kubernetes service
                   discovery configurations.
