@@ -162,7 +162,17 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		ns,
+		[]string{ns},
+		nil,
+		[]string{ns},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)

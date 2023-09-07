@@ -35,7 +35,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
+	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -70,9 +72,11 @@ var (
 // Operator manages life cycle of Alertmanager deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient  kubernetes.Interface
-	mdClient metadata.Interface
-	mclient  monitoringclient.Interface
+	kclient    kubernetes.Interface
+	mdClient   metadata.Interface
+	mclient    monitoringclient.Interface
+	ssarClient authv1.SelfSubjectAccessReviewInterface
+
 	logger   log.Logger
 	accessor *operator.Accessor
 
@@ -93,6 +97,7 @@ type Operator struct {
 }
 
 type Config struct {
+	KubernetesVersion            version.Info
 	LocalHost                    string
 	ClusterDomain                string
 	ReloaderConfig               operator.ContainerConfig
@@ -125,15 +130,18 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
 
 	o := &Operator{
-		kclient:  client,
-		mdClient: mdClient,
-		mclient:  mclient,
+		kclient:    client,
+		mdClient:   mdClient,
+		mclient:    mclient,
+		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
+
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
+			KubernetesVersion:            c.KubernetesVersion,
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
 			ReloaderConfig:               c.ReloaderConfig,
@@ -241,7 +249,20 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
+		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
+			ctx,
+			o.logger,
+			o.config.KubernetesVersion,
+			o.kclient.CoreV1(),
+			o.ssarClient,
+			allowList,
+			o.config.Namespaces.DenyList,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create namespace lister/watcher: %w", err)
+		}
+
 		// nsResyncPeriod is used to control how often the namespace informer
 		// should resync. If the unprivileged ListerWatcher is used, then the
 		// informer must resync more often because it cannot watch for
@@ -250,23 +271,29 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		// If the only namespace is v1.NamespaceAll, then the client must be
 		// privileged and a regular cache.ListWatch will be used. In this case
 		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
+		if privileged {
 			nsResyncPeriod = resyncPeriod
 		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
 
-		return nsInf
+		return cache.NewSharedIndexInformer(
+			o.metrics.NewInstrumentedListerWatcher(lw),
+			&v1.Namespace{},
+			nsResyncPeriod,
+			cache.Indexers{},
+		), nil
 	}
-	c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+	c.nsAlrtCfgInf, err = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+	if err != nil {
+		return err
+	}
+
 	if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
 		c.nsAlrtInf = c.nsAlrtCfgInf
 	} else {
-		c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
+		c.nsAlrtInf, err = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -464,27 +491,6 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 
 // Run the controller.
 func (c *Operator) Run(ctx context.Context) error {
-	errChan := make(chan error)
-	go func() {
-		v, err := c.kclient.Discovery().ServerVersion()
-		if err != nil {
-			errChan <- errors.Wrap(err, "communicating with server failed")
-			return
-		}
-		level.Info(c.logger).Log("msg", "connection established", "cluster-version", v)
-		errChan <- nil
-	}()
-
-	select {
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
-		level.Info(c.logger).Log("msg", "CRD API endpoints ready")
-	case <-ctx.Done():
-		return nil
-	}
-
 	go c.rr.Run(ctx)
 	defer c.rr.Stop()
 
