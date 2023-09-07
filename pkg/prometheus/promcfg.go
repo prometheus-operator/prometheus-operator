@@ -2370,6 +2370,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			Value: configs,
 		})
 	}
+
 	//ConsulSDConfig
 	if len(sc.Spec.ConsulSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
@@ -2571,6 +2572,68 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dns_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// EC2SDConfig
+	if len(sc.Spec.EC2SDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
+		for i, config := range sc.Spec.EC2SDConfigs {
+			if config.Region != nil {
+
+				configs[i] = []yaml.MapItem{
+					{
+						Key:   "region",
+						Value: config.Region,
+					},
+				}
+			}
+
+			if config.AccessKey != nil && config.SecretKey != nil {
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.AccessKey,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "access_key",
+					Value: value,
+				})
+
+				value, err = store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.SecretKey,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "secret_key",
+					Value: value,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ec2_sd_configs",
 			Value: configs,
 		})
 	}

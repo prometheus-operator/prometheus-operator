@@ -720,6 +720,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateEC2SDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("ec2SDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -792,6 +797,19 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 			if *config.Type != "SRV" && config.Port == nil {
 				return fmt.Errorf("[%d]: %s %q", i, "port required for record type", *config.Type)
 			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.EC2SDConfigs {
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil
