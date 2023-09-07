@@ -28,9 +28,10 @@ func MakeVolumeClaimTemplate(e monitoringv1.EmbeddedPersistentVolumeClaim) *v1.P
 			Kind:       e.Kind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        e.Name,
-			Labels:      e.Labels,
-			Annotations: e.Annotations,
+			Name:            e.Name,
+			Labels:          e.Labels,
+			Annotations:     e.Annotations,
+			OwnerReferences: e.OwnerReferences,
 		},
 		Spec:   e.Spec,
 		Status: e.Status,

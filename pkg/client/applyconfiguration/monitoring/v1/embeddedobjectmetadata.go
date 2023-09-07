@@ -16,12 +16,17 @@
 
 package v1
 
+import (
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+)
+
 // EmbeddedObjectMetadataApplyConfiguration represents an declarative configuration of the EmbeddedObjectMetadata type for use
 // with apply.
 type EmbeddedObjectMetadataApplyConfiguration struct {
-	Name        *string           `json:"name,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
+	Name            *string                               `json:"name,omitempty"`
+	Labels          map[string]string                     `json:"labels,omitempty"`
+	Annotations     map[string]string                     `json:"annotations,omitempty"`
+	OwnerReferences []v1.OwnerReferenceApplyConfiguration `json:"ownerReferences,omitempty"`
 }
 
 // EmbeddedObjectMetadataApplyConfiguration constructs an declarative configuration of the EmbeddedObjectMetadata type for use with
@@ -62,6 +67,19 @@ func (b *EmbeddedObjectMetadataApplyConfiguration) WithAnnotations(entries map[s
 	}
 	for k, v := range entries {
 		b.Annotations[k] = v
+	}
+	return b
+}
+
+// WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the OwnerReferences field.
+func (b *EmbeddedObjectMetadataApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *EmbeddedObjectMetadataApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithOwnerReferences")
+		}
+		b.OwnerReferences = append(b.OwnerReferences, *values[i])
 	}
 	return b
 }

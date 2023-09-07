@@ -94,6 +94,20 @@ func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithAnnotations(entrie
 	return b
 }
 
+// WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the OwnerReferences field.
+func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *EmbeddedPersistentVolumeClaimApplyConfiguration {
+	b.ensureEmbeddedObjectMetadataApplyConfigurationExists()
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithOwnerReferences")
+		}
+		b.OwnerReferences = append(b.OwnerReferences, *values[i])
+	}
+	return b
+}
+
 func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) ensureEmbeddedObjectMetadataApplyConfigurationExists() {
 	if b.EmbeddedObjectMetadataApplyConfiguration == nil {
 		b.EmbeddedObjectMetadataApplyConfiguration = &EmbeddedObjectMetadataApplyConfiguration{}
