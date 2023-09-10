@@ -1,6 +1,11 @@
 name: e2e
 on:
   pull_request:
+    paths:
+      - '**.go'
+      - '**/go.mod'
+      - '**/go.sum'
+      - '.github/workflows/e2e.yml'
   push:
     branches:
       - 'release-*'

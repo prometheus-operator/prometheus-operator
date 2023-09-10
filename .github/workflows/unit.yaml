@@ -1,6 +1,11 @@
 name: unit
 on:
   pull_request:
+    paths:
+      - '**.go'
+      - '**/go.mod'
+      - '**/go.sum'
+      - '.github/workflows/unit.yml'
   push:
     branches:
       - 'release-*'
