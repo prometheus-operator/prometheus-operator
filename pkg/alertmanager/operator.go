@@ -54,7 +54,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod                   = 5 * time.Minute
+	prometheusOperatorFieldManager = "PrometheusOperator"
 )
 
 var (
@@ -806,16 +807,14 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	availableCondition := stsReporter.Update(a)
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
-	availableConditionAC := GetAppliedConfigFromCondition(&availableCondition)
-	reconciledConditionAC := GetAppliedConfigFromCondition(&reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
 	asac := monitoringv1ac.AlertmanagerStatus()
-	GetAppliedConfigStatusFromStatus(a, asac, availableConditionAC, reconciledConditionAC)
+	GetAppliedConfigStatusFromStatus(a, asac, availableCondition, reconciledCondition)
 
 	aac := monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 
-	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: a.Name}); err != nil {
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
 		return errors.Wrap(err, "failed to apply status subresource")
 	}
 
@@ -1815,7 +1814,7 @@ func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monito
 	asac.WithUpdatedReplicas(a.Status.UpdatedReplicas)
 	asac.WithUnavailableReplicas(a.Status.UnavailableReplicas)
 
-	for i := range values {
-		asac.WithConditions(values[i])
+	for _, condition := range conditions {
+		asac.WithConditions(GetAppliedConfigFromCondition(&condition))
 	}
 }
