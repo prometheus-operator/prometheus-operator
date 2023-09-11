@@ -1917,7 +1917,37 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 }
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	return poc.HTTPConfig.sanitize(amVersion, logger)
+	if err := poc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
+
+	if poc.UserKeyFile != "" && lessThanV0_26 {
+		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.UserKeyFile = ""
+	}
+
+	if poc.TokenFile != "" && lessThanV0_26 {
+		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TokenFile = ""
+	}
+
+	if poc.UserKey != "" && poc.UserKeyFile != "" {
+		msg := "'user_key' and 'user_key_file' are mutually exclusive for pushover receiver config - 'user_key' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		poc.UserKeyFile = ""
+	}
+
+	if poc.Token != "" && poc.TokenFile != "" {
+		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		poc.TokenFile = ""
+	}
+
+	return nil
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
@@ -1967,7 +1997,23 @@ func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger
 }
 
 func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	return whc.HTTPConfig.sanitize(amVersion, logger)
+	if err := whc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	if whc.URLFile != "" && amVersion.LT(semver.MustParse("0.26.0")) {
+		msg := "'url_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		whc.URLFile = ""
+	}
+
+	if whc.URL != "" && whc.URLFile != "" {
+		msg := "'url' and 'url_file' are mutually exclusive for webhook receiver config - 'url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		whc.URLFile = ""
+	}
+
+	return nil
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
