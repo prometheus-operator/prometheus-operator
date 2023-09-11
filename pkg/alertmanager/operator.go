@@ -1808,7 +1808,7 @@ func GetAppliedConfigFromCondition(c *monitoringv1.Condition) *monitoringv1ac.Co
 		WithObservedGeneration(c.ObservedGeneration)
 }
 
-func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monitoringv1ac.AlertmanagerStatusApplyConfiguration, values ...*monitoringv1ac.ConditionApplyConfiguration) {
+func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monitoringv1ac.AlertmanagerStatusApplyConfiguration, conditions ...monitoringv1.Condition) {
 	asac.WithPaused(a.Status.Paused)
 	asac.WithReplicas(a.Status.Replicas)
 	asac.WithAvailableReplicas(a.Status.AvailableReplicas)
@@ -1816,9 +1816,6 @@ func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monito
 	asac.WithUnavailableReplicas(a.Status.UnavailableReplicas)
 
 	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed")
-		}
 		asac.WithConditions(values[i])
 	}
 }
