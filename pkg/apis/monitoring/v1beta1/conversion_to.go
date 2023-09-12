@@ -439,6 +439,7 @@ func convertTelegramConfigTo(in TelegramConfig) v1alpha1.TelegramConfig {
 		SendResolved:         in.SendResolved,
 		APIURL:               in.APIURL,
 		BotToken:             convertSecretKeySelectorTo(in.BotToken),
+		BotTokenFile:         in.BotTokenFile,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
 		DisableNotifications: in.DisableNotifications,

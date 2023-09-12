@@ -41,6 +41,7 @@ type ProbeSpecApplyConfiguration struct {
 	LabelLimit            *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                              `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets    *uint64                              `json:"keepDroppedTargets,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs an declarative configuration of the ProbeSpec type for use with
@@ -187,5 +188,13 @@ func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *Pr
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ProbeSpecApplyConfiguration {
+	b.KeepDroppedTargets = &value
 	return b
 }

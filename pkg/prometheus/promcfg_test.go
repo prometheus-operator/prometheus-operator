@@ -107,24 +107,28 @@ func TestGlobalSettings(t *testing.T) {
 		expectedLabelLimit            uint64                = 50
 		expectedLabelNameLengthLimit  uint64                = 40
 		expectedLabelValueLengthLimit uint64                = 30
+		expectedkeepDroppedTargets    uint64                = 50
 	)
 
 	for _, tc := range []struct {
-		Scenario              string
-		EvaluationInterval    monitoringv1.Duration
-		ScrapeInterval        monitoringv1.Duration
-		ScrapeTimeout         monitoringv1.Duration
-		ExternalLabels        map[string]string
-		QueryLogFile          string
-		Version               string
-		BodySizeLimit         *monitoringv1.ByteSize
-		SampleLimit           *uint64
-		TargetLimit           *uint64
-		LabelLimit            *uint64
-		LabelNameLengthLimit  *uint64
-		LabelValueLengthLimit *uint64
-		ExpectError           bool
-		Golden                string
+		Scenario                    string
+		EvaluationInterval          monitoringv1.Duration
+		ScrapeInterval              monitoringv1.Duration
+		ScrapeTimeout               monitoringv1.Duration
+		ExternalLabels              map[string]string
+		PrometheusExternalLabelName *string
+		ReplicaExternalLabelName    *string
+		QueryLogFile                string
+		Version                     string
+		BodySizeLimit               *monitoringv1.ByteSize
+		SampleLimit                 *uint64
+		TargetLimit                 *uint64
+		LabelLimit                  *uint64
+		LabelNameLengthLimit        *uint64
+		LabelValueLengthLimit       *uint64
+		KeepDroppedTargets          *uint64
+		ExpectError                 bool
+		Golden                      string
 	}{
 		{
 			Scenario:           "valid config",
@@ -161,6 +165,20 @@ func TestGlobalSettings(t *testing.T) {
 			Golden: "external_label_specified.golden",
 		},
 		{
+			Scenario:           "external label specified along with reserved labels",
+			Version:            "v2.45.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"prometheus_replica": "1",
+				"prometheus":         "prometheus-k8s-1",
+				"some-other-key":     "some-value",
+			},
+			PrometheusExternalLabelName: ptr.To("prometheus"),
+			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
+			Golden:                      "external_label_specified_along_with_reserved_labels.golden",
+		},
+		{
 			Scenario:           "query log file",
 			Version:            "v2.16.0",
 			ScrapeInterval:     "30s",
@@ -191,23 +209,34 @@ func TestGlobalSettings(t *testing.T) {
 			LabelValueLengthLimit: &expectedLabelValueLengthLimit,
 			Golden:                "valid_global_config_with_label_limits.golden",
 		},
+		{
+			Scenario:           "valid global config with keep dropped targets",
+			Version:            "v2.47.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			KeepDroppedTargets: &expectedkeepDroppedTargets,
+			Golden:             "valid_global_config_with_keep_dropped_targets.golden",
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					ScrapeInterval:        tc.ScrapeInterval,
-					ScrapeTimeout:         tc.ScrapeTimeout,
-					ExternalLabels:        tc.ExternalLabels,
-					Version:               tc.Version,
-					TracingConfig:         nil,
-					BodySizeLimit:         tc.BodySizeLimit,
-					SampleLimit:           tc.SampleLimit,
-					TargetLimit:           tc.TargetLimit,
-					LabelLimit:            tc.LabelLimit,
-					LabelNameLengthLimit:  tc.LabelNameLengthLimit,
-					LabelValueLengthLimit: tc.LabelValueLengthLimit,
+					ScrapeInterval:              tc.ScrapeInterval,
+					ScrapeTimeout:               tc.ScrapeTimeout,
+					ExternalLabels:              tc.ExternalLabels,
+					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
+					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
+					Version:                     tc.Version,
+					TracingConfig:               nil,
+					BodySizeLimit:               tc.BodySizeLimit,
+					SampleLimit:                 tc.SampleLimit,
+					TargetLimit:                 tc.TargetLimit,
+					LabelLimit:                  tc.LabelLimit,
+					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
+					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
+					KeepDroppedTargets:          tc.KeepDroppedTargets,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				QueryLogFile:       tc.QueryLogFile,
@@ -5492,6 +5521,86 @@ scrape_configs:
 	}
 }
 
+func TestKeepDroppedTargets(t *testing.T) {
+	for _, tc := range []struct {
+		version                    string
+		enforcedKeepDroppedTargets *uint64
+		keepDroppedTargets         *uint64
+		golden                     string
+	}{
+		{
+			version:                    "v2.46.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(50)),
+			golden:                     "KeepDroppedTargetsNotAddedInConfig.golden",
+		},
+		{
+			version:                    "v2.47.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(2000)),
+			golden:                     "KeepDroppedTargetsOverridedWithEnforcedValue.golden",
+		},
+		{
+			version:                    "v2.47.0",
+			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
+			keepDroppedTargets:         ptr.To(uint64(500)),
+			golden:                     "KeepDroppedTargets.golden",
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedKeepDroppedTargets(%d) keepDroppedTargets(%d)", tc.version, tc.enforcedKeepDroppedTargets, tc.keepDroppedTargets), func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			p.Spec.EnforcedKeepDroppedTargets = tc.enforcedKeepDroppedTargets
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+
+			serviceMonitor.Spec.KeepDroppedTargets = tc.keepDroppedTargets
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestBodySizeLimits(t *testing.T) {
 	expectNoLimit := `global:
   evaluation_interval: 30s
@@ -7557,29 +7666,21 @@ scrape_configs:
 }
 
 // When adding new test cases the developer should specify a name, a ScrapeConfig Spec
-// (scSpec) and an expectedConfig. (Optional) It's also possible to specify a
+// (scSpec) and an expected config in golden file (.golden file in testdata folder). (Optional) It's also possible to specify a
 // function (patchProm) that modifies the default Prometheus CR used if necessary for the test
 // case.
 func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
-		name        string
-		patchProm   func(*monitoringv1.Prometheus)
-		scSpec      monitoringv1alpha1.ScrapeConfigSpec
-		expectedCfg string
+		name      string
+		patchProm func(*monitoringv1.Prometheus)
+		scSpec    monitoringv1alpha1.ScrapeConfigSpec
+		golden    string
 	}{
 		{
 			name:   "empty_scrape_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-`,
+			golden: "ScrapeConfigSpecConfig_Empty.golden",
 		},
 		{
 			name: "static_config",
@@ -7593,20 +7694,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  static_configs:
-  - targets:
-    - http://localhost:9100
-    labels:
-      label1: value1
-`,
+			golden: "ScrapeConfigSpecConfig_Static.golden",
 		},
 		{
 			name: "file_sd_config",
@@ -7618,19 +7706,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  file_sd_configs:
-  - files:
-    - /tmp/myfile.json
-    refresh_interval: 5m
-`,
+			golden: "ScrapeConfigSpecConfig_FileSD.golden",
 		},
 		{
 			name: "http_sd_config",
@@ -7642,18 +7718,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    refresh_interval: 5m
-`,
+			golden: "ScrapeConfigSpecConfig_HTTPSD.golden",
 		},
 		{
 			name: "kubernetes_sd_config",
@@ -7664,52 +7729,21 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  kubernetes_sd_configs:
-  - role: node
-`,
+			golden: "ScrapeConfigSpecConfig_K8SSD.golden",
 		},
 		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricsPath: ptr.To("/metrics"),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  metrics_path: /metrics
-`,
+			golden: "ScrapeConfigSpecConfig_MetricPath.golden",
 		},
 		{
 			name: "empty_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				RelabelConfigs: []*monitoringv1.RelabelConfig{},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-`,
+			golden: "ScrapeConfigSpecConfig_EmptyRelabelConfig.golden",
 		},
 		{
 			name: "non_empty_relabel_config",
@@ -7724,57 +7758,21 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  relabel_configs:
-  - source_labels:
-    - job
-    target_label: __tmp_prometheus_job_name
-  - source_labels:
-    - __address__
-    target_label: __address__
-    regex: (.+)(?::d+)
-    replacement: $1:9537
-    action: replace
-`,
+			golden: "ScrapeConfigSpecConfig_NonEmptyRelabelConfig.golden",
 		},
 		{
 			name: "honor_timestamp",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HonorTimestamps: ptr.To(true),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  honor_timestamps: true
-`,
+			golden: "ScrapeConfigSpecConfig_HonorTimeStamp.golden",
 		},
 		{
 			name: "honor_labels",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HonorLabels: ptr.To(true),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  honor_labels: true
-`,
+			golden: "ScrapeConfigSpecConfig_HonorLabels.golden",
 		},
 		{
 			name: "basic_auth",
@@ -7813,23 +7811,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  basic_auth:
-    username: scrape-bob
-    password: scrape-alice
-  http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    basic_auth:
-      username: http-sd-bob
-      password: http-sd-alice
-`,
+			golden: "ScrapeConfigSpecConfig_BasicAuth.golden",
 		},
 		{
 			name: "authorization",
@@ -7854,23 +7836,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  authorization:
-    type: Bearer
-    credentials: scrape-secret
-  http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    authorization:
-      type: Bearer
-      credentials: http-sd-secret
-`,
+			golden: "ScrapeConfigSpecConfig_Authorization.golden",
 		},
 		{
 			name: "tlsconfig",
@@ -7913,41 +7879,14 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  tls_config:
-    insecure_skip_verify: false
-    ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
-    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-    key_file: /etc/prometheus/certs/secret_default_secret_key
-  http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    tls_config:
-      insecure_skip_verify: true
-      ca_file: /etc/prometheus/certs/secret_default_secret-ca-http_
-`,
+			golden: "ScrapeConfigSpecConfig_TLSConfig.golden",
 		},
 		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				Scheme: ptr.To("HTTPS"),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  scheme: https
-`,
+			golden: "ScrapeConfigSpecConfig_Scheme.golden",
 		},
 		{
 			name: "limits",
@@ -7958,20 +7897,7 @@ scrape_configs:
 				LabelNameLengthLimit:  ptr.To(uint64(40)),
 				LabelValueLengthLimit: ptr.To(uint64(30)),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  sample_limit: 10000
-  target_limit: 1000
-  label_limit: 50
-  label_name_length_limit: 40
-  label_value_length_limit: 30
-`,
+			golden: "ScrapeConfigSpecConfig_Limits.golden",
 		},
 		{
 			name: "params",
@@ -7979,52 +7905,21 @@ scrape_configs:
 				MetricsPath: ptr.To("/federate"),
 				Params:      map[string][]string{"match[]": {"{job=\"prometheus\"}", "{__name__=~\"job:.*\"}"}},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  metrics_path: /federate
-  params:
-    match[]:
-    - '{job="prometheus"}'
-    - '{__name__=~"job:.*"}'
-`,
+			golden: "ScrapeConfigSpecConfig_Params.golden",
 		},
 		{
 			name: "scrape_interval",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScrapeInterval: (*monitoringv1.Duration)(ptr.To("15s")),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  scrape_interval: 15s
-`,
+			golden: "ScrapeConfigSpecConfig_ScrapeInterval.golden",
 		},
 		{
 			name: "scrape_timeout",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScrapeTimeout: (*monitoringv1.Duration)(ptr.To("10s")),
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  scrape_timeout: 10s
-`,
+			golden: "ScrapeConfigSpecConfig_ScrapeTimeout.golden",
 		},
 		{
 			name: "non_empty_metric_relabel_config",
@@ -8036,18 +7931,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  metric_relabel_configs:
-  - regex: noisy_labels.*
-    action: labeldrop
-`,
+			golden: "ScrapeConfigSpecConfig_NonEmptyMetricRelabelConfig.golden",
 		},
 		{
 			name: "dns_sd_config-srv-record",
@@ -8058,18 +7942,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  dns_sd_configs:
-  - names:
-    - web.example.com
-`,
+			golden: "ScrapeConfigSpecConfig_DNSSD_SRVRecord.golden",
 		},
 		{
 			name: "dns_sd_config-a-record",
@@ -8082,20 +7955,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  dns_sd_configs:
-  - names:
-    - node.demo.do.prometheus.io
-    type: A
-    port: 9100
-`,
+			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8150,9 +8010,8 @@ scrape_configs:
 				nil,
 			)
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedCfg, string(cfg))
+			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8170,10 +8029,10 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 		},
 	)
 	for _, tc := range []struct {
-		name        string
-		patchProm   func(*monitoringv1.Prometheus)
-		scSpec      monitoringv1alpha1.ScrapeConfigSpec
-		expectedCfg string
+		name      string
+		patchProm func(*monitoringv1.Prometheus)
+		scSpec    monitoringv1alpha1.ScrapeConfigSpec
+		golden    string
 	}{
 		{
 			name: "consul_scrape_config",
@@ -8216,40 +8075,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  consul_sd_configs:
-  - server: localhost
-    token: value
-    datacenter: we1
-    namespace: observability
-    partition: "1"
-    scheme: https
-    services:
-    - prometheus
-    - alertmanager
-    tags:
-    - tag1
-    tag_separator: ;
-    node_meta:
-      name: node_name
-      service: service_name
-    allow_stale: false
-    refresh_interval: 30s
-    proxy_url: http://no-proxy.com
-    no_proxy: 0.0.0.0
-    proxy_from_environment: true
-    proxy_connect_header:
-      header: value
-    follow_redirects: true
-    enable_http2: true
-`,
+			golden: "ConsulScrapeConfig.golden",
 		}, {
 			name: "consul_scrape_config_basic_auth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -8273,20 +8099,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  consul_sd_configs:
-  - basic_auth:
-      username: consul-sd-bob
-      password: consul-sd-alice
-    server: localhost:8500
-`,
+			golden: "ConsulScrapeConfigBasicAuth.golden",
 		}, {
 			name: "consul_scrape_config_authorization",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -8304,20 +8117,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  consul_sd_configs:
-  - authorization:
-      type: Bearer
-      credentials: authorization
-    server: localhost:8500
-`,
+			golden: "ConsulScrapeConfigAuthorization.golden",
 		}, {
 			name: "consul_scrape_config_oauth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -8349,27 +8149,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  consul_sd_configs:
-  - oauth2:
-      client_id: client-id
-      client_secret: client-secret
-      token_url: http://test.url
-      scopes:
-      - scope 1
-      - scope 2
-      endpoint_params:
-        param1: value1
-        param2: value2
-    server: localhost:8500
-`,
+			golden: "ConsulScrapeConfigOAuth.golden",
 		}, {
 			name: "consul_scrape_config_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -8401,22 +8181,7 @@ scrape_configs:
 					},
 				},
 			},
-			expectedCfg: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
-  external_labels:
-    prometheus: default/test
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
-  consul_sd_configs:
-  - tls_config:
-      insecure_skip_verify: false
-      ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
-      cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-      key_file: /etc/prometheus/certs/secret_default_secret_key
-    server: localhost:8500
-`,
+			golden: "ConsulScrapeConfigTLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
@@ -8474,7 +8239,7 @@ scrape_configs:
 				nil,
 			)
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedCfg, string(cfg))
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 
 	}

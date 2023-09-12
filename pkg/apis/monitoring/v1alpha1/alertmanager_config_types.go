@@ -862,11 +862,23 @@ type TelegramConfig struct {
 	// If not specified, default API URL will be used.
 	// +optional
 	APIURL string `json:"apiURL,omitempty"`
-	// Telegram bot token
+	// Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	//
+	// Either `botToken` or `botTokenFile` is required.
+	//
+	//+optional
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
+	// File to read the Telegram bot token from. It is mutually exclusive with `botToken`.
+	// Either `botToken` or `botTokenFile` is required.
+	//
+	// It requires Alertmanager >= v0.26.0.
+	//
+	// +optional
+	BotTokenFile *string `json:"botTokenFile,omitempty"`
 	// The Telegram chat ID.
+	// +required
 	ChatID int64 `json:"chatID,omitempty"`
 	// Message template
 	// +optional

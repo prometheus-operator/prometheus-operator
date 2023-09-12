@@ -115,6 +115,7 @@ type receiver struct {
 type webhookConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
+	URLFile       string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
 }
@@ -339,6 +340,7 @@ type telegramConfig struct {
 	VSendResolved        *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	APIUrl               string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	BotToken             string            `yaml:"bot_token,omitempty" json:"bot_token,omitempty"`
+	BotTokenFile         string            `yaml:"bot_token_file,omitempty" json:"bot_token_file,omitempty"`
 	ChatID               int64             `yaml:"chat_id,omitempty" json:"chat_id,omitempty"`
 	Message              string            `yaml:"message,omitempty" json:"message,omitempty"`
 	DisableNotifications bool              `yaml:"disable_notifications,omitempty" json:"disable_notifications,omitempty"`

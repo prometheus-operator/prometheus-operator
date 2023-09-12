@@ -812,6 +812,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.BotTokenFile != nil {
+		in, out := &in.BotTokenFile, &out.BotTokenFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.DisableNotifications != nil {
 		in, out := &in.DisableNotifications, &out.DisableNotifications
 		*out = new(bool)

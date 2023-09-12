@@ -43,7 +43,8 @@ const (
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
 
-	defaultReplicaExternalLabelName = "prometheus_replica"
+	defaultPrometheusExternalLabelName = "prometheus"
+	defaultReplicaExternalLabelName    = "prometheus_replica"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -203,6 +204,11 @@ var (
 		specField:       "labelValueLengthLimit",
 		prometheusField: "label_value_length_limit",
 		minVersion:      "2.27.0",
+	}
+	keepDroppedTargetsKey = limitKey{
+		specField:       "keepDroppedTargets",
+		prometheusField: "keep_dropped_targets",
+		minVersion:      "2.47.0",
 	}
 )
 
@@ -387,7 +393,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	objMeta := cg.prom.GetObjectMeta()
 
-	prometheusExternalLabelName := "prometheus"
+	prometheusExternalLabelName := defaultPrometheusExternalLabelName
 	if cpf.PrometheusExternalLabelName != nil {
 		prometheusExternalLabelName = *cpf.PrometheusExternalLabelName
 	}
@@ -407,9 +413,14 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
-	for n, v := range cpf.ExternalLabels {
-		m[n] = v
+	for k, v := range cpf.ExternalLabels {
+		if _, found := m[k]; found {
+			level.Warn(cg.logger).Log("msg", "ignoring external label because it is a reserved key", "key", k)
+			continue
+		}
+		m[k] = v
 	}
+
 	return stringMapToMapSlice(m)
 }
 
@@ -845,6 +856,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -902,6 +914,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1345,6 +1358,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1954,6 +1968,9 @@ func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice
 	if cpf.LabelValueLengthLimit != nil {
 		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_value_length_limit", *cpf.LabelValueLengthLimit)
 	}
+	if cpf.KeepDroppedTargets != nil {
+		slice = cg.WithMinimumVersion("2.47.0").AppendMapItem(slice, "keep_dropped_targets", *cpf.KeepDroppedTargets)
+	}
 
 	return slice
 }
@@ -2254,6 +2271,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, sc.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, sc.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, sc.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)

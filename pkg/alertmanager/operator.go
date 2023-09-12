@@ -257,7 +257,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		}
 		nsInf := cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList),
 			),
 			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 		)
@@ -697,7 +697,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	sset, err := makeStatefulSet(am, c.config, newSSetInputHash, tlsAssets.ShardNames())
 	if err != nil {
-		return errors.Wrap(err, "failed to make statefulset")
+		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 	operator.SanitizeSTS(sset)
 
@@ -760,7 +760,7 @@ func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanage
 
 // getStatefulSetFromAlertmanagerKey returns a copy of the StatefulSet object
 // corresponding to the Alertmanager object identified by key.
-// If the object is not found, it returns a nil pointer.
+// If the object is not found, it returns a nil pointer without error.
 func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.StatefulSet, error) {
 	ssetName := alertmanagerKeyToStatefulSetKey(key)
 
@@ -794,7 +794,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to get StatefulSet")
 	}
 
-	if sset == nil || c.rr.DeletionInProgress(sset) {
+	if sset != nil && c.rr.DeletionInProgress(sset) {
 		return nil
 	}
 

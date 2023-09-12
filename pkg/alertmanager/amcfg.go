@@ -1918,27 +1918,26 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
-
 	if poc.UserKeyFile != "" && lessThanV0_26 {
-		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
+		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		poc.UserKeyFile = ""
 	}
 
 	if poc.TokenFile != "" && lessThanV0_26 {
-		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover config"
+		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		poc.TokenFile = ""
 	}
 
 	if poc.UserKey != "" && poc.UserKeyFile != "" {
-		msg := "'user_key' and 'user_key_file' are mutually exclusive for pushover config - 'user_key' has taken precedence"
+		msg := "'user_key' and 'user_key_file' are mutually exclusive for pushover receiver config - 'user_key' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.UserKeyFile = ""
 	}
 
 	if poc.Token != "" && poc.TokenFile != "" {
-		msg := "'token' and 'token_file' are mutually exclusive for pushover config - 'token' has taken precedence"
+		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
 	}
@@ -1992,7 +1991,23 @@ func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger log.Logger
 }
 
 func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	return whc.HTTPConfig.sanitize(amVersion, logger)
+	if err := whc.HTTPConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	if whc.URLFile != "" && amVersion.LT(semver.MustParse("0.26.0")) {
+		msg := "'url_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		whc.URLFile = ""
+	}
+
+	if whc.URL != "" && whc.URLFile != "" {
+		msg := "'url' and 'url_file' are mutually exclusive for webhook receiver config - 'url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		whc.URLFile = ""
+	}
+
+	return nil
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
@@ -2004,7 +2019,9 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger log.Logger) error
 }
 
 func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
 	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+
 	if !telegramAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; telegram integration is available in Alertmanager >= 0.24.0`)
 	}
@@ -2013,8 +2030,20 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 		return errors.Errorf("mandatory field %q is empty", "chatID")
 	}
 
-	if tc.BotToken == "" {
-		return fmt.Errorf("mandatory field %q is empty", "botToken")
+	if tc.BotTokenFile != "" && lessThanV0_26 {
+		msg := "'bot_token_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		tc.BotTokenFile = ""
+	}
+
+	if tc.BotToken == "" && tc.BotTokenFile == "" {
+		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
+	}
+
+	if tc.BotToken != "" && tc.BotTokenFile != "" {
+		msg := "'bot_token' and 'bot_token_file' are mutually exclusive for telegram receiver config - 'bot_token' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		tc.BotTokenFile = ""
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)

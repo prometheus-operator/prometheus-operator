@@ -3194,7 +3194,7 @@
                             type: 'string',
                           },
                           botToken: {
-                            description: 'Telegram bot token The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.',
+                            description: 'Telegram bot token. It is mutually exclusive with `botTokenFile`. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. \n Either `botToken` or `botTokenFile` is required.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -3212,6 +3212,10 @@
                               'name',
                             ],
                             type: 'object',
+                          },
+                          botTokenFile: {
+                            description: 'File to read the Telegram bot token from. It is mutually exclusive with `botToken`. Either `botToken` or `botTokenFile` is required. \n It requires Alertmanager >= v0.26.0.',
+                            type: 'string',
                           },
                           chatID: {
                             description: 'The Telegram chat ID.',

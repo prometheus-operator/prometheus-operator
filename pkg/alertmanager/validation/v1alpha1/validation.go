@@ -308,8 +308,8 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
 	for _, config := range configs {
 
-		if config.BotToken == nil {
-			return fmt.Errorf("mandatory field %q is empty", "botToken")
+		if config.BotToken == nil && config.BotTokenFile == nil {
+			return fmt.Errorf("mandatory field botToken or botTokenfile is empty")
 		}
 
 		if config.ChatID == 0 {

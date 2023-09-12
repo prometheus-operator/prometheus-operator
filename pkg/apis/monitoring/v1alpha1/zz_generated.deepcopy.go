@@ -1190,6 +1190,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.KeepDroppedTargets != nil {
+		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
+		*out = new(uint64)
+		**out = **in
+	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
 		*out = make([]*monitoringv1.RelabelConfig, len(*in))
@@ -1356,6 +1361,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 		in, out := &in.BotToken, &out.BotToken
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.BotTokenFile != nil {
+		in, out := &in.BotTokenFile, &out.BotTokenFile
+		*out = new(string)
+		**out = **in
 	}
 	if in.DisableNotifications != nil {
 		in, out := &in.DisableNotifications, &out.DisableNotifications
