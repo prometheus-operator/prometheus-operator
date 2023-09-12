@@ -807,12 +807,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	availableCondition := stsReporter.Update(a)
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
+	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
-	asac := monitoringv1ac.AlertmanagerStatus()
-	GetAppliedConfigStatusFromStatus(a, asac, availableCondition, reconciledCondition)
-
-	aac := monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+	aac := ApplyConfigurationFromAlertmanager(a)
 
 	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
 		return errors.Wrap(err, "failed to apply status subresource")
@@ -1797,24 +1795,26 @@ func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
 }
 
-func GetAppliedConfigFromCondition(c *monitoringv1.Condition) *monitoringv1ac.ConditionApplyConfiguration {
-	return monitoringv1ac.Condition().
-		WithType(c.Type).
-		WithStatus(c.Status).
-		WithLastTransitionTime(c.LastTransitionTime).
-		WithReason(c.Reason).
-		WithMessage(c.Message).
-		WithObservedGeneration(c.ObservedGeneration)
-}
+func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {
+	asac := monitoringv1ac.AlertmanagerStatus().
+		WithPaused(a.Status.Paused).
+		WithPaused(a.Status.Paused).
+		WithReplicas(a.Status.Replicas).
+		WithAvailableReplicas(a.Status.AvailableReplicas).
+		WithUpdatedReplicas(a.Status.UpdatedReplicas).
+		WithUnavailableReplicas(a.Status.UnavailableReplicas)
 
-func GetAppliedConfigStatusFromStatus(a *monitoringv1.Alertmanager, asac *monitoringv1ac.AlertmanagerStatusApplyConfiguration, conditions ...monitoringv1.Condition) {
-	asac.WithPaused(a.Status.Paused)
-	asac.WithReplicas(a.Status.Replicas)
-	asac.WithAvailableReplicas(a.Status.AvailableReplicas)
-	asac.WithUpdatedReplicas(a.Status.UpdatedReplicas)
-	asac.WithUnavailableReplicas(a.Status.UnavailableReplicas)
-
-	for _, condition := range conditions {
-		asac.WithConditions(GetAppliedConfigFromCondition(&condition))
+	for _, condition := range a.Status.Conditions {
+		asac.WithConditions(
+			monitoringv1ac.Condition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
+		)
 	}
+
+	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 }
