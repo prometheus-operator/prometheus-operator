@@ -237,11 +237,12 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	{
 		p = framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"monitored": "true",
-			},
-		}
+		p.Spec.ServiceMonitorNamespaceSelector = nil
+		// p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		// 	MatchLabels: map[string]string{
+		// 		"monitored": "true",
+		// 	},
+		// }
 
 		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
