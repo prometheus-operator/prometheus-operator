@@ -2832,9 +2832,10 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		p := framework.MakeBasicPrometheus(mainNS, name, name, 1)
-		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: prometheusNamespaceSelector,
-		}
+		p.Spec.RuleNamespaceSelector = nil
+		// 	p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+		// 	MatchLabels: prometheusNamespaceSelector,
+		// }
 		p.Spec.EvaluationInterval = "1s"
 		p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), mainNS, p)
 		if err != nil {
