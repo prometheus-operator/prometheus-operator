@@ -2885,7 +2885,7 @@ func TestTimeInterval(t *testing.T) {
 		})
 	}
 }
-func TestSanitizePushoverConfig(t *testing.T) {
+func TestSanitizePushoverReceiverConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	for _, tc := range []struct {
