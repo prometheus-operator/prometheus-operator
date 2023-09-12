@@ -157,10 +157,13 @@ func init() {
 		" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
 		"If omitted, the default Go cipher suites will be used."+
 		"Note that TLS 1.3 ciphersuites are not configurable.")
+
+	flagset.StringVar(&cfg.ImpersonateUser, "as", "", "Username to impersonate. User could be a regular user or a service account in a namespace.")
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.CAFile, "ca-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.")
+
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	flagset.StringVar(&cfg.KubeletSelector, "kubelet-selector", "", "Label selector to filter nodes.")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
@@ -264,7 +267,14 @@ func run() int {
 
 	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
 
-	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
+	restConfig, err := k8sutil.NewClusterConfig(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig, cfg.ImpersonateUser)
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
+		cancel()
+		return 1
+	}
+
+	cc, err := k8sutil.NewCRDChecker(restConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
 		cancel()
@@ -288,7 +298,7 @@ func run() int {
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
@@ -314,7 +324,7 @@ func run() int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -322,14 +332,14 @@ func run() int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()

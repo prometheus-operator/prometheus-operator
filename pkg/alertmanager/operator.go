@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -102,23 +103,18 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
-	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating cluster config failed")
-	}
-
-	client, err := kubernetes.NewForConfig(cfg)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	mdClient, err := metadata.NewForConfig(cfg)
+	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	mclient, err := monitoringclient.NewForConfig(cfg)
+	mclient, err := monitoringclient.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
