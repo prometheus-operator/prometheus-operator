@@ -45,6 +45,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -54,7 +55,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod                   = 5 * time.Minute
+	prometheusOperatorFieldManager = "PrometheusOperator"
 )
 
 var (
@@ -804,8 +806,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
-	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).UpdateStatus(ctx, a, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+	aac := ApplyConfigurationFromAlertmanager(a)
+
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+		return errors.Wrap(err, "failed to apply status subresource")
 	}
 
 	return nil
@@ -1785,4 +1789,28 @@ func ListOptions(name string) metav1.ListOptions {
 
 func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+}
+
+func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {
+	asac := monitoringv1ac.AlertmanagerStatus().
+		WithPaused(a.Status.Paused).
+		WithPaused(a.Status.Paused).
+		WithReplicas(a.Status.Replicas).
+		WithAvailableReplicas(a.Status.AvailableReplicas).
+		WithUpdatedReplicas(a.Status.UpdatedReplicas).
+		WithUnavailableReplicas(a.Status.UnavailableReplicas)
+
+	for _, condition := range a.Status.Conditions {
+		asac.WithConditions(
+			monitoringv1ac.Condition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
+		)
+	}
+
+	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 }
