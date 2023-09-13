@@ -32,6 +32,8 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+const PrometheusOperatorFieldManager = "PrometheusOperator"
+
 var (
 	syncsDesc = prometheus.NewDesc(
 		"prometheus_operator_syncs",

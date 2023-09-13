@@ -55,8 +55,7 @@ import (
 )
 
 const (
-	resyncPeriod                   = 5 * time.Minute
-	prometheusOperatorFieldManager = "PrometheusOperator"
+	resyncPeriod = 5 * time.Minute
 )
 
 var (
@@ -806,9 +805,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
-	aac := ApplyConfigurationFromAlertmanager(a)
-
-	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, aac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return errors.Wrap(err, "failed to apply status subresource")
 	}
 

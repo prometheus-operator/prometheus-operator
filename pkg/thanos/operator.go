@@ -46,9 +46,8 @@ import (
 )
 
 const (
-	resyncPeriod                   = 5 * time.Minute
-	thanosRulerLabel               = "thanos-ruler"
-	prometheusOperatorFieldManager = "PrometheusOperator"
+	resyncPeriod     = 5 * time.Minute
+	thanosRulerLabel = "thanos-ruler"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -693,9 +692,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	tr.Status.Conditions = operator.UpdateConditions(tr.Status.Conditions, availableCondition, reconciledCondition)
 	tr.Status.Paused = tr.Spec.Paused
 
-	trac := ApplyConfigurationFromThanosRuler(tr)
-
-	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, trac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, applyConfigurationFromThanosRuler(tr), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return errors.Wrap(err, "failed to apply status subresource")
 	}
 
@@ -807,9 +804,8 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 }
 
-func ApplyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv1ac.ThanosRulerApplyConfiguration {
+func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv1ac.ThanosRulerApplyConfiguration {
 	trac := monitoringv1ac.ThanosRulerStatus().
-		WithPaused(a.Status.Paused).
 		WithPaused(a.Status.Paused).
 		WithReplicas(a.Status.Replicas).
 		WithAvailableReplicas(a.Status.AvailableReplicas).
