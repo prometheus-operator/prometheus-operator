@@ -27,6 +27,8 @@ Usage of ./operator:
     	Annotations to be add to all resources created by the operator
   -apiserver string
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
+  -as string
+    	Username to impersonate. User could be a regular user or a service account in a namespace.
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string

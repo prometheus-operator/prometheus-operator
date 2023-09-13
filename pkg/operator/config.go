@@ -29,13 +29,16 @@ import (
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                         string
+	// Kubernetes client configuration.
+	Host            string
+	TLSInsecure     bool
+	TLSConfig       rest.TLSClientConfig
+	ImpersonateUser string
+
 	ClusterDomain                string
 	KubeletObject                string
 	KubeletSelector              string
 	ListenAddress                string
-	TLSInsecure                  bool
-	TLSConfig                    rest.TLSClientConfig
 	ServerTLSConfig              server.TLSServerConfig
 	ReloaderConfig               ContainerConfig
 	AlertmanagerDefaultBaseImage string

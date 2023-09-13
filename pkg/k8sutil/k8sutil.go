@@ -66,16 +66,12 @@ type CRDChecker struct {
 	kclient kubernetes.Interface
 }
 
-func NewCRDChecker(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*CRDChecker, error) {
-	cfg, err := NewClusterConfig(host, tlsInsecure, tlsConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating cluster config failed")
-	}
-
+func NewCRDChecker(cfg *rest.Config) (*CRDChecker, error) {
 	kclient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
+
 	return &CRDChecker{kclient: kclient}, nil
 }
 
@@ -97,7 +93,7 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	return false, nil
 }
 
-func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
+func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig, asUser string) (*rest.Config, error) {
 	var cfg *rest.Config
 	var err error
 
@@ -132,6 +128,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	cfg.Burst = 100
 
 	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
+	cfg.Impersonate.UserName = asUser
 
 	return cfg, nil
 }
