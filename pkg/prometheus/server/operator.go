@@ -51,8 +51,7 @@ import (
 )
 
 const (
-	resyncPeriod                   = 5 * time.Minute
-	prometheusOperatorFieldManager = "PrometheusOperator"
+	resyncPeriod = 5 * time.Minute
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -1372,8 +1371,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	p.Status = *pStatus
 
-	pac := ApplyConfigurationFromPrometheus(p)
-	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).ApplyStatus(ctx, pac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).ApplyStatus(ctx, applyConfigurationFromPrometheus(p), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return errors.Wrap(err, "failed to apply prometheus status subresource")
 	}
 
@@ -1667,7 +1665,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	return nil
 }
 
-func ApplyConfigurationFromPrometheus(p *monitoringv1.Prometheus) *monitoringv1ac.PrometheusApplyConfiguration {
+func applyConfigurationFromPrometheus(p *monitoringv1.Prometheus) *monitoringv1ac.PrometheusApplyConfiguration {
 	psac := monitoringv1ac.PrometheusStatus().
 		WithPaused(p.Status.Paused).
 		WithPaused(p.Status.Paused).
