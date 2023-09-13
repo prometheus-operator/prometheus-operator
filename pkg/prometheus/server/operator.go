@@ -40,6 +40,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -50,7 +51,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod                   = 5 * time.Minute
+	prometheusOperatorFieldManager = "PrometheusOperator"
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -1369,8 +1371,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	p.Status = *pStatus
-	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update prometheus status subresource")
+
+	pac := ApplyConfigurationFromPrometheus(p)
+	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).ApplyStatus(ctx, pac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+		return errors.Wrap(err, "failed to apply prometheus status subresource")
 	}
 
 	return nil
@@ -1661,4 +1665,39 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
+}
+
+func ApplyConfigurationFromPrometheus(p *monitoringv1.Prometheus) *monitoringv1ac.PrometheusApplyConfiguration {
+	psac := monitoringv1ac.PrometheusStatus().
+		WithPaused(p.Status.Paused).
+		WithPaused(p.Status.Paused).
+		WithReplicas(p.Status.Replicas).
+		WithAvailableReplicas(p.Status.AvailableReplicas).
+		WithUpdatedReplicas(p.Status.UpdatedReplicas).
+		WithUnavailableReplicas(p.Status.UnavailableReplicas)
+
+	for _, condition := range p.Status.Conditions {
+		psac.WithConditions(
+			monitoringv1ac.Condition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
+		)
+	}
+
+	for _, shardStatus := range p.Status.ShardStatuses {
+		psac.WithShardStatuses(
+			monitoringv1ac.ShardStatus().
+				WithShardID(shardStatus.ShardID).
+				WithReplicas(shardStatus.Replicas).
+				WithUpdatedReplicas(shardStatus.UpdatedReplicas).
+				WithAvailableReplicas(shardStatus.AvailableReplicas).
+				WithUnavailableReplicas(shardStatus.UnavailableReplicas),
+		)
+	}
+
+	return monitoringv1ac.Prometheus(p.Name, p.Namespace).WithStatus(psac)
 }
