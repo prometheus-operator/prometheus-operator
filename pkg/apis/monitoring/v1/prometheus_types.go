@@ -407,7 +407,7 @@ type CommonPrometheusFields struct {
 	// When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
 	// and Probe objects will be ignored. They will only discover targets
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe
-	// objec.
+	// object.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
 	// When not empty, a label will be added to
