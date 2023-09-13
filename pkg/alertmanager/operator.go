@@ -1794,7 +1794,6 @@ func tlsAssetsSecretName(name string) string {
 func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {
 	asac := monitoringv1ac.AlertmanagerStatus().
 		WithPaused(a.Status.Paused).
-		WithPaused(a.Status.Paused).
 		WithReplicas(a.Status.Replicas).
 		WithAvailableReplicas(a.Status.AvailableReplicas).
 		WithUpdatedReplicas(a.Status.UpdatedReplicas).
