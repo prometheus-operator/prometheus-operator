@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -45,8 +46,9 @@ import (
 )
 
 const (
-	resyncPeriod     = 5 * time.Minute
-	thanosRulerLabel = "thanos-ruler"
+	resyncPeriod                   = 5 * time.Minute
+	thanosRulerLabel               = "thanos-ruler"
+	prometheusOperatorFieldManager = "PrometheusOperator"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -689,11 +691,12 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	availableCondition := stsReporter.Update(tr)
 	reconciledCondition := o.reconciliations.GetCondition(key, tr.Generation)
 	tr.Status.Conditions = operator.UpdateConditions(tr.Status.Conditions, availableCondition, reconciledCondition)
-
 	tr.Status.Paused = tr.Spec.Paused
 
-	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).UpdateStatus(ctx, tr, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update status subresource")
+	trac := ApplyConfigurationFromThanosRuler(tr)
+
+	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, trac, metav1.ApplyOptions{FieldManager: prometheusOperatorFieldManager, Force: true}); err != nil {
+		return errors.Wrap(err, "failed to apply status subresource")
 	}
 
 	return nil
@@ -802,4 +805,28 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			"err", err,
 		)
 	}
+}
+
+func ApplyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv1ac.ThanosRulerApplyConfiguration {
+	trac := monitoringv1ac.ThanosRulerStatus().
+		WithPaused(a.Status.Paused).
+		WithPaused(a.Status.Paused).
+		WithReplicas(a.Status.Replicas).
+		WithAvailableReplicas(a.Status.AvailableReplicas).
+		WithUpdatedReplicas(a.Status.UpdatedReplicas).
+		WithUnavailableReplicas(a.Status.UnavailableReplicas)
+
+	for _, condition := range a.Status.Conditions {
+		trac.WithConditions(
+			monitoringv1ac.Condition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
+		)
+	}
+
+	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
 }
