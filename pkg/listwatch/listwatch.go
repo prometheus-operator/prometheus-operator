@@ -16,9 +16,12 @@ package listwatch
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
@@ -27,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/apimachinery/pkg/watch"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -34,6 +38,10 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+)
+
+const (
+	pollInterval = 15 * time.Second
 )
 
 // NewNamespaceListWatchFromClient mimics
@@ -105,7 +113,6 @@ func NewNamespaceListWatchFromClient(
 			}
 		}
 
-		level.Debug(l).Log("msg", "using privileged namespace lister/watcher")
 		return cache.NewFilteredListWatchFromClient(
 			corev1Client.RESTClient(),
 			"namespaces",
@@ -158,36 +165,12 @@ func NewNamespaceListWatchFromClient(
 		level.Warn(l).Log("msg", "the operator lacks required permissions which may result in degraded functionalities", "err", err)
 	}
 
-	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
-		list := &v1.NamespaceList{}
-		for name := range allowedNamespaces {
-			result, err := corev1Client.Namespaces().Get(ctx, name, metav1.GetOptions{})
-			if err != nil {
-				if apierrors.IsNotFound(err) {
-					level.Info(l).Log("msg", "namespace not found", "namespace", name)
-					continue
-				}
-
-				return nil, fmt.Errorf("unexpected error while listing namespaces: %w", err)
-			}
-
-			list.Items = append(list.Items, *result)
-		}
-		return list, nil
+	var namespaces []string
+	for ns := range allowedNamespaces {
+		namespaces = append(namespaces, ns)
 	}
 
-	// Since the client does not have Watch privileges, do not
-	// actually watch anything. Use a watch.FakeWatcher here to
-	// implement watch.Interface but not send any events.
-	watchFunc := func(_ metav1.ListOptions) (watch.Interface, error) {
-		// TODO(simonpasquier): implement a poll-based watcher that gets the
-		// list of namespaces perdiocially and send watch.Event() whenever it
-		// detects a change.
-		return watch.NewFake(), nil
-	}
-
-	level.Debug(l).Log("msg", "using unprivileged namespace lister/watcher")
-	return &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}, false, nil
+	return newPollBasedListerWatcher(ctx, l, corev1Client, namespaces), false, nil
 }
 
 // IsAllNamespaces checks if the given map of namespaces
@@ -268,4 +251,152 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 	}
 
 	options.FieldSelector = strings.Join(selectors, ",")
+}
+
+type pollBasedListerWatcher struct {
+	corev1Client corev1.CoreV1Interface
+	ch           chan watch.Event
+
+	ctx context.Context
+	l   log.Logger
+
+	cache map[string]cacheEntry
+}
+
+type cacheEntry struct {
+	present bool
+	ns      *v1.Namespace
+}
+
+var _ = watch.Interface(&pollBasedListerWatcher{})
+var _ = cache.ListerWatcher(&pollBasedListerWatcher{})
+
+func newPollBasedListerWatcher(ctx context.Context, l log.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
+	if l == nil {
+		l = log.NewNopLogger()
+	}
+
+	pblw := &pollBasedListerWatcher{
+		corev1Client: corev1Client,
+		ch:           make(chan watch.Event, 1),
+		ctx:          ctx,
+		l:            l,
+		cache:        make(map[string]cacheEntry, len(namespaces)),
+	}
+
+	for _, ns := range namespaces {
+		pblw.cache[ns] = cacheEntry{}
+	}
+
+	return pblw
+}
+
+func (pblw *pollBasedListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+	list := &v1.NamespaceList{}
+
+	for ns := range pblw.cache {
+		result, err := pblw.corev1Client.Namespaces().Get(pblw.ctx, ns, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				level.Info(pblw.l).Log("msg", "namespace not found", "namespace", ns)
+				continue
+			}
+
+			return nil, fmt.Errorf("unexpected error while listing namespaces: %w", err)
+		}
+
+		pblw.cache[ns] = cacheEntry{
+			present: true,
+			ns:      result,
+		}
+		list.Items = append(list.Items, *result)
+	}
+
+	return list, nil
+}
+
+func (pblw *pollBasedListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+	return pblw, nil
+}
+
+func (pblw *pollBasedListerWatcher) Stop() {}
+
+func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
+	go func() {
+		jitter, err := rand.Int(rand.Reader, big.NewInt(int64(pollInterval)))
+		if err == nil {
+			time.Sleep(time.Duration(jitter.Int64()))
+		} else {
+			level.Info(pblw.l).Log("msg", "failed to generate random jitter", "err", err)
+		}
+
+		wait.PollUntilContextCancel(pblw.ctx, pollInterval, false, pblw.poll)
+	}()
+
+	return pblw.ch
+}
+
+func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
+	var (
+		updated []*v1.Namespace
+		deleted []string
+	)
+
+	for ns, entry := range pblw.cache {
+		result, err := pblw.corev1Client.Namespaces().Get(ctx, ns, metav1.GetOptions{ResourceVersion: entry.ns.ResourceVersion})
+		if err != nil {
+			switch {
+			case apierrors.IsNotFound(err):
+				if entry.present {
+					deleted = append(deleted, ns)
+				}
+			default:
+				level.Warn(pblw.l).Log("msg", "watch error", "err", err, "namespace", ns)
+			}
+			continue
+		}
+
+		if entry.ns.ResourceVersion != result.ResourceVersion {
+			updated = append(updated, result)
+		}
+	}
+
+	for _, ns := range deleted {
+		entry := pblw.cache[ns]
+
+		pblw.ch <- watch.Event{
+			Type:   watch.Deleted,
+			Object: entry.ns,
+		}
+
+		pblw.cache[ns] = cacheEntry{
+			present: false,
+		}
+	}
+
+	for _, ns := range updated {
+		var (
+			eventType = watch.Modified
+			entry     = pblw.cache[ns.Name]
+		)
+
+		switch {
+		case !entry.present:
+			eventType = watch.Added
+		case ns.ResourceVersion == entry.ns.ResourceVersion:
+			continue
+		}
+
+		pblw.ch <- watch.Event{
+			Type:   eventType,
+			Object: ns,
+		}
+
+		pblw.cache[ns.Name] = cacheEntry{
+			ns:      ns,
+			present: true,
+		}
+	}
+
+	return false, nil
 }
