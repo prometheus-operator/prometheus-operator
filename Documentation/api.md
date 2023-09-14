@@ -2136,7 +2136,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -6300,7 +6300,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -10031,7 +10031,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -15323,7 +15323,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -18890,7 +18890,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
