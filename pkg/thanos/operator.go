@@ -223,22 +223,11 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			return nil, err
 		}
 
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if privileged {
-			nsResyncPeriod = resyncPeriod
-		}
-
+		level.Debug(o.logger).Log("msg", "creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{},
-			nsResyncPeriod,
+			resyncPeriod,
 			cache.Indexers{},
 		), nil
 	}
