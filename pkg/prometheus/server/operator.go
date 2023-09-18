@@ -1370,8 +1370,9 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	p.Status = *pStatus
-	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).UpdateStatus(ctx, p, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "failed to update prometheus status subresource")
+
+	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheus(p), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		return errors.Wrap(err, "failed to apply prometheus status subresource")
 	}
 
 	return nil
