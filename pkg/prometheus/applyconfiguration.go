@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package operator
+package prometheus
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -22,16 +22,16 @@ import (
 )
 
 func ApplyConfigurationFromPrometheusAgent(p *monitoringv1alpha1.PrometheusAgent) *monitoringv1alpha1ac.PrometheusAgentApplyConfiguration {
-	psac := fillStatusAC(&p.Status)
+	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status)
 	return monitoringv1alpha1ac.PrometheusAgent(p.Name, p.Namespace).WithStatus(psac)
 }
 
 func ApplyConfigurationFromPrometheus(p *monitoringv1.Prometheus) *monitoringv1ac.PrometheusApplyConfiguration {
-	psac := fillStatusAC(&p.Status)
+	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status)
 	return monitoringv1ac.Prometheus(p.Name, p.Namespace).WithStatus(psac)
 }
 
-func fillStatusAC(status *monitoringv1.PrometheusStatus) *monitoringv1ac.PrometheusStatusApplyConfiguration {
+func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1.PrometheusStatus) *monitoringv1ac.PrometheusStatusApplyConfiguration {
 	psac := monitoringv1ac.PrometheusStatus().
 		WithPaused(status.Paused).
 		WithReplicas(status.Replicas).
