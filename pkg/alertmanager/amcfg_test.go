@@ -2931,16 +2931,10 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
-
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
-
+			require.NoError(t, err)
 			require.Equal(t, tc.expect, *tc.in)
 		})
 	}

@@ -263,16 +263,8 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.Errorf("one of userKey or userKeyFile must be configured")
 		}
 
-		if config.UserKey != nil && config.UserKeyFile != nil {
-			return errors.Errorf("at most one of userKey & userKeyFile must be configured")
-		}
-
 		if config.Token == nil && config.TokenFile == nil {
 			return errors.Errorf("one of token or tokenFile must be configured")
-		}
-
-		if config.Token != nil && config.TokenFile != nil {
-			return errors.Errorf("at most one of token & tokenFile must be configured")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
