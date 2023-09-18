@@ -2927,6 +2927,56 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Test pushover userkey/user_key_file one of must be configured",
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:     "foo",
+								UserKeyFile: "/path/use_key_file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover token/token_file one of must be configured",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								Token:     "bar",
+								TokenFile: "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover user_key_file/token_file dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKeyFile: "/path/use_key_file",
+								TokenFile:   "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -3261,7 +3311,9 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
+								UserKey:     "key",
 								UserKeyFile: "foo",
+								Token:       "token",
 							},
 						},
 					},
@@ -3272,7 +3324,9 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
+								UserKey:     "key",
 								UserKeyFile: "",
+								Token:       "token",
 							},
 						},
 					},
@@ -3287,6 +3341,8 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
+								UserKey:   "key",
+								Token:     "token",
 								TokenFile: "foo",
 							},
 						},
@@ -3298,6 +3354,8 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
+								UserKey:   "key",
+								Token:     "token",
 								TokenFile: "",
 							},
 						},
@@ -3315,6 +3373,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 							{
 								UserKey:     "foo",
 								UserKeyFile: "bar",
+								Token:       "token",
 							},
 						},
 					},
@@ -3326,6 +3385,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 						PushoverConfigs: []*pushoverConfig{
 							{
 								UserKey: "foo",
+								Token:   "token",
 							},
 						},
 					},
@@ -3340,6 +3400,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
+								UserKey:   "foo",
 								Token:     "foo",
 								TokenFile: "bar",
 							},
@@ -3352,7 +3413,8 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
-								Token: "foo",
+								UserKey: "foo",
+								Token:   "foo",
 							},
 						},
 					},
