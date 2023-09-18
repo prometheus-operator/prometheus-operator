@@ -229,7 +229,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate PushoverConfigs - missing user key adn user key file",
+			name: "Test fail to validate PushoverConfigs - missing user key and user key file",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
