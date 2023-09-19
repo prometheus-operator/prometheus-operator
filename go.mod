@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blang/semver/v4 v4.0.0
-	github.com/brancz/kube-rbac-proxy v0.14.2
+	github.com/brancz/kube-rbac-proxy v0.14.3
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/evanphx/json-patch/v5 v5.6.0
