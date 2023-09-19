@@ -413,13 +413,22 @@ const (
 // TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded
 func TestPrometheusVersionUpgrade(t *testing.T) {
 	skipPromVersionUpgradeTests(t)
-	testFuncs := map[string]func(t *testing.T){
-		"PromVersionMigration": testPromVersionMigration,
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for name, f := range testFuncs {
-		t.Run(name, f)
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
 	}
+
+	t.Run("PromVersionMigration", testPromVersionMigration)
 }
 
 func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {

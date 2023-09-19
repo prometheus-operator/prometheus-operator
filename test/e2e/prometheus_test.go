@@ -870,7 +870,6 @@ func testPromNoServiceMonitorSelector(t *testing.T) {
 }
 
 func testPromVersionMigration(t *testing.T) {
-	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
