@@ -30,6 +30,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KubernetesSDConfigs   []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
 	ConsulSDConfigs       []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
 	DNSSDConfigs          []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
+	EC2SDConfigs          []EC2SDConfigApplyConfiguration                   `json:"ec2SDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval        *v1.Duration                                      `json:"scrapeInterval,omitempty"`
@@ -130,6 +131,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDNSSDConfigs(values ...*DNSSDCo
 			panic("nil value passed to WithDNSSDConfigs")
 		}
 		b.DNSSDConfigs = append(b.DNSSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithEC2SDConfigs adds the given value to the EC2SDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EC2SDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEC2SDConfigs(values ...*EC2SDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEC2SDConfigs")
+		}
+		b.EC2SDConfigs = append(b.EC2SDConfigs, *values[i])
 	}
 	return b
 }

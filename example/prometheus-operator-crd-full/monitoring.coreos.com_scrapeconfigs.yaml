@@ -565,6 +565,69 @@ spec:
                   - names
                   type: object
                 type: array
+              ec2SDConfigs:
+                description: EC2SDConfigs defines a list of EC2 service discovery
+                  configurations.
+                items:
+                  description: EC2SDConfig allow retrieving scrape targets from AWS
+                    EC2 instances. The private IP address is used by default, but
+                    may be changed to the public IP address with relabeling. The IAM
+                    credentials used must have the ec2:DescribeInstances permission
+                    to discover scrape targets See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+                  properties:
+                    accessKey:
+                      description: AccessKey is the AWS API key.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    region:
+                      description: The AWS region
+                      type: string
+                    secretKey:
+                      description: SecretKey is the AWS API secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                  type: object
+                type: array
               fileSDConfigs:
                 description: FileSDConfigs defines a list of file service discovery
                   configurations.
