@@ -5,6 +5,7 @@ linters:
   enable:
   - revive
   - gci
+  - depguard
 
 issues:
   exclude-rules:
@@ -24,3 +25,16 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/prometheus-operator/prometheus-operator)
+  depguard:
+    rules:
+      forbid-pkg-errors:
+        deny:
+        - pkg: "github.com/pkg/errors"
+          dsc: Should be replaced with standard lib errors or fmt.Errorf
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+      - depguard
+      severity: info
