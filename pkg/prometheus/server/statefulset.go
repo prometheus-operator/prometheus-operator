@@ -283,6 +283,19 @@ func makeStatefulSetSpec(
 	}
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
 
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: prompkg.ConfDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: prompkg.ConfOutDir,
+		},
+	}
+
+	var configReloaderWebConfigFile string
+
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 2.24.0.
 	// With this we avoid redeploying prometheus when reconfiguring between
@@ -303,9 +316,12 @@ func makeStatefulSetSpec(
 		if err != nil {
 			return nil, err
 		}
+
+		configReloaderWebConfigFile = confArg.Value
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	} else if cpf.Web != nil {
 		webConfigGenerator.Warn("web.config.file")
 	}
@@ -385,16 +401,6 @@ func makeStatefulSetSpec(
 	}
 
 	var watchedDirectories []string
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
 
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
@@ -424,6 +430,7 @@ func makeStatefulSetSpec(
 			operator.ConfigEnvsubstFile(path.Join(prompkg.ConfOutDir, prompkg.ConfigEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.Shard(shard),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ImagePullPolicy(cpf.ImagePullPolicy),
 		),
 	)
@@ -478,6 +485,7 @@ func makeStatefulSetSpec(
 			operator.ConfigEnvsubstFile(path.Join(prompkg.ConfOutDir, prompkg.ConfigEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(shard),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ImagePullPolicy(cpf.ImagePullPolicy),
 		),
 	}, additionalContainers...)

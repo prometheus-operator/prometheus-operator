@@ -634,6 +634,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
 
+	var configReloaderWebConfigFile string
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 0.22.0.
 	// With this we avoid redeploying alertmanager when reconfiguring between
@@ -654,8 +655,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			return nil, err
 		}
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
+		configReloaderWebConfigFile = confArg.Value
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	}
 
 	terminationGracePeriod := int64(120)
@@ -715,6 +718,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ConfigFile(path.Join(alertmanagerConfigDir, alertmanagerConfigFileCompressed)),
 			operator.ConfigEnvsubstFile(path.Join(alertmanagerConfigOutDir, alertmanagerConfigEnvsubstFilename)),
 			operator.ImagePullPolicy(a.Spec.ImagePullPolicy),
@@ -741,6 +745,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ConfigFile(path.Join(alertmanagerConfigDir, alertmanagerConfigFileCompressed)),
 			operator.ConfigEnvsubstFile(path.Join(alertmanagerConfigOutDir, alertmanagerConfigEnvsubstFilename)),
 			operator.ImagePullPolicy(a.Spec.ImagePullPolicy),
