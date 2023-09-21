@@ -24,6 +24,7 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -1233,10 +1234,21 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
 
 			o := &Operator{
-				kclient: c,
-				mclient: monitoringfake.NewSimpleClientset(),
-				logger:  level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
-				metrics: operator.NewMetrics(prometheus.NewRegistry()),
+				kclient:    c,
+				mclient:    monitoringfake.NewSimpleClientset(),
+				ssarClient: &alwaysAllowed{},
+				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
+				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				config: Config{
+					Namespaces: operator.Namespaces{
+						AlertmanagerConfigAllowList: map[string]struct{}{
+							v1.NamespaceAll: {},
+						},
+						AlertmanagerAllowList: map[string]struct{}{
+							"foo": {},
+						},
+					},
+				},
 			}
 
 			err := o.bootstrap(context.Background())
@@ -1274,4 +1286,15 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			}
 		})
 	}
+}
+
+// alwaysAllowed implements SelfSubjectAccessReviewInterface.
+type alwaysAllowed struct{}
+
+func (*alwaysAllowed) Create(_ context.Context, _ *authv1.SelfSubjectAccessReview, _ metav1.CreateOptions) (*authv1.SelfSubjectAccessReview, error) {
+	return &authv1.SelfSubjectAccessReview{
+		Status: authv1.SubjectAccessReviewStatus{
+			Allowed: true,
+		},
+	}, nil
 }
