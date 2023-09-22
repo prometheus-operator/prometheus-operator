@@ -327,7 +327,6 @@ func makeStatefulSetSpec(
 			operator.ConfigEnvsubstFile(path.Join(prompkg.ConfOutDir, prompkg.ConfigEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.Shard(shard),
-			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ImagePullPolicy(cpf.ImagePullPolicy),
 		),
 	)
