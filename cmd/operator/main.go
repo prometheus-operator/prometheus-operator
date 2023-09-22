@@ -303,6 +303,15 @@ func run() int {
 		return 1
 	}
 
+	kubernetesVersion, err := kclient.Discovery().ServerVersion()
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to request Kubernetes server version", "err", err)
+		cancel()
+		return 1
+	}
+	cfg.KubernetesVersion = *kubernetesVersion
+	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
 		logger,

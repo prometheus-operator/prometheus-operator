@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -77,6 +78,7 @@ type Operator struct {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
+	KubernetesVersion      version.Info
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
 	Namespaces             operator.Namespaces
@@ -121,6 +123,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 		config: Config{
+			KubernetesVersion:      conf.KubernetesVersion,
 			ReloaderConfig:         conf.ReloaderConfig,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
@@ -207,32 +210,40 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
-	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
-		// nsResyncPeriod is used to control how often the namespace informer
-		// should resync. If the unprivileged ListerWatcher is used, then the
-		// informer must resync more often because it cannot watch for
-		// namespace changes.
-		nsResyncPeriod := 15 * time.Second
-		// If the only namespace is v1.NamespaceAll, then the client must be
-		// privileged and a regular cache.ListWatch will be used. In this case
-		// watching works and we do not need to resync so frequently.
-		if listwatch.IsAllNamespaces(allowList) {
-			nsResyncPeriod = resyncPeriod
+	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
+		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
+			ctx,
+			o.logger,
+			o.config.KubernetesVersion,
+			o.kclient.CoreV1(),
+			o.kclient.AuthorizationV1().SelfSubjectAccessReviews(),
+			allowList,
+			o.config.Namespaces.DenyList)
+		if err != nil {
+			return nil, err
 		}
-		nsInf := cache.NewSharedIndexInformer(
-			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList),
-			),
-			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-		)
 
-		return nsInf
+		level.Debug(o.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		return cache.NewSharedIndexInformer(
+			o.metrics.NewInstrumentedListerWatcher(lw),
+			&v1.Namespace{},
+			resyncPeriod,
+			cache.Indexers{},
+		), nil
 	}
-	o.nsRuleInf = newNamespaceInformer(o, o.config.Namespaces.AllowList)
+
+	o.nsRuleInf, err = newNamespaceInformer(o, o.config.Namespaces.AllowList)
+	if err != nil {
+		return nil, err
+	}
+
 	if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.ThanosRulerAllowList) {
 		o.nsThanosRulerInf = o.nsRuleInf
 	} else {
-		o.nsThanosRulerInf = newNamespaceInformer(o, o.config.Namespaces.ThanosRulerAllowList)
+		o.nsThanosRulerInf, err = newNamespaceInformer(o, o.config.Namespaces.ThanosRulerAllowList)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return o, nil
@@ -300,27 +311,6 @@ func (o *Operator) addHandlers() {
 
 // Run the controller.
 func (o *Operator) Run(ctx context.Context) error {
-	errChan := make(chan error)
-	go func() {
-		v, err := o.kclient.Discovery().ServerVersion()
-		if err != nil {
-			errChan <- errors.Wrap(err, "communicating with server failed")
-			return
-		}
-		level.Info(o.logger).Log("msg", "connection established", "cluster-version", v)
-		errChan <- nil
-	}()
-
-	select {
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
-		level.Info(o.logger).Log("msg", "CRD API endpoints ready")
-	case <-ctx.Done():
-		return nil
-	}
-
 	go o.rr.Run(ctx)
 	defer o.rr.Stop()
 

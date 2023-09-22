@@ -22,6 +22,7 @@ import (
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -30,10 +31,11 @@ import (
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	// Kubernetes client configuration.
-	Host            string
-	TLSInsecure     bool
-	TLSConfig       rest.TLSClientConfig
-	ImpersonateUser string
+	Host              string
+	TLSInsecure       bool
+	TLSConfig         rest.TLSClientConfig
+	ImpersonateUser   string
+	KubernetesVersion version.Info
 
 	ClusterDomain                string
 	KubeletObject                string
