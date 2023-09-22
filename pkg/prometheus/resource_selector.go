@@ -758,8 +758,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if config.TokenRef != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.TokenRef); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
 		}
 
 		for k, v := range config.ProxyConnectHeader {
