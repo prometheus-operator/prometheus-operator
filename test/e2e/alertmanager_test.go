@@ -2313,7 +2313,7 @@ func testAMWeb(t *testing.T) {
 		cfg := framework.RestConfig
 		podName := amPods.Items[0].Name
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
