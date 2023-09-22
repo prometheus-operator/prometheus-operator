@@ -4522,6 +4522,33 @@ remote_write:
 `,
 		},
 		{
+			version: "v2.45.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: monitoringv1.ManagedIdentity{
+						ClientID: "client-id",
+					},
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  azuread:
+    managed_identity:
+      client_id: client-id
+    cloud: AzureGovernment
+`,
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",

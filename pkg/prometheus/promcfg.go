@@ -1871,6 +1871,22 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "sigv4", sigV4)
 		}
 
+		if spec.AzureAD != nil {
+			azureAd := yaml.MapSlice{
+				{
+					Key: "managed_identity", Value: yaml.MapSlice{
+						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
+					},
+				},
+			}
+
+			if spec.AzureAD.Cloud != nil {
+				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
+			}
+
+			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+		}
+
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}
 
