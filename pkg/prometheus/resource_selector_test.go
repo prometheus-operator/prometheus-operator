@@ -1086,6 +1086,17 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "EC2 SD config with no secret ref provided",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "EC2 SD config with invalid secret ref for accessKey",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
