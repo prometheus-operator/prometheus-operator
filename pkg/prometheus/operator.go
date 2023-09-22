@@ -108,6 +108,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		"oauth2":        spec.OAuth2,
 		"authorization": spec.Authorization,
 		"sigv4":         spec.Sigv4,
+		"azureAd":       spec.AzureAD,
 	} {
 		if reflect.ValueOf(v).IsNil() {
 			continue

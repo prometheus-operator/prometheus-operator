@@ -59,6 +59,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AttachMetadataApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Authorization"):
 		return &monitoringv1.AuthorizationApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureAD"):
+		return &monitoringv1.AzureADApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
@@ -81,6 +83,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HostPortApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
+		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):
 		return &monitoringv1.MetadataConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("NamespaceSelector"):
