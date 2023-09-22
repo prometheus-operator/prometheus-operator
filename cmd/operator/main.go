@@ -252,7 +252,11 @@ func run() int {
 	level.Info(logger).Log("build_context", version.BuildContext())
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
-		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
+		level.Error(logger).Log(
+			"msg", "--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
+			"namespaces", ns,
+			"deny_namespaces", deniedNs,
+		)
 		return 1
 	}
 
@@ -326,15 +330,15 @@ func run() int {
 			Verbs:    []string{"get", "list", "watch"},
 		},
 	)
-
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check ScrapeConfig support", "err", err)
 		cancel()
 		return 1
 	}
 
 	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -360,6 +364,7 @@ func run() int {
 		},
 	)
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check PrometheusAgent support", "err", err)
 		cancel()
 		return 1
 	}
@@ -376,14 +381,14 @@ func run() int {
 
 	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
 		cancel()
 		return 1
 	}
 
 	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -394,7 +399,7 @@ func run() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		level.Error(logger).Log("msg", "listening failed", "address", cfg.ListenAddress, "err", err)
 		cancel()
 		return 1
 	}
@@ -407,7 +412,7 @@ func run() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
+			level.Error(logger).Log("msg", "invalid TLS config", "err", err)
 			cancel()
 			return 1
 		}
@@ -474,7 +479,7 @@ func run() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
+			level.Error(logger).Log("msg", "failed to initialize certificate reloader", "err", err)
 			cancel()
 			return 1
 		}
