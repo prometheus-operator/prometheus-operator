@@ -91,12 +91,13 @@ type Operator struct {
 	config                 operator.Config
 	endpointSliceSupported bool
 	scrapeConfigSupported  bool
+	canReadStorageClass    bool
 
 	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool, canReadStorageClass bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
@@ -163,6 +164,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			Help: "Number of node endpoints synchronisation failures",
 		}),
 		scrapeConfigSupported: scrapeConfigSupported,
+		canReadStorageClass:   canReadStorageClass,
 	}
 	c.metrics.MustRegister(
 		c.nodeAddressLookupErrors,
@@ -1163,6 +1165,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := log.With(c.logger, "key", key)
 	logDeprecatedFields(logger, p)
+
+	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+		return err
+	}
 
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")

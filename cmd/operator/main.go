@@ -39,6 +39,7 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	klog "k8s.io/klog/v2"
@@ -311,6 +312,27 @@ func run() int {
 	}
 	cfg.KubernetesVersion = *kubernetesVersion
 	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+	// Check if we can read the storage classs
+	canReadStorageClass, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		nil,
+		storagev1.SchemeGroupVersion,
+		storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+		k8sutil.ResourceAttribute{
+			Group:    storagev1.GroupName,
+			Version:  storagev1.SchemeGroupVersion.Version,
+			Resource: storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+			Verbs:    []string{"get"},
+		},
+	)
+
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
+		cancel()
+		return 1
+	}
 
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
@@ -332,7 +354,7 @@ func run() int {
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported, canReadStorageClass)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
 		cancel()
@@ -366,7 +388,7 @@ func run() int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported, canReadStorageClass)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -374,14 +396,14 @@ func run() int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r, canReadStorageClass)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r, canReadStorageClass)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()

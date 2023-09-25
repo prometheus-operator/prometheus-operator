@@ -247,6 +247,50 @@ func testAMStorageUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Invalid storageclass e2e test
+
+	_, err = framework.PatchAlertmanager(
+		context.Background(),
+		am.Name,
+		am.Namespace,
+		monitoringv1.AlertmanagerSpec{
+			Storage: &monitoringv1.StorageSpec{
+				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						StorageClassName: ptr.To("unknown-storage-class"),
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceStorage: resource.MustParse("200Mi"),
+							},
+						},
+					},
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var loopError error
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+		current, err := framework.MonClientV1.Alertmanagers(ns).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("%v: %v", err, loopError)
+	}
 }
 
 func testAMExposingWithKubernetesAPI(t *testing.T) {

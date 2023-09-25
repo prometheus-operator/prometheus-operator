@@ -70,8 +70,9 @@ type Operator struct {
 	nsThanosRulerInf cache.SharedIndexInformer
 	nsRuleInf        cache.SharedIndexInformer
 
-	metrics         *operator.Metrics
-	reconciliations *operator.ReconciliationTracker
+	metrics             *operator.Metrics
+	reconciliations     *operator.ReconciliationTracker
+	canReadStorageClass bool
 
 	config Config
 }
@@ -91,7 +92,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
@@ -115,13 +116,14 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
 	o := &Operator{
-		kclient:         client,
-		mdClient:        mdClient,
-		mclient:         mclient,
-		logger:          logger,
-		accessor:        operator.NewAccessor(logger),
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
+		kclient:             client,
+		mdClient:            mdClient,
+		mclient:             mclient,
+		logger:              logger,
+		accessor:            operator.NewAccessor(logger),
+		metrics:             operator.NewMetrics(r),
+		reconciliations:     &operator.ReconciliationTracker{},
+		canReadStorageClass: canReadStorageClass,
 		config: Config{
 			KubernetesVersion:      conf.KubernetesVersion,
 			ReloaderConfig:         conf.ReloaderConfig,
@@ -537,6 +539,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger := log.With(o.logger, "key", key)
 	level.Info(logger).Log("msg", "sync thanos-ruler")
+
+	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
+		return err
+	}
 
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
 	if err != nil {
