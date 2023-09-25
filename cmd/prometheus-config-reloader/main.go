@@ -63,6 +63,7 @@ func main() {
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
+	configReloaderPort := app.Flag("config-reloader-port", "port for the config-reloader to use").Default("8080").Int()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
@@ -152,20 +153,8 @@ func main() {
 	}
 
 	if *listenAddress != "" && *watchInterval != 0 {
-		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"up"}`))
-		})
-
-		srv := http.Server{Addr: *listenAddress}
-
-		g.Add(func() error {
-			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			return srv.ListenAndServe()
-		}, func(error) {
-			srv.Close()
-		})
+		srv := startHTTPServer(*listenAddress, *configReloaderPort, r)
+		defer srv.Close()
 	}
 
 	term := make(chan os.Signal, 1)
@@ -184,6 +173,22 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func startHTTPServer(listenAddress string, port int, r *prometheus.Registry) *http.Server {
+	http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"up"}`))
+	})
+
+	srv := &http.Server{Addr: fmt.Sprintf("%s:%d", listenAddress, port)}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			stdlog.Fatal(err)
+		}
+	}()
+	return srv
 }
 
 func createHTTPClient(timeout *time.Duration) http.Client {
