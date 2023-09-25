@@ -1404,7 +1404,8 @@ func logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
 		}
 	}
 
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil {
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
+
 		level.Warn(logger).Log("msg", "neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
 	}
 }
@@ -1485,7 +1486,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
 	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-		p.Spec.ProbeSelector == nil {
+		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
 		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
 		// make an empty secret
