@@ -2271,7 +2271,7 @@ func testAMWeb(t *testing.T) {
 			}
 		}
 
-		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -2313,7 +2313,7 @@ func testAMWeb(t *testing.T) {
 		cfg := framework.RestConfig
 		podName := amPods.Items[0].Name
 
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		closer, err := testFramework.StartPortForward(ctx, cfg, "https", podName, ns, "9093")
