@@ -313,6 +313,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
 		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
 		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
+		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 	}
 
 	for name, f := range testFuncs {
@@ -330,6 +331,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
 		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 		"ThanosRulerQueryConfig":                        testTRQueryConfig,
+		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)

@@ -136,6 +136,11 @@ function(params) {
         resources: ['ingresses'],
         verbs: ['get', 'list', 'watch'],
       },
+      {
+        apiGroups: ['storage.k8s.io'],
+        resources: ['storageclasses'],
+        verbs: ['get'],
+      },
     ],
   },
 

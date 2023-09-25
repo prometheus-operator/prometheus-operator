@@ -81,12 +81,13 @@ type Operator struct {
 	config                 operator.Config
 	endpointSliceSupported bool
 	scrapeConfigSupported  bool
+	canReadStorageClass    bool
 
 	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool, canReadStorageClass bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
@@ -117,6 +118,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		metrics:               operator.NewMetrics(r),
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
+		canReadStorageClass:   canReadStorageClass,
 	}
 	c.metrics.MustRegister(
 		c.reconciliations,
@@ -518,6 +520,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	level.Info(logger).Log("msg", "sync prometheus")
+
+	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+		return err
+	}
 
 	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
