@@ -1186,6 +1186,48 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 		}
 	}
 }
+
+func TestClusterLabel(t *testing.T) {
+	tt := []struct {
+		scenario                string
+		version                 string
+		expectedClusterLabelArg bool
+	}{{
+		scenario:                "--cluster.label set by default for version >= v0.26.0",
+		version:                 "0.26.0",
+		expectedClusterLabelArg: true,
+	}, {
+		scenario:                "no --cluster.label set for older versions",
+		version:                 "0.25.0",
+		expectedClusterLabelArg: false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "alertmanager",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: toPtr(int32(1)),
+					Version:  ts.version,
+				},
+			}
+
+			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			if ts.expectedClusterLabelArg {
+				require.Contains(t, args, "--cluster.label=monitoring/alertmanager")
+				return
+			}
+			require.NotContains(t, args, "--cluster.label")
+		})
+	}
+}
+
 func containsString(sub string) func(string) bool {
 	return func(x string) bool {
 		return strings.Contains(x, sub)
