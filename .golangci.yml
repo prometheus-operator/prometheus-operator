@@ -5,6 +5,7 @@ linters:
   enable:
   - revive
   - gci
+  - depguard
 
 issues:
   exclude-rules:
@@ -24,3 +25,13 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/prometheus-operator/prometheus-operator)
+  depguard:
+    rules:
+      forbid-pkg-errors:
+        files:
+        - "**/admission/*.go"
+        - "**/alertmanager/*.go"
+        - "**/alertmanager/**/*.go"
+        deny:
+        - pkg: "github.com/pkg/errors"
+          dsc: Should be replaced with standard lib errors or fmt.Errorf
