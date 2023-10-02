@@ -1166,18 +1166,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := log.With(c.logger, "key", key)
 	logDeprecatedFields(logger, p)
 
+	// Check if the Prometheus instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		level.Info(logger).Log("msg", "the resource is deleting, not reconciling")
+		return nil
+	}
+
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
 	}
 
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
-		return nil
-	}
-
-	// Check if the Prometheus instance is marked for deletion.
-	if !p.ObjectMeta.DeletionTimestamp.IsZero() {
-		level.Info(logger).Log("msg", "the resource is deleting, not reconciling")
 		return nil
 	}
 

@@ -514,6 +514,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := log.With(c.logger, "key", key)
+
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		level.Info(logger).Log("msg", "the resource is deleting, not reconciling")
+		return nil
+	}
+
 	if p.Spec.Paused {
 		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
 		return nil

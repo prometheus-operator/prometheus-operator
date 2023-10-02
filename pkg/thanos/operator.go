@@ -533,6 +533,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "failed to set ThanosRuler type information")
 	}
 
+	// Check if the Thanos instance is marked for deletion.
+	if o.rr.DeletionInProgress(tr) {
+		return nil
+	}
+
 	if tr.Spec.Paused {
 		return nil
 	}
