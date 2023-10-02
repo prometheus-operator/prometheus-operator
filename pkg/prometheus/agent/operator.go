@@ -517,7 +517,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
-		level.Info(logger).Log("msg", "the resource is deleting, not reconciling")
 		return nil
 	}
 
