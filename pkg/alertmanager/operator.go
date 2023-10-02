@@ -640,6 +640,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
 	}
 
+	// Check if the Alertmanager instance is marked for deletion.
+	if c.rr.DeletionInProgress(am) {
+		return nil
+	}
+
 	if am.Spec.Paused {
 		return nil
 	}

@@ -1166,6 +1166,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := log.With(c.logger, "key", key)
 	logDeprecatedFields(logger, p)
 
+	// Check if the Prometheus instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		return nil
+	}
+
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
 	}
