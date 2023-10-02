@@ -644,6 +644,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	// Check if the Alertmanager instance is marked for deletion.
+	if !am.ObjectMeta.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
 	logger := log.With(c.logger, "key", key)
 	logDeprecatedFields(logger, am)
 

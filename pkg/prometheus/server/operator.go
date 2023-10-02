@@ -1175,6 +1175,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	// Check if the Prometheus instance is marked for deletion.
+	if !p.ObjectMeta.DeletionTimestamp.IsZero() {
+		level.Info(logger).Log("msg", "the resource is deleting, not reconciling")
+		return nil
+	}
+
 	level.Info(logger).Log("msg", "sync prometheus")
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
