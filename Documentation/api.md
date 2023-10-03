@@ -14425,8 +14425,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig is used to define configurations for Prometheus Alertmanager,
-specifying how alerts are grouped and notified to external systems.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -21839,8 +21839,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig is used to define configurations for Prometheus Alertmanager,
-specifying how alerts are grouped and notified to external systems.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
