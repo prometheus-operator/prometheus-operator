@@ -41,8 +41,8 @@ const (
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 // +kubebuilder:storageversion
 
-// AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-// across multiple namespaces configuring one Alertmanager cluster.
+// AlertmanagerConfig is used to define configurations for Prometheus Alertmanager,
+// specifying how alerts are grouped and notified to external systems.
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
