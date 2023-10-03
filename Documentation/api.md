@@ -14425,8 +14425,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -21839,8 +21839,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
