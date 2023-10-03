@@ -311,7 +311,8 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	if err := f.WaitForPrometheusReady(ctx, result, 5*time.Minute); err != nil {
+	result, err = f.WaitForPrometheusReady(ctx, result, 5*time.Minute)
+	if err != nil {
 		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
@@ -326,6 +327,21 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: ptr.To(replicas),
+			},
+		},
+	)
+}
+
+// TODO(arthursens): Use UpdateScale() instead of PatchPrometheusAndWaitUntilReady() once we have a
+// working UpdateScale() implementation.
+func (f *Framework) ScalePrometheusShardsAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
+	return f.PatchPrometheusAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Shards: ptr.To(shards),
 			},
 		},
 	)
@@ -369,25 +385,28 @@ func (f *Framework) PatchPrometheusAndWaitUntilReady(ctx context.Context, name, 
 		return nil, fmt.Errorf("failed to patch Prometheus %s/%s: %w", ns, name, err)
 	}
 
-	if err := f.WaitForPrometheusReady(ctx, p, 5*time.Minute); err != nil {
+	p, err = f.WaitForPrometheusReady(ctx, p, 5*time.Minute)
+	if err != nil {
 		return nil, err
 	}
 
 	return p, nil
 }
 
-func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.Prometheus, timeout time.Duration) error {
+func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.Prometheus, timeout time.Duration) (*monitoringv1.Prometheus, error) {
 	expected := *p.Spec.Replicas
 	if p.Spec.Shards != nil && *p.Spec.Shards > 0 {
 		expected = expected * *p.Spec.Shards
 	}
 
+	var current *monitoringv1.Prometheus
+	var getErr error
 	if err := f.WaitForResourceAvailable(
 		ctx,
 		func(ctx context.Context) (resourceStatus, error) {
-			current, err := f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
-			if err != nil {
-				return resourceStatus{}, err
+			current, getErr = f.MonClientV1.Prometheuses(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
+			if getErr != nil {
+				return resourceStatus{}, getErr
 			}
 			return resourceStatus{
 				expectedReplicas: expected,
@@ -398,10 +417,10 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 		},
 		timeout,
 	); err != nil {
-		return fmt.Errorf("prometheus %v/%v failed to become available: %w", p.Namespace, p.Name, err)
+		return nil, fmt.Errorf("prometheus %v/%v failed to become available: %w", p.Namespace, p.Name, err)
 	}
 
-	return nil
+	return current, nil
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, name string) error {

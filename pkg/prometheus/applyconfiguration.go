@@ -37,7 +37,9 @@ func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1
 		WithReplicas(status.Replicas).
 		WithAvailableReplicas(status.AvailableReplicas).
 		WithUpdatedReplicas(status.UpdatedReplicas).
-		WithUnavailableReplicas(status.UnavailableReplicas)
+		WithUnavailableReplicas(status.UnavailableReplicas).
+		WithShards(status.Shards).
+		WithSelector(status.Selector)
 
 	for _, condition := range status.Conditions {
 		psac.WithConditions(

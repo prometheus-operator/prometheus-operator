@@ -144,3 +144,34 @@ func testAgentCheckStorageClass(t *testing.T) {
 		t.Fatalf("%v: %v", err, loopError)
 	}
 }
+
+func testPrometheusAgentStatusScale(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	name := "test"
+
+	pAgent := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+
+	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if pAgent.Status.Shards != 1 {
+		t.Fatalf("expected scale of 1 shard, got %d", pAgent.Status.Shards)
+	}
+
+	pAgent, err = framework.ScalePrometheusAgentShardsAndWaitUntilReady(ctx, name, ns, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if pAgent.Status.Shards != 2 {
+		t.Fatalf("expected scale of 2 shards, got %d", pAgent.Status.Shards)
+	}
+}

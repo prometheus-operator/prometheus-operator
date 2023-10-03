@@ -72,25 +72,28 @@ func (f *Framework) CreatePrometheusAgentAndWaitUntilReady(ctx context.Context, 
 		return nil, fmt.Errorf("creating %v prometheus-agent instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	if err := f.WaitForPrometheusAgentReady(ctx, result, 5*time.Minute); err != nil {
+	result, err = f.WaitForPrometheusAgentReady(ctx, result, 5*time.Minute)
+	if err != nil {
 		return nil, fmt.Errorf("waiting for %v prometheus-agent instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return result, nil
 }
 
-func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, timeout time.Duration) error {
+func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, timeout time.Duration) (*monitoringv1alpha1.PrometheusAgent, error) {
 	expected := *p.Spec.Replicas
 	if p.Spec.Shards != nil && *p.Spec.Shards > 0 {
 		expected = expected * *p.Spec.Shards
 	}
 
+	var current *monitoringv1alpha1.PrometheusAgent
+	var getErr error
 	if err := f.WaitForResourceAvailable(
 		ctx,
 		func(context.Context) (resourceStatus, error) {
-			current, err := f.MonClientV1alpha1.PrometheusAgents(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
-			if err != nil {
-				return resourceStatus{}, err
+			current, getErr = f.MonClientV1alpha1.PrometheusAgents(p.Namespace).Get(ctx, p.Name, metav1.GetOptions{})
+			if getErr != nil {
+				return resourceStatus{}, getErr
 			}
 			return resourceStatus{
 				expectedReplicas: expected,
@@ -101,10 +104,10 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 		},
 		timeout,
 	); err != nil {
-		return fmt.Errorf("prometheus-agent %v/%v failed to become available: %w", p.Namespace, p.Name, err)
+		return nil, fmt.Errorf("prometheus-agent %v/%v failed to become available: %w", p.Namespace, p.Name, err)
 	}
 
-	return nil
+	return current, nil
 }
 
 func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, ns, name string) error {
@@ -155,6 +158,35 @@ func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, s
 		},
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+// TODO(arthursens): Use UpdateScale() instead of PatchPrometheusAgentShardsAndWaitUntilReady() once we have a
+// working UpdateScale() implementation.
+func (f *Framework) ScalePrometheusAgentShardsAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1alpha1.PrometheusAgent, error) {
+	return f.PatchPrometheusAgentAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Shards: ptr.To(shards),
+			},
+		},
+	)
+}
+
+func (f *Framework) PatchPrometheusAgentAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1alpha1.PrometheusAgentSpec) (*monitoringv1alpha1.PrometheusAgent, error) {
+	p, err := f.PatchPrometheusAgent(ctx, name, ns, spec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to patch prometheus agent %s/%s: %w", ns, name, err)
+	}
+
+	p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
 	if err != nil {
 		return nil, err
 	}
