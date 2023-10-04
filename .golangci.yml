@@ -32,6 +32,12 @@ linters-settings:
         - "**/admission/*.go"
         - "**/alertmanager/*.go"
         - "**/alertmanager/**/*.go"
+        - "**/apis/*.go"
+        - "**/apis/**/*.go"
+        - "**/assets/*.go"
+        - "**/client/*.go"
+        - "**/client/**/*.go"
+        - "**/informers/*.go"
         deny:
         - pkg: "github.com/pkg/errors"
           dsc: Should be replaced with standard lib errors or fmt.Errorf

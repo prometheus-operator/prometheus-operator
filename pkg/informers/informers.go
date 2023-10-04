@@ -15,9 +15,9 @@
 package informers
 
 import (
+	"fmt"
 	"sort"
 
-	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -64,7 +64,7 @@ func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVe
 	for _, ns := range namespaces {
 		informer, err := ifs.ForResource(ns, resource)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error getting informer in namespace %q for resource %v", ns, resource)
+			return nil, fmt.Errorf("error getting informer in namespace %q for resource %v: %w", ns, resource, err)
 		}
 		informers = append(informers, informer)
 	}
