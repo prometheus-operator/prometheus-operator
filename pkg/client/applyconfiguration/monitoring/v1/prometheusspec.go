@@ -398,9 +398,12 @@ func (b *PrometheusSpecApplyConfiguration) WithTolerations(values ...corev1.Tole
 // WithTopologySpreadConstraints adds the given value to the TopologySpreadConstraints field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the TopologySpreadConstraints field.
-func (b *PrometheusSpecApplyConfiguration) WithTopologySpreadConstraints(values ...corev1.TopologySpreadConstraint) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithTopologySpreadConstraints(values ...*TopologySpreadConstraintApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	for i := range values {
-		b.TopologySpreadConstraints = append(b.TopologySpreadConstraints, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithTopologySpreadConstraints")
+		}
+		b.TopologySpreadConstraints = append(b.TopologySpreadConstraints, *values[i])
 	}
 	return b
 }

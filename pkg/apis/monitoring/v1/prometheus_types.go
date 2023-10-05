@@ -57,6 +57,18 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 	return l.Status
 }
 
+// +kubebuilder:validation:Enum=name;shard
+type AdditionalLabelSelector string
+
+type TopologySpreadConstraint struct {
+	v1.TopologySpreadConstraint `json:",inline"`
+
+	//+optional
+	// +listType=set
+	// Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.
+	AdditionalLabelSelectors []AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
+}
+
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
@@ -320,9 +332,10 @@ type CommonPrometheusFields struct {
 	// Defines the Pods' tolerations if specified.
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+
 	// Defines the pod's topology spread constraints if specified.
-	// +optional
-	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	//+optional
+	TopologySpreadConstraints []TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// Defines the list of remote write configurations.
 	// +optional

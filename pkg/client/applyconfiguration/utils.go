@@ -177,6 +177,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ThanosSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TLSConfig"):
 		return &monitoringv1.TLSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("TopologySpreadConstraint"):
+		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TSDBSpec"):
 		return &monitoringv1.TSDBSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebConfigFileFields"):

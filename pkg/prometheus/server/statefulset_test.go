@@ -25,6 +25,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -2904,5 +2905,89 @@ func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 
 	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
 		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
+	}
+}
+
+func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "without labelSelector and additionalLabels",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "with labelSelector and without additionalLabels",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "with labelSelector and additionalLabels",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							AdditionalLabelSelectors: []monitoringv1.AdditionalLabelSelector{
+								"shard",
+							},
+							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sts, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{Spec: tc.spec})
+
+			require.NoError(t, err)
+
+			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
+
+			if tc.spec.TopologySpreadConstraints[0].AdditionalLabelSelectors != nil {
+				matchLabels := sts.Spec.Template.Spec.TopologySpreadConstraints[0].LabelSelector.MatchLabels
+				assert.Equal(t, len(matchLabels), 2)
+				assert.True(t, matchLabels["app"] == "prometheus", "app label should be present")
+				assert.True(t, matchLabels["operator.prometheus.io/shard"] == "0", "shard label should be present")
+			}
+		})
 	}
 }

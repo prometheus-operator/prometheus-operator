@@ -15,6 +15,8 @@
 package operator
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -52,4 +54,21 @@ func MakeHostAliases(input []monitoringv1.HostAlias) []v1.HostAlias {
 	}
 
 	return output
+}
+
+func MakeK8sTopologySpreadConstraint(podLabels map[string]string, tsc monitoringv1.TopologySpreadConstraint) v1.TopologySpreadConstraint {
+	if len(tsc.AdditionalLabelSelectors) > 0 {
+		if tsc.LabelSelector == nil {
+			tsc.LabelSelector = &metav1.LabelSelector{
+				MatchLabels: make(map[string]string),
+			}
+		}
+
+		for _, label := range tsc.AdditionalLabelSelectors {
+			labelName := fmt.Sprintf("operator.prometheus.io/%s", label)
+			tsc.LabelSelector.MatchLabels[labelName] = podLabels[labelName]
+		}
+	}
+
+	return tsc.TopologySpreadConstraint
 }
