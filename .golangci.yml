@@ -38,6 +38,10 @@ linters-settings:
         - "**/client/*.go"
         - "**/client/**/*.go"
         - "**/informers/*.go"
+        - "**/k8sutil/*.go"
+        - "**/listwatch/*.go"
+        - "**/namespacelabeler/*.go"
+        - "**/operator/*.go"
         deny:
         - pkg: "github.com/pkg/errors"
           dsc: Should be replaced with standard lib errors or fmt.Errorf

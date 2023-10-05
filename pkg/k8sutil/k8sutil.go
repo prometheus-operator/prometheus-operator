@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
-	"github.com/pkg/errors"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
