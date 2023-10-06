@@ -2935,7 +2935,6 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 						PushoverConfigs: []*pushoverConfig{
 							{
 								UserKey:     "foo",
-								UserKeyFile: "/path/use_key_file",
 							},
 						},
 					},
