@@ -259,11 +259,11 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 	for _, config := range configs {
 		if config.UserKey == nil && config.UserKeyFile == nil {
-			return errors.Errorf("one of userKey or userKeyFile must be configured")
+			return fmt.Errorf("one of userKey or userKeyFile must be configured")
 		}
 
 		if config.Token == nil && config.TokenFile == nil {
-			return errors.Errorf("one of token or tokenFile must be configured")
+			return fmt.Errorf("one of token or tokenFile must be configured")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

@@ -2934,7 +2934,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
-								UserKey:     "foo",
+								UserKey: "foo",
 							},
 						},
 					},
@@ -2950,7 +2950,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 					{
 						PushoverConfigs: []*pushoverConfig{
 							{
-								Token:     "bar",
+								Token: "bar",
 							},
 						},
 					},
@@ -2959,7 +2959,24 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "Test pushover user_key_file/token_file dropped in pushover config for unsupported versions",
+			name:           "Test pushover user_key/token_file dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								TokenFile: "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover user_key_file/token dropped in pushover config for unsupported versions",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2967,7 +2984,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 						PushoverConfigs: []*pushoverConfig{
 							{
 								UserKeyFile: "/path/use_key_file",
-								TokenFile:   "/path/token_file",
+								Token:       "bar",
 							},
 						},
 					},
