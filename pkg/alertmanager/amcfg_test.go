@@ -2951,7 +2951,6 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 						PushoverConfigs: []*pushoverConfig{
 							{
 								Token:     "bar",
-								TokenFile: "/path/token_file",
 							},
 						},
 					},
