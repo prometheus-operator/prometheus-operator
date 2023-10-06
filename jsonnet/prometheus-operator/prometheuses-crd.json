@@ -2754,7 +2754,7 @@
                     "type": "boolean"
                   },
                   "ignoreNamespaceSelectors": {
-                    "description": "When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor and Probe objects will be ignored. They will only discover targets within the namespace of the PodMonitor, ServiceMonitor and Probe objec.",
+                    "description": "When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor and Probe objects will be ignored. They will only discover targets within the namespace of the PodMonitor, ServiceMonitor and Probe object.",
                     "type": "boolean"
                   },
                   "image": {
@@ -4706,7 +4706,7 @@
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus to a remote endpoint.",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization section for the URL. \n It requires Prometheus >= v2.26.0. \n Cannot be set at the same time as `sigv4`, `basicAuth`, or `oauth2`.",
+                          "description": "Authorization section for the URL. \n It requires Prometheus >= v2.26.0. \n Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -4741,8 +4741,39 @@
                           },
                           "type": "object"
                         },
+                        "azureAd": {
+                          "description": "AzureAD for the URL. \n It requires Prometheus >= v2.45.0. \n Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                          "properties": {
+                            "cloud": {
+                              "description": "The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
+                              "enum": [
+                                "AzureChina",
+                                "AzureGovernment",
+                                "AzurePublic"
+                              ],
+                              "type": "string"
+                            },
+                            "managedIdentity": {
+                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.",
+                              "properties": {
+                                "clientId": {
+                                  "description": "The client id",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "clientId"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "managedIdentity"
+                          ],
+                          "type": "object"
+                        },
                         "basicAuth": {
-                          "description": "BasicAuth configuration for the URL. \n Cannot be set at the same time as `sigv4`, `authorization`, or `oauth2`.",
+                          "description": "BasicAuth configuration for the URL. \n Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "password": {
                               "description": "The secret in the service monitor namespace that contains the password for authentication.",
@@ -4826,7 +4857,7 @@
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "OAuth2 configuration for the URL. \n It requires Prometheus >= v2.27.0. \n Cannot be set at the same time as `sigv4`, `authorization`, or `basicAuth`.",
+                          "description": "OAuth2 configuration for the URL. \n It requires Prometheus >= v2.27.0. \n Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
                           "properties": {
                             "clientId": {
                               "description": "The secret or configmap containing the OAuth2 client id",
@@ -4987,7 +5018,7 @@
                           "type": "boolean"
                         },
                         "sigv4": {
-                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL. \n It requires Prometheus >= v2.26.0. \n Cannot be set at the same time as `authorization`, `basicAuth`, or `oauth2`.",
+                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL. \n It requires Prometheus >= v2.26.0. \n Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "accessKey": {
                               "description": "AccessKey is the AWS API key. If not specified, the environment variable `AWS_ACCESS_KEY_ID` is used.",

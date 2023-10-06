@@ -90,6 +90,9 @@ type ScrapeConfigSpec struct {
 	//DNSSDConfigs defines a list of DNS service discovery configurations.
 	// +optional
 	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
+	// EC2SDConfigs defines a list of EC2 service discovery configurations.
+	// +optional
+	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -329,6 +332,30 @@ type DNSSDConfig struct {
 	Type *string `json:"type"`
 	// The port number used if the query type is not SRV
 	// Ignored for SRV records
+	// +optional
+	Port *int `json:"port"`
+}
+
+// EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.
+// The private IP address is used by default, but may be changed to the public IP address with relabeling.
+// The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+// +k8s:openapi-gen=true
+type EC2SDConfig struct {
+	// The AWS region
+	// +optional
+	Region *string `json:"region"`
+	// AccessKey is the AWS API key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// SecretKey is the AWS API secret.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
 	// +optional
 	Port *int `json:"port"`
 }

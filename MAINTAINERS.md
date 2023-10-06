@@ -25,6 +25,7 @@ Full list of triage people is displayed below:
 | Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
 | Jayapriya Pai   | `@slashpai`        | [@slashpai](https://github.com/slashpai)               | Red Hat         |
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
+| Nicolas Takashi | `@nicolastakashi`  | [@nicolastakashi](https://github.com/nicolastakashi)   | Coralogix       |
 
 ## Emeritus maintainers
 

@@ -106,6 +106,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
@@ -120,7 +126,7 @@ As the Prometheus Operator works extensively with its `customresourcedefinitions
 * `servicemonitors`
 * `thanosrulers`
 
-Alertmanager and Prometheus clusters are created using `statefulsets` therefore all changes to an Alertmanager or Prometheus object result in a change to the `statefulsets`, which means all actions must be permitted.
+The operator materializes Alertmanager, Prometheus and ThanosRuler objects as `statefulsets` therefore all changes to an Alertmanager or Prometheus object result in a change to the matching `statefulsets`, which means all actions must be permitted.
 
 Additionally as the Prometheus Operator generates configurations, it requires all actions on `configmaps` and `secrets`.
 

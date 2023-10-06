@@ -15,12 +15,11 @@
 package v1alpha1
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -52,56 +51,56 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 
 	for _, receiver := range receivers {
 		if _, found := receiverNames[receiver.Name]; found {
-			return nil, errors.Errorf("%q receiver is not unique", receiver.Name)
+			return nil, fmt.Errorf("%q receiver is not unique: %w", receiver.Name, err)
 		}
 		receiverNames[receiver.Name] = struct{}{}
 
 		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'pagerDutyConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'pagerDutyConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateOpsGenieConfigs(receiver.OpsGenieConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'opsGenieConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'opsGenieConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'slackConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'slackConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'webhookConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'webhookConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'weChatConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'weChatConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'emailConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'emailConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'victorOpsConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'victorOpsConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'pushOverConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'pushOverConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'snsConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'snsConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'telegramConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'telegramConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'webexConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'webexConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
-			return nil, errors.Wrapf(err, "failed to validate 'discordConfig' - receiver %s", receiver.Name)
+			return nil, fmt.Errorf("failed to validate 'discordConfig' - receiver %s: %w", receiver.Name, err)
 		}
 	}
 
@@ -112,7 +111,7 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 	for _, conf := range configs {
 		if conf.URL != "" {
 			if _, err := validation.ValidateURL(conf.URL); err != nil {
-				return errors.Wrap(err, "pagerduty validation failed for 'url'")
+				return fmt.Errorf("pagerduty validation failed for 'url': %w", err)
 			}
 		}
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
@@ -133,7 +132,7 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 		}
 		if config.APIURL != "" {
 			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return errors.Wrap(err, "invalid 'apiURL'")
+				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
 
@@ -173,7 +172,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 		}
 		if config.URL != nil {
 			if _, err := validation.ValidateURL(*config.URL); err != nil {
-				return errors.Wrapf(err, "invalid 'url'")
+				return fmt.Errorf("invalid 'url': %w", err)
 			}
 		}
 
@@ -188,7 +187,7 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 	for _, config := range configs {
 		if config.APIURL != "" {
 			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return errors.Wrap(err, "invalid 'apiURL'")
+				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
 
@@ -208,7 +207,7 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 		if config.Smarthost != "" {
 			_, _, err := net.SplitHostPort(config.Smarthost)
 			if err != nil {
-				return errors.Wrapf(err, "invalid field 'smarthost': %s", config.Smarthost)
+				return fmt.Errorf("invalid 'smarthost' %s: %w", config.Smarthost, err)
 			}
 		}
 
@@ -255,7 +254,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 
 		if config.APIURL != "" {
 			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return errors.Wrapf(err, "'apiURL' %s invalid", config.APIURL)
+				return fmt.Errorf("'apiURL' %s invalid: %w", config.APIURL, err)
 			}
 		}
 
@@ -320,7 +319,7 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 	for _, config := range configs {
 		if *config.APIURL != "" {
 			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-				return errors.Wrap(err, "invalid 'apiURL'")
+				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
 
@@ -342,11 +341,11 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 
 	if r.Receiver == "" {
 		if topLevelRoute {
-			return errors.Errorf("root route must define a receiver")
+			return errors.New("root route must define a receiver")
 		}
 	} else {
 		if _, found := receivers[r.Receiver]; !found {
-			return errors.Errorf("receiver %q not found", r.Receiver)
+			return fmt.Errorf("receiver %q not found", r.Receiver)
 		}
 	}
 
@@ -354,38 +353,38 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 		groupedBy := make(map[string]struct{}, groupLen)
 		for _, str := range r.GroupBy {
 			if _, found := groupedBy[str]; found {
-				return errors.Errorf("duplicate values not permitted in route 'groupBy': %v", r.GroupBy)
+				return fmt.Errorf("duplicate values not permitted in route 'groupBy': %v", r.GroupBy)
 			}
 			groupedBy[str] = struct{}{}
 		}
 		if _, found := groupedBy["..."]; found && groupLen > 1 {
-			return errors.Errorf("'...' must be a sole value in route 'groupBy': %v", r.GroupBy)
+			return fmt.Errorf("'...' must be a sole value in route 'groupBy': %v", r.GroupBy)
 		}
 	}
 
 	for _, namedMuteTimeInterval := range r.MuteTimeIntervals {
 		if _, found := muteTimeIntervals[namedMuteTimeInterval]; !found {
-			return errors.Errorf("mute time interval %q not found", namedMuteTimeInterval)
+			return fmt.Errorf("mute time interval %q not found", namedMuteTimeInterval)
 		}
 	}
 
 	for _, namedActiveTimeInterval := range r.ActiveTimeIntervals {
 		if _, found := muteTimeIntervals[namedActiveTimeInterval]; !found {
-			return errors.Errorf("time interval %q not found", namedActiveTimeInterval)
+			return fmt.Errorf("time interval %q not found", namedActiveTimeInterval)
 		}
 	}
 
 	// validate that if defaults are set, they match regex
 	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
-		return errors.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
 
 	}
 	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return errors.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
+		return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
 	}
 
 	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return errors.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
+		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
 	children, err := r.ChildRoutes()
@@ -395,7 +394,7 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 
 	for i := range children {
 		if err := validateAlertManagerRoutes(&children[i], receivers, muteTimeIntervals, false); err != nil {
-			return errors.Wrapf(err, "route[%d]", i)
+			return fmt.Errorf("route[%d]: %w", i, err)
 		}
 	}
 
@@ -407,7 +406,7 @@ func validateMuteTimeIntervals(muteTimeIntervals []monitoringv1alpha1.MuteTimeIn
 
 	for i, mti := range muteTimeIntervals {
 		if err := mti.Validate(); err != nil {
-			return nil, errors.Wrapf(err, "mute time interval[%d] is invalid", i)
+			return nil, fmt.Errorf("mute time interval[%d] is invalid: %w", i, err)
 		}
 		muteTimeIntervalNames[mti.Name] = struct{}{}
 	}

@@ -200,9 +200,17 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // to control the installation for different version of Prometheus Operator. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns string, namespaceAllowlist,
-	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createResourceAdmissionHooks, createClusterRoleBindings, createScrapeConfigCrd bool) ([]FinalizerFn, error) {
+func (f *Framework) CreateOrUpdatePrometheusOperator(
+	ctx context.Context,
+	ns string,
+	namespaceAllowlist,
+	namespaceDenylist,
+	prometheusInstanceNamespaces,
+	alertmanagerInstanceNamespaces []string,
+	createResourceAdmissionHooks,
+	createClusterRoleBindings,
+	createScrapeConfigCrd bool,
+) ([]FinalizerFn, error) {
 
 	var finalizers []FinalizerFn
 
@@ -363,7 +371,6 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + repoAndTag[1]
 	}
 
-	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
 	deploy.Name = prometheusOperatorServiceDeploymentName
 
 	for _, ns := range namespaceAllowlist {
