@@ -29,6 +29,9 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_node_name
+    target_label: node
   - target_label: job
     replacement: default/testpodmonitor1
   - target_label: endpoint

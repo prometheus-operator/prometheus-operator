@@ -801,6 +801,10 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
 		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_node_name"}},
+			{Key: "target_label", Value: "node"},
+		},
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
@@ -1284,6 +1288,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_node_name"}},
+			{Key: "target_label", Value: "node"},
 		},
 		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_name"}},

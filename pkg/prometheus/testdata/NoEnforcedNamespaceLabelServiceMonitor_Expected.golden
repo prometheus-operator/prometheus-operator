@@ -50,6 +50,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_node_name
+    target_label: node
+  - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
   - action: drop
