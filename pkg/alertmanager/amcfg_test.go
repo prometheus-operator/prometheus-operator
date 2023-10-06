@@ -2928,7 +2928,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "Test pushover userkey/user_key_file one of must be configured",
+			name: "Test pushover token or token_file must be configured",
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
