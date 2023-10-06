@@ -2896,7 +2896,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 		expectErr      bool
 	}{
 		{
-			name:           "Test pushover user_key_file/token_file takes precedence in pushover config",
+			name:           "Test pushover user_key/token takes precedence in pushover config",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
