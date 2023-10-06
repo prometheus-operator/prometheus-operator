@@ -2929,6 +2929,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 		},
 		{
 			name: "Test pushover token or token_file must be configured",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
