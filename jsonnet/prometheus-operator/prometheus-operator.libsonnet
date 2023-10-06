@@ -10,6 +10,7 @@ local defaults = {
     requests: { cpu: '', memory: '' },
   },
   enableReloaderProbes: false,
+  goGC: '30',
   port: 8080,
   resources: {
     limits: { cpu: '200m', memory: '200Mi' },
@@ -168,6 +169,7 @@ function(params) {
         name: 'http',
       }],
       resources: po.config.resources,
+      env: [{ name: 'GOGC', value: po.config.goGC }],
       securityContext: {
         allowPrivilegeEscalation: false,
         readOnlyRootFilesystem: true,

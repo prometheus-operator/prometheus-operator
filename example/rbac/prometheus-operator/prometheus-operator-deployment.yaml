@@ -27,6 +27,9 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.69.1
+        env:
+        - name: GOGC
+          value: "30"
         image: quay.io/prometheus-operator/prometheus-operator:v0.69.1
         name: prometheus-operator
         ports:
