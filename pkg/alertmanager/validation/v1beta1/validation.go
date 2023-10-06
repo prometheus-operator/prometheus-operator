@@ -258,12 +258,12 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 
 func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 	for _, config := range configs {
-		if config.UserKey == nil {
-			return fmt.Errorf("mandatory field %q is empty", "userKey")
+		if config.UserKey == nil && config.UserKeyFile == nil {
+			return fmt.Errorf("one of userKey or userKeyFile must be configured")
 		}
 
-		if config.Token == nil {
-			return fmt.Errorf("mandatory field %q is empty", "token")
+		if config.Token == nil && config.TokenFile == nil {
+			return fmt.Errorf("one of token or tokenFile must be configured")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

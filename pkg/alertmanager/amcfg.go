@@ -1917,22 +1917,16 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 }
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
-	if err := poc.HTTPConfig.sanitize(amVersion, logger); err != nil {
-		return err
-	}
-
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
-		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		poc.UserKeyFile = ""
 	}
 
-	if poc.TokenFile != "" && lessThanV0_26 {
-		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
-		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		poc.TokenFile = ""
+	if poc.UserKey == "" && poc.UserKeyFile == "" {
+		return fmt.Errorf("missing mandatory field user_key or user_key_file")
 	}
 
 	if poc.UserKey != "" && poc.UserKeyFile != "" {
@@ -1941,13 +1935,23 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		poc.UserKeyFile = ""
 	}
 
+	if poc.TokenFile != "" && lessThanV0_26 {
+		msg := "'token_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TokenFile = ""
+	}
+
+	if poc.Token == "" && poc.TokenFile == "" {
+		return fmt.Errorf("missing mandatory field token or token_file")
+	}
+
 	if poc.Token != "" && poc.TokenFile != "" {
 		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
 	}
 
-	return nil
+	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger log.Logger) error {

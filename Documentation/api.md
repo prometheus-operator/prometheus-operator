@@ -19482,9 +19482,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -19497,9 +19513,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -23358,9 +23390,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -23373,9 +23421,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>

@@ -2139,7 +2139,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: "The secret's key that contains the registered application's API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            description: "The secret's key that contains the registered application's API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. Either `token` or `tokenFile` is required.",
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2157,6 +2157,10 @@
                               'name',
                             ],
                             type: 'object',
+                          },
+                          tokenFile: {
+                            description: "The token file that contains the registered application's API token, see https://pushover.net/apps. Either `token` or `tokenFile` is required. It requires Alertmanager >= v0.26.0.",
+                            type: 'string',
                           },
                           url: {
                             description: 'A supplementary URL shown alongside the message.',
@@ -2167,7 +2171,7 @@
                             type: 'string',
                           },
                           userKey: {
-                            description: "The secret's key that contains the recipient user's user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
+                            description: "The secret's key that contains the recipient user's user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. Either `userKey` or `userKeyFile` is required.",
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2185,6 +2189,10 @@
                               'name',
                             ],
                             type: 'object',
+                          },
+                          userKeyFile: {
+                            description: "The user key file that contains the recipient user's user key. Either `userKey` or `userKeyFile` is required. It requires Alertmanager >= v0.26.0.",
+                            type: 'string',
                           },
                         },
                         type: 'object',
