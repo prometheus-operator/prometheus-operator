@@ -394,7 +394,9 @@
                           "description": "HTTP Scheme default \"http\"",
                           "enum": [
                             "HTTP",
-                            "HTTPS"
+                            "HTTPS",
+                            "http",
+                            "https"
                           ],
                           "type": "string"
                         },
@@ -982,9 +984,10 @@
                       "description": "KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
                       "properties": {
                         "role": {
-                          "description": "Role of the Kubernetes entities that should be discovered. Currently the only supported role is \"Node\".",
+                          "description": "Role of the Kubernetes entities that should be discovered. Currently the only supported role is \"node\".",
                           "enum": [
-                            "Node"
+                            "Node",
+                            "node"
                           ],
                           "type": "string"
                         }
@@ -1173,7 +1176,9 @@
                     "description": "Configures the protocol scheme used for requests. If empty, Prometheus uses HTTP by default.",
                     "enum": [
                       "HTTP",
-                      "HTTPS"
+                      "HTTPS",
+                      "http",
+                      "https"
                     ],
                     "type": "string"
                   },

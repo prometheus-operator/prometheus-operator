@@ -17440,7 +17440,7 @@ string
 </td>
 <td>
 <p>Role of the Kubernetes entities that should be discovered.
-Currently the only supported role is &ldquo;Node&rdquo;.</p>
+Currently the only supported role is &ldquo;node&rdquo;.</p>
 </td>
 </tr>
 </tbody>

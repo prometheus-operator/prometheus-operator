@@ -360,6 +360,8 @@ spec:
                       enum:
                       - HTTP
                       - HTTPS
+                      - http
+                      - https
                       type: string
                     server:
                       description: A valid string consisting of a hostname or IP followed
@@ -895,9 +897,10 @@ spec:
                   properties:
                     role:
                       description: Role of the Kubernetes entities that should be
-                        discovered. Currently the only supported role is "Node".
+                        discovered. Currently the only supported role is "node".
                       enum:
                       - Node
+                      - node
                       type: string
                   required:
                   - role
@@ -1091,6 +1094,8 @@ spec:
                 enum:
                 - HTTP
                 - HTTPS
+                - http
+                - https
                 type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
