@@ -554,6 +554,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
+	// ExtraRelabelings allow setting extra default relabelings to all
+	// PodMonitor and ServiceMonitor objects targeted by Prometheus.
+	//
+	// +optional
+	ExtraRelabelings []*RelabelConfig `json:"extraRelabelings,omitempty"`
+
 	// EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
 	// experimental feature, it may change in any upcoming release in a
 	// breaking way.

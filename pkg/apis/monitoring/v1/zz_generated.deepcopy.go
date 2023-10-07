@@ -813,6 +813,17 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExtraRelabelings != nil {
+		in, out := &in.ExtraRelabelings, &out.ExtraRelabelings
+		*out = make([]*RelabelConfig, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(RelabelConfig)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.TracingConfig != nil {
 		in, out := &in.TracingConfig, &out.TracingConfig
 		*out = new(PrometheusTracingConfig)

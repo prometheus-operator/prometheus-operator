@@ -92,6 +92,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ExcludedFromEnforcement         []ObjectReferenceApplyConfiguration                  `json:"excludedFromEnforcement,omitempty"`
 	HostNetwork                     *bool                                                `json:"hostNetwork,omitempty"`
 	PodTargetLabels                 []string                                             `json:"podTargetLabels,omitempty"`
+	ExtraRelabelings                []*monitoringv1.RelabelConfig                        `json:"extraRelabelings,omitempty"`
 	TracingConfig                   *PrometheusTracingConfigApplyConfiguration           `json:"tracingConfig,omitempty"`
 	BodySizeLimit                   *monitoringv1.ByteSize                               `json:"bodySizeLimit,omitempty"`
 	SampleLimit                     *uint64                                              `json:"sampleLimit,omitempty"`
@@ -694,6 +695,19 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithHostNetwork(value bool) *
 func (b *CommonPrometheusFieldsApplyConfiguration) WithPodTargetLabels(values ...string) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
 		b.PodTargetLabels = append(b.PodTargetLabels, values[i])
+	}
+	return b
+}
+
+// WithExtraRelabelings adds the given value to the ExtraRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ExtraRelabelings field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithExtraRelabelings(values ...**monitoringv1.RelabelConfig) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithExtraRelabelings")
+		}
+		b.ExtraRelabelings = append(b.ExtraRelabelings, *values[i])
 	}
 	return b
 }

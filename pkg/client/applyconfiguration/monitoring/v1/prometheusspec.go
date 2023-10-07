@@ -646,6 +646,19 @@ func (b *PrometheusSpecApplyConfiguration) WithPodTargetLabels(values ...string)
 	return b
 }
 
+// WithExtraRelabelings adds the given value to the ExtraRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ExtraRelabelings field.
+func (b *PrometheusSpecApplyConfiguration) WithExtraRelabelings(values ...**monitoringv1.RelabelConfig) *PrometheusSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithExtraRelabelings")
+		}
+		b.ExtraRelabelings = append(b.ExtraRelabelings, *values[i])
+	}
+	return b
+}
+
 // WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TracingConfig field is set to the value of the last call.

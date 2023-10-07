@@ -814,6 +814,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
+	// Add user extra relabelings if specified.
+	if cpf.ExtraRelabelings != nil {
+		relabelings = append(relabelings, generateRelabelConfig(cpf.ExtraRelabelings)...)
+	}
+
 	// By default, generate a safe job name from the PodMonitor. We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
 	// value for it. A single pod may potentially have multiple metrics
@@ -1313,6 +1318,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "regex", Value: "(.+)"},
 			{Key: "replacement", Value: "${1}"},
 		})
+	}
+
+	// Add user extra relabelings if specified.
+	if cpf.ExtraRelabelings != nil {
+		relabelings = append(relabelings, generateRelabelConfig(cpf.ExtraRelabelings)...)
 	}
 
 	// By default, generate a safe job name from the service name.  We also keep

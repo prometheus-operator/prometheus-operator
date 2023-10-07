@@ -2389,6 +2389,21 @@ PodMonitor and ServiceMonitor objects.</p>
 </tr>
 <tr>
 <td>
+<code>extraRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraRelabelings allow setting extra default relabelings to all
+PodMonitor and ServiceMonitor objects targeted by Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tracingConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
@@ -6596,6 +6611,21 @@ PodMonitor and ServiceMonitor objects.</p>
 </tr>
 <tr>
 <td>
+<code>extraRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraRelabelings allow setting extra default relabelings to all
+PodMonitor and ServiceMonitor objects targeted by Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tracingConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
@@ -10356,6 +10386,21 @@ PodMonitor and ServiceMonitor objects.</p>
 </tr>
 <tr>
 <td>
+<code>extraRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraRelabelings allow setting extra default relabelings to all
+PodMonitor and ServiceMonitor objects targeted by Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tracingConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
@@ -11285,7 +11330,7 @@ This is experimental feature and might change in the future.</p>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -15664,6 +15709,21 @@ PodMonitor and ServiceMonitor objects.</p>
 </tr>
 <tr>
 <td>
+<code>extraRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraRelabelings allow setting extra default relabelings to all
+PodMonitor and ServiceMonitor objects targeted by Prometheus.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tracingConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">
@@ -19329,6 +19389,21 @@ it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https:
 <em>(Optional)</em>
 <p>PodTargetLabels are appended to the <code>spec.podTargetLabels</code> field of all
 PodMonitor and ServiceMonitor objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraRelabelings allow setting extra default relabelings to all
+PodMonitor and ServiceMonitor objects targeted by Prometheus.</p>
 </td>
 </tr>
 <tr>

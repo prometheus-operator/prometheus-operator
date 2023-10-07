@@ -2279,6 +2279,111 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 	golden.Assert(t, string(cfg), "PodTargetLabelsFromPodMonitorAndGlobal.golden")
 }
 
+func TestServiceMonitorExtraRelabelings(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.CommonPrometheusFields.ExtraRelabelings = []*monitoringv1.RelabelConfig{
+		{
+			Action:       "replace",
+			SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+			TargetLabel:  "node",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "ServiceMonitorExtraRelabelings.golden")
+}
+
+func TestPodMonitorExtraRelabelings(t *testing.T) {
+	p := defaultPrometheus()
+
+	p.Spec.CommonPrometheusFields.ExtraRelabelings = []*monitoringv1.RelabelConfig{
+		{
+			Action:       "replace",
+			SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+			TargetLabel:  "node",
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "PodMonitorExtraRelabelings.golden")
+}
+
 func TestEmptyEndpointPorts(t *testing.T) {
 	p := defaultPrometheus()
 
