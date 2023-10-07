@@ -25,7 +25,6 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,11 +71,11 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse Prometheus version")
+		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
 
 	if version.Major != 2 {
-		return nil, errors.Wrap(err, fmt.Sprintf("unsupported Prometheus major version %s", version))
+		return nil, fmt.Errorf("unsupported Prometheus major version %s: %w", version, err)
 	}
 
 	logger = log.WithSuffix(logger, "version", promVersion)
@@ -430,15 +429,15 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 	var err error
 
 	if si, err = model.ParseDuration(string(scrapeInterval)); err != nil {
-		return errors.Wrapf(err, "invalid scrapeInterval %q", scrapeInterval)
+		return fmt.Errorf("invalid scrapeInterval %q: %w", scrapeInterval, err)
 	}
 
 	if st, err = model.ParseDuration(string(scrapeTimeout)); err != nil {
-		return errors.Wrapf(err, "invalid scrapeTimeout: %q", scrapeTimeout)
+		return fmt.Errorf("invalid scrapeTimeout: %q: %w", scrapeTimeout, err)
 	}
 
 	if st > si {
-		return errors.Errorf("scrapeTimeout %q greater than scrapeInterval %q", scrapeTimeout, scrapeInterval)
+		return fmt.Errorf("scrapeTimeout %q greater than scrapeInterval %q", scrapeTimeout, scrapeInterval)
 	}
 
 	return nil
@@ -498,12 +497,12 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
 	if err != nil {
-		return nil, errors.Wrap(err, "generate scrape configs")
+		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
 
 	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
-		return nil, errors.Wrap(err, "generate additional scrape configs")
+		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
 	}
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
@@ -513,13 +512,13 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	// Storage config
 	cfg, err = cg.appendStorageSettingsConfig(cfg, exemplars, tsdb)
 	if err != nil {
-		return nil, errors.Wrap(err, "generating storage_settings configuration failed")
+		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
 	// Alerting config
 	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
-		return nil, errors.Wrap(err, "generating alerting configuration failed")
+		return nil, fmt.Errorf("generating alerting configuration failed: %w", err)
 	}
 
 	// Remote write config
@@ -536,7 +535,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		tracingcfg, err := cg.generateTracingConfig()
 
 		if err != nil {
-			return nil, errors.Wrap(err, "generating tracing configuration failed")
+			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
 		}
 
 		cfg = append(cfg, tracingcfg)
@@ -593,7 +592,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 
 	var additionalAlertmanagerConfigsYaml []yaml.MapSlice
 	if err := yaml.Unmarshal([]byte(additionalAlertmanagerConfigs), &additionalAlertmanagerConfigsYaml); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling additional alertmanager configs failed")
+		return nil, fmt.Errorf("unmarshalling additional alertmanager configs failed")
 	}
 	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertmanagerConfigsYaml...)
 
@@ -614,7 +613,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 
 	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
 	if err := yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling additional alerting relabel configs failed")
+		return nil, fmt.Errorf("unmarshalling additional alerting relabel configs failed: %w", err)
 	}
 	alertRelabelConfigs = append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...)
 
@@ -1617,7 +1616,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	var additionalScrapeConfigsYaml []yaml.MapSlice
 	err := yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshalling additional scrape configs failed")
+		return nil, fmt.Errorf("unmarshalling additional scrape configs failed: %w", err)
 	}
 	if shards == 1 {
 		return additionalScrapeConfigsYaml, nil
@@ -1635,12 +1634,12 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 			}
 			values, ok := mapItem.Value.([]interface{})
 			if !ok {
-				return nil, errors.Wrap(err, "error parsing relabel configs")
+				return nil, fmt.Errorf("error parsing relabel configs: %w", err)
 			}
 			for _, value := range values {
 				relabeling, ok := value.(yaml.MapSlice)
 				if !ok {
-					return nil, errors.Wrap(err, "error parsing relabel config")
+					return nil, fmt.Errorf("error parsing relabel config: %w", err)
 				}
 				relabelings = append(relabelings, relabeling)
 			}
@@ -2166,12 +2165,12 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
 	if err != nil {
-		return nil, errors.Wrap(err, "generate scrape configs")
+		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
 
 	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
-		return nil, errors.Wrap(err, "generate additional scrape configs")
+		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
 	}
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
@@ -2186,7 +2185,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig()
 		if err != nil {
-			return nil, errors.Wrap(err, "generating tracing configuration failed")
+			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
 		}
 
 		cfg = append(cfg, tracingcfg)
@@ -2412,7 +2411,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 
 				if err != nil {
-					return cfg, errors.Wrapf(err, "failed to read %s secret %s", config.TokenRef.Name, jobName)
+					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.TokenRef.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2521,7 +2520,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					})
 
 					if err != nil {
-						return cfg, errors.Wrapf(err, "failed to read %s secret %s", v.Name, jobName)
+						return cfg, fmt.Errorf("failed to read %s secret %s: %w", v.Name, jobName, err)
 					}
 
 					proxyConnectHeader[k] = value

@@ -42,6 +42,8 @@ linters-settings:
         - "**/listwatch/*.go"
         - "**/namespacelabeler/*.go"
         - "**/operator/*.go"
+        - "**/prometheus/*.go"
+        - "**/prometheus/**/*.go"
         deny:
         - pkg: "github.com/pkg/errors"
           dsc: Should be replaced with standard lib errors or fmt.Errorf
