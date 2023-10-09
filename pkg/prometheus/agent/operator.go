@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
@@ -56,7 +57,9 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
+
 	logger   log.Logger
 	accessor *operator.Accessor
 
@@ -92,6 +95,11 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
+	mdClient, err := metadata.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
+	}
+
 	mclient, err := monitoringclient.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
@@ -111,6 +119,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 
 	c := &Operator{
 		kclient:               client,
+		mdClient:              mdClient,
 		mclient:               mclient,
 		logger:                logger,
 		config:                conf,
@@ -213,10 +222,10 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 	}
 
 	c.cmapInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = prompkg.LabelPrometheusName
@@ -229,10 +238,10 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 	}
 
 	c.secrInfs, err = informers.NewInformersForResource(
-		informers.NewKubeInformerFactories(
+		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
-			c.kclient,
+			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = secretListWatchSelector.String()
@@ -1049,52 +1058,65 @@ func (c *Operator) handleConfigMapDelete(obj interface{}) {
 }
 
 func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
-	if old.(*v1.ConfigMap).ResourceVersion == cur.(*v1.ConfigMap).ResourceVersion {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap updated")
-		c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
 	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "ConfigMap updated")
+	c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
+	c.enqueueForPrometheusNamespace(curObj.GetNamespace())
 }
 
 // TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret deleted")
-		c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	if old.(*v1.Secret).ResourceVersion == cur.(*v1.Secret).ResourceVersion {
+	if !ok {
 		return
 	}
 
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret updated")
-		c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+	level.Debug(c.logger).Log("msg", "Secret deleted")
+	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
+}
 
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	oldObj, ok := c.accessor.ObjectMetadata(old)
+	if !ok {
+		return
 	}
+
+	curObj, ok := c.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
+	}
+
+	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Secret updated")
+	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "Secret added")
-		c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	level.Debug(c.logger).Log("msg", "Secret added")
+	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
+	c.enqueueForPrometheusNamespace(o.GetNamespace())
 }
 
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
