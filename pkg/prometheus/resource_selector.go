@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,7 +25,6 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,7 +105,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list service monitors in namespace %s", ns)
+			return nil, fmt.Errorf("failed to list service monitors in namespace %s: %w", ns, err)
 		}
 	}
 
@@ -239,7 +239,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse Prometheus version")
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
 
 	minimumVersionCaseActions := version.GTE(semver.MustParse("2.36.0"))
@@ -250,41 +250,41 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	action := strings.ToLower(rc.Action)
 
 	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase)) && !minimumVersionCaseActions {
-		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
+		return fmt.Errorf("%s relabel action is only supported from Prometheus version 2.36.0", rc.Action)
 	}
 
 	if (action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !minimumVersionEqualActions {
-		return errors.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
+		return fmt.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
 	}
 
 	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
-		return errors.Wrapf(err, "invalid regex %s for relabel configuration", rc.Regex)
+		return fmt.Errorf("invalid regex %s for relabel configuration: %w", rc.Regex, err)
 	}
 
 	if rc.Modulus == 0 && action == string(relabel.HashMod) {
-		return errors.Errorf("relabel configuration for hashmod requires non-zero modulus")
+		return fmt.Errorf("relabel configuration for hashmod requires non-zero modulus")
 	}
 
 	if (action == string(relabel.Replace) || action == string(relabel.HashMod) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && rc.TargetLabel == "" {
-		return errors.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
+		return fmt.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
 	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
-		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
-		return errors.Errorf("'replacement' can not be set for %s action", rc.Action)
+		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
 	if action == string(relabel.LabelMap) {
 		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
-			return errors.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+			return fmt.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
 		}
 	}
 
 	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
-		return errors.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
@@ -295,7 +295,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
-			return errors.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
+			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
 		}
 	}
 
@@ -309,7 +309,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
-			return errors.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
+			return fmt.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}
 	return nil
@@ -360,7 +360,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list pod monitors in namespace %s", ns)
+			return nil, fmt.Errorf("failed to list pod monitors in namespace %s: %w", ns, err)
 		}
 	}
 
@@ -483,7 +483,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list probes in namespace %s", ns)
+			return nil, fmt.Errorf("failed to list probes in namespace %s: %w", ns, err)
 		}
 	}
 
@@ -589,13 +589,13 @@ func validateProberURL(url string) error {
 	hostPort := strings.Split(url, ":")
 
 	if !govalidator.IsHost(hostPort[0]) {
-		return errors.Errorf("invalid host: %q", hostPort[0])
+		return fmt.Errorf("invalid host: %q", hostPort[0])
 	}
 
 	// handling cases with url specified as host:port
 	if len(hostPort) > 1 {
 		if !govalidator.IsPort(hostPort[1]) {
-			return errors.Errorf("invalid port: %q", hostPort[1])
+			return fmt.Errorf("invalid port: %q", hostPort[1])
 		}
 	}
 	return nil
@@ -645,7 +645,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list ScrapeConfigs in namespace %s", ns)
+			return nil, fmt.Errorf("failed to list ScrapeConfigs in namespace %s: %w", ns, err)
 		}
 	}
 

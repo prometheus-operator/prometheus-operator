@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -117,7 +116,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	if len(nonNilFields) > 1 {
-		return errors.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
 	return nil
@@ -168,7 +167,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 				continue
 			}
 
-			return nil, errors.Wrap(err, "failed to retrieve statefulset")
+			return nil, fmt.Errorf("failed to retrieve statefulset: %w", err)
 		}
 
 		sset := obj.(*appsv1.StatefulSet).DeepCopy()
@@ -178,7 +177,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 		stsReporter, err := operator.NewStatefulSetReporter(ctx, sr.Kclient, sset)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to retrieve statefulset state")
+			return nil, fmt.Errorf("failed to retrieve statefulset state: %w", err)
 		}
 
 		pStatus.Replicas += int32(len(stsReporter.Pods))

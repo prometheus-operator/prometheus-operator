@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,7 +125,7 @@ func makeStatefulSet(
 	p.SetCommonPrometheusFields(cpf)
 	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
-		return nil, errors.Wrap(err, "make StatefulSet spec")
+		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
 	boolTrue := true
@@ -430,7 +429,7 @@ func makeStatefulSetSpec(
 
 	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge init containers spec")
+		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
 
 	containerArgs, err := operator.BuildArgs(promArgs, cpf.AdditionalArgs)
@@ -484,7 +483,7 @@ func makeStatefulSetSpec(
 
 	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge containers spec")
+		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
@@ -659,7 +658,7 @@ func createThanosContainer(
 			operator.StringPtrValOrDefault(thanos.SHA, ""),
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to build image path")
+			return nil, fmt.Errorf("failed to build image path: %w", err)
 		}
 
 		var grpcBindAddress, httpBindAddress string
@@ -789,7 +788,7 @@ func createThanosContainer(
 
 		thanosVersion, err := semver.ParseTolerant(operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse Thanos version")
+			return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 		}
 
 		if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
