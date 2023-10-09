@@ -42,7 +42,6 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
-	klog "k8s.io/klog/v2"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
@@ -168,7 +167,6 @@ var (
 )
 
 func init() {
-	// With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
@@ -244,10 +242,6 @@ func run() int {
 	if err != nil {
 		stdlog.Fatal(err)
 	}
-
-	// Above level 6, the k8s client would log bearer tokens in clear-text.
-	klog.ClampLevel(6)
-	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
