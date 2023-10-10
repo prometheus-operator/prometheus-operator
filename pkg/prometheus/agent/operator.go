@@ -34,7 +34,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -704,12 +703,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 	}
 
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	SecretsInPromNS, err := sClient.List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
 	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
 		return err
 	}
@@ -718,7 +711,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	additionalScrapeConfigs, err := c.loadConfigFromSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}
@@ -867,29 +861,6 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
-}
-
-func (c *Operator) loadConfigFromSecret(sks *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
-	if sks == nil {
-		return nil, nil
-	}
-
-	for _, secret := range s.Items {
-		if secret.Name == sks.Name {
-			if c, ok := secret.Data[sks.Key]; ok {
-				return c, nil
-			}
-
-			return nil, fmt.Errorf("key %v could not be found in secret %v", sks.Key, sks.Name)
-		}
-	}
-
-	if !ptr.Deref(sks.Optional, true) {
-		return nil, fmt.Errorf("secret %v could not be found", sks.Name)
-	}
-
-	level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
-	return nil, nil
 }
 
 // TODO: Don't enqueue just for the namespace
