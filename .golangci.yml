@@ -44,6 +44,10 @@ linters-settings:
         - "**/operator/*.go"
         - "**/prometheus/*.go"
         - "**/prometheus/**/*.go"
+        - "**/server/*.go"
+        - "**/thanos/*.go"
+        - "**/versionutil/*.go"
+        - "**/webconfig/*.go"
         deny:
         - pkg: "github.com/pkg/errors"
           dsc: Should be replaced with standard lib errors or fmt.Errorf
