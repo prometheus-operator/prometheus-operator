@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -27,7 +28,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	appsv1 "k8s.io/api/apps/v1"
@@ -442,7 +442,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 			}
 
 			if *silences[0].ID != silID {
-				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+				return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
 			}
 			return true, nil
 		})
@@ -570,7 +570,7 @@ An Alert test
 
 	firstExpectedString := "firstConfigWebHook"
 	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, firstExpectedString); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for first expected config"))
+		t.Fatal(fmt.Errorf("failed to wait for first expected config: %w", err))
 	}
 	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
 
@@ -581,7 +581,7 @@ An Alert test
 	secondExpectedString := "secondConfigWebHook"
 
 	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, secondExpectedString); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for second expected config"))
+		t.Fatal(fmt.Errorf("failed to wait for second expected config: %w", err))
 	}
 
 	priorToReloadTime := time.Now()
@@ -591,7 +591,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional configMaps reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional configMaps reload: %w", err))
 	}
 
 	priorToReloadTime = time.Now()
@@ -601,7 +601,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
 	}
 }
 
@@ -684,7 +684,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
 	}
 }
 
@@ -824,7 +824,7 @@ inhibit_rules:
 			close(done)
 			select {
 			case err := <-errc:
-				t.Fatal(errors.Wrapf(err, "sending alert to alertmanager %v", replica))
+				t.Fatal(fmt.Errorf("sending alert to alertmanager %v: %w", replica, err))
 			default:
 				return
 			}
@@ -1502,7 +1502,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -1640,7 +1640,7 @@ templates: []
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1661,7 +1661,7 @@ templates: []
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -1692,7 +1692,7 @@ templates: []
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1769,7 +1769,7 @@ inhibit_rules:
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1996,7 +1996,7 @@ templates:
 		}
 
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 

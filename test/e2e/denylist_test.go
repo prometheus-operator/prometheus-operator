@@ -16,10 +16,10 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -133,7 +133,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 		svc := framework.MakePrometheusService("denied", "denied", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), denied, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -155,7 +155,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 		svc := framework.MakePrometheusService("allowed", "allowed", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowed, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}

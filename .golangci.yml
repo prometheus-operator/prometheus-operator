@@ -48,6 +48,7 @@ linters-settings:
         - "**/thanos/*.go"
         - "**/versionutil/*.go"
         - "**/webconfig/*.go"
+        - "**/e2e/*.go"
         deny:
         - pkg: "github.com/pkg/errors"
           dsc: Should be replaced with standard lib errors or fmt.Errorf
