@@ -477,6 +477,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems := yaml.MapSlice{}
 	globalItems = cg.appendEvaluationInterval(globalItems, evaluationInterval)
 	globalItems = cg.appendScrapeIntervals(globalItems)
+	globalItems = cg.appendScrapeProtocols(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
 	globalItems = cg.appendScrapeLimits(globalItems)
@@ -1955,6 +1956,15 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 			Key: "scrape_timeout", Value: cpf.ScrapeTimeout,
 		})
 	}
+	return slice
+}
+
+func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeProtocols != nil && len(cpf.ScrapeProtocols) > 0 {
+		slice = cg.WithMinimumVersion("2.48.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
+	}
 
 	return slice
 }
@@ -2262,6 +2272,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.ScrapeTimeout != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
+	}
+
+	if sc.Spec.ScrapeProtocols != nil && len(sc.Spec.ScrapeProtocols) > 0 {
+		cfg = cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "scrape_protocols", sc.Spec.ScrapeProtocols)
 	}
 
 	if sc.Spec.RelabelConfigs != nil {

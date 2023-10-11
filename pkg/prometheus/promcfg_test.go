@@ -100,13 +100,14 @@ func TestConfigGeneration(t *testing.T) {
 
 func TestGlobalSettings(t *testing.T) {
 	var (
-		expectedBodySizeLimit         monitoringv1.ByteSize = "1000MB"
-		expectedSampleLimit           uint64                = 10000
-		expectedTargetLimit           uint64                = 1000
-		expectedLabelLimit            uint64                = 50
-		expectedLabelNameLengthLimit  uint64                = 40
-		expectedLabelValueLengthLimit uint64                = 30
-		expectedkeepDroppedTargets    uint64                = 50
+		expectedBodySizeLimit         monitoringv1.ByteSize         = "1000MB"
+		expectedSampleLimit           uint64                        = 10000
+		expectedTargetLimit           uint64                        = 1000
+		expectedLabelLimit            uint64                        = 50
+		expectedLabelNameLengthLimit  uint64                        = 40
+		expectedLabelValueLengthLimit uint64                        = 30
+		expectedkeepDroppedTargets    uint64                        = 50
+		expectedscrapeProtocols       []monitoringv1.ScrapeProtocol = []monitoringv1.ScrapeProtocol{"OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"}
 	)
 
 	for _, tc := range []struct {
@@ -114,6 +115,7 @@ func TestGlobalSettings(t *testing.T) {
 		EvaluationInterval          monitoringv1.Duration
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
+		ScrapeProtocols             []monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
@@ -216,6 +218,14 @@ func TestGlobalSettings(t *testing.T) {
 			KeepDroppedTargets: &expectedkeepDroppedTargets,
 			Golden:             "valid_global_config_with_keep_dropped_targets.golden",
 		},
+		{
+			Scenario:           "valid global config with scrape protocols",
+			Version:            "v2.48.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ScrapeProtocols:    expectedscrapeProtocols,
+			Golden:             "valid_global_config_with_scrape_protocols.golden",
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
@@ -224,6 +234,7 @@ func TestGlobalSettings(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					ScrapeInterval:              tc.ScrapeInterval,
 					ScrapeTimeout:               tc.ScrapeTimeout,
+					ScrapeProtocols:             tc.ScrapeProtocols,
 					ExternalLabels:              tc.ExternalLabels,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
@@ -4947,6 +4958,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				ScrapeTimeout: (*monitoringv1.Duration)(ptr.To("10s")),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeTimeout.golden",
+		},
+		{
+			name: "scrape_protocols",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+					monitoringv1.ScrapeProtocol("PrometheusProto"),
+					monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+					monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+					monitoringv1.ScrapeProtocol("PrometheusText0.0.4"),
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScrapeProtocols.golden",
 		},
 		{
 			name: "non_empty_metric_relabel_config",

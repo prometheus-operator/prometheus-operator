@@ -1683,6 +1683,25 @@ Duration
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -5890,6 +5909,25 @@ Duration
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -9650,6 +9688,25 @@ Duration
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -12283,6 +12340,14 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>ScrapeProtocol represents supported protocol for scraping metrics.</p>
+</div>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
@@ -14958,6 +15023,25 @@ Duration
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -16003,6 +16087,25 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>
@@ -18627,6 +18730,25 @@ Duration
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -20332,6 +20454,25 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocols to negotiate during a scrape. It tells clients what
+protocol are accepted by Prometheus and with what weight (most wanted is first).
+Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
+<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>

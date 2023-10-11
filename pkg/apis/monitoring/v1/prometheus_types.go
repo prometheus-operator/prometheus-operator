@@ -30,6 +30,10 @@ const (
 	PrometheusKindKey = "prometheus"
 )
 
+// ScrapeProtocol represents supported protocol for scraping metrics.
+// +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
+type ScrapeProtocol string
+
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
@@ -218,6 +222,18 @@ type CommonPrometheusFields struct {
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait until a scrape request times out.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
+
+	// The protocols to negotiate during a scrape. It tells clients what
+	// protocol are accepted by Prometheus and with what weight (most wanted is first).
+	// Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+	// OpenMetricsText1.0.0, PrometheusText0.0.4.
+	//
+	// If unset, Prometheus uses its default value: ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
