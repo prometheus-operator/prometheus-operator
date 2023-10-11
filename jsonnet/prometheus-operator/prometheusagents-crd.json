@@ -4661,7 +4661,8 @@
                       ],
                       "type": "string"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
                   },
                   "scrapeTimeout": {
                     "description": "Number of seconds to wait until a scrape request times out.",

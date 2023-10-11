@@ -19219,6 +19219,7 @@ spec:
                   - PrometheusText0.0.4
                   type: string
                 type: array
+                x-kubernetes-list-type: atomic
               scrapeTimeout:
                 description: Number of seconds to wait until a scrape request times
                   out.
@@ -28581,6 +28582,7 @@ spec:
                   - PrometheusText0.0.4
                   type: string
                 type: array
+                x-kubernetes-list-type: atomic
               scrapeTimeout:
                 description: Number of seconds to wait until a scrape request times
                   out.
@@ -33591,6 +33593,7 @@ spec:
                   - PrometheusText0.0.4
                   type: string
                 type: array
+                x-kubernetes-list-type: atomic
               scrapeTimeout:
                 description: ScrapeTimeout is the number of seconds to wait until
                   a scrape request times out.

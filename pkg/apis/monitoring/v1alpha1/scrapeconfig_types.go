@@ -117,6 +117,7 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
+	// +listType=atomic
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
