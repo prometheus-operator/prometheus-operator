@@ -203,6 +203,11 @@ type EmbeddedPersistentVolumeClaim struct {
 	// *Deprecated: this field is never set.*
 	// +optional
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+
+	// Controls whether the ownerReferences in the StatefulSet metadata should be set as ownerReferences
+	// in its PersistentVolumeClaims as well. If true then the ownerReferences will be propagated. Default is false.
+	// +optional
+	PropagateOwnerReferences bool `json:"propagateOwnerReferences,omitempty" protobuf:"bytes,4,opt,name=propagateOwnerReferences"`
 }
 
 // EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta

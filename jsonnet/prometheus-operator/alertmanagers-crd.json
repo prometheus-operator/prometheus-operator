@@ -4445,6 +4445,10 @@
                             },
                             "type": "object"
                           },
+                          "propagateOwnerReferences": {
+                            "description": "Controls whether the ownerReferences in the StatefulSet metadata should be set as ownerReferences in its PersistentVolumeClaims as well. If true then the ownerReferences will be propagated. Default is false.",
+                            "type": "boolean"
+                          },
                           "spec": {
                             "description": "Defines the desired characteristics of a volume requested by a pod author. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
                             "properties": {

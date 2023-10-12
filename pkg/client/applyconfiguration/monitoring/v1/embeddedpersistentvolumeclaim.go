@@ -28,6 +28,7 @@ type EmbeddedPersistentVolumeClaimApplyConfiguration struct {
 	*EmbeddedObjectMetadataApplyConfiguration `json:"metadata,omitempty"`
 	Spec                                      *corev1.PersistentVolumeClaimSpec   `json:"spec,omitempty"`
 	Status                                    *corev1.PersistentVolumeClaimStatus `json:"status,omitempty"`
+	PropagateOwnerReferences                  *bool                               `json:"propagateOwnerReferences,omitempty"`
 }
 
 // EmbeddedPersistentVolumeClaimApplyConfiguration constructs an declarative configuration of the EmbeddedPersistentVolumeClaim type for use with
@@ -113,5 +114,13 @@ func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithSpec(value corev1.
 // If called multiple times, the Status field is set to the value of the last call.
 func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithStatus(value corev1.PersistentVolumeClaimStatus) *EmbeddedPersistentVolumeClaimApplyConfiguration {
 	b.Status = &value
+	return b
+}
+
+// WithPropagateOwnerReferences sets the PropagateOwnerReferences field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PropagateOwnerReferences field is set to the value of the last call.
+func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithPropagateOwnerReferences(value bool) *EmbeddedPersistentVolumeClaimApplyConfiguration {
+	b.PropagateOwnerReferences = &value
 	return b
 }

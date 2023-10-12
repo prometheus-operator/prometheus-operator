@@ -302,6 +302,82 @@ func TestStatefulSetEphemeral(t *testing.T) {
 	}
 }
 
+func TestStatefulSetPropagateOwnerReferences(t *testing.T) {
+	p := monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "propagate-owner-references",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						TypeMeta:               metav1.TypeMeta{},
+						EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{},
+					},
+				},
+			},
+		},
+	}
+	boolTrue := true
+	logger := newLogger()
+	objMeta := p.GetObjectMeta()
+	typeMeta := p.GetTypeMeta()
+
+	cases := []struct {
+		expected                 []metav1.OwnerReference
+		propagateOwnerReferences bool
+	}{
+		{
+			propagateOwnerReferences: true,
+			expected: []metav1.OwnerReference{
+				{
+					APIVersion:         typeMeta.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               typeMeta.Kind,
+					Name:               objMeta.GetName(),
+					UID:                objMeta.GetUID(),
+				},
+			},
+		},
+		{
+			propagateOwnerReferences: false,
+			expected:                 nil,
+		},
+	}
+	for _, c := range cases {
+		p.Spec.CommonPrometheusFields.Storage.VolumeClaimTemplate.PropagateOwnerReferences = c.propagateOwnerReferences
+		cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+		require.NoError(t, err)
+
+		sset, err := makeStatefulSet(
+			"volume-init-test",
+			&p,
+			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+			p.Spec.Retention,
+			p.Spec.RetentionSize,
+			p.Spec.Rules,
+			p.Spec.Query,
+			p.Spec.AllowOverlappingBlocks,
+			p.Spec.EnableAdminAPI,
+			p.Spec.QueryLogFile,
+			p.Spec.Thanos,
+			p.Spec.DisableCompaction,
+			defaultTestConfig,
+			cg,
+			[]string{},
+			"",
+			0,
+			[]string{})
+
+		require.NoError(t, err)
+		if !reflect.DeepEqual(c.expected, sset.Spec.VolumeClaimTemplates[0].OwnerReferences) {
+			fmt.Println(pretty.Compare(c.expected, sset.Spec.VolumeClaimTemplates[0].OwnerReferences))
+			t.Fatal("expected volume claim templates to match")
+		}
+	}
+}
+
 func TestStatefulSetVolumeInitial(t *testing.T) {
 	p := monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{

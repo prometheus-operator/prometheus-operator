@@ -7143,6 +7143,19 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 <p><em>Deprecated: this field is never set.</em></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>propagateOwnerReferences</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Controls whether the ownerReferences in the StatefulSet metadata should be set as ownerReferences
+in its PersistentVolumeClaims as well. If true then the ownerReferences will be propagated. Default is false.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Endpoint">Endpoint

@@ -209,6 +209,9 @@ func makeStatefulSet(
 		} else {
 			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
 		}
+		if storageSpec.VolumeClaimTemplate.PropagateOwnerReferences {
+			pvcTemplate.OwnerReferences = statefulset.OwnerReferences
+		}
 		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
