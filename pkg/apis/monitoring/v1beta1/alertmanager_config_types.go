@@ -177,6 +177,8 @@ type Receiver struct {
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// List of Webex configurations.
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
+	// List of MSTeams configurations.
+	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -882,6 +884,24 @@ type TelegramConfig struct {
 	//+kubebuilder:validation:Enum=MarkdownV2;Markdown;HTML
 	// +optional
 	ParseMode string `json:"parseMode,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// MSTeamsConfig configures notifications via MS Teams.
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config
+type MSTeamsConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// MSTeams webhook url
+	// +kubebuilder:validation:Required
+	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// +optional
+	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

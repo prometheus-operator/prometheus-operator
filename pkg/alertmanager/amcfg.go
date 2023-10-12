@@ -639,6 +639,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var msTeamsConfigs []*msTeamsConfig
+	if l := len(in.MSTeamsConfigs); l > 0 {
+		msTeamsConfigs = make([]*msTeamsConfig, l)
+		for i := range in.MSTeamsConfigs {
+			receiver, err := cb.convertMSTeamsConfig(ctx, in.MSTeamsConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("MSTeamsConfig[%d]: %w", i, err)
+			}
+			msTeamsConfigs[i] = receiver
+		}
+	}
+
 	var webexConfigs []*webexConfig
 	if l := len(in.WebexConfigs); l > 0 {
 		webexConfigs = make([]*webexConfig, l)
@@ -665,6 +677,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		SNSConfigs:       snsConfigs,
 		TelegramConfigs:  telegramConfigs,
 		WebexConfigs:     webexConfigs,
+		MSTeamsConfigs:   msTeamsConfigs,
 	}, nil
 }
 
@@ -1233,6 +1246,33 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			out.Sigv4.AccessKey = accessKey
 			out.Sigv4.SecretKey = secretKey
 		}
+	}
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertMSTeamsConfig(
+	ctx context.Context, in monitoringv1alpha1.MSTeamsConfig, crKey types.NamespacedName,
+) (*msTeamsConfig, error) {
+	out := &msTeamsConfig{
+		SendResolved: in.SendResolved,
+		Title:        in.Title,
+		Text:         in.Text,
+	}
+
+	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
+	if err != nil {
+		return nil, err
+	}
+
+	out.WebhookURL = webHookURL
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
 	}
 
 	return out, nil
@@ -1808,6 +1848,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger log.Logger) error {
 		}
 	}
 
+	for _, conf := range r.MSTeamsConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2018,6 +2064,18 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 	}
 
 	return nil
+}
+
+func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if amVersion.LT(semver.MustParse("0.26.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.25.1`)
+	}
+
+	if tc.WebhookURL == "" {
+		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
