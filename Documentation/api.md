@@ -1696,7 +1696,7 @@ Duration
 protocol are accepted by Prometheus and with what weight (most wanted is first).
 Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
@@ -5922,7 +5922,7 @@ Duration
 protocol are accepted by Prometheus and with what weight (most wanted is first).
 Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
@@ -9701,7 +9701,7 @@ Duration
 protocol are accepted by Prometheus and with what weight (most wanted is first).
 Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
@@ -15036,7 +15036,7 @@ Duration
 protocol are accepted by Prometheus and with what weight (most wanted is first).
 Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
@@ -18743,7 +18743,7 @@ Duration
 protocol are accepted by Prometheus and with what weight (most wanted is first).
 Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 OpenMetricsText1.0.0, PrometheusText0.0.4.</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>

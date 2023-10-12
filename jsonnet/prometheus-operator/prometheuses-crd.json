@@ -5598,7 +5598,7 @@
                     "type": "string"
                   },
                   "scrapeProtocols": {
-                    "description": "The protocols to negotiate during a scrape. It tells clients what protocol are accepted by Prometheus and with what weight (most wanted is first). Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4. \n If unset, Prometheus uses its default value: [\"OpenMetricsText1.0.0\",\"OpenMetricsText0.0.1\",\"PrometheusText0.0.4\"] \n It requires Prometheus >= v2.48.0.",
+                    "description": "The protocols to negotiate during a scrape. It tells clients what protocol are accepted by Prometheus and with what weight (most wanted is first). Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4. \n If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.48.0.",
                     "items": {
                       "description": "ScrapeProtocol represents supported protocol for scraping metrics.",
                       "enum": [
