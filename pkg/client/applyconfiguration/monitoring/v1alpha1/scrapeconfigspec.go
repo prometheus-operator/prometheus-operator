@@ -24,34 +24,35 @@ import (
 // ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
-	StaticConfigs            []StaticConfigApplyConfiguration                  `json:"staticConfigs,omitempty"`
-	FileSDConfigs            []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
-	HTTPSDConfigs            []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
-	KubernetesSDConfigs      []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
-	ConsulSDConfigs          []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
-	DNSSDConfigs             []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
-	EC2SDConfigs             []EC2SDConfigApplyConfiguration                   `json:"ec2SDConfigs,omitempty"`
-	AzureSDConfigs           []AzureSDConfigApplyConfiguration                 `json:"azureSDConfigs,omitempty"`
-	GCESDConfigs             []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
-	RelabelConfigs           []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
-	MetricsPath              *string                                           `json:"metricsPath,omitempty"`
-	ScrapeInterval           *v1.Duration                                      `json:"scrapeInterval,omitempty"`
-	ScrapeTimeout            *v1.Duration                                      `json:"scrapeTimeout,omitempty"`
-	HonorTimestamps          *bool                                             `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness *bool                                             `json:"trackTimestampsStaleness,omitempty"`
-	HonorLabels              *bool                                             `json:"honorLabels,omitempty"`
-	Params                   map[string][]string                               `json:"params,omitempty"`
-	Scheme                   *string                                           `json:"scheme,omitempty"`
-	BasicAuth                *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization            *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	TLSConfig                *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	SampleLimit              *uint64                                           `json:"sampleLimit,omitempty"`
-	TargetLimit              *uint64                                           `json:"targetLimit,omitempty"`
-	LabelLimit               *uint64                                           `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit     *uint64                                           `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit    *uint64                                           `json:"labelValueLengthLimit,omitempty"`
-	KeepDroppedTargets       *uint64                                           `json:"keepDroppedTargets,omitempty"`
-	MetricRelabelConfigs     []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
+	StaticConfigs                 []StaticConfigApplyConfiguration                  `json:"staticConfigs,omitempty"`
+	FileSDConfigs                 []FileSDConfigApplyConfiguration                  `json:"fileSDConfigs,omitempty"`
+	HTTPSDConfigs                 []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
+	KubernetesSDConfigs           []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
+	ConsulSDConfigs               []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
+	DNSSDConfigs                  []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
+	EC2SDConfigs                  []EC2SDConfigApplyConfiguration                   `json:"ec2SDConfigs,omitempty"`
+	AzureSDConfigs                []AzureSDConfigApplyConfiguration                 `json:"azureSDConfigs,omitempty"`
+	GCESDConfigs                  []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
+	RelabelConfigs                []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
+	MetricsPath                   *string                                           `json:"metricsPath,omitempty"`
+	ScrapeInterval                *v1.Duration                                      `json:"scrapeInterval,omitempty"`
+	ScrapeTimeout                 *v1.Duration                                      `json:"scrapeTimeout,omitempty"`
+	HonorTimestamps               *bool                                             `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness      *bool                                             `json:"trackTimestampsStaleness,omitempty"`
+	HonorLabels                   *bool                                             `json:"honorLabels,omitempty"`
+	Params                        map[string][]string                               `json:"params,omitempty"`
+	Scheme                        *string                                           `json:"scheme,omitempty"`
+	BasicAuth                     *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                 *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	TLSConfig                     *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	SampleLimit                   *uint64                                           `json:"sampleLimit,omitempty"`
+	TargetLimit                   *uint64                                           `json:"targetLimit,omitempty"`
+	LabelLimit                    *uint64                                           `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit          *uint64                                           `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit         *uint64                                           `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets            *uint64                                           `json:"keepDroppedTargets,omitempty"`
+	MetricRelabelConfigs          []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
+	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with

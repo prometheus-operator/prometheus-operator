@@ -15,10 +15,16 @@
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
 const (
@@ -191,6 +197,9 @@ type ScrapeConfigSpec struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	// +optional
 	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*ProxyConfig `json:",inline"`
 }
 
 // StaticConfig defines a Prometheus static configuration.
@@ -243,6 +252,9 @@ type HTTPSDConfig struct {
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*ProxyConfig `json:",inline"`
 }
 
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
@@ -318,22 +330,9 @@ type ConsulSDConfig struct {
 	// Optional OAuth 2.0 configuration.
 	// +optional
 	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// Optional proxy URL.
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	ProxyUrl *string `json:"proxyUrl,omitempty"`
-	// Comma-separated string that can contain IPs, CIDR notation, domain names
-	// that should be excluded from proxying. IP and domain names can
-	// contain port numbers.
-	// +optional
-	NoProxy *string `json:"noProxy,omitempty"`
-	// Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
-	// If unset, Prometheus uses its default value.
-	// +optional
-	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
-	// Specifies headers to send to proxies during CONNECT requests.
-	// +mapType:=atomic
-	// +optional
-	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	*ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
 	// +optional
@@ -478,4 +477,58 @@ type GCESDConfig struct {
 	// The tag separator is used to separate the tags on concatenation
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
+}
+
+type ProxyConfig struct {
+	// `proxyURL` defines the HTTP proxy server to use.
+	//
+	// It requires Prometheus >= v2.43.0.
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +optional
+	ProxyURL *string `json:"proxyUrl,omitempty"`
+	// `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+	// that should be excluded from proxying. IP and domain names can
+	// contain port numbers.
+	//
+	// It requires Prometheus >= v2.43.0.
+	// +optional
+	NoProxy *string `json:"noProxy,omitempty"`
+	// Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.43.0.
+	// +optional
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
+	// ProxyConnectHeader optionally specifies headers to send to
+	// proxies during CONNECT requests.
+	//
+	// It requires Prometheus >= v2.43.0.
+	// +optional
+	// +mapType:=atomic
+	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+}
+
+func (pc *ProxyConfig) Validate(ctx context.Context, store *assets.Store, namespace string) error {
+	proxyFromEnvironmentDefined := pc.ProxyFromEnvironment != nil && *pc.ProxyFromEnvironment
+	proxyURLDefined := pc.ProxyURL != nil && *pc.ProxyURL != ""
+	noProxyDefined := pc.NoProxy != nil && *pc.NoProxy != ""
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
+			return fmt.Errorf("header[%s]: %w", k, err)
+		}
+	}
+	return nil
 }

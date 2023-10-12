@@ -2327,6 +2327,39 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
 	}
 
+	if sc.Spec.ProxyConfig != nil {
+
+		if sc.Spec.ProxyConfig.ProxyURL != nil {
+			cfg = cg.WithMinimumVersion("2.43.0").AppendMapItem(cfg, "proxy_url", *sc.Spec.ProxyConfig.ProxyURL)
+		}
+
+		if sc.Spec.ProxyConfig.NoProxy != nil {
+			cfg = cg.WithMinimumVersion("2.43.0").AppendMapItem(cfg, "no_proxy", *sc.Spec.ProxyConfig.NoProxy)
+		}
+
+		if sc.Spec.ProxyConfig.ProxyFromEnvironment != nil {
+			cfg = cg.WithMinimumVersion("2.43.0").AppendMapItem(cfg, "proxy_from_environment", *sc.Spec.ProxyConfig.ProxyFromEnvironment)
+		}
+
+		if sc.Spec.ProxyConfig.ProxyConnectHeader != nil {
+			proxyConnectHeader := make(map[string]string, len(sc.Spec.ProxyConfig.ProxyConnectHeader))
+
+			for k, v := range sc.Spec.ProxyConfig.ProxyConnectHeader {
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: &v,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to read %s secret %s: %w", v.Name, jobName, err)
+				}
+
+				proxyConnectHeader[k] = value
+			}
+
+			cfg = cg.WithMinimumVersion("2.43.0").AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
+		}
+	}
+
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
@@ -2415,6 +2448,38 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+			}
+
+			if config.ProxyConfig != nil {
+				if config.ProxyConfig.ProxyURL != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_url", *config.ProxyConfig.ProxyURL)
+				}
+
+				if config.ProxyConfig.NoProxy != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "no_proxy", *config.ProxyConfig.NoProxy)
+				}
+
+				if config.ProxyConfig.ProxyFromEnvironment != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_from_environment", *config.ProxyConfig.ProxyFromEnvironment)
+				}
+
+				if config.ProxyConfig.ProxyConnectHeader != nil {
+					proxyConnectHeader := make(map[string]string, len(config.ProxyConfig.ProxyConnectHeader))
+
+					for k, v := range config.ProxyConfig.ProxyConnectHeader {
+						value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+							Secret: &v,
+						})
+
+						if err != nil {
+							return configs[i], fmt.Errorf("failed to read %s secret %s: %w", v.Name, jobName, err)
+						}
+
+						proxyConnectHeader[k] = value
+					}
+
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
+				}
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -2569,46 +2634,36 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.ProxyUrl != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "proxy_url",
-					Value: config.ProxyUrl,
-				})
-			}
-
-			if config.NoProxy != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "no_proxy",
-					Value: config.NoProxy,
-				})
-			}
-
-			if config.ProxyFromEnvironment != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "proxy_from_environment",
-					Value: config.ProxyFromEnvironment,
-				})
-			}
-
-			if config.ProxyConnectHeader != nil {
-				proxyConnectHeader := make(map[string]string, len(config.ProxyConnectHeader))
-
-				for k, v := range config.ProxyConnectHeader {
-					value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-						Secret: &v,
-					})
-
-					if err != nil {
-						return cfg, fmt.Errorf("failed to read %s secret %s: %w", v.Name, jobName, err)
-					}
-
-					proxyConnectHeader[k] = value
+			if config.ProxyConfig != nil {
+				if config.ProxyConfig.ProxyURL != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_url", *config.ProxyConfig.ProxyURL)
 				}
 
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "proxy_connect_header",
-					Value: stringMapToMapSlice(proxyConnectHeader),
-				})
+				if config.ProxyConfig.NoProxy != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "no_proxy", *config.ProxyConfig.NoProxy)
+				}
+
+				if config.ProxyConfig.ProxyFromEnvironment != nil {
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_from_environment", *config.ProxyConfig.ProxyFromEnvironment)
+				}
+
+				if config.ProxyConfig.ProxyConnectHeader != nil {
+					proxyConnectHeader := make(map[string]string, len(config.ProxyConfig.ProxyConnectHeader))
+
+					for k, v := range config.ProxyConfig.ProxyConnectHeader {
+						value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+							Secret: &v,
+						})
+
+						if err != nil {
+							return configs[i], fmt.Errorf("failed to read %s secret %s: %w", v.Name, jobName, err)
+						}
+
+						proxyConnectHeader[k] = value
+					}
+
+					configs[i] = cg.WithMinimumVersion("2.43.0").AppendMapItem(configs[i], "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
+				}
 			}
 
 			if config.FollowRedirects != nil {

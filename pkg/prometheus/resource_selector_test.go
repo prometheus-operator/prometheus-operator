@@ -1154,6 +1154,105 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "valid proxy config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with proxy from environment set to true but proxyUrl defined",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					ProxyFromEnvironment: ptr.To(true),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with proxyFromEnvironment set to true but noProxy defined",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(true),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "invalid-key",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with noProxy defined and but no proxyUrl defined",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+					NoProxy: ptr.To("0.0.0.0"),
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "HTTP SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
@@ -1184,6 +1283,76 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									Name: "wrong",
 								},
 								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "HTTP SD config with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "HTTP SD config with invalid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://example.com",
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "HTTP SD proxy config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "invalid-key",
+								},
 							},
 						},
 					},
@@ -1281,6 +1450,38 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: true,
+		},
+		{
+			scenario: "Consul SD proxy config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+					{
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "invalid-key",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
 		},
 		{
 			scenario: "DNS SD config with port for type other than SRV record",

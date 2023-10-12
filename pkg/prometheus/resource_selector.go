@@ -702,6 +702,12 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, err)
 			continue
 		}
+		if sc.Spec.ProxyConfig != nil {
+			if err = sc.Spec.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+				rejectFn(sc, err)
+				continue
+			}
+		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
@@ -792,9 +798,9 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			}
 		}
 
-		for k, v := range config.ProxyConnectHeader {
-			if _, err := rs.store.GetSecretKey(context.Background(), sc.GetNamespace(), v); err != nil {
-				return fmt.Errorf("[%d]: header[%s]: %w", i, k, err)
+		if config.ProxyConfig != nil {
+			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}
 	}
@@ -815,6 +821,12 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if config.ProxyConfig != nil {
+			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
 		}
 	}
 
