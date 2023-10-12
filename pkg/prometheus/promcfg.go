@@ -2274,7 +2274,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
 	}
 
-	if sc.Spec.ScrapeProtocols != nil && len(sc.Spec.ScrapeProtocols) > 0 {
+	if len(sc.Spec.ScrapeProtocols) > 0 {
 		cfg = cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "scrape_protocols", sc.Spec.ScrapeProtocols)
 	}
 
