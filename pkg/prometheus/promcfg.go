@@ -1962,7 +1962,7 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
-	if cpf.ScrapeProtocols != nil && len(cpf.ScrapeProtocols) > 0 {
+	if len(cpf.ScrapeProtocols) > 0 {
 		slice = cg.WithMinimumVersion("2.48.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
 	}
 
