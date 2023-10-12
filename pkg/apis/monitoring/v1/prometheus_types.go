@@ -228,7 +228,7 @@ type CommonPrometheusFields struct {
 	// Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
 	// OpenMetricsText1.0.0, PrometheusText0.0.4.
 	//
-	// If unset, Prometheus uses its default value: ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
