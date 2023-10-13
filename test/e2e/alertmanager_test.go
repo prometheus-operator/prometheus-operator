@@ -2616,7 +2616,7 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -2654,7 +2654,7 @@ receivers:
 templates: []
 `, ns, ns, ns)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -2673,7 +2673,7 @@ templates: []
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -2709,7 +2709,7 @@ receivers:
 templates: []
 `, ns, ns)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
