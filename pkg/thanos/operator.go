@@ -23,7 +23,6 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -95,21 +94,21 @@ type Config struct {
 func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
+		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "instantiating metadata client failed")
+		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
 	}
 
 	mclient, err := monitoringclient.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "instantiating monitoring client failed")
+		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
 	if _, err := labels.Parse(conf.ThanosRulerSelector); err != nil {
-		return nil, errors.Wrap(err, "can not parse thanos ruler selector value")
+		return nil, fmt.Errorf("can not parse thanos ruler selector value: %w", err)
 	}
 
 	// All the metrics exposed by the controller get the controller="thanos" label.
@@ -159,7 +158,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating configmap informers")
+		return nil, fmt.Errorf("error creating configmap informers: %w", err)
 	}
 
 	o.thanosRulerInfs, err = informers.NewInformersForResource(
@@ -175,7 +174,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating thanosruler informers")
+		return nil, fmt.Errorf("error creating thanosruler informers: %w", err)
 	}
 
 	var thanosStores []cache.Store
@@ -195,7 +194,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating prometheusrule informers")
+		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
 	}
 
 	o.ssetInfs, err = informers.NewInformersForResource(
@@ -209,7 +208,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating statefulset informers")
+		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
@@ -264,7 +263,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", infs.name), inf.Informer()) {
-				return errors.Errorf("failed to sync cache for %s informer", infs.name)
+				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
 	}
@@ -277,7 +276,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"RuleNamespace", o.nsRuleInf},
 	} {
 		if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
-			return errors.Errorf("failed to sync cache for %s informer", inf.name)
+			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
@@ -530,7 +529,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	tr := trobj.(*monitoringv1.ThanosRuler)
 	tr = tr.DeepCopy()
 	if err := k8sutil.AddTypeInformationToObject(tr); err != nil {
-		return errors.Wrap(err, "failed to set ThanosRuler type information")
+		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
 	}
 
 	// Check if the Thanos instance is marked for deletion.
@@ -557,7 +556,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
 	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
-		return errors.Wrap(err, "synchronizing governing service failed")
+		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
 	// Ensure we have a StatefulSet running Thanos deployed.
@@ -570,12 +569,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
 		if err != nil {
-			return errors.Wrap(err, "making thanos statefulset config failed")
+			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
 
 		operator.SanitizeSTS(sset)
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return errors.Wrap(err, "creating thanos statefulset failed")
+			return fmt.Errorf("creating thanos statefulset failed: %w", err)
 		}
 
 		return nil
@@ -618,13 +617,13 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		level.Info(logger).Log("msg", "recreating ThanosRuler StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
 		}
 		return nil
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "updating StatefulSet failed")
+		return fmt.Errorf("updating StatefulSet failed: %w", err)
 	}
 
 	return nil
@@ -639,7 +638,7 @@ func (o *Operator) getThanosRulerFromKey(key string) (*monitoringv1.ThanosRuler,
 			level.Info(o.logger).Log("msg", "ThanosRuler not found", "key", key)
 			return nil, nil
 		}
-		return nil, errors.Wrap(err, "failed to retrieve ThanosRuler from informer")
+		return nil, fmt.Errorf("failed to retrieve ThanosRuler from informer: %w", err)
 	}
 
 	return obj.(*monitoringv1.ThanosRuler).DeepCopy(), nil
@@ -657,7 +656,7 @@ func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.Statefu
 			level.Info(o.logger).Log("msg", "StatefulSet not found", "key", ssetName)
 			return nil, nil
 		}
-		return nil, errors.Wrap(err, "failed to retrieve StatefulSet from informer")
+		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
 	}
 
 	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
@@ -676,7 +675,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	sset, err := o.getStatefulSetFromThanosRulerKey(key)
 	if err != nil {
-		return errors.Wrap(err, "failed to get StatefulSet")
+		return fmt.Errorf("failed to get StatefulSet: %w", err)
 	}
 
 	if sset != nil && o.rr.DeletionInProgress(sset) {
@@ -685,7 +684,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	stsReporter, err := operator.NewStatefulSetReporter(ctx, o.kclient, sset)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve statefulset state")
+		return fmt.Errorf("failed to retrieve statefulset state: %w", err)
 	}
 
 	availableCondition := stsReporter.Update(tr)
@@ -694,7 +693,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	tr.Status.Paused = tr.Spec.Paused
 
 	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, applyConfigurationFromThanosRuler(tr), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		return errors.Wrap(err, "failed to apply status subresource")
+		return fmt.Errorf("failed to apply status subresource: %w", err)
 	}
 
 	return nil
@@ -725,10 +724,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		nil,
 	)
 	if err != nil {
-		return "", errors.Wrap(
-			err,
-			"failed to calculate combined hash",
-		)
+		return "", fmt.Errorf("failed to calculate combined hash: %w", err)
 	}
 
 	return fmt.Sprintf("%d", hash), nil
@@ -784,7 +780,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 		if err != nil {
 			level.Error(o.logger).Log(
-				"err", errors.Wrap(err, "failed to convert RuleNamespaceSelector"),
+				"err", fmt.Errorf("failed to convert RuleNamespaceSelector: %w", err),
 				"name", tr.Name,
 				"namespace", tr.Namespace,
 				"selector", tr.Spec.RuleNamespaceSelector,
