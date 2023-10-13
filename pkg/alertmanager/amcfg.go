@@ -238,7 +238,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	globalAlertmanagerConfig.Route = cb.convertRoute(amConfig.Spec.Route, crKey)
 
 	for _, receiver := range amConfig.Spec.Receivers {
-		receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
+		receivers, err := cb.convertReceiver(ctx, &receiver, globalAlertmanagerConfig.Global, crKey)
 		if err != nil {
 			return err
 		}
@@ -324,7 +324,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		)
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
-			receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
+			receivers, err := cb.convertReceiver(ctx, &receiver, cb.cfg.Global, crKey)
 			if err != nil {
 				return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
 			}
@@ -506,7 +506,7 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 }
 
 // convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver
-func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
+func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, globalCfg *globalConfig, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
 	if l := len(in.PagerDutyConfigs); l > 0 {
 		pagerdutyConfigs = make([]*pagerdutyConfig, l)
@@ -583,7 +583,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	if l := len(in.EmailConfigs); l > 0 {
 		emailConfigs = make([]*emailConfig, l)
 		for i := range in.EmailConfigs {
-			receiver, err := cb.convertEmailConfig(ctx, in.EmailConfigs[i], crKey)
+			receiver, err := cb.convertEmailConfig(ctx, in.EmailConfigs[i], *globalCfg, crKey)
 			if err != nil {
 				return nil, fmt.Errorf("EmailConfig[%d]: %w", i, err)
 			}
@@ -1005,7 +1005,7 @@ func (cb *configBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 	return out, nil
 }
 
-func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
+func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, globalCfg globalConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
 		VSendResolved: in.SendResolved,
 		To:            in.To,
@@ -1016,6 +1016,10 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
+	}
+
+	if in.Smarthost == "" && globalCfg.SMTPSmarthost.Host == "" {
+		return nil, fmt.Errorf("smtp_smarthost is mandatory field")
 	}
 
 	if in.Smarthost != "" {

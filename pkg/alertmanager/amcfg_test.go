@@ -674,6 +674,41 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:         "SMTPSmartHost neither specified global nor emailConfig",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "emailConfig",
+							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+								{
+									To:   "user1@example.com",
+									From: "yourserver@example.com",
+								},
+							},
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "emailConfig",
+						Routes: []v1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		version, err := semver.ParseTolerant("v0.22.2")
