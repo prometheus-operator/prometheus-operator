@@ -16,9 +16,9 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -138,7 +138,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 		svc := framework.MakeEchoService("denied", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), deniedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -183,7 +183,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -286,7 +286,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -310,7 +310,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -436,7 +436,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -455,7 +455,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
