@@ -835,10 +835,20 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.UserKeyFile != nil {
+		in, out := &in.UserKeyFile, &out.UserKeyFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Token != nil {
 		in, out := &in.Token, &out.Token
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.TokenFile != nil {
+		in, out := &in.TokenFile, &out.TokenFile
+		*out = new(string)
+		**out = **in
 	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig

@@ -1027,6 +1027,17 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Consul SD config with no secret ref provided",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "DNS SD config with port for type other than SRV record",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
@@ -1069,6 +1080,17 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							},
 							Key: "key2",
 						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "EC2 SD config with no secret ref provided",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
 					},
 				}
 			},

@@ -1,11 +1,11 @@
-name: e2e
+name: Test Prometheus upgrades
 on:
   schedule:
     - cron:  '37 15 * * *' # Every day 15:37
 
 jobs:
-  e2e-tests:
-    name: E2E tests
+  upgrade-prometheus:
+    name: Upgrade Prometheus
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

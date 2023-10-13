@@ -17,14 +17,12 @@ package admission
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, error) {
 	groups := &RuleGroups{}
 	if err := json.Unmarshal(content, groups); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal RuleGroups")
+		return nil, fmt.Errorf("cannot unmarshal RuleGroups: %w", err)
 	}
 
 	patches := new([]string)

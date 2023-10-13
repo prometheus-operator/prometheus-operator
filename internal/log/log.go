@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-kit/log"
 	loglevel "github.com/go-kit/log/level"
+	klogv2 "k8s.io/klog/v2"
 )
 
 const (
@@ -46,10 +47,15 @@ func NewLogger(level string, format string) (log.Logger, error) {
 		lvlOption loglevel.Option
 	)
 
+	// For log levels other than debug, the klog verbosity level is 0.
+	klogv2.ClampLevel(0)
 	switch strings.ToLower(level) {
 	case LevelAll:
 		lvlOption = loglevel.AllowAll()
 	case LevelDebug:
+		// When the log level is set to debug, we set the klog verbosity level to 6.
+		// Above level 6, the k8s client would log bearer tokens in clear-text.
+		klogv2.ClampLevel(6)
 		lvlOption = loglevel.AllowDebug()
 	case LevelInfo:
 		lvlOption = loglevel.AllowInfo()
@@ -75,6 +81,9 @@ func NewLogger(level string, format string) (log.Logger, error) {
 	logger = loglevel.NewFilter(logger, lvlOption)
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
+
+	klogv2.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
+
 	return logger, nil
 }
 

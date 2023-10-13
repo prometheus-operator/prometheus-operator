@@ -5420,6 +5420,49 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AzureAD">AzureAD
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+</p>
+<div>
+<p>AzureAD defines the configuration for remote write&rsquo;s azuread parameters.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>cloud</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Azure Cloud. Options are &lsquo;AzurePublic&rsquo;, &lsquo;AzureChina&rsquo;, or &lsquo;AzureGovernment&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedIdentity</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ManagedIdentity">
+ManagedIdentity
+</a>
+</em>
+</td>
+<td>
+<p>ManagedIdentity defines the Azure User-assigned Managed identity.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
@@ -7755,6 +7798,35 @@ string
 <div>
 <p>LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>ManagedIdentity defines the Azure User-assigned Managed identity.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The client id</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.MetadataConfig">MetadataConfig
 </h3>
 <p>
@@ -11664,7 +11736,7 @@ OAuth2
 <em>(Optional)</em>
 <p>OAuth2 configuration for the URL.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>basicAuth</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11679,7 +11751,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth configuration for the URL.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11707,7 +11779,7 @@ Authorization
 <em>(Optional)</em>
 <p>Authorization section for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11723,7 +11795,23 @@ Sigv4
 <em>(Optional)</em>
 <p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0.</p>
-<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>azureAd</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureAD">
+AzureAD
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AzureAD for the URL.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>sigv4</code>.</p>
 </td>
 </tr>
 <tr>
@@ -14337,8 +14425,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -19394,9 +19482,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -19409,9 +19513,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -21751,8 +21871,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -23270,9 +23390,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -23285,9 +23421,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>

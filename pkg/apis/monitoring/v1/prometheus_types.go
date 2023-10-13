@@ -1121,12 +1121,12 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, or `basicAuth`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// BasicAuth configuration for the URL.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, or `oauth2`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
@@ -1138,7 +1138,7 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `basicAuth`, or `oauth2`.
+	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
@@ -1146,10 +1146,19 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, or `oauth2`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
+
+	// AzureAD for the URL.
+	//
+	// It requires Prometheus >= v2.45.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+	//
+	// +optional
+	AzureAD *AzureAD `json:"azureAd,omitempty"`
 
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
@@ -1217,6 +1226,26 @@ type Sigv4 struct {
 	Profile string `json:"profile,omitempty"`
 	// RoleArn is the named AWS profile used to authenticate.
 	RoleArn string `json:"roleArn,omitempty"`
+}
+
+// AzureAD defines the configuration for remote write's azuread parameters.
+// +k8s:openapi-gen=true
+type AzureAD struct {
+	// The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
+	// +kubebuilder:validation:Enum=AzureChina;AzureGovernment;AzurePublic
+	// +optional
+	Cloud *string `json:"cloud,omitempty"`
+	// ManagedIdentity defines the Azure User-assigned Managed identity.
+	// +required
+	ManagedIdentity ManagedIdentity `json:"managedIdentity"`
+}
+
+// ManagedIdentity defines the Azure User-assigned Managed identity.
+// +k8s:openapi-gen=true
+type ManagedIdentity struct {
+	// The client id
+	// +required
+	ClientID string `json:"clientId"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

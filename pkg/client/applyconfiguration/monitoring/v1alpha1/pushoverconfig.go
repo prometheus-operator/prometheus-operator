@@ -25,7 +25,9 @@ import (
 type PushoverConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
 	UserKey      *v1.SecretKeySelector         `json:"userKey,omitempty"`
+	UserKeyFile  *string                       `json:"userKeyFile,omitempty"`
 	Token        *v1.SecretKeySelector         `json:"token,omitempty"`
+	TokenFile    *string                       `json:"tokenFile,omitempty"`
 	Title        *string                       `json:"title,omitempty"`
 	Message      *string                       `json:"message,omitempty"`
 	URL          *string                       `json:"url,omitempty"`
@@ -60,11 +62,27 @@ func (b *PushoverConfigApplyConfiguration) WithUserKey(value v1.SecretKeySelecto
 	return b
 }
 
+// WithUserKeyFile sets the UserKeyFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UserKeyFile field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithUserKeyFile(value string) *PushoverConfigApplyConfiguration {
+	b.UserKeyFile = &value
+	return b
+}
+
 // WithToken sets the Token field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Token field is set to the value of the last call.
 func (b *PushoverConfigApplyConfiguration) WithToken(value v1.SecretKeySelector) *PushoverConfigApplyConfiguration {
 	b.Token = &value
+	return b
+}
+
+// WithTokenFile sets the TokenFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TokenFile field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithTokenFile(value string) *PushoverConfigApplyConfiguration {
+	b.TokenFile = &value
 	return b
 }
 

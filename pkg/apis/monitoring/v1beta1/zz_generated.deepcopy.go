@@ -470,9 +470,19 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.UserKeyFile != nil {
+		in, out := &in.UserKeyFile, &out.UserKeyFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Token != nil {
 		in, out := &in.Token, &out.Token
 		*out = new(SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenFile != nil {
+		in, out := &in.TokenFile, &out.TokenFile
+		*out = new(string)
 		**out = **in
 	}
 	if in.HTTPConfig != nil {

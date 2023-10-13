@@ -40,8 +40,8 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 
-// AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-// across multiple namespaces configuring one Alertmanager cluster.
+// AlertmanagerConfig configures the Prometheus Alertmanager,
+// specifying how alerts should be grouped, inhibited and notified to external systems.
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -750,13 +750,25 @@ type PushoverConfig struct {
 	// The secret's key that contains the recipient user's user key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +kubebuilder:validation:Required
+	// Either `userKey` or `userKeyFile` is required.
+	// +optional
 	UserKey *SecretKeySelector `json:"userKey,omitempty"`
+	// The user key file that contains the recipient user's user key.
+	// Either `userKey` or `userKeyFile` is required.
+	// It requires Alertmanager >= v0.26.0.
+	// +optional
+	UserKeyFile *string `json:"userKeyFile,omitempty"`
 	// The secret's key that contains the registered application's API token, see https://pushover.net/apps.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +kubebuilder:validation:Required
+	// Either `token` or `tokenFile` is required.
+	// +optional
 	Token *SecretKeySelector `json:"token,omitempty"`
+	// The token file that contains the registered application's API token, see https://pushover.net/apps.
+	// Either `token` or `tokenFile` is required.
+	// It requires Alertmanager >= v0.26.0.
+	// +optional
+	TokenFile *string `json:"tokenFile,omitempty"`
 	// Notification title.
 	// +optional
 	Title string `json:"title,omitempty"`

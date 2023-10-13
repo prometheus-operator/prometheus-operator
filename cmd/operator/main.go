@@ -39,9 +39,9 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
-	klog "k8s.io/klog/v2"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
@@ -167,7 +167,6 @@ var (
 )
 
 func init() {
-	// With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
@@ -244,15 +243,15 @@ func run() int {
 		stdlog.Fatal(err)
 	}
 
-	// Above level 6, the k8s client would log bearer tokens in clear-text.
-	klog.ClampLevel(6)
-	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
-
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
-		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
+		level.Error(logger).Log(
+			"msg", "--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
+			"namespaces", ns,
+			"deny_namespaces", deniedNs,
+		)
 		return 1
 	}
 
@@ -311,6 +310,27 @@ func run() int {
 	}
 	cfg.KubernetesVersion = *kubernetesVersion
 	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+	// Check if we can read the storage classs
+	canReadStorageClass, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		nil,
+		storagev1.SchemeGroupVersion,
+		storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+		k8sutil.ResourceAttribute{
+			Group:    storagev1.GroupName,
+			Version:  storagev1.SchemeGroupVersion.Version,
+			Resource: storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+			Verbs:    []string{"get"},
+		},
+	)
+
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
+		cancel()
+		return 1
+	}
 
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
@@ -326,15 +346,15 @@ func run() int {
 			Verbs:    []string{"get", "list", "watch"},
 		},
 	)
-
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check ScrapeConfig support", "err", err)
 		cancel()
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -360,13 +380,14 @@ func run() int {
 		},
 	)
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check PrometheusAgent support", "err", err)
 		cancel()
 		return 1
 	}
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported, canReadStorageClass)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -374,16 +395,16 @@ func run() int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -394,7 +415,7 @@ func run() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		level.Error(logger).Log("msg", "listening failed", "address", cfg.ListenAddress, "err", err)
 		cancel()
 		return 1
 	}
@@ -407,7 +428,7 @@ func run() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
+			level.Error(logger).Log("msg", "invalid TLS config", "err", err)
 			cancel()
 			return 1
 		}
@@ -474,7 +495,7 @@ func run() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
+			level.Error(logger).Log("msg", "failed to initialize certificate reloader", "err", err)
 			cancel()
 			return 1
 		}
