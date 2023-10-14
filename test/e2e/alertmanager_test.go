@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	appsv1 "k8s.io/api/apps/v1"
@@ -938,9 +939,10 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "webhook",
 				Matchers: []monitoringv1alpha1.Matcher{{
-					Name:  "job",
-					Value: "webapp.+",
-					Regex: true,
+					Name:      "job",
+					MatchType: monitoringv1alpha1.MatchType(labels.MatchRegexp.String()),
+					Value:     "webapp.+",
+					Regex:     true,
 				}},
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
@@ -1279,7 +1281,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{
-					{Name: "service", Value: "webapp"},
+					{Name: "service", MatchType: monitoringv1alpha1.MatchType(labels.MatchEqual.String()), Value: "webapp"},
 				},
 				Routes: []apiextensionsv1.JSON{
 					{Raw: []byte(`
@@ -1289,6 +1291,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
   "matchers": [
     {
       "name": "job",
+	  "matchType": "=",
       "value": "db"
     }
   ],
@@ -1298,6 +1301,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
       "matchers": [
         {
           "name": "alertname",
+		  "matchType": "=",
           "value": "TargetDown"
         }
       ]
@@ -1308,6 +1312,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
       "matchers": [
         {
           "name": "severity",
+		  "matchType": "=~",
           "value": "critical|warning",
           "regex": true
         }
@@ -1957,8 +1962,8 @@ route:
   receiver: %[1]s
   routes:
   - receiver: %[1]s
-    match:
-      mykey: myvalue-1
+    matchers:
+	- mykey="myvalue-1"
 inhibit_rules:
 - target_matchers:
   - mykey="myvalue-2"
@@ -2597,8 +2602,9 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "webhook",
 				Matchers: []monitoringv1alpha1.Matcher{{
-					Name:  "test",
-					Value: "test",
+					Name:      "test",
+					MatchType: monitoringv1alpha1.MatchType(labels.MatchEqual.String()),
+					Value:     "test",
 				}},
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{

@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
+	"github.com/prometheus/alertmanager/pkg/labels"
 	v1 "k8s.io/api/core/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -76,9 +77,10 @@ func (f *Framework) CreateAlertmanagerConfig(ctx context.Context, ns, name strin
 		Receiver: "null",
 		Matchers: []monitoringv1alpha1.Matcher{
 			{
-				Name:  "mykey",
-				Value: "myvalue-1",
-				Regex: false,
+				Name:      "mykey",
+				MatchType: monitoringv1alpha1.MatchType(labels.MatchEqual.String()),
+				Value:     "myvalue-1",
+				Regex:     false,
 			},
 		},
 	}
@@ -97,16 +99,18 @@ func (f *Framework) CreateAlertmanagerConfig(ctx context.Context, ns, name strin
 				{
 					SourceMatch: []monitoringv1alpha1.Matcher{
 						{
-							Name:  "mykey",
-							Value: "myvalue-1",
-							Regex: false,
+							Name:      "mykey",
+							MatchType: monitoringv1alpha1.MatchType(labels.MatchEqual.String()),
+							Value:     "myvalue-1",
+							Regex:     false,
 						},
 					},
 					TargetMatch: []monitoringv1alpha1.Matcher{
 						{
-							Name:  "mykey",
-							Value: "myvalue-2",
-							Regex: false,
+							Name:      "mykey",
+							MatchType: monitoringv1alpha1.MatchType(labels.MatchEqual.String()),
+							Value:     "myvalue-2",
+							Regex:     false,
 						},
 					},
 					Equal: []string{"equalkey"},

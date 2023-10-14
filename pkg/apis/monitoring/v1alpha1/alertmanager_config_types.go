@@ -22,6 +22,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
+	"github.com/prometheus/alertmanager/pkg/labels"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -942,6 +943,7 @@ type Matcher struct {
 // String returns Matcher as a string
 // Use only for MatchType Matcher
 func (in Matcher) String() string {
+	// Similar format as the `foo=bar` substring here: https://github.com/prometheus/alertmanager/blob/v0.26.0/pkg/labels/parse_test.go#L211 (which is valid).
 	return fmt.Sprintf(`%s%s"%s"`, in.Name, in.MatchType, openMetricsEscape(in.Value))
 }
 
@@ -959,6 +961,14 @@ func (in Matcher) Validate() error {
 
 	if strings.TrimSpace(in.Name) == "" {
 		return errors.New("matcher 'name' is required")
+	}
+
+	matcherStr := in.String()
+	if matcherStr != "" {
+		_, err := labels.ParseMatcher(matcherStr)
+		if err != nil {
+			return fmt.Errorf("invalid matcher '%s': %w", matcherStr, err)
+		}
 	}
 
 	return nil
