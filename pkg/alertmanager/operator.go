@@ -699,7 +699,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	sset, err := makeStatefulSet(am, c.config, newSSetInputHash, tlsAssets.ShardNames())
+	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsAssets.ShardNames())
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}

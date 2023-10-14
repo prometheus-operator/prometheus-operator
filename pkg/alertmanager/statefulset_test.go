@@ -69,7 +69,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"app.kubernetes.io/instance":   "",
 	}
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -101,7 +101,7 @@ func TestStatefulSetStoragePath(t *testing.T) {
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",
 	}
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -131,7 +131,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testvalue",
 	}
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
 			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
@@ -153,7 +153,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testvalue",
 	}
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
 			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
@@ -189,7 +189,7 @@ func TestStatefulSetPVC(t *testing.T) {
 		},
 	}
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -220,7 +220,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 		Medium: v1.StorageMediumMemory,
 	}
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -258,7 +258,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 		},
 	}
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -279,7 +279,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 }
 
 func TestListenLocal(t *testing.T) {
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
 			ListenLocal: true,
 		},
@@ -313,7 +313,7 @@ func TestListenLocal(t *testing.T) {
 }
 
 func TestListenTLS(t *testing.T) {
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
 			Web: &monitoringv1.AlertmanagerWebSpec{
 				WebConfigFileFields: monitoringv1.WebConfigFileFields{
@@ -418,7 +418,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -439,7 +439,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -496,7 +496,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -548,7 +548,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -575,7 +575,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -610,7 +610,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain := defaultTestConfig
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
-	statefulSet, err := makeStatefulSetSpec(&a, configWithClusterDomain, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -636,7 +636,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -673,7 +673,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 			},
 		},
 	}
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -703,7 +703,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 func TestAdditionalSecretsMounted(t *testing.T) {
 	secrets := []string{"secret1", "secret2"}
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
 			Secrets: secrets,
@@ -757,7 +757,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -775,7 +775,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 
 func TestSHAAndTagAndVersion(t *testing.T) {
 	{
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
@@ -792,7 +792,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 		}
 	}
 	{
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
@@ -811,7 +811,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 	}
 	{
 		image := "my-registry/alertmanager:latest"
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
@@ -841,7 +841,7 @@ func TestRetention(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				Retention: test.specRetention,
 			},
@@ -867,7 +867,7 @@ func TestRetention(t *testing.T) {
 }
 
 func TestAdditionalConfigMap(t *testing.T) {
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
@@ -909,14 +909,14 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{},
 		}
 
-		sset, err := makeStatefulSet(am, testConfig, "", nil)
+		sset, err := makeStatefulSet(nil, am, testConfig, "", nil)
 		require.NoError(t, err)
 		return sset
 	})
 }
 
 func TestTerminationPolicy(t *testing.T) {
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
 	}, defaultTestConfig, "", nil)
 	if err != nil {
@@ -936,7 +936,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -963,7 +963,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.Replicas = &replicas
 	a.Spec.ForceEnableClusterMode = true
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -989,7 +989,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1016,7 +1016,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	// assert defaults to zero if nil
-	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1027,7 +1027,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	a.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(&a, defaultTestConfig, nil)
+	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1079,7 +1079,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	imagePullPolicy := v1.PullAlways
 
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
 			NodeSelector:       nodeSelector,
@@ -1134,7 +1134,7 @@ func TestPodTemplateConfig(t *testing.T) {
 }
 
 func TestConfigReloader(t *testing.T) {
-	baseSet, err := makeStatefulSet(&monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
+	baseSet, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1173,7 +1173,7 @@ func TestConfigReloader(t *testing.T) {
 func TestAutomountServiceAccountToken(t *testing.T) {
 	for i := range []int{0, 1} {
 		automountServiceAccountToken := (i == 0)
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				AutomountServiceAccountToken: &automountServiceAccountToken,
 			},
@@ -1215,7 +1215,7 @@ func TestClusterLabel(t *testing.T) {
 				},
 			}
 
-			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
