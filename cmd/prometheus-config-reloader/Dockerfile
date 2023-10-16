@@ -1,8 +1,6 @@
 ARG ARCH="amd64"
 ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
-FROM debian:bookworm
-ENV DEBIAN_FRONTEND=noninteractive
 
 RUN \
     apt-get update && apt-get install -y --no-install-recommends \
