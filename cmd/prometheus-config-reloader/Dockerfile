@@ -2,7 +2,7 @@ ARG ARCH="amd64"
 ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 
-RUN apt-get update && apt-get install -y libvpx
+RUN apt-get update && apt-get install -y
 
 COPY prometheus-config-reloader /bin/prometheus-config-reloader
 
