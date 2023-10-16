@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN \
     apt-get update && apt-get install -y --no-install-recommends \
       libvpx 1.13.1
-    
+
 COPY prometheus-config-reloader /bin/prometheus-config-reloader
 
 USER nobody
