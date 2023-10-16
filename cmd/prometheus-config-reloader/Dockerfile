@@ -2,6 +2,7 @@ ARG ARCH="amd64"
 ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 
+FROM debian:bookworm
 RUN apt-get update
 
 COPY prometheus-config-reloader /bin/prometheus-config-reloader
