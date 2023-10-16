@@ -34,6 +34,12 @@ type Target string
 // +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
 type SDFile string
 
+// EC2Filter is the configuration for filtering EC2 instances.
+type EC2Filter struct {
+	Name   string   `json:"name"`
+	Values []string `json:"values"`
+}
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
@@ -361,4 +367,10 @@ type EC2SDConfig struct {
 	// instead be specified in the relabeling rule.
 	// +optional
 	Port *int `json:"port"`
+	// Filters can be used optionally to filter the instance list by other criteria.
+	// Available filter criteria can be found here:
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// +optional
+	Filters []*EC2Filter `json:"filters"`
 }

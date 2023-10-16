@@ -2652,6 +2652,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.Port,
 				})
 			}
+
+			if config.Filters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filters",
+					Value: config.Filters,
+				})
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ec2_sd_configs",
