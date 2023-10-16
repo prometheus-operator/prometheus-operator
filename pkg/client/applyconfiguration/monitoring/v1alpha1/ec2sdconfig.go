@@ -27,6 +27,7 @@ type EC2SDConfigApplyConfiguration struct {
 	Region          *string                `json:"region,omitempty"`
 	AccessKey       *v1.SecretKeySelector  `json:"accessKey,omitempty"`
 	SecretKey       *v1.SecretKeySelector  `json:"secretKey,omitempty"`
+	RoleARN         *string                `json:"roleARN,omitempty"`
 	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	Port            *int                   `json:"port,omitempty"`
 }
@@ -58,6 +59,14 @@ func (b *EC2SDConfigApplyConfiguration) WithAccessKey(value v1.SecretKeySelector
 // If called multiple times, the SecretKey field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithSecretKey(value v1.SecretKeySelector) *EC2SDConfigApplyConfiguration {
 	b.SecretKey = &value
+	return b
+}
+
+// WithRoleARN sets the RoleARN field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RoleARN field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithRoleARN(value string) *EC2SDConfigApplyConfiguration {
+	b.RoleARN = &value
 	return b
 }
 

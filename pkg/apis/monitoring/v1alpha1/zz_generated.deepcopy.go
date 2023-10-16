@@ -340,6 +340,11 @@ func (in *EC2SDConfig) DeepCopyInto(out *EC2SDConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.RoleARN != nil {
+		in, out := &in.RoleARN, &out.RoleARN
+		*out = new(string)
+		**out = **in
+	}
 	if in.RefreshInterval != nil {
 		in, out := &in.RefreshInterval, &out.RefreshInterval
 		*out = new(monitoringv1.Duration)

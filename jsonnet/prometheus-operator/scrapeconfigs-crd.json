@@ -667,6 +667,10 @@
                           "description": "The AWS region",
                           "type": "string"
                         },
+                        "roleARN": {
+                          "description": "AWS Role ARN, an alternative to using AWS API keys.",
+                          "type": "string"
+                        },
                         "secretKey": {
                           "description": "SecretKey is the AWS API secret.",
                           "properties": {

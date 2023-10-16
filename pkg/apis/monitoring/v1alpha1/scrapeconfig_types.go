@@ -351,6 +351,9 @@ type EC2SDConfig struct {
 	// SecretKey is the AWS API secret.
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// AWS Role ARN, an alternative to using AWS API keys.
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
