@@ -434,41 +434,10 @@ func run() int {
 		}
 	}
 
-	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_triggered_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of times a prometheusRule object triggered validation",
-	})
-
-	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_errors_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a prometheusRules object",
-	})
-
-	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of times an alertmanagerconfig object triggered validation",
-	})
-
-	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a alertmanagerconfig object",
-	})
-
 	r.MustRegister(
 		collectors.NewGoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		validationTriggeredCounter,
-		validationErrorsCounter,
-		alertManagerConfigValidationTriggered,
-		alertManagerConfigValidationError,
 		version.NewCollector("prometheus_operator"),
-	)
-
-	admit.RegisterMetrics(
-		validationTriggeredCounter,
-		validationErrorsCounter,
-		alertManagerConfigValidationTriggered,
-		alertManagerConfigValidationError,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
