@@ -906,6 +906,7 @@ type MSTeamsConfig struct {
 	// MSTeams webhook URL.
 	// +kubebuilder:validation:Required
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
+	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// +optional
