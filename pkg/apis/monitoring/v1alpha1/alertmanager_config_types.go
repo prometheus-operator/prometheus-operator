@@ -909,6 +909,7 @@ type MSTeamsConfig struct {
 	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
+	// Message body template.
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
