@@ -17451,8 +17451,8 @@ Currently the only supported role is &ldquo;Node&rdquo;.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>MSTeamsConfig configures notifications via MS Teams.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#msteams_config">https://prometheus.io/docs/alerting/latest/configuration/#msteams_config</a></p>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </div>
 <table>
 <thead>
@@ -17484,7 +17484,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>MSTeams webhook url</p>
+<p>MSTeams webhook URL.</p>
 </td>
 </tr>
 <tr>
@@ -17496,6 +17496,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Message title template.</p>
 </td>
 </tr>
 <tr>
@@ -17507,6 +17508,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Message body template.</p>
 </td>
 </tr>
 <tr>
@@ -19934,7 +19936,8 @@ string
 </em>
 </td>
 <td>
-<p>List of MSTeams configurations.</p>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>
@@ -22708,8 +22711,8 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>MSTeamsConfig configures notifications via MS Teams.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#msteams_config">https://prometheus.io/docs/alerting/latest/configuration/#msteams_config</a></p>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </div>
 <table>
 <thead>
@@ -22741,7 +22744,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>MSTeams webhook url</p>
+<p>MSTeams webhook URL.</p>
 </td>
 </tr>
 <tr>
@@ -22753,6 +22756,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Message title template.</p>
 </td>
 </tr>
 <tr>
@@ -22764,6 +22768,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Message body template.</p>
 </td>
 </tr>
 <tr>
@@ -23934,7 +23939,8 @@ string
 </em>
 </td>
 <td>
-<p>List of MSTeams configurations.</p>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>

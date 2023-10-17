@@ -898,7 +898,7 @@ type TelegramConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-  // MSTeamsConfig configures notifications via Microsoft Teams.
+// MSTeamsConfig configures notifications via Microsoft Teams.
 // It requires Alertmanager >= 0.26.0.
 type MSTeamsConfig struct {
 	// Whether to notify about resolved alerts.

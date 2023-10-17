@@ -1647,7 +1647,7 @@ func checkMSTeamsConfigs(
 		return nil
 	}
 	if amVersion.LT(semver.MustParse("0.26.0")) {
-		return fmt.Errorf(`msteamsConfigs is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
 	}
 
 	for i, config := range configs {

@@ -1256,8 +1256,8 @@ func (cb *configBuilder) convertMSTeamsConfig(
 ) (*msTeamsConfig, error) {
 	out := &msTeamsConfig{
 		SendResolved: in.SendResolved,
-		Title:        in.Title,
-		Text:         in.Text,
+		Title:        *in.Title,
+		Text:         *in.Text,
 	}
 
 	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
@@ -2068,7 +2068,7 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger log.Logger) 
 
 func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	if amVersion.LT(semver.MustParse("0.26.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.25.1`)
+		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
 	}
 
 	if tc.WebhookURL == "" {

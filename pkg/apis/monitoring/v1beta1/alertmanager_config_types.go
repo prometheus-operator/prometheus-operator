@@ -178,6 +178,7 @@ type Receiver struct {
 	// List of Webex configurations.
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// List of MSTeams configurations.
+	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 }
 
@@ -889,17 +890,19 @@ type TelegramConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// MSTeamsConfig configures notifications via MS Teams.
-// See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config
+// MSTeamsConfig configures notifications via Microsoft Teams.
+// It requires Alertmanager >= 0.26.0.
 type MSTeamsConfig struct {
 	// Whether to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// MSTeams webhook url
+	// MSTeams webhook URL.
 	// +kubebuilder:validation:Required
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
+	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
+	// Message body template.
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.

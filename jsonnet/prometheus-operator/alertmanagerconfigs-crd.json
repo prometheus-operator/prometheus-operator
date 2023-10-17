@@ -884,9 +884,9 @@
                           "type": "array"
                         },
                         "msteamsConfigs": {
-                          "description": "List of MSTeams configurations.",
+                          "description": "List of MSTeams configurations. It requires Alertmanager >= 0.26.0.",
                           "items": {
-                            "description": "MSTeamsConfig configures notifications via MS Teams. See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config",
+                            "description": "MSTeamsConfig configures notifications via Microsoft Teams. It requires Alertmanager >= 0.26.0.",
                             "properties": {
                               "httpConfig": {
                                 "description": "HTTP client configuration.",
@@ -1248,13 +1248,15 @@
                                 "type": "boolean"
                               },
                               "text": {
+                                "description": "Message body template.",
                                 "type": "string"
                               },
                               "title": {
+                                "description": "Message title template.",
                                 "type": "string"
                               },
                               "webhookUrl": {
-                                "description": "MSTeams webhook url",
+                                "description": "MSTeams webhook URL.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
