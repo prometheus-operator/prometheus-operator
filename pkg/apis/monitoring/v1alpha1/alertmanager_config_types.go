@@ -180,6 +180,7 @@ type Receiver struct {
 	// List of Webex configurations.
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// List of MSTeams configurations.
+	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 }
 
