@@ -903,7 +903,7 @@ type MSTeamsConfig struct {
 	// Whether to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// MSTeams webhook url
+	// MSTeams webhook URL.
 	// +kubebuilder:validation:Required
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
 	// +optional
