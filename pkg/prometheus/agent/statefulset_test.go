@@ -220,7 +220,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
-							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -236,7 +236,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
-							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -258,9 +258,9 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
 							AdditionalLabelSelectors: []monitoringv1.AdditionalLabelSelector{
-								"shard",
+								"ShardName",
 							},
-							TopologySpreadConstraint: v1.TopologySpreadConstraint{
+							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,

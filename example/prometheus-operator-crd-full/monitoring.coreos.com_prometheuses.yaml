@@ -7613,8 +7613,8 @@ spec:
                         should be added to labelSelector on the topologySpreadConstraint.
                       items:
                         enum:
-                        - name
-                        - shard
+                        - ResourceName
+                        - ShardName
                         type: string
                       type: array
                       x-kubernetes-list-type: set

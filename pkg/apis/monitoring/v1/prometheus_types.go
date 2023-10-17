@@ -57,11 +57,11 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 	return l.Status
 }
 
-// +kubebuilder:validation:Enum=name;shard
+// +kubebuilder:validation:Enum=ResourceName;ShardName
 type AdditionalLabelSelector string
 
 type TopologySpreadConstraint struct {
-	v1.TopologySpreadConstraint `json:",inline"`
+	*v1.TopologySpreadConstraint `json:",inline"`
 
 	//+optional
 	// +listType=set

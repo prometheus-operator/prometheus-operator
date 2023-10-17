@@ -15,8 +15,6 @@
 package operator
 
 import (
-	"fmt"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -64,11 +62,16 @@ func MakeK8sTopologySpreadConstraint(podLabels map[string]string, tsc monitoring
 			}
 		}
 
+		labelMap := map[monitoringv1.AdditionalLabelSelector]string{
+			"ShardName":    "operator.prometheus.io/shard",
+			"ResourceName": "operator.prometheus.io/name",
+		}
+
 		for _, label := range tsc.AdditionalLabelSelectors {
-			labelName := fmt.Sprintf("operator.prometheus.io/%s", label)
+			labelName := labelMap[label]
 			tsc.LabelSelector.MatchLabels[labelName] = podLabels[labelName]
 		}
 	}
 
-	return tsc.TopologySpreadConstraint
+	return *tsc.TopologySpreadConstraint
 }

@@ -5522,8 +5522,8 @@
                           "description": "Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.",
                           "items": {
                             "enum": [
-                              "name",
-                              "shard"
+                              "ResourceName",
+                              "ShardName"
                             ],
                             "type": "string"
                           },
