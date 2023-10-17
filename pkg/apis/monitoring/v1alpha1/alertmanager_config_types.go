@@ -898,7 +898,7 @@ type TelegramConfig struct {
 }
 
 // MSTeamsConfig configures notifications via MS Teams.
-// See https://prometheus.io/docs/alerting/latest/configuration/#msteams_config
+// It requires Alertmanager >= 0.26.0.
 type MSTeamsConfig struct {
 	// Whether to notify about resolved alerts.
 	// +optional
