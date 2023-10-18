@@ -79,7 +79,7 @@ func main() {
 
 	webConfig := app.Flag(
 		"web-config-file",
-		"Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
+		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
 	).Default("").String()
 
 	logFormat := app.Flag(
