@@ -324,12 +324,27 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 }
 
 func api() *Admission {
-	validationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
+	promRuleMutationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_mutation_triggered_total",
+		Help: "Number of times a prometheusRule object triggered mutation",
+	})
+	promRuleMutationErrors := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_mutation_errors_total",
+		Help: "Number of errors that occurred while mutating a prometheusRules object",
+	})
+	promValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_prometheus_validation_triggered_total",
+		Help: "Number of times a prometheus object triggered validation",
+	})
+	promValidationErrors := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_prometheus_validation_errors_total",
+		Help: "Number of errors that occurred while validating a prometheus object",
+	})
+	promRuleValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
 		Help: "Number of times a prometheusRule object triggered validation",
 	})
-
-	validationErrors := prometheus.NewCounter(prometheus.CounterOpts{
+	promRuleValidationErrors := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_errors_total",
 		Help: "Number of errors that occurred while validating a prometheusRules object",
 	})
@@ -337,14 +352,22 @@ func api() *Admission {
 		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
 		Help: "Number of times an alertmanagerconfig object triggered validation",
 	})
-
 	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
 		Help: "Number of errors that occurred while validating a alertmanagerconfig object",
 	})
 
 	a := New(level.NewFilter(log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)), level.AllowNone()))
-	a.RegisterMetrics(validationTriggered, validationErrors, alertManagerConfigValidationTriggered, alertManagerConfigValidationError)
+	a.RegisterMetrics(
+		promRuleMutationTriggered,
+		promRuleMutationErrors,
+		promValidationTriggered,
+		promValidationErrors,
+		promRuleValidationTriggered,
+		promRuleValidationErrors,
+		alertManagerConfigValidationTriggered,
+		alertManagerConfigValidationError,
+	)
 
 	return a
 }
