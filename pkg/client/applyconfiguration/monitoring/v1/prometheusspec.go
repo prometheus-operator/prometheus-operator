@@ -318,6 +318,14 @@ func (b *PrometheusSpecApplyConfiguration) WithWeb(value *PrometheusWebSpecApply
 	return b
 }
 
+// WithWebConfigReloader sets the WebConfigReloader field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebConfigReloader field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithWebConfigReloader(value *PrometheusConfigReloaderWebSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.WebConfigReloader = value
+	return b
+}
+
 // WithResources sets the Resources field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Resources field is set to the value of the last call.

@@ -231,6 +231,11 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+	// Defines the configuration of the config-reloader.
+	// // It requires config-reloader > v0.68.0.
+	//
+	// +optional
+	WebConfigReloader *AlertmanagerConfigReloaderWebSpec `json:"webConfigReloader,omitempty"`
 	// EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
 	// If defined, it takes precedence over the `configSecret` field.
 	// This field may change in future releases.
@@ -345,6 +350,12 @@ type AlertmanagerWebSpec struct {
 	// `--web.timeout` flag.
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
+}
+
+// AlertmanagerConfigReloaderWebSpec defines the web command line flags for the config-reloader.
+// +k8s:openapi-gen=true
+type AlertmanagerConfigReloaderWebSpec struct {
+	WebConfigFileFields `json:",inline"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

@@ -274,6 +274,12 @@ type CommonPrometheusFields struct {
 	// Defines the configuration of the Prometheus web server.
 	Web *PrometheusWebSpec `json:"web,omitempty"`
 
+	// Defines the configuration of the config-reloader.
+	// // It requires config-reloader > v0.68.0.
+	//
+	// +optional
+	WebConfigReloader *PrometheusConfigReloaderWebSpec `json:"webConfigReloader,omitempty"`
+
 	// Defines the resources requests and limits of the 'prometheus' container.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
@@ -921,6 +927,12 @@ type PrometheusWebSpec struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	MaxConnections *int32 `json:"maxConnections,omitempty"`
+}
+
+// PrometheusConfigReloaderSpec defines the configuration of the config-reloader.
+// +k8s:openapi-gen=true
+type PrometheusConfigReloaderWebSpec struct {
+	WebConfigFileFields `json:",inline"`
 }
 
 // ThanosSpec defines the configuration of the Thanos sidecar.

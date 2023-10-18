@@ -709,6 +709,21 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigReloaderWebSpec">
+AlertmanagerConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfiguration</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">
@@ -1810,6 +1825,21 @@ PrometheusWebSpec
 </td>
 <td>
 <p>Defines the configuration of the Prometheus web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">
+PrometheusConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>
@@ -4075,6 +4105,50 @@ Default is <code>OnNamespace</code>.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigReloaderWebSpec">AlertmanagerConfigReloaderWebSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerConfigReloaderWebSpec defines the web command line flags for the config-reloader.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
 <p>
@@ -5042,6 +5116,21 @@ AlertmanagerWebSpec
 </td>
 <td>
 <p>Defines the web command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigReloaderWebSpec">
+AlertmanagerConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>
@@ -6017,6 +6106,21 @@ PrometheusWebSpec
 </td>
 <td>
 <p>Defines the configuration of the Prometheus web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">
+PrometheusConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>
@@ -9205,6 +9309,50 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">PrometheusConfigReloaderWebSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>PrometheusConfigReloaderSpec defines the configuration of the config-reloader.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.PrometheusRuleExcludeConfig">PrometheusRuleExcludeConfig
 </h3>
 <p>
@@ -9777,6 +9925,21 @@ PrometheusWebSpec
 </td>
 <td>
 <p>Defines the configuration of the Prometheus web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">
+PrometheusConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>
@@ -14084,7 +14247,7 @@ fail and an error will be logged.</p>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfigReloaderWebSpec">AlertmanagerConfigReloaderWebSpec</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">PrometheusConfigReloaderWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
 </p>
 <div>
 <p>WebConfigFileFields defines the file content for &ndash;web.config.file flag.</p>
@@ -15085,6 +15248,21 @@ PrometheusWebSpec
 </td>
 <td>
 <p>Defines the configuration of the Prometheus web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">
+PrometheusConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>
@@ -18754,6 +18932,21 @@ PrometheusWebSpec
 </td>
 <td>
 <p>Defines the configuration of the Prometheus web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webConfigReloader</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PrometheusConfigReloaderWebSpec">
+PrometheusConfigReloaderWebSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the configuration of the config-reloader.
+// It requires config-reloader &gt; v0.68.0.</p>
 </td>
 </tr>
 <tr>

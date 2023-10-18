@@ -56,6 +56,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	Volumes                         []corev1.Volume                                      `json:"volumes,omitempty"`
 	VolumeMounts                    []corev1.VolumeMount                                 `json:"volumeMounts,omitempty"`
 	Web                             *PrometheusWebSpecApplyConfiguration                 `json:"web,omitempty"`
+	WebConfigReloader               *PrometheusConfigReloaderWebSpecApplyConfiguration   `json:"webConfigReloader,omitempty"`
 	Resources                       *corev1.ResourceRequirements                         `json:"resources,omitempty"`
 	NodeSelector                    map[string]string                                    `json:"nodeSelector,omitempty"`
 	ServiceAccountName              *string                                              `json:"serviceAccountName,omitempty"`
@@ -367,6 +368,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithVolumeMounts(values ...co
 // If called multiple times, the Web field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithWeb(value *PrometheusWebSpecApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.Web = value
+	return b
+}
+
+// WithWebConfigReloader sets the WebConfigReloader field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebConfigReloader field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithWebConfigReloader(value *PrometheusConfigReloaderWebSpecApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.WebConfigReloader = value
 	return b
 }
 
