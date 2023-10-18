@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/swag v0.22.4
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
