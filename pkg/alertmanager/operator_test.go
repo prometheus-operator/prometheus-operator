@@ -1238,7 +1238,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				mclient:    monitoringfake.NewSimpleClientset(),
 				ssarClient: &alwaysAllowed{},
 				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				metrics:    operator.NewMetrics(nil, prometheus.NewRegistry()),
 			}
 
 			err := o.bootstrap(

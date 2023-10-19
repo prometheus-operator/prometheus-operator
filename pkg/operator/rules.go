@@ -23,8 +23,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/prometheus/model/rulefmt"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -166,7 +168,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 
 // Select selects PrometheusRules and translates them into native Prometheus/Thanos configurations.
 // The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
+func (prs *PrometheusRuleSelector) Select(recorder record.EventRecorder, namespaces []string) (map[string]string, int, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -203,6 +205,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
+			recorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %q/%q was rejected due to invalid configuration: %v", promRule.Namespace, promRule.Name, err)
 			continue
 		}
 

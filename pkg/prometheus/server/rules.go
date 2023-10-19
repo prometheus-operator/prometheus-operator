@@ -73,7 +73,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
 
-	newRules, rejected, err := promRuleSelector.Select(namespaces)
+	newRules, rejected, err := promRuleSelector.Select(c.metrics.Recorder, namespaces)
 	if err != nil {
 		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
 	}
