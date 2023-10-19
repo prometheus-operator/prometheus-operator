@@ -120,7 +120,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		mclient:             mclient,
 		logger:              logger,
 		accessor:            operator.NewAccessor(logger),
-		metrics:             operator.NewMetrics(r),
+		metrics:             operator.NewMetrics(client, r),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{

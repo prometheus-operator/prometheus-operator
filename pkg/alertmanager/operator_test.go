@@ -1238,7 +1238,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				mclient:    monitoringfake.NewSimpleClientset(),
 				ssarClient: &alwaysAllowed{},
 				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				metrics:    operator.NewMetrics(nil, prometheus.NewRegistry()),
 				config: Config{
 					Namespaces: operator.Namespaces{
 						AlertmanagerConfigAllowList: map[string]struct{}{

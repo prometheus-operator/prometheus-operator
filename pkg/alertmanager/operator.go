@@ -139,7 +139,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:             operator.NewMetrics(r),
+		metrics:             operator.NewMetrics(client, r),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{
@@ -1100,6 +1100,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
+			c.metrics.Recorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %q/%q was rejected due to invalid configuration: %v", amc.GetNamespace(), amc.GetName(), err)
 			continue
 		}
 

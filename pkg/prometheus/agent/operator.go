@@ -122,7 +122,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		mclient:               mclient,
 		logger:                logger,
 		config:                conf,
-		metrics:               operator.NewMetrics(r),
+		metrics:               operator.NewMetrics(client, r),
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,

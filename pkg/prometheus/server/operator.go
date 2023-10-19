@@ -147,7 +147,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		metrics:                operator.NewMetrics(r),
+		metrics:                operator.NewMetrics(client, r),
 		reconciliations:        &operator.ReconciliationTracker{},
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
