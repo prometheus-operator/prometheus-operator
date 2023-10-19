@@ -144,7 +144,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String(), "http2", enableHTTP2)
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -161,6 +161,7 @@ var (
 	cfg = operator.DefaultConfig(defaultReloaderCPU, defaultReloaderMemory)
 
 	rawTLSCipherSuites string
+	enableHTTP2        bool
 	serverTLS          bool
 
 	flagset = flag.CommandLine
@@ -168,6 +169,15 @@ var (
 
 func init() {
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
+	// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
+	// standard library and golang.org/x/net are fully fixed.
+	// Right now, it is possible for authenticated and unauthenticated users to
+	// hold open HTTP2 connections and consume huge amounts of memory.
+	// See:
+	// * https://github.com/kubernetes/kubernetes/pull/121120
+	// * https://github.com/kubernetes/kubernetes/issues/121197
+	// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
+	flagset.BoolVar(&enableHTTP2, "web.enable-http2", false, "Enable HTTP2 connections.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
 	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", defaultOperatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
@@ -524,6 +534,9 @@ func run() int {
 		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
 		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
 		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
+	}
+	if !enableHTTP2 {
+		srv.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
