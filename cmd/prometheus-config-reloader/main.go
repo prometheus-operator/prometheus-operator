@@ -177,7 +177,6 @@ func main() {
 			return web.ListenAndServe(srv, &web.FlagConfig{
 				WebListenAddresses: &[]string{*listenAddress},
 				WebConfigFile:      webConfig,
-				WebSystemdSocket:   nil,
 			}, logger)
 		}, func(error) {
 			srv.Close()
