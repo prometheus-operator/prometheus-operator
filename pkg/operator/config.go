@@ -72,10 +72,12 @@ func DefaultConfig(cpu, memory string) Config {
 // ContainerConfig holds some configuration for the ConfigReloader sidecar
 // that can be set through prometheus-operator command line arguments
 type ContainerConfig struct {
-	CPURequests    Quantity
-	CPULimits      Quantity
-	MemoryRequests Quantity
-	MemoryLimits   Quantity
+	// The struct tag are needed for github.com/mitchellh/hashstructure to take
+	// the field values into account when generating the statefulset hash.
+	CPURequests    Quantity `hash:"string"`
+	CPULimits      Quantity `hash:"string"`
+	MemoryRequests Quantity `hash:"string"`
+	MemoryLimits   Quantity `hash:"string"`
 	Image          string
 	EnableProbes   bool
 }
@@ -106,8 +108,10 @@ type Quantity struct {
 	q resource.Quantity
 }
 
-// String implements the flag.Value interface
-func (q *Quantity) String() string {
+var _ = fmt.Stringer(Quantity{})
+
+// String implements the flag.Value and fmt.Stringer interfaces.
+func (q Quantity) String() string {
 	return q.q.String()
 }
 
