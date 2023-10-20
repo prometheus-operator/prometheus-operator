@@ -97,12 +97,6 @@ func main() {
 
 	versionutil.RegisterIntoKingpinFlags(app)
 
-	err := web.Validate(*webConfig)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Unable to validate web configuration file. err: ", err.Error())
-		os.Exit(2)
-	}
-
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
@@ -116,6 +110,12 @@ func main() {
 	logger, err := logging.NewLogger(*logLevel, *logFormat)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	err = web.Validate(*webConfig)
+	if err != nil {
+		level.Error(logger).Log("msg", "Unable to validate web configuration file. err: "+err.Error())
+		os.Exit(2)
 	}
 
 	if createStatefulsetOrdinalFrom != nil {
