@@ -293,7 +293,7 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		msg := "invalid config"
 		level.Debug(a.logger).Log("msg", msg, "content", string(ar.Request.Object.Raw))
 		level.Info(a.logger).Log("msg", msg, "err", err)
-		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []error{err})
+		return toAdmissionResponseFailure(fmt.Sprintf("AlertmanagerConfig is invalid: %v", err), alertManagerConfigResource, []error{err})
 	}
 	return &v1.AdmissionResponse{Allowed: true}
 }

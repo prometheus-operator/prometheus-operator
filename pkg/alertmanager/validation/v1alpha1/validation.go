@@ -21,8 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/prometheus/alertmanager/pkg/labels"
-
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
@@ -379,7 +377,13 @@ func validateAlertManagerRoutes(r *monitoringv1alpha1.Route, receivers, muteTime
 	// Validate matchers, so they don't end up crashing the main instance: https://github.com/prometheus/alertmanager/blob/v0.26.0/config/coordinator.go#L124.
 	if len(r.Matchers) > 0 {
 		for _, matcher := range r.Matchers {
-			_, err := labels.ParseMatcher(matcher.String())
+			if matcher.MatchType == "" {
+				matcher.MatchType = monitoringv1alpha1.MatchEqual
+				if matcher.Regex {
+					matcher.MatchType = monitoringv1alpha1.MatchRegexp
+				}
+			}
+			_, err := monitoringv1alpha1.ParseMatcher(matcher.String())
 			if err != nil {
 				return fmt.Errorf("invalid matcher %q: %w", matcher, err)
 			}
