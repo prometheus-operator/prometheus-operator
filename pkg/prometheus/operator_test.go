@@ -17,6 +17,9 @@ package prometheus
 import (
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
@@ -132,6 +135,59 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				BasicAuth: &monitoringv1.BasicAuth{},
 				Sigv4:     &monitoringv1.Sigv4{},
 				OAuth2:    &monitoringv1.OAuth2{},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_no_azure_managed_identity_and_no_azure_oAuth",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_azure_managed_identity_and_azure_oAuth",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: "client-id",
+					},
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_invalid_azure_oAuth_clientID",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "invalid",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
 			},
 			expectErr: true,
 		},

@@ -4401,7 +4401,7 @@ spec:
                           type: string
                         managedIdentity:
                           description: ManagedIdentity defines the Azure User-assigned
-                            Managed identity.
+                            Managed identity. Cannot be set at the same time as `oauth`.
                           properties:
                             clientId:
                               description: The client id
@@ -4409,8 +4409,51 @@ spec:
                           required:
                           - clientId
                           type: object
-                      required:
-                      - managedIdentity
+                        oauth:
+                          description: "OAuth defines the oauth config that is being
+                            used to authenticate. Cannot be set at the same time as
+                            `managedIdentity`. \n It requires Prometheus >= v2.48.0."
+                          properties:
+                            clientId:
+                              description: '`clientID` is the clientId of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              type: string
+                            clientSecret:
+                              description: '`clientSecret` specifies a key of a Secret
+                                containing the client secret of the Azure Active Directory
+                                application that is being used to authenticate.'
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            tenantId:
+                              description: '`tenantID` is the tenant ID of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
+                          required:
+                          - clientId
+                          - clientSecret
+                          - tenantId
+                          type: object
                       type: object
                     basicAuth:
                       description: "BasicAuth configuration for the URL. \n Cannot

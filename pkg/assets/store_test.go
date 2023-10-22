@@ -1039,3 +1039,105 @@ func TestAddSigV4(t *testing.T) {
 		})
 	}
 }
+
+func TestAddAzureOAuth(t *testing.T) {
+	const (
+		clientSecret = "clientSecretKey"
+	)
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				clientSecret: []byte("val1"),
+			},
+		},
+	)
+
+	for i, tc := range []struct {
+		title                string
+		ns                   string
+		selectedName         string
+		accessKey, secretKey string
+
+		err      bool
+		expected *AzureOAuthCredentials
+	}{
+		{
+			title:        "valid clientSecret key",
+			ns:           "ns1",
+			selectedName: "secret",
+			secretKey:    clientSecret,
+
+			expected: &AzureOAuthCredentials{ClientSecret: "val1"},
+		},
+		{
+			title:        "wrong namespace",
+			ns:           "ns2",
+			selectedName: "secret",
+			secretKey:    clientSecret,
+
+			err: true,
+		},
+		{
+			title:        "wrong name",
+			ns:           "ns1",
+			selectedName: "faulty",
+			secretKey:    clientSecret,
+
+			err: true,
+		},
+		{
+			title:        "wrong key selector",
+			ns:           "ns1",
+			selectedName: "secret",
+			secretKey:    "wrong-secret-key",
+
+			err: true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			store := NewStore(c.CoreV1(), c.CoreV1())
+
+			key := fmt.Sprintf("remoteWrite/%d", i)
+			azureAD := monitoringv1.AzureAD{}
+			azureOAuth := monitoringv1.AzureOAuth{}
+			if tc.secretKey != "" {
+				azureOAuth.ClientSecret = v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tc.selectedName,
+					},
+					Key: tc.secretKey,
+				}
+			}
+			azureAD.OAuth = &azureOAuth
+			err := store.AddAzureOAuth(context.Background(), tc.ns, &azureAD, key)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			azureOAuthCreds, found := store.AzureOAuthAssets[key]
+
+			if !found {
+				if tc.expected != nil {
+					t.Fatalf("expecting to find key %q but got nothing", key)
+				}
+				return
+			}
+
+			if !reflect.DeepEqual(&azureOAuthCreds, tc.expected) {
+				t.Fatalf("expecting %#v, got %#v", tc.expected, &azureOAuthCreds)
+			}
+		})
+	}
+}
