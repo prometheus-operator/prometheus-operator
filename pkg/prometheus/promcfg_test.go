@@ -5292,7 +5292,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 		expectedErr bool
 	}{
 		{
-			name: "ec2_sd_config_valid",
+			name: "ec2_sd_config_valid_with_api_keys",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
@@ -5314,7 +5314,45 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SDConfigValid.golden",
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigValidAPIKeys.golden",
+		},
+		{
+			name: "ec2_sd_config_valid_with_role_arn",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigValidRoleARN.golden",
+		},
+		{
+			name: "ec2_sd_config_valid_with_filters",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+						Filters: []*monitoringv1alpha1.EC2Filter{
+							{
+								Name:   "tag:environment",
+								Values: []string{"prod"},
+							},
+							{
+								Name:   "tag:service",
+								Values: []string{"web", "db"},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigFilters.golden",
 		},
 		{
 			name: "ec2_sd_config_invalid",

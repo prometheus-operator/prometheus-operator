@@ -199,6 +199,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.DiscordConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DNSSDConfig"):
 		return &monitoringv1alpha1.DNSSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("EC2Filter"):
+		return &monitoringv1alpha1.EC2FilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2SDConfig"):
 		return &monitoringv1alpha1.EC2SDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):

@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -27,8 +28,10 @@ type EC2SDConfigApplyConfiguration struct {
 	Region          *string                `json:"region,omitempty"`
 	AccessKey       *v1.SecretKeySelector  `json:"accessKey,omitempty"`
 	SecretKey       *v1.SecretKeySelector  `json:"secretKey,omitempty"`
+	RoleARN         *string                `json:"roleARN,omitempty"`
 	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	Port            *int                   `json:"port,omitempty"`
+	Filters         []*v1alpha1.EC2Filter  `json:"filters,omitempty"`
 }
 
 // EC2SDConfigApplyConfiguration constructs an declarative configuration of the EC2SDConfig type for use with
@@ -61,6 +64,14 @@ func (b *EC2SDConfigApplyConfiguration) WithSecretKey(value v1.SecretKeySelector
 	return b
 }
 
+// WithRoleARN sets the RoleARN field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RoleARN field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithRoleARN(value string) *EC2SDConfigApplyConfiguration {
+	b.RoleARN = &value
+	return b
+}
+
 // WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RefreshInterval field is set to the value of the last call.
@@ -74,5 +85,18 @@ func (b *EC2SDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.D
 // If called multiple times, the Port field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithPort(value int) *EC2SDConfigApplyConfiguration {
 	b.Port = &value
+	return b
+}
+
+// WithFilters adds the given value to the Filters field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Filters field.
+func (b *EC2SDConfigApplyConfiguration) WithFilters(values ...**v1alpha1.EC2Filter) *EC2SDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithFilters")
+		}
+		b.Filters = append(b.Filters, *values[i])
+	}
 	return b
 }

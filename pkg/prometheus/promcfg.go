@@ -2596,7 +2596,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
 			if config.Region != nil {
-
 				configs[i] = []yaml.MapItem{
 					{
 						Key:   "region",
@@ -2633,6 +2632,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.RoleARN != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role_arn",
+					Value: config.RoleARN,
+				})
+			}
+
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
@@ -2644,6 +2650,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "port",
 					Value: config.Port,
+				})
+			}
+
+			if config.Filters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filters",
+					Value: config.Filters,
 				})
 			}
 		}
