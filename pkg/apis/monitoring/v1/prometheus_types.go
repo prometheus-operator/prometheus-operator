@@ -1457,24 +1457,33 @@ type AlertmanagerEndpoints struct {
 
 	// BasicAuth configuration for Alertmanager.
 	//
-	// Cannot be set at the same time as `bearerTokenFile`, or `authorization`.
+	// Cannot be set at the same time as `bearerTokenFile`, `authorization` or `sigv4`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 
 	// File to read bearer token for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
 	//
 	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`.
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `sigv4`.
 	//
 	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
+
+	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.
+	//
+	// +optional
+	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "v1" or "v2".
