@@ -49,6 +49,13 @@ linters-settings:
         - "**/versionutil/*.go"
         - "**/webconfig/*.go"
         - "**/e2e/*.go"
+        - "**/framework/admission_webhooks.go"
+        - "**/framework/alertmanager.go"
+        - "**/framework/cluster_role_binding.go"
+        - "**/framework/cluster_role.go"
+        - "**/framework/configmap.go"
+        - "**/framework/context.go"
+        - "**/framework/crd.go"
         - "**/framework/framework.go"
         deny:
         - pkg: "github.com/pkg/errors"
