@@ -9,7 +9,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.15.0
 	github.com/cespare/xxhash/v2 v2.2.0
-	github.com/docker/distribution v2.8.2+incompatible
+	github.com/distribution/reference v0.5.0
 	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-openapi/swag v0.22.4
@@ -46,6 +46,7 @@ require (
 )
 
 require (
+	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
