@@ -18,6 +18,7 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,81 +26,82 @@ import (
 // CommonPrometheusFieldsApplyConfiguration represents an declarative configuration of the CommonPrometheusFields type for use
 // with apply.
 type CommonPrometheusFieldsApplyConfiguration struct {
-	PodMetadata                     *EmbeddedObjectMetadataApplyConfiguration            `json:"podMetadata,omitempty"`
-	ServiceMonitorSelector          *metav1.LabelSelector                                `json:"serviceMonitorSelector,omitempty"`
-	ServiceMonitorNamespaceSelector *metav1.LabelSelector                                `json:"serviceMonitorNamespaceSelector,omitempty"`
-	PodMonitorSelector              *metav1.LabelSelector                                `json:"podMonitorSelector,omitempty"`
-	PodMonitorNamespaceSelector     *metav1.LabelSelector                                `json:"podMonitorNamespaceSelector,omitempty"`
-	ProbeSelector                   *metav1.LabelSelector                                `json:"probeSelector,omitempty"`
-	ProbeNamespaceSelector          *metav1.LabelSelector                                `json:"probeNamespaceSelector,omitempty"`
-	ScrapeConfigSelector            *metav1.LabelSelector                                `json:"scrapeConfigSelector,omitempty"`
-	ScrapeConfigNamespaceSelector   *metav1.LabelSelector                                `json:"scrapeConfigNamespaceSelector,omitempty"`
-	Version                         *string                                              `json:"version,omitempty"`
-	Paused                          *bool                                                `json:"paused,omitempty"`
-	Image                           *string                                              `json:"image,omitempty"`
-	ImagePullPolicy                 *corev1.PullPolicy                                   `json:"imagePullPolicy,omitempty"`
-	ImagePullSecrets                []corev1.LocalObjectReference                        `json:"imagePullSecrets,omitempty"`
-	Replicas                        *int32                                               `json:"replicas,omitempty"`
-	Shards                          *int32                                               `json:"shards,omitempty"`
-	ReplicaExternalLabelName        *string                                              `json:"replicaExternalLabelName,omitempty"`
-	PrometheusExternalLabelName     *string                                              `json:"prometheusExternalLabelName,omitempty"`
-	LogLevel                        *string                                              `json:"logLevel,omitempty"`
-	LogFormat                       *string                                              `json:"logFormat,omitempty"`
-	ScrapeInterval                  *monitoringv1.Duration                               `json:"scrapeInterval,omitempty"`
-	ScrapeTimeout                   *monitoringv1.Duration                               `json:"scrapeTimeout,omitempty"`
-	ExternalLabels                  map[string]string                                    `json:"externalLabels,omitempty"`
-	EnableRemoteWriteReceiver       *bool                                                `json:"enableRemoteWriteReceiver,omitempty"`
-	EnableFeatures                  []string                                             `json:"enableFeatures,omitempty"`
-	ExternalURL                     *string                                              `json:"externalUrl,omitempty"`
-	RoutePrefix                     *string                                              `json:"routePrefix,omitempty"`
-	Storage                         *StorageSpecApplyConfiguration                       `json:"storage,omitempty"`
-	Volumes                         []corev1.Volume                                      `json:"volumes,omitempty"`
-	VolumeMounts                    []corev1.VolumeMount                                 `json:"volumeMounts,omitempty"`
-	Web                             *PrometheusWebSpecApplyConfiguration                 `json:"web,omitempty"`
-	Resources                       *corev1.ResourceRequirements                         `json:"resources,omitempty"`
-	NodeSelector                    map[string]string                                    `json:"nodeSelector,omitempty"`
-	ServiceAccountName              *string                                              `json:"serviceAccountName,omitempty"`
-	Secrets                         []string                                             `json:"secrets,omitempty"`
-	ConfigMaps                      []string                                             `json:"configMaps,omitempty"`
-	Affinity                        *corev1.Affinity                                     `json:"affinity,omitempty"`
-	Tolerations                     []corev1.Toleration                                  `json:"tolerations,omitempty"`
-	TopologySpreadConstraints       []corev1.TopologySpreadConstraint                    `json:"topologySpreadConstraints,omitempty"`
-	RemoteWrite                     []RemoteWriteSpecApplyConfiguration                  `json:"remoteWrite,omitempty"`
-	SecurityContext                 *corev1.PodSecurityContext                           `json:"securityContext,omitempty"`
-	ListenLocal                     *bool                                                `json:"listenLocal,omitempty"`
-	Containers                      []corev1.Container                                   `json:"containers,omitempty"`
-	InitContainers                  []corev1.Container                                   `json:"initContainers,omitempty"`
-	AdditionalScrapeConfigs         *corev1.SecretKeySelector                            `json:"additionalScrapeConfigs,omitempty"`
-	APIServerConfig                 *APIServerConfigApplyConfiguration                   `json:"apiserverConfig,omitempty"`
-	PriorityClassName               *string                                              `json:"priorityClassName,omitempty"`
-	PortName                        *string                                              `json:"portName,omitempty"`
-	ArbitraryFSAccessThroughSMs     *ArbitraryFSAccessThroughSMsConfigApplyConfiguration `json:"arbitraryFSAccessThroughSMs,omitempty"`
-	OverrideHonorLabels             *bool                                                `json:"overrideHonorLabels,omitempty"`
-	OverrideHonorTimestamps         *bool                                                `json:"overrideHonorTimestamps,omitempty"`
-	IgnoreNamespaceSelectors        *bool                                                `json:"ignoreNamespaceSelectors,omitempty"`
-	EnforcedNamespaceLabel          *string                                              `json:"enforcedNamespaceLabel,omitempty"`
-	EnforcedSampleLimit             *uint64                                              `json:"enforcedSampleLimit,omitempty"`
-	EnforcedTargetLimit             *uint64                                              `json:"enforcedTargetLimit,omitempty"`
-	EnforcedLabelLimit              *uint64                                              `json:"enforcedLabelLimit,omitempty"`
-	EnforcedLabelNameLengthLimit    *uint64                                              `json:"enforcedLabelNameLengthLimit,omitempty"`
-	EnforcedLabelValueLengthLimit   *uint64                                              `json:"enforcedLabelValueLengthLimit,omitempty"`
-	EnforcedKeepDroppedTargets      *uint64                                              `json:"enforcedKeepDroppedTargets,omitempty"`
-	EnforcedBodySizeLimit           *monitoringv1.ByteSize                               `json:"enforcedBodySizeLimit,omitempty"`
-	MinReadySeconds                 *uint32                                              `json:"minReadySeconds,omitempty"`
-	HostAliases                     []HostAliasApplyConfiguration                        `json:"hostAliases,omitempty"`
-	AdditionalArgs                  []ArgumentApplyConfiguration                         `json:"additionalArgs,omitempty"`
-	WALCompression                  *bool                                                `json:"walCompression,omitempty"`
-	ExcludedFromEnforcement         []ObjectReferenceApplyConfiguration                  `json:"excludedFromEnforcement,omitempty"`
-	HostNetwork                     *bool                                                `json:"hostNetwork,omitempty"`
-	PodTargetLabels                 []string                                             `json:"podTargetLabels,omitempty"`
-	TracingConfig                   *PrometheusTracingConfigApplyConfiguration           `json:"tracingConfig,omitempty"`
-	BodySizeLimit                   *monitoringv1.ByteSize                               `json:"bodySizeLimit,omitempty"`
-	SampleLimit                     *uint64                                              `json:"sampleLimit,omitempty"`
-	TargetLimit                     *uint64                                              `json:"targetLimit,omitempty"`
-	LabelLimit                      *uint64                                              `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit            *uint64                                              `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit           *uint64                                              `json:"labelValueLengthLimit,omitempty"`
-	KeepDroppedTargets              *uint64                                              `json:"keepDroppedTargets,omitempty"`
+	PodMetadata                          *EmbeddedObjectMetadataApplyConfiguration               `json:"podMetadata,omitempty"`
+	ServiceMonitorSelector               *metav1.LabelSelector                                   `json:"serviceMonitorSelector,omitempty"`
+	ServiceMonitorNamespaceSelector      *metav1.LabelSelector                                   `json:"serviceMonitorNamespaceSelector,omitempty"`
+	PodMonitorSelector                   *metav1.LabelSelector                                   `json:"podMonitorSelector,omitempty"`
+	PodMonitorNamespaceSelector          *metav1.LabelSelector                                   `json:"podMonitorNamespaceSelector,omitempty"`
+	ProbeSelector                        *metav1.LabelSelector                                   `json:"probeSelector,omitempty"`
+	ProbeNamespaceSelector               *metav1.LabelSelector                                   `json:"probeNamespaceSelector,omitempty"`
+	ScrapeConfigSelector                 *metav1.LabelSelector                                   `json:"scrapeConfigSelector,omitempty"`
+	ScrapeConfigNamespaceSelector        *metav1.LabelSelector                                   `json:"scrapeConfigNamespaceSelector,omitempty"`
+	Version                              *string                                                 `json:"version,omitempty"`
+	Paused                               *bool                                                   `json:"paused,omitempty"`
+	Image                                *string                                                 `json:"image,omitempty"`
+	ImagePullPolicy                      *corev1.PullPolicy                                      `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets                     []corev1.LocalObjectReference                           `json:"imagePullSecrets,omitempty"`
+	Replicas                             *int32                                                  `json:"replicas,omitempty"`
+	Shards                               *int32                                                  `json:"shards,omitempty"`
+	ReplicaExternalLabelName             *string                                                 `json:"replicaExternalLabelName,omitempty"`
+	PrometheusExternalLabelName          *string                                                 `json:"prometheusExternalLabelName,omitempty"`
+	LogLevel                             *string                                                 `json:"logLevel,omitempty"`
+	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
+	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
+	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
+	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
+	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
+	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
+	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
+	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
+	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
+	Volumes                              []corev1.Volume                                         `json:"volumes,omitempty"`
+	VolumeMounts                         []corev1.VolumeMount                                    `json:"volumeMounts,omitempty"`
+	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
+	Web                                  *PrometheusWebSpecApplyConfiguration                    `json:"web,omitempty"`
+	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
+	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
+	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
+	Secrets                              []string                                                `json:"secrets,omitempty"`
+	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
+	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
+	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
+	TopologySpreadConstraints            []corev1.TopologySpreadConstraint                       `json:"topologySpreadConstraints,omitempty"`
+	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
+	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
+	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
+	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
+	AdditionalScrapeConfigs              *corev1.SecretKeySelector                               `json:"additionalScrapeConfigs,omitempty"`
+	APIServerConfig                      *APIServerConfigApplyConfiguration                      `json:"apiserverConfig,omitempty"`
+	PriorityClassName                    *string                                                 `json:"priorityClassName,omitempty"`
+	PortName                             *string                                                 `json:"portName,omitempty"`
+	ArbitraryFSAccessThroughSMs          *ArbitraryFSAccessThroughSMsConfigApplyConfiguration    `json:"arbitraryFSAccessThroughSMs,omitempty"`
+	OverrideHonorLabels                  *bool                                                   `json:"overrideHonorLabels,omitempty"`
+	OverrideHonorTimestamps              *bool                                                   `json:"overrideHonorTimestamps,omitempty"`
+	IgnoreNamespaceSelectors             *bool                                                   `json:"ignoreNamespaceSelectors,omitempty"`
+	EnforcedNamespaceLabel               *string                                                 `json:"enforcedNamespaceLabel,omitempty"`
+	EnforcedSampleLimit                  *uint64                                                 `json:"enforcedSampleLimit,omitempty"`
+	EnforcedTargetLimit                  *uint64                                                 `json:"enforcedTargetLimit,omitempty"`
+	EnforcedLabelLimit                   *uint64                                                 `json:"enforcedLabelLimit,omitempty"`
+	EnforcedLabelNameLengthLimit         *uint64                                                 `json:"enforcedLabelNameLengthLimit,omitempty"`
+	EnforcedLabelValueLengthLimit        *uint64                                                 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	EnforcedKeepDroppedTargets           *uint64                                                 `json:"enforcedKeepDroppedTargets,omitempty"`
+	EnforcedBodySizeLimit                *monitoringv1.ByteSize                                  `json:"enforcedBodySizeLimit,omitempty"`
+	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
+	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
+	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
+	WALCompression                       *bool                                                   `json:"walCompression,omitempty"`
+	ExcludedFromEnforcement              []ObjectReferenceApplyConfiguration                     `json:"excludedFromEnforcement,omitempty"`
+	HostNetwork                          *bool                                                   `json:"hostNetwork,omitempty"`
+	PodTargetLabels                      []string                                                `json:"podTargetLabels,omitempty"`
+	TracingConfig                        *PrometheusTracingConfigApplyConfiguration              `json:"tracingConfig,omitempty"`
+	BodySizeLimit                        *monitoringv1.ByteSize                                  `json:"bodySizeLimit,omitempty"`
+	SampleLimit                          *uint64                                                 `json:"sampleLimit,omitempty"`
+	TargetLimit                          *uint64                                                 `json:"targetLimit,omitempty"`
+	LabelLimit                           *uint64                                                 `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                 *uint64                                                 `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                *uint64                                                 `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets                   *uint64                                                 `json:"keepDroppedTargets,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -359,6 +361,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithVolumeMounts(values ...co
 	for i := range values {
 		b.VolumeMounts = append(b.VolumeMounts, values[i])
 	}
+	return b
+}
+
+// WithPersistentVolumeClaimRetentionPolicy sets the PersistentVolumeClaimRetentionPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PersistentVolumeClaimRetentionPolicy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithPersistentVolumeClaimRetentionPolicy(value appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy) *CommonPrometheusFieldsApplyConfiguration {
+	b.PersistentVolumeClaimRetentionPolicy = &value
 	return b
 }
 
