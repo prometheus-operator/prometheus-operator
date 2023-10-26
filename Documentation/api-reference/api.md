@@ -13031,6 +13031,18 @@ More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/c
 </em>
 </td>
 <td>
+<p>The list of hosts to probe.
+Deprecated: Use <code>hosts</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hosts</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
 <p>The list of hosts to probe.</p>
 </td>
 </tr>

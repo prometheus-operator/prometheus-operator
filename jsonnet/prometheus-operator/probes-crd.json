@@ -882,6 +882,13 @@
                       "staticConfig": {
                         "description": "staticConfig defines the static list of targets to probe and the\nrelabeling configuration.\nIf `ingress` is also defined, `staticConfig` takes precedence.\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.",
                         "properties": {
+                          "hosts": {
+                            "description": "The list of hosts to probe.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
                           "labels": {
                             "additionalProperties": {
                               "type": "string"
@@ -959,7 +966,7 @@
                             "type": "array"
                           },
                           "static": {
-                            "description": "The list of hosts to probe.",
+                            "description": "The list of hosts to probe.\nDeprecated: Use `hosts` instead.",
                             "items": {
                               "type": "string"
                             },

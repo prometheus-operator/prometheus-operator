@@ -196,7 +196,10 @@ func (e *ProbeTargetsValidationError) Error() string {
 // +k8s:openapi-gen=true
 type ProbeTargetStaticConfig struct {
 	// The list of hosts to probe.
+	// Deprecated: Use `hosts` instead.
 	Targets []string `json:"static,omitempty"`
+	// The list of hosts to probe.
+	Hosts []string `json:"hosts,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
 	Labels map[string]string `json:"labels,omitempty"`
 	// RelabelConfigs to apply to the label set of the targets before it gets

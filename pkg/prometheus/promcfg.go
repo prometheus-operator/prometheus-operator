@@ -1624,6 +1624,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	switch {
 	case m.Spec.Targets.StaticConfig != nil:
 		// Generate static_config section.
+		// Hosts takes precedence over Targets, since the latter is deprecated.
+		if len(m.Spec.Targets.StaticConfig.Hosts) > 0 {
+			m.Spec.Targets.StaticConfig.Targets = m.Spec.Targets.StaticConfig.Hosts
+		}
 		staticConfig := yaml.MapSlice{
 			{Key: "targets", Value: m.Spec.Targets.StaticConfig.Targets},
 		}

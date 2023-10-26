@@ -20,6 +20,7 @@ package v1
 // with apply.
 type ProbeTargetStaticConfigApplyConfiguration struct {
 	Targets        []string                          `json:"static,omitempty"`
+	Hosts          []string                          `json:"hosts,omitempty"`
 	Labels         map[string]string                 `json:"labels,omitempty"`
 	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelingConfigs,omitempty"`
 }
@@ -36,6 +37,16 @@ func ProbeTargetStaticConfig() *ProbeTargetStaticConfigApplyConfiguration {
 func (b *ProbeTargetStaticConfigApplyConfiguration) WithTargets(values ...string) *ProbeTargetStaticConfigApplyConfiguration {
 	for i := range values {
 		b.Targets = append(b.Targets, values[i])
+	}
+	return b
+}
+
+// WithHosts adds the given value to the Hosts field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Hosts field.
+func (b *ProbeTargetStaticConfigApplyConfiguration) WithHosts(values ...string) *ProbeTargetStaticConfigApplyConfiguration {
+	for i := range values {
+		b.Hosts = append(b.Hosts, values[i])
 	}
 	return b
 }
