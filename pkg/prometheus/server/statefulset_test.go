@@ -53,7 +53,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		return nil, err
 	}
 
-	return makeStatefulSet(
+	return makeStatefulSet(nil, nil,
 		"test",
 		&p,
 		defaultTestConfig,
@@ -426,7 +426,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(
+	sset, err := makeStatefulSet(nil, nil,
 		"volume-init-test",
 		&p,
 		defaultTestConfig,
@@ -821,7 +821,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(
+	sset, err := makeStatefulSet(nil, nil,
 		"test",
 		&p,
 		operatorConfig,
@@ -863,7 +863,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(
+	sset, err := makeStatefulSet(nil, nil,
 		"test",
 		&p,
 		thanosBaseImageConfig,
@@ -1388,7 +1388,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(
+	sset, err := makeStatefulSet(nil, nil,
 		"test",
 		&p,
 		testConfig,
@@ -1429,7 +1429,7 @@ func TestSidecarResources(t *testing.T) {
 		cg, err := prompkg.NewConfigGenerator(logger, &p)
 		require.NoError(t, err)
 
-		sset, err := makeStatefulSet(
+		sset, err := makeStatefulSet(nil, nil,
 			"test",
 			&p,
 			testConfig,
@@ -1852,7 +1852,7 @@ func TestConfigReloader(t *testing.T) {
 	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	require.NoError(t, err)
 
-	sset, err := makeStatefulSet(
+	sset, err := makeStatefulSet(nil, nil,
 		"test",
 		&p,
 		defaultTestConfig,
@@ -1911,6 +1911,8 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
+		nil,
+		nil,
 		"test",
 		&p,
 		defaultTestConfig,
