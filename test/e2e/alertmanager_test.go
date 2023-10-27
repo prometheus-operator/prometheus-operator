@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -27,7 +28,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	appsv1 "k8s.io/api/apps/v1"
@@ -442,7 +442,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 			}
 
 			if *silences[0].ID != silID {
-				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+				return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
 			}
 			return true, nil
 		})
@@ -570,7 +570,7 @@ An Alert test
 
 	firstExpectedString := "firstConfigWebHook"
 	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, firstExpectedString); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for first expected config"))
+		t.Fatal(fmt.Errorf("failed to wait for first expected config: %w", err))
 	}
 	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
 
@@ -581,7 +581,7 @@ An Alert test
 	secondExpectedString := "secondConfigWebHook"
 
 	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, secondExpectedString); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for second expected config"))
+		t.Fatal(fmt.Errorf("failed to wait for second expected config: %w", err))
 	}
 
 	priorToReloadTime := time.Now()
@@ -591,7 +591,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional configMaps reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional configMaps reload: %w", err))
 	}
 
 	priorToReloadTime = time.Now()
@@ -601,7 +601,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
 	}
 }
 
@@ -684,7 +684,7 @@ An Alert test
 	}
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
+		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
 	}
 }
 
@@ -824,7 +824,7 @@ inhibit_rules:
 			close(done)
 			select {
 			case err := <-errc:
-				t.Fatal(errors.Wrapf(err, "sending alert to alertmanager %v", replica))
+				t.Fatal(fmt.Errorf("sending alert to alertmanager %v: %w", replica, err))
 			default:
 				return
 			}
@@ -1502,7 +1502,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -1640,7 +1640,7 @@ templates: []
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1661,7 +1661,7 @@ templates: []
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
 			return false, nil
 		}
 
@@ -1692,7 +1692,7 @@ templates: []
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1769,7 +1769,7 @@ inhibit_rules:
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -1996,7 +1996,7 @@ templates:
 		}
 
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
-			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
@@ -2572,5 +2572,154 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	amName := "amconfigmatcherstrategy"
+	alertmanager := framework.MakeBasicAlertmanager(ns, amName, 1)
+	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amcfg-v1alpha1",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "webhook",
+				Matchers: []monitoringv1alpha1.Matcher{{
+					Name:  "test",
+					Value: "test",
+				}},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "webhook",
+			}},
+		},
+	}
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{}); err != nil {
+		t.Fatalf("failed to create v1alpha1 AlertmanagerConfig object: %v", err)
+	}
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
+		if err != nil {
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
+			return false, nil
+		}
+
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := fmt.Sprintf(`global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: %s/amcfg-v1alpha1/webhook
+    match:
+      test: test
+    matchers:
+    - namespace="%s"
+    continue: true
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: %s/amcfg-v1alpha1/webhook
+templates: []
+`, ns, ns, ns)
+		if diff := cmp.Diff(uncompressed, expected); diff != "" {
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
+	}
+
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), alertmanager.Name, alertmanager.Namespace, monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: "None"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the change above to take effect.
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
+		if err != nil {
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
+			return false, nil
+		}
+
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := fmt.Sprintf(`global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: %s/amcfg-v1alpha1/webhook
+    match:
+      test: test
+    continue: true
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: %s/amcfg-v1alpha1/webhook
+templates: []
+`, ns, ns)
+		if diff := cmp.Diff(uncompressed, expected); diff != "" {
+			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
+	}
+
+	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName); err != nil {
+		t.Fatal(err)
 	}
 }

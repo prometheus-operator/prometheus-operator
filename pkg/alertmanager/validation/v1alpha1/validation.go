@@ -102,6 +102,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'discordConfig' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
+		}
 	}
 
 	return receiverNames, nil
@@ -323,6 +327,16 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 			}
 		}
 
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
+	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

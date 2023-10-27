@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blang/semver/v4 v4.0.0
-	github.com/brancz/kube-rbac-proxy v0.14.3
+	github.com/brancz/kube-rbac-proxy v0.15.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/evanphx/json-patch/v5 v5.7.0
@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/swag v0.22.4
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
@@ -25,29 +25,30 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.68.0
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.17.0
-	github.com/prometheus/common v0.44.0
-	github.com/prometheus/prometheus v0.47.1
+	github.com/prometheus/common v0.45.0
+	github.com/prometheus/prometheus v0.47.2
 	github.com/stretchr/testify v1.8.4
-	github.com/thanos-io/thanos v0.32.4
+	github.com/thanos-io/thanos v0.32.5
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/net v0.17.0
-	golang.org/x/sync v0.3.0
+	golang.org/x/sync v0.4.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.28.1
-	k8s.io/apiextensions-apiserver v0.28.1
-	k8s.io/apimachinery v0.28.1
-	k8s.io/client-go v0.28.1
-	k8s.io/component-base v0.28.1
+	k8s.io/api v0.28.3
+	k8s.io/apiextensions-apiserver v0.28.3
+	k8s.io/apimachinery v0.28.3
+	k8s.io/client-go v0.28.3
+	k8s.io/component-base v0.28.3
 	k8s.io/klog/v2 v2.100.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
-	sigs.k8s.io/controller-runtime v0.16.2
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/controller-runtime v0.16.3
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 )
 
 require (
@@ -90,7 +91,6 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

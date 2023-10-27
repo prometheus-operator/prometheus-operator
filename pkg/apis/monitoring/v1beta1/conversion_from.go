@@ -452,6 +452,16 @@ func convertTelegramConfigFrom(in v1alpha1.TelegramConfig) TelegramConfig {
 	}
 }
 
+func convertMSTeamsConfigFrom(in v1alpha1.MSTeamsConfig) MSTeamsConfig {
+	return MSTeamsConfig{
+		SendResolved: in.SendResolved,
+		WebhookURL:   in.WebhookURL,
+		Title:        in.Title,
+		Text:         in.Text,
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+	}
+}
+
 // ConvertFrom converts from the Hub version (v1alpha1) to this version (v1beta1).
 func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha1.AlertmanagerConfig)
@@ -544,6 +554,13 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			out.TelegramConfigs = append(
 				out.TelegramConfigs,
 				convertTelegramConfigFrom(in),
+			)
+		}
+
+		for _, in := range in.MSTeamsConfigs {
+			out.MSTeamsConfigs = append(
+				out.MSTeamsConfigs,
+				convertMSTeamsConfigFrom(in),
 			)
 		}
 

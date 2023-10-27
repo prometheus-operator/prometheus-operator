@@ -110,6 +110,7 @@ type receiver struct {
 	TelegramConfigs  []*telegramConfig  `yaml:"telegram_configs,omitempty" json:"telegram_configs,omitempty"`
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
+	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -398,6 +399,14 @@ type victorOpsConfig struct {
 	EntityDisplayName string            `yaml:"entity_display_name,omitempty" json:"entity_display_name,omitempty"`
 	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
+}
+
+type msTeamsConfig struct {
+	SendResolved *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL   string            `yaml:"webhook_url"`
+	Title        string            `yaml:"title,omitempty"`
+	Text         string            `yaml:"text,omitempty"`
+	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
 type timeInterval config.TimeInterval

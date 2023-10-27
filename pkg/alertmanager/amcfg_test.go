@@ -764,6 +764,11 @@ func TestGenerateConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	version26, err := semver.ParseTolerant("v0.26.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
 		t.Fatal("Could not parse slack API URL")
@@ -1907,6 +1912,58 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Active_Time_Intervals.golden",
+		},
+		{
+			name:      "CR with MSTeams Receiver",
+			amVersion: &version26,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ms-teams-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://webhook.office.com/webhookb2/id/IncomingWebhook/id"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+									{
+										WebhookURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "ms-teams-secret",
+											},
+										},
+										Title: ptr.To("test title"),
+										Text:  ptr.To("test text"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_MSTeams_Receiver.golden",
 		},
 	}
 

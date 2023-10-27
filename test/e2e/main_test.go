@@ -232,6 +232,7 @@ func TestAllNS(t *testing.T) {
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
+		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
@@ -369,11 +370,12 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                 testPrometheusInstanceNamespacesAllNs,
-		"AllowList":             testPrometheusInstanceNamespacesAllowList,
-		"DenyList":              testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":     testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle": testScrapeConfigLifecycle,
+		"AllNs":                   testPrometheusInstanceNamespacesAllNs,
+		"AllowList":               testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":       testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":   testScrapeConfigLifecycle,
+		"ConfigReloaderResources": testConfigReloaderResources,
 	}
 
 	for name, f := range testFuncs {

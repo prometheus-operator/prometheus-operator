@@ -195,14 +195,21 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 	}
 }
 
-// CreateOrUpdatePrometheusOperator creates or updates a Prometheus Operator Kubernetes Deployment
-// inside the specified namespace using the specified operator image. Semver is used
-// to control the installation for different version of Prometheus Operator. In addition
-// one can specify the namespaces to watch, which defaults to all namespaces.
-// Returns the CA, which can bs used to access the operator over TLS
+type PrometheusOperatorOpts struct {
+	Namespace              string
+	AllowedNamespaces      []string
+	DeniedNamespaces       []string
+	PrometheusNamespaces   []string
+	AlertmanagerNamespaces []string
+	EnableAdmissionWebhook bool
+	ClusterRoleBindings    bool
+	EnableScrapeConfigs    bool
+	AdditionalArgs         []string
+}
+
 func (f *Framework) CreateOrUpdatePrometheusOperator(
 	ctx context.Context,
-	ns string,
+	namespace string,
 	namespaceAllowlist,
 	namespaceDenylist,
 	prometheusInstanceNamespaces,
@@ -211,12 +218,37 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 	createClusterRoleBindings,
 	createScrapeConfigCrd bool,
 ) ([]FinalizerFn, error) {
+	return f.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx,
+		PrometheusOperatorOpts{
+			Namespace:              namespace,
+			AllowedNamespaces:      namespaceAllowlist,
+			DeniedNamespaces:       namespaceDenylist,
+			PrometheusNamespaces:   prometheusInstanceNamespaces,
+			AlertmanagerNamespaces: alertmanagerInstanceNamespaces,
+			EnableAdmissionWebhook: createResourceAdmissionHooks,
+			ClusterRoleBindings:    createClusterRoleBindings,
+			EnableScrapeConfigs:    createScrapeConfigCrd,
+		},
+	)
+}
+
+// CreateOrUpdatePrometheusOperatorWithOpts creates or updates a Prometheus
+// Operator Kubernetes Deployment inside the specified namespace using the
+// specified operator image. Semver is used to control the installation for
+// different versions of Prometheus Operator. In addition one can specify the
+// namespaces to watch, which defaults to all namespaces.  It returns a slice
+// of functions to tear down the deployment.
+func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
+	ctx context.Context,
+	opts PrometheusOperatorOpts,
+) ([]FinalizerFn, error) {
 
 	var finalizers []FinalizerFn
 
 	_, err := f.createOrUpdateServiceAccount(
 		ctx,
-		ns,
+		opts.Namespace,
 		fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-service-account.yaml", f.exampleDir),
 	)
 	if err != nil {
@@ -234,17 +266,20 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
-	if createClusterRoleBindings {
-		if _, err := f.createOrUpdateClusterRoleBinding(ctx, ns, fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml", f.exampleDir)); err != nil {
+	if opts.ClusterRoleBindings {
+		// Grant permissions on all namespaces.
+		if _, err := f.createOrUpdateClusterRoleBinding(ctx, opts.Namespace, fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml", f.exampleDir)); err != nil {
 			return nil, errors.Wrap(err, "failed to create or update prometheus cluster role binding")
 		}
 	} else {
-		namespaces := namespaceAllowlist
-		namespaces = append(namespaces, prometheusInstanceNamespaces...)
-		namespaces = append(namespaces, alertmanagerInstanceNamespaces...)
+		// Grant permissions on specific namespaces.
+		var namespaces []string
+		namespaces = append(namespaces, opts.AllowedNamespaces...)
+		namespaces = append(namespaces, opts.PrometheusNamespaces...)
+		namespaces = append(namespaces, opts.AlertmanagerNamespaces...)
 
 		for _, n := range namespaces {
-			if _, err := f.CreateOrUpdateRoleBindingForSubjectNamespace(ctx, n, ns, fmt.Sprintf("%s/prometheus-operator-role-binding.yaml", f.resourcesDir)); err != nil {
+			if _, err := f.CreateOrUpdateRoleBindingForSubjectNamespace(ctx, n, opts.Namespace, fmt.Sprintf("%s/prometheus-operator-role-binding.yaml", f.resourcesDir)); err != nil {
 				return nil, errors.Wrap(err, "failed to create or update prometheus operator role binding")
 			}
 		}
@@ -320,7 +355,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		return nil, errors.Wrap(err, "initialize PrometheusAgent v1alpha1 CRD")
 	}
 
-	if createScrapeConfigCrd {
+	if opts.EnableScrapeConfigs {
 		err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.ScrapeConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
 			return f.MonClientV1alpha1.ScrapeConfigs(v1.NamespaceAll).List(ctx, opts)
 		})
@@ -329,12 +364,12 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		}
 	}
 
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, ns), nil, nil)
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, opts.Namespace), nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate certificate and key")
 	}
 
-	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, ns, prometheusOperatorCertsSecretName); err != nil {
+	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, opts.Namespace, prometheusOperatorCertsSecretName); err != nil {
 		return nil, errors.Wrap(err, "failed to create or update prometheus-operator TLS secret")
 	}
 
@@ -343,7 +378,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		return nil, err
 	}
 
-	// Make sure only one version of prometheus operator when update
+	// Make sure only that only one instance of the Prometheus operator is running during update.
 	deploy.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
@@ -373,28 +408,28 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 
 	deploy.Name = prometheusOperatorServiceDeploymentName
 
-	for _, ns := range namespaceAllowlist {
+	for _, ns := range opts.AllowedNamespaces {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--namespaces=%v", ns),
 		)
 	}
 
-	for _, ns := range namespaceDenylist {
+	for _, ns := range opts.DeniedNamespaces {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--deny-namespaces=%v", ns),
 		)
 	}
 
-	for _, ns := range prometheusInstanceNamespaces {
+	for _, ns := range opts.PrometheusNamespaces {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--prometheus-instance-namespaces=%v", ns),
 		)
 	}
 
-	for _, ns := range alertmanagerInstanceNamespaces {
+	for _, ns := range opts.AlertmanagerNamespaces {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--alertmanager-instance-namespaces=%v", ns),
@@ -412,7 +447,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 
 	// The addition of rule admission webhooks requires TLS, so enable it and
 	// switch to a more common https port
-	if createResourceAdmissionHooks {
+	if opts.EnableAdmissionWebhook {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			"--web.enable-tls=true",
@@ -420,7 +455,12 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		)
 	}
 
-	err = f.CreateOrUpdateDeploymentAndWaitUntilReady(ctx, ns, deploy)
+	deploy.Spec.Template.Spec.Containers[0].Args = append(
+		deploy.Spec.Template.Spec.Containers[0].Args,
+		opts.AdditionalArgs...,
+	)
+
+	err = f.CreateOrUpdateDeploymentAndWaitUntilReady(ctx, opts.Namespace, deploy)
 	if err != nil {
 		return nil, err
 	}
@@ -430,33 +470,33 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 		return finalizers, errors.Wrap(err, "cannot parse service file")
 	}
 
-	service.Namespace = ns
+	service.Namespace = opts.Namespace
 	service.Spec.ClusterIP = ""
 	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
-	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, service); err != nil {
+	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, opts.Namespace, service); err != nil {
 		return finalizers, errors.Wrap(err, "failed to create or update prometheus operator service")
 	}
 
-	if createResourceAdmissionHooks {
-		webhookService, b, err := f.CreateOrUpdateAdmissionWebhookServer(ctx, ns, webhookServerImage)
+	if opts.EnableAdmissionWebhook {
+		webhookService, b, err := f.CreateOrUpdateAdmissionWebhookServer(ctx, opts.Namespace, webhookServerImage)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create webhook server")
 		}
 
-		finalizer, err := f.createOrUpdateMutatingHook(ctx, b, ns, fmt.Sprintf("%s/prometheus-operator-mutatingwebhook.yaml", f.resourcesDir))
+		finalizer, err := f.createOrUpdateMutatingHook(ctx, b, opts.Namespace, fmt.Sprintf("%s/prometheus-operator-mutatingwebhook.yaml", f.resourcesDir))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create or update mutating webhook for PrometheusRule objects")
 		}
 		finalizers = append(finalizers, finalizer)
 
-		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, ns, fmt.Sprintf("%s/prometheus-operator-validatingwebhook.yaml", f.resourcesDir))
+		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, opts.Namespace, fmt.Sprintf("%s/prometheus-operator-validatingwebhook.yaml", f.resourcesDir))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create or update validating webhook for PrometheusRule objects")
 		}
 		finalizers = append(finalizers, finalizer)
 
-		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, ns, fmt.Sprintf("%s/alertmanager-config-validating-webhook.yaml", f.resourcesDir))
+		finalizer, err = f.createOrUpdateValidatingHook(ctx, b, opts.Namespace, fmt.Sprintf("%s/alertmanager-config-validating-webhook.yaml", f.resourcesDir))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create or update validating webhook for AlertManagerConfig objects")
 		}
