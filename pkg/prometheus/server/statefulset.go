@@ -15,16 +15,22 @@
 package prometheus
 
 import (
+	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -91,6 +97,8 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 }
 
 func makeStatefulSet(
+	client kubernetes.Interface,
+	logger log.Logger,
 	name string,
 	p monitoringv1.PrometheusInterface,
 	baseImage, tag, sha string,
@@ -123,7 +131,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(client, logger, baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -224,6 +232,8 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
+	client kubernetes.Interface,
+	logger log.Logger,
 	baseImage, tag, sha string,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
@@ -372,6 +382,45 @@ func makeStatefulSetSpec(
 	}
 	if thanosContainer != nil {
 		additionalContainers = append(additionalContainers, *thanosContainer)
+
+		// Compute manifest hashes to trigger reconciliation when the underlying data is changed.
+		for _, env := range thanosContainer.Env {
+			if env.ValueFrom == nil ||
+				env.ValueFrom.SecretKeyRef == nil ||
+				env.ValueFrom.SecretKeyRef.LocalObjectReference.Name == "" {
+				continue
+			}
+			switch env.Name {
+			case "OBJSTORE_CONFIG":
+				var manifest []byte
+				secret, err := client.CoreV1().Secrets(metav1.NamespaceAll).Get(context.Background(), env.ValueFrom.SecretKeyRef.LocalObjectReference.Name, metav1.GetOptions{})
+				if err != nil {
+					level.Warn(logger).Log("msg", "failed to get object store config secret", "err", err)
+				}
+				_, err = secret.MarshalTo(manifest)
+				if err != nil {
+					level.Warn(logger).Log("msg", "failed to marshal object store config secret", "err", err)
+				} else {
+					hash := md5.Sum(manifest)
+					hashToHex := hex.EncodeToString(hash[:])
+					podAnnotations["checksum/thanos.objstore.config"] = hashToHex
+				}
+			case "TRACING_CONFIG":
+				var manifest []byte
+				secret, err := client.CoreV1().Secrets(metav1.NamespaceAll).Get(context.Background(), env.ValueFrom.SecretKeyRef.LocalObjectReference.Name, metav1.GetOptions{})
+				if err != nil {
+					level.Warn(logger).Log("msg", "failed to get tracing config secret", "err", err)
+				}
+				_, err = secret.MarshalTo(manifest)
+				if err != nil {
+					level.Warn(logger).Log("msg", "failed to marshal tracing config secret", "err", err)
+				} else {
+					hash := md5.Sum(manifest)
+					hashToHex := hex.EncodeToString(hash[:])
+					podAnnotations["checksum/thanos.tracing.config"] = hashToHex
+				}
+			}
+		}
 	}
 
 	if disableCompaction {
