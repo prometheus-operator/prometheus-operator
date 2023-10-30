@@ -1,0 +1,14 @@
+# Code generated using 'make generate-crds'. DO NOT EDIT.
+apiVersion: 'kustomize.config.k8s.io/v1beta1'
+kind: 'Kustomization'
+resources:
+- './monitoring.coreos.com_alertmanagerconfigs.yaml'
+- './monitoring.coreos.com_alertmanagers.yaml'
+- './monitoring.coreos.com_podmonitors.yaml'
+- './monitoring.coreos.com_probes.yaml'
+- './monitoring.coreos.com_prometheusagents.yaml'
+- './monitoring.coreos.com_prometheuses.yaml'
+- './monitoring.coreos.com_prometheusrules.yaml'
+- './monitoring.coreos.com_scrapeconfigs.yaml'
+- './monitoring.coreos.com_servicemonitors.yaml'
+- './monitoring.coreos.com_thanosrulers.yaml'
