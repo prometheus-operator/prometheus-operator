@@ -213,6 +213,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.HTTPSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("K8SSelectorConfig"):
+		return &monitoringv1alpha1.K8SSelectorConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KeyValue"):
 		return &monitoringv1alpha1.KeyValueApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KubernetesSDConfig"):

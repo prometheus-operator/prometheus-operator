@@ -914,10 +914,34 @@ spec:
                   properties:
                     role:
                       description: Role of the Kubernetes entities that should be
-                        discovered. Currently the only supported role is "Node".
+                        discovered.
                       enum:
                       - Node
+                      - node
                       type: string
+                    selectors:
+                      description: Selector to select objects.
+                      items:
+                        description: K8SSelectorConfig is Kubernetes Selector Config
+                        properties:
+                          field:
+                            type: string
+                          label:
+                            type: string
+                          role:
+                            description: K8SRole is role of the service in Kubernetes.
+                              Currently the only supported role is "Node".
+                            enum:
+                            - Node
+                            - node
+                            type: string
+                        required:
+                        - role
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - role
+                      x-kubernetes-list-type: map
                   required:
                   - role
                   type: object

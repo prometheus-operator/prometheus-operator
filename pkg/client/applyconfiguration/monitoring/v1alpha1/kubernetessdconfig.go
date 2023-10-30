@@ -16,10 +16,15 @@
 
 package v1alpha1
 
+import (
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+)
+
 // KubernetesSDConfigApplyConfiguration represents an declarative configuration of the KubernetesSDConfig type for use
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
-	Role *string `json:"role,omitempty"`
+	Role      *v1alpha1.K8SRole                     `json:"role,omitempty"`
+	Selectors []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
 }
 
 // KubernetesSDConfigApplyConfiguration constructs an declarative configuration of the KubernetesSDConfig type for use with
@@ -31,7 +36,20 @@ func KubernetesSDConfig() *KubernetesSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithRole(value string) *KubernetesSDConfigApplyConfiguration {
+func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.K8SRole) *KubernetesSDConfigApplyConfiguration {
 	b.Role = &value
+	return b
+}
+
+// WithSelectors adds the given value to the Selectors field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Selectors field.
+func (b *KubernetesSDConfigApplyConfiguration) WithSelectors(values ...*K8SSelectorConfigApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSelectors")
+		}
+		b.Selectors = append(b.Selectors, *values[i])
+	}
 	return b
 }

@@ -40,6 +40,19 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
+// K8SRole is role of the service in Kubernetes.
+// Currently the only supported role is "Node".
+// +kubebuilder:validation:Enum=Node;node
+type K8SRole string
+
+// K8SSelectorConfig is Kubernetes Selector Config
+type K8SSelectorConfig struct {
+	// +kubebuilder:validation:Required
+	Role  K8SRole `json:"role"`
+	Label string  `json:"label,omitempty"`
+	Field string  `json:"field,omitempty"`
+}
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
@@ -225,10 +238,13 @@ type HTTPSDConfig struct {
 // +k8s:openapi-gen=true
 type KubernetesSDConfig struct {
 	// Role of the Kubernetes entities that should be discovered.
-	// Currently the only supported role is "Node".
-	// +kubebuilder:validation:Enum=Node
 	// +required
-	Role string `json:"role"`
+	Role K8SRole `json:"role"`
+	// Selector to select objects.
+	// +optional
+	// +listType=map
+	// +listMapKey=role
+	Selectors []K8SSelectorConfig `json:"selectors,omitempty"`
 }
 
 // ConsulSDConfig defines a Consul service discovery configuration
