@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.11.1",
-      "prometheus-operator.dev/version": "0.68.0"
+      "operator.prometheus.io/version": "0.68.0"
     },
     "creationTimestamp": null,
     "name": "alertmanagers.monitoring.coreos.com"
