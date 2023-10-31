@@ -1008,6 +1008,86 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 	}
 }
 
+func TestAlertmanagerSigv4(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "Valid Prom Version",
+			version: "2.48.0",
+			golden:  "AlertmanagerSigv4_Valid_Prom_Version.golden",
+		},
+		{
+			name:    "Invalid Prom Version",
+			version: "2.47.0",
+			golden:  "AlertmanagerSigv4_Invalid_Prom_Version.golden",
+		},
+	} {
+		p := defaultPrometheus()
+		p.Spec.Version = tc.version
+		p.Spec.Alerting = &monitoringv1.AlertingSpec{
+			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+				{
+					Name:      "alertmanager-main",
+					Namespace: "default",
+					Port:      intstr.FromString("web"),
+					Sigv4: &monitoringv1.Sigv4{
+						Profile: "profilename",
+						RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
+						AccessKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "access-key",
+						},
+						SecretKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "secret-key",
+						},
+						Region: "us-central-0",
+					},
+				},
+			},
+		}
+
+		cg := mustNewConfigGenerator(t, p)
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			p.Spec.EvaluationInterval,
+			p.Spec.QueryLogFile,
+			p.Spec.RuleSelector,
+			p.Spec.Exemplars,
+			p.Spec.TSDB,
+			p.Spec.Alerting,
+			p.Spec.RemoteRead,
+			nil,
+			nil,
+			nil,
+			nil,
+			&assets.Store{
+				SigV4Assets: map[string]assets.SigV4Credentials{
+					"alertmanager/auth/0": {
+						AccessKeyID: "access-key",
+						SecretKeyID: "secret-key",
+					},
+				},
+			},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		golden.Assert(t, string(cfg), tc.golden)
+	}
+}
+
 func TestAlertmanagerAPIVersion(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{

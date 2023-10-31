@@ -4234,7 +4234,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth configuration for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>bearerTokenFile</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>bearerTokenFile</code>, <code>authorization</code> or <code>sigv4</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4246,7 +4246,7 @@ string
 </td>
 <td>
 <p>File to read bearer token for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>sigv4</code>.</p>
 <p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
@@ -4262,7 +4262,23 @@ SafeAuthorization
 <td>
 <em>(Optional)</em>
 <p>Authorization section for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>bearerTokenFile</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>sigv4</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sigv4</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Sigv4">
+Sigv4
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12615,7 +12631,7 @@ int32
 <h3 id="monitoring.coreos.com/v1.Sigv4">Sigv4
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
 </p>
 <div>
 <p>Sigv4 optionally configures AWS&rsquo;s Signature Verification 4 signing process to
