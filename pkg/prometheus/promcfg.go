@@ -834,6 +834,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
+	//validate relabel config for podmonitor
+	for _, relabelConfigPmon := range ep.RelabelConfigs {
+		if err := validateRelabelConfig(cg.prom, *relabelConfigPmon); err != nil {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("Error validating relabel config for podMonitor/%s/%s - %v, ignoring pod monitor", m.Namespace, m.Name, err))
+			return nil
+		}
+	}
+
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
@@ -848,6 +856,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	}
+
+	//validate metric relabel config for podmonitor
+	for _, metricRelabelConfigPmon := range ep.MetricRelabelConfigs {
+		if err := validateRelabelConfig(cg.prom, *metricRelabelConfigPmon); err != nil {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("Error validating metric relabel config for podMonitor/%s/%s - %v, ignoring pod monitor", m.Namespace, m.Name, err))
+			return nil
+		}
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -1334,6 +1350,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
+	//validate relabel config for servicemonitor
+	for _, relabelConfigSmon := range ep.RelabelConfigs {
+		if err := validateRelabelConfig(cg.prom, *relabelConfigSmon); err != nil {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("Error validating relabel config for serviceMonitor/%s/%s - %v, ignoring service monitor", m.Namespace, m.Name, err))
+			return nil
+		}
+	}
+
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
@@ -1348,6 +1372,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	}
+
+	//validate metric relabel config for servicemonitor
+	for _, metricRelabelConfigSmon := range ep.MetricRelabelConfigs {
+		if err := validateRelabelConfig(cg.prom, *metricRelabelConfigSmon); err != nil {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("Error validating metric relabel config for serviceMonitor/%s/%s - %v, ignoring service monitor", m.Namespace, m.Name, err))
+			return nil
+		}
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -2008,15 +2040,16 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
-			slices = append(slices,
-				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
-					serviceMonitors[identifier],
-					ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
+			svcMonitorScrapeConfig := cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
+				serviceMonitors[identifier],
+				ep, i,
+				apiserverConfig,
+				store,
+				shards,
 			)
+			if svcMonitorScrapeConfig != nil {
+				slices = append(slices, svcMonitorScrapeConfig)
+			}
 		}
 	}
 
@@ -2041,14 +2074,15 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
-			slices = append(slices,
-				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
-					podMonitors[identifier], ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
+			podMonitorScrapeConfig := cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
+				podMonitors[identifier], ep, i,
+				apiserverConfig,
+				store,
+				shards,
 			)
+			if podMonitorScrapeConfig != nil {
+				slices = append(slices, podMonitorScrapeConfig)
+			}
 		}
 	}
 
