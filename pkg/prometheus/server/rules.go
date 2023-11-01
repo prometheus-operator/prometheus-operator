@@ -17,7 +17,6 @@ package prometheus
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -41,15 +40,6 @@ import (
 // into the overall maximum size of a ConfigMap. Thereby lets leave a
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
-
-// var monitoringGroup = func() string {
-// 	group := monitoring.GroupName
-// 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-// 	if customGroupV1 != "" {
-// 		group = customGroupV1
-// 	}
-// 	return group
-// }()
 
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)

@@ -331,11 +331,6 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 }
 
 func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
-	// monitoringGroup := monitoring.GroupName
-	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	// if customGroupV1 != "" {
-	// 	monitoringGroup = customGroupV1
-	// }
 	b, err := json.Marshal(
 		&monitoringv1.Prometheus{
 			TypeMeta: metav1.TypeMeta{

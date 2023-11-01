@@ -40,15 +40,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-// var monitoringGroup = func() string {
-// 	group := monitoring.GroupName
-// 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-// 	if customGroupV1 != "" {
-// 		group = customGroupV1
-// 	}
-// 	return group
-// }()
-
 func defaultPrometheus() *monitoringv1.Prometheus {
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{

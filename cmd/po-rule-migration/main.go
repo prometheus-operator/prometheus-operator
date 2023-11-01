@@ -110,12 +110,6 @@ func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
 			)
 		}
 
-		// monitoringGroup := monitoring.GroupName
-		// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-		// if customGroupV1 != "" {
-		// 	monitoringGroup = customGroupV1
-		// }
-
 		rule := monitoringv1.PrometheusRule{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.PrometheusRuleKind,

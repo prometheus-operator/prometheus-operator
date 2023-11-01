@@ -36,12 +36,6 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 		Expected monitoringv1.PrometheusRule
 	}
 
-	// monitoringGroup := monitoring.GroupName
-	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	// if customGroupV1 != "" {
-	// 	monitoringGroup = customGroupV1
-	// }
-
 	testcases := []testCase{
 		{
 			Name: "rule-ns-enforced-add",

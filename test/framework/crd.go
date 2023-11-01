@@ -129,12 +129,6 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, monitoringGroup string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 
-	// monitoringGroup := monitoring.GroupName
-	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	// if customGroupV1 != "" {
-	// 	monitoringGroup = customGroupV1
-	// }
-
 	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + monitoringGroup + "_" + crdName + ".yaml"
 
 	crd, err := f.MakeCRD(assetPath)

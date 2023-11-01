@@ -75,12 +75,6 @@ func (f *Framework) PatchThanosRulerAndWaitUntilReady(ctx context.Context, name,
 }
 
 func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec monitoringv1.ThanosRulerSpec) (*monitoringv1.ThanosRuler, error) {
-	// monitoringGroup := monitoring.GroupName
-	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	// if customGroupV1 != "" {
-	// 	monitoringGroup = customGroupV1
-	// }
-
 	b, err := json.Marshal(
 		&monitoringv1.ThanosRuler{
 			TypeMeta: metav1.TypeMeta{
