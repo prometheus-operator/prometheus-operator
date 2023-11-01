@@ -16,6 +16,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -23,6 +24,8 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -80,4 +83,34 @@ func TestCreateHTTPClient(t *testing.T) {
 			t.Errorf("found differences %v", diff)
 		}
 	})
+}
+
+func TestConfigReloaderPort(t *testing.T) {
+	port := 9095
+	listenAddress := "localhost"
+
+	r := prometheus.NewRegistry()
+	r.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+
+	// Start the HTTP server in a separate goroutine
+	srv := startHTTPServer(listenAddress, port, r)
+	defer srv.Close()
+
+	// Give some time for the server to start
+	time.Sleep(5 * time.Second)
+
+	// Now, try to access the /metrics endpoint
+	resp, err := http.Get(fmt.Sprintf("http://%s:%d/metrics", listenAddress, port))
+	if err != nil {
+		t.Fatalf("Failed to connect to the server: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the response is 200 OK
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 }
