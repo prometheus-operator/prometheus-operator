@@ -1,0 +1,20 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test-pd
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test-pd
+  pagerduty_configs:
+  - routing_key: 1234abc
+    images:
+    - src: https://some-image.com
+      alt: some-image
+      href: https://some-image.com
+    links:
+    - href: https://some-link.com
+      text: some-link
+templates: []

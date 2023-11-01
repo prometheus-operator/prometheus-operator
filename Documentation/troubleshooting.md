@@ -11,6 +11,25 @@ draft: false
 description: Guide on troubleshooting the Prometheus Operator.
 ---
 
+### `CustomResourceDefinition "..." is invalid: metadata.annotations: Too long` issue
+
+When applying updated CRDs on a cluster, you may face the following error message:
+
+```bash
+$ kubectl apply -f $MANIFESTS
+The CustomResourceDefinition "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long: must have at most 262144 bytes
+```
+
+The reason is that apply runs in the client by default and saves information into the object annotations but there's a hard limit on the size of annotations.
+
+The workaround is to use server-side apply which requires Kubernetes v1.22 at least.
+
+```bash
+kubectl apply --server-side --force-conflicts -f $MANIFESTS
+```
+
+If using ArgoCD, please refer to their [documentation](https://argo-cd.readthedocs.io/en/latest/user-guide/sync-options/#server-side-apply).
+
 ### RBAC on Google Container Engine (GKE)
 
 When you try to create `ClusterRole` (`kube-state-metrics`, `prometheus` `prometheus-operator`, etc.) on GKE Kubernetes cluster running 1.6 version, you will probably run into permission errors:

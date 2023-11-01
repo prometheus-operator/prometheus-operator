@@ -1,0 +1,17 @@
+route:
+  receiver: sns-test
+receivers:
+- name: sns-test
+  sns_configs:
+  - api_url: https://sns.us-west-2.amazonaws.com
+    sigv4:
+      region: us-west-2
+      access_key: key
+      secret_key: secret
+      profile: dev
+      role_arn: arn:dev
+    topic_arn: arn:test
+    phone_number: "+12345"
+    target_arn: arn:target
+    subject: testing
+templates: []

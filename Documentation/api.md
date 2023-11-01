@@ -938,6 +938,20 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>attachMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AttachMetadata">
@@ -1234,6 +1248,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </table>
@@ -2108,7 +2136,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -2213,6 +2241,23 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -2436,6 +2481,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -3064,6 +3123,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -4161,7 +4234,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth configuration for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>bearerTokenFile</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>bearerTokenFile</code>, <code>authorization</code> or <code>sigv4</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4173,7 +4246,7 @@ string
 </td>
 <td>
 <p>File to read bearer token for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>sigv4</code>.</p>
 <p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
@@ -4189,7 +4262,23 @@ SafeAuthorization
 <td>
 <em>(Optional)</em>
 <p>Authorization section for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>bearerTokenFile</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>sigv4</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sigv4</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Sigv4">
+Sigv4
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5347,6 +5436,49 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AzureAD">AzureAD
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+</p>
+<div>
+<p>AzureAD defines the configuration for remote write&rsquo;s azuread parameters.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>cloud</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Azure Cloud. Options are &lsquo;AzurePublic&rsquo;, &lsquo;AzureChina&rsquo;, or &lsquo;AzureGovernment&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedIdentity</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ManagedIdentity">
+ManagedIdentity
+</a>
+</em>
+</td>
+<td>
+<p>ManagedIdentity defines the Azure User-assigned Managed identity.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
@@ -6227,7 +6359,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -6332,6 +6464,23 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -6557,6 +6706,20 @@ uint64
 Only valid in Prometheus versions 2.45.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -6716,7 +6879,7 @@ The possible status values for this condition type are:
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -7651,6 +7814,35 @@ string
 <div>
 <p>LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>ManagedIdentity defines the Azure User-assigned Managed identity.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The client id</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.MetadataConfig">MetadataConfig
 </h3>
 <p>
@@ -8406,6 +8598,20 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>attachMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AttachMetadata">
@@ -8657,6 +8863,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 </tbody>
@@ -9899,7 +10119,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -10004,6 +10224,23 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -10227,6 +10464,20 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -11501,7 +11752,7 @@ OAuth2
 <em>(Optional)</em>
 <p>OAuth2 configuration for the URL.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>basicAuth</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11516,7 +11767,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth configuration for the URL.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11544,7 +11795,7 @@ Authorization
 <em>(Optional)</em>
 <p>Authorization section for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11560,7 +11811,23 @@ Sigv4
 <em>(Optional)</em>
 <p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0.</p>
-<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, or <code>oauth2</code>.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>azureAd</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureAD">
+AzureAD
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AzureAD for the URL.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>sigv4</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12259,6 +12526,20 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>attachMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AttachMetadata">
@@ -12350,7 +12631,7 @@ int32
 <h3 id="monitoring.coreos.com/v1.Sigv4">Sigv4
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
 </p>
 <div>
 <p>Sigv4 optionally configures AWS&rsquo;s Signature Verification 4 signing process to
@@ -14160,8 +14441,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -15146,7 +15427,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -15251,6 +15532,23 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -15476,6 +15774,20 @@ uint64
 Only valid in Prometheus versions 2.45.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -15622,6 +15934,34 @@ ScrapeConfigSpec
 <td>
 <em>(Optional)</em>
 <p>ConsulSDConfigs defines a list of Consul service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">
+[]DNSSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DNSSDConfigs defines a list of DNS service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ec2SDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">
+[]EC2SDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EC2SDConfigs defines a list of EC2 service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -15833,6 +16173,34 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
 </td>
 </tr>
 </table>
@@ -16225,6 +16593,78 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.
+The DNS servers to be contacted are read from /etc/resolv.conf.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>names</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>A list of DNS domain names to be queried.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RefreshInterval configures the time after which the provided names are refreshed.
+If not set, Prometheus uses its default value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The type of DNS query to perform. One of SRV, A, AAAA or MX.
+If not set, Prometheus uses its default value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The port number used if the query type is not SRV
+Ignored for SRV records</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DayOfMonthRange">DayOfMonthRange
 </h3>
 <p>
@@ -16345,6 +16785,161 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>HTTP client configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.EC2Filter">EC2Filter
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
+</p>
+<div>
+<p>EC2Filter is the configuration for filtering EC2 instances.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.
+The private IP address is used by default, but may be changed to the public IP address with relabeling.
+The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The AWS region</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKey</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AccessKey is the AWS API key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretKey</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretKey is the AWS API secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>roleARN</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AWS Role ARN, an alternative to using AWS API keys.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The port to scrape metrics from. If using the public IP address, this must
+instead be specified in the relabeling rule.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filters</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EC2Filter">
+[]EC2Filter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filters can be used optionally to filter the instance list by other criteria.
+Available filter criteria can be found here:
+<a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
+Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
 </td>
 </tr>
 </tbody>
@@ -16598,7 +17193,7 @@ Duration
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -16929,6 +17524,88 @@ string
 <td>
 <p>Role of the Kubernetes entities that should be discovered.
 Currently the only supported role is &ldquo;Node&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookUrl</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>MSTeams webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message body template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -18568,7 +19245,7 @@ bool
 <p>When true, <code>spec.namespaceSelector</code> from all PodMonitor, ServiceMonitor
 and Probe objects will be ignored. They will only discover targets
 within the namespace of the PodMonitor, ServiceMonitor and Probe
-objec.</p>
+object.</p>
 </td>
 </tr>
 <tr>
@@ -18673,6 +19350,23 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedKeepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+dropped by relabeling that will be kept in memory. The value overrides
+any <code>spec.keepDroppedTargets</code> set by
+ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
+greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -18898,6 +19592,20 @@ uint64
 Only valid in Prometheus versions 2.45.0 and newer.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig
@@ -18939,9 +19647,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -18954,9 +19678,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -19267,6 +20007,20 @@ string
 </td>
 <td>
 <p>List of Webex configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>msteamsConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">
+[]MSTeamsConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>
@@ -19676,6 +20430,34 @@ HTTPConfig
 </tr>
 <tr>
 <td>
+<code>dnsSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">
+[]DNSSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DNSSDConfigs defines a list of DNS service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ec2SDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">
+[]EC2SDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EC2SDConfigs defines a list of EC2 service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -19883,6 +20665,34 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepDroppedTargets</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Per-scrape limit on the number of targets dropped by relabeling
+that will be kept in memory. 0 means no limit.</p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricRelabelConfigs to apply to samples before ingestion.</p>
 </td>
 </tr>
 </tbody>
@@ -20484,9 +21294,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>Telegram bot token
+<em>(Optional)</em>
+<p>Telegram bot token. It is mutually exclusive with <code>botTokenFile</code>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+<p>Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to read the Telegram bot token from. It is mutually exclusive with <code>botToken</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+<p>It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -21224,8 +22050,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
-across multiple namespaces configuring one Alertmanager cluster.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -21746,7 +22572,7 @@ SafeTLSConfig
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -21958,6 +22784,88 @@ string
 </td>
 <td>
 <p>Value of the tuple.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookUrl</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>MSTeams webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message body template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -22743,9 +23651,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the recipient user&rsquo;s user key.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userKeyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The user key file that contains the recipient user&rsquo;s user key.
+Either <code>userKey</code> or <code>userKeyFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -22758,9 +23682,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The token file that contains the registered application&rsquo;s API token, see <a href="https://pushover.net/apps">https://pushover.net/apps</a>.
+Either <code>token</code> or <code>tokenFile</code> is required.
+It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -23070,6 +24010,20 @@ string
 </td>
 <td>
 <p>List of Webex configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>msteamsConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">
+[]MSTeamsConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>
@@ -23967,9 +24921,25 @@ SecretKeySelector
 </em>
 </td>
 <td>
-<p>Telegram bot token
+<em>(Optional)</em>
+<p>Telegram bot token. It is mutually exclusive with <code>botTokenFile</code>.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+<p>Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to read the Telegram bot token from. It is mutually exclusive with <code>botToken</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.</p>
+<p>It requires Alertmanager &gt;= v0.26.0.</p>
 </td>
 </tr>
 <tr>

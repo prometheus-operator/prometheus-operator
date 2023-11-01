@@ -1,5 +1,5 @@
 ---
-weight: 153
+weight: 154
 toc: true
 title: ScrapeConfig CRD
 menu:
@@ -52,7 +52,7 @@ If you have an interest in another service discovery mechanism or you see someth
 For example, to scrape the target located at `http://prometheus.demo.do.prometheus.io:9090`, use the following:
 
 ```yaml
-apiVersion: coreos.monitoring.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: static-config

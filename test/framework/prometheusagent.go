@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -23,11 +24,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
+	prometheusagent "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 )
 
 func (f *Framework) MakeBasicPrometheusAgent(ns, name, group string, replicas int32) *monitoringv1alpha1.PrometheusAgent {
@@ -127,4 +132,36 @@ func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, n
 	}
 
 	return nil
+}
+
+func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, spec monitoringv1alpha1.PrometheusAgentSpec) (*monitoringv1alpha1.PrometheusAgent, error) {
+	b, err := json.Marshal(
+		&monitoringv1alpha1.PrometheusAgent{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1alpha1.PrometheusAgentsKind,
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1alpha1.Version}.String(),
+			},
+			Spec: spec,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error(), "failed to marshal PrometheusAgent spec")
+	}
+
+	p, err := f.MonClientV1alpha1.PrometheusAgents(ns).Patch(
+		ctx,
+		name,
+		types.ApplyPatchType,
+		b,
+		metav1.PatchOptions{
+			Force:        ptr.To(true),
+			FieldManager: "e2e-test",
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }

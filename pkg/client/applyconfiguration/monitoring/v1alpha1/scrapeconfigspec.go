@@ -29,6 +29,8 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	HTTPSDConfigs         []HTTPSDConfigApplyConfiguration                  `json:"httpSDConfigs,omitempty"`
 	KubernetesSDConfigs   []KubernetesSDConfigApplyConfiguration            `json:"kubernetesSDConfigs,omitempty"`
 	ConsulSDConfigs       []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
+	DNSSDConfigs          []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
+	EC2SDConfigs          []EC2SDConfigApplyConfiguration                   `json:"ec2SDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval        *v1.Duration                                      `json:"scrapeInterval,omitempty"`
@@ -45,6 +47,8 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	LabelLimit            *uint64                                           `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                                           `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                                           `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets    *uint64                                           `json:"keepDroppedTargets,omitempty"`
+	MetricRelabelConfigs  []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -114,6 +118,32 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithConsulSDConfigs(values ...*Cons
 			panic("nil value passed to WithConsulSDConfigs")
 		}
 		b.ConsulSDConfigs = append(b.ConsulSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithDNSSDConfigs adds the given value to the DNSSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the DNSSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithDNSSDConfigs(values ...*DNSSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithDNSSDConfigs")
+		}
+		b.DNSSDConfigs = append(b.DNSSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithEC2SDConfigs adds the given value to the EC2SDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EC2SDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEC2SDConfigs(values ...*EC2SDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEC2SDConfigs")
+		}
+		b.EC2SDConfigs = append(b.EC2SDConfigs, *values[i])
 	}
 	return b
 }
@@ -254,5 +284,26 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.KeepDroppedTargets = &value
+	return b
+}
+
+// WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetricRelabelConfigs")
+		}
+		b.MetricRelabelConfigs = append(b.MetricRelabelConfigs, *values[i])
+	}
 	return b
 }

@@ -39,11 +39,14 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
-	klog "k8s.io/klog/v2"
+	storagev1 "k8s.io/api/storage/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -93,19 +96,40 @@ func (n namespaces) asSlice() []string {
 	return ns
 }
 
-// Helper function for checking CRD prerequisites
-func checkPrerequisites(ctx context.Context, logger log.Logger, cc *k8sutil.CRDChecker, allowedNamespaces []string, verbs map[string][]string, groupVersion, resourceName string) (bool, error) {
-	err := cc.CheckPrerequisites(ctx, allowedNamespaces, verbs, groupVersion, resourceName)
-	switch {
-	case errors.Is(err, k8sutil.ErrPrerequiresitesFailed):
-		level.Warn(logger).Log("msg", fmt.Sprintf("%s CRD not supported", resourceName), "reason", err)
-		return false, nil
-	case err != nil:
-		level.Error(logger).Log("msg", fmt.Sprintf("failed to check prerequisites for the %s CRD ", resourceName), "err", err)
-		return false, err
-	default:
-		return true, nil
+// checkPrerequisites verifies that the CRD is installed in the cluster and
+// that the operator has enough permissions to manage the resource.
+func checkPrerequisites(
+	ctx context.Context,
+	logger log.Logger,
+	kclient kubernetes.Interface,
+	allowedNamespaces []string,
+	groupVersion schema.GroupVersion,
+	resource string,
+	attributes ...k8sutil.ResourceAttribute,
+) (bool, error) {
+	installed, err := k8sutil.IsAPIGroupVersionResourceSupported(kclient.Discovery(), groupVersion, resource)
+	if err != nil {
+		return false, fmt.Errorf("failed to check presence of resource %q (group %q): %w", resource, groupVersion, err)
 	}
+
+	if !installed {
+		level.Warn(logger).Log("msg", fmt.Sprintf("resource %q (group: %q) not installed in the cluster", resource, groupVersion))
+		return false, nil
+	}
+
+	allowed, errs, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), allowedNamespaces, attributes...)
+	if err != nil {
+		return false, fmt.Errorf("failed to check permissions on resource %q (group %q): %w", resource, groupVersion, err)
+	}
+
+	if !allowed {
+		for _, reason := range errs {
+			level.Warn(logger).Log("msg", fmt.Sprintf("missing permission on resource %q (group: %q)", resource, groupVersion), "reason", reason)
+		}
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
@@ -120,7 +144,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String(), "http2", enableHTTP2)
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -137,14 +161,23 @@ var (
 	cfg = operator.DefaultConfig(defaultReloaderCPU, defaultReloaderMemory)
 
 	rawTLSCipherSuites string
+	enableHTTP2        bool
 	serverTLS          bool
 
 	flagset = flag.CommandLine
 )
 
 func init() {
-	// With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
+	// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
+	// standard library and golang.org/x/net are fully fixed.
+	// Right now, it is possible for authenticated and unauthenticated users to
+	// hold open HTTP2 connections and consume huge amounts of memory.
+	// See:
+	// * https://github.com/kubernetes/kubernetes/pull/121120
+	// * https://github.com/kubernetes/kubernetes/issues/121197
+	// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
+	flagset.BoolVar(&enableHTTP2, "web.enable-http2", false, "Enable HTTP2 connections.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
 	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", defaultOperatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
@@ -157,10 +190,13 @@ func init() {
 		" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
 		"If omitted, the default Go cipher suites will be used."+
 		"Note that TLS 1.3 ciphersuites are not configurable.")
+
+	flagset.StringVar(&cfg.ImpersonateUser, "as", "", "Username to impersonate. User could be a regular user or a service account in a namespace.")
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.CAFile, "ca-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.")
+
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	flagset.StringVar(&cfg.KubeletSelector, "kubelet-selector", "", "Label selector to filter nodes.")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
@@ -217,15 +253,15 @@ func run() int {
 		stdlog.Fatal(err)
 	}
 
-	// Above level 6, the k8s client would log bearer tokens in clear-text.
-	klog.ClampLevel(6)
-	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
-
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
-		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
+		level.Error(logger).Log(
+			"msg", "--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
+			"namespaces", ns,
+			"deny_namespaces", deniedNs,
+		)
 		return 1
 	}
 
@@ -262,11 +298,46 @@ func run() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	allowedNamespaces := namespaces(cfg.Namespaces.AllowList).asSlice()
-
-	cc, err := k8sutil.NewCRDChecker(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
+	restConfig, err := k8sutil.NewClusterConfig(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig, cfg.ImpersonateUser)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create new CRDChecker object ", "err", err)
+		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
+		cancel()
+		return 1
+	}
+
+	kclient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to create Kubernetes client", "err", err)
+		cancel()
+		return 1
+	}
+
+	kubernetesVersion, err := kclient.Discovery().ServerVersion()
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to request Kubernetes server version", "err", err)
+		cancel()
+		return 1
+	}
+	cfg.KubernetesVersion = *kubernetesVersion
+	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+	// Check if we can read the storage classs
+	canReadStorageClass, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		nil,
+		storagev1.SchemeGroupVersion,
+		storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+		k8sutil.ResourceAttribute{
+			Group:    storagev1.GroupName,
+			Version:  storagev1.SchemeGroupVersion.Version,
+			Resource: storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
+			Verbs:    []string{"get"},
+		},
+	)
+
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
 		cancel()
 		return 1
 	}
@@ -274,23 +345,26 @@ func run() int {
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
 		logger,
-		cc,
-		allowedNamespaces,
-		map[string][]string{
-			monitoringv1alpha1.ScrapeConfigName: {"get", "list", "watch"},
-		},
-		monitoringv1alpha1.SchemeGroupVersion.String(),
+		kclient,
+		namespaces(cfg.Namespaces.AllowList).asSlice(),
+		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.ScrapeConfigName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: monitoringv1alpha1.ScrapeConfigName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
 	)
-
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check ScrapeConfig support", "err", err)
 		cancel()
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating prometheus controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -298,23 +372,32 @@ func run() int {
 	prometheusAgentSupported, err := checkPrerequisites(
 		ctx,
 		logger,
-		cc,
-		allowedNamespaces,
-		map[string][]string{
-			monitoringv1alpha1.PrometheusAgentName:                           {"get", "list", "watch"},
-			fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName): {"update"},
-		},
-		monitoringv1alpha1.SchemeGroupVersion.String(),
+		kclient,
+		namespaces(cfg.Namespaces.PrometheusAllowList).asSlice(),
+		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.PrometheusAgentName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: monitoringv1alpha1.PrometheusAgentName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1alpha1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName),
+			Verbs:    []string{"update"},
+		},
 	)
 	if err != nil {
+		level.Error(logger).Log("msg", "failed to check PrometheusAgent support", "err", err)
 		cancel()
 		return 1
 	}
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported, canReadStorageClass)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -322,16 +405,16 @@ func run() int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r, canReadStorageClass)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "instantiating thanos controller failed: ", err)
+		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
 		cancel()
 		return 1
 	}
@@ -342,7 +425,7 @@ func run() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		level.Error(logger).Log("msg", "listening failed", "address", cfg.ListenAddress, "err", err)
 		cancel()
 		return 1
 	}
@@ -355,47 +438,16 @@ func run() int {
 		tlsConfig, err = server.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprintln(os.Stderr, "invalid TLS config", err)
+			level.Error(logger).Log("msg", "invalid TLS config", "err", err)
 			cancel()
 			return 1
 		}
 	}
 
-	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_triggered_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of times a prometheusRule object triggered validation",
-	})
-
-	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_errors_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a prometheusRules object",
-	})
-
-	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of times an alertmanagerconfig object triggered validation",
-	})
-
-	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
-		Help: "DEPRECATED, removed in v0.57.0: Number of errors that occurred while validating a alertmanagerconfig object",
-	})
-
 	r.MustRegister(
 		collectors.NewGoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		validationTriggeredCounter,
-		validationErrorsCounter,
-		alertManagerConfigValidationTriggered,
-		alertManagerConfigValidationError,
 		version.NewCollector("prometheus_operator"),
-	)
-
-	admit.RegisterMetrics(
-		validationTriggeredCounter,
-		validationErrorsCounter,
-		alertManagerConfigValidationTriggered,
-		alertManagerConfigValidationError,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
@@ -422,7 +474,7 @@ func run() int {
 			cfg.ServerTLSConfig.ReloadInterval,
 		)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "failed to initialize certificate reloader", err)
+			level.Error(logger).Log("msg", "failed to initialize certificate reloader", "err", err)
 			cancel()
 			return 1
 		}
@@ -451,6 +503,9 @@ func run() int {
 		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
 		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
 		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
+	}
+	if !enableHTTP2 {
+		srv.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))

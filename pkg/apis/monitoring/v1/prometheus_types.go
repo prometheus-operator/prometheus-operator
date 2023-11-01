@@ -407,7 +407,7 @@ type CommonPrometheusFields struct {
 	// When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
 	// and Probe objects will be ignored. They will only discover targets
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe
-	// objec.
+	// object.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
 	// When not empty, a label will be added to
@@ -472,6 +472,16 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	// When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
+	// dropped by relabeling that will be kept in memory. The value overrides
+	// any `spec.keepDroppedTargets` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets` is
+	// greater than zero and less than `spec.enforcedKeepDroppedTargets`.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// When defined, enforcedBodySizeLimit specifies a global limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	// Targets responding with a body larger than this many bytes will cause
@@ -580,6 +590,13 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 }
 
 // +genclient
@@ -1104,12 +1121,12 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, or `basicAuth`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// BasicAuth configuration for the URL.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, or `oauth2`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
@@ -1121,7 +1138,7 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `basicAuth`, or `oauth2`.
+	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
@@ -1129,10 +1146,19 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, or `oauth2`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
+
+	// AzureAD for the URL.
+	//
+	// It requires Prometheus >= v2.45.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+	//
+	// +optional
+	AzureAD *AzureAD `json:"azureAd,omitempty"`
 
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
@@ -1200,6 +1226,26 @@ type Sigv4 struct {
 	Profile string `json:"profile,omitempty"`
 	// RoleArn is the named AWS profile used to authenticate.
 	RoleArn string `json:"roleArn,omitempty"`
+}
+
+// AzureAD defines the configuration for remote write's azuread parameters.
+// +k8s:openapi-gen=true
+type AzureAD struct {
+	// The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
+	// +kubebuilder:validation:Enum=AzureChina;AzureGovernment;AzurePublic
+	// +optional
+	Cloud *string `json:"cloud,omitempty"`
+	// ManagedIdentity defines the Azure User-assigned Managed identity.
+	// +required
+	ManagedIdentity ManagedIdentity `json:"managedIdentity"`
+}
+
+// ManagedIdentity defines the Azure User-assigned Managed identity.
+// +k8s:openapi-gen=true
+type ManagedIdentity struct {
+	// The client id
+	// +required
+	ClientID string `json:"clientId"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples
@@ -1411,24 +1457,33 @@ type AlertmanagerEndpoints struct {
 
 	// BasicAuth configuration for Alertmanager.
 	//
-	// Cannot be set at the same time as `bearerTokenFile`, or `authorization`.
+	// Cannot be set at the same time as `bearerTokenFile`, `authorization` or `sigv4`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 
 	// File to read bearer token for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
 	//
 	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`.
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `sigv4`.
 	//
 	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
+
+	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.
+	//
+	// +optional
+	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "v1" or "v2".

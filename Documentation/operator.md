@@ -27,6 +27,8 @@ Usage of ./operator:
     	Annotations to be add to all resources created by the operator
   -apiserver string
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
+  -as string
+    	Username to impersonate. User could be a regular user or a service account in a namespace.
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string
@@ -62,7 +64,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.67.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.68.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
@@ -87,6 +89,8 @@ Usage of ./operator:
     	Cert file to be used for operator web server endpoints. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
     	Client CA certificate file to be used for operator web server endpoints. (default "/etc/tls/private/tls-ca.crt")
+  -web.enable-http2
+    	Enable HTTP2 connections.
   -web.enable-tls
     	Activate prometheus operator web server TLS.   This is useful for example when using the rule validation webhook.
   -web.key-file string

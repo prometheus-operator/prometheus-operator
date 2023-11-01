@@ -141,6 +141,12 @@ spec:
               jobName:
                 description: The job name assigned to scraped metrics by default.
                 type: string
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               labelLimit:
                 description: Per-scrape limit on number of labels that will be accepted
                   for a sample. Only valid in Prometheus versions 2.27.0 and newer.

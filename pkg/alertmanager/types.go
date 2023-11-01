@@ -110,11 +110,13 @@ type receiver struct {
 	TelegramConfigs  []*telegramConfig  `yaml:"telegram_configs,omitempty" json:"telegram_configs,omitempty"`
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
+	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
 }
 
 type webhookConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
+	URLFile       string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
 }
@@ -298,8 +300,8 @@ type emailConfig struct {
 	AuthSecret       string            `yaml:"auth_secret,omitempty" json:"auth_secret,omitempty"`
 	AuthIdentity     string            `yaml:"auth_identity,omitempty" json:"auth_identity,omitempty"`
 	Headers          map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
-	HTML             string            `yaml:"html,omitempty" json:"html,omitempty"`
-	Text             string            `yaml:"text,omitempty" json:"text,omitempty"`
+	HTML             *string           `yaml:"html,omitempty" json:"html,omitempty"`
+	Text             *string           `yaml:"text,omitempty" json:"text,omitempty"`
 	RequireTLS       *bool             `yaml:"require_tls,omitempty" json:"require_tls,omitempty"`
 	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
 }
@@ -308,7 +310,9 @@ type pushoverConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	UserKey       string            `yaml:"user_key,omitempty" json:"user_key,omitempty"`
+	UserKeyFile   string            `yaml:"user_key_file,omitempty" json:"user_key_file,omitempty"`
 	Token         string            `yaml:"token,omitempty" json:"token,omitempty"`
+	TokenFile     string            `yaml:"token_file,omitempty" json:"token_file,omitempty"`
 	Title         string            `yaml:"title,omitempty" json:"title,omitempty"`
 	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
@@ -337,6 +341,7 @@ type telegramConfig struct {
 	VSendResolved        *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	APIUrl               string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	BotToken             string            `yaml:"bot_token,omitempty" json:"bot_token,omitempty"`
+	BotTokenFile         string            `yaml:"bot_token_file,omitempty" json:"bot_token_file,omitempty"`
 	ChatID               int64             `yaml:"chat_id,omitempty" json:"chat_id,omitempty"`
 	Message              string            `yaml:"message,omitempty" json:"message,omitempty"`
 	DisableNotifications bool              `yaml:"disable_notifications,omitempty" json:"disable_notifications,omitempty"`
@@ -394,6 +399,14 @@ type victorOpsConfig struct {
 	EntityDisplayName string            `yaml:"entity_display_name,omitempty" json:"entity_display_name,omitempty"`
 	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
+}
+
+type msTeamsConfig struct {
+	SendResolved *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL   string            `yaml:"webhook_url"`
+	Title        string            `yaml:"title,omitempty"`
+	Text         string            `yaml:"text,omitempty"`
+	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
 type timeInterval config.TimeInterval

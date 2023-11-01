@@ -1,0 +1,42 @@
+name: Dependabot auto-merge
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout
+        if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Generate Documentation/compatibility.md
+        if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
+        run: |
+          make generate --always-make
+          if ! git diff --exit-code; then
+            git config --global user.email "support@github.com"
+            git config --global user.name "dependabot[bot]"
+            git add Documentation/compatibility.md
+            git commit -s -m "Generate Documentation/compatibility.md"
+            git push
+          fi
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
+        run: |
+          gh pr merge --auto --merge "$PR_URL"
+          gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -20,7 +20,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,7 +62,7 @@ func makeStatefulSet(
 	p.SetCommonPrometheusFields(cpf)
 	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsAssetSecrets)
 	if err != nil {
-		return nil, errors.Wrap(err, "make StatefulSet spec")
+		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
 	boolTrue := true
@@ -328,7 +327,7 @@ func makeStatefulSetSpec(
 
 	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge init containers spec")
+		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
 
 	containerArgs, err := operator.BuildArgs(promArgs, cpf.AdditionalArgs)
@@ -382,7 +381,7 @@ func makeStatefulSetSpec(
 
 	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge containers spec")
+		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

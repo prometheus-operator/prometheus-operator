@@ -1,3 +1,19 @@
+## 0.68.0 / 2023-09-06
+
+* [FEATURE] Add support for Webex receiver to the AlertmanagerConfig CRD. #5305
+* [FEATURE] Add support for Bot Token File for Telegram receiver in AlermanagerConfig CRD. #5882
+* [FEATURE] Add support for MetricRelabelings to the ScrapeConfig CRD. #5805
+* [FEATURE] Add support for DNS service discovery fields to the ScrapeConfig CRD. #5866
+* [FEATURE] Add support for `keep_dropped_targets` to Prometheus, PrometheusAgent, ServiceMonitor, PodMonitor, Probe and ScrapeConfig CRDs. #5897
+* [FEATURE] Don't trigger reconcile loops if statefulsets have different `revisionHistoryLimit`. #5773
+* [ENHANCEMENT] Decrease CPU usage when reconciling ThanosRuler resources. #5784
+* [BUGFIX] Fix sharding in Probe CRD. #5735
+* [BUGFIX] Fix text-only email configs in AlertmanagerConfig CRD. #5804
+* [BUGFIX] Fix rejecting PodMonitor, ServiceMonitor, Probes and ScrapeConfigs with invalid relabelings. #5841 #5856
+* [BUGFIX] Fix Kubernetes Service Discovery in ScrapeConfig CRD. #5871
+* [BUGFIX] Fix reserved labels being overriden by external labels. #5888
+* [BUGFIX] Fix updating Status of Prometheus, Alertmanager and ThanosRuler even the operator fails to update their statefulsets. #5891
+
 ## 0.67.1 / 2023-08-03
 
 * [BUGFIX] Avoid skipping `AlertmanagerConfig` resources for Alertmanager versions prior v0.25.0. #5788

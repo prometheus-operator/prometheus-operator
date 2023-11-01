@@ -24,6 +24,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -130,11 +131,16 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 	gObj.SetAvailableReplicas(ready)
 	gObj.SetUnavailableReplicas(len(sr.Pods) - ready)
 
-	if ready < gObj.ExpectedReplicas() {
-		if available == 0 {
+	switch {
+	case sr.sset == nil:
+		condition.Reason = "StatefulSetNotFound"
+		condition.Status = monitoringv1.ConditionFalse
+	case ready < gObj.ExpectedReplicas():
+		switch {
+		case available == 0:
 			condition.Reason = "NoPodReady"
 			condition.Status = monitoringv1.ConditionFalse
-		} else {
+		default:
 			condition.Reason = "SomePodsNotReady"
 			condition.Status = monitoringv1.ConditionDegraded
 		}
@@ -154,6 +160,14 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 
 // NewStatefulSetReporter returns a statefulset's reporter.
 func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (*StatefulSetReporter, error) {
+	if sset == nil {
+		// sset is nil when the controller couldn't create the statefulset
+		// (incompatible spec fields for instance).
+		return &StatefulSetReporter{
+			Pods: []*Pod{},
+		}, nil
+	}
+
 	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
 	if err != nil {
 		// Something is really broken if the statefulset's selector isn't valid.
@@ -182,7 +196,7 @@ func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, s
 			continue
 		}
 
-		stsReporter.Pods = append(stsReporter.Pods, (func(p Pod) *Pod { return &p })(Pod(p)))
+		stsReporter.Pods = append(stsReporter.Pods, ptr.To(Pod(p)))
 	}
 
 	return stsReporter, nil

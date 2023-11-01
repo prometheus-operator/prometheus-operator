@@ -67,6 +67,18 @@ func skipOperatorUpgradeTests(t *testing.T) {
 	}
 }
 
+func skipPromVersionUpgradeTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_PROMETHEUS_UPGRADE_TESTS") != "" {
+		t.Skip("Skipping Prometheus Version upgrade tests")
+	}
+}
+
+func skipAllNSTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_ALL_NS_TESTS") != "" {
+		t.Skip("Skipping AllNS upgrade tests")
+	}
+}
+
 // feature gated tests need to be explicitly included
 // not currently in use
 //
@@ -160,6 +172,8 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
+	skipAllNSTests(t)
+
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
@@ -218,8 +232,10 @@ func TestAllNS(t *testing.T) {
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
+		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
+		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
 		"AMScaling":                               testAMScaling,
 		"AMVersionMigration":                      testAMVersionMigration,
 		"AMStorageUpdate":                         testAMStorageUpdate,
@@ -253,7 +269,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromCreateDeleteCluster":                   testPromCreateDeleteCluster,
 		"PromScaleUpDownCluster":                    testPromScaleUpDownCluster,
 		"PromNoServiceMonitorSelector":              testPromNoServiceMonitorSelector,
-		"PromVersionMigration":                      testPromVersionMigration,
 		"PromResourceUpdate":                        testPromResourceUpdate,
 		"PromStorageLabelsAnnotations":              testPromStorageLabelsAnnotations,
 		"PromStorageUpdate":                         testPromStorageUpdate,
@@ -297,6 +312,9 @@ func testAllNSPrometheus(t *testing.T) {
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
+		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
+		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
+		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 	}
 
 	for name, f := range testFuncs {
@@ -308,11 +326,13 @@ func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
+		"ThanosRulerWithStatefulsetCreationFailure":     testThanosRulerWithStatefulsetCreationFailure,
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
 		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 		"ThanosRulerQueryConfig":                        testTRQueryConfig,
+		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
@@ -350,11 +370,12 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                 testPrometheusInstanceNamespacesAllNs,
-		"AllowList":             testPrometheusInstanceNamespacesAllowList,
-		"DenyList":              testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":     testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle": testScrapeConfigLifecycle,
+		"AllNs":                   testPrometheusInstanceNamespacesAllNs,
+		"AllowList":               testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":       testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":   testScrapeConfigLifecycle,
+		"ConfigReloaderResources": testConfigReloaderResources,
 	}
 
 	for name, f := range testFuncs {
@@ -392,6 +413,27 @@ func TestOperatorUpgrade(t *testing.T) {
 const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
+
+// TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded
+func TestPrometheusVersionUpgrade(t *testing.T) {
+	skipPromVersionUpgradeTests(t)
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
+	}
+
+	t.Run("PromVersionMigration", testPromVersionMigration)
+}
 
 func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 	return func(t *testing.T) {

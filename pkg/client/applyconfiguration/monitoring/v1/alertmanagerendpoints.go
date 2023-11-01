@@ -33,6 +33,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	BasicAuth       *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	BearerTokenFile *string                              `json:"bearerTokenFile,omitempty"`
 	Authorization   *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Sigv4           *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
 	APIVersion      *string                              `json:"apiVersion,omitempty"`
 	Timeout         *monitoringv1.Duration               `json:"timeout,omitempty"`
 	EnableHttp2     *bool                                `json:"enableHttp2,omitempty"`
@@ -113,6 +114,14 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithBearerTokenFile(value stri
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *AlertmanagerEndpointsApplyConfiguration) WithAuthorization(value *SafeAuthorizationApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithSigv4 sets the Sigv4 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Sigv4 field is set to the value of the last call.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithSigv4(value *Sigv4ApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
+	b.Sigv4 = value
 	return b
 }
 

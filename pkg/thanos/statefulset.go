@@ -15,13 +15,13 @@
 package thanos
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -159,7 +159,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	thanosVersion := operator.StringValOrDefault(tr.Spec.Version, operator.DefaultThanosVersion)
 	if _, err := semver.ParseTolerant(thanosVersion); err != nil {
-		return nil, errors.Wrap(err, "failed to parse Thanos version")
+		return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 
 	}
 
@@ -171,7 +171,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		"",
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to build image path")
+		return nil, fmt.Errorf("failed to build image path: %w", err)
 	}
 
 	trCLIArgs := []monitoringv1.Argument{
@@ -343,15 +343,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if tr.Spec.PodMetadata != nil {
-		if tr.Spec.PodMetadata.Labels != nil {
-			for k, v := range tr.Spec.PodMetadata.Labels {
-				podLabels[k] = v
-			}
+		for k, v := range tr.Spec.PodMetadata.Labels {
+			podLabels[k] = v
 		}
-		if tr.Spec.PodMetadata.Annotations != nil {
-			for k, v := range tr.Spec.PodMetadata.Annotations {
-				podAnnotations[k] = v
-			}
+		for k, v := range tr.Spec.PodMetadata.Annotations {
+			podAnnotations[k] = v
 		}
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
@@ -426,7 +422,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	containers, err := k8sutil.MergePatchContainers(operatorContainers, tr.Spec.Containers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge containers spec")
+		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
 	terminationGracePeriod := int64(120)

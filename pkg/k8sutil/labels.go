@@ -15,9 +15,9 @@
 package k8sutil
 
 import (
+	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -32,7 +32,7 @@ func LabelSelectionHasChanged(old, current map[string]string, selector *metav1.L
 
 	sel, err := metav1.LabelSelectorAsSelector(selector)
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to convert selector %q", selector.String())
+		return false, fmt.Errorf("failed to convert selector %q: %w", selector.String(), err)
 	}
 
 	// The selector doesn't restrict the selection thus old and current labels always match.

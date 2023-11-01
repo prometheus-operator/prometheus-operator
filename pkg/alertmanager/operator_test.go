@@ -24,13 +24,14 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -188,7 +189,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 				t.Fatal("expected two Alertmanager CRDs to produce the same hash but got different hash")
 			}
 
-			a2Hash, err = createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{Replicas: func(i int32) *int32 { return &i }(2)})
+			a2Hash, err = createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -482,7 +483,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: pointer.String("http://test.local"),
+								URL: ptr.To("http://test.local"),
 							},
 						},
 					}},
@@ -1233,10 +1234,21 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
 
 			o := &Operator{
-				kclient: c,
-				mclient: monitoringfake.NewSimpleClientset(),
-				logger:  level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
-				metrics: operator.NewMetrics(prometheus.NewRegistry()),
+				kclient:    c,
+				mclient:    monitoringfake.NewSimpleClientset(),
+				ssarClient: &alwaysAllowed{},
+				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowInfo()),
+				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				config: Config{
+					Namespaces: operator.Namespaces{
+						AlertmanagerConfigAllowList: map[string]struct{}{
+							v1.NamespaceAll: {},
+						},
+						AlertmanagerAllowList: map[string]struct{}{
+							"foo": {},
+						},
+					},
+				},
 			}
 
 			err := o.bootstrap(context.Background())
@@ -1274,4 +1286,15 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			}
 		})
 	}
+}
+
+// alwaysAllowed implements SelfSubjectAccessReviewInterface.
+type alwaysAllowed struct{}
+
+func (*alwaysAllowed) Create(_ context.Context, _ *authv1.SelfSubjectAccessReview, _ metav1.CreateOptions) (*authv1.SelfSubjectAccessReview, error) {
+	return &authv1.SelfSubjectAccessReview{
+		Status: authv1.SubjectAccessReviewStatus{
+			Allowed: true,
+		},
+	}, nil
 }

@@ -1,0 +1,23 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  webhook_configs:
+  - url: http://test.url
+    http_config:
+      oauth2:
+        client_id: clientID
+        client_secret: clientSecret
+        scopes:
+        - any
+        token_url: https://test.com
+        endpoint_params:
+          some: value
+      follow_redirects: true
+templates: []

@@ -83,6 +83,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	EnforcedLabelLimit              *uint64                                              `json:"enforcedLabelLimit,omitempty"`
 	EnforcedLabelNameLengthLimit    *uint64                                              `json:"enforcedLabelNameLengthLimit,omitempty"`
 	EnforcedLabelValueLengthLimit   *uint64                                              `json:"enforcedLabelValueLengthLimit,omitempty"`
+	EnforcedKeepDroppedTargets      *uint64                                              `json:"enforcedKeepDroppedTargets,omitempty"`
 	EnforcedBodySizeLimit           *monitoringv1.ByteSize                               `json:"enforcedBodySizeLimit,omitempty"`
 	MinReadySeconds                 *uint32                                              `json:"minReadySeconds,omitempty"`
 	HostAliases                     []HostAliasApplyConfiguration                        `json:"hostAliases,omitempty"`
@@ -98,6 +99,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LabelLimit                      *uint64                                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit            *uint64                                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit           *uint64                                              `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets              *uint64                                              `json:"keepDroppedTargets,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -607,6 +609,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelValueLengthL
 	return b
 }
 
+// WithEnforcedKeepDroppedTargets sets the EnforcedKeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnforcedKeepDroppedTargets field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedKeepDroppedTargets(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.EnforcedKeepDroppedTargets = &value
+	return b
+}
+
 // WithEnforcedBodySizeLimit sets the EnforcedBodySizeLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedBodySizeLimit field is set to the value of the last call.
@@ -741,5 +751,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelNameLengthLimit(valu
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+	b.KeepDroppedTargets = &value
 	return b
 }

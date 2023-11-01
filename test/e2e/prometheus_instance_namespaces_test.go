@@ -16,9 +16,9 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +33,17 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	nonInstanceNs := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, instanceNs)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, nil, []string{instanceNs}, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		operatorNs,
+		nil,
+		nil,
+		[]string{instanceNs},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +102,17 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, nil, []string{deniedNs, instanceNs}, []string{instanceNs}, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		operatorNs,
+		nil,
+		[]string{deniedNs, instanceNs},
+		[]string{instanceNs},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +138,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 		svc := framework.MakeEchoService("denied", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), deniedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -163,7 +183,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -215,7 +235,16 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{allowedNs}, nil, []string{instanceNs}, nil, false, false, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		operatorNs,
+		[]string{allowedNs},
+		nil,
+		[]string{instanceNs},
+		nil,
+		false,
+		false, // not clusterrole
+		true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +286,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -281,7 +310,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -295,20 +324,16 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// FIXME(simonpasquier): the unprivileged namespace lister/watcher
-		// isn't notified of updates properly so the code below fails.
-		// Uncomment the test once the lister/watcher is fixed.
-		//
 		// Remove the selecting label on the "allowed" namespace and check that
 		// the target is removed.
 		// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-		//if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, allowedNs, "monitored"); err != nil {
-		//	t.Fatal(err)
-		//}
+		if err := framework.RemoveLabelsFromNamespace(context.Background(), allowedNs, "monitored"); err != nil {
+			t.Fatal(err)
+		}
 
-		//if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 0); err != nil {
-		//	t.Fatal(err)
-		//}
+		if err := framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 0); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
@@ -369,7 +394,17 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNs, []string{"notfound", allowedNs}, nil, []string{"notfound", instanceNs}, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		operatorNs,
+		[]string{"notfound", allowedNs},
+		nil,
+		[]string{"notfound", instanceNs},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -401,7 +436,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
@@ -420,7 +455,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}

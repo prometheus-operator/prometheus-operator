@@ -34,6 +34,12 @@ type Target string
 // +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
 type SDFile string
 
+// EC2Filter is the configuration for filtering EC2 instances.
+type EC2Filter struct {
+	Name   string   `json:"name"`
+	Values []string `json:"values"`
+}
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
@@ -87,6 +93,12 @@ type ScrapeConfigSpec struct {
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
+	//DNSSDConfigs defines a list of DNS service discovery configurations.
+	// +optional
+	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
+	// EC2SDConfigs defines a list of EC2 service discovery configurations.
+	// +optional
+	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -144,6 +156,16 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// Per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// +optional
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +optional
+	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.
@@ -295,4 +317,60 @@ type ConsulSDConfig struct {
 	// TLS Config
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.
+// The DNS servers to be contacted are read from /etc/resolv.conf.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config
+// +k8s:openapi-gen=true
+type DNSSDConfig struct {
+	// A list of DNS domain names to be queried.
+	// +kubebuilder:validation:MinItems:=1
+	Names []string `json:"names"`
+	// RefreshInterval configures the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The type of DNS query to perform. One of SRV, A, AAAA or MX.
+	// If not set, Prometheus uses its default value.
+	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX
+	// +optional
+	Type *string `json:"type"`
+	// The port number used if the query type is not SRV
+	// Ignored for SRV records
+	// +optional
+	Port *int `json:"port"`
+}
+
+// EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.
+// The private IP address is used by default, but may be changed to the public IP address with relabeling.
+// The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+// +k8s:openapi-gen=true
+type EC2SDConfig struct {
+	// The AWS region
+	// +optional
+	Region *string `json:"region"`
+	// AccessKey is the AWS API key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// SecretKey is the AWS API secret.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// AWS Role ARN, an alternative to using AWS API keys.
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
+	// Filters can be used optionally to filter the instance list by other criteria.
+	// Available filter criteria can be found here:
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// +optional
+	Filters []*EC2Filter `json:"filters"`
 }

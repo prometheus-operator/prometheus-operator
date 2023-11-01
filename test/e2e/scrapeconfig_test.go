@@ -24,7 +24,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -96,6 +96,21 @@ func testScrapeConfigCreation(t *testing.T) {
 			},
 		},
 		{
+			name: "dns-sd-config",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{
+							"demo.do.prometheus.io",
+						},
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To("A"),
+						Port:            ptr.To(9090),
+					},
+				},
+			},
+		},
+		{
 			name: "invalid-sd-config",
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
@@ -147,7 +162,17 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		ns,
+		[]string{ns},
+		nil,
+		[]string{ns},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
@@ -241,8 +266,6 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 // testScrapeConfigKubernetesNodeRole tests whether Kubernetes node monitoring works as expected
 func testScrapeConfigKubernetesNodeRole(t *testing.T) {
-	skipPrometheusTests(t)
-
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -270,7 +293,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	createMTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
-	sc.Spec.Scheme = pointer.String("HTTPS")
+	sc.Spec.Scheme = ptr.To("HTTPS")
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
 		Credentials: &v1.SecretKeySelector{
 			LocalObjectReference: v1.LocalObjectReference{
@@ -309,6 +332,50 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	sc.Spec.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 		{
 			Role: "Node",
+		},
+	}
+	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
+	require.NoError(t, err)
+
+	// Check that the targets appear in Prometheus and does proper scrapping
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Remove the ScrapeConfig
+	err = framework.DeleteScrapeConfig(context.Background(), ns, "scrape-config")
+	require.NoError(t, err)
+
+	// Check that the targets disappeared in Prometheus
+	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 0)
+	require.NoError(t, err)
+}
+
+// testScrapeConfigDNSSDConfig tests whether DNS SD based monitoring works as expected
+func testScrapeConfigDNSSDConfig(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "scrapeconfig",
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
+	sc.Spec.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+		{
+			Names: []string{"node.demo.do.prometheus.io"},
+			Type:  ptr.To("A"),
+			Port:  ptr.To(9100),
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)

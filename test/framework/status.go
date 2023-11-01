@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -31,11 +32,27 @@ type resourceStatus struct {
 	conditions       []monitoringv1.Condition
 }
 
+func (f *Framework) AssertCondition(conds []monitoringv1.Condition, expectedType monitoringv1.ConditionType, expectedStatus monitoringv1.ConditionStatus) error {
+	for _, c := range conds {
+		if c.Type != expectedType {
+			continue
+		}
+
+		if c.Status != expectedStatus {
+			return fmt.Errorf("expected condition %q to be %q but got %q", c.Type, expectedStatus, c.Status)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("condition %q not found", expectedType)
+}
+
 // WaitForResourceAvailable waits for a monitoring resource to report itself as being reconciled & available.
 // If the resource isn't available within the given timeout, it returns an error.
 func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceStatus func(context.Context) (resourceStatus, error), timeout time.Duration) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var status resourceStatus
 		status, pollErr = getResourceStatus(ctx)
 		if pollErr != nil {

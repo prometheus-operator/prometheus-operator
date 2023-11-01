@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -2609,8 +2609,6 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 }
 
 func TestPrometheusQuerySpec(t *testing.T) {
-	durationPtr := func(s string) *monitoringv1.Duration { d := monitoringv1.Duration(s); return &d }
-
 	for _, tc := range []struct {
 		name string
 
@@ -2628,10 +2626,10 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "all values provided",
-			lookbackDelta:  pointer.String("2m"),
-			maxConcurrency: pointer.Int32(10),
-			maxSamples:     pointer.Int32(10000),
-			timeout:        durationPtr("1m"),
+			lookbackDelta:  ptr.To("2m"),
+			maxConcurrency: ptr.To(int32(10)),
+			maxSamples:     ptr.To(int32(10000)),
+			timeout:        ptr.To(monitoringv1.Duration("1m")),
 
 			expected: []string{
 				"--query.lookback-delta=2m",
@@ -2642,10 +2640,10 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "zero values are skipped",
-			lookbackDelta:  pointer.String("2m"),
-			maxConcurrency: pointer.Int32(0),
-			maxSamples:     pointer.Int32(0),
-			timeout:        durationPtr("1m"),
+			lookbackDelta:  ptr.To("2m"),
+			maxConcurrency: ptr.To(int32(0)),
+			maxSamples:     ptr.To(int32(0)),
+			timeout:        ptr.To(monitoringv1.Duration("1m")),
 
 			expected: []string{
 				"--query.lookback-delta=2m",
@@ -2654,10 +2652,10 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples skipped if version < 2.5",
-			lookbackDelta:  pointer.String("2m"),
-			maxConcurrency: pointer.Int32(10),
-			maxSamples:     pointer.Int32(10000),
-			timeout:        durationPtr("1m"),
+			lookbackDelta:  ptr.To("2m"),
+			maxConcurrency: ptr.To(int32(10)),
+			maxSamples:     ptr.To(int32(10000)),
+			timeout:        ptr.To(monitoringv1.Duration("1m")),
 			version:        "v2.4.0",
 
 			expected: []string{
@@ -2668,10 +2666,10 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples not skipped if version > 2.5",
-			lookbackDelta:  pointer.String("2m"),
-			maxConcurrency: pointer.Int32(10),
-			maxSamples:     pointer.Int32(10000),
-			timeout:        durationPtr("1m"),
+			lookbackDelta:  ptr.To("2m"),
+			maxConcurrency: ptr.To(int32(10)),
+			maxSamples:     ptr.To(int32(10000)),
+			timeout:        ptr.To(monitoringv1.Duration("1m")),
 			version:        "v2.5.0",
 
 			expected: []string{
@@ -2754,7 +2752,7 @@ func TestSecurityContextCapabilities(t *testing.T) {
 			name: "Thanos sidecar with object storage",
 			spec: monitoringv1.PrometheusSpec{
 				Thanos: &monitoringv1.ThanosSpec{
-					ObjectStorageConfigFile: func(s string) *string { return &s }("/etc/thanos.cfg"),
+					ObjectStorageConfigFile: ptr.To("/etc/thanos.cfg"),
 				},
 			},
 		},

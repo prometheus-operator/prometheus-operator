@@ -22,6 +22,7 @@ type TelegramConfigApplyConfiguration struct {
 	SendResolved         *bool                                `json:"sendResolved,omitempty"`
 	APIURL               *string                              `json:"apiURL,omitempty"`
 	BotToken             *SecretKeySelectorApplyConfiguration `json:"botToken,omitempty"`
+	BotTokenFile         *string                              `json:"botTokenFile,omitempty"`
 	ChatID               *int64                               `json:"chatID,omitempty"`
 	Message              *string                              `json:"message,omitempty"`
 	DisableNotifications *bool                                `json:"disableNotifications,omitempty"`
@@ -56,6 +57,14 @@ func (b *TelegramConfigApplyConfiguration) WithAPIURL(value string) *TelegramCon
 // If called multiple times, the BotToken field is set to the value of the last call.
 func (b *TelegramConfigApplyConfiguration) WithBotToken(value *SecretKeySelectorApplyConfiguration) *TelegramConfigApplyConfiguration {
 	b.BotToken = value
+	return b
+}
+
+// WithBotTokenFile sets the BotTokenFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BotTokenFile field is set to the value of the last call.
+func (b *TelegramConfigApplyConfiguration) WithBotTokenFile(value string) *TelegramConfigApplyConfiguration {
+	b.BotTokenFile = &value
 	return b
 }
 
