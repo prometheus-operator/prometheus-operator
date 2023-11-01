@@ -28,8 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/yaml"
-
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
 
 // GetCRD gets a custom resource definition from the apiserver.
