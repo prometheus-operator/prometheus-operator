@@ -36,6 +36,12 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 		Expected monitoringv1.PrometheusRule
 	}
 
+	group := monitoring.GroupName
+	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	if customGroupV1 != "" {
+		group = customGroupV1
+	}
+
 	testcases := []testCase{
 		{
 			Name: "rule-ns-enforced-add",
@@ -219,7 +225,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     group,
 					Resource:  monitoringv1.PrometheusRuleName,
 				},
 			},
@@ -250,7 +256,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 					excludedFromEnforcement = append(excludedFromEnforcement,
 						monitoringv1.ObjectReference{
 							Namespace: rule.RuleNamespace,
-							Group:     monitoring.GroupName,
+							Group:     group,
 							Resource:  monitoringv1.PrometheusRuleName,
 							Name:      rule.RuleName,
 						})
@@ -318,7 +324,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     group,
 					Resource:  monitoringv1.ServiceMonitorName,
 					Name:      "exclude-me",
 				},
@@ -342,7 +348,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     group,
 					Resource:  monitoringv1.ServiceMonitorName,
 				},
 			},

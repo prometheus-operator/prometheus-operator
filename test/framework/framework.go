@@ -473,6 +473,10 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	}
 
 	group := monitoring.GroupName
+	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	if customGroupV1 != "" {
+		group = customGroupV1
+	}
 
 	alertmanagerCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.AlertmanagerName))
 	if err != nil {

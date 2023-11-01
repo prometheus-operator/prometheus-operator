@@ -41,6 +41,15 @@ import (
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+var PackageGroupName = func() string {
+	group := monitoring.GroupName
+	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	if customGroupV1 != "" {
+		group = customGroupV1
+	}
+	return group
+}()
+
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
@@ -55,7 +64,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		excludedFromEnforcement = append(excludedFromEnforcement,
 			monitoringv1.ObjectReference{
 				Namespace: rule.RuleNamespace,
-				Group:     monitoring.GroupName,
+				Group:     PackageGroupName,
 				Resource:  monitoringv1.PrometheusRuleName,
 				Name:      rule.RuleName,
 			})

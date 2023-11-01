@@ -42,6 +42,15 @@ const labelThanosRulerName = "thanos-ruler-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+var PackageGroupName = func() string {
+	group := monitoring.GroupName
+	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	if customGroupV1 != "" {
+		group = customGroupV1
+	}
+	return group
+}()
+
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
 
@@ -56,7 +65,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		excludedFromEnforcement = append(excludedFromEnforcement,
 			monitoringv1.ObjectReference{
 				Namespace: rule.RuleNamespace,
-				Group:     monitoring.GroupName,
+				Group:     PackageGroupName,
 				Resource:  monitoringv1.PrometheusRuleName,
 				Name:      rule.RuleName,
 			})

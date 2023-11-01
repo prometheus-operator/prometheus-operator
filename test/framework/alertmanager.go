@@ -259,11 +259,19 @@ func (f *Framework) PatchAlertmanagerAndWaitUntilReady(ctx context.Context, name
 }
 
 func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec monitoringv1.AlertmanagerSpec) (*monitoringv1.Alertmanager, error) {
+	var PackageGroupName = func() string {
+		group := monitoring.GroupName
+		customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+		if customGroupV1 != "" {
+			group = customGroupV1
+		}
+		return group
+	}()
 	b, err := json.Marshal(
 		&monitoringv1.Alertmanager{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.AlertmanagersKind,
-				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
+				APIVersion: schema.GroupVersion{Group: PackageGroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,
 		},
