@@ -18,7 +18,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -127,14 +126,14 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 
 // CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
 // manifest on the apiserver and wait until it is available for use.
-func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
+func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, monitoringGroup string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 
-	monitoringGroup := monitoring.GroupName
-	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	if customGroupV1 != "" {
-		monitoringGroup = customGroupV1
-	}
+	// monitoringGroup := monitoring.GroupName
+	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	// if customGroupV1 != "" {
+	// 	monitoringGroup = customGroupV1
+	// }
 
 	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + monitoringGroup + "_" + crdName + ".yaml"
 

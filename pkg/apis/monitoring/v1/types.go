@@ -114,12 +114,7 @@ func (obj *ObjectReference) GroupKind() schema.GroupKind {
 // It is mostly needed for tests which don't create objects through the API and don't benefit from the default value.
 func (obj *ObjectReference) getGroup() string {
 	if obj.Group == "" {
-		monitoringGroup := monitoring.GroupName
-		customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-		if customGroupV1 != "" {
-			monitoringGroup = customGroupV1
-		}
-		return monitoringGroup
+		return PackageGroupName
 	}
 	return obj.Group
 }

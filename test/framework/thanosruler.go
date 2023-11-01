@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -76,17 +75,17 @@ func (f *Framework) PatchThanosRulerAndWaitUntilReady(ctx context.Context, name,
 }
 
 func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec monitoringv1.ThanosRulerSpec) (*monitoringv1.ThanosRuler, error) {
-	monitoringGroup := monitoring.GroupName
-	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	if customGroupV1 != "" {
-		monitoringGroup = customGroupV1
-	}
+	// monitoringGroup := monitoring.GroupName
+	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	// if customGroupV1 != "" {
+	// 	monitoringGroup = customGroupV1
+	// }
 
 	b, err := json.Marshal(
 		&monitoringv1.ThanosRuler{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.ThanosRulerKind,
-				APIVersion: schema.GroupVersion{Group: monitoringGroup, Version: monitoringv1.Version}.String(),
+				APIVersion: schema.GroupVersion{Group: monitoringv1.PackageGroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,
 		},

@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -332,16 +331,16 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 }
 
 func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
-	monitoringGroup := monitoring.GroupName
-	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
-	if customGroupV1 != "" {
-		monitoringGroup = customGroupV1
-	}
+	// monitoringGroup := monitoring.GroupName
+	// customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
+	// if customGroupV1 != "" {
+	// 	monitoringGroup = customGroupV1
+	// }
 	b, err := json.Marshal(
 		&monitoringv1.Prometheus{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.PrometheusesKind,
-				APIVersion: schema.GroupVersion{Group: monitoringGroup, Version: monitoringv1.Version}.String(),
+				APIVersion: schema.GroupVersion{Group: monitoringv1.PackageGroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,
 		},
