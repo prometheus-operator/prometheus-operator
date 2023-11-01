@@ -126,7 +126,7 @@ type ScrapeConfigSpec struct {
 	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// +kubebuilder:validation:Enum=HTTP;HTTPS;http;https
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// BasicAuth information to use on every scrape request.
@@ -225,8 +225,8 @@ type HTTPSDConfig struct {
 // +k8s:openapi-gen=true
 type KubernetesSDConfig struct {
 	// Role of the Kubernetes entities that should be discovered.
-	// Currently the only supported role is "Node".
-	// +kubebuilder:validation:Enum=Node
+	// Currently the only supported role is "node".
+	// +kubebuilder:validation:Enum=Node;node
 	// +required
 	Role string `json:"role"`
 }
@@ -252,7 +252,7 @@ type ConsulSDConfig struct {
 	// +optional
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// +kubebuilder:validation:Enum=HTTP;HTTPS;http;https
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
