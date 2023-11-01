@@ -89,6 +89,8 @@ Usage of ./operator:
     	Cert file to be used for operator web server endpoints. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
     	Client CA certificate file to be used for operator web server endpoints. (default "/etc/tls/private/tls-ca.crt")
+  -web.enable-http2
+    	Enable HTTP2 connections.
   -web.enable-tls
     	Activate prometheus operator web server TLS.   This is useful for example when using the rule validation webhook.
   -web.key-file string

@@ -3,7 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1"
+      "controller-gen.kubebuilder.io/version": "v0.11.1",
+      "operator.prometheus.io/version": "0.68.0"
     },
     "creationTimestamp": null,
     "name": "prometheuses.monitoring.coreos.com"
@@ -844,7 +845,7 @@
                               "type": "string"
                             },
                             "authorization": {
-                              "description": "Authorization section for Alertmanager. \n Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`.",
+                              "description": "Authorization section for Alertmanager. \n Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `sigv4`.",
                               "properties": {
                                 "credentials": {
                                   "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -876,7 +877,7 @@
                               "type": "object"
                             },
                             "basicAuth": {
-                              "description": "BasicAuth configuration for Alertmanager. \n Cannot be set at the same time as `bearerTokenFile`, or `authorization`.",
+                              "description": "BasicAuth configuration for Alertmanager. \n Cannot be set at the same time as `bearerTokenFile`, `authorization` or `sigv4`.",
                               "properties": {
                                 "password": {
                                   "description": "The secret in the service monitor namespace that contains the password for authentication.",
@@ -926,7 +927,7 @@
                               "type": "object"
                             },
                             "bearerTokenFile": {
-                              "description": "File to read bearer token for Alertmanager. \n Cannot be set at the same time as `basicAuth`, or `authorization`. \n *Deprecated: this will be removed in a future release. Prefer using `authorization`.*",
+                              "description": "File to read bearer token for Alertmanager. \n Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`. \n *Deprecated: this will be removed in a future release. Prefer using `authorization`.*",
                               "type": "string"
                             },
                             "enableHttp2": {
@@ -960,6 +961,68 @@
                             "scheme": {
                               "description": "Scheme to use when firing alerts.",
                               "type": "string"
+                            },
+                            "sigv4": {
+                              "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL. \n It requires Prometheus >= v2.48.0. \n Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.",
+                              "properties": {
+                                "accessKey": {
+                                  "description": "AccessKey is the AWS API key. If not specified, the environment variable `AWS_ACCESS_KEY_ID` is used.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "profile": {
+                                  "description": "Profile is the named AWS profile used to authenticate.",
+                                  "type": "string"
+                                },
+                                "region": {
+                                  "description": "Region is the AWS region. If blank, the region from the default credentials chain used.",
+                                  "type": "string"
+                                },
+                                "roleArn": {
+                                  "description": "RoleArn is the named AWS profile used to authenticate.",
+                                  "type": "string"
+                                },
+                                "secretKey": {
+                                  "description": "SecretKey is the AWS API secret. If not specified, the environment variable `AWS_SECRET_ACCESS_KEY` is used.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                }
+                              },
+                              "type": "object"
                             },
                             "timeout": {
                               "description": "Timeout is a per-target Alertmanager timeout when pushing alerts.",

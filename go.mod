@@ -7,9 +7,9 @@ require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blang/semver/v4 v4.0.0
-	github.com/brancz/kube-rbac-proxy v0.14.4
+	github.com/brancz/kube-rbac-proxy v0.15.0
 	github.com/cespare/xxhash/v2 v2.2.0
-	github.com/docker/distribution v2.8.2+incompatible
+	github.com/distribution/reference v0.5.0
 	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-openapi/swag v0.22.4
@@ -29,25 +29,26 @@ require (
 	github.com/prometheus/exporter-toolkit v0.10.0
 	github.com/prometheus/prometheus v0.47.2
 	github.com/stretchr/testify v1.8.4
-	github.com/thanos-io/thanos v0.32.4
+	github.com/thanos-io/thanos v0.32.5
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/net v0.17.0
 	golang.org/x/sync v0.4.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.28.2
-	k8s.io/apiextensions-apiserver v0.28.2
-	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
-	k8s.io/component-base v0.28.2
+	k8s.io/api v0.28.3
+	k8s.io/apiextensions-apiserver v0.28.3
+	k8s.io/apimachinery v0.28.3
+	k8s.io/client-go v0.28.3
+	k8s.io/component-base v0.28.3
 	k8s.io/klog/v2 v2.100.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
-	sigs.k8s.io/controller-runtime v0.16.2
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/controller-runtime v0.16.3
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
+	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect

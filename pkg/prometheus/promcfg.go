@@ -339,6 +339,35 @@ func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
 }
 
+func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
+	assetStoreKey string,
+	store *assets.Store,
+	sigv4 *monitoringv1.Sigv4,
+) yaml.MapSlice {
+	if sigv4 == nil {
+		return cfg
+	}
+
+	sigv4Cfg := yaml.MapSlice{}
+	if sigv4.Region != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "region", Value: sigv4.Region})
+	}
+	if store.SigV4Assets[assetStoreKey].AccessKeyID != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[assetStoreKey].AccessKeyID})
+	}
+	if store.SigV4Assets[assetStoreKey].SecretKeyID != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[assetStoreKey].SecretKeyID})
+	}
+	if sigv4.Profile != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "profile", Value: sigv4.Profile})
+	}
+	if sigv4.RoleArn != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
+	}
+
+	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
+}
+
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
@@ -1576,6 +1605,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
+		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
+
 		if am.APIVersion == "v1" || am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
@@ -1848,27 +1879,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		if spec.Sigv4 != nil {
-			sigV4 := yaml.MapSlice{}
-			if spec.Sigv4.Region != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
-			}
-			key := fmt.Sprintf("remoteWrite/%d", i)
-			if store.SigV4Assets[key].AccessKeyID != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[key].AccessKeyID})
-			}
-			if store.SigV4Assets[key].SecretKeyID != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[key].SecretKeyID})
-			}
-			if spec.Sigv4.Profile != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "profile", Value: spec.Sigv4.Profile})
-			}
-			if spec.Sigv4.RoleArn != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
-			}
-
-			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "sigv4", sigV4)
-		}
+		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
 
 		if spec.AzureAD != nil {
 			azureAd := yaml.MapSlice{
@@ -2596,7 +2607,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
 			if config.Region != nil {
-
 				configs[i] = []yaml.MapItem{
 					{
 						Key:   "region",
@@ -2633,6 +2643,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.RoleARN != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role_arn",
+					Value: config.RoleARN,
+				})
+			}
+
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
@@ -2644,6 +2661,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "port",
 					Value: config.Port,
+				})
+			}
+
+			if config.Filters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filters",
+					Value: config.Filters,
 				})
 			}
 		}

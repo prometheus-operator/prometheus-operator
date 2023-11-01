@@ -1008,6 +1008,86 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 	}
 }
 
+func TestAlertmanagerSigv4(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "Valid Prom Version",
+			version: "2.48.0",
+			golden:  "AlertmanagerSigv4_Valid_Prom_Version.golden",
+		},
+		{
+			name:    "Invalid Prom Version",
+			version: "2.47.0",
+			golden:  "AlertmanagerSigv4_Invalid_Prom_Version.golden",
+		},
+	} {
+		p := defaultPrometheus()
+		p.Spec.Version = tc.version
+		p.Spec.Alerting = &monitoringv1.AlertingSpec{
+			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+				{
+					Name:      "alertmanager-main",
+					Namespace: "default",
+					Port:      intstr.FromString("web"),
+					Sigv4: &monitoringv1.Sigv4{
+						Profile: "profilename",
+						RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
+						AccessKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "access-key",
+						},
+						SecretKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "secret-key",
+						},
+						Region: "us-central-0",
+					},
+				},
+			},
+		}
+
+		cg := mustNewConfigGenerator(t, p)
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			p.Spec.EvaluationInterval,
+			p.Spec.QueryLogFile,
+			p.Spec.RuleSelector,
+			p.Spec.Exemplars,
+			p.Spec.TSDB,
+			p.Spec.Alerting,
+			p.Spec.RemoteRead,
+			nil,
+			nil,
+			nil,
+			nil,
+			&assets.Store{
+				SigV4Assets: map[string]assets.SigV4Credentials{
+					"alertmanager/auth/0": {
+						AccessKeyID: "access-key",
+						SecretKeyID: "secret-key",
+					},
+				},
+			},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		golden.Assert(t, string(cfg), tc.golden)
+	}
+}
+
 func TestAlertmanagerAPIVersion(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
@@ -5292,7 +5372,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 		expectedErr bool
 	}{
 		{
-			name: "ec2_sd_config_valid",
+			name: "ec2_sd_config_valid_with_api_keys",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
@@ -5314,7 +5394,45 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SDConfigValid.golden",
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigValidAPIKeys.golden",
+		},
+		{
+			name: "ec2_sd_config_valid_with_role_arn",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigValidRoleARN.golden",
+		},
+		{
+			name: "ec2_sd_config_valid_with_filters",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+						Filters: []*monitoringv1alpha1.EC2Filter{
+							{
+								Name:   "tag:environment",
+								Values: []string{"prod"},
+							},
+							{
+								Name:   "tag:service",
+								Values: []string{"web", "db"},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EC2SDConfigFilters.golden",
 		},
 		{
 			name: "ec2_sd_config_invalid",

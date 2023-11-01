@@ -3,7 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1"
+      "controller-gen.kubebuilder.io/version": "v0.11.1",
+      "operator.prometheus.io/version": "0.68.0"
     },
     "creationTimestamp": null,
     "name": "scrapeconfigs.monitoring.coreos.com"
@@ -654,6 +655,29 @@
                           ],
                           "type": "object"
                         },
+                        "filters": {
+                          "description": "Filters can be used optionally to filter the instance list by other criteria. Available filter criteria can be found here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
+                          "items": {
+                            "description": "EC2Filter is the configuration for filtering EC2 instances.",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "values": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "values"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
                           "type": "integer"
@@ -665,6 +689,10 @@
                         },
                         "region": {
                           "description": "The AWS region",
+                          "type": "string"
+                        },
+                        "roleARN": {
+                          "description": "AWS Role ARN, an alternative to using AWS API keys.",
                           "type": "string"
                         },
                         "secretKey": {

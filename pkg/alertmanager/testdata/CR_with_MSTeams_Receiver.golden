@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  msteams_configs:
+  - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
+    title: test title
+    text: test text
+templates: []
