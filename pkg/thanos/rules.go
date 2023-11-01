@@ -17,6 +17,7 @@ package thanos
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -42,7 +43,7 @@ const labelThanosRulerName = "thanos-ruler-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
-var PackageGroupName = func() string {
+var monitoringGroup = func() string {
 	group := monitoring.GroupName
 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
 	if customGroupV1 != "" {
@@ -65,7 +66,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		excludedFromEnforcement = append(excludedFromEnforcement,
 			monitoringv1.ObjectReference{
 				Namespace: rule.RuleNamespace,
-				Group:     PackageGroupName,
+				Group:     monitoringGroup,
 				Resource:  monitoringv1.PrometheusRuleName,
 				Name:      rule.RuleName,
 			})

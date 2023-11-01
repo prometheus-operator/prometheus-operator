@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -472,80 +473,80 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 		return errors.Wrap(err, "failed to delete prometheus cluster role")
 	}
 
-	group := monitoring.GroupName
+	monitoringGroup := monitoring.GroupName
 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
 	if customGroupV1 != "" {
-		group = customGroupV1
+		monitoringGroup = customGroupV1
 	}
 
-	alertmanagerCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.AlertmanagerName))
+	alertmanagerCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.AlertmanagerName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make alertmanager CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete alertmanager CRD")
 	}
 
-	podMonitorCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.PodMonitorName))
+	podMonitorCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.PodMonitorName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make podMonitor CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", podMonitorCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", podMonitorCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete podMonitor CRD")
 	}
 
-	probeCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.ProbeName))
+	probeCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.ProbeName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make probe CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", probeCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", probeCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete probe CRD")
 	}
 
-	prometheusCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.PrometheusName))
+	prometheusCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.PrometheusName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make prometheus CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete prometheus CRD")
 	}
 
-	prometheusRuleCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.PrometheusRuleName))
+	prometheusRuleCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.PrometheusRuleName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make prometheusRule CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusRuleCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusRuleCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete prometheusRule CRD")
 	}
 
-	serviceMonitorCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.ServiceMonitorName))
+	serviceMonitorCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.ServiceMonitorName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make serviceMonitor CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", serviceMonitorCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", serviceMonitorCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete serviceMonitor CRD")
 	}
 
-	thanosRulerCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1.ThanosRulerName))
+	thanosRulerCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1.ThanosRulerName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make thanosRuler CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", thanosRulerCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", thanosRulerCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete thanosRuler CRD")
 	}
 
-	alertmanagerConfigCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, group, monitoringv1alpha1.AlertmanagerConfigName))
+	alertmanagerConfigCRD, err := f.MakeCRD(fmt.Sprintf("%s/prometheus-operator-crd/%s_%s.yaml", f.exampleDir, monitoringGroup, monitoringv1alpha1.AlertmanagerConfigName))
 	if err != nil {
 		return errors.Wrap(err, "failed to make alertmanagerConfig CRD")
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerConfigCRD.Name, group))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerConfigCRD.Name, monitoringGroup))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "failed to delete alertmanagerConfig CRD")
 	}

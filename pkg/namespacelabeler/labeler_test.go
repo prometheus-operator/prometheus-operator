@@ -14,6 +14,7 @@
 package namespacelabeler
 
 import (
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -36,10 +37,10 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 		Expected monitoringv1.PrometheusRule
 	}
 
-	group := monitoring.GroupName
+	monitoringGroup := monitoring.GroupName
 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
 	if customGroupV1 != "" {
-		group = customGroupV1
+		monitoringGroup = customGroupV1
 	}
 
 	testcases := []testCase{
@@ -225,7 +226,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     group,
+					Group:     monitoringGroup,
 					Resource:  monitoringv1.PrometheusRuleName,
 				},
 			},
@@ -256,7 +257,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 					excludedFromEnforcement = append(excludedFromEnforcement,
 						monitoringv1.ObjectReference{
 							Namespace: rule.RuleNamespace,
-							Group:     group,
+							Group:     monitoringGroup,
 							Resource:  monitoringv1.PrometheusRuleName,
 							Name:      rule.RuleName,
 						})
@@ -324,7 +325,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     group,
+					Group:     monitoringGroup,
 					Resource:  monitoringv1.ServiceMonitorName,
 					Name:      "exclude-me",
 				},
@@ -348,7 +349,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     group,
+					Group:     monitoringGroup,
 					Resource:  monitoringv1.ServiceMonitorName,
 				},
 			},

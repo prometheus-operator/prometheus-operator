@@ -18,6 +18,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -129,21 +130,21 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
 
-	group := monitoring.GroupName
+	monitoringGroup := monitoring.GroupName
 	customGroupV1 := os.Getenv("PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP")
 	if customGroupV1 != "" {
-		group = customGroupV1
+		monitoringGroup = customGroupV1
 	}
 
-	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
+	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + monitoringGroup + "_" + crdName + ".yaml"
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
 		return errors.Wrapf(err, "create CRD: %s from manifest: %s", crdName, assetPath)
 	}
 
-	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
-	crd.Spec.Group = group
+	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + monitoringGroup
+	crd.Spec.Group = monitoringGroup
 
 	err = f.CreateOrUpdateCRD(ctx, crd)
 	if err != nil {
