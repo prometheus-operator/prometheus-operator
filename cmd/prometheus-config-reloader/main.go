@@ -114,7 +114,7 @@ func main() {
 
 	err = web.Validate(*webConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "Unable to validate web configuration file. err: "+err.Error())
+		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
 		os.Exit(2)
 	}
 
