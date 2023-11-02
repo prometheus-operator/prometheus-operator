@@ -284,7 +284,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 		}
 	}
 
-	v1GroupName := monitoringV1.PackageGroupName
+	v1GroupName := monitoringv1.PackageGroupName
 	v1Alpha1GroupName := monitoring.GroupName
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.AlertmanagerName, v1GroupName, func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -526,7 +526,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make alertmanager CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete alertmanager CRD: %w", err)
 	}
@@ -535,7 +535,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make podMonitor CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", podMonitorCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", podMonitorCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete podMonitor CRD: %w", err)
 	}
@@ -544,7 +544,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make probe CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", probeCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", probeCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete probe CRD: %w", err)
 	}
@@ -553,7 +553,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make prometheus CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete prometheus CRD: %w", err)
 	}
@@ -562,7 +562,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make prometheusRule CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusRuleCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", prometheusRuleCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete prometheusRule CRD: %w", err)
 	}
@@ -571,7 +571,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make serviceMonitor CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", serviceMonitorCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", serviceMonitorCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete serviceMonitor CRD: %w", err)
 	}
@@ -580,7 +580,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make thanosRuler CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", thanosRulerCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", thanosRulerCRD.Name, monitoringv1.PackageGroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete thanosRuler CRD: %w", err)
 	}
@@ -589,7 +589,7 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 	if err != nil {
 		return fmt.Errorf("failed to make alertmanagerConfig CRD: %w", err)
 	}
-	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerConfigCRD.Name, monitoringGroup))
+	err = f.DeleteCRD(ctx, fmt.Sprintf("%s.%s", alertmanagerConfigCRD.Name, monitoring.GroupName))
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete alertmanagerConfig CRD: %w", err)
 	}
