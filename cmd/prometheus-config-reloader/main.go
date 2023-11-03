@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -76,6 +77,11 @@ func main() {
 		"address on which to expose metrics (disabled when empty)").
 		String()
 
+	webConfig := app.Flag(
+		"web-config-file",
+		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
+	).Default("").String()
+
 	logFormat := app.Flag(
 		"log-format",
 		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", "))).
@@ -104,6 +110,12 @@ func main() {
 	logger, err := logging.NewLogger(*logLevel, *logFormat)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	err = web.Validate(*webConfig)
+	if err != nil {
+		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
+		os.Exit(2)
 	}
 
 	if createStatefulsetOrdinalFrom != nil {
@@ -158,11 +170,14 @@ func main() {
 			w.Write([]byte(`{"status":"up"}`))
 		})
 
-		srv := http.Server{Addr: *listenAddress}
+		srv := &http.Server{}
 
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			return srv.ListenAndServe()
+			return web.ListenAndServe(srv, &web.FlagConfig{
+				WebListenAddresses: &[]string{*listenAddress},
+				WebConfigFile:      webConfig,
+			}, logger)
 		}, func(error) {
 			srv.Close()
 		})
