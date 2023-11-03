@@ -993,6 +993,52 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with invalid label",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Label: "app=example,env!=production,release in (v1, v2",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid field",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Field: "status.phase=Running,metadata.name!=worker,)",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid label and field",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Label: "app=example,env!=production,release in (v1, v2)",
+								Field: "status.phase=Running,metadata.name!=worker",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Consul SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{

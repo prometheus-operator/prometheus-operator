@@ -17457,6 +17457,65 @@ the inhibition to take effect.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.K8SRole">K8SRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+<p>K8SRole is role of the service in Kubernetes.
+Currently the only supported role is &ldquo;Node&rdquo;.</p>
+</div>
+<h3 id="monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+<p>K8SSelectorConfig is Kubernetes Selector Config</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>role</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
+K8SRole
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>label</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>field</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.KeyValue">KeyValue
 </h3>
 <p>
@@ -17518,12 +17577,27 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
+K8SRole
+</a>
 </em>
 </td>
 <td>
-<p>Role of the Kubernetes entities that should be discovered.
-Currently the only supported role is &ldquo;Node&rdquo;.</p>
+<p>Role of the Kubernetes entities that should be discovered.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
+[]K8SSelectorConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Selector to select objects.</p>
 </td>
 </tr>
 </tbody>
