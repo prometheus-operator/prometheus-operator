@@ -60,6 +60,14 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 // +kubebuilder:validation:Enum=ResourceName;ShardName
 type AdditionalLabelSelector string
 
+const (
+    // Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).
+    ResourceNameLabelSelector AdditionalLabelSelector = "ResourceName"
+    
+    // Automatically add a label selector that will select all pods matching the same shard.
+    ShardNameLabelSelector AdditionalLabelSelector = "ShardName"    
+)
+
 type TopologySpreadConstraint struct {
 	*v1.TopologySpreadConstraint `json:",inline"`
 
