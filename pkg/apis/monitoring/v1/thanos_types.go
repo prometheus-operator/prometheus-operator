@@ -68,7 +68,14 @@ type ThanosRulerList struct {
 type ThanosRulerSpec struct {
 	// Version of Thanos to be deployed.
 	Version string `json:"version,omitempty"`
-	// PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.
+	// PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.
+	//
+	// The following items are reserved and cannot be overridden:
+	// * "app.kubernetes.io/name" label, set to "thanos-ruler".
+	// * "app.kubernetes.io/managed-by" label, set to "prometheus-operator".
+	// * "app.kubernetes.io/instance" label, set to the name of the ThanosRuler instance.
+	// * "thanos-ruler" label, set to the name of the ThanosRuler instance.
+	// * "kubectl.kubernetes.io/default-container" annotation, set to "thanos-ruler".
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// Thanos container image URL.
 	Image string `json:"image,omitempty"`
@@ -158,10 +165,10 @@ type ThanosRulerSpec struct {
 	// Deprecated: use excludedFromEnforcement instead.
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// Log level for ThanosRuler to be configured with.
-	//+kubebuilder:validation:Enum="";debug;info;warn;error
+	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for ThanosRuler to be configured with.
-	//+kubebuilder:validation:Enum="";logfmt;json
+	// +kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 	// Port name used for the pods and governing service.
 	// Defaults to `web`.

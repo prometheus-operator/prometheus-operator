@@ -4096,7 +4096,7 @@
                     "type": "boolean"
                   },
                   "podMetadata": {
-                    "description": "PodMetadata configures labels and annotations which are propagated to the Prometheus pods.",
+                    "description": "PodMetadata configures labels and annotations which are propagated to the Prometheus pods. \n The following items are reserved and cannot be overridden: * \"prometheus\" label, set to the name of the Prometheus object. * \"app.kubernetes.io/instance\" label, set to the name of the Prometheus object. * \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\". * \"app.kubernetes.io/name\" label, set to \"prometheus\". * \"app.kubernetes.io/version\" label, set to the Prometheus version. * \"operator.prometheus.io/name\" label, set to the name of the Prometheus object. * \"operator.prometheus.io/shard\" label, set to the shard number of the Prometheus object. * \"kubectl.kubernetes.io/default-container\" annotation, set to \"prometheus\".",
                     "properties": {
                       "annotations": {
                         "additionalProperties": {
