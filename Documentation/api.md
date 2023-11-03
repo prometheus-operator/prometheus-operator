@@ -106,8 +106,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the Alertmanager pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -1345,8 +1345,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -3254,8 +3254,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the ThanosRuler pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
@@ -4465,8 +4465,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the Alertmanager pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -5574,8 +5574,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -9343,8 +9343,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -13032,8 +13032,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the ThanosRuler pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
@@ -14666,8 +14666,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -18344,8 +18344,8 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods,
-out of which, the following are reserved and cannot be overridden:
+<p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
 * &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
