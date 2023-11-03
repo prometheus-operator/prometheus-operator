@@ -54,23 +54,29 @@ func MakeHostAliases(input []monitoringv1.HostAlias) []v1.HostAlias {
 	return output
 }
 
+const ShardLabel = "operator.prometheus.io/shard"
+const ResourceNameLabel = "operator.prometheus.io/name"
+
 func MakeK8sTopologySpreadConstraint(podLabels map[string]string, tsc monitoringv1.TopologySpreadConstraint) v1.TopologySpreadConstraint {
-	if len(tsc.AdditionalLabelSelectors) > 0 {
-		if tsc.LabelSelector == nil {
-			tsc.LabelSelector = &metav1.LabelSelector{
-				MatchLabels: make(map[string]string),
-			}
-		}
+	if tsc.AdditionalLabelSelectors == nil {
+		return *tsc.TopologySpreadConstraint
+	}
 
-		labelMap := map[monitoringv1.AdditionalLabelSelector]string{
-			"ShardName":    "operator.prometheus.io/shard",
-			"ResourceName": "operator.prometheus.io/name",
+	if tsc.LabelSelector == nil {
+		tsc.LabelSelector = &metav1.LabelSelector{
+			MatchLabels: make(map[string]string),
 		}
+	}
 
-		for _, label := range tsc.AdditionalLabelSelectors {
-			labelName := labelMap[label]
-			tsc.LabelSelector.MatchLabels[labelName] = podLabels[labelName]
+	if *tsc.AdditionalLabelSelectors == monitoringv1.ResourceNameLabelSelector {
+		for key, value := range podLabels {
+			tsc.LabelSelector.MatchLabels[key] = value
 		}
+	}
+
+	if *tsc.AdditionalLabelSelectors == monitoringv1.ShardAndResourceNameLabelSelector {
+		tsc.LabelSelector.MatchLabels[ShardLabel] = podLabels[ShardLabel]
+		tsc.LabelSelector.MatchLabels[ResourceNameLabel] = podLabels[ResourceNameLabel]
 	}
 
 	return *tsc.TopologySpreadConstraint

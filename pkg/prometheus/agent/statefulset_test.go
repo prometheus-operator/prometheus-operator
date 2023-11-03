@@ -17,6 +17,7 @@ package prometheusagent
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/go-kit/log"
@@ -27,6 +28,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -213,6 +215,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		spec monitoringv1alpha1.PrometheusAgentSpec
+		tsc  v1.TopologySpreadConstraint
 	}{
 		{
 			name: "without labelSelector and additionalLabels",
@@ -228,6 +231,11 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 						},
 					},
 				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
 			},
 		},
 		{
@@ -250,16 +258,24 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					},
 				},
 			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "prometheus",
+					},
+				},
+			},
 		},
 		{
-			name: "with labelSelector and additionalLabels",
+			name: "with labelSelector and additionalLabels as ShardAndNameResource",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
-							AdditionalLabelSelectors: []monitoringv1.AdditionalLabelSelector{
-								"ShardName",
-							},
+							AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
 							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
@@ -274,6 +290,57 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					},
 				},
 			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app":                           "prometheus",
+						prompkg.ShardLabelName:          "0",
+						prompkg.PrometheusNameLabelName: "",
+					},
+				},
+			},
+		},
+		{
+			name: "with labelSelector and additionalLabels as ResourceName",
+			spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							AdditionalLabelSelectors: ptr.To(monitoringv1.ResourceNameLabelSelector),
+							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app":                           "prometheus",
+						"app.kubernetes.io/instance":    "",
+						"app.kubernetes.io/managed-by":  "prometheus-operator",
+						"app.kubernetes.io/name":        "prometheus-agent",
+						"app.kubernetes.io/version":     strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
+						"operator.prometheus.io/name":   "",
+						prompkg.ShardLabelName:          "0",
+						prompkg.PrometheusNameLabelName: "",
+					},
+				},
+			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -282,13 +349,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
-
-			if tc.spec.TopologySpreadConstraints[0].AdditionalLabelSelectors != nil {
-				matchLabels := sts.Spec.Template.Spec.TopologySpreadConstraints[0].LabelSelector.MatchLabels
-				assert.Equal(t, len(matchLabels), 2)
-				assert.True(t, matchLabels["app"] == "prometheus", "app label should be present")
-				assert.True(t, matchLabels["operator.prometheus.io/shard"] == "0", "shard label should be present")
-			}
+			assert.Equal(t, tc.tsc, sts.Spec.Template.Spec.TopologySpreadConstraints[0])
 		})
 	}
 }

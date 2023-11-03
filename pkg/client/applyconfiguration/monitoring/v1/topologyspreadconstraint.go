@@ -25,7 +25,7 @@ import (
 // with apply.
 type TopologySpreadConstraintApplyConfiguration struct {
 	v1.TopologySpreadConstraint `json:",inline"`
-	AdditionalLabelSelectors    []monitoringv1.AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
+	AdditionalLabelSelectors    *monitoringv1.AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
 }
 
 // TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the TopologySpreadConstraint type for use with
@@ -34,12 +34,10 @@ func TopologySpreadConstraint() *TopologySpreadConstraintApplyConfiguration {
 	return &TopologySpreadConstraintApplyConfiguration{}
 }
 
-// WithAdditionalLabelSelectors adds the given value to the AdditionalLabelSelectors field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the AdditionalLabelSelectors field.
-func (b *TopologySpreadConstraintApplyConfiguration) WithAdditionalLabelSelectors(values ...monitoringv1.AdditionalLabelSelector) *TopologySpreadConstraintApplyConfiguration {
-	for i := range values {
-		b.AdditionalLabelSelectors = append(b.AdditionalLabelSelectors, values[i])
-	}
+// WithAdditionalLabelSelectors sets the AdditionalLabelSelectors field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AdditionalLabelSelectors field is set to the value of the last call.
+func (b *TopologySpreadConstraintApplyConfiguration) WithAdditionalLabelSelectors(value monitoringv1.AdditionalLabelSelector) *TopologySpreadConstraintApplyConfiguration {
+	b.AdditionalLabelSelectors = &value
 	return b
 }

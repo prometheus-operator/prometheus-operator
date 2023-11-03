@@ -3119,8 +3119,8 @@ func (in *TopologySpreadConstraint) DeepCopyInto(out *TopologySpreadConstraint) 
 	}
 	if in.AdditionalLabelSelectors != nil {
 		in, out := &in.AdditionalLabelSelectors, &out.AdditionalLabelSelectors
-		*out = make([]AdditionalLabelSelector, len(*in))
-		copy(*out, *in)
+		*out = new(AdditionalLabelSelector)
+		**out = **in
 	}
 }
 

@@ -4102,6 +4102,21 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </p>
 <div>
 </div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;ResourceName&#34;</p></td>
+<td><p>Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).</p>
+</td>
+</tr><tr><td><p>&#34;ShardAndResourceName&#34;</p></td>
+<td><p>Automatically add a label selector that will select all pods matching the same shard.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertingSpec">AlertingSpec
 </h3>
 <p>
@@ -14522,7 +14537,7 @@ fail and an error will be logged.</p>
 <code>additionalLabelSelectors</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AdditionalLabelSelector">
-[]AdditionalLabelSelector
+AdditionalLabelSelector
 </a>
 </em>
 </td>

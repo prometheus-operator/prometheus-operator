@@ -6222,13 +6222,10 @@ spec:
                     additionalLabelSelectors:
                       description: Defines what Prometheus Operator managed labels
                         should be added to labelSelector on the topologySpreadConstraint.
-                      items:
-                        enum:
-                        - ResourceName
-                        - ShardName
-                        type: string
-                      type: array
-                      x-kubernetes-list-type: set
+                      enum:
+                      - ResourceName
+                      - ShardAndResourceName
+                      type: string
                     labelSelector:
                       description: LabelSelector is used to find matching pods. Pods
                         that match this label selector are counted to determine the

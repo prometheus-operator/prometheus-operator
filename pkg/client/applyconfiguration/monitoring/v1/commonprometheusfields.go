@@ -65,7 +65,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
 	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
 	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
-	TopologySpreadConstraints            []corev1.TopologySpreadConstraint                       `json:"topologySpreadConstraints,omitempty"`
+	TopologySpreadConstraints            []TopologySpreadConstraintApplyConfiguration            `json:"topologySpreadConstraints,omitempty"`
 	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`

@@ -57,24 +57,23 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 	return l.Status
 }
 
-// +kubebuilder:validation:Enum=ResourceName;ShardName
+// +kubebuilder:validation:Enum=ResourceName;ShardAndResourceName
 type AdditionalLabelSelector string
 
 const (
-    // Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).
-    ResourceNameLabelSelector AdditionalLabelSelector = "ResourceName"
-    
-    // Automatically add a label selector that will select all pods matching the same shard.
-    ShardNameLabelSelector AdditionalLabelSelector = "ShardName"    
+	// Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).
+	ResourceNameLabelSelector AdditionalLabelSelector = "ResourceName"
+
+	// Automatically add a label selector that will select all pods matching the same shard.
+	ShardAndResourceNameLabelSelector AdditionalLabelSelector = "ShardAndResourceName"
 )
 
 type TopologySpreadConstraint struct {
 	*v1.TopologySpreadConstraint `json:",inline"`
 
 	//+optional
-	// +listType=set
 	// Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.
-	AdditionalLabelSelectors []AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
+	AdditionalLabelSelectors *AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
 }
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
