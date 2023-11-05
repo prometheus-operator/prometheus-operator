@@ -28,7 +28,6 @@ import (
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/prometheus/client_golang/prometheus"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -324,27 +323,7 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 }
 
 func api() *Admission {
-	validationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_triggered_total",
-		Help: "Number of times a prometheusRule object triggered validation",
-	})
-
-	validationErrors := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_rule_validation_errors_total",
-		Help: "Number of errors that occurred while validating a prometheusRules object",
-	})
-	alertManagerConfigValidationTriggered := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_triggered_total",
-		Help: "Number of times an alertmanagerconfig object triggered validation",
-	})
-
-	alertManagerConfigValidationError := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_config_validation_errors_total",
-		Help: "Number of errors that occurred while validating a alertmanagerconfig object",
-	})
-
 	a := New(level.NewFilter(log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)), level.AllowNone()))
-	a.RegisterMetrics(validationTriggered, validationErrors, alertManagerConfigValidationTriggered, alertManagerConfigValidationError)
 
 	return a
 }

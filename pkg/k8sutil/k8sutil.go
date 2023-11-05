@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
-	"github.com/pkg/errors"
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
@@ -33,10 +33,11 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/kubernetes"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	clientauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -54,29 +55,10 @@ var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
 var scheme = runtime.NewScheme()
 
-var ErrPrerequiresitesFailed = errors.New("unmet prerequisites")
-
 func init() {
 	_ = monitoringv1.SchemeBuilder.AddToScheme(scheme)
 	_ = monitoringv1alpha1.SchemeBuilder.AddToScheme(scheme)
 	_ = monitoringv1beta1.SchemeBuilder.AddToScheme(scheme)
-}
-
-type CRDChecker struct {
-	kclient kubernetes.Interface
-}
-
-func NewCRDChecker(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*CRDChecker, error) {
-	cfg, err := NewClusterConfig(host, tlsInsecure, tlsConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating cluster config failed")
-	}
-
-	kclient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
-	}
-	return &CRDChecker{kclient: kclient}, nil
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
@@ -97,7 +79,7 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	return false, nil
 }
 
-func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
+func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig, asUser string) (*rest.Config, error) {
 	var cfg *rest.Config
 	var err error
 
@@ -132,73 +114,96 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	cfg.Burst = 100
 
 	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
+	cfg.Impersonate.UserName = asUser
 
 	return cfg, nil
 }
 
-// CheckPrerequisites checks if given resource's CRD is installed in the cluster and the operator
-// serviceaccount has the necessary RBAC verbs in the namespace list to reconcile it.
-func (cc CRDChecker) CheckPrerequisites(ctx context.Context, nsAllowList []string, verbs map[string][]string, sgv, resource string) error {
-	if err := cc.validateCRDInstallation(sgv, resource); err != nil {
-		return err
-	}
-
-	missingPermissions, err := cc.getMissingPermissions(ctx, nsAllowList, verbs)
-	if err != nil {
-		return err
-	}
-	if len(missingPermissions) > 0 {
-		return fmt.Errorf("%w: some permissions are missing: %v", ErrPrerequiresitesFailed, missingPermissions)
-	}
-
-	return nil
+// ResourceAttribute represents authorization attributes to check on a given resource.
+type ResourceAttribute struct {
+	Resource string
+	Name     string
+	Group    string
+	Version  string
+	Verbs    []string
 }
 
-func (cc CRDChecker) validateCRDInstallation(sgv, resource string) error {
-	crdInstalled, err := IsAPIGroupVersionResourceSupported(cc.kclient.Discovery(), sgv, resource)
-	if err != nil {
-		return fmt.Errorf("failed to check if the API supports %s resource (apiGroup: %q): %w", resource, sgv, err)
+// IsAllowed returns whether the user (e.g. the operator's service account) has
+// been granted the required RBAC attributes.
+// It returns true when the conditions are met for the namespaces (an empty
+// namespace value means "all").
+// The second return value returns the list of permissions that are missing if
+// the requirements aren't met.
+func IsAllowed(
+	ctx context.Context,
+	ssarClient clientauthv1.SelfSubjectAccessReviewInterface,
+	namespaces []string,
+	attributes ...ResourceAttribute,
+) (bool, []error, error) {
+	if len(attributes) == 0 {
+		return false, nil, fmt.Errorf("resource attributes must not be empty")
 	}
-	if !crdInstalled {
-		return fmt.Errorf("%w: %s resource (apiGroup: %q) not installed", ErrPrerequiresitesFailed, resource, sgv)
+
+	if len(namespaces) == 0 {
+		namespaces = []string{v1.NamespaceAll}
 	}
-	return nil
-}
 
-// getMissingPermissions returns the RBAC permissions that the controller would need to be
-// granted to fulfill its mission. An empty map means that everything is ok.
-func (cc CRDChecker) getMissingPermissions(ctx context.Context, nsAllowList []string, verbs map[string][]string) (map[string][]string, error) {
-	var ssar *authv1.SelfSubjectAccessReview
-	var ssarResponse *authv1.SelfSubjectAccessReview
-	var err error
-	missingPermissions := map[string][]string{}
+	var missingPermissions []error
+	for _, ns := range namespaces {
+		for _, ra := range attributes {
+			for _, verb := range ra.Verbs {
+				resourceAttributes := authv1.ResourceAttributes{
+					Verb:     verb,
+					Group:    ra.Group,
+					Version:  ra.Version,
+					Resource: ra.Resource,
+					// An empty name value means "all" resources.
+					Name: ra.Name,
+					// An empty namespace value means "all" for namespace-scoped resources.
+					Namespace: ns,
+				}
 
-	for _, ns := range nsAllowList {
-		for resource, verbs := range verbs {
-			for _, verb := range verbs {
-				ssar = &authv1.SelfSubjectAccessReview{
+				// Special case for SAR on namespaces resources: Namespace and
+				// Name need to be equal.
+				if resourceAttributes.Group == "" && resourceAttributes.Resource == "namespaces" && resourceAttributes.Name != "" && resourceAttributes.Namespace == "" {
+					resourceAttributes.Namespace = resourceAttributes.Name
+				}
+
+				ssar := &authv1.SelfSubjectAccessReview{
 					Spec: authv1.SelfSubjectAccessReviewSpec{
-						ResourceAttributes: &authv1.ResourceAttributes{
-							Verb:     verb,
-							Group:    monitoringv1alpha1.SchemeGroupVersion.Group,
-							Resource: resource,
-							// If ns is empty string, it will check cluster-wide
-							Namespace: ns,
-						},
+						ResourceAttributes: &resourceAttributes,
 					},
 				}
-				ssarResponse, err = cc.kclient.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, ssar, metav1.CreateOptions{})
+
+				// FIXME(simonpasquier): retry in case of server-side errors.
+				ssarResponse, err := ssarClient.Create(ctx, ssar, metav1.CreateOptions{})
 				if err != nil {
-					return nil, err
+					return false, nil, err
 				}
+
 				if !ssarResponse.Status.Allowed {
-					missingPermissions[resource] = append(missingPermissions[resource], verb)
+					var (
+						reason   error
+						resource = ra.Resource
+					)
+					if ra.Name != "" {
+						resource += "/" + ra.Name
+					}
+
+					switch {
+					case ns == v1.NamespaceAll:
+						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for all namespaces", verb, resource, ra.Group)
+					default:
+						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for namespace %q", verb, resource, ra.Group, ns)
+					}
+
+					missingPermissions = append(missingPermissions, reason)
 				}
 			}
 		}
 	}
 
-	return missingPermissions, nil
+	return len(missingPermissions) == 0, missingPermissions, nil
 }
 
 func IsResourceNotFoundError(err error) bool {
@@ -206,9 +211,11 @@ func IsResourceNotFoundError(err error) bool {
 	if !ok {
 		return false
 	}
+
 	if se.Status().Code == http.StatusNotFound && se.Status().Reason == metav1.StatusReasonNotFound {
 		return true
 	}
+
 	return false
 }
 
@@ -302,14 +309,13 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 }
 
 // IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
-//
-// you can exec `kubectl api-resources` to find groupVersion and resource.
-func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupversion string, resource string) (bool, error) {
-	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupversion)
+func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupVersion schema.GroupVersion, resource string) (bool, error) {
+	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupVersion.String())
 	if err != nil {
 		if IsResourceNotFoundError(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
 
@@ -318,6 +324,7 @@ func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterfac
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 

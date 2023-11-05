@@ -25,7 +25,7 @@ For an introduction to the Prometheus Operator, see the [getting started](https:
 
 ## Project Status
 
-The operator in itself is considered to be production ready. Please refer to the Custom Resource Defintion (CRD) versions for the status of each CRD:
+The operator in itself is considered to be production ready. Please refer to the Custom Resource Definition (CRD) versions for the status of each CRD:
 
 * `monitoring.coreos.com/v1`: **stable** CRDs and API, changes are made in a backward-compatible way.
 * `monitoring.coreos.com/v1beta1`: **unstable** CRDs and API, changes can happen but the team is focused on avoiding them. We encourage usage in production for users that accept the risk of breaking changes.
@@ -210,7 +210,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 #### Running *end-to-end* tests on local minikube cluster:
 
-1. `minikube start --kubernetes-version=stable --memory=4096 --extra-config=apiserver.authorization-mode=RBAC`
+1. `minikube start --kubernetes-version=stable --memory=4096 --extra-config=apiserver.authorization-mode=NODE,RBAC`
 2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
    docker image on minikube's docker
 3. `make test-e2e`

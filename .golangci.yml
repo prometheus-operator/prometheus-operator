@@ -5,6 +5,7 @@ linters:
   enable:
   - revive
   - gci
+  - depguard
 
 issues:
   exclude-rules:
@@ -24,3 +25,38 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/prometheus-operator/prometheus-operator)
+  depguard:
+    rules:
+      forbid-pkg-errors:
+        files:
+        - "**/admission/*.go"
+        - "**/alertmanager/*.go"
+        - "**/alertmanager/**/*.go"
+        - "**/apis/*.go"
+        - "**/apis/**/*.go"
+        - "**/assets/*.go"
+        - "**/client/*.go"
+        - "**/client/**/*.go"
+        - "**/informers/*.go"
+        - "**/k8sutil/*.go"
+        - "**/listwatch/*.go"
+        - "**/namespacelabeler/*.go"
+        - "**/operator/*.go"
+        - "**/prometheus/*.go"
+        - "**/prometheus/**/*.go"
+        - "**/server/*.go"
+        - "**/thanos/*.go"
+        - "**/versionutil/*.go"
+        - "**/webconfig/*.go"
+        - "**/e2e/*.go"
+        - "**/framework/admission_webhooks.go"
+        - "**/framework/alertmanager.go"
+        - "**/framework/cluster_role_binding.go"
+        - "**/framework/cluster_role.go"
+        - "**/framework/configmap.go"
+        - "**/framework/context.go"
+        - "**/framework/crd.go"
+        - "**/framework/framework.go"
+        deny:
+        - pkg: "github.com/pkg/errors"
+          dsc: Should be replaced with standard lib errors or fmt.Errorf

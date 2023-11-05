@@ -1,0 +1,2 @@
+kubernetes_sd_configs:
+- role: endpoints

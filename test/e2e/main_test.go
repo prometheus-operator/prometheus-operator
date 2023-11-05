@@ -232,8 +232,10 @@ func TestAllNS(t *testing.T) {
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
+		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
+		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
 		"AMScaling":                               testAMScaling,
 		"AMVersionMigration":                      testAMVersionMigration,
 		"AMStorageUpdate":                         testAMStorageUpdate,
@@ -310,6 +312,9 @@ func testAllNSPrometheus(t *testing.T) {
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
+		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
+		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
+		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 	}
 
 	for name, f := range testFuncs {
@@ -321,11 +326,13 @@ func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
+		"ThanosRulerWithStatefulsetCreationFailure":     testThanosRulerWithStatefulsetCreationFailure,
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
 		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 		"ThanosRulerQueryConfig":                        testTRQueryConfig,
+		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
@@ -363,11 +370,12 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                 testPrometheusInstanceNamespacesAllNs,
-		"AllowList":             testPrometheusInstanceNamespacesAllowList,
-		"DenyList":              testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":     testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle": testScrapeConfigLifecycle,
+		"AllNs":                   testPrometheusInstanceNamespacesAllNs,
+		"AllowList":               testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":       testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":   testScrapeConfigLifecycle,
+		"ConfigReloaderResources": testConfigReloaderResources,
 	}
 
 	for name, f := range testFuncs {
@@ -409,13 +417,22 @@ const (
 // TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded
 func TestPrometheusVersionUpgrade(t *testing.T) {
 	skipPromVersionUpgradeTests(t)
-	testFuncs := map[string]func(t *testing.T){
-		"PromVersionMigration": testPromVersionMigration,
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for name, f := range testFuncs {
-		t.Run(name, f)
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
 	}
+
+	t.Run("PromVersionMigration", testPromVersionMigration)
 }
 
 func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {

@@ -23,7 +23,6 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -301,7 +300,7 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
-	level.Debug(rr.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	level.Debug(rr.logger).Log("msg", "update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	if rr.DeletionInProgress(cur) {
 		return
@@ -403,7 +402,7 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 	}
 
 	rr.reconcileErrors.Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("sync %q failed", key)))
+	utilruntime.HandleError(fmt.Errorf("sync %q failed: %w", key, err))
 	rr.reconcileQ.AddRateLimited(key)
 
 	return true
@@ -424,7 +423,7 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 		return true
 	}
 
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("status %q failed", key)))
+	utilruntime.HandleError(fmt.Errorf("status %q failed: %w", key, err))
 	rr.statusQ.AddRateLimited(key)
 
 	return true
@@ -438,7 +437,7 @@ func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInf
 		ns = append(ns, obj.(*v1.Namespace).Name)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list namespaces")
+		return nil, fmt.Errorf("failed to list namespaces: %w", err)
 	}
 	return ns, nil
 }

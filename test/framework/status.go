@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -29,6 +30,22 @@ type resourceStatus struct {
 	generation       int64
 	replicas         int32
 	conditions       []monitoringv1.Condition
+}
+
+func (f *Framework) AssertCondition(conds []monitoringv1.Condition, expectedType monitoringv1.ConditionType, expectedStatus monitoringv1.ConditionStatus) error {
+	for _, c := range conds {
+		if c.Type != expectedType {
+			continue
+		}
+
+		if c.Status != expectedStatus {
+			return fmt.Errorf("expected condition %q to be %q but got %q", c.Type, expectedStatus, c.Status)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("condition %q not found", expectedType)
 }
 
 // WaitForResourceAvailable waits for a monitoring resource to report itself as being reconciled & available.

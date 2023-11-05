@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -114,7 +113,7 @@ func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) stri
 func compress(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, data); err != nil {
-		return nil, errors.Wrap(err, "failed to gzip config")
+		return nil, fmt.Errorf("failed to gzip config: %w", err)
 	}
 
 	return buf.Bytes(), nil

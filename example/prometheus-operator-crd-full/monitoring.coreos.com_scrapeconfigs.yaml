@@ -527,6 +527,130 @@ spec:
                   - server
                   type: object
                 type: array
+              dnsSDConfigs:
+                description: DNSSDConfigs defines a list of DNS service discovery
+                  configurations.
+                items:
+                  description: DNSSDConfig allows specifying a set of DNS domain names
+                    which are periodically queried to discover a list of targets.
+                    The DNS servers to be contacted are read from /etc/resolv.conf.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config
+                  properties:
+                    names:
+                      description: A list of DNS domain names to be queried.
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    port:
+                      description: The port number used if the query type is not SRV
+                        Ignored for SRV records
+                      type: integer
+                    refreshInterval:
+                      description: RefreshInterval configures the time after which
+                        the provided names are refreshed. If not set, Prometheus uses
+                        its default value.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    type:
+                      description: The type of DNS query to perform. One of SRV, A,
+                        AAAA or MX. If not set, Prometheus uses its default value.
+                      enum:
+                      - SRV
+                      - A
+                      - AAAA
+                      - MX
+                      type: string
+                  required:
+                  - names
+                  type: object
+                type: array
+              ec2SDConfigs:
+                description: EC2SDConfigs defines a list of EC2 service discovery
+                  configurations.
+                items:
+                  description: EC2SDConfig allow retrieving scrape targets from AWS
+                    EC2 instances. The private IP address is used by default, but
+                    may be changed to the public IP address with relabeling. The IAM
+                    credentials used must have the ec2:DescribeInstances permission
+                    to discover scrape targets See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+                  properties:
+                    accessKey:
+                      description: AccessKey is the AWS API key.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    filters:
+                      description: 'Filters can be used optionally to filter the instance
+                        list by other criteria. Available filter criteria can be found
+                        here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+                        Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html'
+                      items:
+                        description: EC2Filter is the configuration for filtering
+                          EC2 instances.
+                        properties:
+                          name:
+                            type: string
+                          values:
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - name
+                        - values
+                        type: object
+                      type: array
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    region:
+                      description: The AWS region
+                      type: string
+                    roleARN:
+                      description: AWS Role ARN, an alternative to using AWS API keys.
+                      type: string
+                    secretKey:
+                      description: SecretKey is the AWS API secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                  type: object
+                type: array
               fileSDConfigs:
                 description: FileSDConfigs defines a list of file service discovery
                   configurations.
@@ -779,6 +903,12 @@ spec:
                   - url
                   type: object
                 type: array
+              keepDroppedTargets:
+                description: "Per-scrape limit on the number of targets dropped by
+                  relabeling that will be kept in memory. 0 means no limit. \n It
+                  requires Prometheus >= v2.47.0."
+                format: int64
+                type: integer
               kubernetesSDConfigs:
                 description: KubernetesSDConfigs defines a list of Kubernetes service
                   discovery configurations.
@@ -788,10 +918,34 @@ spec:
                   properties:
                     role:
                       description: Role of the Kubernetes entities that should be
-                        discovered. Currently the only supported role is "Node".
+                        discovered.
                       enum:
                       - Node
+                      - node
                       type: string
+                    selectors:
+                      description: Selector to select objects.
+                      items:
+                        description: K8SSelectorConfig is Kubernetes Selector Config
+                        properties:
+                          field:
+                            type: string
+                          label:
+                            type: string
+                          role:
+                            description: K8SRole is role of the service in Kubernetes.
+                              Currently the only supported role is "Node".
+                            enum:
+                            - Node
+                            - node
+                            type: string
+                        required:
+                        - role
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - role
+                      x-kubernetes-list-type: map
                   required:
                   - role
                   type: object

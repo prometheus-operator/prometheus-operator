@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -235,12 +234,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		operator.StringValOrDefault(a.Spec.SHA, ""),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to build image path")
+		return nil, fmt.Errorf("failed to build image path: %w", err)
 	}
 
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse alertmanager version")
+		return nil, fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	amArgs := []string{
@@ -304,6 +303,17 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	if a.Spec.ClusterPeerTimeout != "" {
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer-timeout=%s", a.Spec.ClusterPeerTimeout))
+	}
+
+	// If multiple Alertmanager clusters are deployed on the same cluster, it can happen
+	// that because pod IP addresses are recycled, an Alertmanager instance from cluster B
+	// connects with cluster A.
+	// --cluster.label flag was introduced in alertmanager v0.26, this helps to block
+	// any traffic that is not meant for the cluster.
+	// The value is hardcoded and the value is guaranteed to be unique in a given cluster but
+	// if there's a use case, we can consider a new field in the CRD.
+	if version.GTE(semver.MustParse("0.26.0")) {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.label=%s/%s", a.Namespace, a.Name))
 	}
 
 	isHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0"))
@@ -448,7 +458,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			})
 		}
 	default:
-		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
+		return nil, fmt.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
 	assetsVolume := v1.Volume{
@@ -723,7 +733,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	containers, err := k8sutil.MergePatchContainers(defaultContainers, a.Spec.Containers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge containers spec")
+		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
 	var minReadySeconds int32
@@ -749,7 +759,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 
 	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, a.Spec.InitContainers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge init containers spec")
+		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

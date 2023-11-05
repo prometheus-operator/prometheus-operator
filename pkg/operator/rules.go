@@ -15,13 +15,13 @@
 package operator
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -52,12 +52,12 @@ type PrometheusRuleSelector struct {
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, logger log.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse version")
+		return nil, fmt.Errorf("failed to parse version: %w", err)
 	}
 
 	ruleSelector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
-		return nil, errors.Wrap(err, "convert rule label selector to selector")
+		return nil, fmt.Errorf("convert rule label selector to selector: %w", err)
 	}
 
 	return &PrometheusRuleSelector{
@@ -78,7 +78,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 
 	content, err := yaml.Marshal(promRuleSpec)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal content")
+		return "", fmt.Errorf("failed to marshal content: %w", err)
 	}
 
 	errs := ValidateRule(promRuleSpec)
@@ -158,7 +158,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 
 	content, err := yaml.Marshal(promRuleSpec)
 	if err != nil {
-		return []error{errors.Wrap(err, "failed to marshal content")}
+		return []error{fmt.Errorf("failed to marshal content: %w", err)}
 	}
 	_, errs := rulefmt.Parse(content)
 	return errs
@@ -180,7 +180,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 			promRules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
-			return nil, 0, errors.Wrapf(err, "failed to list prometheus rules in namespace %s", ns)
+			return nil, 0, fmt.Errorf("failed to list prometheus rules in namespace %s: %w", ns, err)
 		}
 	}
 

@@ -13,6 +13,7 @@ declare SHOW_USAGE=false
 declare SKIP_OPERATOR_RUN_CHECK=false
 declare USE_DEFAULT_CONTEXT=false
 declare API_SERVER=""
+declare IMPERSONATE_USER="${IMPERSONATE_USER:-}"
 
 # tmp operator files that needs to be cleaned up
 declare -r CA_FILE="tmp/CA_FILE"
@@ -131,6 +132,7 @@ run_operator() {
 	echo "──────────────────────────────────────────────────────────────────"
 
 	run ./operator \
+		--as="$IMPERSONATE_USER" \
 		--apiserver="$API_SERVER" \
 		--ca-file="$CA_FILE" \
 		--cert-file="$CERT_FILE" \

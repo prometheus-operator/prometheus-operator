@@ -34,6 +34,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	LabelLimit            *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                              `json:"labelValueLengthLimit,omitempty"`
+	KeepDroppedTargets    *uint64                              `json:"keepDroppedTargets,omitempty"`
 	AttachMetadata        *AttachMetadataApplyConfiguration    `json:"attachMetadata,omitempty"`
 }
 
@@ -137,6 +138,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value ui
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ServiceMonitorSpecApplyConfiguration {
+	b.KeepDroppedTargets = &value
 	return b
 }
 

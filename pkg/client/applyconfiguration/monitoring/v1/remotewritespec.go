@@ -35,6 +35,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	BearerTokenFile      *string                           `json:"bearerTokenFile,omitempty"`
 	Authorization        *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
 	Sigv4                *Sigv4ApplyConfiguration          `json:"sigv4,omitempty"`
+	AzureAD              *AzureADApplyConfiguration        `json:"azureAd,omitempty"`
 	BearerToken          *string                           `json:"bearerToken,omitempty"`
 	TLSConfig            *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
 	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
@@ -152,6 +153,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithAuthorization(value *Authorizati
 // If called multiple times, the Sigv4 field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithSigv4(value *Sigv4ApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.Sigv4 = value
+	return b
+}
+
+// WithAzureAD sets the AzureAD field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AzureAD field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithAzureAD(value *AzureADApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
+	b.AzureAD = value
 	return b
 }
 
