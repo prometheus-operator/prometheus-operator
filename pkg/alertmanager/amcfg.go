@@ -1126,6 +1126,7 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
 		HTML:          in.HTML,
+		Device:        *in.Device,
 	}
 
 	{
@@ -1995,6 +1996,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
+	}
+
+	if poc.Device != "" && lessThanV0_26 {
+		msg := "'device' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.UserKeyFile = ""
 	}
 
 	return poc.HTTPConfig.sanitize(amVersion, logger)
