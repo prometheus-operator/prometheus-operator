@@ -169,8 +169,8 @@ func newSrv(logger log.Logger, tlsConf *tls.Config) *srv {
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"status":"up"}`))
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"up"}`))
 	})
 
 	httpServer := http.Server{
