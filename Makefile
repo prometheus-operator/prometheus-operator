@@ -32,6 +32,7 @@ TYPES_V1BETA1_TARGET := pkg/apis/monitoring/v1beta1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
+export DOCKER_BUILDKIT=1
 
 CONTROLLER_GEN_BINARY := $(TOOLS_BIN_DIR)/controller-gen
 JB_BINARY=$(TOOLS_BIN_DIR)/jb
@@ -168,29 +169,37 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 .PHONY: k8s-gen
 k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
+## Pull main images to use as cache for build
+# .PHONY: pull-main-images
+# pull-main-images:
+# 	$(CONTAINER_CLI) pull $(IMAGE_OPERATOR):main
+# 	$(CONTAINER_CLI) pull $(IMAGE_RELOADER):main
+# 	$(CONTAINER_CLI) pull $(IMAGE_WEBHOOK):main
+
+
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
-.hack-operator-image: Dockerfile operator
+.hack-operator-image: Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	DOCKER_BUILDKIT=1 $(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
+	$(CONTAINER_CLI) build --cache-from ${IMAGE_OPERATOR}:main --build-arg ARCH=$(ARCH) --build-arg BUILDKIT_INLINE_CACHE=1 --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
-.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
+.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	DOCKER_BUILDKIT=1 $(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	$(CONTAINER_CLI) build --cache-from ${IMAGE_RELOADER}:main --build-arg ARCH=$(ARCH) --build-arg BUILDKIT_INLINE_CACHE=1 --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
+.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	DOCKER_BUILDKIT=1 $(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+	$(CONTAINER_CLI) build --cache-from ${IMAGE_WEBHOOK}:main --build-arg ARCH=$(ARCH) --build-arg BUILDKIT_INLINE_CACHE=1 --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 	touch $@
 
 .PHONY: update-go-deps
@@ -374,7 +383,9 @@ $(TOOLING): $(TOOLS_BIN_DIR)
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
 	@echo Downloading shellcheck
-	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
+	@cd $(TOOLS_BIN_DIR)
+	@echo wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz"
+	@echo tar -xJv --strip=1 shellcheck-stable/shellcheck
 
 # generate k8s generator variable and target,
 # i.e. if $(1)=informer-gen:
