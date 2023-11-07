@@ -6357,6 +6357,10 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              serviceName:
+                description: ServiceName is the name of the Service resource created
+                  for the PrometheusAgent instance.
+                type: string
               sha:
                 description: '*Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.*'
@@ -9775,6 +9779,10 @@ spec:
                   Prometheus deployment (their labels match the selector).
                 format: int32
                 type: integer
+              serviceName:
+                description: ServiceName is the name of the Service resource associated
+                  with the Prometheus instance.
+                type: string
               shardStatuses:
                 description: The list has one entry per shard. Each entry provides
                   a summary of the shard status.

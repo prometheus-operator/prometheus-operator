@@ -26,6 +26,7 @@ type PrometheusStatusApplyConfiguration struct {
 	UnavailableReplicas *int32                          `json:"unavailableReplicas,omitempty"`
 	Conditions          []ConditionApplyConfiguration   `json:"conditions,omitempty"`
 	ShardStatuses       []ShardStatusApplyConfiguration `json:"shardStatuses,omitempty"`
+	ServiceName         *string                         `json:"serviceName,omitempty"`
 }
 
 // PrometheusStatusApplyConfiguration constructs an declarative configuration of the PrometheusStatus type for use with
@@ -97,5 +98,13 @@ func (b *PrometheusStatusApplyConfiguration) WithShardStatuses(values ...*ShardS
 		}
 		b.ShardStatuses = append(b.ShardStatuses, *values[i])
 	}
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *PrometheusStatusApplyConfiguration) WithServiceName(value string) *PrometheusStatusApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }

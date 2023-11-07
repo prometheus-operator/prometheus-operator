@@ -429,9 +429,14 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operat
 		p.Spec.PortName = prompkg.DefaultPortName
 	}
 
+	serviceName := p.Spec.ServiceName
+	if serviceName == "" {
+		serviceName = governingServiceName
+	}
+
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
+			Name: serviceName,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					Name:       p.GetName(),

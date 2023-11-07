@@ -607,6 +607,9 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	// ServiceName is the name of the Service resource created for the PrometheusAgent instance.
+	// +optional
+	ServiceName string `json:"serviceName,omitempty"`
 }
 
 // +genclient
@@ -861,6 +864,9 @@ type PrometheusStatus struct {
 	// +listMapKey=shardID
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
+	// ServiceName is the name of the Service resource associated with the Prometheus
+	// instance.
+	ServiceName string `json:"serviceName,omitempty"`
 }
 
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.

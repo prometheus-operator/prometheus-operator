@@ -100,6 +100,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LabelNameLengthLimit            *uint64                                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit           *uint64                                              `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets              *uint64                                              `json:"keepDroppedTargets,omitempty"`
+	ServiceName                     *string                                              `json:"serviceName,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -759,5 +760,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(val
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value uint64) *CommonPrometheusFieldsApplyConfiguration {
 	b.KeepDroppedTargets = &value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
