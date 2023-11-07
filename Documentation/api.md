@@ -106,7 +106,14 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;alertmanager&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Alertmanager version.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;alertmanager&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -1354,6 +1361,15 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -3268,7 +3284,13 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;thanos-ruler&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;thanos-ruler&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -4308,7 +4330,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth configuration for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>bearerTokenFile</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>bearerTokenFile</code>, <code>authorization</code> or <code>sigv4</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4320,7 +4342,7 @@ string
 </td>
 <td>
 <p>File to read bearer token for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>sigv4</code>.</p>
 <p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
@@ -4336,7 +4358,23 @@ SafeAuthorization
 <td>
 <em>(Optional)</em>
 <p>Authorization section for Alertmanager.</p>
-<p>Cannot be set at the same time as <code>basicAuth</code>, or <code>bearerTokenFile</code>.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>sigv4</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sigv4</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Sigv4">
+Sigv4
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenFile</code> or <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4517,7 +4555,14 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;alertmanager&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Alertmanager instance.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;alertmanager&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Alertmanager version.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;alertmanager&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -5635,6 +5680,15 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -9454,6 +9508,15 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -12778,7 +12841,7 @@ int32
 <h3 id="monitoring.coreos.com/v1.Sigv4">Sigv4
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>)
 </p>
 <div>
 <p>Sigv4 optionally configures AWS&rsquo;s Signature Verification 4 signing process to
@@ -13148,7 +13211,13 @@ EmbeddedObjectMetadata
 </em>
 </td>
 <td>
-<p>PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.</p>
+<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;thanos-ruler&rdquo; label, set to the name of the ThanosRuler instance.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;thanos-ruler&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -14777,6 +14846,15 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -16951,6 +17029,44 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.EC2Filter">EC2Filter
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
+</p>
+<div>
+<p>EC2Filter is the configuration for filtering EC2 instances.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig
 </h3>
 <p>
@@ -17012,6 +17128,18 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
+<code>roleARN</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AWS Role ARN, an alternative to using AWS API keys.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>refreshInterval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -17035,6 +17163,23 @@ int
 <em>(Optional)</em>
 <p>The port to scrape metrics from. If using the public IP address, this must
 instead be specified in the relabeling rule.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filters</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EC2Filter">
+[]EC2Filter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filters can be used optionally to filter the instance list by other criteria.
+Available filter criteria can be found here:
+<a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
+Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
 </td>
 </tr>
 </tbody>
@@ -17288,7 +17433,7 @@ Duration
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -17552,6 +17697,65 @@ the inhibition to take effect.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.K8SRole">K8SRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+<p>K8SRole is role of the service in Kubernetes.
+Currently the only supported role is &ldquo;Node&rdquo;.</p>
+</div>
+<h3 id="monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+<p>K8SSelectorConfig is Kubernetes Selector Config</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>role</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
+K8SRole
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>label</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>field</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.KeyValue">KeyValue
 </h3>
 <p>
@@ -17613,12 +17817,109 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
+K8SRole
+</a>
+</em>
+</td>
+<td>
+<p>Role of the Kubernetes entities that should be discovered.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
+[]K8SSelectorConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Selector to select objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookUrl</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>MSTeams webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
 string
 </em>
 </td>
 <td>
-<p>Role of the Kubernetes entities that should be discovered.
-Currently the only supported role is &ldquo;Node&rdquo;.</p>
+<em>(Optional)</em>
+<p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message body template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -18461,6 +18762,15 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <p>PodMetadata configures labels and annotations which are propagated to the Prometheus pods.</p>
+<p>The following items are reserved and cannot be overridden:
+* &ldquo;prometheus&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/instance&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
+* &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;prometheus&rdquo;.
+* &ldquo;app.kubernetes.io/version&rdquo; label, set to the Prometheus version.
+* &ldquo;operator.prometheus.io/name&rdquo; label, set to the name of the Prometheus object.
+* &ldquo;operator.prometheus.io/shard&rdquo; label, set to the shard number of the Prometheus object.
+* &ldquo;kubectl.kubernetes.io/default-container&rdquo; annotation, set to &ldquo;prometheus&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -20035,6 +20345,20 @@ string
 </td>
 <td>
 <p>List of Webex configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>msteamsConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">
+[]MSTeamsConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>
@@ -22586,7 +22910,7 @@ SafeTLSConfig
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -22798,6 +23122,88 @@ string
 </td>
 <td>
 <p>Value of the tuple.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MSTeamsConfig configures notifications via Microsoft Teams.
+It requires Alertmanager &gt;= 0.26.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookUrl</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>MSTeams webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message body template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -23942,6 +24348,20 @@ string
 </td>
 <td>
 <p>List of Webex configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>msteamsConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">
+[]MSTeamsConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of MSTeams configurations.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 </tbody>

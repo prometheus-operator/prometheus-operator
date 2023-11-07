@@ -60,6 +60,16 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
 	// PodMetadata configures labels and annotations which are propagated to the Prometheus pods.
+	//
+	// The following items are reserved and cannot be overridden:
+	// * "prometheus" label, set to the name of the Prometheus object.
+	// * "app.kubernetes.io/instance" label, set to the name of the Prometheus object.
+	// * "app.kubernetes.io/managed-by" label, set to "prometheus-operator".
+	// * "app.kubernetes.io/name" label, set to "prometheus".
+	// * "app.kubernetes.io/version" label, set to the Prometheus version.
+	// * "operator.prometheus.io/name" label, set to the name of the Prometheus object.
+	// * "operator.prometheus.io/shard" label, set to the shard number of the Prometheus object.
+	// * "kubectl.kubernetes.io/default-container" annotation, set to "prometheus".
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 
 	// ServiceMonitors to be selected for target discovery. An empty label
@@ -205,10 +215,10 @@ type CommonPrometheusFields struct {
 	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
 
 	// Log level for Prometheus and the config-reloader sidecar.
-	//+kubebuilder:validation:Enum="";debug;info;warn;error
+	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Log level for Prometheus and the config-reloader sidecar.
-	//+kubebuilder:validation:Enum="";logfmt;json
+	// +kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Interval between consecutive scrapes.
@@ -308,7 +318,7 @@ type CommonPrometheusFields struct {
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// Defines the pod's topology spread constraints if specified.
-	//+optional
+	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// Defines the list of remote write configurations.
@@ -793,7 +803,7 @@ type PrometheusSpec struct {
 
 type PrometheusTracingConfig struct {
 	// Client used to export the traces. Supported values are `http` or `grpc`.
-	//+kubebuilder:validation:Enum=http;grpc
+	// +kubebuilder:validation:Enum=http;grpc
 	// +optional
 	ClientType *string `json:"clientType"`
 
@@ -815,7 +825,7 @@ type PrometheusTracingConfig struct {
 	Headers map[string]string `json:"headers"`
 
 	// Compression key for supported compression types. The only supported value is `gzip`.
-	//+kubebuilder:validation:Enum=gzip
+	// +kubebuilder:validation:Enum=gzip
 	// +optional
 	Compression *string `json:"compression"`
 
@@ -1035,10 +1045,10 @@ type ThanosSpec struct {
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
 
 	// Log level for the Thanos sidecar.
-	//+kubebuilder:validation:Enum="";debug;info;warn;error
+	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for the Thanos sidecar.
-	//+kubebuilder:validation:Enum="";logfmt;json
+	// +kubebuilder:validation:Enum="";logfmt;json
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Defines the start of time range limit served by the Thanos sidecar's StoreAPI.
@@ -1469,24 +1479,33 @@ type AlertmanagerEndpoints struct {
 
 	// BasicAuth configuration for Alertmanager.
 	//
-	// Cannot be set at the same time as `bearerTokenFile`, or `authorization`.
+	// Cannot be set at the same time as `bearerTokenFile`, `authorization` or `sigv4`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 
 	// File to read bearer token for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
 	//
 	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.
 	//
-	// Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`.
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `sigv4`.
 	//
 	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
+
+	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.
+	//
+	// +optional
+	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "v1" or "v2".

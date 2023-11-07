@@ -28,6 +28,7 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 
@@ -710,6 +711,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateKubernetesSDConfigs(sc); err != nil {
+			rejectFn(sc, fmt.Errorf("kubernetesSDConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateConsulSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("consulSDConfigs: %w", err))
 			continue
@@ -740,6 +746,21 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	}
 
 	return res, nil
+}
+
+func (rs *ResourceSelector) validateKubernetesSDConfigs(sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.KubernetesSDConfigs {
+		for _, s := range config.Selectors {
+			if _, err := fields.ParseSelector(s.Field); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+
+			if _, err := labels.Parse(s.Label); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+	}
+	return nil
 }
 
 func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {

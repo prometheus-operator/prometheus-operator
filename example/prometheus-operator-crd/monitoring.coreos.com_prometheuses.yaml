@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
+    operator.prometheus.io/version: 0.69.0
   creationTimestamp: null
   name: prometheuses.monitoring.coreos.com
 spec:
@@ -1019,7 +1020,8 @@ spec:
                           type: string
                         authorization:
                           description: "Authorization section for Alertmanager. \n
-                            Cannot be set at the same time as `basicAuth`, or `bearerTokenFile`."
+                            Cannot be set at the same time as `basicAuth`, `bearerTokenFile`
+                            or `sigv4`."
                           properties:
                             credentials:
                               description: Selects a key of a Secret in the namespace
@@ -1051,7 +1053,7 @@ spec:
                         basicAuth:
                           description: "BasicAuth configuration for Alertmanager.
                             \n Cannot be set at the same time as `bearerTokenFile`,
-                            or `authorization`."
+                            `authorization` or `sigv4`."
                           properties:
                             password:
                               description: The secret in the service monitor namespace
@@ -1098,9 +1100,9 @@ spec:
                           type: object
                         bearerTokenFile:
                           description: "File to read bearer token for Alertmanager.
-                            \n Cannot be set at the same time as `basicAuth`, or `authorization`.
-                            \n *Deprecated: this will be removed in a future release.
-                            Prefer using `authorization`.*"
+                            \n Cannot be set at the same time as `basicAuth`, `authorization`,
+                            or `sigv4`. \n *Deprecated: this will be removed in a
+                            future release. Prefer using `authorization`.*"
                           type: string
                         enableHttp2:
                           description: Whether to enable HTTP2.
@@ -1124,6 +1126,68 @@ spec:
                         scheme:
                           description: Scheme to use when firing alerts.
                           type: string
+                        sigv4:
+                          description: "Sigv4 allows to configures AWS's Signature
+                            Verification 4 for the URL. \n It requires Prometheus
+                            >= v2.48.0. \n Cannot be set at the same time as `basicAuth`,
+                            `bearerTokenFile` or `authorization`."
+                          properties:
+                            accessKey:
+                              description: AccessKey is the AWS API key. If not specified,
+                                the environment variable `AWS_ACCESS_KEY_ID` is used.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            profile:
+                              description: Profile is the named AWS profile used to
+                                authenticate.
+                              type: string
+                            region:
+                              description: Region is the AWS region. If blank, the
+                                region from the default credentials chain used.
+                              type: string
+                            roleArn:
+                              description: RoleArn is the named AWS profile used to
+                                authenticate.
+                              type: string
+                            secretKey:
+                              description: SecretKey is the AWS API secret. If not
+                                specified, the environment variable `AWS_SECRET_ACCESS_KEY`
+                                is used.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
                         timeout:
                           description: Timeout is a per-target Alertmanager timeout
                             when pushing alerts.
@@ -4453,8 +4517,17 @@ spec:
                   for deletion will be performed on the underlying objects.
                 type: boolean
               podMetadata:
-                description: PodMetadata configures labels and annotations which are
-                  propagated to the Prometheus pods.
+                description: "PodMetadata configures labels and annotations which
+                  are propagated to the Prometheus pods. \n The following items are
+                  reserved and cannot be overridden: * \"prometheus\" label, set to
+                  the name of the Prometheus object. * \"app.kubernetes.io/instance\"
+                  label, set to the name of the Prometheus object. * \"app.kubernetes.io/managed-by\"
+                  label, set to \"prometheus-operator\". * \"app.kubernetes.io/name\"
+                  label, set to \"prometheus\". * \"app.kubernetes.io/version\" label,
+                  set to the Prometheus version. * \"operator.prometheus.io/name\"
+                  label, set to the name of the Prometheus object. * \"operator.prometheus.io/shard\"
+                  label, set to the shard number of the Prometheus object. * \"kubectl.kubernetes.io/default-container\"
+                  annotation, set to \"prometheus\"."
                 properties:
                   annotations:
                     additionalProperties:

@@ -3,7 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1"
+      "controller-gen.kubebuilder.io/version": "v0.11.1",
+      "operator.prometheus.io/version": "0.69.0"
     },
     "creationTimestamp": null,
     "name": "scrapeconfigs.monitoring.coreos.com"
@@ -654,6 +655,29 @@
                           ],
                           "type": "object"
                         },
+                        "filters": {
+                          "description": "Filters can be used optionally to filter the instance list by other criteria. Available filter criteria can be found here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
+                          "items": {
+                            "description": "EC2Filter is the configuration for filtering EC2 instances.",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "values": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "values"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
                           "type": "integer"
@@ -665,6 +689,10 @@
                         },
                         "region": {
                           "description": "The AWS region",
+                          "type": "string"
+                        },
+                        "roleARN": {
+                          "description": "AWS Role ARN, an alternative to using AWS API keys.",
                           "type": "string"
                         },
                         "secretKey": {
@@ -982,11 +1010,43 @@
                       "description": "KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
                       "properties": {
                         "role": {
-                          "description": "Role of the Kubernetes entities that should be discovered. Currently the only supported role is \"Node\".",
+                          "description": "Role of the Kubernetes entities that should be discovered.",
                           "enum": [
-                            "Node"
+                            "Node",
+                            "node"
                           ],
                           "type": "string"
+                        },
+                        "selectors": {
+                          "description": "Selector to select objects.",
+                          "items": {
+                            "description": "K8SSelectorConfig is Kubernetes Selector Config",
+                            "properties": {
+                              "field": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "description": "K8SRole is role of the service in Kubernetes. Currently the only supported role is \"Node\".",
+                                "enum": [
+                                  "Node",
+                                  "node"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "role"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "role"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         }
                       },
                       "required": [

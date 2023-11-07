@@ -67,6 +67,25 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.Store, namespace s
 	return nil
 }
 
+func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.Store, namespace string, ams []monv1.AlertmanagerEndpoints) error {
+	for i, am := range ams {
+		if err := ValidateAlertmanagerEndpoints(am); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func AddAPIServerConfigToStore(ctx context.Context, store *assets.Store, namespace string, config *monv1.APIServerConfig) error {
 	if config == nil {
 		return nil
