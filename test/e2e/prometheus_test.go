@@ -4026,7 +4026,7 @@ func testPromConfigReloaderWeb(t *testing.T) {
 	}
 
 	kubeClient := framework.KubeClient
-	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "config-reloader-web-tls"); err != nil {
+	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -4037,14 +4037,14 @@ func testPromConfigReloaderWeb(t *testing.T) {
 			TLSConfig: &monitoringv1.WebTLSConfig{
 				KeySecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: "config-reloader-web-tls",
+						Name: "web-tls",
 					},
 					Key: "tls.key",
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
 					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "config-reloader-web-tls",
+							Name: "web-tls",
 						},
 						Key: "tls.crt",
 					},
@@ -4140,7 +4140,7 @@ func testPromConfigReloaderWeb(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "config-reloader-web-tls"); err != nil {
+	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
 		t.Fatal(err)
 	}
 
