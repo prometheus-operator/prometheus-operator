@@ -253,6 +253,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 		"AMWeb":                                   testAMWeb,
+		"AMConfigReloaderWebConfig":               testAMConfigReloaderWebConfig,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 	}
 

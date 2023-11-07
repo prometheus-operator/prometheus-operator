@@ -205,6 +205,31 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			equal: false,
 		},
+		{
+			name: "different config reloader http2",
+			a: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+						WebConfigReloader: &monitoringv1.PrometheusConfigReloaderWebSpec{
+							WebConfigFileFields: monitoringv1.WebConfigFileFields{
+								HTTPConfig: &monitoringv1.WebHTTPConfig{
+									HTTP2: &falseVal,
+								},
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v1.7.2",
+					},
+				},
+			},
+			equal: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c := operator.Config{}

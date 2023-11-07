@@ -166,6 +166,27 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			equal: false,
 		},
+		{
+			name: "different config-reloader TLS",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					WebConfigReloader: &monitoringv1.AlertmanagerConfigReloaderWebSpec{
+						WebConfigFileFields: monitoringv1.WebConfigFileFields{
+							HTTPConfig: &monitoringv1.WebHTTPConfig{
+								HTTP2: &falseVal,
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+			equal: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a1Hash, err := createSSetInputHash(tc.a, Config{}, nil, appsv1.StatefulSetSpec{})

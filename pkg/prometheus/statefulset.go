@@ -34,11 +34,12 @@ import (
 )
 
 const (
-	StorageDir   = "/prometheus"
-	ConfDir      = "/etc/prometheus/config"
-	ConfOutDir   = "/etc/prometheus/config_out"
-	WebConfigDir = "/etc/prometheus/web_config"
-	tlsAssetsDir = "/etc/prometheus/certs"
+	StorageDir           = "/prometheus"
+	ConfDir              = "/etc/prometheus/config"
+	ConfOutDir           = "/etc/prometheus/config_out"
+	WebConfigDir         = "/etc/prometheus/web_config"
+	WebConfigReloaderDir = "/etc/prometheus/web_config_reloader"
+	tlsAssetsDir         = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
 	RulesDir                 = "/etc/prometheus/rules"
@@ -157,6 +158,10 @@ func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
 
 func WebConfigSecretName(p monitoringv1.PrometheusInterface) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(p))
+}
+
+func WebConfigReloaderSecretName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-config-reloader-web-config", prefixedName(p))
 }
 
 func VolumeName(p monitoringv1.PrometheusInterface) string {

@@ -9717,8 +9717,8 @@ spec:
                     type: object
                 type: object
               webConfigReloader:
-                description: Defines the configuration of the config-reloader. //
-                  It requires config-reloader > v0.68.0.
+                description: Defines the web configuration reloader of the config-reloader.
+                  It requires config-reloader >= v0.69.0.
                 properties:
                   httpConfig:
                     description: Defines HTTP parameters for web server.

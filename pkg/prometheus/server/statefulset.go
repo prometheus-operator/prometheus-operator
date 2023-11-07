@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	commonversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -258,6 +259,11 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	cfgReloaderVersion, err := semver.ParseTolerant(operator.StringValOrDefault(commonversion.Version, operator.DefaultConfigReloaderVersion))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse configreloader version: %w", err)
+	}
+
 	webRoutePrefix := "/"
 	if cpf.RoutePrefix != "" {
 		webRoutePrefix = cpf.RoutePrefix
@@ -281,6 +287,19 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
+
+	var configReloaderWebConfigFile string
+
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: prompkg.ConfDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: prompkg.ConfOutDir,
+		},
+	}
 
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 2.24.0.
@@ -309,6 +328,24 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
+	// Mount web config and web TLS credentials as volumes for config-reloader.
+	// We always mount the web config file for versions greater than 0.69.0.
+	if cfgReloaderVersion.GTE(semver.MustParse("0.69.0")) && cpf.WebConfigReloader != nil {
+		fields := cpf.WebConfigReloader.WebConfigFileFields
+		webConfigReloader, err := webconfig.New(prompkg.WebConfigReloaderDir, prompkg.WebConfigReloaderSecretName(p), fields)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount, err := webConfigReloader.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
+
+		configReloaderWebConfigFile = confArg.Value
+		volumes = append(volumes, configVol...)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+	}
 	// The /-/ready handler returns OK only after the TSDB initialization has
 	// completed. The WAL replay can take a significant time for large setups
 	// hence we enable the startup probe with a generous failure threshold (15
@@ -384,16 +421,6 @@ func makeStatefulSetSpec(
 	}
 
 	var watchedDirectories []string
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
 
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
@@ -473,6 +500,7 @@ func makeStatefulSetSpec(
 			operator.LocalHost(c.LocalHost),
 			operator.LogFormat(cpf.LogFormat),
 			operator.LogLevel(cpf.LogLevel),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ConfigFile(path.Join(prompkg.ConfDir, prompkg.ConfigFilename)),
 			operator.ConfigEnvsubstFile(path.Join(prompkg.ConfOutDir, prompkg.ConfigEnvsubstFilename)),
 			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),

@@ -239,9 +239,8 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
-	// Defines the configuration of the config-reloader.
-	// // It requires config-reloader > v0.68.0.
-	//
+	// Defines the web configuration reloader of the config-reloader.
+	// It requires config-reloader >= v0.69.0.
 	// +optional
 	WebConfigReloader *AlertmanagerConfigReloaderWebSpec `json:"webConfigReloader,omitempty"`
 	// EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.

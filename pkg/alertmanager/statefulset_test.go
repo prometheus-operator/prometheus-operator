@@ -401,6 +401,95 @@ func TestListenTLS(t *testing.T) {
 	}
 }
 
+func TestConfigReloaderListenTLS(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			WebConfigReloader: &monitoringv1.AlertmanagerConfigReloaderWebSpec{
+				WebConfigFileFields: monitoringv1.WebConfigFileFields{
+					TLSConfig: &monitoringv1.WebTLSConfig{
+						KeySecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cfg-secret",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "cfg-configmap",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
+		return v1.ProbeHandler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: probePath,
+				Port: intstr.FromString("web"),
+			},
+		}
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		FailureThreshold: 10,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		ProbeHandler:        expectedProbeHandler("/-/ready"),
+		InitialDelaySeconds: 3,
+		TimeoutSeconds:      3,
+		PeriodSeconds:       5,
+		FailureThreshold:    10,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
+	}
+
+	expectedConfigReloaderReloadURL := "--reload-url=http://localhost:9093/-/reload"
+	reloadURLFound := false
+	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
+		fmt.Println(arg)
+
+		if arg == expectedConfigReloaderReloadURL {
+			reloadURLFound = true
+		}
+	}
+	if !reloadURLFound {
+		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
+	}
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config_reloader/web-config.yaml",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+		"--watched-dir=/etc/alertmanager/config",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
+}
+
 // below Alertmanager v0.13.0 all flags are with single dash.
 func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 	tests := []struct {

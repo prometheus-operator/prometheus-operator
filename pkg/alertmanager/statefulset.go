@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	commonversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -46,6 +47,7 @@ const (
 	alertmanagerTemplatesVolumeName    = "notification-templates"
 	alertmanagerTemplatesDir           = "/etc/alertmanager/templates"
 	webConfigDir                       = "/etc/alertmanager/web_config"
+	webConfigReloaderDir               = "/etc/alertmanager/web_config_reloader"
 	alertmanagerConfigVolumeName       = "config-volume"
 	alertmanagerConfigDir              = "/etc/alertmanager/config"
 	alertmanagerConfigOutVolumeName    = "config-out"
@@ -240,6 +242,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse alertmanager version: %w", err)
+	}
+
+	cfgReloaderVersion, err := semver.ParseTolerant(operator.StringValOrDefault(commonversion.Version, operator.DefaultConfigReloaderVersion))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse configreloader version: %w", err)
 	}
 
 	amArgs := []string{
@@ -575,6 +582,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		})
 	}
 
+	var configReloaderWebConfigFile string
 	watchedDirectories := []string{alertmanagerConfigDir}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
@@ -668,6 +676,25 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 		amVolumeMounts = append(amVolumeMounts, configMount...)
 	}
 
+	// Mount web config and web TLS credentials as volumes for config-reloader.
+	// We always mount the web config file for versions greater than 0.69.0.
+	if cfgReloaderVersion.GTE(semver.MustParse("0.69.0")) && a.Spec.WebConfigReloader != nil {
+		fields := a.Spec.WebConfigReloader.WebConfigFileFields
+		webConfigReloader, err := webconfig.New(webConfigReloaderDir, webConfigReloaderSecretName(a.Name), fields)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount, err := webConfigReloader.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
+
+		configReloaderWebConfigFile = confArg.Value
+		volumes = append(volumes, configVol...)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+	}
+
 	terminationGracePeriod := int64(120)
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
@@ -722,6 +749,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 			operator.LocalHost(config.LocalHost),
 			operator.LogFormat(a.Spec.LogFormat),
 			operator.LogLevel(a.Spec.LogLevel),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),
@@ -813,6 +841,10 @@ func generatedConfigSecretName(name string) string {
 
 func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
+}
+
+func webConfigReloaderSecretName(name string) string {
+	return fmt.Sprintf("%s-config-reloader-web-config", prefixedName(name))
 }
 
 func volumeName(name string) string {

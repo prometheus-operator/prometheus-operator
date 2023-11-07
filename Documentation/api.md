@@ -725,8 +725,8 @@ AlertmanagerConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -1854,8 +1854,8 @@ PrometheusConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -5174,8 +5174,8 @@ AlertmanagerConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -6173,8 +6173,8 @@ PrometheusConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -10001,8 +10001,8 @@ PrometheusConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -15339,8 +15339,8 @@ PrometheusConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>
@@ -19255,8 +19255,8 @@ PrometheusConfigReloaderWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the config-reloader.
-// It requires config-reloader &gt; v0.68.0.</p>
+<p>Defines the web configuration reloader of the config-reloader.
+It requires config-reloader &gt;= v0.69.0.</p>
 </td>
 </tr>
 <tr>

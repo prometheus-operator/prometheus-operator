@@ -284,9 +284,8 @@ type CommonPrometheusFields struct {
 	// Defines the configuration of the Prometheus web server.
 	Web *PrometheusWebSpec `json:"web,omitempty"`
 
-	// Defines the configuration of the config-reloader.
-	// // It requires config-reloader > v0.68.0.
-	//
+	// Defines the web configuration reloader of the config-reloader.
+	// It requires config-reloader >= v0.69.0.
 	// +optional
 	WebConfigReloader *PrometheusConfigReloaderWebSpec `json:"webConfigReloader,omitempty"`
 
