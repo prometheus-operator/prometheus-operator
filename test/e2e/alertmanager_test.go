@@ -2603,8 +2603,6 @@ func testAMConfigReloaderWebConfig(t *testing.T) {
 			return false, nil
 		}
 		return true, nil
-
-		return true, nil
 	})
 
 	if err != nil {
