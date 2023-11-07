@@ -300,6 +300,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromSharedResourcesReconciliation":         testPromSharedResourcesReconciliation,
 		"PromPreserveUserAddedMetadata":             testPromPreserveUserAddedMetadata,
 		"PromWebWithThanosSidecar":                  testPromWebWithThanosSidecar,
+		"PromConfigReloaderWeb":                     testPromConfigReloaderWeb,
 		"PromMinReadySeconds":                       testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":                testPromEnforcedNamespaceLabel,
 		"PromNamespaceEnforcementExclusion":         testPromNamespaceEnforcementExclusion,
