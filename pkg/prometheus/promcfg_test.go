@@ -4551,7 +4551,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_<_v2.39.0.golden",
+			golden: "TSDB_config_less_than_v2.39.0.golden",
 		},
 		{
 
@@ -4559,7 +4559,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_>=_v2.39.0.golden",
+			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
