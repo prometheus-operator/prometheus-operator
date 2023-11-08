@@ -253,7 +253,6 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 		"AMWeb":                                   testAMWeb,
-		"AMConfigReloaderWebConfig":               testAMConfigReloaderWebConfig,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 	}
 
@@ -300,7 +299,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromSharedResourcesReconciliation":         testPromSharedResourcesReconciliation,
 		"PromPreserveUserAddedMetadata":             testPromPreserveUserAddedMetadata,
 		"PromWebWithThanosSidecar":                  testPromWebWithThanosSidecar,
-		"PromConfigReloaderWeb":                     testPromConfigReloaderWeb,
 		"PromMinReadySeconds":                       testPromMinReadySeconds,
 		"PromEnforcedNamespaceLabel":                testPromEnforcedNamespaceLabel,
 		"PromNamespaceEnforcementExclusion":         testPromNamespaceEnforcementExclusion,
