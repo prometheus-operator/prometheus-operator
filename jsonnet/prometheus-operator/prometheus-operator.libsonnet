@@ -9,6 +9,7 @@ local defaults = {
     limits: { cpu: '', memory: '' },
     requests: { cpu: '', memory: '' },
   },
+  enableReloaderProbes: false,
   port: 8080,
   resources: {
     limits: { cpu: '200m', memory: '200Mi' },
@@ -147,6 +148,8 @@ function(params) {
   deployment:
     local reloaderResourceArg(arg, value) =
       if value != '' then [arg + '=' + value] else [];
+    local enableReloaderProbesArg(value) =
+      if value == true then ['--enable-config-reloader-probes=true'] else [];
 
     local container = {
       name: po.config.name,
@@ -158,7 +161,8 @@ function(params) {
             reloaderResourceArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
             reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
             reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
-            reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory),
+            reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory) +
+            enableReloaderProbesArg(po.config.enableReloaderProbes),
       ports: [{
         containerPort: po.config.port,
         name: 'http',
