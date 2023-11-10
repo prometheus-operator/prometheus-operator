@@ -1,3 +1,9 @@
+## 0.69.1 / 2023-11-09
+
+This release is built using Go 1.21.4 which addresses CVE-2023-45283 and CVE-2023-45284.
+
+* [BUGFIX] Rename test files to resolve Go import failures of `github.com/prometheus-operator/prometheus-operator`. #6070
+
 ## 0.69.0 / 2023-11-03
 
 * [CHANGE] Consider secret references without `optional` value to be mandatory instead of optional for `.spec.additionalScrapeConfigs` configs. #5985
