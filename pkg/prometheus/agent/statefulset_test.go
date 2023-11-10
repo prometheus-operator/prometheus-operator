@@ -22,8 +22,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -205,4 +207,46 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 		"",
 		0,
 		nil)
+}
+
+func TestMakeStatefulSetService(t *testing.T) {
+	defaultServiceName := "prometheus-agent-operated"
+	customServiceName := "custom-service"
+
+	tests := []struct {
+		name              string
+		serviceName       string
+		expectServiceName string
+	}{
+		{
+			name:              "default service name",
+			serviceName:       "",
+			expectServiceName: defaultServiceName,
+		},
+		{
+			name:              "custom service name",
+			serviceName:       customServiceName,
+			expectServiceName: customServiceName,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			p := &monitoringv1alpha1.PrometheusAgent{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-agent",
+					Namespace: "default",
+				},
+				Spec: monitoringv1alpha1.PrometheusAgentSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ServiceName: test.serviceName,
+					},
+				},
+			}
+
+			config := operator.Config{}
+			service := makeStatefulSetService(p, config)
+			assert.Equal(t, test.expectServiceName, service.Name)
+		})
+	}
 }

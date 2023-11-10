@@ -4872,6 +4872,10 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "serviceName": {
+                    "description": "ServiceName is the name of the Service resource created for the PrometheusAgent instance.",
+                    "type": "string"
+                  },
                   "shards": {
                     "description": "EXPERIMENTAL: Number of shards to distribute targets onto. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally, use Thanos sidecar and Thanos querier or remote write data to a central location. \n Sharding is performed on the content of the `__address__` target meta-label for PodMonitors and ServiceMonitors and `__param_target__` for Probes. \n Default: 1",
                     "format": "int32",
@@ -7410,6 +7414,10 @@
                     "description": "Total number of non-terminated pods targeted by this Prometheus deployment (their labels match the selector).",
                     "format": "int32",
                     "type": "integer"
+                  },
+                  "serviceName": {
+                    "description": "ServiceName is the name of the Service resource associated with the Prometheus instance.",
+                    "type": "string"
                   },
                   "shardStatuses": {
                     "description": "The list has one entry per shard. Each entry provides a summary of the shard status.",

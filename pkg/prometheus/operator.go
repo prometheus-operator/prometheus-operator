@@ -257,5 +257,12 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 		sr.Reconciliations.GetCondition(key, p.GetObjectMeta().GetGeneration()),
 	)
 
+	if commonFields.ServiceName != "" {
+		pStatus.ServiceName = commonFields.ServiceName
+	} else {
+		const governingServiceName = "prometheus-agent-operated"
+		pStatus.ServiceName = governingServiceName
+	}
+
 	return &pStatus, nil
 }
