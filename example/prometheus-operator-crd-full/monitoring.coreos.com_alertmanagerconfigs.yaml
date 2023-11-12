@@ -2712,6 +2712,10 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                          apiURLFile:
+                            description: File path on the disk containing the Slack's
+                              webhook URL
+                            type: string
                           callbackId:
                             type: string
                           channel:
@@ -8242,6 +8246,10 @@ spec:
                             - key
                             - name
                             type: object
+                          apiURLFile:
+                            description: File path on the disk containing the Slack's
+                              webhook URL
+                            type: string
                           callbackId:
                             type: string
                           channel:

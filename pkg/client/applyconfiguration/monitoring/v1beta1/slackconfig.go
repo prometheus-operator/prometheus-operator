@@ -21,6 +21,7 @@ package v1beta1
 type SlackConfigApplyConfiguration struct {
 	SendResolved *bool                                `json:"sendResolved,omitempty"`
 	APIURL       *SecretKeySelectorApplyConfiguration `json:"apiURL,omitempty"`
+	APIURLFile   *string                              `json:"apiURLFile,omitempty"`
 	Channel      *string                              `json:"channel,omitempty"`
 	Username     *string                              `json:"username,omitempty"`
 	Color        *string                              `json:"color,omitempty"`
@@ -62,6 +63,14 @@ func (b *SlackConfigApplyConfiguration) WithSendResolved(value bool) *SlackConfi
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithAPIURL(value *SecretKeySelectorApplyConfiguration) *SlackConfigApplyConfiguration {
 	b.APIURL = value
+	return b
+}
+
+// WithAPIURLFile sets the APIURLFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the APIURLFile field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithAPIURLFile(value string) *SlackConfigApplyConfiguration {
+	b.APIURLFile = &value
 	return b
 }
 
