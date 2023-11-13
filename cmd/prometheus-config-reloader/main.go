@@ -196,7 +196,6 @@ func main() {
 	}, func(error) {})
 
 	if err := g.Run(); err != nil {
-		// fmt.Fprintln(os.Stderr, err)
 		level.Error(logger).Log("msg", "Failed to run", "err", err)
 		os.Exit(1)
 	}
