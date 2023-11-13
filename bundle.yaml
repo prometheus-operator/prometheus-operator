@@ -33061,6 +33061,73 @@ spec:
                       \n \"Basic\" is not a supported value. \n Default: \"Bearer\""
                     type: string
                 type: object
+              azureSDConfigs:
+                description: AzureSDConfigs defines a list of Azure service discovery
+                  configurations.
+                items:
+                  description: AzureSDConfig allow retrieving scrape targets from
+                    Azure VMs. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
+                  properties:
+                    authenticationMethod:
+                      description: '# The authentication method, either OAuth or ManagedIdentity.
+                        See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview'
+                      enum:
+                      - OAuth
+                      - ManagedIdentity
+                      type: string
+                    clientID:
+                      description: Optional client ID. Only required with the OAuth
+                        authentication method.
+                      type: string
+                    clientSecret:
+                      description: Optional client secret. Only required with the
+                        OAuth authentication method.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    environment:
+                      description: The Azure environment.
+                      type: string
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    resourceGroup:
+                      description: Optional resource group name. Limits discovery
+                        to this resource group.
+                      type: string
+                    subscriptionID:
+                      description: The subscription ID. Always required.
+                      minLength: 1
+                      type: string
+                    tenantID:
+                      description: Optional tenant ID. Only required with the OAuth
+                        authentication method.
+                      type: string
+                  required:
+                  - subscriptionID
+                  type: object
+                type: array
               basicAuth:
                 description: BasicAuth information to use on every scrape request.
                 properties:

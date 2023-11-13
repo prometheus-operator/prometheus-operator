@@ -111,6 +111,9 @@ type ScrapeConfigSpec struct {
 	// EC2SDConfigs defines a list of EC2 service discovery configurations.
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
+	// AzureSDConfigs defines a list of Azure service discovery configurations.
+	// +optional
+	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -388,4 +391,41 @@ type EC2SDConfig struct {
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
 	Filters []*EC2Filter `json:"filters"`
+}
+
+// AzureSDConfig allow retrieving scrape targets from Azure VMs.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
+// +k8s:openapi-gen=true
+type AzureSDConfig struct {
+	// The Azure environment.
+	// +optional
+	Environment *string `json:"environment,omitempty"`
+	// # The authentication method, either OAuth or ManagedIdentity.
+	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity
+	// +optional
+	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	// The subscription ID. Always required.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	SubscriptionID string `json:"subscriptionID"`
+	// Optional tenant ID. Only required with the OAuth authentication method.
+	// +optional
+	TenantID *string `json:"tenantID,omitempty"`
+	// Optional client ID. Only required with the OAuth authentication method.
+	// +optional
+	ClientID *string `json:"clientID,omitempty"`
+	// Optional client secret. Only required with the OAuth authentication method.
+	// +optional
+	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
+	// Optional resource group name. Limits discovery to this resource group.
+	// +optional
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
 }
