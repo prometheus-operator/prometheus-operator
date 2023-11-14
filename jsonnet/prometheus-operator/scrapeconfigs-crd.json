@@ -3,10 +3,9 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1",
+      "controller-gen.kubebuilder.io/version": "v0.13.0",
       "operator.prometheus.io/version": "0.69.1"
     },
-    "creationTimestamp": null,
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
   "spec": {
@@ -372,7 +371,8 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
                           },
                           "description": "Specifies headers to send to proxies during CONNECT requests.",
                           "type": "object",
@@ -579,7 +579,8 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         }
                       },
                       "required": [
@@ -653,7 +654,8 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         },
                         "filters": {
                           "description": "Filters can be used optionally to filter the instance list by other criteria. Available filter criteria can be found here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
@@ -714,7 +716,8 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
                         }
                       },
                       "type": "object"

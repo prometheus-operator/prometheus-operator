@@ -3,10 +3,9 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1",
+      "controller-gen.kubebuilder.io/version": "v0.13.0",
       "operator.prometheus.io/version": "0.69.1"
     },
-    "creationTimestamp": null,
     "name": "alertmanagers.monitoring.coreos.com"
   },
   "spec": {
