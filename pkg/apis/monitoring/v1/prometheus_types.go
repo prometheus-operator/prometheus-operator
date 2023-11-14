@@ -17,6 +17,7 @@ package v1
 import (
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -280,6 +281,14 @@ type CommonPrometheusFields struct {
 	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'
 	// container, that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+	// The default behavior is all PVCs are retained.
+	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
+	//
+	// +optional
+	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 
 	// Defines the configuration of the Prometheus web server.
 	Web *PrometheusWebSpec `json:"web,omitempty"`
