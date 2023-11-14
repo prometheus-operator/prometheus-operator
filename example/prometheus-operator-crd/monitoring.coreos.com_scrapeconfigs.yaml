@@ -919,6 +919,16 @@ spec:
                       enum:
                       - Node
                       - node
+                      - Service
+                      - service
+                      - Pod
+                      - pod
+                      - Endpoints
+                      - endpoints
+                      - EndpointSlice
+                      - endpointslice
+                      - Ingress
+                      - ingress
                       type: string
                     selectors:
                       description: Selector to select objects.
@@ -930,11 +940,20 @@ spec:
                           label:
                             type: string
                           role:
-                            description: K8SRole is role of the service in Kubernetes.
-                              Currently the only supported role is "Node".
+                            description: Role is role of the service in Kubernetes.
                             enum:
                             - Node
                             - node
+                            - Service
+                            - service
+                            - Pod
+                            - pod
+                            - Endpoints
+                            - endpoints
+                            - EndpointSlice
+                            - endpointslice
+                            - Ingress
+                            - ingress
                             type: string
                         required:
                         - role

@@ -17519,15 +17519,6 @@ the inhibition to take effect.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.K8SRole">K8SRole
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
-</p>
-<div>
-<p>K8SRole is role of the service in Kubernetes.
-Currently the only supported role is &ldquo;Node&rdquo;.</p>
-</div>
 <h3 id="monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig
 </h3>
 <p>
@@ -17548,8 +17539,8 @@ Currently the only supported role is &ldquo;Node&rdquo;.</p>
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
-K8SRole
+<a href="#monitoring.coreos.com/v1alpha1.Role">
+Role
 </a>
 </em>
 </td>
@@ -17639,8 +17630,8 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.K8SRole">
-K8SRole
+<a href="#monitoring.coreos.com/v1alpha1.Role">
+Role
 </a>
 </em>
 </td>
@@ -20170,6 +20161,14 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Role">Role
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+<p>Role is role of the service in Kubernetes.</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.Route">Route
 </h3>
 <p>

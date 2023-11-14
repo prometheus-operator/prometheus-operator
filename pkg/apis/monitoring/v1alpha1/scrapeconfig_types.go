@@ -40,17 +40,16 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
-// K8SRole is role of the service in Kubernetes.
-// Currently the only supported role is "Node".
-// +kubebuilder:validation:Enum=Node;node
-type K8SRole string
+// Role is role of the service in Kubernetes.
+// +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
+type Role string
 
 // K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfig struct {
 	// +kubebuilder:validation:Required
-	Role  K8SRole `json:"role"`
-	Label string  `json:"label,omitempty"`
-	Field string  `json:"field,omitempty"`
+	Role  Role   `json:"role"`
+	Label string `json:"label,omitempty"`
+	Field string `json:"field,omitempty"`
 }
 
 // +genclient
@@ -239,7 +238,7 @@ type HTTPSDConfig struct {
 type KubernetesSDConfig struct {
 	// Role of the Kubernetes entities that should be discovered.
 	// +required
-	Role K8SRole `json:"role"`
+	Role Role `json:"role"`
 	// Selector to select objects.
 	// +optional
 	// +listType=map

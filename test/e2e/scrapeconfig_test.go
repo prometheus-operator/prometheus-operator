@@ -90,7 +90,7 @@ func testScrapeConfigCreation(t *testing.T) {
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.K8SRole("Node"),
+						Role: monitoringv1alpha1.Role("Node"),
 					},
 				},
 			},
@@ -331,7 +331,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 
 	sc.Spec.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 		{
-			Role: monitoringv1alpha1.K8SRole("Node"),
+			Role: monitoringv1alpha1.Role("Node"),
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
