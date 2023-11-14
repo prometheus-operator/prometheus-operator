@@ -38,7 +38,7 @@ import (
 )
 
 func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
 func TestValidateRelabelConfig(t *testing.T) {
