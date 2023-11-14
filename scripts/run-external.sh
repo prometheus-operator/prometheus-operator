@@ -122,12 +122,6 @@ extract_certs() {
 run_operator() {
 	header "Run Operator"
 
-	# cleanup the files soon after the operator has had time to read it
-	(
-		sleep 5
-		cleanup
-	) &
-
 	info "Running operator against cluster: $CLUSTER - $API_SERVER"
 	echo "──────────────────────────────────────────────────────────────────"
 
