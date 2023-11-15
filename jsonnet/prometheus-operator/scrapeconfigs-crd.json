@@ -1016,7 +1016,17 @@
                           "description": "Role of the Kubernetes entities that should be discovered.",
                           "enum": [
                             "Node",
-                            "node"
+                            "node",
+                            "Service",
+                            "service",
+                            "Pod",
+                            "pod",
+                            "Endpoints",
+                            "endpoints",
+                            "EndpointSlice",
+                            "endpointslice",
+                            "Ingress",
+                            "ingress"
                           ],
                           "type": "string"
                         },
@@ -1032,10 +1042,20 @@
                                 "type": "string"
                               },
                               "role": {
-                                "description": "K8SRole is role of the service in Kubernetes. Currently the only supported role is \"Node\".",
+                                "description": "Role is role of the service in Kubernetes.",
                                 "enum": [
                                   "Node",
-                                  "node"
+                                  "node",
+                                  "Service",
+                                  "service",
+                                  "Pod",
+                                  "pod",
+                                  "Endpoints",
+                                  "endpoints",
+                                  "EndpointSlice",
+                                  "endpointslice",
+                                  "Ingress",
+                                  "ingress"
                                 ],
                                 "type": "string"
                               }

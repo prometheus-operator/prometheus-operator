@@ -23,7 +23,7 @@ import (
 // KubernetesSDConfigApplyConfiguration represents an declarative configuration of the KubernetesSDConfig type for use
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
-	Role      *v1alpha1.K8SRole                     `json:"role,omitempty"`
+	Role      *v1alpha1.Role                        `json:"role,omitempty"`
 	Selectors []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
 }
 
@@ -36,7 +36,7 @@ func KubernetesSDConfig() *KubernetesSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.K8SRole) *KubernetesSDConfigApplyConfiguration {
+func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.Role) *KubernetesSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }
