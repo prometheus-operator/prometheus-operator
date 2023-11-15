@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	defaultTestConfig = &operator.Config{
+	defaultTestConfig = &prompkg.Config{
 		LocalHost:                  "localhost",
 		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
@@ -874,7 +874,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 }
 
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
-	operatorConfig := &operator.Config{
+	operatorConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -926,7 +926,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
-	thanosBaseImageConfig := &operator.Config{
+	thanosBaseImageConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -1534,7 +1534,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 }
 
 func TestReplicasConfigurationWithSharding(t *testing.T) {
-	testConfig := &operator.Config{
+	testConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1596,7 +1596,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 
 func TestSidecarResources(t *testing.T) {
 	operator.TestSidecarsResources(t, func(reloaderConfig operator.ContainerConfig) *appsv1.StatefulSet {
-		testConfig := &operator.Config{
+		testConfig := &prompkg.Config{
 			ReloaderConfig:             reloaderConfig,
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,

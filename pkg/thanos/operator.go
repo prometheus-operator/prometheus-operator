@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -76,22 +75,19 @@ type Operator struct {
 	config Config
 }
 
-// Config defines configuration parameters for the Operator.
+// Config defines the operator's parameters for the Thanos controller.
+// Whenever the value of one of these parameters is changed, it triggers an
+// update of the managed statefulsets.
 type Config struct {
-	KubernetesVersion      version.Info
+	LocalHost              string
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
-	Namespaces             operator.Namespaces
 	Annotations            operator.Map
 	Labels                 operator.Map
-	LocalHost              string
-	LogLevel               string
-	LogFormat              string
-	ThanosRulerSelector    string
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -107,10 +103,6 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
-	if _, err := labels.Parse(conf.ThanosRulerSelector); err != nil {
-		return nil, fmt.Errorf("can not parse thanos ruler selector value: %w", err)
-	}
-
 	// All the metrics exposed by the controller get the controller="thanos" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
@@ -124,16 +116,11 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{
-			KubernetesVersion:      conf.KubernetesVersion,
-			ReloaderConfig:         conf.ReloaderConfig,
-			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
-			Namespaces:             conf.Namespaces,
-			Annotations:            conf.Annotations,
-			Labels:                 conf.Labels,
-			LocalHost:              conf.LocalHost,
-			LogLevel:               conf.LogLevel,
-			LogFormat:              conf.LogFormat,
-			ThanosRulerSelector:    conf.ThanosRulerSelector,
+			ReloaderConfig:         c.ReloaderConfig,
+			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
+			Annotations:            c.Annotations,
+			Labels:                 c.Labels,
+			LocalHost:              c.LocalHost,
 		},
 	}
 
@@ -147,8 +134,8 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewMetadataInformerFactory(
-			o.config.Namespaces.ThanosRulerAllowList,
-			o.config.Namespaces.DenyList,
+			c.Namespaces.ThanosRulerAllowList,
+			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
@@ -163,12 +150,12 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 
 	o.thanosRulerInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.ThanosRulerAllowList,
-			o.config.Namespaces.DenyList,
+			c.Namespaces.ThanosRulerAllowList,
+			c.Namespaces.DenyList,
 			mclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = o.config.ThanosRulerSelector
+				options.LabelSelector = c.ThanosRulerSelector.String()
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName),
@@ -185,8 +172,8 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.AllowList,
-			o.config.Namespaces.DenyList,
+			c.Namespaces.AllowList,
+			c.Namespaces.DenyList,
 			mclient,
 			resyncPeriod,
 			nil,
@@ -199,8 +186,8 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 
 	o.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.ThanosRulerAllowList,
-			o.config.Namespaces.DenyList,
+			c.Namespaces.ThanosRulerAllowList,
+			c.Namespaces.DenyList,
 			o.kclient,
 			resyncPeriod,
 			nil,
@@ -215,11 +202,11 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
 			o.logger,
-			o.config.KubernetesVersion,
+			c.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.kclient.AuthorizationV1().SelfSubjectAccessReviews(),
 			allowList,
-			o.config.Namespaces.DenyList)
+			c.Namespaces.DenyList)
 		if err != nil {
 			return nil, err
 		}
@@ -233,15 +220,15 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		), nil
 	}
 
-	o.nsRuleInf, err = newNamespaceInformer(o, o.config.Namespaces.AllowList)
+	o.nsRuleInf, err = newNamespaceInformer(o, c.Namespaces.AllowList)
 	if err != nil {
 		return nil, err
 	}
 
-	if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.ThanosRulerAllowList) {
+	if listwatch.IdenticalNamespaces(c.Namespaces.AllowList, c.Namespaces.ThanosRulerAllowList) {
 		o.nsThanosRulerInf = o.nsRuleInf
 	} else {
-		o.nsThanosRulerInf, err = newNamespaceInformer(o, o.config.Namespaces.ThanosRulerAllowList)
+		o.nsThanosRulerInf, err = newNamespaceInformer(o, c.Namespaces.ThanosRulerAllowList)
 		if err != nil {
 			return nil, err
 		}

@@ -41,7 +41,7 @@ const (
 )
 
 // TODO(ArthurSens): generalize it enough to be used by both server and agent.
-func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
+func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *v1.Service {
 	p = p.DeepCopy()
 
 	if p.Spec.PortName == "" {
@@ -103,7 +103,7 @@ func makeStatefulSet(
 	queryLogFile string,
 	thanos *monitoringv1.ThanosSpec,
 	disableCompaction bool,
-	config *operator.Config,
+	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
@@ -239,7 +239,7 @@ func makeStatefulSetSpec(
 	thanos *monitoringv1.ThanosSpec,
 	disableCompaction bool,
 	p monitoringv1.PrometheusInterface,
-	c *operator.Config,
+	c *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
@@ -647,7 +647,7 @@ func createThanosContainer(
 	disableCompaction *bool,
 	p monitoringv1.PrometheusInterface,
 	thanos *monitoringv1.ThanosSpec,
-	c *operator.Config,
+	c *prompkg.Config,
 	prometheusURIScheme, webRoutePrefix string) (*v1.Container, error) {
 
 	var container *v1.Container

@@ -15,12 +15,101 @@
 package server
 
 import (
+	"crypto/tls"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-func TestNewTLSConfig(t *testing.T) {
-	_, err := NewTLSConfig(nil, "", "", "foo.txt", "", nil)
-	if err == nil {
-		t.Errorf("expected tls err when client CA set without key and cert files")
+func TestConvertTLSConfig(t *testing.T) {
+	for _, tc := range []struct {
+		c TLSConfig
+
+		err    bool
+		assert func(*testing.T, *tls.Config)
+	}{
+		{
+			c: TLSConfig{},
+
+			assert: func(t *testing.T, c *tls.Config) {
+				require.Nil(t, c)
+			},
+		},
+		{
+			c: TLSConfig{
+				Enabled:      true,
+				ClientCAFile: "ca.crt",
+			},
+			err: true,
+		},
+		{
+			c: TLSConfig{
+				Enabled: true,
+			},
+
+			assert: func(t *testing.T, c *tls.Config) {
+				require.Nil(t, c)
+			},
+		},
+		{
+			c: TLSConfig{
+				Enabled:    true,
+				CertFile:   "server.crt",
+				KeyFile:    "server.key",
+				MinVersion: "VersionTLSXX",
+			},
+
+			err: true,
+		},
+		{
+			c: TLSConfig{
+				Enabled:  true,
+				CertFile: "server.crt",
+				KeyFile:  "server.key",
+			},
+
+			assert: func(t *testing.T, c *tls.Config) {
+				require.NotNil(t, c)
+				require.Equal(t, tls.VersionTLS12, int(c.MinVersion))
+			},
+		},
+		{
+			c: TLSConfig{
+				Enabled:      true,
+				CertFile:     "server.crt",
+				KeyFile:      "server.key",
+				CipherSuites: operator.StringSet(map[string]struct{}{"foo": {}}),
+			},
+
+			err: true,
+		},
+		{
+			c: TLSConfig{
+				Enabled:      true,
+				CertFile:     "server.crt",
+				KeyFile:      "server.key",
+				CipherSuites: operator.StringSet(map[string]struct{}{"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA": {}}),
+			},
+
+			assert: func(t *testing.T, c *tls.Config) {
+				require.NotNil(t, c)
+				require.Equal(t, []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA}, c.CipherSuites)
+			},
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			c, err := tc.c.Convert(nil)
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			if tc.assert != nil {
+				tc.assert(t, c)
+			}
+		})
 	}
 }

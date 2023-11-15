@@ -37,6 +37,18 @@ import (
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
+// Config defines the operator's parameters for the Prometheus controllers.
+// Whenever the value of one of these parameters is changed, it triggers an
+// update of the managed statefulsets.
+type Config struct {
+	LocalHost                  string
+	ReloaderConfig             operator.ContainerConfig
+	PrometheusDefaultBaseImage string
+	ThanosDefaultBaseImage     string
+	Annotations                operator.Map
+	Labels                     operator.Map
+}
+
 type StatusReporter struct {
 	Kclient         kubernetes.Interface
 	Reconciliations *operator.ReconciliationTracker

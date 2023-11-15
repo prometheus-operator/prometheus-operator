@@ -26,7 +26,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 func TestListOptions(t *testing.T) {
@@ -207,7 +207,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := operator.Config{}
+			c := prompkg.Config{}
 
 			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{})
 			if err != nil {
