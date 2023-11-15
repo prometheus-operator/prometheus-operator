@@ -1,6 +1,8 @@
 name: unit
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -8,6 +10,8 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
