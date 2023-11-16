@@ -33,19 +33,19 @@ type ConsulSDConfigApplyConfiguration struct {
 	Scheme               *string                                                             `json:"scheme,omitempty"`
 	Services             []string                                                            `json:"services,omitempty"`
 	Tags                 []string                                                            `json:"tags,omitempty"`
-	TagSeparator         *string                                                             `json:"tag_separator,omitempty"`
-	NodeMeta             map[string]string                                                   `json:"node_meta,omitempty"`
-	AllowStale           *bool                                                               `json:"allow_stale,omitempty"`
-	RefreshInterval      *monitoringv1.Duration                                              `json:"refresh_interval,omitempty"`
+	TagSeparator         *string                                                             `json:"tagSeparator,omitempty"`
+	NodeMeta             map[string]string                                                   `json:"nodeMeta,omitempty"`
+	AllowStale           *bool                                                               `json:"allowStale,omitempty"`
+	RefreshInterval      *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
 	BasicAuth            *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization        *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	Oauth2               *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	ProxyUrl             *string                                                             `json:"proxy_url,omitempty"`
-	NoProxy              *string                                                             `json:"no_proxy,omitempty"`
-	ProxyFromEnvironment *bool                                                               `json:"proxy_from_environment,omitempty"`
-	ProxyConnectHeader   map[string]v1.SecretKeySelector                                     `json:"proxy_connect_header,omitempty"`
-	FollowRedirects      *bool                                                               `json:"follow_redirects,omitempty"`
-	EnableHttp2          *bool                                                               `json:"enable_http2,omitempty"`
+	ProxyUrl             *string                                                             `json:"proxyUrl,omitempty"`
+	NoProxy              *string                                                             `json:"noProxy,omitempty"`
+	ProxyFromEnvironment *bool                                                               `json:"proxyFromEnvironment,omitempty"`
+	ProxyConnectHeader   map[string]v1.SecretKeySelector                                     `json:"proxyConnectHeader,omitempty"`
+	FollowRedirects      *bool                                                               `json:"followRedirects,omitempty"`
+	EnableHttp2          *bool                                                               `json:"enableHTTP2,omitempty"`
 	TLSConfig            *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 }
 

@@ -187,7 +187,7 @@ spec:
                   description: ConsulSDConfig defines a Consul service discovery configuration
                     See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
                   properties:
-                    allow_stale:
+                    allowStale:
                       description: Allow stale Consul results (see https://www.consul.io/api/features/consistency.html).
                         Will reduce load on Consul. If unset, Prometheus uses its
                         default value.
@@ -271,23 +271,23 @@ spec:
                       description: Consul Datacenter name, if not provided it will
                         use the local Consul Agent Datacenter.
                       type: string
-                    enable_http2:
+                    enableHTTP2:
                       description: Whether to enable HTTP2. If unset, Prometheus uses
                         its default value.
                       type: boolean
-                    follow_redirects:
+                    followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects. If unset, Prometheus uses its default value.
                       type: boolean
                     namespace:
                       description: Namespaces are only supported in Consul Enterprise.
                       type: string
-                    no_proxy:
+                    noProxy:
                       description: Comma-separated string that can contain IPs, CIDR
                         notation, domain names that should be excluded from proxying.
                         IP and domain names can contain port numbers.
                       type: string
-                    node_meta:
+                    nodeMeta:
                       additionalProperties:
                         type: string
                       description: Node metadata key/value pairs to filter nodes for
@@ -383,7 +383,7 @@ spec:
                     partition:
                       description: Admin Partitions are only supported in Consul Enterprise.
                       type: string
-                    proxy_connect_header:
+                    proxyConnectHeader:
                       additionalProperties:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -407,15 +407,15 @@ spec:
                         requests.
                       type: object
                       x-kubernetes-map-type: atomic
-                    proxy_from_environment:
+                    proxyFromEnvironment:
                       description: Use proxy URL indicated by environment variables
                         (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
                         If unset, Prometheus uses its default value.
                       type: boolean
-                    proxy_url:
+                    proxyUrl:
                       description: Optional proxy URL.
                       type: string
-                    refresh_interval:
+                    refreshInterval:
                       description: The time after which the provided names are refreshed.
                         On large setup it might be a good idea to increase this value
                         because the catalog will change all the time. If unset, Prometheus
@@ -440,7 +440,7 @@ spec:
                         type: string
                       type: array
                       x-kubernetes-list-type: atomic
-                    tag_separator:
+                    tagSeparator:
                       description: The string by which Consul tags are joined into
                         the tag label. If unset, Prometheus uses its default value.
                       type: string
