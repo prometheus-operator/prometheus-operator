@@ -232,7 +232,7 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
-	// +listType=atomic
+	// +listType=set
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
