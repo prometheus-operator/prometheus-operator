@@ -2920,7 +2920,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
-							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -2941,7 +2941,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
-							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -2973,7 +2973,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
 							AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
-							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -2996,6 +2996,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 						"app":                           "prometheus",
 						prompkg.ShardLabelName:          "0",
 						prompkg.PrometheusNameLabelName: "",
+						prompkg.PrometheusK8sLabelName:  "prometheus",
 					},
 				},
 			},
@@ -3007,7 +3008,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
 						{
 							AdditionalLabelSelectors: ptr.To(monitoringv1.ResourceNameLabelSelector),
-							TopologySpreadConstraint: &v1.TopologySpreadConstraint{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
 								WhenUnsatisfiable: v1.DoNotSchedule,
@@ -3027,14 +3028,14 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-						"app.kubernetes.io/name":       "prometheus",
-						"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
-						"operator.prometheus.io/name":  "",
-						"operator.prometheus.io/shard": "0",
-						"prometheus":                   "",
+						"app":                           "prometheus",
+						"app.kubernetes.io/instance":    "",
+						"app.kubernetes.io/managed-by":  "prometheus-operator",
+						prompkg.PrometheusK8sLabelName:  "prometheus",
+						"app.kubernetes.io/version":     strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
+						prompkg.PrometheusNameLabelName: "",
+						prompkg.ShardLabelName:          "0",
+						"prometheus":                    "",
 					},
 				},
 			},

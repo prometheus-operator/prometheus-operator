@@ -465,7 +465,7 @@ func makeStatefulSetSpec(
 
 	tscs := make([]v1.TopologySpreadConstraint, 0, len(cpf.TopologySpreadConstraints))
 	for _, tsc := range cpf.TopologySpreadConstraints {
-		tscs = append(tscs, operator.MakeK8sTopologySpreadConstraint(finalLabels, tsc))
+		tscs = append(tscs, prompkg.MakeK8sTopologySpreadConstraint(finalLabels, tsc))
 	}
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

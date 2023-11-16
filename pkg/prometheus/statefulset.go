@@ -60,6 +60,7 @@ var (
 	ShardLabelName                = "operator.prometheus.io/shard"
 	PrometheusNameLabelName       = "operator.prometheus.io/name"
 	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
+	PrometheusK8sLabelName        = "app.kubernetes.io/name"
 	ProbeTimeoutSeconds     int32 = 3
 	LabelPrometheusName           = "prometheus-name"
 )
@@ -495,4 +496,30 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 			monitoringv1.HTTPReloadStrategyType,
 		) == monitoringv1.ProcessSignalReloadStrategyType,
 	)
+}
+
+func MakeK8sTopologySpreadConstraint(podLabels map[string]string, tsc monitoringv1.TopologySpreadConstraint) v1.TopologySpreadConstraint {
+	if tsc.AdditionalLabelSelectors == nil {
+		return v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint)
+	}
+
+	if tsc.LabelSelector == nil {
+		tsc.LabelSelector = &metav1.LabelSelector{
+			MatchLabels: make(map[string]string),
+		}
+	}
+
+	if *tsc.AdditionalLabelSelectors == monitoringv1.ResourceNameLabelSelector {
+		for key, value := range podLabels {
+			tsc.LabelSelector.MatchLabels[key] = value
+		}
+	}
+
+	if *tsc.AdditionalLabelSelectors == monitoringv1.ShardAndResourceNameLabelSelector {
+		tsc.LabelSelector.MatchLabels[ShardLabelName] = podLabels[ShardLabelName]
+		tsc.LabelSelector.MatchLabels[PrometheusNameLabelName] = podLabels[PrometheusNameLabelName]
+		tsc.LabelSelector.MatchLabels[PrometheusK8sLabelName] = podLabels[PrometheusK8sLabelName]
+	}
+
+	return v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint)
 }

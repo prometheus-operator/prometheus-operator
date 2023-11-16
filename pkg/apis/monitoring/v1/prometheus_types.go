@@ -62,14 +62,16 @@ type AdditionalLabelSelector string
 
 const (
 	// Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).
-	ResourceNameLabelSelector AdditionalLabelSelector = "ResourceName"
+	ResourceNameLabelSelector AdditionalLabelSelector = "OnResource"
 
 	// Automatically add a label selector that will select all pods matching the same shard.
 	ShardAndResourceNameLabelSelector AdditionalLabelSelector = "ShardAndResourceName"
 )
 
+type CoreV1TopologySpreadConstraint v1.TopologySpreadConstraint
+
 type TopologySpreadConstraint struct {
-	*v1.TopologySpreadConstraint `json:",inline"`
+	CoreV1TopologySpreadConstraint `json:",inline"`
 
 	//+optional
 	// Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.

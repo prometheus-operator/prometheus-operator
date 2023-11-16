@@ -17,28 +17,33 @@
 package v1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TopologySpreadConstraintApplyConfiguration represents an declarative configuration of the TopologySpreadConstraint type for use
+// CoreV1TopologySpreadConstraintApplyConfiguration represents an declarative configuration of the CoreV1TopologySpreadConstraint type for use
 // with apply.
-type TopologySpreadConstraintApplyConfiguration struct {
-	CoreV1TopologySpreadConstraintApplyConfiguration `json:",inline"`
-	AdditionalLabelSelectors                         *monitoringv1.AdditionalLabelSelector `json:"additionalLabelSelectors,omitempty"`
+type CoreV1TopologySpreadConstraintApplyConfiguration struct {
+	MaxSkew            *int32                            `json:"maxSkew,omitempty"`
+	TopologyKey        *string                           `json:"topologyKey,omitempty"`
+	WhenUnsatisfiable  *v1.UnsatisfiableConstraintAction `json:"whenUnsatisfiable,omitempty"`
+	LabelSelector      *metav1.LabelSelector             `json:"labelSelector,omitempty"`
+	MinDomains         *int32                            `json:"minDomains,omitempty"`
+	NodeAffinityPolicy *v1.NodeInclusionPolicy           `json:"nodeAffinityPolicy,omitempty"`
+	NodeTaintsPolicy   *v1.NodeInclusionPolicy           `json:"nodeTaintsPolicy,omitempty"`
+	MatchLabelKeys     []string                          `json:"matchLabelKeys,omitempty"`
 }
 
-// TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the TopologySpreadConstraint type for use with
+// CoreV1TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the CoreV1TopologySpreadConstraint type for use with
 // apply.
-func TopologySpreadConstraint() *TopologySpreadConstraintApplyConfiguration {
-	return &TopologySpreadConstraintApplyConfiguration{}
+func CoreV1TopologySpreadConstraint() *CoreV1TopologySpreadConstraintApplyConfiguration {
+	return &CoreV1TopologySpreadConstraintApplyConfiguration{}
 }
 
 // WithMaxSkew sets the MaxSkew field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxSkew field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithMaxSkew(value int32) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithMaxSkew(value int32) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.MaxSkew = &value
 	return b
 }
@@ -46,7 +51,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithMaxSkew(value int32) *T
 // WithTopologyKey sets the TopologyKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TopologyKey field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithTopologyKey(value string) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithTopologyKey(value string) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.TopologyKey = &value
 	return b
 }
@@ -54,7 +59,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithTopologyKey(value strin
 // WithWhenUnsatisfiable sets the WhenUnsatisfiable field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WhenUnsatisfiable field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable(value corev1.UnsatisfiableConstraintAction) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable(value v1.UnsatisfiableConstraintAction) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.WhenUnsatisfiable = &value
 	return b
 }
@@ -62,7 +67,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable(value
 // WithLabelSelector sets the LabelSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelSelector field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value metav1.LabelSelector) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value metav1.LabelSelector) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.LabelSelector = &value
 	return b
 }
@@ -70,7 +75,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value met
 // WithMinDomains sets the MinDomains field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinDomains field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithMinDomains(value int32) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithMinDomains(value int32) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.MinDomains = &value
 	return b
 }
@@ -78,7 +83,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithMinDomains(value int32)
 // WithNodeAffinityPolicy sets the NodeAffinityPolicy field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NodeAffinityPolicy field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithNodeAffinityPolicy(value corev1.NodeInclusionPolicy) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithNodeAffinityPolicy(value v1.NodeInclusionPolicy) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.NodeAffinityPolicy = &value
 	return b
 }
@@ -86,7 +91,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithNodeAffinityPolicy(valu
 // WithNodeTaintsPolicy sets the NodeTaintsPolicy field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NodeTaintsPolicy field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithNodeTaintsPolicy(value corev1.NodeInclusionPolicy) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithNodeTaintsPolicy(value v1.NodeInclusionPolicy) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	b.NodeTaintsPolicy = &value
 	return b
 }
@@ -94,17 +99,9 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithNodeTaintsPolicy(value 
 // WithMatchLabelKeys adds the given value to the MatchLabelKeys field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MatchLabelKeys field.
-func (b *TopologySpreadConstraintApplyConfiguration) WithMatchLabelKeys(values ...string) *TopologySpreadConstraintApplyConfiguration {
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithMatchLabelKeys(values ...string) *CoreV1TopologySpreadConstraintApplyConfiguration {
 	for i := range values {
 		b.MatchLabelKeys = append(b.MatchLabelKeys, values[i])
 	}
-	return b
-}
-
-// WithAdditionalLabelSelectors sets the AdditionalLabelSelectors field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AdditionalLabelSelectors field is set to the value of the last call.
-func (b *TopologySpreadConstraintApplyConfiguration) WithAdditionalLabelSelectors(value monitoringv1.AdditionalLabelSelector) *TopologySpreadConstraintApplyConfiguration {
-	b.AdditionalLabelSelectors = &value
 	return b
 }
