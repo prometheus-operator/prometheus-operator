@@ -2786,6 +2786,56 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// GCESDConfig
+	if len(sc.Spec.GCESDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.GCESDConfigs))
+		for i, config := range sc.Spec.GCESDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "project",
+					Value: config.Project,
+				},
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "zone",
+				Value: config.Zone,
+			})
+
+			if config.Filter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filter",
+					Value: config.Filter,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "gce_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
