@@ -284,20 +284,20 @@ type ConsulSDConfig struct {
 	// The string by which Consul tags are joined into the tag label.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	TagSeparator *string `json:"tag_separator,omitempty"`
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
 	// +mapType:=atomic
 	// +optional
-	NodeMeta map[string]string `json:"node_meta,omitempty"`
+	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	AllowStale *bool `json:"allow_stale,omitempty"`
+	AllowStale *bool `json:"allowStale,omitempty"`
 	// The time after which the provided names are refreshed.
 	// On large setup it might be a good idea to increase this value because the catalog will change all the time.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	RefreshInterval *v1.Duration `json:"refresh_interval,omitempty"`
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// BasicAuth information to authenticate against the Consul Server.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	// +optional
@@ -310,28 +310,28 @@ type ConsulSDConfig struct {
 	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// Optional proxy URL.
 	// +optional
-	ProxyUrl *string `json:"proxy_url,omitempty"`
+	ProxyUrl *string `json:"proxyUrl,omitempty"`
 	// Comma-separated string that can contain IPs, CIDR notation, domain names
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
 	// +optional
-	NoProxy *string `json:"no_proxy,omitempty"`
+	NoProxy *string `json:"noProxy,omitempty"`
 	// Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
 	// If unset, Prometheus uses its default value.
 	// +optional
-	ProxyFromEnvironment *bool `json:"proxy_from_environment,omitempty"`
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
 	// Specifies headers to send to proxies during CONNECT requests.
 	// +mapType:=atomic
 	// +optional
-	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxy_connect_header,omitempty"`
+	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	FollowRedirects *bool `json:"follow_redirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to enable HTTP2.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	EnableHttp2 *bool `json:"enable_http2,omitempty"`
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
 	// TLS Config
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`

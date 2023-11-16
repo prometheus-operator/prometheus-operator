@@ -16679,7 +16679,7 @@ string
 </tr>
 <tr>
 <td>
-<code>tag_separator</code><br/>
+<code>tagSeparator</code><br/>
 <em>
 string
 </em>
@@ -16692,7 +16692,7 @@ If unset, Prometheus uses its default value.</p>
 </tr>
 <tr>
 <td>
-<code>node_meta</code><br/>
+<code>nodeMeta</code><br/>
 <em>
 map[string]string
 </em>
@@ -16704,7 +16704,7 @@ map[string]string
 </tr>
 <tr>
 <td>
-<code>allow_stale</code><br/>
+<code>allowStale</code><br/>
 <em>
 bool
 </em>
@@ -16717,7 +16717,7 @@ If unset, Prometheus uses its default value.</p>
 </tr>
 <tr>
 <td>
-<code>refresh_interval</code><br/>
+<code>refreshInterval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
 Duration
@@ -16776,7 +16776,7 @@ OAuth2
 </tr>
 <tr>
 <td>
-<code>proxy_url</code><br/>
+<code>proxyUrl</code><br/>
 <em>
 string
 </em>
@@ -16788,7 +16788,7 @@ string
 </tr>
 <tr>
 <td>
-<code>no_proxy</code><br/>
+<code>noProxy</code><br/>
 <em>
 string
 </em>
@@ -16802,7 +16802,7 @@ contain port numbers.</p>
 </tr>
 <tr>
 <td>
-<code>proxy_from_environment</code><br/>
+<code>proxyFromEnvironment</code><br/>
 <em>
 bool
 </em>
@@ -16815,7 +16815,7 @@ If unset, Prometheus uses its default value.</p>
 </tr>
 <tr>
 <td>
-<code>proxy_connect_header</code><br/>
+<code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string]k8s.io/api/core/v1.SecretKeySelector
@@ -16829,7 +16829,7 @@ map[string]k8s.io/api/core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
-<code>follow_redirects</code><br/>
+<code>followRedirects</code><br/>
 <em>
 bool
 </em>
@@ -16842,7 +16842,7 @@ If unset, Prometheus uses its default value.</p>
 </tr>
 <tr>
 <td>
-<code>enable_http2</code><br/>
+<code>enableHTTP2</code><br/>
 <em>
 bool
 </em>
