@@ -43,6 +43,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/kubelet"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
@@ -102,6 +103,10 @@ var (
 	tlsClientConfig rest.TLSClientConfig
 
 	serverConfig = server.DefaultConfig(":8080", false)
+
+	// Parameters for the kubelet endpoints controller.
+	kubeletObject   string
+	kubeletSelector operator.LabelSelector
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -116,8 +121,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tlsClientConfig.CAFile, "ca-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.")
 	fs.BoolVar(&tlsClientConfig.Insecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
 
-	fs.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
-	fs.Var(&cfg.KubeletSelector, "kubelet-selector", "Label selector to filter nodes.")
+	fs.StringVar(&kubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
+	fs.Var(&kubeletSelector, "kubelet-selector", "Label selector to filter nodes.")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -313,6 +318,23 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
+	var kec *kubelet.Controller
+	if kubeletObject != "" {
+		if kec, err = kubelet.New(
+			log.With(logger, "component", "kubelet_endpoints"),
+			restConfig,
+			r,
+			kubeletObject,
+			kubeletSelector,
+			cfg.Annotations,
+			cfg.Labels,
+		); err != nil {
+			level.Error(logger).Log("msg", "instantiating kubelet endpoints controller failed", "err", err)
+			cancel()
+			return 1
+		}
+	}
+
 	// Setup the web server.
 	mux := http.NewServeMux()
 
@@ -352,6 +374,9 @@ func run(fs *flag.FlagSet) int {
 	}
 	wg.Go(func() error { return ao.Run(ctx) })
 	wg.Go(func() error { return to.Run(ctx) })
+	if kec != nil {
+		wg.Go(func() error { return kec.Run(ctx) })
+	}
 
 	term := make(chan os.Signal, 1)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
