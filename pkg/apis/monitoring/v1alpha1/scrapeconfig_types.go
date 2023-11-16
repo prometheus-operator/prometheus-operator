@@ -114,6 +114,9 @@ type ScrapeConfigSpec struct {
 	// AzureSDConfigs defines a list of Azure service discovery configurations.
 	// +optional
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
+	// GCESDConfigs defines a list of GCE service discovery configurations.
+	// +optional
+	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -428,4 +431,44 @@ type AzureSDConfig struct {
 	// instead be specified in the relabeling rule.
 	// +optional
 	Port *int `json:"port"`
+}
+
+// GCESDConfig configures scrape targets from GCP GCE instances.
+// The private IP address is used by default, but may be changed to
+// the public IP address with relabeling.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config
+//
+// The GCE service discovery will load the Google Cloud credentials
+// from the file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+// See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
+//
+// A pre-requisite for using GCESDConfig is that a Secret containing valid
+// Google Cloud credentials is mounted into the Prometheus or PrometheusAgent
+// pod via the `.spec.secrets` field and that the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable is set to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>.
+// +k8s:openapi-gen=true
+type GCESDConfig struct {
+	// The Google Cloud Project ID
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Project string `json:"project"`
+	// The zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Zone string `json:"zone"`
+	// Filter can be used optionally to filter the instance list by other criteria
+	// Syntax of this filter is described in the filter query parameter section:
+	// https://cloud.google.com/compute/docs/reference/latest/instances/list
+	// +optional
+	Filter *string `json:"filter,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
+	// The tag separator is used to separate the tags on concatenation
+	// +optional
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 }

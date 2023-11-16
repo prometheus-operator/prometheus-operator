@@ -33738,6 +33738,55 @@ spec:
                   - files
                   type: object
                 type: array
+              gceSDConfigs:
+                description: GCESDConfigs defines a list of GCE service discovery
+                  configurations.
+                items:
+                  description: "GCESDConfig configures scrape targets from GCP GCE
+                    instances. The private IP address is used by default, but may
+                    be changed to the public IP address with relabeling. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config
+                    \n The GCE service discovery will load the Google Cloud credentials
+                    from the file specified by the GOOGLE_APPLICATION_CREDENTIALS
+                    environment variable. See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
+                    \n A pre-requisite for using GCESDConfig is that a Secret containing
+                    valid Google Cloud credentials is mounted into the Prometheus
+                    or PrometheusAgent pod via the `.spec.secrets` field and that
+                    the GOOGLE_APPLICATION_CREDENTIALS environment variable is set
+                    to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>."
+                  properties:
+                    filter:
+                      description: 'Filter can be used optionally to filter the instance
+                        list by other criteria Syntax of this filter is described
+                        in the filter query parameter section: https://cloud.google.com/compute/docs/reference/latest/instances/list'
+                      type: string
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    project:
+                      description: The Google Cloud Project ID
+                      minLength: 1
+                      type: string
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    tagSeparator:
+                      description: The tag separator is used to separate the tags
+                        on concatenation
+                      type: string
+                    zone:
+                      description: The zone of the scrape targets. If you need multiple
+                        zones use multiple GCESDConfigs.
+                      minLength: 1
+                      type: string
+                  required:
+                  - project
+                  - zone
+                  type: object
+                type: array
               honorLabels:
                 description: HonorLabels chooses the metric's labels on collisions
                   with target labels.

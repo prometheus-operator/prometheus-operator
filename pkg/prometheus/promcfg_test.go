@@ -5633,6 +5633,77 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "gce_sd_config_valid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project:         "devops-dev",
+						Zone:            "us-west-1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_empty",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigEmpty.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestTracingConfig(t *testing.T) {
 	samplingTwo := resource.MustParse("0.5")
 	testCases := []struct {
