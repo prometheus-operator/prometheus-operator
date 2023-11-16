@@ -283,8 +283,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -305,8 +305,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -361,8 +361,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -410,8 +411,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -434,17 +435,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -883,8 +885,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -905,8 +907,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -961,8 +963,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1010,8 +1013,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1034,17 +1037,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -1330,8 +1334,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1352,8 +1356,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1408,8 +1412,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1457,8 +1462,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1481,17 +1486,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -1779,8 +1785,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1801,8 +1807,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1857,8 +1863,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1906,8 +1913,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1930,17 +1937,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -2240,8 +2248,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2262,8 +2270,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2318,8 +2326,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2367,8 +2376,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2391,17 +2400,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -2792,8 +2802,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2814,8 +2824,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2870,8 +2880,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2919,8 +2930,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2943,17 +2954,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -3187,8 +3199,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3209,8 +3221,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3265,8 +3277,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3314,8 +3327,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3338,17 +3351,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -3673,8 +3687,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3695,8 +3709,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3751,8 +3765,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3800,8 +3815,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3824,17 +3839,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -4088,8 +4104,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4110,8 +4126,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4166,8 +4182,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4215,8 +4232,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4239,17 +4256,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -4469,8 +4487,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4491,8 +4509,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4547,8 +4565,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4596,8 +4615,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4620,17 +4639,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -4838,8 +4858,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4860,8 +4880,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4916,8 +4936,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4965,8 +4986,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4989,17 +5010,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -5264,8 +5286,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5286,8 +5308,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5342,8 +5364,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5391,8 +5414,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5415,17 +5438,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -5865,8 +5889,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5887,8 +5911,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5939,8 +5963,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5988,8 +6013,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6012,17 +6037,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -6453,8 +6479,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6475,8 +6501,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6527,8 +6553,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -6576,8 +6603,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6600,17 +6627,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -6893,8 +6921,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6915,8 +6943,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6967,8 +6995,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -7016,8 +7045,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7040,17 +7069,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -7332,8 +7362,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7354,8 +7384,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7406,8 +7436,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -7455,8 +7486,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7479,17 +7510,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -7783,8 +7815,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7805,8 +7837,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7857,8 +7889,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -7906,8 +7939,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7930,17 +7963,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -8322,8 +8356,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8344,8 +8378,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8396,8 +8430,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -8445,8 +8480,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8469,17 +8504,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -8713,8 +8749,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8735,8 +8771,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8787,8 +8823,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -8836,8 +8873,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8860,17 +8897,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -9192,8 +9230,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9214,8 +9252,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9266,8 +9304,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -9315,8 +9354,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9339,17 +9378,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -9600,8 +9640,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9622,8 +9662,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9674,8 +9714,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -9723,8 +9764,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9747,17 +9788,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -9976,8 +10018,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9998,8 +10040,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10050,8 +10092,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -10099,8 +10142,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10123,17 +10166,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -10341,8 +10385,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10363,8 +10407,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10415,8 +10459,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -10464,8 +10509,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10488,17 +10533,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -10757,8 +10803,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10779,8 +10825,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10831,8 +10877,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -10880,8 +10927,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10904,17 +10951,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:

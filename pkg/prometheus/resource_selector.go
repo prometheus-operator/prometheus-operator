@@ -127,6 +127,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 
 			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
 
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
 				break
 			}
@@ -195,6 +196,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if e.BearerTokenFile != "" {
 		return errors.New("it accesses file system via bearer token file which Prometheus specification prohibits")
 	}
