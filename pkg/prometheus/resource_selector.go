@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -731,6 +732,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateAzureSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("azureSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -837,6 +843,32 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.AzureSDConfigs {
+		// Since Prometheus uses default authentication method as "OAuth"
+		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentify" {
+			continue
+		}
+
+		if len(ptr.Deref(config.TenantID, "")) == 0 {
+			return fmt.Errorf("[%d]: configuration requires a tenantID", i)
+		}
+
+		if len(ptr.Deref(config.ClientID, "")) == 0 {
+			return fmt.Errorf("[%d]: configuration requires a clientID", i)
+		}
+
+		if config.ClientSecret == nil {
+			return fmt.Errorf("[%d]: configuration requires a clientSecret", i)
+		}
+
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ClientSecret); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil

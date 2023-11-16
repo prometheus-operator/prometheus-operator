@@ -2702,6 +2702,90 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// AzureSDConfig
+	if len(sc.Spec.AzureSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
+		for i, config := range sc.Spec.AzureSDConfigs {
+			if config.Environment != nil {
+				configs[i] = []yaml.MapItem{
+					{
+						Key:   "environment",
+						Value: config.Environment,
+					},
+				}
+			}
+
+			if config.AuthenticationMethod != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "authentication_method",
+					Value: config.AuthenticationMethod,
+				})
+			}
+
+			if config.SubscriptionID != "" {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "subscription_id",
+					Value: config.SubscriptionID,
+				})
+			}
+
+			if config.TenantID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tenant_id",
+					Value: config.TenantID,
+				})
+			}
+
+			if config.ClientID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "client_id",
+					Value: config.ClientID,
+				})
+			}
+
+			if config.ClientSecret != nil {
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.ClientSecret,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s client secret %s: %w", config.ClientSecret.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "client_secret",
+					Value: value,
+				})
+			}
+
+			if config.ResourceGroup != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+
+					Key:   "resource_group",
+					Value: config.ResourceGroup,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "azure_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}

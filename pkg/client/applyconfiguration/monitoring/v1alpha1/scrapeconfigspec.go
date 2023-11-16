@@ -31,6 +31,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ConsulSDConfigs       []ConsulSDConfigApplyConfiguration                `json:"consulSDConfigs,omitempty"`
 	DNSSDConfigs          []DNSSDConfigApplyConfiguration                   `json:"dnsSDConfigs,omitempty"`
 	EC2SDConfigs          []EC2SDConfigApplyConfiguration                   `json:"ec2SDConfigs,omitempty"`
+	AzureSDConfigs        []AzureSDConfigApplyConfiguration                 `json:"azureSDConfigs,omitempty"`
 	RelabelConfigs        []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath           *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval        *v1.Duration                                      `json:"scrapeInterval,omitempty"`
@@ -144,6 +145,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithEC2SDConfigs(values ...*EC2SDCo
 			panic("nil value passed to WithEC2SDConfigs")
 		}
 		b.EC2SDConfigs = append(b.EC2SDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithAzureSDConfigs adds the given value to the AzureSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AzureSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithAzureSDConfigs(values ...*AzureSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAzureSDConfigs")
+		}
+		b.AzureSDConfigs = append(b.AzureSDConfigs, *values[i])
 	}
 	return b
 }
