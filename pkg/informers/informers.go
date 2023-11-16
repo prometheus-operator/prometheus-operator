@@ -56,6 +56,10 @@ type ForResource struct {
 // It takes a namespace aware informer factory, wrapped in a FactoriesForNamespaces interface
 // that is able to instantiate an informer for a given namespace.
 func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVersionResource) (*ForResource, error) {
+	return NewInformersForResourceWithTransform(ifs, resource, nil)
+}
+
+func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource schema.GroupVersionResource, handler cache.TransformFunc) (*ForResource, error) {
 	namespaces := ifs.Namespaces().UnsortedList()
 	sort.Strings(namespaces)
 
@@ -66,12 +70,38 @@ func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVe
 		if err != nil {
 			return nil, fmt.Errorf("error getting informer in namespace %q for resource %v: %w", ns, resource, err)
 		}
+		if handler != nil {
+			if err := informer.Informer().SetTransform(handler); err != nil {
+				return nil, fmt.Errorf("error setting transform in namespace %q for resource %v: %w", ns, resource, err)
+			}
+		}
 		informers = append(informers, informer)
 	}
 
 	return &ForResource{
 		informers: informers,
 	}, nil
+}
+
+// PartialObjectMetadataStrip removes the following fields from PartialObjectMetadata objects:
+// * Annotations
+// * Labels
+// * ManagedFields
+// * Finalizers
+// * OwnerReferences
+func PartialObjectMetadataStrip(obj interface{}) (interface{}, error) {
+	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
+	if !ok {
+		return nil, fmt.Errorf("internal error: cannot cast object %#+v to PartialObjectMetadata", obj)
+	}
+
+	partialMeta.Annotations = nil
+	partialMeta.Labels = nil
+	partialMeta.ManagedFields = nil
+	partialMeta.Finalizers = nil
+	partialMeta.OwnerReferences = nil
+
+	return partialMeta, nil
 }
 
 // Start starts all underlying informers, passing the given stop channel to each of them.

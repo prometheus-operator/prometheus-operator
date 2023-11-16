@@ -58,6 +58,7 @@ type Operator struct {
 	kclient  kubernetes.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
+
 	logger   log.Logger
 	accessor *operator.Accessor
 
@@ -272,7 +273,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
 	}
 
-	c.cmapInfs, err = informers.NewInformersForResource(
+	c.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
@@ -283,12 +284,13 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		informers.PartialObjectMetadataStrip,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
 	}
 
-	c.secrInfs, err = informers.NewInformersForResource(
+	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
@@ -299,6 +301,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		informers.PartialObjectMetadataStrip,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating secrets informers: %w", err)
