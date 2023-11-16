@@ -298,7 +298,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 						MatchNames: []string{"test1", "test2"},
 					},
 					AttachMetadata: &monitoringv1.AttachMetadata{
-						Node: true,
+						Node: ptr.To(true),
 					},
 				},
 			},
@@ -407,7 +407,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 				MatchNames: []string{"test"},
 			},
 			AttachMetadata: &monitoringv1.AttachMetadata{
-				Node: true,
+				Node: ptr.To(true),
 			},
 		},
 	}
