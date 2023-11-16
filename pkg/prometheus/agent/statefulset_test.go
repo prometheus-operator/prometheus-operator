@@ -17,7 +17,6 @@ package prometheusagent
 import (
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/go-kit/log"
@@ -296,10 +295,12 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						prompkg.ShardLabelName:          "0",
-						prompkg.PrometheusNameLabelName: "",
-						prompkg.PrometheusK8sLabelName:  "prometheus-agent",
+						"app":                          "prometheus",
+						"app.kubernetes.io/instance":   "",
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+						"app.kubernetes.io/name":       "prometheus-agent",
+						"operator.prometheus.io/name":  "",
+						"operator.prometheus.io/shard": "0",
 					},
 				},
 			},
@@ -331,14 +332,11 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "",
-						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						prompkg.PrometheusK8sLabelName:  "prometheus-agent",
-						"app.kubernetes.io/version":     strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
-						"operator.prometheus.io/name":   "",
-						prompkg.ShardLabelName:          "0",
-						prompkg.PrometheusNameLabelName: "",
+						"app":                          "prometheus",
+						"app.kubernetes.io/instance":   "",
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+						"app.kubernetes.io/name":       "prometheus-agent",
+						"operator.prometheus.io/name":  "",
 					},
 				},
 			},

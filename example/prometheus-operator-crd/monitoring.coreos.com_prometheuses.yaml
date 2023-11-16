@@ -7613,8 +7613,8 @@ spec:
                       description: Defines what Prometheus Operator managed labels
                         should be added to labelSelector on the topologySpreadConstraint.
                       enum:
-                      - ResourceName
-                      - ShardAndResourceName
+                      - OnResource
+                      - OnShard
                       type: string
                     labelSelector:
                       description: LabelSelector is used to find matching pods. Pods

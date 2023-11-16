@@ -4095,7 +4095,7 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.AdditionalLabelSelector">AdditionalLabelSelector
+<h3 id="monitoring.coreos.com/v1.AdditionalLabelSelectors">AdditionalLabelSelectors
 (<code>string</code> alias)</h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">TopologySpreadConstraint</a>)
@@ -4112,7 +4112,7 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 <tbody><tr><td><p>&#34;OnResource&#34;</p></td>
 <td><p>Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).</p>
 </td>
-</tr><tr><td><p>&#34;ShardAndResourceName&#34;</p></td>
+</tr><tr><td><p>&#34;OnShard&#34;</p></td>
 <td><p>Automatically add a label selector that will select all pods matching the same shard.</p>
 </td>
 </tr></tbody>
@@ -14917,8 +14917,8 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 <td>
 <code>additionalLabelSelectors</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.AdditionalLabelSelector">
-AdditionalLabelSelector
+<a href="#monitoring.coreos.com/v1.AdditionalLabelSelectors">
+AdditionalLabelSelectors
 </a>
 </em>
 </td>
