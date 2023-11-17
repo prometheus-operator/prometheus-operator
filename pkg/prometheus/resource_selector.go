@@ -376,6 +376,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
 				break
 			}
