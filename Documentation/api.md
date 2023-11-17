@@ -5535,7 +5535,78 @@ ManagedIdentity
 </em>
 </td>
 <td>
-<p>ManagedIdentity defines the Azure User-assigned Managed identity.</p>
+<em>(Optional)</em>
+<p>ManagedIdentity defines the Azure User-assigned Managed identity.
+Cannot be set at the same time as <code>oauth</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureOAuth">
+AzureOAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth defines the oauth config that is being used to authenticate.
+Cannot be set at the same time as <code>managedIdentity</code>.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AzureOAuth">AzureOAuth
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>AzureOAuth defines the Azure OAuth settings.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><code>clientID</code> is the clientId of the Azure Active Directory application that is being used to authenticate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p><code>clientSecret</code> specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tenantId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><code>tenantID</code> is the tenant ID of the Azure Active Directory application that is being used to authenticate.</p>
 </td>
 </tr>
 </tbody>

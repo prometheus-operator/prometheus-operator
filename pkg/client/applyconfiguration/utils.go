@@ -61,6 +61,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AuthorizationApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureAD"):
 		return &monitoringv1.AzureADApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureOAuth"):
+		return &monitoringv1.AzureOAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):

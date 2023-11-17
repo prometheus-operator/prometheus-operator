@@ -21,6 +21,7 @@ package v1
 type AzureADApplyConfiguration struct {
 	Cloud           *string                            `json:"cloud,omitempty"`
 	ManagedIdentity *ManagedIdentityApplyConfiguration `json:"managedIdentity,omitempty"`
+	OAuth           *AzureOAuthApplyConfiguration      `json:"oauth,omitempty"`
 }
 
 // AzureADApplyConfiguration constructs an declarative configuration of the AzureAD type for use with
@@ -42,5 +43,13 @@ func (b *AzureADApplyConfiguration) WithCloud(value string) *AzureADApplyConfigu
 // If called multiple times, the ManagedIdentity field is set to the value of the last call.
 func (b *AzureADApplyConfiguration) WithManagedIdentity(value *ManagedIdentityApplyConfiguration) *AzureADApplyConfiguration {
 	b.ManagedIdentity = value
+	return b
+}
+
+// WithOAuth sets the OAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth field is set to the value of the last call.
+func (b *AzureADApplyConfiguration) WithOAuth(value *AzureOAuthApplyConfiguration) *AzureADApplyConfiguration {
+	b.OAuth = value
 	return b
 }

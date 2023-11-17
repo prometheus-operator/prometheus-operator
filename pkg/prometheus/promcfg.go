@@ -1893,12 +1893,22 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
 
 		if spec.AzureAD != nil {
-			azureAd := yaml.MapSlice{
-				{
-					Key: "managed_identity", Value: yaml.MapSlice{
+			azureAd := yaml.MapSlice{}
+
+			if spec.AzureAD.ManagedIdentity != nil {
+				azureAd = append(azureAd,
+					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
 						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					},
-				},
+					}},
+				)
+			}
+
+			if spec.AzureAD.OAuth != nil {
+				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
+					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+				})
 			}
 
 			if spec.AzureAD.Cloud != nil {

@@ -42,3 +42,7 @@ type SigV4Credentials struct {
 	AccessKeyID string
 	SecretKeyID string
 }
+
+type AzureOAuthCredentials struct {
+	ClientSecret string
+}

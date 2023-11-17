@@ -1255,8 +1255,33 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// ManagedIdentity defines the Azure User-assigned Managed identity.
+	// Cannot be set at the same time as `oauth`.
+	// +optional
+	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
+	// OAuth defines the oauth config that is being used to authenticate.
+	// Cannot be set at the same time as `managedIdentity`.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	OAuth *AzureOAuth `json:"oauth,omitempty"`
+}
+
+// AzureOAuth defines the Azure OAuth settings.
+// +k8s:openapi-gen=true
+type AzureOAuth struct {
+	// `clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.
 	// +required
-	ManagedIdentity ManagedIdentity `json:"managedIdentity"`
+	// +kubebuilder:validation:MinLength=1
+	ClientID string `json:"clientId"`
+	// `clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
+	// +required
+	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
+	// `tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	TenantID string `json:"tenantId"`
 }
 
 // ManagedIdentity defines the Azure User-assigned Managed identity.

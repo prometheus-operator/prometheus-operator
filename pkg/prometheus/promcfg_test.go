@@ -3346,12 +3346,52 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
-					ManagedIdentity: monitoringv1.ManagedIdentity{
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
 						ClientID: "client-id",
 					},
 				},
 			},
 			golden: "RemoteWriteConfig_v2.45.0_1.golden",
+		},
+		{
+			version: "v2.48.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
+		},
+		{
+			version: "v2.47.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -3505,6 +3545,13 @@ func TestRemoteWriteConfig(t *testing.T) {
 					"remoteWrite/0": {
 						AccessKeyID: "access-key",
 						SecretKeyID: "secret-key",
+					},
+				}
+			}
+			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
+				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
+					"remoteWrite/0": {
+						ClientSecret: "secret-key",
 					},
 				}
 			}
