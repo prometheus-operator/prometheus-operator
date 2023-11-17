@@ -207,7 +207,7 @@ type PodMetricsEndpoint struct {
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
-  // TrackTimestampsStaleness whether Prometheus tracks staleness of
+	// TrackTimestampsStaleness whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamps present in scraped data.
 	// It requires Prometheus >= v2.48.0.
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
