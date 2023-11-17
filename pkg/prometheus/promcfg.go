@@ -2481,7 +2481,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Scheme != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "scheme",
-					Value: config.Scheme,
+					Value: strings.ToLower(*config.Scheme),
 				})
 			}
 
