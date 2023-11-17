@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -102,7 +101,7 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 		},
 		timeout,
 	); err != nil {
-		return errors.Wrapf(err, "prometheus-agent %v/%v failed to become available", p.Namespace, p.Name)
+		return fmt.Errorf("prometheus-agent %v/%v failed to become available: %w", p.Namespace, p.Name, err)
 	}
 
 	return nil
@@ -111,11 +110,11 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, ns, name string) error {
 	_, err := f.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("requesting PrometheusAgent custom resource %v failed", name))
+		return fmt.Errorf("requesting PrometheusAgent custom resource %v failed: %w", name, err)
 	}
 
 	if err := f.MonClientV1alpha1.PrometheusAgents(ns).Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("deleting PrometheusAgent custom resource %v failed", name))
+		return fmt.Errorf("deleting PrometheusAgent custom resource %v failed: %w", name, err)
 	}
 
 	if err := f.WaitForPodsReady(
@@ -125,10 +124,7 @@ func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, n
 		0,
 		prometheusagent.ListOptions(name),
 	); err != nil {
-		return errors.Wrap(
-			err,
-			fmt.Sprintf("waiting for PrometheusAgent custom resource (%s) to vanish timed out", name),
-		)
+		return fmt.Errorf("waiting for PrometheusAgent custom resource (%s) to vanish timed out: %w", name, err)
 	}
 
 	return nil

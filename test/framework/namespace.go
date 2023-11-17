@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -33,7 +32,7 @@ func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *
 	rn := k8sutil.ResourceNamer{}
 	name, err := rn.UniqueDNS1123Label(name)
 	if err != nil {
-		t.Fatal(errors.Wrap(err, fmt.Sprintf("failed to generate a namespace name %v", name)))
+		t.Fatal(fmt.Errorf("failed to generate a namespace name %v: %w", name, err))
 	}
 
 	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
@@ -43,7 +42,7 @@ func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *
 	}, metav1.CreateOptions{})
 
 	if err != nil {
-		t.Fatal(errors.Wrap(err, fmt.Sprintf("failed to create namespace with name %v", name)))
+		t.Fatal(fmt.Errorf("failed to create namespace with name %v: %w", name, err))
 	}
 
 	namespaceFinalizerFn := func() error {

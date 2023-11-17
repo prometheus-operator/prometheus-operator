@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/textparse"
 	v1 "k8s.io/api/core/v1"
@@ -46,12 +45,12 @@ func SourceToIOReader(source string) (io.Reader, error) {
 func PathToOSFile(relativePath string) (*os.File, error) {
 	path, err := filepath.Abs(relativePath)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolute file path of %s", relativePath))
+		return nil, fmt.Errorf("failed generate absolute file path of %s: %w", relativePath, err)
 	}
 
 	manifest, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", path))
+		return nil, fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 
 	return manifest, nil
@@ -71,11 +70,12 @@ func URLToIOReader(url string) (io.Reader, error) {
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"waiting for %v to return a successful status code timed out. Last response from server was: %v",
+		return nil, fmt.Errorf(
+			"waiting for %v to return a successful status code timed out. Last response from server was: %v: %w",
 			url,
 			resp,
-		))
+			err,
+		)
 	}
 
 	return resp.Body, nil
@@ -141,11 +141,15 @@ func WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 		return false, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf(
-		"waiting for %v to return a successful status code timed out. Last response from server was: %v",
-		url,
-		resp,
-	))
+	if err != nil {
+		return fmt.Errorf(
+			"waiting for %v to return a successful status code timed out. Last response from server was: %v: %w",
+			url,
+			resp,
+			err,
+		)
+	}
+	return nil
 }
 
 func podRunsImage(p v1.Pod, image string) bool {
