@@ -1659,6 +1659,8 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 		var addlScrapeConfig yaml.MapSlice
 		var relabelings []yaml.MapSlice
 		var otherConfigItems []yaml.MapItem
+		var alreadyHasShardLabel = false
+
 		for _, mapItem := range mapSlice {
 			if mapItem.Key != "relabel_configs" {
 				otherConfigItems = append(otherConfigItems, mapItem)
@@ -1673,10 +1675,18 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				if !ok {
 					return nil, fmt.Errorf("error parsing relabel config: %w", err)
 				}
+				for _, relabelItem := range relabeling {
+					if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
+						level.Debug(cg.logger).Log("msg", "found existing hashmod relabeling rule, skipping", "relabeling", relabeling)
+						alreadyHasShardLabel = true
+					}
+				}
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		if !alreadyHasShardLabel {
+			relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		}
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
