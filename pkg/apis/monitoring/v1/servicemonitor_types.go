@@ -58,12 +58,12 @@ type ServiceMonitorSpec struct {
 	// of the associated Kubernetes `Service`.
 	JobLabel string `json:"jobLabel,omitempty"`
 
-	// targetLabels defines the labels which are transferred from the
+	// `targetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Service` object onto the ingested metrics.
 	//
 	// +optional
 	TargetLabels []string `json:"targetLabels,omitempty"`
-	// podTargetLabels defines the labels which are transferred from the
+	// `podTargetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
 	// +optional
@@ -80,13 +80,13 @@ type ServiceMonitorSpec struct {
 	// are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
-	// sampleLimit defines a per-scrape limit on the number of scraped samples
+	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
 	//
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 
-	// targetLimit defines a limit on the number of scraped targets that will
+	// `targetLimit` defines a limit on the number of scraped targets that will
 	// be accepted.
 	//
 	// +optional
@@ -118,7 +118,7 @@ type ServiceMonitorSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 
-	// attachMetadata defines additional metadata which is added to the
+	// `attachMetadata` defines additional metadata which is added to the
 	// discovered targets.
 	//
 	// It requires Prometheus >= v2.37.0.

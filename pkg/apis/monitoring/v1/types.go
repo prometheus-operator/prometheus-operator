@@ -411,11 +411,11 @@ type Endpoint struct {
 	// Deprecated: use `authorization` instead.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
-	// Secret to mount to read bearer token for scraping targets. The secret
-	// needs to be in the same namespace as the service monitor and accessible by
-	// the Prometheus Operator.
+	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
+	// token for scraping targets. The secret needs to be in the same namespace
+	// as the ServiceMonitor object and readable by the Prometheus Operator.
 	//
-	//+ optional
+	// +optional
 	//
 	// Deprecated: use `authorization` instead.
 	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`

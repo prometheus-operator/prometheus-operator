@@ -45,7 +45,7 @@
                 "description": "Specification of desired Service selection for target discovery by Prometheus.",
                 "properties": {
                   "attachMetadata": {
-                    "description": "attachMetadata defines additional metadata which is added to the discovered targets. \n It requires Prometheus >= v2.37.0.",
+                    "description": "`attachMetadata` defines additional metadata which is added to the discovered targets. \n It requires Prometheus >= v2.37.0.",
                     "properties": {
                       "node": {
                         "description": "When set to true, Prometheus must have the `get` permission on the `Nodes` objects.",
@@ -146,7 +146,7 @@
                           "type": "string"
                         },
                         "bearerTokenSecret": {
-                          "description": "Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. \n Deprecated: use `authorization` instead.",
+                          "description": "`bearerTokenSecret` specifies a key of a Secret containing the bearer token for scraping targets. The secret needs to be in the same namespace as the ServiceMonitor object and readable by the Prometheus Operator. \n Deprecated: use `authorization` instead.",
                           "properties": {
                             "key": {
                               "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -678,14 +678,14 @@
                     "type": "object"
                   },
                   "podTargetLabels": {
-                    "description": "podTargetLabels defines the labels which are transferred from the associated Kubernetes `Pod` object onto the ingested metrics.",
+                    "description": "`podTargetLabels` defines the labels which are transferred from the associated Kubernetes `Pod` object onto the ingested metrics.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "sampleLimit": {
-                    "description": "sampleLimit defines a per-scrape limit on the number of scraped samples that will be accepted.",
+                    "description": "`sampleLimit` defines a per-scrape limit on the number of scraped samples that will be accepted.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -733,14 +733,14 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "targetLabels": {
-                    "description": "targetLabels defines the labels which are transferred from the associated Kubernetes `Service` object onto the ingested metrics.",
+                    "description": "`targetLabels` defines the labels which are transferred from the associated Kubernetes `Service` object onto the ingested metrics.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "targetLimit": {
-                    "description": "targetLimit defines a limit on the number of scraped targets that will be accepted.",
+                    "description": "`targetLimit` defines a limit on the number of scraped targets that will be accepted.",
                     "format": "int64",
                     "type": "integer"
                   }
