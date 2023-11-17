@@ -78,6 +78,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ArbitraryFSAccessThroughSMs          *ArbitraryFSAccessThroughSMsConfigApplyConfiguration    `json:"arbitraryFSAccessThroughSMs,omitempty"`
 	OverrideHonorLabels                  *bool                                                   `json:"overrideHonorLabels,omitempty"`
 	OverrideHonorTimestamps              *bool                                                   `json:"overrideHonorTimestamps,omitempty"`
+	OverrideTrackTimestampsStaleness     *bool                                                   `json:"overrideTrackTimestampsStaleness,omitempty"`
 	IgnoreNamespaceSelectors             *bool                                                   `json:"ignoreNamespaceSelectors,omitempty"`
 	EnforcedNamespaceLabel               *string                                                 `json:"enforcedNamespaceLabel,omitempty"`
 	EnforcedSampleLimit                  *uint64                                                 `json:"enforcedSampleLimit,omitempty"`
@@ -560,6 +561,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithOverrideHonorLabels(value
 // If called multiple times, the OverrideHonorTimestamps field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithOverrideHonorTimestamps(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.OverrideHonorTimestamps = &value
+	return b
+}
+
+// WithOverrideTrackTimestampsStaleness sets the OverrideTrackTimestampsStaleness field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OverrideTrackTimestampsStaleness field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithOverrideTrackTimestampsStaleness(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.OverrideTrackTimestampsStaleness = &value
 	return b
 }
 

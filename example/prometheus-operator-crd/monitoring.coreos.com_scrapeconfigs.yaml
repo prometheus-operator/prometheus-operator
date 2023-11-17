@@ -3,8 +3,9 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.11.1
     operator.prometheus.io/version: 0.69.1
+  creationTimestamp: null
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -106,7 +107,6 @@ spec:
                       required:
                       - key
                       type: object
-                      x-kubernetes-map-type: atomic
                     environment:
                       description: The Azure environment.
                       type: string
@@ -406,7 +406,6 @@ spec:
                         required:
                         - key
                         type: object
-                        x-kubernetes-map-type: atomic
                       description: Specifies headers to send to proxies during CONNECT
                         requests.
                       type: object
@@ -593,7 +592,6 @@ spec:
                       required:
                       - key
                       type: object
-                      x-kubernetes-map-type: atomic
                   required:
                   - server
                   type: object
@@ -664,7 +662,6 @@ spec:
                       required:
                       - key
                       type: object
-                      x-kubernetes-map-type: atomic
                     filters:
                       description: 'Filters can be used optionally to filter the instance
                         list by other criteria. Available filter criteria can be found
@@ -719,7 +716,6 @@ spec:
                       required:
                       - key
                       type: object
-                      x-kubernetes-map-type: atomic
                   type: object
                 type: array
               fileSDConfigs:
@@ -1427,6 +1423,11 @@ spec:
                     description: Used to verify the hostname for the targets.
                     type: string
                 type: object
+              trackTimestampsStaleness:
+                description: "TrackTimestampsStaleness whether Prometheus tracks staleness
+                  of the metrics that have an explicit timestamps present in scraped
+                  data. \n It requires Prometheus >= v2.48.0."
+                type: boolean
             type: object
         required:
         - spec

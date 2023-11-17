@@ -3,9 +3,10 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.13.0",
+      "controller-gen.kubebuilder.io/version": "v0.11.1",
       "operator.prometheus.io/version": "0.69.1"
     },
+    "creationTimestamp": null,
     "name": "prometheuses.monitoring.coreos.com"
   },
   "spec": {
@@ -4088,6 +4089,10 @@
                   },
                   "overrideHonorTimestamps": {
                     "description": "When true, Prometheus ignores the timestamps for all the targets created from service and pod monitors. Otherwise the HonorTimestamps field of the service or pod monitor applies.",
+                    "type": "boolean"
+                  },
+                  "overrideTrackTimestampsStaleness": {
+                    "description": "When true, Prometheus ignores the timestamps for all the targets created from service and pod monitors. Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.",
                     "type": "boolean"
                   },
                   "paused": {

@@ -25,6 +25,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +37,9 @@ type FakeAlertmanagerConfigs struct {
 	ns   string
 }
 
-var alertmanagerconfigsResource = v1alpha1.SchemeGroupVersion.WithResource("alertmanagerconfigs")
+var alertmanagerconfigsResource = schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1alpha1", Resource: "alertmanagerconfigs"}
 
-var alertmanagerconfigsKind = v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig")
+var alertmanagerconfigsKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1alpha1", Kind: "AlertmanagerConfig"}
 
 // Get takes name of the alertmanagerConfig, and returns the corresponding alertmanagerConfig object, and an error if there is any.
 func (c *FakeAlertmanagerConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AlertmanagerConfig, err error) {

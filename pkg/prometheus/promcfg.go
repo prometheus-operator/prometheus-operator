@@ -247,6 +247,26 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 	return cg.WithMinimumVersion("2.9.0").AppendMapItem(cfg, "honor_timestamps", honor && !cpf.OverrideHonorTimestamps)
 }
 
+// AddTrackTimestampsStaleness adds the track_timestamps_staleness field into scrape configurations.
+// track_timestamps_staleness is false only when the user specified it or when the global
+// override applies.
+// For backwards compatibility with Prometheus <2.48.0 we don't set
+// track_timestamps_staleness.
+func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, userTrackTimestampsStaleness *bool) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	// Fast path.
+	if userTrackTimestampsStaleness == nil && !cpf.OverrideTrackTimestampsStaleness {
+		return cfg
+	}
+
+	track := false
+	if userTrackTimestampsStaleness != nil {
+		track = *userTrackTimestampsStaleness
+	}
+
+	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", track && !cpf.OverrideTrackTimestampsStaleness)
+}
+
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
 func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
@@ -687,6 +707,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
+	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	var attachMetaConfig *attachMetadataConfig
 	if m.Spec.AttachMetadata != nil {
@@ -1146,6 +1167,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
+	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	role := kubernetesSDRoleEndpoint
 	if cg.EndpointSliceSupported() {
@@ -2274,6 +2296,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.HonorTimestamps != nil {
 		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)
+	}
+
+	if sc.Spec.TrackTimestampsStaleness != nil {
+		cfg = cg.AddTrackTimestampsStaleness(cfg, sc.Spec.TrackTimestampsStaleness)
 	}
 
 	if sc.Spec.HonorLabels != nil {

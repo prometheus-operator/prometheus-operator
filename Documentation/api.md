@@ -2160,6 +2160,19 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
+<code>overrideTrackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -6507,6 +6520,19 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
+<code>overrideTrackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -7513,6 +7539,20 @@ when exposed by the target.</p>
 </tr>
 <tr>
 <td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamps present in scraped data.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
@@ -8453,6 +8493,19 @@ bool
 </td>
 <td>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamps present in scraped data.
+It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>
@@ -10325,6 +10378,19 @@ bool
 <p>When true, Prometheus ignores the timestamps for all the targets created
 from service and pod monitors.
 Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>overrideTrackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
 </td>
 </tr>
 <tr>
@@ -15682,6 +15748,19 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
+<code>overrideTrackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -16323,6 +16402,20 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamps present in scraped data.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>
@@ -19854,6 +19947,19 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
+<code>overrideTrackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>When true, Prometheus ignores the timestamps for all the targets created
+from service and pod monitors.
+Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -21177,6 +21283,20 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamps present in scraped data.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>

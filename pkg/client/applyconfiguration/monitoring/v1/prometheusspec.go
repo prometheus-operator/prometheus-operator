@@ -510,6 +510,14 @@ func (b *PrometheusSpecApplyConfiguration) WithOverrideHonorTimestamps(value boo
 	return b
 }
 
+// WithOverrideTrackTimestampsStaleness sets the OverrideTrackTimestampsStaleness field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OverrideTrackTimestampsStaleness field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithOverrideTrackTimestampsStaleness(value bool) *PrometheusSpecApplyConfiguration {
+	b.OverrideTrackTimestampsStaleness = &value
+	return b
+}
+
 // WithIgnoreNamespaceSelectors sets the IgnoreNamespaceSelectors field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IgnoreNamespaceSelectors field is set to the value of the last call.

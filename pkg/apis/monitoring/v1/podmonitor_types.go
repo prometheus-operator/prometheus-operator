@@ -135,6 +135,10 @@ type PodMetricsEndpoint struct {
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// TrackTimestampsStaleness whether Prometheus tracks staleness of
+	// the metrics that have an explicit timestamps present in scraped data.
+	// It requires Prometheus >= v2.48.0.
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`

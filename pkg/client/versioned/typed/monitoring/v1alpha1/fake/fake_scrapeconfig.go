@@ -25,6 +25,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +37,9 @@ type FakeScrapeConfigs struct {
 	ns   string
 }
 
-var scrapeconfigsResource = v1alpha1.SchemeGroupVersion.WithResource("scrapeconfigs")
+var scrapeconfigsResource = schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1alpha1", Resource: "scrapeconfigs"}
 
-var scrapeconfigsKind = v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfig")
+var scrapeconfigsKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1alpha1", Kind: "ScrapeConfig"}
 
 // Get takes name of the scrapeConfig, and returns the corresponding scrapeConfig object, and an error if there is any.
 func (c *FakeScrapeConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ScrapeConfig, err error) {

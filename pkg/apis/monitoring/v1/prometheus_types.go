@@ -423,6 +423,11 @@ type CommonPrometheusFields struct {
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 
+	// When true, Prometheus ignores the timestamps for all the targets created
+	// from service and pod monitors.
+	// Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.
+	OverrideTrackTimestampsStaleness bool `json:"overrideTrackTimestampsStaleness,omitempty"`
+
 	// When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
 	// and Probe objects will be ignored. They will only discover targets
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe

@@ -3,9 +3,10 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.13.0",
+      "controller-gen.kubebuilder.io/version": "v0.11.1",
       "operator.prometheus.io/version": "0.69.1"
     },
+    "creationTimestamp": null,
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
   "spec": {
@@ -112,8 +113,7 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object",
-                          "x-kubernetes-map-type": "atomic"
+                          "type": "object"
                         },
                         "environment": {
                           "description": "The Azure environment.",
@@ -444,8 +444,7 @@
                             "required": [
                               "key"
                             ],
-                            "type": "object",
-                            "x-kubernetes-map-type": "atomic"
+                            "type": "object"
                           },
                           "description": "Specifies headers to send to proxies during CONNECT requests.",
                           "type": "object",
@@ -652,8 +651,7 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object",
-                          "x-kubernetes-map-type": "atomic"
+                          "type": "object"
                         }
                       },
                       "required": [
@@ -727,8 +725,7 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object",
-                          "x-kubernetes-map-type": "atomic"
+                          "type": "object"
                         },
                         "filters": {
                           "description": "Filters can be used optionally to filter the instance list by other criteria. Available filter criteria can be found here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
@@ -789,8 +786,7 @@
                           "required": [
                             "key"
                           ],
-                          "type": "object",
-                          "x-kubernetes-map-type": "atomic"
+                          "type": "object"
                         }
                       },
                       "type": "object"
@@ -1550,6 +1546,10 @@
                       }
                     },
                     "type": "object"
+                  },
+                  "trackTimestampsStaleness": {
+                    "description": "TrackTimestampsStaleness whether Prometheus tracks staleness of the metrics that have an explicit timestamps present in scraped data. \n It requires Prometheus >= v2.48.0.",
+                    "type": "boolean"
                   }
                 },
                 "type": "object"
