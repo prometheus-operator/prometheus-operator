@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: scrapeconfigs.monitoring.coreos.com
+  name: scrapeconfigs.azmonitoring.coreos.com
 spec:
-  group: monitoring.coreos.com
+  group: azmonitoring.coreos.com
   names:
     categories:
     - prometheus-operator

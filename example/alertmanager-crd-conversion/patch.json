@@ -7,7 +7,7 @@
          "operator.prometheus.io/version": "0.68.0"
       },
       "creationTimestamp": null,
-      "name": "alertmanagerconfigs.monitoring.coreos.com"
+      "name": "alertmanagerconfigs.azmonitoring.coreos.com"
    },
    "spec": {
       "conversion": {

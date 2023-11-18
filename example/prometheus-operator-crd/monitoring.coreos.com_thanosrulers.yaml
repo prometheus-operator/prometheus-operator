@@ -6,9 +6,9 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.11.1
     operator.prometheus.io/version: 0.68.0
   creationTimestamp: null
-  name: thanosrulers.monitoring.coreos.com
+  name: thanosrulers.azmonitoring.coreos.com
 spec:
-  group: monitoring.coreos.com
+  group: azmonitoring.coreos.com
   names:
     categories:
     - prometheus-operator
@@ -2299,11 +2299,11 @@ spec:
                     Probe or PrometheusRule object.
                   properties:
                     group:
-                      default: monitoring.coreos.com
+                      default: azmonitoring.coreos.com
                       description: Group of the referent. When not specified, it defaults
-                        to `monitoring.coreos.com`
+                        to `azmonitoring.coreos.com`
                       enum:
-                      - monitoring.coreos.com
+                      - azmonitoring.coreos.com
                       type: string
                     name:
                       description: Name of the referent. When not set, all resources
