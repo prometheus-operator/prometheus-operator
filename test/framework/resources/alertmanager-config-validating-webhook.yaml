@@ -9,11 +9,11 @@ webhooks:
         namespace: default
         path: /admission-alertmanagerconfigs/validate
     failurePolicy: Fail
-    name: alertmanagerconfigs-validate.monitoring.coreos.com
+    name: alertmanagerconfigs-validate.azmonitoring.coreos.com
     namespaceSelector: {}
     rules:
       - apiGroups:
-          - monitoring.coreos.com
+          - azmonitoring.coreos.com
         apiVersions:
           - v1alpha1
           - v1beta1
