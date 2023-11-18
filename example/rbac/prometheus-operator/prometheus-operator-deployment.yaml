@@ -32,6 +32,9 @@ spec:
         ports:
         - containerPort: 8080
           name: http
+        env:
+        - name: PROMETHEUS_OPERATOR_V1_CUSTOM_GROUP
+          value: "azmonitoring.coreos.com"
         resources:
           limits:
             cpu: 200m
