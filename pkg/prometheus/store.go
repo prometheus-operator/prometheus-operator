@@ -44,6 +44,9 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace 
 		if err := store.AddSigV4(ctx, namespace, remote.Sigv4, key); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+		if err := store.AddAzureOAuth(ctx, namespace, remote.AzureAD, key); err != nil {
+			return fmt.Errorf("remote write %d: %w", i, err)
+		}
 	}
 	return nil
 }

@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
   name: prometheusagents.azmonitoring.coreos.com
 spec:
   group: azmonitoring.coreos.com
@@ -994,8 +993,8 @@ spec:
                       `bearerTokenFile`."
                     properties:
                       password:
-                        description: The secret in the service monitor namespace that
-                          contains the password for authentication.
+                        description: '`password` specifies a key of a Secret containing
+                          the password for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -1014,8 +1013,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       username:
-                        description: The secret in the service monitor namespace that
-                          contains the username for authentication.
+                        description: '`username` specifies a key of a Secret containing
+                          the username for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -4084,9 +4083,40 @@ spec:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: The field controls if and how PVCs are deleted during
+                  the lifecycle of a StatefulSet. The default behavior is all PVCs
+                  are retained. This is an alpha field from kubernetes 1.23 until
+                  1.26 and a beta field from 1.26. It requires enabling the StatefulSetAutoDeletePVC
+                  feature gate.
+                properties:
+                  whenDeleted:
+                    description: WhenDeleted specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      deleted. The default policy of `Retain` causes PVCs to not be
+                      affected by StatefulSet deletion. The `Delete` policy causes
+                      those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: WhenScaled specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      scaled down. The default policy of `Retain` causes PVCs to not
+                      be affected by a scaledown. The `Delete` policy causes the associated
+                      PVCs for any excess pods above the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
-                description: PodMetadata configures labels and annotations which are
-                  propagated to the Prometheus pods.
+                description: "PodMetadata configures labels and annotations which
+                  are propagated to the Prometheus pods. \n The following items are
+                  reserved and cannot be overridden: * \"prometheus\" label, set to
+                  the name of the Prometheus object. * \"app.kubernetes.io/instance\"
+                  label, set to the name of the Prometheus object. * \"app.kubernetes.io/managed-by\"
+                  label, set to \"prometheus-operator\". * \"app.kubernetes.io/name\"
+                  label, set to \"prometheus\". * \"app.kubernetes.io/version\" label,
+                  set to the Prometheus version. * \"operator.prometheus.io/name\"
+                  label, set to the name of the Prometheus object. * \"operator.prometheus.io/shard\"
+                  label, set to the shard number of the Prometheus object. * \"kubectl.kubernetes.io/default-container\"
+                  annotation, set to \"prometheus\"."
                 properties:
                   annotations:
                     additionalProperties:
@@ -4392,7 +4422,7 @@ spec:
                           type: string
                         managedIdentity:
                           description: ManagedIdentity defines the Azure User-assigned
-                            Managed identity.
+                            Managed identity. Cannot be set at the same time as `oauth`.
                           properties:
                             clientId:
                               description: The client id
@@ -4400,8 +4430,51 @@ spec:
                           required:
                           - clientId
                           type: object
-                      required:
-                      - managedIdentity
+                        oauth:
+                          description: "OAuth defines the oauth config that is being
+                            used to authenticate. Cannot be set at the same time as
+                            `managedIdentity`. \n It requires Prometheus >= v2.48.0."
+                          properties:
+                            clientId:
+                              description: '`clientID` is the clientId of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              type: string
+                            clientSecret:
+                              description: '`clientSecret` specifies a key of a Secret
+                                containing the client secret of the Azure Active Directory
+                                application that is being used to authenticate.'
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            tenantId:
+                              description: '`tenantID` is the tenant ID of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
+                          required:
+                          - clientId
+                          - clientSecret
+                          - tenantId
+                          type: object
                       type: object
                     basicAuth:
                       description: "BasicAuth configuration for the URL. \n Cannot
@@ -4409,8 +4482,8 @@ spec:
                         or `azureAd`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4429,8 +4502,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4493,8 +4566,8 @@ spec:
                         `sigv4`, `authorization`, `basicAuth`, or `azureAd`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -4538,7 +4611,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4559,15 +4633,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:

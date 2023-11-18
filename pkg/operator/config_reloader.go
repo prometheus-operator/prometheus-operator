@@ -41,6 +41,7 @@ const (
 type ConfigReloader struct {
 	name               string
 	config             ContainerConfig
+	webConfigFile      string
 	configFile         string
 	configEnvsubstFile string
 	imagePullPolicy    v1.PullPolicy
@@ -68,6 +69,13 @@ func ReloaderRunOnce() ReloaderOption {
 func WatchedDirectories(watchedDirectories []string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.watchedDirectories = watchedDirectories
+	}
+}
+
+// WebConfigFile sets the webConfigFile option for the config-reloader container
+func WebConfigFile(config string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.webConfigFile = config
 	}
 }
 
@@ -120,7 +128,7 @@ func LogFormat(logFormat string) ReloaderOption {
 	}
 }
 
-// LogLevel sets the logLevel option for the config-reloader container\
+// LogLevel sets the logLevel option for the config-reloader container
 func LogLevel(logLevel string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logLevel = logLevel
@@ -186,6 +194,10 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 				Protocol:      v1.ProtocolTCP,
 			},
 		)
+	}
+
+	if len(configReloader.webConfigFile) > 0 {
+		args = append(args, fmt.Sprintf("--web-config-file=%s", configReloader.webConfigFile))
 	}
 
 	if len(configReloader.reloadURL.String()) > 0 {

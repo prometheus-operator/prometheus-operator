@@ -43,43 +43,71 @@ func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
-// ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
+// ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
-	// JobLabel selects the label from the associated Kubernetes service which will be used as the `job` label for all metrics.
+	// `jobLabel` selects the label from the associated Kubernetes `Service`
+	// object which will be used as the `job` label for all metrics.
 	//
-	// For example:
-	// If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`,
-	// then the `job="bar"` label is added to all metrics.
+	// For example if `jobLabel` is set to `foo` and the Kubernetes `Service`
+	// object is labeled with `foo: bar`, then Prometheus adds the `job="bar"`
+	// label to all ingested metrics.
 	//
-	// If the value of this field is empty or if the label doesn't exist for the given Service, the `job` label of the metrics defaults to the name of the Kubernetes Service.
+	// If the value of this field is empty or if the label doesn't exist for
+	// the given Service, the `job` label of the metrics defaults to the name
+	// of the associated Kubernetes `Service`.
 	JobLabel string `json:"jobLabel,omitempty"`
-	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
+
+	// `targetLabels` defines the labels which are transferred from the
+	// associated Kubernetes `Service` object onto the ingested metrics.
+	//
+	// +optional
 	TargetLabels []string `json:"targetLabels,omitempty"`
-	// PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
+	// `podTargetLabels` defines the labels which are transferred from the
+	// associated Kubernetes `Pod` object onto the ingested metrics.
+	//
+	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
-	// A list of endpoints allowed as part of this ServiceMonitor.
+
+	// List of endpoints part of this ServiceMonitor.
+	//
+	// +optional
 	Endpoints []Endpoint `json:"endpoints"`
-	// Selector to select Endpoints objects.
+
+	// Label selector to select the Kubernetes `Endpoints` objects.
 	Selector metav1.LabelSelector `json:"selector"`
-	// Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.
+	// Selector to select which namespaces the Kubernetes `Endpoints` objects
+	// are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
-	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+
+	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
+	// that will be accepted.
+	//
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
-	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
+
+	// `targetLimit` defines a limit on the number of scraped targets that will
+	// be accepted.
+	//
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+
 	// Per-scrape limit on number of labels that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.27.0 and newer.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
 	// Per-scrape limit on length of labels name that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.27.0 and newer.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.27.0 and newer.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 	// Per-scrape limit on the number of targets dropped by relabeling
@@ -89,8 +117,13 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
-	// Attaches node metadata to discovered targets.
-	// Requires Prometheus v2.37.0 and above.
+
+	// `attachMetadata` defines additional metadata which is added to the
+	// discovered targets.
+	//
+	// It requires Prometheus >= v2.37.0.
+	//
+	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 

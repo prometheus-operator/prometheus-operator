@@ -18,6 +18,7 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -307,6 +308,14 @@ func (b *PrometheusSpecApplyConfiguration) WithVolumeMounts(values ...corev1.Vol
 	for i := range values {
 		b.VolumeMounts = append(b.VolumeMounts, values[i])
 	}
+	return b
+}
+
+// WithPersistentVolumeClaimRetentionPolicy sets the PersistentVolumeClaimRetentionPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PersistentVolumeClaimRetentionPolicy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithPersistentVolumeClaimRetentionPolicy(value appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy) *PrometheusSpecApplyConfiguration {
+	b.PersistentVolumeClaimRetentionPolicy = &value
 	return b
 }
 

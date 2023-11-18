@@ -38,7 +38,7 @@ import (
 )
 
 func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
 func TestValidateRelabelConfig(t *testing.T) {
@@ -993,6 +993,52 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with invalid label",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Label: "app=example,env!=production,release in (v1, v2",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid field",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Field: "status.phase=Running,metadata.name!=worker,)",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid label and field",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Label: "app=example,env!=production,release in (v1, v2)",
+								Field: "status.phase=Running,metadata.name!=worker",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Consul SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
@@ -1136,6 +1182,73 @@ func TestSelectScrapeConfigs(t *testing.T) {
 								Name: "wrong",
 							},
 							Key: "key2",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Azure SD config with valid options for OAuth authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						TenantID: ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID: ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Azure SD config with no client secret ref provided for OAuth authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("OAuth"),
+						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Azure SD config with no tenant id provided for OAuth authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("OAuth"),
+						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Azure SD config with no client id provided for OAuth authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("OAuth"),
+						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
 						},
 					},
 				}
