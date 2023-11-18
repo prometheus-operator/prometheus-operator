@@ -1,3 +1,37 @@
+## 0.69.1 / 2023-11-09
+
+This release is built using Go 1.21.4 which addresses CVE-2023-45283 and CVE-2023-45284.
+
+* [BUGFIX] Rename test files to resolve Go import failures of `github.com/prometheus-operator/prometheus-operator`. #6070
+
+## 0.69.0 / 2023-11-03
+
+* [CHANGE] Consider secret references without `optional` value to be mandatory instead of optional for `.spec.additionalScrapeConfigs` configs. #5985
+* [CHANGE] Remove `prometheus_operator_rule_validation_triggered_total`, `prometheus_operator_rule_validation_errors_total`, `prometheus_operator_alertmanager_config_validation_triggered_total` and `prometheus_operator_alertmanager_config_validation_errors_total` metrics which have been deprecated since v0.55.0. The same information is available from the `apiserver_admission_webhook_rejection_count` metric available since Kubernetes v1.16.0. #6024
+* [CHANGE/BUGFIX] Disable HTTP2 connections by default to mitigate CVE-2023-44487. #6028
+* [FEATURE] Add support for EC2 service discovery to the ScrapeConfig CRD. #5902 #6012
+* [FEATURE] Support MSTeams receiver in the AlertmanagerConfig CRD. #6002
+* [FEATURE] Add the `sigv4` field to the Alertmanager endpoints for the Prometheus CRD. #6036
+* [FEATURE] Support AzureAD authentication for Prometheus remote write. #5852
+* [FEATURE] Add the `userKeyFile` and `tokenFile` fields for Pushover to the AlertmanagerConfig CRD. #5886
+* [FEATURE] Add `--as` to the operator's CLI arguments for user impersonation. #5906
+* [FEATURE] Add the `selectors` field for the Kubernetes service discovery to the ScrapeConfig CRD. #6053
+* [ENHANCEMENT] Support `url_file` for Webhook receiver in the Alertmanager configuration. #5876
+* [ENHANCEMENT] Support `user_key_file` and `token_file` for Pushover receiver in the Alertmanager configuration. #5876
+* [ENHANCEMENT] Use server-side apply instead of update when reconciling the resource's status. #5883 #5913 #5912
+* [ENHANCEMENT] Detect when an invalid storage class is defined. #5792
+* [ENHANCEMENT] Add OCI labels to container images. #5946
+* [ENHANCEMENT] Add the `operator.prometheus.io/version` annotation to the CRD manifests. #6050
+* [BUGFIX] Detect namespace changes without list/watch permissions on the namespace resources. #5934 #5898
+* [BUGFIX] Avoid operator panic when using ScrapeConfig with the Consul service discovery. #5937
+* [BUGFIX] Don't enable Prometheus unmanaged mode when only `.spec.scrapeConfigSelector` is defined. #5941
+* [BUGFIX] Prevent Alertmanager pods from joining random clusters. #5945
+* [BUGFIX] Fix race condition when deleting Alertmanager, Prometheus, PrometheusAgent and ThanosRuler instances. #5954
+* [BUGFIX] Enable klog verbose level only when the log level is debug.. #5981
+* [BUGFIX] Reduce memory usage by using secret metadata informer in the PrometheusAgent controller. #5982
+* [BUGFIX] Do not strip mandatory fields in the `stripped-down-crds.yaml` manifest file. #6008
+* [BUGFIX] Update the resource requests and limits of the config reloader sidecar when updated. #5971
+
 ## 0.68.0 / 2023-09-06
 
 * [FEATURE] Add support for Webex receiver to the AlertmanagerConfig CRD. #5305

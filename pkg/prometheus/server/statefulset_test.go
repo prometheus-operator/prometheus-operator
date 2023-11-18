@@ -48,7 +48,7 @@ var (
 )
 
 func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
@@ -2804,5 +2804,28 @@ func TestPodHostNetworkConfig(t *testing.T) {
 
 	if sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
 		t.Fatalf("expected DNSPolicy configuration to match due to hostNetwork but failed")
+	}
+}
+
+func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+					WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+					WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenDeleted to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted)
+	}
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
 	}
 }

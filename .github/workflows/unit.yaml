@@ -1,6 +1,8 @@
 name: unit
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -8,6 +10,8 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
@@ -19,6 +23,7 @@ jobs:
     - uses: actions/setup-go@v4
       with:
         go-version: '${{ env.golang-version }}'
+        check-latest: true
     - run: make test-unit
   extended-tests:
     runs-on: ubuntu-latest
@@ -30,4 +35,5 @@ jobs:
     - uses: actions/setup-go@v4
       with:
         go-version: ${{ env.golang-version }}
+        check-latest: true
     - run: make test-long

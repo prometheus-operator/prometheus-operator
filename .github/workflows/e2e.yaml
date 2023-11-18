@@ -1,6 +1,8 @@
 name: e2e
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -8,6 +10,8 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   e2e-tests:
     name: E2E tests
@@ -59,6 +63,7 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '${{ env.golang-version }}'
+        check-latest: true
     - name: Build images
       run: |
         export SHELL=/bin/bash

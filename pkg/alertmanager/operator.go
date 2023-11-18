@@ -221,7 +221,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return fmt.Errorf("can not parse secrets selector value: %w", err)
 	}
 
-	c.secrInfs, err = informers.NewInformersForResource(
+	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.AlertmanagerConfigAllowList,
 			c.config.Namespaces.DenyList,
@@ -232,6 +232,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 			},
 		),
 		v1.SchemeGroupVersion.WithResource("secrets"),
+		informers.PartialObjectMetadataStrip,
 	)
 	if err != nil {
 		return fmt.Errorf("error creating secret informers: %w", err)
