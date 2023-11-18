@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-kit/log"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -1225,6 +1226,106 @@ func TestClusterLabel(t *testing.T) {
 			}
 			require.NotContains(t, args, "--cluster.label")
 		})
+	}
+}
+
+func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
+	replicas := int32(1)
+	tt := []struct {
+		a                   monitoringv1.Alertmanager
+		expectedSourceCount int
+	}{
+		{
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: &replicas,
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Templates: []monitoringv1.SecretOrConfigMap{
+							{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "template1",
+									},
+									Key: "template1.tmpl",
+								},
+							},
+							{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "template2",
+									},
+									Key: "template1.tmpl",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSourceCount: 1,
+		},
+		{
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: &replicas,
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Templates: []monitoringv1.SecretOrConfigMap{
+							{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "template1",
+									},
+									Key: "template1.tmpl",
+								},
+							},
+							{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "template2",
+									},
+									Key: "template2.tmpl",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSourceCount: 2,
+		},
+		{
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: &replicas,
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Templates: []monitoringv1.SecretOrConfigMap{
+							{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "template1",
+									},
+									Key: "template1.tmpl",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSourceCount: 1,
+		},
+	}
+
+	for _, test := range tt {
+		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		volumes := statefulSpec.Template.Spec.Volumes
+		for _, volume := range volumes {
+			if volume.Name == "notification-templates" {
+				if len(volume.VolumeSource.Projected.Sources) != test.expectedSourceCount {
+					t.Fatalf("expected %d sources, got %d", test.expectedSourceCount, len(volume.VolumeSource.Projected.Sources))
+				}
+			}
+		}
 	}
 }
 

@@ -534,12 +534,11 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 	amCfg := a.Spec.AlertmanagerConfiguration
 	if amCfg != nil && len(amCfg.Templates) > 0 {
 		sources := []v1.VolumeProjection{}
-		configmapKeys := sets.Set[string]{}
-		secretKeys := sets.Set[string]{}
+		keys := sets.Set[string]{}
 		for _, v := range amCfg.Templates {
 			if v.ConfigMap != nil {
-				if configmapKeys.Has(v.ConfigMap.Key) {
-					level.Debug(logger).Log("msg", fmt.Sprintf("skipping configmap %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
+				if keys.Has(v.ConfigMap.Key) {
+					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
 					continue
 				}
 				sources = append(sources, v1.VolumeProjection{
@@ -553,11 +552,11 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 						}},
 					},
 				})
-				configmapKeys.Insert(v.ConfigMap.Key)
+				keys.Insert(v.ConfigMap.Key)
 			}
 			if v.Secret != nil {
-				if secretKeys.Has(v.Secret.Key) {
-					level.Debug(logger).Log("msg", fmt.Sprintf("skipping secret %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
+				if keys.Has(v.Secret.Key) {
+					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
 					continue
 				}
 				sources = append(sources, v1.VolumeProjection{
@@ -571,7 +570,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 						}},
 					},
 				})
-				secretKeys.Insert(v.Secret.Key)
+				keys.Insert(v.Secret.Key)
 			}
 		}
 		volumes = append(volumes, v1.Volume{
