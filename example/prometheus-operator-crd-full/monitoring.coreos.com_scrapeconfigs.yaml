@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
-  name: scrapeconfigs.azmonitoring.coreos.com
+  name: scrapeconfigs.monitoring.coreos.com
 spec:
-  group: azmonitoring.coreos.com
+  group: monitoring.coreos.com
   names:
     categories:
     - prometheus-operator
