@@ -1965,6 +1965,56 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_MSTeams_Receiver.golden",
 		},
+		{
+			name:      "CR with MSTeams Receiver with Partial Conf",
+			amVersion: &version26,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ms-teams-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://webhook.office.com/webhookb2/id/IncomingWebhook/id"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+									{
+										WebhookURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "ms-teams-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_MSTeams_Receiver_Partial_Conf.golden",
+		},
 	}
 
 	logger := log.NewNopLogger()
