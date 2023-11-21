@@ -252,12 +252,11 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 // track_timestamps_staleness.
 func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackTimestampsStaleness *bool) yaml.MapSlice {
 	// Fast path.
-	if userTrackTimestampsStaleness == nil {
+	if trackTimestampsStaleness == nil {
 		return cfg
 	}
 
-	
-	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", trackTimestampsStaleness)
+	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.

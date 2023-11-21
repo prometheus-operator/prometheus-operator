@@ -7536,7 +7536,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+<p><code>trackTimestampsStaleness</code> defines whether Prometheus tracks staleness of
 the metrics that have an explicit timestamp present in scraped data.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
@@ -8505,10 +8505,11 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>TrackTimestampsStaleness whether Prometheus tracks staleness of
 the metrics that have an explicit timestamps present in scraped data.
-Has no effect if <code>honorTimestamps</code> is false.
-It requires Prometheus &gt;= v2.48.0.</p>
+Has no effect if <code>honorTimestamps</code> is false.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>
