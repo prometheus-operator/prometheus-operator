@@ -18675,11 +18675,6 @@ spec:
                   the targets created from service and pod monitors. Otherwise the
                   HonorTimestamps field of the service or pod monitor applies.
                 type: boolean
-              overrideTrackTimestampsStaleness:
-                description: When true, Prometheus ignores the timestamps for all
-                  the targets created from service and pod monitors. Otherwise the
-                  TrackTimestampsStaleness field of the service or pod monitor applies.
-                type: boolean
               paused:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
@@ -27620,11 +27615,6 @@ spec:
                 description: When true, Prometheus ignores the timestamps for all
                   the targets created from service and pod monitors. Otherwise the
                   HonorTimestamps field of the service or pod monitor applies.
-                type: boolean
-              overrideTrackTimestampsStaleness:
-                description: When true, Prometheus ignores the timestamps for all
-                  the targets created from service and pod monitors. Otherwise the
-                  TrackTimestampsStaleness field of the service or pod monitor applies.
                 type: boolean
               paused:
                 description: When a Prometheus deployment is paused, no actions except

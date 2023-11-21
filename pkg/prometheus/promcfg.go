@@ -248,14 +248,11 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 }
 
 // AddTrackTimestampsStaleness adds the track_timestamps_staleness field into scrape configurations.
-// track_timestamps_staleness is false only when the user specified it or when the global
-// override applies.
 // For backwards compatibility with Prometheus <2.48.0 we don't set
 // track_timestamps_staleness.
 func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, userTrackTimestampsStaleness *bool) yaml.MapSlice {
-	cpf := cg.prom.GetCommonPrometheusFields()
 	// Fast path.
-	if userTrackTimestampsStaleness == nil && !cpf.OverrideTrackTimestampsStaleness {
+	if userTrackTimestampsStaleness == nil {
 		return cfg
 	}
 
@@ -264,7 +261,7 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, userTr
 		track = *userTrackTimestampsStaleness
 	}
 
-	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", track && !cpf.OverrideTrackTimestampsStaleness)
+	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", track)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.

@@ -2014,51 +2014,6 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 	golden.Assert(t, string(cfg), "HonorTimestampsOverriding.golden")
 }
 
-func TestTrackTimestampsStalenessOverriding(t *testing.T) {
-	p := defaultPrometheus()
-	p.Spec.CommonPrometheusFields.OverrideTrackTimestampsStaleness = true
-
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		context.Background(),
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							TrackTimestampsStaleness: swag.Bool(true),
-							Port:                     "web",
-							Interval:                 "30s",
-						},
-					},
-				},
-			},
-		},
-		nil,
-		nil,
-		nil,
-		&assets.Store{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "TrackTimestampsStalenessOverriding.golden")
-}
-
 func TestSettingHonorLabels(t *testing.T) {
 	p := defaultPrometheus()
 
@@ -3030,41 +2985,22 @@ func TestHonorTimestamps(t *testing.T) {
 
 func TestTrackTimestampsStaleness(t *testing.T) {
 	type testCase struct {
-		UserTrackTimestampsStaleness     *bool
-		OverrideTrackTimestampsStaleness bool
-		Expected                         string
+		UserTrackTimestampsStaleness *bool
+		Expected                     string
 	}
 
 	testCases := []testCase{
 		{
-			UserTrackTimestampsStaleness:     nil,
-			OverrideTrackTimestampsStaleness: true,
-			Expected:                         "track_timestamps_staleness: false\n",
+			UserTrackTimestampsStaleness: nil,
+			Expected:                     "{}\n",
 		},
 		{
-			UserTrackTimestampsStaleness:     nil,
-			OverrideTrackTimestampsStaleness: false,
-			Expected:                         "{}\n",
+			UserTrackTimestampsStaleness: swag.Bool(false),
+			Expected:                     "track_timestamps_staleness: false\n",
 		},
 		{
-			UserTrackTimestampsStaleness:     swag.Bool(false),
-			OverrideTrackTimestampsStaleness: true,
-			Expected:                         "track_timestamps_staleness: false\n",
-		},
-		{
-			UserTrackTimestampsStaleness:     swag.Bool(false),
-			OverrideTrackTimestampsStaleness: false,
-			Expected:                         "track_timestamps_staleness: false\n",
-		},
-		{
-			UserTrackTimestampsStaleness:     swag.Bool(true),
-			OverrideTrackTimestampsStaleness: true,
-			Expected:                         "track_timestamps_staleness: false\n",
-		},
-		{
-			UserTrackTimestampsStaleness:     swag.Bool(true),
-			OverrideTrackTimestampsStaleness: false,
-			Expected:                         "track_timestamps_staleness: true\n",
+			UserTrackTimestampsStaleness: swag.Bool(true),
+			Expected:                     "track_timestamps_staleness: true\n",
 		},
 	}
 
@@ -3073,8 +3009,7 @@ func TestTrackTimestampsStaleness(t *testing.T) {
 			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version:                          "2.48.0",
-						OverrideTrackTimestampsStaleness: tc.OverrideTrackTimestampsStaleness,
+						Version: "2.48.0",
 					},
 				},
 			})

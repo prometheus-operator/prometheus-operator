@@ -2175,19 +2175,6 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
-<code>overrideTrackTimestampsStaleness</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>When true, Prometheus ignores the timestamps for all the targets created
-from service and pod monitors.
-Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -6535,19 +6522,6 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
-<code>overrideTrackTimestampsStaleness</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>When true, Prometheus ignores the timestamps for all the targets created
-from service and pod monitors.
-Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -10441,19 +10415,6 @@ bool
 <p>When true, Prometheus ignores the timestamps for all the targets created
 from service and pod monitors.
 Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>overrideTrackTimestampsStaleness</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>When true, Prometheus ignores the timestamps for all the targets created
-from service and pod monitors.
-Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
 </td>
 </tr>
 <tr>
@@ -15811,19 +15772,6 @@ Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
 </tr>
 <tr>
 <td>
-<code>overrideTrackTimestampsStaleness</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>When true, Prometheus ignores the timestamps for all the targets created
-from service and pod monitors.
-Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>ignoreNamespaceSelectors</code><br/>
 <em>
 bool
@@ -20006,19 +19954,6 @@ bool
 <p>When true, Prometheus ignores the timestamps for all the targets created
 from service and pod monitors.
 Otherwise the HonorTimestamps field of the service or pod monitor applies.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>overrideTrackTimestampsStaleness</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>When true, Prometheus ignores the timestamps for all the targets created
-from service and pod monitors.
-Otherwise the TrackTimestampsStaleness field of the service or pod monitor applies.</p>
 </td>
 </tr>
 <tr>
