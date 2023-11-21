@@ -31,7 +31,12 @@ const (
 	PrometheusKindKey = "prometheus"
 )
 
-// ScrapeProtocol represents supported protocol for scraping metrics.
+// ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
+// Supported values are:
+// * `OpenMetricsText0.0.1`
+// * `OpenMetricsText1.0.0`
+// * `PrometheusProto`
+// * `PrometheusText0.0.4`
 // +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
 type ScrapeProtocol string
 
