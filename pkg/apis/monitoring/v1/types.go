@@ -350,90 +350,191 @@ func (c *WebTLSConfig) Validate() error {
 	return nil
 }
 
-// LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.
+// LabelName is a valid Prometheus label name which may only contain ASCII
+// letters, numbers, as well as underscores.
+//
 // +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
 type LabelName string
 
-// Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+// Endpoint defines an endpoint serving Prometheus metrics to be scraped by
+// Prometheus.
+//
 // +k8s:openapi-gen=true
 type Endpoint struct {
-	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
+	// Name of the Service port which this endpoint refers to.
+	//
+	// It takes precedence over `targetPort`.
 	Port string `json:"port,omitempty"`
-	// Name or number of the target port of the Pod behind the Service, the port must be specified with container port property. Mutually exclusive with port.
+
+	// Name or number of the target port of the `Pod` object behind the Service, the
+	// port must be specified with container port property.
+	//
+	// Deprecated: use `port` instead.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
-	// HTTP path to scrape for metrics.
+
+	// HTTP path from which to scrape for metrics.
+	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	Path string `json:"path,omitempty"`
+
 	// HTTP scheme to use for scraping.
-	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
+	//
+	// `http` and `https` are the expected values unless you rewrite the
+	// `__scheme__` label via relabeling.
+	//
 	// If empty, Prometheus uses the default value `http`.
+	//
 	// +kubebuilder:validation:Enum=http;https
 	Scheme string `json:"scheme,omitempty"`
-	// Optional HTTP URL parameters
+
+	// params define optional HTTP URL parameters.
 	Params map[string][]string `json:"params,omitempty"`
-	// Interval at which metrics should be scraped
-	// If not specified Prometheus' global scrape interval is used.
+
+	// Interval at which Prometheus scrapes the metrics from the target.
+	//
+	// If empty, Prometheus uses the global scrape interval.
 	Interval Duration `json:"interval,omitempty"`
-	// Timeout after which the scrape is ended
-	// If not specified, the Prometheus global scrape timeout is used unless it is less than `Interval` in which the latter is used.
+
+	// Timeout after which Prometheus considers the scrape to be failed.
+	//
+	// If empty, Prometheus uses the global scrape timeout unless it is less
+	// than the target's scrape interval value in which the latter is used.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
-	// TLS configuration to use when scraping the endpoint
+
+	// TLS configuration to use when scraping the target.
+	//
+	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// File to read bearer token for scraping targets.
+
+	// File to read bearer token for scraping the target.
+	//
+	// Deprecated: use `authorization` instead.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-	// Secret to mount to read bearer token for scraping targets. The secret
-	// needs to be in the same namespace as the service monitor and accessible by
-	// the Prometheus Operator.
-	//+ optional
+
+	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
+	// token for scraping targets. The secret needs to be in the same namespace
+	// as the ServiceMonitor object and readable by the Prometheus Operator.
+	//
+	// +optional
+	//
+	// Deprecated: use `authorization` instead.
 	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// Authorization section for this endpoint
+
+	// `authorization` configures the Authorization header credentials to use when
+	// scraping the target.
+	//
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	//
+	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// HonorLabels chooses the metric's labels on collisions with target labels.
+
+	// When true, `honorLabels` preserves the metric's labels when they collide
+	// with the target's labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
-	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+
+	// `honorTimestamps` controls whether Prometheus preserves the timestamps
+	// when exposed by the target.
+	//
+	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
-	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+
+	// `basicAuth` configures the Basic Authentication credentials to use when
+	// scraping the target.
+	//
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	//
+	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+
+	// `oauth2` configures the OAuth2 settings to use when scraping the target.
+	//
+	// It requires Prometheus >= 2.27.0.
+	//
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	//
+	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-	// MetricRelabelConfigs to apply to samples before ingestion.
+
+	// `metricRelabelings` configures the relabeling rules to apply to the
+	// samples before ingestion.
+	//
+	// +optional
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
-	// RelabelConfigs to apply to samples before scraping.
-	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+
+	// `relabelings` configures the relabeling rules to apply the target's
+	// metadata labels.
+	//
+	// The Operator automatically adds relabelings for a few standard Kubernetes fields.
+	//
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
+	//
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	//
+	// +optional
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
-	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
+
+	// `proxyURL` configures the HTTP Proxy URL (e.g.
+	// "http://proxyserver:2195") to go through when scraping the target.
+	//
+	// +optional
 	ProxyURL *string `json:"proxyUrl,omitempty"`
-	// FollowRedirects configures whether scrape requests follow HTTP 3xx redirects.
+
+	// `followRedirects` defines whether the scrape requests should follow HTTP
+	// 3xx redirects.
+	//
+	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
-	// Whether to enable HTTP2.
+
+	// `enableHttp2` can be used to disable HTTP2 when scraping the target.
+	//
+	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
-	// Drop pods that are not running. (Failed, Succeeded). Enabled by default.
+
+	// When true, the pods which are not running (e.g. either in Failed or
+	// Succeeded state) are dropped during the target discovery.
+	//
+	// If unset, the filtering is enabled.
+	//
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+	//
+	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
 }
 
 type AttachMetadata struct {
-	// When set to true, Prometheus must have permissions to get Nodes.
-	Node bool `json:"node,omitempty"`
+	// When set to true, Prometheus must have the `get` permission on the
+	// `Nodes` objects.
+	//
+	// +optional
+	Node *bool `json:"node,omitempty"`
 }
 
-// OAuth2 allows an endpoint to authenticate with OAuth2.
-// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#oauth2
+// OAuth2 configures OAuth2 settings.
+//
 // +k8s:openapi-gen=true
 type OAuth2 struct {
-	// The secret or configmap containing the OAuth2 client id
+	// `clientId` specifies a key of a Secret or ConfigMap containing the
+	// OAuth2 client's ID.
 	ClientID SecretOrConfigMap `json:"clientId"`
-	// The secret containing the OAuth2 client secret
+
+	// `clientSecret` specifies a key of a Secret containing the OAuth2
+	// client's secret.
 	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
-	// The URL to fetch the token from
+
+	// `tokenURL` configures the URL to fetch the token from.
+	//
 	// +kubebuilder:validation:MinLength=1
 	TokenURL string `json:"tokenUrl"`
-	// OAuth2 scopes used for the token request
+
+	// `scopes` defines the OAuth2 scopes used for the token request.
+	//
+	// +optional.
 	Scopes []string `json:"scopes,omitempty"`
-	// Parameters to append to the token URL
+
+	// `endpointParams` configures the HTTP parameters to append to the token
+	// URL.
+	//
+	// +optional
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 }
 
@@ -463,15 +564,16 @@ func (o *OAuth2) Validate() error {
 	return nil
 }
 
-// BasicAuth allow an endpoint to authenticate over basic authentication
-// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+// BasicAuth configures HTTP Basic Authentication settings.
+//
 // +k8s:openapi-gen=true
 type BasicAuth struct {
-	// The secret in the service monitor namespace that contains the username
-	// for authentication.
+	// `username` specifies a key of a Secret containing the username for
+	// authentication.
 	Username v1.SecretKeySelector `json:"username,omitempty"`
-	// The secret in the service monitor namespace that contains the password
-	// for authentication.
+
+	// `password` specifies a key of a Secret containing the password for
+	// authentication.
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 

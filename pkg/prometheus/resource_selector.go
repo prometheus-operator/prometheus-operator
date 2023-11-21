@@ -28,8 +28,10 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -125,6 +127,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 
 			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
 
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
 				break
 			}
@@ -193,6 +196,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if e.BearerTokenFile != "" {
 		return errors.New("it accesses file system via bearer token file which Prometheus specification prohibits")
 	}
@@ -372,6 +376,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
 				break
 			}
@@ -710,6 +715,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateKubernetesSDConfigs(sc); err != nil {
+			rejectFn(sc, fmt.Errorf("kubernetesSDConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateConsulSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("consulSDConfigs: %w", err))
 			continue
@@ -722,6 +732,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 
 		if err = rs.validateEC2SDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("ec2SDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateAzureSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("azureSDConfigs: %w", err))
 			continue
 		}
 
@@ -740,6 +755,21 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	}
 
 	return res, nil
+}
+
+func (rs *ResourceSelector) validateKubernetesSDConfigs(sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.KubernetesSDConfigs {
+		for _, s := range config.Selectors {
+			if _, err := fields.ParseSelector(s.Field); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+
+			if _, err := labels.Parse(s.Label); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+	}
+	return nil
 }
 
 func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
@@ -816,6 +846,32 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.AzureSDConfigs {
+		// Since Prometheus uses default authentication method as "OAuth"
+		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentify" {
+			continue
+		}
+
+		if len(ptr.Deref(config.TenantID, "")) == 0 {
+			return fmt.Errorf("[%d]: configuration requires a tenantID", i)
+		}
+
+		if len(ptr.Deref(config.ClientID, "")) == 0 {
+			return fmt.Errorf("[%d]: configuration requires a clientID", i)
+		}
+
+		if config.ClientSecret == nil {
+			return fmt.Errorf("[%d]: configuration requires a clientSecret", i)
+		}
+
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ClientSecret); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil

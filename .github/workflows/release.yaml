@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '${{ env.golang-version }}'
+          check-latest: true
       - name: Upload bundle.yaml to release
         uses: svenstaro/upload-release-action@v2
         with:

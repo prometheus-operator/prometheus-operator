@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	dockerref "github.com/docker/distribution/reference"
+	ref "github.com/distribution/reference"
 )
 
 // BuildImagePath builds a container image path based on
@@ -31,12 +31,12 @@ func BuildImagePath(specImage, baseImage, version, tag, sha string) (string, err
 	if strings.TrimSpace(specImage) != "" {
 		return specImage, nil
 	}
-	named, err := dockerref.ParseNormalizedNamed(baseImage)
+	named, err := ref.ParseNormalizedNamed(baseImage)
 	if err != nil {
 		return "", fmt.Errorf("couldn't parse image reference %q: %v", baseImage, err)
 	}
-	_, isTagged := named.(dockerref.Tagged)
-	_, isDigested := named.(dockerref.Digested)
+	_, isTagged := named.(ref.Tagged)
+	_, isDigested := named.(ref.Digested)
 	if isTagged || isDigested {
 		return baseImage, nil
 	}
@@ -44,7 +44,7 @@ func BuildImagePath(specImage, baseImage, version, tag, sha string) (string, err
 	if sha != "" {
 		return fmt.Sprintf("%s@sha256:%s", baseImage, sha), nil
 	} else if tag != "" {
-		imageTag, err := dockerref.WithTag(named, tag)
+		imageTag, err := ref.WithTag(named, tag)
 		if err != nil {
 			return "", err
 		}

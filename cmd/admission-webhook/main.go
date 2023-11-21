@@ -53,12 +53,22 @@ var (
 	cfg     = config{}
 	flagset = flag.CommandLine
 
+	enableHTTP2        bool
 	serverTLS          bool
 	rawTLSCipherSuites string
 )
 
 func main() {
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8443", "Address on which the admission webhook service listens")
+	// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
+	// standard library and golang.org/x/net are fully fixed.
+	// Right now, it is possible for authenticated and unauthenticated users to
+	// hold open HTTP2 connections and consume huge amounts of memory.
+	// See:
+	// * https://github.com/kubernetes/kubernetes/pull/121120
+	// * https://github.com/kubernetes/kubernetes/issues/121197
+	// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
+	flagset.BoolVar(&enableHTTP2, "web.enable-http2", false, "Enable HTTP2 connections.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", true, "Enable TLS web server")
 
 	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", defaultCrtFile, "Certificate file to be used for the web server.")
@@ -127,7 +137,7 @@ func (s *srv) run(listener net.Listener) error {
 	log := log.With(s.logger, "address", listener.Addr().String())
 
 	if s.s.TLSConfig != nil {
-		level.Info(log).Log("msg", "Starting TLS enabled server")
+		level.Info(log).Log("msg", "Starting TLS enabled server", "http2", enableHTTP2)
 		if err := s.s.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -159,22 +169,27 @@ func newSrv(logger log.Logger, tlsConf *tls.Config) *srv {
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"status":"up"}`))
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"up"}`))
 	})
+
+	httpServer := http.Server{
+		Handler:           mux,
+		TLSConfig:         tlsConf,
+		ReadHeaderTimeout: 30 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
+		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
+		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
+		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
+	}
+	if !enableHTTP2 {
+		httpServer.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+	}
 
 	return &srv{
 		logger: logger,
-		s: &http.Server{
-			Handler:           mux,
-			TLSConfig:         tlsConf,
-			ReadHeaderTimeout: 30 * time.Second,
-			ReadTimeout:       30 * time.Second,
-			// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
-			// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
-			// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
-			ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
-		},
+		s:      &httpServer,
 	}
 }
 

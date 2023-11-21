@@ -21,11 +21,10 @@ import (
 	json "encoding/json"
 	"fmt"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -37,25 +36,25 @@ type FakePrometheuses struct {
 	ns   string
 }
 
-var prometheusesResource = schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "prometheuses"}
+var prometheusesResource = v1.SchemeGroupVersion.WithResource("prometheuses")
 
-var prometheusesKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "Prometheus"}
+var prometheusesKind = v1.SchemeGroupVersion.WithKind("Prometheus")
 
 // Get takes name of the prometheus, and returns the corresponding prometheus object, and an error if there is any.
-func (c *FakePrometheuses) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Prometheus, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(prometheusesResource, c.ns, name), &monitoringv1.Prometheus{})
+		Invokes(testing.NewGetAction(prometheusesResource, c.ns, name), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // List takes label and field selectors, and returns the list of Prometheuses that match those selectors.
-func (c *FakePrometheuses) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.PrometheusList, err error) {
+func (c *FakePrometheuses) List(ctx context.Context, opts metav1.ListOptions) (result *v1.PrometheusList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(prometheusesResource, prometheusesKind, c.ns, opts), &monitoringv1.PrometheusList{})
+		Invokes(testing.NewListAction(prometheusesResource, prometheusesKind, c.ns, opts), &v1.PrometheusList{})
 
 	if obj == nil {
 		return nil, err
@@ -65,8 +64,8 @@ func (c *FakePrometheuses) List(ctx context.Context, opts v1.ListOptions) (resul
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &monitoringv1.PrometheusList{ListMeta: obj.(*monitoringv1.PrometheusList).ListMeta}
-	for _, item := range obj.(*monitoringv1.PrometheusList).Items {
+	list := &v1.PrometheusList{ListMeta: obj.(*v1.PrometheusList).ListMeta}
+	for _, item := range obj.(*v1.PrometheusList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -75,75 +74,75 @@ func (c *FakePrometheuses) List(ctx context.Context, opts v1.ListOptions) (resul
 }
 
 // Watch returns a watch.Interface that watches the requested prometheuses.
-func (c *FakePrometheuses) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePrometheuses) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(prometheusesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheus and creates it.  Returns the server's representation of the prometheus, and an error, if there is any.
-func (c *FakePrometheuses) Create(ctx context.Context, prometheus *monitoringv1.Prometheus, opts v1.CreateOptions) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) Create(ctx context.Context, prometheus *v1.Prometheus, opts metav1.CreateOptions) (result *v1.Prometheus, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(prometheusesResource, c.ns, prometheus), &monitoringv1.Prometheus{})
+		Invokes(testing.NewCreateAction(prometheusesResource, c.ns, prometheus), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // Update takes the representation of a prometheus and updates it. Returns the server's representation of the prometheus, and an error, if there is any.
-func (c *FakePrometheuses) Update(ctx context.Context, prometheus *monitoringv1.Prometheus, opts v1.UpdateOptions) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) Update(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(prometheusesResource, c.ns, prometheus), &monitoringv1.Prometheus{})
+		Invokes(testing.NewUpdateAction(prometheusesResource, c.ns, prometheus), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePrometheuses) UpdateStatus(ctx context.Context, prometheus *monitoringv1.Prometheus, opts v1.UpdateOptions) (*monitoringv1.Prometheus, error) {
+func (c *FakePrometheuses) UpdateStatus(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (*v1.Prometheus, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusesResource, "status", c.ns, prometheus), &monitoringv1.Prometheus{})
+		Invokes(testing.NewUpdateSubresourceAction(prometheusesResource, "status", c.ns, prometheus), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // Delete takes name of the prometheus and deletes it. Returns an error if one occurs.
-func (c *FakePrometheuses) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakePrometheuses) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(prometheusesResource, c.ns, name, opts), &monitoringv1.Prometheus{})
+		Invokes(testing.NewDeleteActionWithOptions(prometheusesResource, c.ns, name, opts), &v1.Prometheus{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePrometheuses) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *FakePrometheuses) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(prometheusesResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &monitoringv1.PrometheusList{})
+	_, err := c.Fake.Invokes(action, &v1.PrometheusList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched prometheus.
-func (c *FakePrometheuses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Prometheus, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, name, pt, data, subresources...), &monitoringv1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, name, pt, data, subresources...), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // Apply takes the given apply declarative configuration, applies it and returns the applied prometheus.
-func (c *FakePrometheuses) Apply(ctx context.Context, prometheus *applyconfigurationmonitoringv1.PrometheusApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) Apply(ctx context.Context, prometheus *monitoringv1.PrometheusApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Prometheus, err error) {
 	if prometheus == nil {
 		return nil, fmt.Errorf("prometheus provided to Apply must not be nil")
 	}
@@ -156,17 +155,17 @@ func (c *FakePrometheuses) Apply(ctx context.Context, prometheus *applyconfigura
 		return nil, fmt.Errorf("prometheus.Name must be provided to Apply")
 	}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data), &monitoringv1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }
 
 // ApplyStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *FakePrometheuses) ApplyStatus(ctx context.Context, prometheus *applyconfigurationmonitoringv1.PrometheusApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1.Prometheus, err error) {
+func (c *FakePrometheuses) ApplyStatus(ctx context.Context, prometheus *monitoringv1.PrometheusApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Prometheus, err error) {
 	if prometheus == nil {
 		return nil, fmt.Errorf("prometheus provided to Apply must not be nil")
 	}
@@ -179,10 +178,10 @@ func (c *FakePrometheuses) ApplyStatus(ctx context.Context, prometheus *applycon
 		return nil, fmt.Errorf("prometheus.Name must be provided to Apply")
 	}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data, "status"), &monitoringv1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1.Prometheus{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.Prometheus), err
+	return obj.(*v1.Prometheus), err
 }

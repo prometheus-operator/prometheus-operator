@@ -58,6 +58,7 @@ type Operator struct {
 	kclient  kubernetes.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
+
 	logger   log.Logger
 	accessor *operator.Accessor
 
@@ -272,7 +273,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
 	}
 
-	c.cmapInfs, err = informers.NewInformersForResource(
+	c.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
@@ -283,12 +284,13 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		informers.PartialObjectMetadataStrip,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
 	}
 
-	c.secrInfs, err = informers.NewInformersForResource(
+	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
 			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
@@ -299,6 +301,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		informers.PartialObjectMetadataStrip,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating secrets informers: %w", err)
@@ -1518,13 +1521,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	if p.Spec.Alerting != nil {
-		for i, am := range p.Spec.Alerting.Alertmanagers {
-			if err := store.AddBasicAuth(ctx, p.GetNamespace(), am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
-				return fmt.Errorf("alerting: %w", err)
-			}
-			if err := store.AddSafeAuthorizationCredentials(ctx, p.GetNamespace(), am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
-				return fmt.Errorf("alerting: %w", err)
-			}
+		if err := prompkg.AddAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), p.Spec.Alerting.Alertmanagers); err != nil {
+			return err
 		}
 	}
 

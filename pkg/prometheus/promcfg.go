@@ -28,6 +28,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -337,6 +338,35 @@ func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	}
 
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
+}
+
+func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
+	assetStoreKey string,
+	store *assets.Store,
+	sigv4 *monitoringv1.Sigv4,
+) yaml.MapSlice {
+	if sigv4 == nil {
+		return cfg
+	}
+
+	sigv4Cfg := yaml.MapSlice{}
+	if sigv4.Region != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "region", Value: sigv4.Region})
+	}
+	if store.SigV4Assets[assetStoreKey].AccessKeyID != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[assetStoreKey].AccessKeyID})
+	}
+	if store.SigV4Assets[assetStoreKey].SecretKeyID != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[assetStoreKey].SecretKeyID})
+	}
+	if sigv4.Profile != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "profile", Value: sigv4.Profile})
+	}
+	if sigv4.RoleArn != "" {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
+	}
+
+	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
 }
 
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
@@ -697,6 +727,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
 		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
@@ -1162,11 +1193,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
 
-	if ep.BearerTokenFile != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
+	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	}
 
-	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
+	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1236,18 +1267,18 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "regex", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil {
-		if ep.TargetPort.StrVal != "" {
+	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		if ep.TargetPort.StrVal != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
-				{Key: "regex", Value: ep.TargetPort.String()},
+				{Key: "regex", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			})
-		} else if ep.TargetPort.IntVal != 0 {
+		} else if ep.TargetPort.IntVal != 0 { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
-				{Key: "regex", Value: ep.TargetPort.String()},
+				{Key: "regex", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			})
 		}
 	}
@@ -1291,7 +1322,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		},
 	}...)
 
-	if ep.FilterRunning == nil || *ep.FilterRunning {
+	if ptr.Deref(ep.FilterRunning, true) {
 		relabelings = append(relabelings, generateRunningFilter())
 	}
 
@@ -1340,10 +1371,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" {
+	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
-			{Key: "replacement", Value: ep.TargetPort.String()},
+			{Key: "replacement", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		})
 	}
 
@@ -1577,6 +1608,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
+		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
+
 		if am.APIVersion == "v1" || am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
@@ -1628,6 +1661,8 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 		var addlScrapeConfig yaml.MapSlice
 		var relabelings []yaml.MapSlice
 		var otherConfigItems []yaml.MapItem
+		var alreadyHasShardLabel = false
+
 		for _, mapItem := range mapSlice {
 			if mapItem.Key != "relabel_configs" {
 				otherConfigItems = append(otherConfigItems, mapItem)
@@ -1642,10 +1677,18 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				if !ok {
 					return nil, fmt.Errorf("error parsing relabel config: %w", err)
 				}
+				for _, relabelItem := range relabeling {
+					if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
+						level.Debug(cg.logger).Log("msg", "found existing hashmod relabeling rule, skipping", "relabeling", relabeling)
+						alreadyHasShardLabel = true
+					}
+				}
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		if !alreadyHasShardLabel {
+			relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		}
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
@@ -1849,35 +1892,25 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		if spec.Sigv4 != nil {
-			sigV4 := yaml.MapSlice{}
-			if spec.Sigv4.Region != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
-			}
-			key := fmt.Sprintf("remoteWrite/%d", i)
-			if store.SigV4Assets[key].AccessKeyID != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[key].AccessKeyID})
-			}
-			if store.SigV4Assets[key].SecretKeyID != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[key].SecretKeyID})
-			}
-			if spec.Sigv4.Profile != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "profile", Value: spec.Sigv4.Profile})
-			}
-			if spec.Sigv4.RoleArn != "" {
-				sigV4 = append(sigV4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
-			}
-
-			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "sigv4", sigV4)
-		}
+		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
 
 		if spec.AzureAD != nil {
-			azureAd := yaml.MapSlice{
-				{
-					Key: "managed_identity", Value: yaml.MapSlice{
+			azureAd := yaml.MapSlice{}
+
+			if spec.AzureAD.ManagedIdentity != nil {
+				azureAd = append(azureAd,
+					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
 						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					},
-				},
+					}},
+				)
+			}
+
+			if spec.AzureAD.OAuth != nil {
+				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
+					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+				})
 			}
 
 			if spec.AzureAD.Cloud != nil {
@@ -2390,8 +2423,33 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
-					Value: strings.ToLower(config.Role),
+					Value: strings.ToLower(string(config.Role)),
 				},
+			}
+
+			selectors := make([][]yaml.MapItem, len(config.Selectors))
+			for i, s := range config.Selectors {
+				selectors[i] = []yaml.MapItem{
+					{
+						Key:   "role",
+						Value: strings.ToLower(string(s.Role)),
+					},
+					{
+						Key:   "label",
+						Value: s.Label,
+					},
+					{
+						Key:   "field",
+						Value: s.Field,
+					},
+				}
+			}
+
+			if len(selectors) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "selectors",
+					Value: selectors,
+				})
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -2458,7 +2516,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Scheme != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "scheme",
-					Value: config.Scheme,
+					Value: strings.ToLower(*config.Scheme),
 				})
 			}
 
@@ -2676,6 +2734,140 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ec2_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// AzureSDConfig
+	if len(sc.Spec.AzureSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
+		for i, config := range sc.Spec.AzureSDConfigs {
+			if config.Environment != nil {
+				configs[i] = []yaml.MapItem{
+					{
+						Key:   "environment",
+						Value: config.Environment,
+					},
+				}
+			}
+
+			if config.AuthenticationMethod != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "authentication_method",
+					Value: config.AuthenticationMethod,
+				})
+			}
+
+			if config.SubscriptionID != "" {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "subscription_id",
+					Value: config.SubscriptionID,
+				})
+			}
+
+			if config.TenantID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tenant_id",
+					Value: config.TenantID,
+				})
+			}
+
+			if config.ClientID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "client_id",
+					Value: config.ClientID,
+				})
+			}
+
+			if config.ClientSecret != nil {
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.ClientSecret,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s client secret %s: %w", config.ClientSecret.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "client_secret",
+					Value: value,
+				})
+			}
+
+			if config.ResourceGroup != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+
+					Key:   "resource_group",
+					Value: config.ResourceGroup,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "azure_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// GCESDConfig
+	if len(sc.Spec.GCESDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.GCESDConfigs))
+		for i, config := range sc.Spec.GCESDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "project",
+					Value: config.Project,
+				},
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "zone",
+				Value: config.Zone,
+			})
+
+			if config.Filter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filter",
+					Value: config.Filter,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "gce_sd_configs",
 			Value: configs,
 		})
 	}
