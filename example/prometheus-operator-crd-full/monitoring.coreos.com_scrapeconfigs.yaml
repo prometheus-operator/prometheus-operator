@@ -1427,9 +1427,10 @@ spec:
                     type: string
                 type: object
               trackTimestampsStaleness:
-                description: "TrackTimestampsStaleness whether Prometheus tracks staleness
+                description: TrackTimestampsStaleness whether Prometheus tracks staleness
                   of the metrics that have an explicit timestamp present in scraped
-                  data. \n It requires Prometheus >= v2.48.0."
+                  data. Has no effect if `honorTimestamps` is false. It requires Prometheus
+                  >= v2.48.0.
                 type: boolean
             type: object
         required:
