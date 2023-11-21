@@ -250,7 +250,7 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 // AddTrackTimestampsStaleness adds the track_timestamps_staleness field into scrape configurations.
 // For backwards compatibility with Prometheus <2.48.0 we don't set
 // track_timestamps_staleness.
-func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, userTrackTimestampsStaleness *bool) yaml.MapSlice {
+func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackTimestampsStaleness *bool) yaml.MapSlice {
 	// Fast path.
 	if userTrackTimestampsStaleness == nil {
 		return cfg
