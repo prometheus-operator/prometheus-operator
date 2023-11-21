@@ -241,8 +241,6 @@ type CommonPrometheusFields struct {
 
 	// The protocols to negotiate during a scrape. It tells clients what
 	// protocol are accepted by Prometheus and with what weight (most wanted is first).
-	// Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
-	// OpenMetricsText1.0.0, PrometheusText0.0.4.
 	//
 	// If unset, Prometheus uses its default value.
 	//
