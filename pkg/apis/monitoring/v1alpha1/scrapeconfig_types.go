@@ -136,7 +136,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// TrackTimestampsStaleness whether Prometheus tracks staleness of
-	// the metrics that have an explicit timestamps present in scraped data.
+	// the metrics that have an explicit timestamp present in scraped data.
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
