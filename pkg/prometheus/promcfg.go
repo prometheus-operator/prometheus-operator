@@ -256,12 +256,8 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 		return cfg
 	}
 
-	track := false
-	if userTrackTimestampsStaleness != nil {
-		track = *userTrackTimestampsStaleness
-	}
-
-	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", track)
+	
+	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", trackTimestampsStaleness)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
