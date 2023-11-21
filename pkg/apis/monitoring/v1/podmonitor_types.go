@@ -210,7 +210,10 @@ type PodMetricsEndpoint struct {
 	// TrackTimestampsStaleness whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamps present in scraped data.
 	// Has no effect if `honorTimestamps` is false.
+	//
 	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 
 	// `basicAuth` configures the Basic Authentication credentials to use when
