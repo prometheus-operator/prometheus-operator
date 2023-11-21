@@ -48,7 +48,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
 	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
-  ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
+	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
