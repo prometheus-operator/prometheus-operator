@@ -1376,6 +1376,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.TrackTimestampsStaleness != nil {
+		in, out := &in.TrackTimestampsStaleness, &out.TrackTimestampsStaleness
+		*out = new(bool)
+		**out = **in
+	}
 	if in.HonorLabels != nil {
 		in, out := &in.HonorLabels, &out.HonorLabels
 		*out = new(bool)

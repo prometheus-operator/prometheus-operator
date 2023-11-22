@@ -135,6 +135,13 @@ type ScrapeConfigSpec struct {
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// TrackTimestampsStaleness whether Prometheus tracks staleness of
+	// the metrics that have an explicit timestamp present in scraped data.
+	// Has no effect if `honorTimestamps` is false.
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`

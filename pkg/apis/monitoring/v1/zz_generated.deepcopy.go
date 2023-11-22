@@ -1013,6 +1013,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.TrackTimestampsStaleness != nil {
+		in, out := &in.TrackTimestampsStaleness, &out.TrackTimestampsStaleness
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)
@@ -1373,6 +1378,11 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 	in.BearerTokenSecret.DeepCopyInto(&out.BearerTokenSecret)
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
+		*out = new(bool)
+		**out = **in
+	}
+	if in.TrackTimestampsStaleness != nil {
+		in, out := &in.TrackTimestampsStaleness, &out.TrackTimestampsStaleness
 		*out = new(bool)
 		**out = **in
 	}

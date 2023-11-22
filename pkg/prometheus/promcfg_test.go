@@ -1881,6 +1881,94 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	golden.Assert(t, string(cfg), "SettingHonorTimestampsInPodMonitor.golden")
 }
 
+func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					TargetLabels: []string{"example", "env"},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							TrackTimestampsStaleness: swag.Bool(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInServiceMonitor.golden")
+}
+
+func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodTargetLabels: []string{"example", "env"},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							TrackTimestampsStaleness: swag.Bool(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInPodMonitor.golden")
+}
+
 func TestHonorTimestampsOverriding(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.OverrideHonorTimestamps = true
@@ -2890,6 +2978,43 @@ func TestHonorTimestamps(t *testing.T) {
 			})
 
 			hl, _ := yaml.Marshal(cg.AddHonorTimestamps(yaml.MapSlice{}, tc.UserHonorTimestamps))
+			require.Equal(t, tc.Expected, string(hl))
+		})
+	}
+}
+
+func TestTrackTimestampsStaleness(t *testing.T) {
+	type testCase struct {
+		UserTrackTimestampsStaleness *bool
+		Expected                     string
+	}
+
+	testCases := []testCase{
+		{
+			UserTrackTimestampsStaleness: nil,
+			Expected:                     "{}\n",
+		},
+		{
+			UserTrackTimestampsStaleness: swag.Bool(false),
+			Expected:                     "track_timestamps_staleness: false\n",
+		},
+		{
+			UserTrackTimestampsStaleness: swag.Bool(true),
+			Expected:                     "track_timestamps_staleness: true\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "2.48.0",
+					},
+				},
+			})
+
+			hl, _ := yaml.Marshal(cg.AddTrackTimestampsStaleness(yaml.MapSlice{}, tc.UserTrackTimestampsStaleness))
 			require.Equal(t, tc.Expected, string(hl))
 		})
 	}
@@ -4938,6 +5063,13 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				HonorTimestamps: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorTimeStamp.golden",
+		},
+		{
+			name: "track_timestamps_staleness",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TrackTimestampsStaleness: ptr.To(true),
+			},
+			golden: "ScrapeConfigSpecConfig_TrackTimestampsStaleness.golden",
 		},
 		{
 			name: "honor_labels",

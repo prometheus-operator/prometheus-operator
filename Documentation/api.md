@@ -7529,6 +7529,20 @@ when exposed by the target.</p>
 </tr>
 <tr>
 <td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>trackTimestampsStaleness</code> defines whether Prometheus tracks staleness of
+the metrics that have an explicit timestamp present in scraped data.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
@@ -8481,6 +8495,21 @@ bool
 <em>(Optional)</em>
 <p><code>honorTimestamps</code> controls whether Prometheus preserves the timestamps
 when exposed by the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamps present in scraped data.
+Has no effect if <code>honorTimestamps</code> is false.</p>
+<p>It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>
@@ -16390,6 +16419,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamp present in scraped data.
+Has no effect if <code>honorTimestamps</code> is false.
+It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorLabels</code><br/>
 <em>
 bool
@@ -21240,6 +21284,21 @@ bool
 <td>
 <em>(Optional)</em>
 <p>HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trackTimestampsStaleness</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrackTimestampsStaleness whether Prometheus tracks staleness of
+the metrics that have an explicit timestamp present in scraped data.
+Has no effect if <code>honorTimestamps</code> is false.
+It requires Prometheus &gt;= v2.48.0.</p>
 </td>
 </tr>
 <tr>

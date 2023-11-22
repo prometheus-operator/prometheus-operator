@@ -438,6 +438,14 @@ type Endpoint struct {
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
+	// `trackTimestampsStaleness` defines whether Prometheus tracks staleness of
+	// the metrics that have an explicit timestamp present in scraped data.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
+
 	// `basicAuth` configures the Basic Authentication credentials to use when
 	// scraping the target.
 	//
