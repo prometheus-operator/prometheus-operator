@@ -2007,7 +2007,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 	if poc.Device != "" && lessThanV0_26 {
 		msg := "'device' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		poc.UserKeyFile = ""
+		poc.Device = ""
 	}
 
 	return poc.HTTPConfig.sanitize(amVersion, logger)
