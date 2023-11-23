@@ -44,7 +44,7 @@ A scrape class defines TLS settings (and possibly other settings in future, e.g.
 One scrape class may be designated as the default class, in which case that class is applied to any scrape config that doesn't specify a value for `scrapeClass`.
 
 When defining a podmonitor/servicemonitor/probe/scrapeconfig, a user may assign a scrape class via the `scrapeClass` field.
-For monitors, each endpoint may be assigned a scrape class.
+When there's a match, a scrape class is assigned to all the endpoints.
 
 Class names are assumed to be installation-specific. In practice, some common class names like `istio-mtls` are likely to emerge.
 
