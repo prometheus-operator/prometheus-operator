@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -60,7 +59,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		}
 
 		if status.replicas != status.expectedReplicas {
-			pollErr = errors.Errorf("expected %d replicas, got %d", status.expectedReplicas, status.replicas)
+			pollErr = fmt.Errorf("expected %d replicas, got %d", status.expectedReplicas, status.replicas)
 			return false, nil
 		}
 
@@ -77,7 +76,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 				reconciled = &cond
 			}
 			if cond.ObservedGeneration != status.generation {
-				pollErr = errors.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
+				pollErr = fmt.Errorf("observed generation %d for condition %s isn't equal to the state generation %d",
 					cond.ObservedGeneration,
 					cond.Type,
 					status.generation)
@@ -86,12 +85,12 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		}
 
 		if reconciled == nil {
-			pollErr = errors.Errorf("failed to find Reconciled condition in status subresource")
+			pollErr = fmt.Errorf("failed to find Reconciled condition in status subresource")
 			return false, nil
 		}
 
 		if reconciled.Status != monitoringv1.ConditionTrue {
-			pollErr = errors.Errorf(
+			pollErr = fmt.Errorf(
 				"expected Reconciled condition to be 'True', got %q (reason %s, %q)",
 				reconciled.Status,
 				reconciled.Reason,
@@ -101,12 +100,12 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		}
 
 		if available == nil {
-			pollErr = errors.Errorf("failed to find Available condition in status subresource")
+			pollErr = fmt.Errorf("failed to find Available condition in status subresource")
 			return false, nil
 		}
 
 		if available.Status != monitoringv1.ConditionTrue {
-			pollErr = errors.Errorf(
+			pollErr = fmt.Errorf(
 				"expected Available condition to be 'True', got %q (reason %s, %q)",
 				available.Status,
 				available.Reason,
@@ -116,7 +115,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		}
 		return true, nil
 	}); err != nil {
-		return errors.Wrapf(pollErr, "%v", err)
+		return fmt.Errorf("%v: %w", pollErr, err)
 	}
 
 	return nil

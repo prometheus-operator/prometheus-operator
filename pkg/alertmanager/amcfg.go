@@ -1257,8 +1257,14 @@ func (cb *configBuilder) convertMSTeamsConfig(
 ) (*msTeamsConfig, error) {
 	out := &msTeamsConfig{
 		SendResolved: in.SendResolved,
-		Title:        *in.Title,
-		Text:         *in.Text,
+	}
+
+	if in.Title != nil {
+		out.Title = *in.Title
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
 	}
 
 	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)

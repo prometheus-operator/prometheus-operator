@@ -121,7 +121,7 @@ The `Probe` custom resource definition (CRD) allows to declarative define how gr
 
 The `PrometheusRule` custom resource definition (CRD) declaratively defines desired Prometheus rules to be consumed by Prometheus or Thanos Ruler instances.
 
-Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Rulre.
+Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Ruler.
 
 ## AlertmanagerConfig
 

@@ -17,6 +17,7 @@ package v1
 import (
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -280,6 +281,14 @@ type CommonPrometheusFields struct {
 	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'
 	// container, that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+	// The default behavior is all PVCs are retained.
+	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
+	//
+	// +optional
+	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 
 	// Defines the configuration of the Prometheus web server.
 	Web *PrometheusWebSpec `json:"web,omitempty"`
@@ -1246,8 +1255,33 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// ManagedIdentity defines the Azure User-assigned Managed identity.
+	// Cannot be set at the same time as `oauth`.
+	// +optional
+	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
+	// OAuth defines the oauth config that is being used to authenticate.
+	// Cannot be set at the same time as `managedIdentity`.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	OAuth *AzureOAuth `json:"oauth,omitempty"`
+}
+
+// AzureOAuth defines the Azure OAuth settings.
+// +k8s:openapi-gen=true
+type AzureOAuth struct {
+	// `clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.
 	// +required
-	ManagedIdentity ManagedIdentity `json:"managedIdentity"`
+	// +kubebuilder:validation:MinLength=1
+	ClientID string `json:"clientId"`
+	// `clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
+	// +required
+	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
+	// `tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	TenantID string `json:"tenantId"`
 }
 
 // ManagedIdentity defines the Azure User-assigned Managed identity.

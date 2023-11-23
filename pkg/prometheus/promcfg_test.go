@@ -67,7 +67,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	if p == nil {
 		p = &monitoringv1.Prometheus{}
 	}
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
 	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
@@ -298,7 +298,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 						MatchNames: []string{"test1", "test2"},
 					},
 					AttachMetadata: &monitoringv1.AttachMetadata{
-						Node: true,
+						Node: ptr.To(true),
 					},
 				},
 			},
@@ -407,7 +407,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 				MatchNames: []string{"test"},
 			},
 			AttachMetadata: &monitoringv1.AttachMetadata{
-				Node: true,
+				Node: ptr.To(true),
 			},
 		},
 	}
@@ -1881,6 +1881,94 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	golden.Assert(t, string(cfg), "SettingHonorTimestampsInPodMonitor.golden")
 }
 
+func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					TargetLabels: []string{"example", "env"},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							TrackTimestampsStaleness: swag.Bool(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInServiceMonitor.golden")
+}
+
+func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodTargetLabels: []string{"example", "env"},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							TrackTimestampsStaleness: swag.Bool(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInPodMonitor.golden")
+}
+
 func TestHonorTimestampsOverriding(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.OverrideHonorTimestamps = true
@@ -2895,6 +2983,43 @@ func TestHonorTimestamps(t *testing.T) {
 	}
 }
 
+func TestTrackTimestampsStaleness(t *testing.T) {
+	type testCase struct {
+		UserTrackTimestampsStaleness *bool
+		Expected                     string
+	}
+
+	testCases := []testCase{
+		{
+			UserTrackTimestampsStaleness: nil,
+			Expected:                     "{}\n",
+		},
+		{
+			UserTrackTimestampsStaleness: swag.Bool(false),
+			Expected:                     "track_timestamps_staleness: false\n",
+		},
+		{
+			UserTrackTimestampsStaleness: swag.Bool(true),
+			Expected:                     "track_timestamps_staleness: true\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "2.48.0",
+					},
+				},
+			})
+
+			hl, _ := yaml.Marshal(cg.AddTrackTimestampsStaleness(yaml.MapSlice{}, tc.UserTrackTimestampsStaleness))
+			require.Equal(t, tc.Expected, string(hl))
+		})
+	}
+}
+
 func TestSampleLimits(t *testing.T) {
 	for _, tc := range []struct {
 		enforcedLimit int
@@ -3346,12 +3471,52 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
-					ManagedIdentity: monitoringv1.ManagedIdentity{
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
 						ClientID: "client-id",
 					},
 				},
 			},
 			golden: "RemoteWriteConfig_v2.45.0_1.golden",
+		},
+		{
+			version: "v2.48.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
+		},
+		{
+			version: "v2.47.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -3505,6 +3670,13 @@ func TestRemoteWriteConfig(t *testing.T) {
 					"remoteWrite/0": {
 						AccessKeyID: "access-key",
 						SecretKeyID: "secret-key",
+					},
+				}
+			}
+			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
+				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
+					"remoteWrite/0": {
+						ClientSecret: "secret-key",
 					},
 				}
 			}
@@ -4551,7 +4723,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_<_v2.39.0.golden",
+			golden: "TSDB_config_less_than_v2.39.0.golden",
 		},
 		{
 
@@ -4559,7 +4731,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_>=_v2.39.0.golden",
+			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -4891,6 +5063,13 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				HonorTimestamps: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorTimeStamp.golden",
+		},
+		{
+			name: "track_timestamps_staleness",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TrackTimestampsStaleness: ptr.To(true),
+			},
+			golden: "ScrapeConfigSpecConfig_TrackTimestampsStaleness.golden",
 		},
 		{
 			name: "honor_labels",
@@ -5510,6 +5689,185 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				scs,
 				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "azure-client-secret",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"clientSecret": []byte("my-secret"),
+			},
+		},
+	)
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "azure_sd_config_valid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To("OAuth"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-client-secret",
+							},
+							Key: "clientSecret",
+						},
+						ResourceGroup:   ptr.To("my-resource-group"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid.golden",
+		},
+		{
+			name: "azure_sd_config_invalid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "wrong-secret-name",
+							},
+							Key: "clientSecret",
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "azure_sd_config_empty",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigEmpty.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "gce_sd_config_valid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project:         "devops-dev",
+						Zone:            "us-west-1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_empty",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigEmpty.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				nil,
 				nil,
 				nil,
 				nil,

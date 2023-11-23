@@ -153,6 +153,10 @@ func makeStatefulSet(
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
 
+	if cpf.PersistentVolumeClaimRetentionPolicy != nil {
+		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
+	}
+
 	if cpf.HostNetwork {
 		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}

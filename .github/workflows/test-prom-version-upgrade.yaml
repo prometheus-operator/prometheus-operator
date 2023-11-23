@@ -15,6 +15,7 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '${{ env.golang-version }}'
+        check-latest: true
     - name: Build images
       run: |
         export SHELL=/bin/bash

@@ -40,17 +40,16 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
-// K8SRole is role of the service in Kubernetes.
-// Currently the only supported role is "Node".
-// +kubebuilder:validation:Enum=Node;node
-type K8SRole string
+// Role is role of the service in Kubernetes.
+// +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
+type Role string
 
 // K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfig struct {
 	// +kubebuilder:validation:Required
-	Role  K8SRole `json:"role"`
-	Label string  `json:"label,omitempty"`
-	Field string  `json:"field,omitempty"`
+	Role  Role   `json:"role"`
+	Label string `json:"label,omitempty"`
+	Field string `json:"field,omitempty"`
 }
 
 // +genclient
@@ -112,6 +111,12 @@ type ScrapeConfigSpec struct {
 	// EC2SDConfigs defines a list of EC2 service discovery configurations.
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
+	// AzureSDConfigs defines a list of Azure service discovery configurations.
+	// +optional
+	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
+	// GCESDConfigs defines a list of GCE service discovery configurations.
+	// +optional
+	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -130,6 +135,13 @@ type ScrapeConfigSpec struct {
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// TrackTimestampsStaleness whether Prometheus tracks staleness of
+	// the metrics that have an explicit timestamp present in scraped data.
+	// Has no effect if `honorTimestamps` is false.
+	// It requires Prometheus >= v2.48.0.
+	//
+	// +optional
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
@@ -239,7 +251,7 @@ type HTTPSDConfig struct {
 type KubernetesSDConfig struct {
 	// Role of the Kubernetes entities that should be discovered.
 	// +required
-	Role K8SRole `json:"role"`
+	Role Role `json:"role"`
 	// Selector to select objects.
 	// +optional
 	// +listType=map
@@ -282,20 +294,20 @@ type ConsulSDConfig struct {
 	// The string by which Consul tags are joined into the tag label.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	TagSeparator *string `json:"tag_separator,omitempty"`
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
 	// +mapType:=atomic
 	// +optional
-	NodeMeta map[string]string `json:"node_meta,omitempty"`
+	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	AllowStale *bool `json:"allow_stale,omitempty"`
+	AllowStale *bool `json:"allowStale,omitempty"`
 	// The time after which the provided names are refreshed.
 	// On large setup it might be a good idea to increase this value because the catalog will change all the time.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	RefreshInterval *v1.Duration `json:"refresh_interval,omitempty"`
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// BasicAuth information to authenticate against the Consul Server.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	// +optional
@@ -308,28 +320,28 @@ type ConsulSDConfig struct {
 	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// Optional proxy URL.
 	// +optional
-	ProxyUrl *string `json:"proxy_url,omitempty"`
+	ProxyUrl *string `json:"proxyUrl,omitempty"`
 	// Comma-separated string that can contain IPs, CIDR notation, domain names
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
 	// +optional
-	NoProxy *string `json:"no_proxy,omitempty"`
+	NoProxy *string `json:"noProxy,omitempty"`
 	// Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
 	// If unset, Prometheus uses its default value.
 	// +optional
-	ProxyFromEnvironment *bool `json:"proxy_from_environment,omitempty"`
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
 	// Specifies headers to send to proxies during CONNECT requests.
 	// +mapType:=atomic
 	// +optional
-	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxy_connect_header,omitempty"`
+	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	FollowRedirects *bool `json:"follow_redirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to enable HTTP2.
 	// If unset, Prometheus uses its default value.
 	// +optional
-	EnableHttp2 *bool `json:"enable_http2,omitempty"`
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
 	// TLS Config
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -389,4 +401,81 @@ type EC2SDConfig struct {
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
 	Filters []*EC2Filter `json:"filters"`
+}
+
+// AzureSDConfig allow retrieving scrape targets from Azure VMs.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
+// +k8s:openapi-gen=true
+type AzureSDConfig struct {
+	// The Azure environment.
+	// +optional
+	Environment *string `json:"environment,omitempty"`
+	// # The authentication method, either OAuth or ManagedIdentity.
+	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity
+	// +optional
+	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	// The subscription ID. Always required.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	SubscriptionID string `json:"subscriptionID"`
+	// Optional tenant ID. Only required with the OAuth authentication method.
+	// +optional
+	TenantID *string `json:"tenantID,omitempty"`
+	// Optional client ID. Only required with the OAuth authentication method.
+	// +optional
+	ClientID *string `json:"clientID,omitempty"`
+	// Optional client secret. Only required with the OAuth authentication method.
+	// +optional
+	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
+	// Optional resource group name. Limits discovery to this resource group.
+	// +optional
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
+}
+
+// GCESDConfig configures scrape targets from GCP GCE instances.
+// The private IP address is used by default, but may be changed to
+// the public IP address with relabeling.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config
+//
+// The GCE service discovery will load the Google Cloud credentials
+// from the file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+// See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
+//
+// A pre-requisite for using GCESDConfig is that a Secret containing valid
+// Google Cloud credentials is mounted into the Prometheus or PrometheusAgent
+// pod via the `.spec.secrets` field and that the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable is set to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>.
+// +k8s:openapi-gen=true
+type GCESDConfig struct {
+	// The Google Cloud Project ID
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Project string `json:"project"`
+	// The zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Zone string `json:"zone"`
+	// Filter can be used optionally to filter the instance list by other criteria
+	// Syntax of this filter is described in the filter query parameter section:
+	// https://cloud.google.com/compute/docs/reference/latest/instances/list
+	// +optional
+	Filter *string `json:"filter,omitempty"`
+	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
+	// The tag separator is used to separate the tags on concatenation
+	// +optional
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 }

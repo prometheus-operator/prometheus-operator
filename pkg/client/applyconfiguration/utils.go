@@ -61,6 +61,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AuthorizationApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureAD"):
 		return &monitoringv1.AzureADApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureOAuth"):
+		return &monitoringv1.AzureOAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
@@ -191,6 +193,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfigSpec"):
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("AzureSDConfig"):
+		return &monitoringv1alpha1.AzureSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ConsulSDConfig"):
 		return &monitoringv1alpha1.ConsulSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DayOfMonthRange"):
@@ -207,6 +211,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.EmailConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
 		return &monitoringv1alpha1.FileSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("GCESDConfig"):
+		return &monitoringv1alpha1.GCESDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1alpha1.HTTPConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPSDConfig"):
