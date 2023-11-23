@@ -74,6 +74,10 @@ spec:
   volumeMounts:
     - name: istio-certs
       mountPath: "/etc/istio-certs/"
+  volumes:
+    - name: istio-certs
+      secret:
+        secretName: istio-certs
 ```
 
 Any object references in the scrape class definition are assumed to refer to objects in the namespace of the `Prometheus` object.
