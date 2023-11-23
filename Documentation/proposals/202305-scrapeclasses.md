@@ -29,7 +29,9 @@ to compose the scrape configurations in a Kubernetes way.
 - Allow for the administrator to define a named, reusable scrape configuration snippet, including unsafe elements such as file references.
 - Allow for a user to select a configuration snippet by name in their probe/podmonitor/servicemonitor endpoint configuration.
 - Avoid giving the user the ability to use arbirary files within the Prometheus pod.
+## Non-Goals
 
+- Allow Prometheus owners to override the configuration defined in the monitoring resources (at least in the first iteration).
 ### Audience
 
 - Users who serve Prometheus as a service and want to give their customers autonomy in defining monitors, but want to provide a default configuration for scraping.
