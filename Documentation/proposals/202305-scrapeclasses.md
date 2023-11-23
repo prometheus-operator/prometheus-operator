@@ -84,7 +84,7 @@ Any object references in the scrape class definition are assumed to refer to obj
 
 ### PodMonitor Resource
 
-Allow the user to select a scrape class for each endpoint.
+Allow the user to select a scrape class which applies to all endpoints.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
