@@ -1126,7 +1126,10 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
 		HTML:          in.HTML,
-		Device:        *in.Device,
+		}
+		if in.Device != nil {
+			out.Device = *in.Device
+		}
 	}
 
 	{
