@@ -39,11 +39,13 @@ func TestValidateSecretOrConfigMap(t *testing.T) {
 
 func TestValidateSafeTLSConfig(t *testing.T) {
 	for _, tc := range []struct {
+		name   string
 		config *SafeTLSConfig
-		err    bool
+
+		err bool
 	}{
 		{
-			// CA, Cert, and KeySecret.
+			name: "ca, cert and keySecret",
 			config: &SafeTLSConfig{
 				CA:        SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				Cert:      SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
@@ -52,7 +54,7 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without CA cert.
+			name: "cert and keySecret",
 			config: &SafeTLSConfig{
 				Cert:      SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				KeySecret: &v1.SecretKeySelector{},
@@ -60,7 +62,7 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without Cert.
+			name: "ca and keySecret",
 			config: &SafeTLSConfig{
 				CA:        SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				KeySecret: &v1.SecretKeySelector{},
@@ -68,21 +70,29 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 			err: true,
 		},
 		{
-			// Without KeySecret.
+			name: "ca and cert",
 			config: &SafeTLSConfig{
-				CA:   SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				Cert: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				CA: SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{},
+				},
+				Cert: SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{},
+				},
 			},
 			err: true,
 		},
 	} {
-		t.Run("", func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()
-			if tc.err && err == nil {
-				t.Fatalf("expected validation of %+v to fail, but got no error", tc.config)
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
 			}
-			if !tc.err && err != nil {
-				t.Fatalf("expected validation of %+v not to fail, err: %s", tc.config, err)
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
 			}
 		})
 	}
@@ -90,11 +100,13 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 
 func TestValidateTLSConfig(t *testing.T) {
 	for _, tc := range []struct {
+		name   string
 		config *TLSConfig
-		err    bool
+
+		err bool
 	}{
 		{
-			// CAFile, CertFile, and KeyFile.
+			name: "caFile, certFile and keyFile",
 			config: &TLSConfig{
 				CAFile:   "cafile",
 				CertFile: "certfile",
@@ -103,7 +115,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without CAFile.
+			name: "certFile and keyFile",
 			config: &TLSConfig{
 				CertFile: "certfile",
 				KeyFile:  "keyfile",
@@ -111,7 +123,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without CertFile.
+			name: "caFile and keyFile",
 			config: &TLSConfig{
 				CAFile:  "cafile",
 				KeyFile: "keyfile",
@@ -119,7 +131,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: true,
 		},
 		{
-			// Without KeyFile.
+			name: "caFile and certFile",
 			config: &TLSConfig{
 				CAFile:   "cafile",
 				CertFile: "certfile",
@@ -127,7 +139,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: true,
 		},
 		{
-			// CertSecret and KeyFile.
+			name: "caFile, cert and keyFile",
 			config: &TLSConfig{
 				CAFile:  "cafile",
 				KeyFile: "keyfile",
@@ -138,7 +150,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// CertFile and KeySecret.
+			name: "caFile, certFile and keySecret",
 			config: &TLSConfig{
 				CAFile:   "cafile",
 				CertFile: "certfile",
@@ -149,7 +161,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// CA, Cert, and KeySecret.
+			name: "ca, cert and keySecret",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
 					CA:        SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
@@ -160,7 +172,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without CA and CAFile.
+			name: "cert and keySecret",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
 					Cert:      SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
@@ -170,7 +182,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: false,
 		},
 		{
-			// Without Cert and CertFile.
+			name: "ca and keySecret",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
 					CA:        SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
@@ -180,7 +192,7 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: true,
 		},
 		{
-			// Without KeySecret and KeyFile.
+			name: "ca and cert",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
 					CA:   SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
@@ -190,13 +202,17 @@ func TestValidateTLSConfig(t *testing.T) {
 			err: true,
 		},
 	} {
-		t.Run("", func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()
-			if tc.err && err == nil {
-				t.Fatalf("expected validation of %+v to fail, but got no error", tc.config)
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
 			}
-			if !tc.err && err != nil {
-				t.Fatalf("expected validation of %+v not to fail, err: %s", tc.config, err)
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
 			}
 		})
 	}
@@ -265,10 +281,11 @@ func TestValidateAuthorization(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()
 			if tc.err && err == nil {
-				t.Fatalf("expected validation of %+v to fail, but got no error", tc.config)
+				t.Fatal("expected error but got none")
 			}
+
 			if !tc.err && err != nil {
-				t.Fatalf("expected validation of %+v not to fail, err: %s", tc.config, err)
+				t.Fatalf("expected no error but got: %s", err)
 			}
 		})
 	}

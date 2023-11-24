@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
@@ -833,7 +832,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				BasicAuth:       &monitoringv1.BasicAuth{},
 				BearerToken:     "bearer_token",
 				BearerTokenFile: "bearer_token_file",
-				TLSConfig:       nil,
 			},
 			&assets.Store{
 				BasicAuthAssets: map[string]assets.BasicAuthCredentials{
@@ -1200,7 +1198,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 						Namespace:   "default",
 						Port:        intstr.FromString("web"),
 						APIVersion:  "v2",
-						EnableHttp2: swag.Bool(tc.enableHTTP2),
+						EnableHttp2: ptr.To(tc.enableHTTP2),
 					},
 				},
 			}
@@ -1816,7 +1814,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: swag.Bool(false),
+							HonorTimestamps: ptr.To(false),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -1861,7 +1859,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							HonorTimestamps: swag.Bool(false),
+							HonorTimestamps: ptr.To(false),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -1904,7 +1902,7 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							TrackTimestampsStaleness: swag.Bool(false),
+							TrackTimestampsStaleness: ptr.To(false),
 							Port:                     "web",
 							Interval:                 "30s",
 						},
@@ -1949,7 +1947,7 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							TrackTimestampsStaleness: swag.Bool(false),
+							TrackTimestampsStaleness: ptr.To(false),
 							Port:                     "web",
 							Interval:                 "30s",
 						},
@@ -1993,7 +1991,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: swag.Bool(true),
+							HonorTimestamps: ptr.To(true),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -2945,22 +2943,22 @@ func TestHonorTimestamps(t *testing.T) {
 			Expected:                "{}\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(false),
+			UserHonorTimestamps:     ptr.To(false),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(false),
+			UserHonorTimestamps:     ptr.To(false),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(true),
+			UserHonorTimestamps:     ptr.To(true),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(true),
+			UserHonorTimestamps:     ptr.To(true),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: true\n",
 		},
@@ -2995,11 +2993,11 @@ func TestTrackTimestampsStaleness(t *testing.T) {
 			Expected:                     "{}\n",
 		},
 		{
-			UserTrackTimestampsStaleness: swag.Bool(false),
+			UserTrackTimestampsStaleness: ptr.To(false),
 			Expected:                     "track_timestamps_staleness: false\n",
 		},
 		{
-			UserTrackTimestampsStaleness: swag.Bool(true),
+			UserTrackTimestampsStaleness: ptr.To(true),
 			Expected:                     "track_timestamps_staleness: true\n",
 		},
 	}
@@ -4329,7 +4327,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(tc.followRedirects),
+							FollowRedirects: ptr.To(tc.followRedirects),
 						},
 					},
 				},
@@ -4407,7 +4405,7 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(tc.followRedirects),
+							FollowRedirects: ptr.To(tc.followRedirects),
 						},
 					},
 				},
@@ -4486,7 +4484,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(tc.enableHTTP2),
+							EnableHttp2: ptr.To(tc.enableHTTP2),
 						},
 					},
 				},
@@ -4546,7 +4544,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							FilterRunning: swag.Bool(false),
+							FilterRunning: ptr.To(false),
 							Port:          "test",
 						},
 					},
@@ -4609,7 +4607,7 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(tc.enableHTTP2),
+							EnableHttp2: ptr.To(tc.enableHTTP2),
 						},
 					},
 				},

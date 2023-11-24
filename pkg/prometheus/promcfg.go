@@ -320,12 +320,15 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	}
 
 	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
+
 	if tls.CAFile != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
 	}
+
 	if tls.CertFile != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 	}
+
 	if tls.KeyFile != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
 	}

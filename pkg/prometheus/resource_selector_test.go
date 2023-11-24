@@ -698,6 +698,15 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 }
 
 func TestSelectServiceMonitors(t *testing.T) {
+	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	require.NoError(t, err)
+
+	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	require.NoError(t, err)
+
+	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	require.NoError(t, err)
+
 	for _, tc := range []struct {
 		scenario   string
 		updateSpec func(*monitoringv1.ServiceMonitorSpec)
@@ -763,12 +772,202 @@ func TestSelectServiceMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "valid TLS config with CA, cert and key",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid TLS config with both CA and CAFile",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile: "/etc/secrets/tls/ca.crt",
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid TLS config with both CA Secret and Configmap",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+								ConfigMap: &v1.ConfigMapKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "configmap",
+									},
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid TLS config with invalid CA data",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid TLS config with cert and missing key",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid TLS config with key and missing cert",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid TLS config with key and invalid cert",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
+			cs := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"ca":         ca,
+						"invalid_ca": []byte("garbage"),
+						"cert":       cert,
+						"key":        key,
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "configmap",
+						Namespace: "test",
+					},
+					Data: map[string]string{
+						"ca":   string(ca),
+						"cert": string(cert),
+					},
+				},
+			)
+
 			rs := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{},
-				nil,
+				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 			)

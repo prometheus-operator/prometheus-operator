@@ -12,7 +12,6 @@ require (
 	github.com/distribution/reference v0.5.0
 	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/go-kit/log v0.2.1
-	github.com/go-openapi/swag v0.22.4
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.6.0
@@ -48,6 +47,7 @@ require (
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
+	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect

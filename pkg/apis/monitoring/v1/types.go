@@ -593,24 +593,32 @@ type SecretOrConfigMap struct {
 	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
 }
 
-// SecretOrConfigMapValidationError is returned by SecretOrConfigMap.Validate()
-// on semantically invalid configurations.
-// +k8s:openapi-gen=false
-type SecretOrConfigMapValidationError struct {
-	err string
-}
-
-func (e *SecretOrConfigMapValidationError) Error() string {
-	return e.err
-}
-
-// Validate semantically validates the given TLSConfig.
+// Validate semantically validates the given SecretOrConfigMap.
 func (c *SecretOrConfigMap) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Secret != nil && c.ConfigMap != nil {
-		return &SecretOrConfigMapValidationError{"SecretOrConfigMap can not specify both Secret and ConfigMap"}
+		return fmt.Errorf("cannot specify both Secret and ConfigMap")
 	}
 
 	return nil
+}
+
+func (c *SecretOrConfigMap) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+
+	switch {
+	case c.Secret != nil:
+		return fmt.Sprintf("<secret=%s,key=%s>", c.Secret.LocalObjectReference.Name, c.Secret.Key)
+	case c.ConfigMap != nil:
+		return fmt.Sprintf("<configmap=%s,key=%s>", c.ConfigMap.LocalObjectReference.Name, c.ConfigMap.Key)
+	}
+
+	return "<empty>"
 }
 
 // SafeTLSConfig specifies safe TLS configuration parameters.
@@ -632,22 +640,22 @@ type SafeTLSConfig struct {
 func (c *SafeTLSConfig) Validate() error {
 	if c.CA != (SecretOrConfigMap{}) {
 		if err := c.CA.Validate(); err != nil {
-			return err
+			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
 		}
 	}
 
 	if c.Cert != (SecretOrConfigMap{}) {
 		if err := c.Cert.Validate(); err != nil {
-			return err
+			return fmt.Errorf("cert %s: %w", c.Cert.String(), err)
 		}
 	}
 
 	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
-		return &TLSConfigValidationError{"client cert specified without client key"}
+		return fmt.Errorf("client cert specified without client key")
 	}
 
 	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
-		return &TLSConfigValidationError{"client key specified without client cert"}
+		return fmt.Errorf("client key specified without client cert")
 	}
 
 	return nil
@@ -665,50 +673,39 @@ type TLSConfig struct {
 	KeyFile string `json:"keyFile,omitempty"`
 }
 
-// TLSConfigValidationError is returned by TLSConfig.Validate() on semantically
-// invalid tls configurations.
-// +k8s:openapi-gen=false
-type TLSConfigValidationError struct {
-	err string
-}
-
-func (e *TLSConfigValidationError) Error() string {
-	return e.err
-}
-
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
 	if c.CA != (SecretOrConfigMap{}) {
 		if c.CAFile != "" {
-			return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
+			return fmt.Errorf("cannot specify both caFile and ca")
 		}
 		if err := c.CA.Validate(); err != nil {
-			return &TLSConfigValidationError{"tls config CA is invalid"}
+			return fmt.Errorf("SecretOrConfigMap ca: %w", err)
 		}
 	}
 
 	if c.Cert != (SecretOrConfigMap{}) {
 		if c.CertFile != "" {
-			return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
+			return fmt.Errorf("cannot specify both certFile and cert")
 		}
 		if err := c.Cert.Validate(); err != nil {
-			return &TLSConfigValidationError{"tls config Cert is invalid"}
+			return fmt.Errorf("SecretOrConfigMap cert: %w", err)
 		}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
-		return &TLSConfigValidationError{"tls config can not both specify KeyFile and KeySecret"}
+		return fmt.Errorf("cannot specify both keyFile and keySecret")
 	}
 
 	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
 	hasKey := c.KeyFile != "" || c.KeySecret != nil
 
 	if hasCert && !hasKey {
-		return &TLSConfigValidationError{"tls config can not specify client cert without client key"}
+		return fmt.Errorf("cannot specify client cert without client key")
 	}
 
 	if hasKey && !hasCert {
-		return &TLSConfigValidationError{"tls config can not specify client key without client cert"}
+		return fmt.Errorf("cannot specify client key without client cert")
 	}
 
 	return nil

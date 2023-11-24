@@ -12654,32 +12654,6 @@ Kubernetes core/v1.ConfigMapKeySelector
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.SecretOrConfigMapValidationError">SecretOrConfigMapValidationError
-</h3>
-<div>
-<p>SecretOrConfigMapValidationError is returned by SecretOrConfigMap.Validate()
-on semantically invalid configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec
 </h3>
 <p>
@@ -13222,32 +13196,6 @@ string
 </td>
 <td>
 <p>Path to the client key file in the Prometheus container for the targets.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.TLSConfigValidationError">TLSConfigValidationError
-</h3>
-<div>
-<p>TLSConfigValidationError is returned by TLSConfig.Validate() on semantically
-invalid tls configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
 </td>
 </tr>
 </tbody>
