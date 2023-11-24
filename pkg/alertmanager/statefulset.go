@@ -21,11 +21,14 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -64,7 +67,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash string, tlsAssetSecrets []string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsAssetSecrets []string) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -90,7 +93,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(am, config, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(logger, am, config, tlsAssetSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +227,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(a.Spec.Image, ""),
@@ -531,8 +534,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 	amCfg := a.Spec.AlertmanagerConfiguration
 	if amCfg != nil && len(amCfg.Templates) > 0 {
 		sources := []v1.VolumeProjection{}
+		keys := sets.Set[string]{}
 		for _, v := range amCfg.Templates {
 			if v.ConfigMap != nil {
+				if keys.Has(v.ConfigMap.Key) {
+					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
+					continue
+				}
 				sources = append(sources, v1.VolumeProjection{
 					ConfigMap: &v1.ConfigMapProjection{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -544,9 +552,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 						}},
 					},
 				})
-
+				keys.Insert(v.ConfigMap.Key)
 			}
 			if v.Secret != nil {
+				if keys.Has(v.Secret.Key) {
+					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
+					continue
+				}
 				sources = append(sources, v1.VolumeProjection{
 					Secret: &v1.SecretProjection{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -558,6 +570,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config, tlsAssetSe
 						}},
 					},
 				})
+				keys.Insert(v.Secret.Key)
 			}
 		}
 		volumes = append(volumes, v1.Volume{
