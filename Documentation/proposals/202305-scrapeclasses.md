@@ -34,6 +34,8 @@ to compose the scrape configurations in a Kubernetes way.
 
 - Allow Prometheus owners to override the configuration defined in the monitoring resources (at least in the first iteration).
 
+- Deprecation of the unsafe TLS settings in `ServiceMonitor`.
+
 ### Audience
 
 - Users who serve Prometheus as a service and want to give their customers autonomy in defining monitors, but want to provide a default configuration for scraping.
@@ -92,15 +94,13 @@ Allow the user to select a scrape class which applies to all endpoints.
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 spec:
-  scrapeClass: istio-mtls
+  scrapeClassName: istio-mtls
   podMetricsEndpoints:
   - port: http
     path: /metrics
 ```
 
-The proposed behavior is:
-1. the `tlsConfig` in the associated scrape class is automatically applied to the scrape configuration of the endpoint.
-2. the inline `tlsConfig` (if any) takes precedence over the `tlsConfig` in the scrape class.
+If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use a merge strategy to combine the `tlsConfig` with the `tlsConfig` of the scrape class, but the `tlsConfig` in the `Monitor` resource takes precedence.
 
 ### Probe Resource
 
@@ -110,7 +110,7 @@ Allow the user to select a scrape class for the probe.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 spec:
-  scrapeClass: istio-mtls
+  scrapeClassName: istio-mtls
 ```
 
 ### ServiceMonitor Resource
@@ -121,13 +121,11 @@ Allow the user to select a scrape class for each endpoint.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 spec:
-  scrapeClass: istio-mtls
+  scrapeClassName: istio-mtls
   endpoints:
   - port: http
     path: /metrics
 ```
-
-Out-of-scope: deprecation of the unsafe TLS settings in `ServiceMonitor`.
 
 ### ScrapeConfig
 
@@ -139,7 +137,7 @@ kind: ScrapeConfig
 metadata:
   name: scrape-config
 spec:
-  scrapeClass: istio-mtls
+  scrapeClassName: istio-mtls
   staticConfigs:
     [...]
   httpSDConfig:
@@ -206,7 +204,9 @@ spec:
 An open question is whether the resource would be cluster-scoped or namespace-scoped.
 
 Objections:
+
 1. Since the file paths are dependent on the volume mounts in the server, this approach may not achieve a meaningful decoupling.
+
 2. Extra complexity in defining a new CRD.
 
 ### Non-Safe Monitors
