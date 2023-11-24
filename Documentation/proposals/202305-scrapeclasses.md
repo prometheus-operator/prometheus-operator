@@ -33,6 +33,7 @@ to compose the scrape configurations in a Kubernetes way.
 ## Non-Goals
 
 - Allow Prometheus owners to override the configuration defined in the monitoring resources (at least in the first iteration).
+
 ### Audience
 
 - Users who serve Prometheus as a service and want to give their customers autonomy in defining monitors, but want to provide a default configuration for scraping.
