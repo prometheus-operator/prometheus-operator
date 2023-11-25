@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -176,7 +177,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		c.logger,
 		c,
 		c.metrics,
-		monitoringv1.PrometheusesKind,
+		monitoring.PrometheusesKind,
 		r,
 	)
 
@@ -190,7 +191,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 				options.LabelSelector = c.config.PromSelector
 			},
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.PrometheusName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating prometheus informers: %w", err)
@@ -210,7 +211,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ServiceMonitorName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.ServiceMonitorName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating servicemonitor informers: %w", err)
@@ -224,7 +225,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PodMonitorName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.PodMonitorName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating podmonitor informers: %w", err)
@@ -238,7 +239,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ProbeName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.ProbeName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating probe informers: %w", err)
@@ -253,7 +254,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 				resyncPeriod,
 				nil,
 			),
-			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.ScrapeConfigName),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoring.ScrapeConfigName),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating scrapeconfigs informers: %w", err)
@@ -267,7 +268,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.PrometheusRuleName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
@@ -702,7 +703,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ServiceMonitorsKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -717,7 +718,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ServiceMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -728,7 +729,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ServiceMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -739,7 +740,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PodMonitorsKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -753,7 +754,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PodMonitorsKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -764,7 +765,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PodMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PodMonitorsKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -774,7 +775,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ProbesKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -787,7 +788,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 
 	if o, ok := c.accessor.ObjectMetadata(cur); ok {
 		level.Debug(c.logger).Log("msg", "Probe updated")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
+		c.metrics.TriggerByCounter(monitoring.ProbesKind, operator.UpdateEvent)
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -796,7 +797,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ProbesKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -805,7 +806,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ScrapeConfigsKind, operator.AddEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -818,7 +819,7 @@ func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 
 	if o, ok := c.accessor.ObjectMetadata(cur); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig updated")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.UpdateEvent)
+		c.metrics.TriggerByCounter(monitoring.ScrapeConfigsKind, operator.UpdateEvent)
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -827,7 +828,7 @@ func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.ScrapeConfigsKind, operator.DeleteEvent).Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -837,7 +838,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule added")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.AddEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -852,7 +853,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule updated")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
@@ -863,7 +864,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule deleted")
-		c.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
+		c.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}

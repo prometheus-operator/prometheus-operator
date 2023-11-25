@@ -22,8 +22,14 @@ import (
 )
 
 const (
-	PodMonitorsKind   = "PodMonitor"
-	PodMonitorName    = "podmonitors"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PodMonitorsKind = "PodMonitor"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	PodMonitorName = "podmonitors"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	PodMonitorKindKey = "podmonitor"
 )
 

@@ -134,7 +134,7 @@ func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, s
 	b, err := json.Marshal(
 		&monitoringv1alpha1.PrometheusAgent{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       monitoringv1alpha1.PrometheusAgentsKind,
+				Kind:       monitoring.PrometheusAgentsKind,
 				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1alpha1.Version}.String(),
 			},
 			Spec: spec,

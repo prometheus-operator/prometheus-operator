@@ -149,7 +149,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 				{
 					Namespace: "foo",
 					Group:     "monitoring.coreos.com",
-					Resource:  monitoringv1.PrometheusRuleName,
+					Resource:  monitoring.PrometheusRuleName,
 				},
 			},
 
@@ -220,7 +220,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 				{
 					Namespace: "bar",
 					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.PrometheusRuleName,
+					Resource:  monitoring.PrometheusRuleName,
 				},
 			},
 
@@ -251,7 +251,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 						monitoringv1.ObjectReference{
 							Namespace: rule.RuleNamespace,
 							Group:     monitoring.GroupName,
-							Resource:  monitoringv1.PrometheusRuleName,
+							Resource:  monitoring.PrometheusRuleName,
 							Name:      rule.RuleName,
 						})
 				}
@@ -319,7 +319,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 				{
 					Namespace: "bar",
 					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.ServiceMonitorName,
+					Resource:  monitoring.ServiceMonitorName,
 					Name:      "exclude-me",
 				},
 			},
@@ -343,7 +343,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 				{
 					Namespace: "bar",
 					Group:     monitoring.GroupName,
-					Resource:  monitoringv1.ServiceMonitorName,
+					Resource:  monitoring.ServiceMonitorName,
 				},
 			},
 			Expected: expandServiceMonitor(&promServiceMonitorFlat{
@@ -383,7 +383,7 @@ func expandPromRule(r *promRuleFlat) monitoringv1.PrometheusRule {
 			Labels:    r.Labels,
 		},
 		TypeMeta: metav1.TypeMeta{
-			Kind:       monitoringv1.PrometheusRuleKind,
+			Kind:       monitoring.PrometheusRuleKind,
 			APIVersion: monitoringv1.SchemeGroupVersion.String(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
@@ -410,7 +410,7 @@ func expandServiceMonitor(r *promServiceMonitorFlat) monitoringv1.ServiceMonitor
 			Labels:    r.Labels,
 		},
 		TypeMeta: metav1.TypeMeta{
-			Kind:       monitoringv1.ServiceMonitorsKind,
+			Kind:       monitoring.ServiceMonitorsKind,
 			APIVersion: monitoringv1.SchemeGroupVersion.String(),
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{

@@ -20,8 +20,14 @@ import (
 )
 
 const (
-	ServiceMonitorsKind   = "ServiceMonitor"
-	ServiceMonitorName    = "servicemonitors"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ServiceMonitorsKind = "ServiceMonitor"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ServiceMonitorName = "servicemonitors"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	ServiceMonitorKindKey = "servicemonitor"
 )
 

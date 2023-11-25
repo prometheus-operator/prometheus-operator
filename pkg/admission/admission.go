@@ -31,6 +31,7 @@ import (
 
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	validationv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1beta1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -45,11 +46,11 @@ const (
 	errUnmarshalConfig           = "Cannot unmarhsal config from spec"
 
 	group                  = "monitoring.coreos.com"
-	prometheusRuleResource = monitoringv1.PrometheusRuleName
+	prometheusRuleResource = monitoring.PrometheusRuleName
 	prometheusRuleVersion  = monitoringv1.Version
 
-	alertManagerConfigResource = monitoringv1beta1.AlertmanagerConfigName
-	alertManagerConfigKind     = monitoringv1beta1.AlertmanagerConfigKind
+	alertManagerConfigResource = monitoring.AlertmanagerConfigName
+	alertManagerConfigKind     = monitoring.AlertmanagerConfigKind
 
 	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
 	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"

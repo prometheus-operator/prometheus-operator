@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -141,7 +142,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 		o.logger,
 		o,
 		o.metrics,
-		monitoringv1.ThanosRulerKind,
+		monitoring.ThanosRulerKind,
 		r,
 	)
 
@@ -171,7 +172,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 				options.LabelSelector = o.config.ThanosRulerSelector
 			},
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.ThanosRulerName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating thanosruler informers: %w", err)
@@ -191,7 +192,7 @@ func New(ctx context.Context, restConfig *rest.Config, conf operator.Config, log
 			resyncPeriod,
 			nil,
 		),
-		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
+		monitoringv1.SchemeGroupVersion.WithResource(monitoring.PrometheusRuleName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
@@ -404,7 +405,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule added")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
+		o.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.AddEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}
@@ -419,7 +420,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(cur)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule updated")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
+		o.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.UpdateEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}
@@ -430,7 +431,7 @@ func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
 		level.Debug(o.logger).Log("msg", "PrometheusRule deleted")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
+		o.metrics.TriggerByCounter(monitoring.PrometheusRuleKind, operator.DeleteEvent).Inc()
 
 		o.enqueueForRulesNamespace(meta.GetNamespace())
 	}

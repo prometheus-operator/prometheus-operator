@@ -111,7 +111,7 @@ func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
 
 		rule := monitoringv1.PrometheusRule{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       monitoringv1.PrometheusRuleKind,
+				Kind:       monitoring.PrometheusRuleKind,
 				APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
 			},
 

@@ -21,8 +21,14 @@ import (
 )
 
 const (
-	ProbesKind   = "Probe"
-	ProbeName    = "probes"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ProbesKind = "Probe"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ProbeName = "probes"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	ProbeKindKey = "probe"
 )
 

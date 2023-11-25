@@ -1536,7 +1536,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 		{
 			Namespace: "pod-monitor-ns",
 			Group:     monitoring.GroupName,
-			Resource:  monitoringv1.PodMonitorName,
+			Resource:  monitoring.PodMonitorName,
 			Name:      "testpodmonitor1",
 		},
 	}
@@ -1563,7 +1563,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
-					Kind:       monitoringv1.PodMonitorsKind,
+					Kind:       monitoring.PodMonitorsKind,
 				},
 				Spec: monitoringv1.PodMonitorSpec{
 					PodTargetLabels: []string{"example", "env"},
@@ -1681,7 +1681,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		{
 			Namespace: "service-monitor-ns",
 			Group:     monitoring.GroupName,
-			Resource:  monitoringv1.ServiceMonitorName,
+			Resource:  monitoring.ServiceMonitorName,
 			Name:      "", // exclude all servicemonitors in this namespace
 		},
 	}
@@ -1707,7 +1707,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
-					Kind:       monitoringv1.ServiceMonitorsKind,
+					Kind:       monitoring.ServiceMonitorsKind,
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Selector: metav1.LabelSelector{

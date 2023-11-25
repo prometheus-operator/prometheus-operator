@@ -348,11 +348,11 @@ func run() int {
 		kclient,
 		namespaces(cfg.Namespaces.AllowList).asSlice(),
 		monitoringv1alpha1.SchemeGroupVersion,
-		monitoringv1alpha1.ScrapeConfigName,
+		monitoring.ScrapeConfigName,
 		k8sutil.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
-			Resource: monitoringv1alpha1.ScrapeConfigName,
+			Resource: monitoring.ScrapeConfigName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
 	)
@@ -375,17 +375,17 @@ func run() int {
 		kclient,
 		namespaces(cfg.Namespaces.PrometheusAllowList).asSlice(),
 		monitoringv1alpha1.SchemeGroupVersion,
-		monitoringv1alpha1.PrometheusAgentName,
+		monitoring.PrometheusAgentName,
 		k8sutil.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
-			Resource: monitoringv1alpha1.PrometheusAgentName,
+			Resource: monitoring.PrometheusAgentName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
 		k8sutil.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
-			Resource: fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName),
+			Resource: fmt.Sprintf("%s/status", monitoring.PrometheusAgentName),
 			Verbs:    []string{"update"},
 		},
 	)

@@ -21,8 +21,14 @@ import (
 )
 
 const (
-	ThanosRulerKind    = "ThanosRuler"
-	ThanosRulerName    = "thanosrulers"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ThanosRulerKind = "ThanosRuler"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
+	ThanosRulerName = "thanosrulers"
+	// Deprecated: Use github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+	// TODO: Remove in v0.75
 	ThanosRulerKindKey = "thanosrulers"
 )
 

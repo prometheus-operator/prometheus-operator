@@ -19,26 +19,45 @@ import (
 )
 
 const (
-	PrometheusesKind = "Prometheus"
-	PrometheusName   = "prometheuses"
+	PrometheusesKind  = "Prometheus"
+	PrometheusName    = "prometheuses"
+	PrometheusKindKey = "prometheus"
 
-	AlertmanagersKind = "Alertmanager"
-	AlertmanagerName  = "alertmanagers"
+	AlertmanagersKind   = "Alertmanager"
+	AlertmanagerName    = "alertmanagers"
+	AlertManagerKindKey = "alertmanager"
 
-	ServiceMonitorsKind = "ServiceMonitor"
-	ServiceMonitorName  = "servicemonitors"
+	AlertmanagerConfigKind    = "AlertmanagerConfig"
+	AlertmanagerConfigName    = "alertmanagerconfigs"
+	AlertmanagerConfigKindKey = "alertmanagerconfig"
 
-	PodMonitorsKind = "PodMonitor"
-	PodMonitorName  = "podmonitors"
+	ServiceMonitorsKind   = "ServiceMonitor"
+	ServiceMonitorName    = "servicemonitors"
+	ServiceMonitorKindKey = "servicemonitor"
 
-	PrometheusRuleKind = "PrometheusRule"
-	PrometheusRuleName = "prometheusrules"
+	PodMonitorsKind   = "PodMonitor"
+	PodMonitorName    = "podmonitors"
+	PodMonitorKindKey = "podmonitor"
 
-	ProbesKind = "Probe"
-	ProbeName  = "probes"
+	PrometheusAgentsKind   = "PrometheusAgent"
+	PrometheusAgentName    = "prometheusagents"
+	PrometheusAgentKindKey = "prometheusagent"
 
-	ScrapeConfigsKind = "ScrapeConfig"
-	ScrapeConfigName  = "scrapeconfigs"
+	PrometheusRuleKind    = "PrometheusRule"
+	PrometheusRuleName    = "prometheusrules"
+	PrometheusRuleKindKey = "prometheusrule"
+
+	ProbesKind   = "Probe"
+	ProbeName    = "probes"
+	ProbeKindKey = "probe"
+
+	ScrapeConfigsKind   = "ScrapeConfig"
+	ScrapeConfigName    = "scrapeconfigs"
+	ScrapeConfigKindKey = "scrapeconfig"
+
+	ThanosRulerKind    = "ThanosRuler"
+	ThanosRulerName    = "thanosrulers"
+	ThanosRulerKindKey = "thanosrulers"
 )
 
 var resourceToKindMap = map[string]string{
