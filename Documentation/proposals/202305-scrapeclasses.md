@@ -33,7 +33,6 @@ to compose the scrape configurations in a Kubernetes way.
 ## Non-Goals
 
 - Provide a way for Prometheus administrators to enforce/override settings on scrape configurations.
-
 - Deprecation of the unsafe TLS settings in `ServiceMonitor`.
 
 ### Audience
