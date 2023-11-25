@@ -205,7 +205,6 @@ An open question is whether the resource would be cluster-scoped or namespace-sc
 Objections:
 
 1. Since the file paths are dependent on the volume mounts in the server, this approach may not achieve a meaningful decoupling.
-
 2. Extra complexity in defining a new CRD.
 
 ### Non-Safe Monitors
