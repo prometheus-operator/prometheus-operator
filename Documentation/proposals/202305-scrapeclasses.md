@@ -32,7 +32,7 @@ to compose the scrape configurations in a Kubernetes way.
 
 ## Non-Goals
 
-- Allow Prometheus owners to override the configuration defined in the monitoring resources (at least in the first iteration).
+- Provide a way for Prometheus administrators to enforce/override settings on scrape configurations.
 
 - Deprecation of the unsafe TLS settings in `ServiceMonitor`.
 
