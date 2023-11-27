@@ -5,7 +5,7 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
+- job_name: scrapeConfig/default/testscrapeconfig1
   ec2_sd_configs:
   - region: us-east-1
     role_arn: arn:aws:iam::123456789:role/prometheus-role

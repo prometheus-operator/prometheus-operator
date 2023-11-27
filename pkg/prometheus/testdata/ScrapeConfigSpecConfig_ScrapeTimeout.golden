@@ -5,5 +5,5 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs:
-- job_name: scrapeconfig/default/testscrapeconfig1
+- job_name: scrapeConfig/default/testscrapeconfig1
   scrape_timeout: 10s
