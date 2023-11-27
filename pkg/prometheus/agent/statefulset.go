@@ -41,7 +41,7 @@ const (
 func makeStatefulSet(
 	name string,
 	p monitoringv1.PrometheusInterface,
-	config *operator.Config,
+	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	inputHash string,
 	shard int32,
@@ -166,7 +166,7 @@ func makeStatefulSet(
 
 func makeStatefulSetSpec(
 	p monitoringv1.PrometheusInterface,
-	c *operator.Config,
+	c *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	tlsAssetSecrets []string,
@@ -426,7 +426,7 @@ func makeStatefulSetSpec(
 	}, nil
 }
 
-func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config operator.Config) *v1.Service {
+func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config prompkg.Config) *v1.Service {
 	p = p.DeepCopy()
 
 	if p.Spec.PortName == "" {

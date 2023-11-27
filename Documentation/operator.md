@@ -21,8 +21,8 @@ Usage of ./operator:
     	Alertmanager default base image (path without tag/version) (default "quay.io/prometheus/alertmanager")
   -alertmanager-instance-namespaces value
     	Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.
-  -alertmanager-instance-selector string
-    	Label selector to filter AlertManager Custom Resources to watch.
+  -alertmanager-instance-selector value
+    	Label selector to filter Alertmanager Custom Resources to watch.
   -annotations value
     	Annotations to be add to all resources created by the operator
   -apiserver string
@@ -49,7 +49,7 @@ Usage of ./operator:
     	Enable liveness and readiness for the config-reloader container. Default: false
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
-  -kubelet-selector string
+  -kubelet-selector value
     	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
@@ -69,9 +69,9 @@ Usage of ./operator:
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
     	Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
-  -prometheus-instance-selector string
+  -prometheus-instance-selector value
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
-  -secret-field-selector string
+  -secret-field-selector value
     	Field selector to filter Secrets to watch
   -short-version
     	Print just the version number.
@@ -79,26 +79,26 @@ Usage of ./operator:
     	Thanos default base image (path without tag/version) (default "quay.io/thanos/thanos")
   -thanos-ruler-instance-namespaces value
     	Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.
-  -thanos-ruler-instance-selector string
+  -thanos-ruler-instance-selector value
     	Label selector to filter ThanosRuler Custom Resources to watch.
   -tls-insecure
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
   -version
     	Prints current version.
   -web.cert-file string
-    	Cert file to be used for operator web server endpoints. (default "/etc/tls/private/tls.crt")
+    	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
-    	Client CA certificate file to be used for operator web server endpoints. (default "/etc/tls/private/tls-ca.crt")
+    	Client CA certificate file to be used for the web server. (default "/etc/tls/private/tls-ca.crt")
   -web.enable-http2
     	Enable HTTP2 connections.
   -web.enable-tls
-    	Activate prometheus operator web server TLS.   This is useful for example when using the rule validation webhook.
+    	Enable TLS for the web server.
   -web.key-file string
-    	Private key matching the cert file to be used for operator web server endpoints. (default "/etc/tls/private/tls.key")
+    	Private key matching the cert file to be used for the web server. (default "/etc/tls/private/tls.key")
   -web.listen-address string
     	Address on which to expose metrics and web interface. (default ":8080")
-  -web.tls-cipher-suites string
-    	Comma-separated list of cipher suites for the server. Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).If omitted, the default Go cipher suites will be used.Note that TLS 1.3 ciphersuites are not configurable.
+  -web.tls-cipher-suites value
+    	Comma-separated list of cipher suites for the server. Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).If omitted, the default Go cipher suites will be used. Note that TLS 1.3 ciphersuites are not configurable.
   -web.tls-min-version string
     	Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants. (default "VersionTLS13")
   -web.tls-reload-interval duration

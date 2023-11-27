@@ -119,7 +119,7 @@ func compress(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config operator.Config, data []byte) (*v1.Secret, error) {
+func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, data []byte) (*v1.Secret, error) {
 	promConfig, err := compress(data)
 	if err != nil {
 		return nil, err

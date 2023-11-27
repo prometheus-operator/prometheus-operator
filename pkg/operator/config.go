@@ -16,48 +16,56 @@ package operator
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/rest"
-
-	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 )
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	// Kubernetes client configuration.
-	Host              string
-	TLSInsecure       bool
-	TLSConfig         rest.TLSClientConfig
-	ImpersonateUser   string
+	// Version reported by the Kubernetes API.
 	KubernetesVersion version.Info
 
-	ClusterDomain                string
-	KubeletObject                string
-	KubeletSelector              string
-	ListenAddress                string
-	ServerTLSConfig              server.TLSServerConfig
-	ReloaderConfig               ContainerConfig
+	// Parameters for the kubelet endpoint controller.
+	KubeletObject   string
+	KubeletSelector LabelSelector
+
+	// Cluster domain for Kubernetes services managed by the operator.
+	ClusterDomain string
+
+	// Global configuration for the reloader config sidecar.
+	ReloaderConfig ContainerConfig
+
+	// Base container images for operands.
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
-	Namespaces                   Namespaces
-	Annotations                  Map
-	Labels                       Map
-	LocalHost                    string
-	LogLevel                     string
-	LogFormat                    string
-	PromSelector                 string
-	AlertManagerSelector         string
-	ThanosRulerSelector          string
-	SecretListWatchSelector      string
+
+	// Allow and deny lists for namespace watchers.
+	Namespaces Namespaces
+
+	// Metadata applied to all resources managed by the operator.
+	Annotations Map
+	Labels      Map
+
+	// Custom name to use for "localhost".
+	LocalHost string
+
+	// Label and field selectors for resource watchers.
+	PromSelector            LabelSelector
+	AlertmanagerSelector    LabelSelector
+	ThanosRulerSelector     LabelSelector
+	SecretListWatchSelector FieldSelector
 }
 
+// DefaultConfig returns a default operator configuration.
 func DefaultConfig(cpu, memory string) Config {
 	return Config{
 		ReloaderConfig: ContainerConfig{
@@ -65,6 +73,14 @@ func DefaultConfig(cpu, memory string) Config {
 			CPULimits:      Quantity{q: resource.MustParse(cpu)},
 			MemoryRequests: Quantity{q: resource.MustParse(memory)},
 			MemoryLimits:   Quantity{q: resource.MustParse(memory)},
+		},
+		Namespaces: Namespaces{
+			AllowList:                   StringSet{},
+			DenyList:                    StringSet{},
+			PrometheusAllowList:         StringSet{},
+			AlertmanagerAllowList:       StringSet{},
+			AlertmanagerConfigAllowList: StringSet{},
+			ThanosRulerAllowList:        StringSet{},
 		},
 	}
 }
@@ -196,8 +212,126 @@ func (m *Map) SortedKeys() []string {
 }
 
 type Namespaces struct {
-	// Allow list/deny list for common custom resources.
-	AllowList, DenyList map[string]struct{}
-	// Allow list for prometheus/alertmanager custom resources.
-	PrometheusAllowList, AlertmanagerAllowList, AlertmanagerConfigAllowList, ThanosRulerAllowList map[string]struct{}
+	// Allow list for common custom resources.
+	AllowList StringSet
+	// Deny list for common custom resources.
+	DenyList StringSet
+	// Allow list for Prometheus custom resources.
+	PrometheusAllowList StringSet
+	// Allow list for Alertmanager custom resources.
+	AlertmanagerAllowList StringSet
+	// Allow list for AlertmanagerConfig custom resources.
+	AlertmanagerConfigAllowList StringSet
+	// Allow list for ThanosRuler custom resources.
+	ThanosRulerAllowList StringSet
+}
+
+func (n *Namespaces) String() string {
+	return fmt.Sprintf("{allow_list=%q,deny_list=%q,prometheus_allow_list=%q,alertmanager_allow_list=%q,alertmanagerconfig_allow_list=%q,thanosruler_allow_list=%q}",
+		n.AllowList,
+		n.DenyList,
+		n.PrometheusAllowList,
+		n.AlertmanagerAllowList,
+		n.AlertmanagerConfigAllowList,
+		n.ThanosRulerAllowList,
+	)
+}
+
+func (n *Namespaces) Finalize() {
+	if len(n.AllowList) == 0 {
+		n.AllowList.Insert(v1.NamespaceAll)
+	}
+
+	if len(n.PrometheusAllowList) == 0 {
+		n.PrometheusAllowList = n.AllowList
+	}
+
+	if len(n.AlertmanagerAllowList) == 0 {
+		n.AlertmanagerAllowList = n.AllowList
+	}
+
+	if len(n.AlertmanagerConfigAllowList) == 0 {
+		n.AlertmanagerConfigAllowList = n.AllowList
+	}
+
+	if len(n.ThanosRulerAllowList) == 0 {
+		n.ThanosRulerAllowList = n.AllowList
+	}
+}
+
+type LabelSelector string
+
+// String implements the flag.Value interface
+func (ls *LabelSelector) String() string {
+	if ls == nil {
+		return ""
+	}
+
+	return string(*ls)
+}
+
+// Set implements the flag.Value interface.
+func (ls *LabelSelector) Set(value string) error {
+	if _, err := labels.Parse(value); err != nil {
+		return err
+	}
+
+	*ls = LabelSelector(value)
+	return nil
+}
+
+type FieldSelector string
+
+// String implements the flag.Value interface
+func (fs *FieldSelector) String() string {
+	if fs == nil {
+		return ""
+	}
+
+	return string(*fs)
+}
+
+// Set implements the flag.Value interface.
+func (fs *FieldSelector) Set(value string) error {
+	if _, err := fields.ParseSelector(value); err != nil {
+		return err
+	}
+
+	*fs = FieldSelector(value)
+	return nil
+}
+
+// StringSet represents a list of comma-separated strings.
+type StringSet map[string]struct{}
+
+// Set implements the flag.Value interface.
+func (s StringSet) Set(value string) error {
+	if s == nil {
+		return fmt.Errorf("expected StringSet variable to be initialized")
+	}
+
+	for _, v := range strings.Split(value, ",") {
+		s[v] = struct{}{}
+	}
+
+	return nil
+}
+
+// String implements the flag.Value interface.
+func (s StringSet) String() string {
+	return strings.Join(s.Slice(), ",")
+}
+
+func (s StringSet) Insert(value string) {
+	s[value] = struct{}{}
+}
+
+func (s StringSet) Slice() []string {
+	ss := make([]string, 0, len(s))
+	for k := range s {
+		ss = append(ss, k)
+	}
+
+	slices.Sort(ss)
+	return ss
 }

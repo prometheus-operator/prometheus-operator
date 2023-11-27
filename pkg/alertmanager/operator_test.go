@@ -1239,7 +1239,11 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				ssarClient: &alwaysAllowed{},
 				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
 				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
-				config: Config{
+			}
+
+			err := o.bootstrap(
+				context.Background(),
+				operator.Config{
 					Namespaces: operator.Namespaces{
 						AlertmanagerConfigAllowList: map[string]struct{}{
 							v1.NamespaceAll: {},
@@ -1249,9 +1253,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 						},
 					},
 				},
-			}
-
-			err := o.bootstrap(context.Background())
+			)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

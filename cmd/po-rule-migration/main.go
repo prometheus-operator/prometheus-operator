@@ -34,11 +34,14 @@ import (
 )
 
 func main() {
-	versionutil.RegisterFlags()
+	fs := flag.CommandLine
+	versionutil.RegisterFlags(fs)
 
 	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule ConfigMap")
 	var ruleCRDSDestination = flag.String("rule-crds-destination", "", "destination new crds should be created in")
-	flag.Parse()
+
+	// No need to check for errors because Parse would exit on error.
+	_ = fs.Parse(os.Args[1:])
 
 	if versionutil.ShouldPrintVersion() {
 		versionutil.Print(os.Stdout, "po-rule-migration")

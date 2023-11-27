@@ -35,7 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -68,8 +67,20 @@ var (
 	}
 )
 
-// Operator manages life cycle of Alertmanager deployments and
-// monitoring configurations.
+// Config defines the operator's parameters for the Alertmanager controller.
+// Whenever the value of one of these parameters is changed, it triggers an
+// update of the managed statefulsets.
+type Config struct {
+	LocalHost                    string
+	ClusterDomain                string
+	ReloaderConfig               operator.ContainerConfig
+	AlertmanagerDefaultBaseImage string
+	Annotations                  operator.Map
+	Labels                       operator.Map
+}
+
+// Operator manages the lifecycle of the Alertmanager statefulsets and their
+// configurations.
 type Operator struct {
 	kclient    kubernetes.Interface
 	mdClient   metadata.Interface
@@ -95,19 +106,6 @@ type Operator struct {
 	canReadStorageClass bool
 
 	config Config
-}
-
-type Config struct {
-	KubernetesVersion            version.Info
-	LocalHost                    string
-	ClusterDomain                string
-	ReloaderConfig               operator.ContainerConfig
-	AlertmanagerDefaultBaseImage string
-	Namespaces                   operator.Namespaces
-	Annotations                  operator.Map
-	Labels                       operator.Map
-	AlertManagerSelector         string
-	SecretListWatchSelector      string
 }
 
 // New creates a new controller.
@@ -142,17 +140,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:             operator.NewMetrics(r),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
+
 		config: Config{
-			KubernetesVersion:            c.KubernetesVersion,
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
 			ReloaderConfig:               c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
-			Namespaces:                   c.Namespaces,
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
-			AlertManagerSelector:         c.AlertManagerSelector,
-			SecretListWatchSelector:      c.SecretListWatchSelector,
 		},
 	}
 
@@ -164,30 +159,25 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		r,
 	)
 
-	if err := o.bootstrap(ctx); err != nil {
+	if err := o.bootstrap(ctx, c); err != nil {
 		return nil, err
 	}
 
 	return o, nil
 }
 
-func (c *Operator) bootstrap(ctx context.Context) error {
-	var err error
-
-	if _, err := labels.Parse(c.config.AlertManagerSelector); err != nil {
-		return fmt.Errorf("can not parse alertmanager selector value: %w", err)
-	}
-
+func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error {
 	c.metrics.MustRegister(c.reconciliations)
 
+	var err error
 	c.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AlertmanagerAllowList,
-			c.config.Namespaces.DenyList,
+			config.Namespaces.AlertmanagerAllowList,
+			config.Namespaces.DenyList,
 			c.mclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = c.config.AlertManagerSelector
+				options.LabelSelector = config.AlertmanagerSelector.String()
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName),
@@ -204,8 +194,8 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AlertmanagerConfigAllowList,
-			c.config.Namespaces.DenyList,
+			config.Namespaces.AlertmanagerConfigAllowList,
+			config.Namespaces.DenyList,
 			c.mclient,
 			resyncPeriod,
 			nil,
@@ -216,19 +206,14 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return fmt.Errorf("error creating alertmanagerconfig informers: %w", err)
 	}
 
-	secretListWatchSelector, err := fields.ParseSelector(c.config.SecretListWatchSelector)
-	if err != nil {
-		return fmt.Errorf("can not parse secrets selector value: %w", err)
-	}
-
 	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.config.Namespaces.AlertmanagerConfigAllowList,
-			c.config.Namespaces.DenyList,
+			config.Namespaces.AlertmanagerConfigAllowList,
+			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.FieldSelector = secretListWatchSelector.String()
+				options.FieldSelector = config.SecretListWatchSelector.String()
 			},
 		),
 		v1.SchemeGroupVersion.WithResource("secrets"),
@@ -240,8 +225,8 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 
 	c.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AlertmanagerAllowList,
-			c.config.Namespaces.DenyList,
+			config.Namespaces.AlertmanagerAllowList,
+			config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
 			nil,
@@ -256,11 +241,11 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
 			o.logger,
-			o.config.KubernetesVersion,
+			config.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.ssarClient,
 			allowList,
-			o.config.Namespaces.DenyList,
+			config.Namespaces.DenyList,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create namespace lister/watcher: %w", err)
@@ -274,15 +259,15 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 			cache.Indexers{},
 		), nil
 	}
-	c.nsAlrtCfgInf, err = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerConfigAllowList)
+	c.nsAlrtCfgInf, err = newNamespaceInformer(c, config.Namespaces.AlertmanagerConfigAllowList)
 	if err != nil {
 		return err
 	}
 
-	if listwatch.IdenticalNamespaces(c.config.Namespaces.AlertmanagerConfigAllowList, c.config.Namespaces.AlertmanagerAllowList) {
+	if listwatch.IdenticalNamespaces(config.Namespaces.AlertmanagerConfigAllowList, config.Namespaces.AlertmanagerAllowList) {
 		c.nsAlrtInf = c.nsAlrtCfgInf
 	} else {
-		c.nsAlrtInf, err = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
+		c.nsAlrtInf, err = newNamespaceInformer(c, config.Namespaces.AlertmanagerAllowList)
 		if err != nil {
 			return err
 		}
@@ -733,7 +718,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(logger).Log("msg", "recreating AlertManager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		level.Info(logger).Log("msg", "recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
@@ -1171,14 +1156,14 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 
 	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
-			"'authorization' config set in 'httpConfig' but supported in AlertManager >= 0.22.0 only - current %s",
+			"'authorization' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
 			amVersion.String(),
 		)
 	}
 
 	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
-			"'oauth2' config set in 'httpConfig' but supported in AlertManager >= 0.22.0 only - current %s",
+			"'oauth2' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
 			amVersion.String(),
 		)
 	}
@@ -1329,7 +1314,7 @@ func checkOpsGenieResponder(opsgenieResponder []monitoringv1alpha1.OpsGenieConfi
 	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
 	for _, resp := range opsgenieResponder {
 		if resp.Type == "teams" && lessThanV0_24 {
-			return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in AlertManager >= 0.24.0 only")
+			return fmt.Errorf("'teams' set in 'opsgenieResponder' but supported in Alertmanager >= 0.24.0 only")
 		}
 	}
 	return nil
