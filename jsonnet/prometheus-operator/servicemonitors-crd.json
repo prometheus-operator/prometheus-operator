@@ -628,7 +628,7 @@
                           "type": "object"
                         },
                         "trackTimestampsStaleness": {
-                          "description": "`trackTimestampsStaleness` defines whether Prometheus tracks staleness of the metrics that have an explicit timestamp present in scraped data. \n It requires Prometheus >= v2.48.0.",
+                          "description": "`trackTimestampsStaleness` defines whether Prometheus tracks staleness of the metrics that have an explicit timestamp present in scraped data. Has no effect if `honorTimestamps` is false. \n It requires Prometheus >= v2.48.0.",
                           "type": "boolean"
                         }
                       },

@@ -440,6 +440,7 @@ type Endpoint struct {
 
 	// `trackTimestampsStaleness` defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
+	// Has no effect if `honorTimestamps` is false.
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
