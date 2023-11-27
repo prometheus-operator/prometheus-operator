@@ -99,7 +99,7 @@ spec:
     path: /metrics
 ```
 
-If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use a merge strategy to combine the `tlsConfig` with the `tlsConfig` of the scrape class, but the `tlsConfig` in the `Monitor` resource takes precedence.
+If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use a merge strategy to combine the `tlsConfig` fields from the PodMonitor object with the `tlsConfig` fields of the scrape class, the `tlsConfig` fields in the `PodMonitor` resource take precedence.
 
 ### Probe Resource
 
