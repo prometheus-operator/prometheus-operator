@@ -2275,7 +2275,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 ) (yaml.MapSlice, error) {
-	jobName := fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name)
+	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
