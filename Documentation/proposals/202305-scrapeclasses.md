@@ -21,8 +21,8 @@ Another motivation is to improve feature parity amongst the monitor resources. T
 ### Pitfalls of the current solution
 
 The only known solution for use cases where you'd need to use unsafe TLS settings is to use `additionalScrapeConfig`.
-The downside is obviously the loss of a great feature of the Prometheus Operator. The monitor resources make it possible
-to compose the scrape configurations in a Kubernetes way.
+
+The downside is the loss of integration provided by Prometheus Operator through monitor resources to compose the scrape configurations in a Kubernetes way.
 
 ## Goals
 
@@ -64,6 +64,7 @@ kind: Prometheus
 spec:
   # define scrape classes for use by the monitors
   # one class may be designated as the default class
+  # when a resource defines several default scrape classes, it should fail the reconciliation.
   scrapeClasses:
     - name: istio-mtls
       default: true
@@ -78,9 +79,9 @@ spec:
     - name: istio-certs
       mountPath: "/etc/istio-certs/"
   volumes:
-    - name: istio-certs
-      secret:
-        secretName: istio-certs
+  - emptyDir:
+      medium: Memory
+    name: istio-certs
 ```
 
 Any object references in the scrape class definition are assumed to refer to objects in the namespace of the `Prometheus` object.
