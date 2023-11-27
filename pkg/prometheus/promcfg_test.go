@@ -4962,6 +4962,53 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_Empty.golden",
 		},
 		{
+			name: "shard_config",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.Shards = ptr.To(int32(2))
+			},
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				StaticConfigs: []monitoringv1alpha1.StaticConfig{
+					{
+						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Labels: map[monitoringv1.LabelName]string{
+							"label1": "value1",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_Sharded.golden",
+		},
+		{
+			name: "already_sharded_config",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.Shards = ptr.To(int32(2))
+			},
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				StaticConfigs: []monitoringv1alpha1.StaticConfig{
+					{
+						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Labels: map[monitoringv1.LabelName]string{
+							"label1": "value1_sharded",
+						},
+					},
+				},
+				RelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						SourceLabels: []monitoringv1.LabelName{"__address__"},
+						TargetLabel:  "__tmp_hash",
+						Modulus:      999,
+						Action:       "hashmod",
+					},
+					{
+						SourceLabels: []monitoringv1.LabelName{"__tmp_hash"},
+						Regex:        "$(SHARD)",
+						Action:       "keep",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_Already_Sharded.golden",
+		},
+		{
 			name: "static_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
