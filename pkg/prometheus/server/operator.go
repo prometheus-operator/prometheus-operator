@@ -82,15 +82,6 @@ type Operator struct {
 	reconciliations *operator.ReconciliationTracker
 	statusReporter  prompkg.StatusReporter
 
-	nodeAddressLookupErrors prometheus.Counter
-	nodeEndpointSyncs       prometheus.Counter
-	nodeEndpointSyncErrors  prometheus.Counter
-
-	kubeletObjectName      string
-	kubeletObjectNamespace string
-	kubeletSelector        string
-	kubeletSyncEnabled     bool
-
 	endpointSliceSupported bool
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
@@ -113,20 +104,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
-	kubeletObjectName := ""
-	kubeletObjectNamespace := ""
-	kubeletSyncEnabled := false
-
-	if c.KubeletObject != "" {
-		parts := strings.Split(c.KubeletObject, "/")
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("malformatted kubelet object string, must be in format \"namespace/name\"")
-		}
-		kubeletObjectNamespace = parts[0]
-		kubeletObjectName = parts[1]
-		kubeletSyncEnabled = true
-	}
-
 	// All the metrics exposed by the controller get the controller="prometheus" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
 
@@ -136,11 +113,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mclient:  mclient,
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
-
-		kubeletObjectName:      kubeletObjectName,
-		kubeletObjectNamespace: kubeletObjectNamespace,
-		kubeletSyncEnabled:     kubeletSyncEnabled,
-		kubeletSelector:        c.KubeletSelector.String(),
 
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
@@ -152,27 +124,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		},
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
-		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_node_address_lookup_errors_total",
-			Help: "Number of times a node IP address could not be determined",
-		}),
-		nodeEndpointSyncs: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_node_syncs_total",
-			Help: "Number of node endpoints synchronisations",
-		}),
-		nodeEndpointSyncErrors: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_node_syncs_failed_total",
-			Help: "Number of node endpoints synchronisation failures",
-		}),
+
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
 	}
-	o.metrics.MustRegister(
-		o.nodeAddressLookupErrors,
-		o.nodeEndpointSyncs,
-		o.nodeEndpointSyncErrors,
-		o.reconciliations,
-	)
+	o.metrics.MustRegister(o.reconciliations)
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
@@ -509,10 +465,6 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	c.addHandlers()
 
-	if c.kubeletSyncEnabled {
-		go c.reconcileNodeEndpoints(ctx)
-	}
-
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
 	go operator.StatusPoller(ctx, c)
 
@@ -534,169 +486,6 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
-}
-
-func (c *Operator) reconcileNodeEndpoints(ctx context.Context) {
-	c.syncNodeEndpointsWithLogError(ctx)
-	ticker := time.NewTicker(3 * time.Minute)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			c.syncNodeEndpointsWithLogError(ctx)
-		}
-	}
-}
-
-// nodeAddress returns the provided node's address, based on the priority:
-// 1. NodeInternalIP
-// 2. NodeExternalIP
-//
-// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
-func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
-	m := map[v1.NodeAddressType][]string{}
-	for _, a := range node.Status.Addresses {
-		m[a.Type] = append(m[a.Type], a.Address)
-	}
-
-	if addresses, ok := m[v1.NodeInternalIP]; ok {
-		return addresses[0], m, nil
-	}
-	if addresses, ok := m[v1.NodeExternalIP]; ok {
-		return addresses[0], m, nil
-	}
-	return "", m, fmt.Errorf("host address unknown")
-}
-
-func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
-	addresses := make([]v1.EndpointAddress, 0)
-	errs := make([]error, 0)
-
-	for _, n := range nodes.Items {
-		address, _, err := nodeAddress(n)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
-			continue
-		}
-		addresses = append(addresses, v1.EndpointAddress{
-			IP: address,
-			TargetRef: &v1.ObjectReference{
-				Kind:       "Node",
-				Name:       n.Name,
-				UID:        n.UID,
-				APIVersion: n.APIVersion,
-			},
-		})
-	}
-
-	return addresses, errs
-}
-
-func (c *Operator) syncNodeEndpointsWithLogError(ctx context.Context) {
-	level.Debug(c.logger).Log("msg", "Syncing nodes into Endpoints object")
-
-	c.nodeEndpointSyncs.Inc()
-	err := c.syncNodeEndpoints(ctx)
-	if err != nil {
-		c.nodeEndpointSyncErrors.Inc()
-		level.Error(c.logger).Log("msg", "Syncing nodes into Endpoints object failed", "err", err)
-	}
-}
-
-func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
-	logger := log.With(c.logger, "operation", "syncNodeEndpoints")
-	eps := &v1.Endpoints{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        c.kubeletObjectName,
-			Annotations: c.config.Annotations,
-			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			}),
-		},
-		Subsets: []v1.EndpointSubset{
-			{
-				Ports: []v1.EndpointPort{
-					{
-						Name: "https-metrics",
-						Port: 10250,
-					},
-					{
-						Name: "http-metrics",
-						Port: 10255,
-					},
-					{
-						Name: "cadvisor",
-						Port: 4194,
-					},
-				},
-			},
-		},
-	}
-
-	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{LabelSelector: c.kubeletSelector})
-	if err != nil {
-		return fmt.Errorf("listing nodes failed: %w", err)
-	}
-
-	level.Debug(logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
-
-	addresses, errs := getNodeAddresses(nodes)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			level.Warn(logger).Log("err", err)
-		}
-		c.nodeAddressLookupErrors.Add(float64(len(errs)))
-	}
-	level.Debug(logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
-
-	eps.Subsets[0].Addresses = addresses
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: c.kubeletObjectName,
-			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			}),
-		},
-		Spec: v1.ServiceSpec{
-			Type:      v1.ServiceTypeClusterIP,
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name: "https-metrics",
-					Port: 10250,
-				},
-				{
-					Name: "http-metrics",
-					Port: 10255,
-				},
-				{
-					Name: "cadvisor",
-					Port: 4194,
-				},
-			},
-		},
-	}
-
-	level.Debug(logger).Log("msg", "Updating Kubernetes service", "service", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
-	err = k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
-	if err != nil {
-		return fmt.Errorf("synchronizing kubelet service object failed: %w", err)
-	}
-
-	level.Debug(logger).Log("msg", "Updating Kubernetes endpoint", "endpoint", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
-	err = k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
-	if err != nil {
-		return fmt.Errorf("synchronizing kubelet endpoints object failed: %w", err)
-	}
-
-	return nil
 }
 
 // TODO: Don't enqueue just for the namespace

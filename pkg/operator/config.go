@@ -33,10 +33,6 @@ type Config struct {
 	// Version reported by the Kubernetes API.
 	KubernetesVersion version.Info
 
-	// Parameters for the kubelet endpoint controller.
-	KubeletObject   string
-	KubeletSelector LabelSelector
-
 	// Cluster domain for Kubernetes services managed by the operator.
 	ClusterDomain string
 

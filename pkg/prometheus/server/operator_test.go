@@ -15,10 +15,8 @@
 package prometheus
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -237,89 +235,6 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			if p1Hash == p2Hash {
 				t.Fatal("expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
-			}
-		})
-	}
-}
-
-func TestGetNodeAddresses(t *testing.T) {
-	cases := []struct {
-		name              string
-		nodes             *v1.NodeList
-		expectedAddresses []string
-		expectedErrors    int
-	}{
-		{
-			name: "simple",
-			nodes: &v1.NodeList{
-				Items: []v1.Node{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "node-0",
-						},
-						Status: v1.NodeStatus{
-							Addresses: []v1.NodeAddress{
-								{
-									Address: "10.0.0.1",
-									Type:    v1.NodeInternalIP,
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedAddresses: []string{"10.0.0.1"},
-			expectedErrors:    0,
-		},
-		{
-			// Replicates #1815
-			name: "missing ip on one node",
-			nodes: &v1.NodeList{
-				Items: []v1.Node{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "node-0",
-						},
-						Status: v1.NodeStatus{
-							Addresses: []v1.NodeAddress{
-								{
-									Address: "node-0",
-									Type:    v1.NodeHostName,
-								},
-							},
-						},
-					},
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "node-1",
-						},
-						Status: v1.NodeStatus{
-							Addresses: []v1.NodeAddress{
-								{
-									Address: "10.0.0.1",
-									Type:    v1.NodeInternalIP,
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedAddresses: []string{"10.0.0.1"},
-			expectedErrors:    1,
-		},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			addrs, errs := getNodeAddresses(c.nodes)
-			if len(errs) != c.expectedErrors {
-				t.Errorf("Expected %d errors, got %d. Errors: %v", c.expectedErrors, len(errs), errs)
-			}
-			ips := make([]string, 0)
-			for _, addr := range addrs {
-				ips = append(ips, addr.IP)
-			}
-			if !reflect.DeepEqual(ips, c.expectedAddresses) {
-				t.Error(pretty.Compare(ips, c.expectedAddresses))
 			}
 		})
 	}
