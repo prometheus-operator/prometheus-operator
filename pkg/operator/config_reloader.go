@@ -50,13 +50,21 @@ type ConfigReloader struct {
 	logFormat          string
 	logLevel           string
 	reloadURL          url.URL
+	runtimeInfoURL     url.URL
 	runOnce            bool
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
+	useSignal          bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
+
+func ReloaderUseSignal() ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.useSignal = true
+	}
+}
 
 // ReloaderRunOnce sets the runOnce option for the config-reloader container
 func ReloaderRunOnce() ReloaderOption {
@@ -101,9 +109,16 @@ func ReloaderConfig(rc ContainerConfig) ReloaderOption {
 }
 
 // ReloaderURL sets the reloaderURL option for the config-reloader container
-func ReloaderURL(reloadURL url.URL) ReloaderOption {
+func ReloaderURL(u url.URL) ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.reloadURL = reloadURL
+		c.reloadURL = u
+	}
+}
+
+// RuntimeInfoURL sets the runtimeInfoURL option for the config-reloader container
+func RuntimeInfoURL(u url.URL) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.runtimeInfoURL = u
 	}
 }
 
@@ -200,8 +215,17 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		args = append(args, fmt.Sprintf("--web-config-file=%s", configReloader.webConfigFile))
 	}
 
-	if len(configReloader.reloadURL.String()) > 0 {
-		args = append(args, fmt.Sprintf("--reload-url=%s", configReloader.reloadURL.String()))
+	if configReloader.useSignal {
+		args = append(args, "--reload-method=signal")
+		if len(configReloader.runtimeInfoURL.String()) > 0 {
+			args = append(args, fmt.Sprintf("--runtimeinfo-url=%s", configReloader.runtimeInfoURL.String()))
+		}
+	} else {
+		// Don't set the --reload-method argument in case the operator is
+		// configured with an older version of the config reloader.
+		if len(configReloader.reloadURL.String()) > 0 {
+			args = append(args, fmt.Sprintf("--reload-url=%s", configReloader.reloadURL.String()))
+		}
 	}
 
 	if len(configReloader.configFile) > 0 {

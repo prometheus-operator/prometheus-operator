@@ -719,6 +719,14 @@ func (b *PrometheusSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) 
 	return b
 }
 
+// WithReloadStrategy sets the ReloadStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ReloadStrategy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithReloadStrategy(value monitoringv1.ReloadStrategyType) *PrometheusSpecApplyConfiguration {
+	b.ReloadStrategy = &value
+	return b
+}
+
 // WithBaseImage sets the BaseImage field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BaseImage field is set to the value of the last call.

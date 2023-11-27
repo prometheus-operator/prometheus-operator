@@ -204,12 +204,15 @@ func queryLogFilePath(queryLogFile string) string {
 }
 
 // BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.
-func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator, webRoutePrefix string) []monitoringv1.Argument {
+func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) []monitoringv1.Argument {
 	promArgs := []monitoringv1.Argument{
 		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
 		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
 		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
-		{Name: "web.enable-lifecycle"},
+	}
+
+	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-lifecycle"})
 	}
 
 	if cpf.Web != nil {
@@ -234,7 +237,7 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
 	}
 
-	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: webRoutePrefix})
+	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
 
 	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
@@ -375,8 +378,8 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 	return volName
 }
 
-func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator, webRoutePrefix string) v1.ProbeHandler {
-	probePath = path.Clean(webRoutePrefix + probePath)
+func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator) v1.ProbeHandler {
+	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
 	handler := v1.ProbeHandler{}
 	if cpf.ListenLocal {
 		probeURL := url.URL{
@@ -426,4 +429,70 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 	}
 
 	return podAnnotations, podLabels
+}
+
+func BuildConfigReloader(
+	p monitoringv1.PrometheusInterface,
+	c *Config,
+	initContainer bool,
+	mounts []v1.VolumeMount,
+	watchedDirectories []string,
+	opts ...operator.ReloaderOption,
+) v1.Container {
+	cpf := p.GetCommonPrometheusFields()
+
+	reloaderOptions := []operator.ReloaderOption{
+		operator.ReloaderConfig(c.ReloaderConfig),
+		operator.LogFormat(cpf.LogFormat),
+		operator.LogLevel(cpf.LogLevel),
+		operator.VolumeMounts(mounts),
+		operator.ConfigFile(path.Join(ConfDir, ConfigFilename)),
+		operator.ConfigEnvsubstFile(path.Join(ConfOutDir, ConfigEnvsubstFilename)),
+		operator.WatchedDirectories(watchedDirectories),
+		operator.ImagePullPolicy(cpf.ImagePullPolicy),
+	}
+	reloaderOptions = append(reloaderOptions, opts...)
+
+	name := "config-reloader"
+	if initContainer {
+		name = "init-config-reloader"
+		reloaderOptions = append(reloaderOptions, operator.ReloaderRunOnce())
+		return operator.CreateConfigReloader(name, reloaderOptions...)
+	}
+
+	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.ProcessSignalReloadStrategyType {
+		reloaderOptions = append(reloaderOptions,
+			operator.ReloaderUseSignal(),
+		)
+		reloaderOptions = append(reloaderOptions,
+			operator.RuntimeInfoURL(url.URL{
+				Scheme: cpf.PrometheusURIScheme(),
+				Host:   c.LocalHost + ":9090",
+				Path:   path.Clean(cpf.WebRoutePrefix() + "/api/v1/status/runtimeinfo"),
+			}),
+		)
+	} else {
+		reloaderOptions = append(reloaderOptions,
+			operator.ListenLocal(cpf.ListenLocal),
+			operator.LocalHost(c.LocalHost),
+		)
+		reloaderOptions = append(reloaderOptions,
+			operator.ReloaderURL(url.URL{
+				Scheme: cpf.PrometheusURIScheme(),
+				Host:   c.LocalHost + ":9090",
+				Path:   path.Clean(cpf.WebRoutePrefix() + "/-/reload"),
+			}),
+		)
+	}
+
+	return operator.CreateConfigReloader(name, reloaderOptions...)
+}
+
+func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
+	return ptr.To(
+		ptr.Deref(
+			p.GetCommonPrometheusFields().ReloadStrategy,
+			monitoringv1.HTTPReloadStrategyType,
+		) == monitoringv1.ProcessSignalReloadStrategyType,
+	)
 }

@@ -2547,6 +2547,21 @@ that will be kept in memory. 0 means no limit.</p>
 </tr>
 <tr>
 <td>
+<code>reloadStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ReloadStrategyType">
+ReloadStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the strategy used to reload the Prometheus configuration.
+If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -6892,6 +6907,21 @@ that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>reloadStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ReloadStrategyType">
+ReloadStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the strategy used to reload the Prometheus configuration.
+If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -10794,6 +10824,21 @@ that will be kept in memory. 0 means no limit.</p>
 </tr>
 <tr>
 <td>
+<code>reloadStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ReloadStrategyType">
+ReloadStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the strategy used to reload the Prometheus configuration.
+If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -11720,6 +11765,28 @@ string
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ReloadStrategyType">ReloadStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;HTTP&#34;</p></td>
+<td><p>HTTPReloadStrategyType reloads the configuration using the /-/reload HTTP endpoint.</p>
+</td>
+</tr><tr><td><p>&#34;ProcessSignal&#34;</p></td>
+<td><p>ProcessSignalReloadStrategyType reloads the configuration by sending a SIGHUP signal to the process.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec
 </h3>
@@ -16145,6 +16212,21 @@ that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>reloadStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ReloadStrategyType">
+ReloadStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the strategy used to reload the Prometheus configuration.
+If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -20330,6 +20412,21 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reloadStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ReloadStrategyType">
+ReloadStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the strategy used to reload the Prometheus configuration.
+If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
 </td>
 </tr>
 </tbody>

@@ -616,6 +616,38 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+
+	// Defines the strategy used to reload the Prometheus configuration.
+	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
+	// +optional
+	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=HTTP;ProcessSignal
+type ReloadStrategyType string
+
+const (
+	// HTTPReloadStrategyType reloads the configuration using the /-/reload HTTP endpoint.
+	HTTPReloadStrategyType ReloadStrategyType = "HTTP"
+
+	// ProcessSignalReloadStrategyType reloads the configuration by sending a SIGHUP signal to the process.
+	ProcessSignalReloadStrategyType ReloadStrategyType = "ProcessSignal"
+)
+
+func (cpf *CommonPrometheusFields) PrometheusURIScheme() string {
+	if cpf.Web != nil && cpf.Web.TLSConfig != nil {
+		return "https"
+	}
+
+	return "http"
+}
+
+func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
+	if cpf.RoutePrefix != "" {
+		return cpf.RoutePrefix
+	}
+
+	return "/"
 }
 
 // +genclient
