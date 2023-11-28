@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -1535,7 +1534,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 	p.Spec.CommonPrometheusFields.ExcludedFromEnforcement = []monitoringv1.ObjectReference{
 		{
 			Namespace: "pod-monitor-ns",
-			Group:     monitoring.GroupName,
+			Group:     monitoringv1.PackageGroupName,
 			Resource:  monitoringv1.PodMonitorName,
 			Name:      "testpodmonitor1",
 		},
@@ -1562,7 +1561,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 					},
 				},
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+					APIVersion: monitoringv1.PackageGroupName + "/" + monitoringv1.Version,
 					Kind:       monitoringv1.PodMonitorsKind,
 				},
 				Spec: monitoringv1.PodMonitorSpec{
@@ -1680,7 +1679,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 	p.Spec.CommonPrometheusFields.ExcludedFromEnforcement = []monitoringv1.ObjectReference{
 		{
 			Namespace: "service-monitor-ns",
-			Group:     monitoring.GroupName,
+			Group:     monitoringv1.PackageGroupName,
 			Resource:  monitoringv1.ServiceMonitorName,
 			Name:      "", // exclude all servicemonitors in this namespace
 		},
@@ -1706,7 +1705,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 					},
 				},
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+					APIVersion: monitoringv1.PackageGroupName + "/" + monitoringv1.Version,
 					Kind:       monitoringv1.ServiceMonitorsKind,
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{

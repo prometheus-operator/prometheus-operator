@@ -9,7 +9,7 @@ webhooks:
         namespace: default
         path: /admission-prometheusrules/validate
     failurePolicy: Fail
-    name: prometheusrulemutate.monitoring.coreos.com
+    name: prometheusrulemutate.azmonitoring.coreos.com
     namespaceSelector:
       matchExpressions:
       - key: excludeFromWebhook
@@ -17,7 +17,7 @@ webhooks:
         values: ["true"]
     rules:
       - apiGroups:
-          - monitoring.coreos.com
+          - azmonitoring.coreos.com
         apiVersions:
           - '*'
         operations:

@@ -20,7 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -219,7 +218,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     monitoringv1.PackageGroupName,
 					Resource:  monitoringv1.PrometheusRuleName,
 				},
 			},
@@ -250,7 +249,7 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 					excludedFromEnforcement = append(excludedFromEnforcement,
 						monitoringv1.ObjectReference{
 							Namespace: rule.RuleNamespace,
-							Group:     monitoring.GroupName,
+							Group:     monitoringv1.PackageGroupName,
 							Resource:  monitoringv1.PrometheusRuleName,
 							Name:      rule.RuleName,
 						})
@@ -318,7 +317,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     monitoringv1.PackageGroupName,
 					Resource:  monitoringv1.ServiceMonitorName,
 					Name:      "exclude-me",
 				},
@@ -342,7 +341,7 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
 				{
 					Namespace: "bar",
-					Group:     monitoring.GroupName,
+					Group:     monitoringv1.PackageGroupName,
 					Resource:  monitoringv1.ServiceMonitorName,
 				},
 			},

@@ -234,7 +234,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	err := framework.DeleteCRD(context.Background(), "scrapeconfigs.monitoring.coreos.com")
+	err := framework.DeleteCRD(context.Background(), "scrapeconfigs.azmonitoring.coreos.com")
 	require.NoError(t, err)
 
 	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, false)

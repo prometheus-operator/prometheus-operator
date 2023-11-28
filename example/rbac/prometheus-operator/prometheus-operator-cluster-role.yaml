@@ -8,7 +8,7 @@ metadata:
   name: prometheus-operator
 rules:
 - apiGroups:
-  - monitoring.coreos.com
+  - azmonitoring.coreos.com
   resources:
   - alertmanagers
   - alertmanagers/finalizers
