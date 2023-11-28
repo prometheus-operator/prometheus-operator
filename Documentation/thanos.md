@@ -73,8 +73,9 @@ spec:
   thanos:
     image: quay.io/thanos/thanos:v0.28.1
     objectStorageConfig:
-      key: thanos.yaml
-      name: thanos-objstore-config
+      existingSecret:
+        key: thanos.yaml
+        name: thanos-objstore-config
 ...
 ```
 
