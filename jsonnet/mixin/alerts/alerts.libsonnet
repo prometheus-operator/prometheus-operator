@@ -121,6 +121,20 @@
             },
             'for': '10m',
           },
+          {
+            alert: 'ConfigReloaderSidecarApplyErrors',
+            expr: |||
+              increase(reloader_config_apply_operations_failed_total{%(configReloaderSelector)s}[5m]) > 0
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: 'Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to apply config in {{$labels.namespace}} namespace.\nAs a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.',
+              summary: 'config-reloader sidecar was unable to apply new config for 5m',
+            },
+            'for': '5m',
+          },
         ],
       },
     ],
