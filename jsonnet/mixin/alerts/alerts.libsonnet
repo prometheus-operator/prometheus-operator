@@ -131,7 +131,7 @@
             },
             annotations: {
               description: 'Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to apply config in {{$labels.namespace}} namespace.\nAs a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.',
-              summary: 'config-reloader sidecar was unable to apply new config for 5m',
+              summary: 'config-reloader sidecar was unable to apply new config',
             },
             'for': '5m',
           },

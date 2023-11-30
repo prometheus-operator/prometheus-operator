@@ -82,7 +82,7 @@ groups:
       description: |-
         Errors encountered while the {{$labels.pod}} config-reloader sidecar attempts to apply config in {{$labels.namespace}} namespace.
         As a result, configuration for service running in {{$labels.pod}} may be stale and cannot be updated anymore.
-      summary: config-reloader sidecar was unable to apply new config for 5m
+      summary: config-reloader sidecar was unable to apply new config
     expr: |
       increase(reloader_config_apply_operations_failed_total{namespace=~".+"}[5m]) > 0
     for: 5m
