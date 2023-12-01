@@ -5471,6 +5471,11 @@ spec:
                   \n Default: 1"
                 format: int32
                 type: integer
+              startupProbeTimeoutSeconds:
+                description: Defines how long to wait for starting liveness and readiness
+                  probes.
+                format: int32
+                type: integer
               storage:
                 description: Storage defines the storage used by Prometheus.
                 properties:

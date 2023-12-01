@@ -643,6 +643,10 @@ type CommonPrometheusFields struct {
 	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
 	// +optional
 	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
+
+	// Defines how long to wait for starting liveness and readiness probes.
+	// +optional
+	StartupProbeTimeoutSeconds *int32 `json:"startupProbeTimeoutSeconds,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

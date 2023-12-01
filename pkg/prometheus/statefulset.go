@@ -526,3 +526,15 @@ func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []mo
 
 	return coreTscs
 }
+
+func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonPrometheusFields) (int32, int32) {
+	var startupPeriodSeconds int32 = 15
+	var startupFailureThreshold int32 = 60
+
+	if cfp.StartupProbeTimeoutSeconds != nil {
+		startupPeriodSeconds = *cfp.StartupProbeTimeoutSeconds / 60
+		startupFailureThreshold = *cfp.StartupProbeTimeoutSeconds / startupPeriodSeconds
+	}
+
+	return startupPeriodSeconds, startupFailureThreshold
+}

@@ -3074,3 +3074,48 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestStartupProbeTimeoutSeconds(t *testing.T) {
+	tests := []struct {
+		startupProbeTimeoutSeconds      *int32
+		expectedStartupPeriodSeconds    int32
+		expectedStartupFailureThreshold int32
+	}{
+		{
+			startupProbeTimeoutSeconds:      nil,
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			startupProbeTimeoutSeconds:      ptr.To(int32(600)),
+			expectedStartupPeriodSeconds:    10,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			startupProbeTimeoutSeconds:      ptr.To(int32(900)),
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			startupProbeTimeoutSeconds:      ptr.To(int32(1200)),
+			expectedStartupPeriodSeconds:    20,
+			expectedStartupFailureThreshold: 60,
+		},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					StartupProbeTimeoutSeconds: test.startupProbeTimeoutSeconds,
+				},
+			},
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, sset.Spec.Template.Spec.Containers[0].StartupProbe)
+		require.Equal(t, test.expectedStartupPeriodSeconds, sset.Spec.Template.Spec.Containers[0].StartupProbe.PeriodSeconds)
+		require.Equal(t, test.expectedStartupFailureThreshold, sset.Spec.Template.Spec.Containers[0].StartupProbe.FailureThreshold)
+	}
+}

@@ -2560,6 +2560,18 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
+<code>startupProbeTimeoutSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how long to wait for starting liveness and readiness probes.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -6938,6 +6950,18 @@ ReloadStrategyType
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>startupProbeTimeoutSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how long to wait for starting liveness and readiness probes.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -11050,6 +11074,18 @@ ReloadStrategyType
 <em>(Optional)</em>
 <p>Defines the strategy used to reload the Prometheus configuration.
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>startupProbeTimeoutSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how long to wait for starting liveness and readiness probes.</p>
 </td>
 </tr>
 <tr>
@@ -16599,6 +16635,18 @@ ReloadStrategyType
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>startupProbeTimeoutSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how long to wait for starting liveness and readiness probes.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -21016,6 +21064,18 @@ ReloadStrategyType
 <em>(Optional)</em>
 <p>Defines the strategy used to reload the Prometheus configuration.
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>startupProbeTimeoutSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how long to wait for starting liveness and readiness probes.</p>
 </td>
 </tr>
 </tbody>

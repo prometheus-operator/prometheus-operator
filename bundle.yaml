@@ -20071,6 +20071,11 @@ spec:
                   \n Default: 1"
                 format: int32
                 type: integer
+              startupProbeTimeoutSeconds:
+                description: Defines how long to wait for starting liveness and readiness
+                  probes.
+                format: int32
+                type: integer
               storage:
                 description: Storage defines the storage used by Prometheus.
                 properties:
@@ -29576,6 +29581,11 @@ spec:
                   is performed on the content of the `__address__` target meta-label
                   for PodMonitors and ServiceMonitors and `__param_target__` for Probes.
                   \n Default: 1"
+                format: int32
+                type: integer
+              startupProbeTimeoutSeconds:
+                description: Defines how long to wait for starting liveness and readiness
+                  probes.
                 format: int32
                 type: integer
               storage:
