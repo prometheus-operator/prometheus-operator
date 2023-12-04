@@ -644,7 +644,8 @@ type CommonPrometheusFields struct {
 	// +optional
 	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
 
-	// Defines how long to wait for starting liveness and readiness probes.
+	// Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed.
+	// If unset, it will be equal to 600 seconds (= 15 minutes).
 	// +optional
 	StartupProbeTimeoutSeconds *int32 `json:"startupProbeTimeoutSeconds,omitempty"`
 }
