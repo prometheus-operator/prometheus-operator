@@ -2994,12 +2994,11 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "",
+						"app.kubernetes.io/instance":    "test",
 						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "",
+						"prometheus":                    "test",
 						prompkg.ShardLabelName:          "0",
-						prompkg.PrometheusNameLabelName: "",
-						"app.kubernetes.io/version":     strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
+						prompkg.PrometheusNameLabelName: "test",
 						prompkg.PrometheusK8sLabelName:  "prometheus",
 					},
 				},
@@ -3033,11 +3032,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "",
+						"app.kubernetes.io/instance":    "test",
 						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "",
-						prompkg.PrometheusNameLabelName: "",
-						"app.kubernetes.io/version":     strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
+						"prometheus":                    "test",
+						prompkg.PrometheusNameLabelName: "test",
 						prompkg.PrometheusK8sLabelName:  "prometheus",
 					},
 				},
@@ -3045,7 +3043,13 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			sts, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{Spec: tc.spec})
+			sts, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns-test",
+				},
+				Spec: tc.spec,
+			})
 
 			require.NoError(t, err)
 

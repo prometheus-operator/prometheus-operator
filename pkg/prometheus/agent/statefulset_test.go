@@ -296,10 +296,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "",
+						"app.kubernetes.io/instance":   "test",
 						"app.kubernetes.io/managed-by": "prometheus-operator",
 						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "",
+						"operator.prometheus.io/name":  "test",
 						"operator.prometheus.io/shard": "0",
 					},
 				},
@@ -333,10 +333,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "",
+						"app.kubernetes.io/instance":   "test",
 						"app.kubernetes.io/managed-by": "prometheus-operator",
 						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "",
+						"operator.prometheus.io/name":  "test",
 					},
 				},
 			},
@@ -344,9 +344,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			sts, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-				ObjectMeta: v1.ObjectMeta{
-					Name: "test",
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
 					Namespace: "ns-test",
+				},
 				Spec: tc.spec,
 			})
 
