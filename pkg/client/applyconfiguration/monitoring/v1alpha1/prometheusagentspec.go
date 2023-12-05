@@ -709,10 +709,10 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithReloadStrategy(value monitor
 	return b
 }
 
-// WithStartupProbeTimeoutSeconds sets the StartupProbeTimeoutSeconds field in the declarative configuration to the given value
+// WithMaximumStartupDurationSeconds sets the MaximumStartupDurationSeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the StartupProbeTimeoutSeconds field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithStartupProbeTimeoutSeconds(value int32) *PrometheusAgentSpecApplyConfiguration {
-	b.StartupProbeTimeoutSeconds = &value
+// If called multiple times, the MaximumStartupDurationSeconds field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithMaximumStartupDurationSeconds(value int32) *PrometheusAgentSpecApplyConfiguration {
+	b.MaximumStartupDurationSeconds = &value
 	return b
 }

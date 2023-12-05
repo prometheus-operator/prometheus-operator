@@ -898,8 +898,8 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(ReloadStrategyType)
 		**out = **in
 	}
-	if in.StartupProbeTimeoutSeconds != nil {
-		in, out := &in.StartupProbeTimeoutSeconds, &out.StartupProbeTimeoutSeconds
+	if in.MaximumStartupDurationSeconds != nil {
+		in, out := &in.MaximumStartupDurationSeconds, &out.MaximumStartupDurationSeconds
 		*out = new(int32)
 		**out = **in
 	}

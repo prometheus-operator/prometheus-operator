@@ -3632,6 +3632,11 @@
                     ],
                     "type": "string"
                   },
+                  "maximumStartupDurationSeconds": {
+                    "description": "Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. If unset, it will be equal to 600 seconds (= 15 minutes).",
+                    "format": "int32",
+                    "type": "integer"
+                  },
                   "minReadySeconds": {
                     "description": "Minimum number of seconds for which a newly created Pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) \n This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
                     "format": "int32",
@@ -4936,11 +4941,6 @@
                   },
                   "shards": {
                     "description": "EXPERIMENTAL: Number of shards to distribute targets onto. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally, use Thanos sidecar and Thanos querier or remote write data to a central location. \n Sharding is performed on the content of the `__address__` target meta-label for PodMonitors and ServiceMonitors and `__param_target__` for Probes. \n Default: 1",
-                    "format": "int32",
-                    "type": "integer"
-                  },
-                  "startupProbeTimeoutSeconds": {
-                    "description": "Defines how long to wait for starting liveness and readiness probes.",
                     "format": "int32",
                     "type": "integer"
                   },

@@ -4486,6 +4486,12 @@ spec:
                 - warn
                 - error
                 type: string
+              maximumStartupDurationSeconds:
+                description: Defines the maximum time that the `prometheus` container's
+                  startup probe will wait before being considered failed. If unset,
+                  it will be equal to 600 seconds (= 15 minutes).
+                format: int32
+                type: integer
               minReadySeconds:
                 description: "Minimum number of seconds for which a newly created
                   Pod should be ready without any of its container crashing for it
@@ -6453,11 +6459,6 @@ spec:
                   is performed on the content of the `__address__` target meta-label
                   for PodMonitors and ServiceMonitors and `__param_target__` for Probes.
                   \n Default: 1"
-                format: int32
-                type: integer
-              startupProbeTimeoutSeconds:
-                description: Defines how long to wait for starting liveness and readiness
-                  probes.
                 format: int32
                 type: integer
               storage:

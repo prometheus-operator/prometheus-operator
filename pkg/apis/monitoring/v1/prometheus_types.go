@@ -647,7 +647,7 @@ type CommonPrometheusFields struct {
 	// Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed.
 	// If unset, it will be equal to 600 seconds (= 15 minutes).
 	// +optional
-	StartupProbeTimeoutSeconds *int32 `json:"startupProbeTimeoutSeconds,omitempty"`
+	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

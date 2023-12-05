@@ -531,9 +531,9 @@ func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonProme
 	var startupPeriodSeconds int32 = 15
 	var startupFailureThreshold int32 = 60
 
-	if cfp.StartupProbeTimeoutSeconds != nil {
-		startupPeriodSeconds = *cfp.StartupProbeTimeoutSeconds / 60
-		startupFailureThreshold = *cfp.StartupProbeTimeoutSeconds / startupPeriodSeconds
+	if cfp.MaximumStartupDurationSeconds != nil && *cfp.MaximumStartupDurationSeconds > 0 {
+		startupPeriodSeconds = *cfp.MaximumStartupDurationSeconds / 60
+		startupFailureThreshold = *cfp.MaximumStartupDurationSeconds / startupPeriodSeconds
 	}
 
 	return startupPeriodSeconds, startupFailureThreshold

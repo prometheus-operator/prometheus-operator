@@ -191,29 +191,44 @@ func TestWALCompression(t *testing.T) {
 
 func TestStartupProbeTimeoutSeconds(t *testing.T) {
 	tests := []struct {
-		startupProbeTimeoutSeconds      *int32
+		maximumStartupDurationSeconds   *int32
 		expectedStartupPeriodSeconds    int32
 		expectedStartupFailureThreshold int32
 	}{
 		{
-			startupProbeTimeoutSeconds:      nil,
+			maximumStartupDurationSeconds:   nil,
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			startupProbeTimeoutSeconds:      ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   ptr.To(int32(0)),
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(600)),
 			expectedStartupPeriodSeconds:    10,
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			startupProbeTimeoutSeconds:      ptr.To(int32(900)),
+			maximumStartupDurationSeconds:   ptr.To(int32(900)),
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			startupProbeTimeoutSeconds:      ptr.To(int32(1200)),
+			maximumStartupDurationSeconds:   ptr.To(int32(1200)),
 			expectedStartupPeriodSeconds:    20,
 			expectedStartupFailureThreshold: 60,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(139)),
+			expectedStartupPeriodSeconds:    2,
+			expectedStartupFailureThreshold: 69,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(612)),
+			expectedStartupPeriodSeconds:    10,
+			expectedStartupFailureThreshold: 61,
 		},
 	}
 
@@ -221,7 +236,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
 			Spec: monitoringv1alpha1.PrometheusAgentSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					StartupProbeTimeoutSeconds: test.startupProbeTimeoutSeconds,
+					MaximumStartupDurationSeconds: test.maximumStartupDurationSeconds,
 				},
 			},
 		})

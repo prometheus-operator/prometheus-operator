@@ -2560,14 +2560,15 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
-<code>startupProbeTimeoutSeconds</code><br/>
+<code>maximumStartupDurationSeconds</code><br/>
 <em>
 int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines how long to wait for starting liveness and readiness probes.</p>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
+If unset, it will be equal to 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -6952,14 +6953,15 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
-<code>startupProbeTimeoutSeconds</code><br/>
+<code>maximumStartupDurationSeconds</code><br/>
 <em>
 int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines how long to wait for starting liveness and readiness probes.</p>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
+If unset, it will be equal to 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </tbody>
@@ -11078,14 +11080,15 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
-<code>startupProbeTimeoutSeconds</code><br/>
+<code>maximumStartupDurationSeconds</code><br/>
 <em>
 int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines how long to wait for starting liveness and readiness probes.</p>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
+If unset, it will be equal to 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -16637,14 +16640,15 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
-<code>startupProbeTimeoutSeconds</code><br/>
+<code>maximumStartupDurationSeconds</code><br/>
 <em>
 int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines how long to wait for starting liveness and readiness probes.</p>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
+If unset, it will be equal to 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </table>
@@ -21068,14 +21072,15 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
-<code>startupProbeTimeoutSeconds</code><br/>
+<code>maximumStartupDurationSeconds</code><br/>
 <em>
 int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines how long to wait for starting liveness and readiness probes.</p>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
+If unset, it will be equal to 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </tbody>
