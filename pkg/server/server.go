@@ -17,7 +17,6 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"fmt"
 	stdlog "log"
@@ -27,9 +26,9 @@ import (
 	"path/filepath"
 	"time"
 
-	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"k8s.io/apiserver/pkg/server/dynamiccertificates"
 	kflag "k8s.io/component-base/cli/flag"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -43,6 +42,7 @@ const (
 func DefaultConfig(listenAddress string, enableTLS bool) Config {
 	return Config{
 		ListenAddress: listenAddress,
+
 		// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
 		// standard library and golang.org/x/net are fully fixed.
 		// Right now, it is possible for authenticated and unauthenticated users to
@@ -52,6 +52,7 @@ func DefaultConfig(listenAddress string, enableTLS bool) Config {
 		// * https://github.com/kubernetes/kubernetes/issues/121197
 		// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
 		EnableHTTP2: false,
+
 		TLSConfig: TLSConfig{
 			Enabled:        enableTLS,
 			CertFile:       filepath.Join(defaultTLSDir, "tls.crt"),
@@ -103,6 +104,7 @@ type TLSConfig struct {
 }
 
 // Convert returns a *tls.Config from the given TLSConfig.
+// It returns nil when TLS isn't enabled/configured.
 func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
@@ -155,23 +157,13 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 	info, err := os.Stat(tc.ClientCAFile)
 	switch {
 	case err != nil:
-		level.Warn(logger).Log("msg", "server TLS client verification disabled", "err", err, "client_ca_file", tc.ClientCAFile)
+		level.Warn(logger).Log("msg", "server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "err", err)
 
 	case !info.Mode().IsRegular():
 		level.Warn(logger).Log("msg", "server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "file_mode", info.Mode().String())
 
 	default:
-		caPEM, err := os.ReadFile(tc.ClientCAFile)
-		if err != nil {
-			return nil, fmt.Errorf("reading client CA %q: %w", tc.ClientCAFile, err)
-		}
-
-		certPool := x509.NewCertPool()
-		if !certPool.AppendCertsFromPEM(caPEM) {
-			return nil, fmt.Errorf("client CA %q: failed to parse certificate", tc.ClientCAFile)
-		}
-
-		tlsCfg.ClientCAs = certPool
+		// The client CA content will be checked by the cert controller.
 		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
 		level.Info(logger).Log("msg", "server TLS client verification enabled", "client_ca_file", tc.ClientCAFile)
 	}
@@ -181,22 +173,94 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 
 // Server is a web server.
 type Server struct {
-	logger   log.Logger
-	srv      *http.Server
+	logger log.Logger
+
 	listener net.Listener
-	cfg      *Config
+	srv      *http.Server
+	runners  []func(context.Context)
+
+	cfg *Config
 }
 
 // NewServer initializes a web server with the given handler (typically an http.MuxServe).
 func NewServer(logger log.Logger, c *Config, handler http.Handler) (*Server, error) {
+	listener, err := net.Listen("tcp", c.ListenAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	tlsConfig, err := c.TLSConfig.Convert(logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create TLS configuration: %w", err)
 	}
 
-	listener, err := net.Listen("tcp", c.ListenAddress)
-	if err != nil {
-		return nil, err
+	var runners []func(context.Context)
+	if tlsConfig != nil {
+		var (
+			certController *dynamiccertificates.DynamicServingCertificateController
+			clientCA       dynamiccertificates.CAContentProvider
+			servingCert    dynamiccertificates.CertKeyContentProvider
+		)
+
+		if tlsConfig.ClientAuth == tls.RequireAndVerifyClientCert {
+			clientCA, err = dynamiccertificates.NewDynamicCAContentFromFile("clientCA", c.TLSConfig.ClientCAFile)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load client CA certificate: %w", err)
+			}
+
+			if err = clientCA.(*dynamiccertificates.DynamicFileCAContent).RunOnce(context.Background()); err != nil {
+				return nil, fmt.Errorf("failed to sync client CA certificate: %w", err)
+			}
+
+			runners = append(runners, func(ctx context.Context) {
+				clientCA.(*dynamiccertificates.DynamicFileCAContent).Run(ctx, 1)
+			})
+		}
+
+		if c.TLSConfig.CertFile != "" && c.TLSConfig.KeyFile != "" {
+			servingCert, err = dynamiccertificates.NewDynamicServingContentFromFiles("servingCert", c.TLSConfig.CertFile, c.TLSConfig.KeyFile)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load serving certificate and key: %w", err)
+			}
+
+			if err = servingCert.(*dynamiccertificates.DynamicCertKeyPairContent).RunOnce(context.Background()); err != nil {
+				return nil, fmt.Errorf("failed to sync serving certificate: %w", err)
+			}
+
+			runners = append(runners, func(ctx context.Context) {
+				servingCert.(*dynamiccertificates.DynamicCertKeyPairContent).Run(ctx, 1)
+			})
+		}
+
+		certController = dynamiccertificates.NewDynamicServingCertificateController(
+			tlsConfig,
+			clientCA,
+			servingCert,
+			nil,
+			nil,
+		)
+
+		if clientCA != nil {
+			clientCA.AddListener(certController)
+		}
+
+		if servingCert != nil {
+			servingCert.AddListener(certController)
+		}
+
+		// Ensure that the configuration is valid.
+		err = certController.RunOnce()
+		if err != nil {
+			return nil, fmt.Errorf("failed to sync certificates: %w", err)
+		}
+
+		runners = append(runners, func(ctx context.Context) {
+			certController.Run(1, ctx.Done())
+		})
+
+		tlsConfig.GetConfigForClient = certController.GetConfigForClient
+
+		listener = tls.NewListener(listener, tlsConfig)
 	}
 
 	srv := &http.Server{
@@ -218,6 +282,7 @@ func NewServer(logger log.Logger, c *Config, handler http.Handler) (*Server, err
 		logger:   logger,
 		srv:      srv,
 		listener: listener,
+		runners:  runners,
 		cfg:      c,
 	}, nil
 }
@@ -225,39 +290,17 @@ func NewServer(logger log.Logger, c *Config, handler http.Handler) (*Server, err
 // Serve starts the web server. It will block until the server is shutted down
 // or an error occurs.
 func (s *Server) Serve(ctx context.Context) error {
+	for _, r := range s.runners {
+		go r(ctx)
+	}
+
 	if s.srv.TLSConfig == nil {
 		level.Info(s.logger).Log("msg", "starting insecure server", "address", s.listener.Addr().String())
-		if err := s.srv.Serve(s.listener); err != http.ErrServerClosed {
-			return err
-		}
-
-		return nil
+	} else {
+		level.Info(s.logger).Log("msg", "starting secure server", "address", s.listener.Addr().String(), "http2", s.cfg.EnableHTTP2)
 	}
 
-	r, err := rbacproxytls.NewCertReloader(
-		s.cfg.TLSConfig.CertFile,
-		s.cfg.TLSConfig.KeyFile,
-		s.cfg.TLSConfig.ReloadInterval,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to initialize certificate reloader: %w", err)
-	}
-
-	s.srv.TLSConfig.GetCertificate = r.GetCertificate
-	go func() {
-		for {
-			// r.Watch will wait ReloadInterval, so this is not
-			// a hot loop
-			if err := r.Watch(ctx); err != nil {
-				level.Warn(s.logger).Log(
-					"msg", "error watching certificate reloader",
-					"err", err)
-			}
-		}
-	}()
-
-	level.Info(s.logger).Log("msg", "starting secure server", "address", s.listener.Addr().String(), "http2", s.cfg.EnableHTTP2)
-	if err := s.srv.ServeTLS(s.listener, "", ""); err != http.ErrServerClosed {
+	if err := s.srv.Serve(s.listener); err != http.ErrServerClosed {
 		return err
 	}
 
