@@ -343,7 +343,12 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			sts, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{Spec: tc.spec})
+			sts, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "test",
+					Namespace: "ns-test",
+				Spec: tc.spec,
+			})
 
 			require.NoError(t, err)
 
