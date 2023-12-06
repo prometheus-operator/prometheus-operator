@@ -28,7 +28,7 @@ The downside is the loss of integration provided by Prometheus Operator through 
 
 - Allow for the administrator to define a named, reusable scrape configuration snippet, including unsafe elements such as file references.
 - Allow for a user to select a configuration snippet by name in their probe/podmonitor/servicemonitor endpoint configuration.
-- Avoid giving the user the ability to use arbirary files within the Prometheus pod.
+- Avoid giving the user the ability to exflitrate arbitrary files within the Prometheus pod.
 
 ## Non-Goals
 
