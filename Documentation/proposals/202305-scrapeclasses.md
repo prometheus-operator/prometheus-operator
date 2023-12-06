@@ -44,7 +44,7 @@ The downside is the loss of integration provided by Prometheus Operator through 
 The proposed solution is to introduce a notion of a *scrape class*, akin to a Kubernetes [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
 A scrape class defines TLS settings (and possibly other settings in future, e.g. sensitive authorization settings) to be applied to all scrape configs of that class.
 
-One scrape class may be designated as the default class, in which case that class is applied to any scrape config that doesn't specify a value for `scrapeClass`.
+One scrape class may be designated as the default class, in which case that class is applied to any scrape resource that doesn't specify a value for `scrapeClassName`.
 
 When defining a podmonitor/servicemonitor/probe/scrapeconfig, a user may assign a scrape class via the `scrapeClass` field.
 When there's a match, a scrape class is assigned to all the endpoints.
