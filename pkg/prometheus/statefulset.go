@@ -498,23 +498,34 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 	)
 }
 
-func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tsc monitoringv1.TopologySpreadConstraint) v1.TopologySpreadConstraint {
-	if tsc.AdditionalLabelSelectors == nil {
-		return v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint)
-	}
+func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []monitoringv1.TopologySpreadConstraint) []v1.TopologySpreadConstraint {
 
-	if tsc.LabelSelector == nil {
-		tsc.LabelSelector = &metav1.LabelSelector{
-			MatchLabels: make(map[string]string),
-		}
-	}
+	coreTscs := make([]v1.TopologySpreadConstraint, 0, len(tscs))
+	// for _, tsc := range cpf.TopologySpreadConstraints {
+	// 	tscs = append(tscs, prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, tsc))
+	// }
 
-	for key, value := range selectorLabels {
-		if *tsc.AdditionalLabelSelectors == monitoringv1.ResourceNameLabelSelector && key == ShardLabelName {
+	for _, tsc := range tscs {
+		if tsc.AdditionalLabelSelectors == nil {
+			coreTscs = append(coreTscs, v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint))
 			continue
 		}
-		tsc.LabelSelector.MatchLabels[key] = value
+
+		if tsc.LabelSelector == nil {
+			tsc.LabelSelector = &metav1.LabelSelector{
+				MatchLabels: make(map[string]string),
+			}
+		}
+
+		for key, value := range selectorLabels {
+			if *tsc.AdditionalLabelSelectors == monitoringv1.ResourceNameLabelSelector && key == ShardLabelName {
+				continue
+			}
+			tsc.LabelSelector.MatchLabels[key] = value
+		}
+
+		coreTscs = append(coreTscs, v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint))
 	}
 
-	return v1.TopologySpreadConstraint(tsc.CoreV1TopologySpreadConstraint)
+	return coreTscs
 }

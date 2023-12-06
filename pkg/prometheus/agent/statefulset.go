@@ -360,11 +360,6 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	tscs := make([]v1.TopologySpreadConstraint, 0, len(cpf.TopologySpreadConstraints))
-	for _, tsc := range cpf.TopologySpreadConstraints {
-		tscs = append(tscs, prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, tsc))
-	}
-
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -396,7 +391,7 @@ func makeStatefulSetSpec(
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
-				TopologySpreadConstraints:     tscs,
+				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
 			},
