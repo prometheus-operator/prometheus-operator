@@ -86,29 +86,29 @@ func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitorin
 
 	ca, err = s.GetKey(ctx, ns, tlsConfig.CA)
 	if err != nil {
-		return fmt.Errorf("failed to get CA: %w", err)
+		return fmt.Errorf("failed to get ca %q: %w", tlsConfig.CA.String(), err)
 	}
 
 	cert, err = s.GetKey(ctx, ns, tlsConfig.Cert)
 	if err != nil {
-		return fmt.Errorf("failed to get cert: %w", err)
+		return fmt.Errorf("failed to get cert %q: %w", tlsConfig.Cert.String(), err)
 	}
 
 	if tlsConfig.KeySecret != nil {
 		key, err = s.GetSecretKey(ctx, ns, *tlsConfig.KeySecret)
 		if err != nil {
-			return fmt.Errorf("failed to get key: %w", err)
+			return fmt.Errorf("failed to get key %s/%s: %w", tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key, err)
 		}
 	}
 
 	if ca != "" {
 		block, _ := pem.Decode([]byte(ca))
 		if block == nil {
-			return errors.New("failed to decode CA certificate")
+			return fmt.Errorf("ca %s: failed to decode PEM block", tlsConfig.CA.String())
 		}
 		_, err = x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return fmt.Errorf("failed to parse CA certificate: %w", err)
+			return fmt.Errorf("ca %s: failed to parse certificate: %w", tlsConfig.CA.String(), err)
 		}
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
 	}
@@ -116,7 +116,11 @@ func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitorin
 	if cert != "" && key != "" {
 		_, err = tls.X509KeyPair([]byte(cert), []byte(key))
 		if err != nil {
-			return fmt.Errorf("failed to load X509 key pair: %w", err)
+			return fmt.Errorf(
+				"cert %s, key <%s/%s>: %w",
+				tlsConfig.Cert.String(),
+				tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key,
+				err)
 		}
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, monitoringv1.SecretOrConfigMap{Secret: tlsConfig.KeySecret})] = TLSAsset(key)
