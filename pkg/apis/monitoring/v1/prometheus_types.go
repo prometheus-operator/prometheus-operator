@@ -645,7 +645,9 @@ type CommonPrometheusFields struct {
 	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
 
 	// Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed.
-	// If unset, it will be equal to 600 seconds (= 15 minutes).
+	// If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+	// If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+	// If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).
 	// +optional
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
 }

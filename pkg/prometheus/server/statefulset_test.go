@@ -3092,6 +3092,16 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 			expectedStartupFailureThreshold: 60,
 		},
 		{
+			maximumStartupDurationSeconds:   ptr.To(int32(1)),
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(60)),
+			expectedStartupPeriodSeconds:    1,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
 			maximumStartupDurationSeconds:   ptr.To(int32(600)),
 			expectedStartupPeriodSeconds:    10,
 			expectedStartupFailureThreshold: 60,
@@ -3108,13 +3118,13 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 		},
 		{
 			maximumStartupDurationSeconds:   ptr.To(int32(129)),
-			expectedStartupPeriodSeconds:    2,
-			expectedStartupFailureThreshold: 64,
+			expectedStartupPeriodSeconds:    3,
+			expectedStartupFailureThreshold: 43,
 		},
 		{
 			maximumStartupDurationSeconds:   ptr.To(int32(322)),
-			expectedStartupPeriodSeconds:    5,
-			expectedStartupFailureThreshold: 64,
+			expectedStartupPeriodSeconds:    6,
+			expectedStartupFailureThreshold: 54,
 		},
 	}
 

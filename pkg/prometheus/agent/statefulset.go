@@ -246,8 +246,8 @@ func makeStatefulSetSpec(
 	startupProbe := &v1.Probe{
 		ProbeHandler:     readyProbeHandler,
 		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    int32(startupPeriodSeconds),
-		FailureThreshold: int32(startupFailureThreshold),
+		PeriodSeconds:    startupPeriodSeconds,
+		FailureThreshold: startupFailureThreshold,
 	}
 
 	readinessProbe := &v1.Probe{

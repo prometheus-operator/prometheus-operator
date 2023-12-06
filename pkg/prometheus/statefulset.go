@@ -17,6 +17,7 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"net/url"
 	"path"
 	"path/filepath"
@@ -528,13 +529,15 @@ func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []mo
 }
 
 func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonPrometheusFields) (int32, int32) {
-	var startupPeriodSeconds int32 = 15
-	var startupFailureThreshold int32 = 60
+	var startupPeriodSeconds float64 = 15
+	var startupFailureThreshold float64 = 60
 
-	if ptr.Deref(cfp.MaximumStartupDurationSeconds, 0) > 0 {
-		startupPeriodSeconds = *cfp.MaximumStartupDurationSeconds / 60
-		startupFailureThreshold = *cfp.MaximumStartupDurationSeconds / startupPeriodSeconds
+	maximumStartupDurationSeconds := float64(ptr.Deref(cfp.MaximumStartupDurationSeconds, 0))
+
+	if maximumStartupDurationSeconds > 0 && maximumStartupDurationSeconds >= 60 {
+		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / 60)
+		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / startupPeriodSeconds)
 	}
 
-	return startupPeriodSeconds, startupFailureThreshold
+	return int32(startupPeriodSeconds), int32(startupFailureThreshold)
 }

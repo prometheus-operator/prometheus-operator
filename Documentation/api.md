@@ -2568,7 +2568,9 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
-If unset, it will be equal to 600 seconds (= 15 minutes).</p>
+If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -6961,7 +6963,9 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
-If unset, it will be equal to 600 seconds (= 15 minutes).</p>
+If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </tbody>
@@ -11088,7 +11092,9 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
-If unset, it will be equal to 600 seconds (= 15 minutes).</p>
+If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -16648,7 +16654,9 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
-If unset, it will be equal to 600 seconds (= 15 minutes).</p>
+If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </table>
@@ -21080,7 +21088,9 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed.
-If unset, it will be equal to 600 seconds (= 15 minutes).</p>
+If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
+If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).</p>
 </td>
 </tr>
 </tbody>
