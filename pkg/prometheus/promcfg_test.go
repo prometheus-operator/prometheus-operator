@@ -4992,6 +4992,19 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL:             "http://localhost:9100/sd.json",
 						RefreshInterval: &refreshInterval,
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -5236,6 +5249,47 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_NonEmptyMetricRelabelConfig.golden",
 		},
 		{
+			name: "proxy_settings",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
+		},
+		{
+			name: "proxy_settings_incompatible_prometheus_version",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.CommonPrometheusFields.Version = "v2.42.0"
+			},
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettingsIncompatiblePrometheusVersion.golden",
+		},
+		{
 			name: "dns_sd_config-srv-record",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
@@ -5277,6 +5331,35 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			cg := mustNewConfigGenerator(t, p)
+
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
+				"scrapeconfig/default/testscrapeconfig1": {
+					Username: "scrape-bob",
+					Password: "scrape-alice",
+				},
+				"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
+					Username: "http-sd-bob",
+					Password: "http-sd-alice",
+				},
+			}
+			store.TokenAssets = map[string]assets.Token{
+				"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
+				"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
+			}
+
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
 				p.Spec.EvaluationInterval,
@@ -5290,22 +5373,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{
-						"scrapeconfig/default/testscrapeconfig1": {
-							Username: "scrape-bob",
-							Password: "scrape-alice",
-						},
-						"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
-							Username: "http-sd-bob",
-							Password: "http-sd-alice",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
-						"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
-					},
-				},
+				store,
 				nil,
 				nil,
 				nil,
@@ -5353,17 +5421,19 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							"service": "service_name",
 							"name":    "node_name",
 						},
-						AllowStale:           ptr.To(false),
-						RefreshInterval:      (*monitoringv1.Duration)(ptr.To("30s")),
-						ProxyUrl:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string]v1.SecretKeySelector{
-							"header": {
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "foo",
+						AllowStale:      ptr.To(false),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
 								},
-								Key: "proxy-header",
 							},
 						},
 						FollowRedirects: ptr.To(true),
