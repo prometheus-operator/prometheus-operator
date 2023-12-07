@@ -649,6 +649,7 @@ type CommonPrometheusFields struct {
 	// If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
 	// If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).
 	// +optional
+	// +kubebuilder:validation:Minimum=60
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
 }
 
