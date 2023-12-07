@@ -58,13 +58,14 @@ It is proposed that the `Prometheus` and `PrometheusAgent` resources contain a n
 The rationale for defining scrape classes inline is that, in practice, the TLS file paths are closely related to the `volumeMounts`
 of the `Prometheus` spec. An alternative is outlined later, of factoring the class definitions into a separate resource.
 
+Define a scrape classes for use by the monitors, one class may be designated as the default class.
+
+When a resource defines several default scrape classes, it should fail the reconciliation.
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 spec:
-  # define scrape classes for use by the monitors
-  # one class may be designated as the default class
-  # when a resource defines several default scrape classes, it should fail the reconciliation.
   scrapeClasses:
     - name: istio-mtls
       default: true
@@ -101,6 +102,10 @@ spec:
 ```
 
 If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use a merge strategy to combine the `tlsConfig` fields from the PodMonitor object with the `tlsConfig` fields of the scrape class, the `tlsConfig` fields in the `PodMonitor` resource take precedence.
+
+If the resource specifies a scrape class name that isn't defined in the Prometheus/PrometheusAgent object, then the scrape resource is dropped by the operator.
+
+If the resource doesn't specify a scrape class name and the Prometheus/PrometheusAgent object defines a default scrape class, the operator will act as if the PodMonitor resource specified the default scrape class name.
 
 ### Probe Resource
 
@@ -145,6 +150,12 @@ spec:
   fileSDConfig:
     [...]
 ```
+
+If the monitor resource specifies a scrape class name that isn't defined in the Prometheus/PrometheusAgent object, then the scrape resource is rejected by the operator.
+
+This behavior is consistent with the behavior of monitor resources referencing a non-existing secret for bearer token authentication.
+
+To ensure users will have proper information about the error, the operator will emit an event with the error message on the monitor resource and also update the status of the monitor resource with the error message.
 
 ## Test Plan
 
