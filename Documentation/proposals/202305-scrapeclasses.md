@@ -104,7 +104,7 @@ If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use
 
 ### Probe Resource
 
-Allow the user to select a scrape class for the probe.
+Allow the user to select a scrape class for the prober service.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
