@@ -65,7 +65,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
 	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
 	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
-	TopologySpreadConstraints            []corev1.TopologySpreadConstraint                       `json:"topologySpreadConstraints,omitempty"`
+	TopologySpreadConstraints            []TopologySpreadConstraintApplyConfiguration            `json:"topologySpreadConstraints,omitempty"`
 	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
@@ -452,9 +452,12 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithTolerations(values ...cor
 // WithTopologySpreadConstraints adds the given value to the TopologySpreadConstraints field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the TopologySpreadConstraints field.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithTopologySpreadConstraints(values ...corev1.TopologySpreadConstraint) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTopologySpreadConstraints(values ...*TopologySpreadConstraintApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
-		b.TopologySpreadConstraints = append(b.TopologySpreadConstraints, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithTopologySpreadConstraints")
+		}
+		b.TopologySpreadConstraints = append(b.TopologySpreadConstraints, *values[i])
 	}
 	return b
 }

@@ -1956,8 +1956,8 @@ Kubernetes core/v1.Affinity
 <td>
 <code>topologySpreadConstraints</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
+<a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">
+[]TopologySpreadConstraint
 </a>
 </em>
 </td>
@@ -4094,6 +4094,28 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AdditionalLabelSelectors">AdditionalLabelSelectors
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">TopologySpreadConstraint</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OnResource&#34;</p></td>
+<td><p>Automatically add a label selector that will select all pods matching the same Prometheus/PrometheusAgent resource (irrespective of their shards).</p>
+</td>
+</tr><tr><td><p>&#34;OnShard&#34;</p></td>
+<td><p>Automatically add a label selector that will select all pods matching the same shard.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertingSpec">AlertingSpec
 </h3>
@@ -6318,8 +6340,8 @@ Kubernetes core/v1.Affinity
 <td>
 <code>topologySpreadConstraints</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
+<a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">
+[]TopologySpreadConstraint
 </a>
 </em>
 </td>
@@ -7077,6 +7099,205 @@ The possible status values for this condition type are:
 - Unknown: the operator couldn&rsquo;t determine the condition status.</p>
 </td>
 </tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.CoreV1TopologySpreadConstraint">CoreV1TopologySpreadConstraint
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">TopologySpreadConstraint</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxSkew</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>MaxSkew describes the degree to which pods may be unevenly distributed.
+When <code>whenUnsatisfiable=DoNotSchedule</code>, it is the maximum permitted difference
+between the number of matching pods in the target topology and the global minimum.
+The global minimum is the minimum number of matching pods in an eligible domain
+or zero if the number of eligible domains is less than MinDomains.
+For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+labelSelector spread as 2/2/1:
+In this case, the global minimum is 1.
+| zone1 | zone2 | zone3 |
+|  P P  |  P P  |   P   |
+- if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2;
+scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2)
+violate MaxSkew(1).
+- if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+When <code>whenUnsatisfiable=ScheduleAnyway</code>, it is used to give higher precedence
+to topologies that satisfy it.
+It&rsquo;s a required field. Default value is 1 and 0 is not allowed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologyKey</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>TopologyKey is the key of node labels. Nodes that have a label with this key
+and identical values are considered to be in the same topology.
+We consider each <key, value> as a &ldquo;bucket&rdquo;, and try to put balanced number
+of pods into each bucket.
+We define a domain as a particular instance of a topology.
+Also, we define an eligible domain as a domain whose nodes meet the requirements of
+nodeAffinityPolicy and nodeTaintsPolicy.
+e.g. If TopologyKey is &ldquo;kubernetes.io/hostname&rdquo;, each Node is a domain of that topology.
+And, if TopologyKey is &ldquo;topology.kubernetes.io/zone&rdquo;, each zone is a domain of that topology.
+It&rsquo;s a required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>whenUnsatisfiable</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#unsatisfiableconstraintaction-v1-core">
+Kubernetes core/v1.UnsatisfiableConstraintAction
+</a>
+</em>
+</td>
+<td>
+<p>WhenUnsatisfiable indicates how to deal with a pod if it doesn&rsquo;t satisfy
+the spread constraint.
+- DoNotSchedule (default) tells the scheduler not to schedule it.
+- ScheduleAnyway tells the scheduler to schedule the pod in any location,
+but giving higher precedence to topologies that would help reduce the
+skew.
+A constraint is considered &ldquo;Unsatisfiable&rdquo; for an incoming pod
+if and only if every possible node assignment for that pod would violate
+&ldquo;MaxSkew&rdquo; on some topology.
+For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+labelSelector spread as 3/1/1:
+| zone1 | zone2 | zone3 |
+| P P P |   P   |   P   |
+If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
+to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
+MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
+won&rsquo;t make it <em>more</em> imbalanced.
+It&rsquo;s a required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LabelSelector is used to find matching pods.
+Pods that match this label selector are counted to determine the number of pods
+in their corresponding topology domain.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minDomains</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MinDomains indicates a minimum number of eligible domains.
+When the number of eligible domains with matching topology keys is less than minDomains,
+Pod Topology Spread treats &ldquo;global minimum&rdquo; as 0, and then the calculation of Skew is performed.
+And when the number of eligible domains with matching topology keys equals or greater than minDomains,
+this value has no effect on scheduling.
+As a result, when the number of eligible domains is less than minDomains,
+scheduler won&rsquo;t schedule more than maxSkew Pods to those domains.
+If value is nil, the constraint behaves as if MinDomains is equal to 1.
+Valid values are integers greater than 0.
+When value is not nil, WhenUnsatisfiable must be DoNotSchedule.</p>
+<p>For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same
+labelSelector spread as 2/2/2:
+| zone1 | zone2 | zone3 |
+|  P P  |  P P  |  P P  |
+The number of domains is less than 5(MinDomains), so &ldquo;global minimum&rdquo; is treated as 0.
+In this situation, new pod with the same labelSelector cannot be scheduled,
+because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
+it will violate MaxSkew.</p>
+<p>This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeAffinityPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#nodeinclusionpolicy-v1-core">
+Kubernetes core/v1.NodeInclusionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeAffinityPolicy indicates how we will treat Pod&rsquo;s nodeAffinity/nodeSelector
+when calculating pod topology spread skew. Options are:
+- Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
+- Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.</p>
+<p>If this value is nil, the behavior is equivalent to the Honor policy.
+This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeTaintsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#nodeinclusionpolicy-v1-core">
+Kubernetes core/v1.NodeInclusionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeTaintsPolicy indicates how we will treat node taints when calculating
+pod topology spread skew. Options are:
+- Honor: nodes without taints, along with tainted nodes for which the incoming pod
+has a toleration, are included.
+- Ignore: node taints are ignored. All nodes are included.</p>
+<p>If this value is nil, the behavior is equivalent to the Ignore policy.
+This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchLabelKeys</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MatchLabelKeys is a set of pod label keys to select the pods over which
+spreading will be calculated. The keys are used to lookup values from the
+incoming pod labels, those key-value labels are ANDed with labelSelector
+to select the group of existing pods over which spreading will be calculated
+for the incoming pod. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector.
+MatchLabelKeys cannot be set when LabelSelector isn&rsquo;t set.
+Keys that don&rsquo;t exist in the incoming pod labels will
+be ignored. A null or empty list means only match against labelSelector.</p>
+<p>This is a beta field and requires the MatchLabelKeysInPodTopologySpread feature gate to be enabled (enabled by default).</p>
+</td>
+</tr>
+</tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
@@ -10233,8 +10454,8 @@ Kubernetes core/v1.Affinity
 <td>
 <code>topologySpreadConstraints</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
+<a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">
+[]TopologySpreadConstraint
 </a>
 </em>
 </td>
@@ -14443,6 +14664,219 @@ fail and an error will be logged.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.TopologySpreadConstraint">TopologySpreadConstraint
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxSkew</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>MaxSkew describes the degree to which pods may be unevenly distributed.
+When <code>whenUnsatisfiable=DoNotSchedule</code>, it is the maximum permitted difference
+between the number of matching pods in the target topology and the global minimum.
+The global minimum is the minimum number of matching pods in an eligible domain
+or zero if the number of eligible domains is less than MinDomains.
+For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+labelSelector spread as 2/2/1:
+In this case, the global minimum is 1.
+| zone1 | zone2 | zone3 |
+|  P P  |  P P  |   P   |
+- if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2;
+scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2)
+violate MaxSkew(1).
+- if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+When <code>whenUnsatisfiable=ScheduleAnyway</code>, it is used to give higher precedence
+to topologies that satisfy it.
+It&rsquo;s a required field. Default value is 1 and 0 is not allowed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologyKey</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>TopologyKey is the key of node labels. Nodes that have a label with this key
+and identical values are considered to be in the same topology.
+We consider each <key, value> as a &ldquo;bucket&rdquo;, and try to put balanced number
+of pods into each bucket.
+We define a domain as a particular instance of a topology.
+Also, we define an eligible domain as a domain whose nodes meet the requirements of
+nodeAffinityPolicy and nodeTaintsPolicy.
+e.g. If TopologyKey is &ldquo;kubernetes.io/hostname&rdquo;, each Node is a domain of that topology.
+And, if TopologyKey is &ldquo;topology.kubernetes.io/zone&rdquo;, each zone is a domain of that topology.
+It&rsquo;s a required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>whenUnsatisfiable</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#unsatisfiableconstraintaction-v1-core">
+Kubernetes core/v1.UnsatisfiableConstraintAction
+</a>
+</em>
+</td>
+<td>
+<p>WhenUnsatisfiable indicates how to deal with a pod if it doesn&rsquo;t satisfy
+the spread constraint.
+- DoNotSchedule (default) tells the scheduler not to schedule it.
+- ScheduleAnyway tells the scheduler to schedule the pod in any location,
+but giving higher precedence to topologies that would help reduce the
+skew.
+A constraint is considered &ldquo;Unsatisfiable&rdquo; for an incoming pod
+if and only if every possible node assignment for that pod would violate
+&ldquo;MaxSkew&rdquo; on some topology.
+For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+labelSelector spread as 3/1/1:
+| zone1 | zone2 | zone3 |
+| P P P |   P   |   P   |
+If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
+to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
+MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
+won&rsquo;t make it <em>more</em> imbalanced.
+It&rsquo;s a required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LabelSelector is used to find matching pods.
+Pods that match this label selector are counted to determine the number of pods
+in their corresponding topology domain.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minDomains</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MinDomains indicates a minimum number of eligible domains.
+When the number of eligible domains with matching topology keys is less than minDomains,
+Pod Topology Spread treats &ldquo;global minimum&rdquo; as 0, and then the calculation of Skew is performed.
+And when the number of eligible domains with matching topology keys equals or greater than minDomains,
+this value has no effect on scheduling.
+As a result, when the number of eligible domains is less than minDomains,
+scheduler won&rsquo;t schedule more than maxSkew Pods to those domains.
+If value is nil, the constraint behaves as if MinDomains is equal to 1.
+Valid values are integers greater than 0.
+When value is not nil, WhenUnsatisfiable must be DoNotSchedule.</p>
+<p>For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same
+labelSelector spread as 2/2/2:
+| zone1 | zone2 | zone3 |
+|  P P  |  P P  |  P P  |
+The number of domains is less than 5(MinDomains), so &ldquo;global minimum&rdquo; is treated as 0.
+In this situation, new pod with the same labelSelector cannot be scheduled,
+because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
+it will violate MaxSkew.</p>
+<p>This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeAffinityPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#nodeinclusionpolicy-v1-core">
+Kubernetes core/v1.NodeInclusionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeAffinityPolicy indicates how we will treat Pod&rsquo;s nodeAffinity/nodeSelector
+when calculating pod topology spread skew. Options are:
+- Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
+- Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.</p>
+<p>If this value is nil, the behavior is equivalent to the Honor policy.
+This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeTaintsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#nodeinclusionpolicy-v1-core">
+Kubernetes core/v1.NodeInclusionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeTaintsPolicy indicates how we will treat node taints when calculating
+pod topology spread skew. Options are:
+- Honor: nodes without taints, along with tainted nodes for which the incoming pod
+has a toleration, are included.
+- Ignore: node taints are ignored. All nodes are included.</p>
+<p>If this value is nil, the behavior is equivalent to the Ignore policy.
+This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchLabelKeys</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MatchLabelKeys is a set of pod label keys to select the pods over which
+spreading will be calculated. The keys are used to lookup values from the
+incoming pod labels, those key-value labels are ANDed with labelSelector
+to select the group of existing pods over which spreading will be calculated
+for the incoming pod. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector.
+MatchLabelKeys cannot be set when LabelSelector isn&rsquo;t set.
+Keys that don&rsquo;t exist in the incoming pod labels will
+be ignored. A null or empty list means only match against labelSelector.</p>
+<p>This is a beta field and requires the MatchLabelKeysInPodTopologySpread feature gate to be enabled (enabled by default).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalLabelSelectors</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AdditionalLabelSelectors">
+AdditionalLabelSelectors
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
@@ -15571,8 +16005,8 @@ Kubernetes core/v1.Affinity
 <td>
 <code>topologySpreadConstraints</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
+<a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">
+[]TopologySpreadConstraint
 </a>
 </em>
 </td>
@@ -19720,8 +20154,8 @@ Kubernetes core/v1.Affinity
 <td>
 <code>topologySpreadConstraints</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
+<a href="#monitoring.coreos.com/v1.TopologySpreadConstraint">
+[]TopologySpreadConstraint
 </a>
 </em>
 </td>
