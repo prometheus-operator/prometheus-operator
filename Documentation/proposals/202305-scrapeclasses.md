@@ -53,7 +53,7 @@ Class names are assumed to be installation-specific. In practice, some common cl
 
 ### Prometheus Resource
 
-It is proposed that the `Prometheus` and `PrometheusAgent` resources contain a new section for defining scrape classes.
+It is proposed that the `Prometheus` and `PrometheusAgent` resources contain a new field for defining scrape classes.
 
 The rationale for defining scrape classes inline is that, in practice, the TLS file paths are closely related to the `volumeMounts`
 of the `Prometheus` spec. An alternative is outlined later, of factoring the class definitions into a separate resource.
