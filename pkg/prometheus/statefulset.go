@@ -501,9 +501,6 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []monitoringv1.TopologySpreadConstraint) []v1.TopologySpreadConstraint {
 
 	coreTscs := make([]v1.TopologySpreadConstraint, 0, len(tscs))
-	// for _, tsc := range cpf.TopologySpreadConstraints {
-	// 	tscs = append(tscs, prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, tsc))
-	// }
 
 	for _, tsc := range tscs {
 		if tsc.AdditionalLabelSelectors == nil {
