@@ -534,9 +534,9 @@ func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonProme
 
 	maximumStartupDurationSeconds := float64(ptr.Deref(cfp.MaximumStartupDurationSeconds, 0))
 
-	if maximumStartupDurationSeconds > 0 && maximumStartupDurationSeconds >= 60 {
-		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / 60)
-		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / startupPeriodSeconds)
+	if maximumStartupDurationSeconds >= 60 {
+		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / 60)
+		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / startupFailureThreshold)
 	}
 
 	return int32(startupPeriodSeconds), int32(startupFailureThreshold)

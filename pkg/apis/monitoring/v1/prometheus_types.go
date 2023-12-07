@@ -644,10 +644,8 @@ type CommonPrometheusFields struct {
 	// +optional
 	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
 
-	// Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete. 
-	// If unset, it will be equal to the default value of 600 seconds (= 15 minutes).
-	// If set to 0, it will be equal to the default value of 600 seconds (= 15 minutes).
-	// If set to less than 60 seconds, it will be equal to the default value of 600 seconds (= 15 minutes).
+	// Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+	// If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).
 	// +optional
 	// +kubebuilder:validation:Minimum=60
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
