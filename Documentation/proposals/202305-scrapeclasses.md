@@ -218,7 +218,7 @@ Objections:
 
 ## Action Plan
 
-* [ ] Change the Operator API to define scrape classes and for endpoint to select a scrape class
+* [ ] Change the Operator API to define scrape classes and for scrape resources to select a scrape class
 * [ ] Update the scrape configuration generator to use the scrape class
 * [ ] Update documentation
 * [ ] Resolve issues #4121, #3922
