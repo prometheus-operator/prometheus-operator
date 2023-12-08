@@ -28,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/yaml"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
 
 // GetCRD gets a custom resource definition from the apiserver.
@@ -127,18 +129,18 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 
 // CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
 // manifest on the apiserver and wait until it is available for use.
-func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, monitoringGroup string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
+func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)
-
-	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + monitoringGroup + "_" + crdName + ".yaml"
+	group := monitoring.GroupName
+	assetPath := f.exampleDir + "/prometheus-operator-crd-full/" + group + "_" + crdName + ".yaml"
 
 	crd, err := f.MakeCRD(assetPath)
 	if err != nil {
 		return fmt.Errorf("create CRD: %s from manifest: %s: %w", crdName, assetPath, err)
 	}
 
-	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + monitoringGroup
-	crd.Spec.Group = monitoringGroup
+	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
+	crd.Spec.Group = group
 
 	err = f.CreateOrUpdateCRD(ctx, crd)
 	if err != nil {

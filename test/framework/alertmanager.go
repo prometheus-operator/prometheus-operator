@@ -38,6 +38,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
@@ -260,7 +261,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 		&monitoringv1.Alertmanager{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.AlertmanagersKind,
-				APIVersion: schema.GroupVersion{Group: monitoringv1.PackageGroupName, Version: monitoringv1.Version}.String(),
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,
 		},

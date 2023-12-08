@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -113,7 +114,7 @@ func (obj *ObjectReference) GroupKind() schema.GroupKind {
 // It is mostly needed for tests which don't create objects through the API and don't benefit from the default value.
 func (obj *ObjectReference) getGroup() string {
 	if obj.Group == "" {
-		return PackageGroupName
+		return monitoring.GroupName
 	}
 	return obj.Group
 }

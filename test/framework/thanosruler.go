@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 )
@@ -78,7 +79,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 		&monitoringv1.ThanosRuler{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.ThanosRulerKind,
-				APIVersion: schema.GroupVersion{Group: monitoringv1.PackageGroupName, Version: monitoringv1.Version}.String(),
+				APIVersion: schema.GroupVersion{Group: monitoring.GroupName, Version: monitoringv1.Version}.String(),
 			},
 			Spec: spec,
 		},
