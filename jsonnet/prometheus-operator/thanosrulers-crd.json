@@ -3,10 +3,9 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.11.1",
-      "operator.prometheus.io/version": "0.68.0"
+      "controller-gen.kubebuilder.io/version": "v0.13.0",
+      "operator.prometheus.io/version": "0.70.0"
     },
-    "creationTimestamp": null,
     "name": "thanosrulers.monitoring.coreos.com"
   },
   "spec": {
@@ -3524,7 +3523,7 @@
                     "type": "boolean"
                   },
                   "podMetadata": {
-                    "description": "PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.",
+                    "description": "PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods. \n The following items are reserved and cannot be overridden: * \"app.kubernetes.io/name\" label, set to \"thanos-ruler\". * \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\". * \"app.kubernetes.io/instance\" label, set to the name of the ThanosRuler instance. * \"thanos-ruler\" label, set to the name of the ThanosRuler instance. * \"kubectl.kubernetes.io/default-container\" annotation, set to \"thanos-ruler\".",
                     "properties": {
                       "annotations": {
                         "additionalProperties": {

@@ -42,24 +42,26 @@ type Store struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets       map[TLSAssetKey]TLSAsset
-	TokenAssets     map[string]Token
-	BasicAuthAssets map[string]BasicAuthCredentials
-	OAuth2Assets    map[string]OAuth2Credentials
-	SigV4Assets     map[string]SigV4Credentials
+	TLSAssets        map[TLSAssetKey]TLSAsset
+	TokenAssets      map[string]Token
+	BasicAuthAssets  map[string]BasicAuthCredentials
+	OAuth2Assets     map[string]OAuth2Credentials
+	SigV4Assets      map[string]SigV4Credentials
+	AzureOAuthAssets map[string]AzureOAuthCredentials
 }
 
 // NewStore returns an empty assetStore.
 func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *Store {
 	return &Store{
-		cmClient:        cmClient,
-		sClient:         sClient,
-		TLSAssets:       make(map[TLSAssetKey]TLSAsset),
-		TokenAssets:     make(map[string]Token),
-		BasicAuthAssets: make(map[string]BasicAuthCredentials),
-		OAuth2Assets:    make(map[string]OAuth2Credentials),
-		SigV4Assets:     make(map[string]SigV4Credentials),
-		objStore:        cache.NewStore(assetKeyFunc),
+		cmClient:         cmClient,
+		sClient:          sClient,
+		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
+		TokenAssets:      make(map[string]Token),
+		BasicAuthAssets:  make(map[string]BasicAuthCredentials),
+		OAuth2Assets:     make(map[string]OAuth2Credentials),
+		SigV4Assets:      make(map[string]SigV4Credentials),
+		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
+		objStore:         cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -84,29 +86,29 @@ func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitorin
 
 	ca, err = s.GetKey(ctx, ns, tlsConfig.CA)
 	if err != nil {
-		return fmt.Errorf("failed to get CA: %w", err)
+		return fmt.Errorf("failed to get ca %q: %w", tlsConfig.CA.String(), err)
 	}
 
 	cert, err = s.GetKey(ctx, ns, tlsConfig.Cert)
 	if err != nil {
-		return fmt.Errorf("failed to get cert: %w", err)
+		return fmt.Errorf("failed to get cert %q: %w", tlsConfig.Cert.String(), err)
 	}
 
 	if tlsConfig.KeySecret != nil {
 		key, err = s.GetSecretKey(ctx, ns, *tlsConfig.KeySecret)
 		if err != nil {
-			return fmt.Errorf("failed to get key: %w", err)
+			return fmt.Errorf("failed to get key %s/%s: %w", tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key, err)
 		}
 	}
 
 	if ca != "" {
 		block, _ := pem.Decode([]byte(ca))
 		if block == nil {
-			return errors.New("failed to decode CA certificate")
+			return fmt.Errorf("ca %s: failed to decode PEM block", tlsConfig.CA.String())
 		}
 		_, err = x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return fmt.Errorf("failed to parse CA certificate: %w", err)
+			return fmt.Errorf("ca %s: failed to parse certificate: %w", tlsConfig.CA.String(), err)
 		}
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
 	}
@@ -114,7 +116,11 @@ func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitorin
 	if cert != "" && key != "" {
 		_, err = tls.X509KeyPair([]byte(cert), []byte(key))
 		if err != nil {
-			return fmt.Errorf("failed to load X509 key pair: %w", err)
+			return fmt.Errorf(
+				"cert %s, key <%s/%s>: %w",
+				tlsConfig.Cert.String(),
+				tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key,
+				err)
 		}
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
 		s.TLSAssets[TLSAssetKeyFromSelector(ns, monitoringv1.SecretOrConfigMap{Secret: tlsConfig.KeySecret})] = TLSAsset(key)
@@ -288,6 +294,30 @@ func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sig
 	sigV4Credentials.SecretKeyID = secretKey
 
 	s.SigV4Assets[key] = sigV4Credentials
+
+	return nil
+}
+
+// AddAzureOAuth processes the AzureOAuth SecretKeySelectors and adds the AzureOAuth data to the store.
+func (s *Store) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
+	if azureAD == nil {
+		return nil
+	}
+
+	azureOAuth := azureAD.OAuth
+	if azureOAuth == nil {
+		return nil
+	}
+
+	azureOAuthCredentials := AzureOAuthCredentials{}
+
+	clientSecret, err := s.GetSecretKey(ctx, ns, azureOAuth.ClientSecret)
+	if err != nil {
+		return fmt.Errorf("failed to read AzureOAuth clientSecret: %w", err)
+	}
+	azureOAuthCredentials.ClientSecret = clientSecret
+
+	s.AzureOAuthAssets[key] = azureOAuthCredentials
 
 	return nil
 }

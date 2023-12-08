@@ -42,7 +42,7 @@ are very busy and read the mailing lists.
 The project also holds bi-weekly public meetings where maintainers,
 contributors and users of the Prometheus Operator and kube-prometheus can
 discuss issues, pull requests or any topic related to the projects. The
-meetings happen at 09:00 UTC on Monday, check the [online
+meetings happen at 11:00 UTC on Monday, check the [online
 notes](https://docs.google.com/document/d/1-fjJmzrwRpKmSPHtXN5u6VZnn39M28KqyQGBEJsqUOk/edit?usp=sharing)
 to know the exact dates and the connection details.
 

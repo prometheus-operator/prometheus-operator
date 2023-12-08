@@ -21,11 +21,10 @@ import (
 	json "encoding/json"
 	"fmt"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -37,25 +36,25 @@ type FakePrometheusRules struct {
 	ns   string
 }
 
-var prometheusrulesResource = schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "prometheusrules"}
+var prometheusrulesResource = v1.SchemeGroupVersion.WithResource("prometheusrules")
 
-var prometheusrulesKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "PrometheusRule"}
+var prometheusrulesKind = v1.SchemeGroupVersion.WithKind("PrometheusRule")
 
 // Get takes name of the prometheusRule, and returns the corresponding prometheusRule object, and an error if there is any.
-func (c *FakePrometheusRules) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.PrometheusRule, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(prometheusrulesResource, c.ns, name), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewGetAction(prometheusrulesResource, c.ns, name), &v1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.PrometheusRule), err
+	return obj.(*v1.PrometheusRule), err
 }
 
 // List takes label and field selectors, and returns the list of PrometheusRules that match those selectors.
-func (c *FakePrometheusRules) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.PrometheusRuleList, err error) {
+func (c *FakePrometheusRules) List(ctx context.Context, opts metav1.ListOptions) (result *v1.PrometheusRuleList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(prometheusrulesResource, prometheusrulesKind, c.ns, opts), &monitoringv1.PrometheusRuleList{})
+		Invokes(testing.NewListAction(prometheusrulesResource, prometheusrulesKind, c.ns, opts), &v1.PrometheusRuleList{})
 
 	if obj == nil {
 		return nil, err
@@ -65,8 +64,8 @@ func (c *FakePrometheusRules) List(ctx context.Context, opts v1.ListOptions) (re
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &monitoringv1.PrometheusRuleList{ListMeta: obj.(*monitoringv1.PrometheusRuleList).ListMeta}
-	for _, item := range obj.(*monitoringv1.PrometheusRuleList).Items {
+	list := &v1.PrometheusRuleList{ListMeta: obj.(*v1.PrometheusRuleList).ListMeta}
+	for _, item := range obj.(*v1.PrometheusRuleList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -75,63 +74,63 @@ func (c *FakePrometheusRules) List(ctx context.Context, opts v1.ListOptions) (re
 }
 
 // Watch returns a watch.Interface that watches the requested prometheusRules.
-func (c *FakePrometheusRules) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePrometheusRules) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(prometheusrulesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheusRule and creates it.  Returns the server's representation of the prometheusRule, and an error, if there is any.
-func (c *FakePrometheusRules) Create(ctx context.Context, prometheusRule *monitoringv1.PrometheusRule, opts v1.CreateOptions) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Create(ctx context.Context, prometheusRule *v1.PrometheusRule, opts metav1.CreateOptions) (result *v1.PrometheusRule, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(prometheusrulesResource, c.ns, prometheusRule), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewCreateAction(prometheusrulesResource, c.ns, prometheusRule), &v1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.PrometheusRule), err
+	return obj.(*v1.PrometheusRule), err
 }
 
 // Update takes the representation of a prometheusRule and updates it. Returns the server's representation of the prometheusRule, and an error, if there is any.
-func (c *FakePrometheusRules) Update(ctx context.Context, prometheusRule *monitoringv1.PrometheusRule, opts v1.UpdateOptions) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Update(ctx context.Context, prometheusRule *v1.PrometheusRule, opts metav1.UpdateOptions) (result *v1.PrometheusRule, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(prometheusrulesResource, c.ns, prometheusRule), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewUpdateAction(prometheusrulesResource, c.ns, prometheusRule), &v1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.PrometheusRule), err
+	return obj.(*v1.PrometheusRule), err
 }
 
 // Delete takes name of the prometheusRule and deletes it. Returns an error if one occurs.
-func (c *FakePrometheusRules) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakePrometheusRules) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(prometheusrulesResource, c.ns, name, opts), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewDeleteActionWithOptions(prometheusrulesResource, c.ns, name, opts), &v1.PrometheusRule{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePrometheusRules) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *FakePrometheusRules) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(prometheusrulesResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &monitoringv1.PrometheusRuleList{})
+	_, err := c.Fake.Invokes(action, &v1.PrometheusRuleList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched prometheusRule.
-func (c *FakePrometheusRules) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.PrometheusRule, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, name, pt, data, subresources...), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, name, pt, data, subresources...), &v1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.PrometheusRule), err
+	return obj.(*v1.PrometheusRule), err
 }
 
 // Apply takes the given apply declarative configuration, applies it and returns the applied prometheusRule.
-func (c *FakePrometheusRules) Apply(ctx context.Context, prometheusRule *applyconfigurationmonitoringv1.PrometheusRuleApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Apply(ctx context.Context, prometheusRule *monitoringv1.PrometheusRuleApplyConfiguration, opts metav1.ApplyOptions) (result *v1.PrometheusRule, err error) {
 	if prometheusRule == nil {
 		return nil, fmt.Errorf("prometheusRule provided to Apply must not be nil")
 	}
@@ -144,10 +143,10 @@ func (c *FakePrometheusRules) Apply(ctx context.Context, prometheusRule *applyco
 		return nil, fmt.Errorf("prometheusRule.Name must be provided to Apply")
 	}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, *name, types.ApplyPatchType, data), &monitoringv1.PrometheusRule{})
+		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, *name, types.ApplyPatchType, data), &v1.PrometheusRule{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*monitoringv1.PrometheusRule), err
+	return obj.(*v1.PrometheusRule), err
 }

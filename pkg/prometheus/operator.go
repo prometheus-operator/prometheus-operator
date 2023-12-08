@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,6 +37,18 @@ import (
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
 var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
+
+// Config defines the operator's parameters for the Prometheus controllers.
+// Whenever the value of one of these parameters is changed, it triggers an
+// update of the managed statefulsets.
+type Config struct {
+	LocalHost                  string
+	ReloaderConfig             operator.ContainerConfig
+	PrometheusDefaultBaseImage string
+	ThanosDefaultBaseImage     string
+	Annotations                operator.Map
+	Labels                     operator.Map
+}
 
 type StatusReporter struct {
 	Kclient         kubernetes.Interface
@@ -97,7 +110,8 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]str
 }
 
 // ValidateRemoteWriteSpec checks that mutually exclusive configurations are not
-// included in the Prometheus remoteWrite configuration section.
+// included in the Prometheus remoteWrite configuration section, while also validating
+// the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
 func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
@@ -117,6 +131,23 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 
 	if len(nonNilFields) > 1 {
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	if spec.AzureAD != nil {
+		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil {
+			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth in the Azure AD config")
+		}
+
+		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.OAuth != nil {
+			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure OAuth in the Azure AD config")
+		}
+
+		if spec.AzureAD.OAuth != nil {
+			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
+			if err != nil {
+				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
+			}
+		}
 	}
 
 	return nil

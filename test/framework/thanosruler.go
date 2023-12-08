@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -85,7 +84,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 		},
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal ThanosRuler spec")
+		return nil, fmt.Errorf("failed to marshal ThanosRuler spec: %w", err)
 	}
 
 	tr, err := f.MonClientV1.ThanosRulers(ns).Patch(
@@ -125,7 +124,7 @@ func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *
 		},
 		timeout,
 	); err != nil {
-		return errors.Wrapf(err, "thanos ruler %v/%v failed to become available", tr.Namespace, tr.Name)
+		return fmt.Errorf("thanos ruler %v/%v failed to become available: %w", tr.Namespace, tr.Name, err)
 	}
 
 	return nil
@@ -166,7 +165,7 @@ func (f *Framework) WaitForThanosFiringAlert(ctx context.Context, ns, svcName, a
 	})
 
 	if err != nil {
-		return errors.Errorf(
+		return fmt.Errorf(
 			"waiting for alert '%v' to fire: %v: %v",
 			alertName,
 			err,
@@ -185,12 +184,12 @@ func (f *Framework) CheckThanosFiringAlert(ctx context.Context, ns, svcName, ale
 		nil,
 	)
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to get Thanos service %s/%s", ns, svcName)
+		return false, fmt.Errorf("failed to get Thanos service %s/%s: %w", ns, svcName, err)
 	}
 
 	apiResponse := ThanosAlertsAPIResponse{}
 	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&apiResponse); err != nil {
-		return false, errors.Wrap(err, "failed to decode alerts from Thanos ruler API")
+		return false, fmt.Errorf("failed to decode alerts from Thanos ruler API: %w", err)
 	}
 
 	for _, alert := range apiResponse.Data.Alerts {
@@ -214,11 +213,11 @@ func (f *Framework) ThanosSVCGetRequest(ctx context.Context, ns, svcName, endpoi
 func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ctx context.Context, ns, name string) error {
 	_, err := f.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("requesting ThanosRuler custom resource %v failed", name))
+		return fmt.Errorf("requesting ThanosRuler custom resource %v failed: %w", name, err)
 	}
 
 	if err := f.MonClientV1.ThanosRulers(ns).Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("deleting ThanosRuler custom resource %v failed", name))
+		return fmt.Errorf("deleting ThanosRuler custom resource %v failed: %w", name, err)
 	}
 
 	if err := f.WaitForPodsReady(
@@ -228,10 +227,7 @@ func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ctx context.Context, ns, n
 		0,
 		thanos.ListOptions(name),
 	); err != nil {
-		return errors.Wrap(
-			err,
-			fmt.Sprintf("waiting for Prometheus custom resource (%s) to vanish timed out", name),
-		)
+		return fmt.Errorf("waiting for Prometheus custom resource (%s) to vanish timed out: %w", name, err)
 	}
 
 	return nil

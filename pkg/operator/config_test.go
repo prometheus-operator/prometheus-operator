@@ -34,3 +34,79 @@ func TestMap(t *testing.T) {
 
 	require.Equal(t, map[string]string{"foo": "bar", "foo2": "bar2", "foo3": "bar3"}, m.Merge(map[string]string{"foo": "xxx", "foo3": "bar3"}))
 }
+
+func TestFieldSelector(t *testing.T) {
+	for _, tc := range []struct {
+		value string
+		fail  bool
+	}{
+		{
+			value: "",
+		},
+		{
+			value: "foo = bar",
+		},
+		{
+			value: "foo",
+			fail:  true,
+		},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			fs := new(FieldSelector)
+
+			err := fs.Set(tc.value)
+			if tc.fail {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestLabelSelector(t *testing.T) {
+	for _, tc := range []struct {
+		value string
+		fail  bool
+	}{
+		{
+			value: "",
+		},
+		{
+			value: "foo in (bar)",
+		},
+		{
+			value: "foo in",
+			fail:  true,
+		},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			ls := new(LabelSelector)
+
+			err := ls.Set(tc.value)
+			if tc.fail {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestStringSet(t *testing.T) {
+	var s StringSet
+
+	require.Error(t, s.Set("a,b,c"))
+
+	s = StringSet{}
+
+	require.NoError(t, s.Set("a,b,c"))
+	require.Equal(t, len(s), 3)
+	require.Equal(t, s.String(), "a,b,c")
+	for _, k := range []string{"a", "b", "c"} {
+		_, found := s[k]
+		require.True(t, found)
+	}
+}

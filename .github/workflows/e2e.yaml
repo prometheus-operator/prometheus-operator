@@ -1,6 +1,8 @@
 name: e2e
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -8,6 +10,8 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   e2e-tests:
     name: E2E tests
@@ -56,9 +60,10 @@ jobs:
     - name: Import environment variables from file
       run: cat ".github/env" >> $GITHUB_ENV
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
+        check-latest: true
     - name: Build images
       run: |
         export SHELL=/bin/bash

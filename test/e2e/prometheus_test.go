@@ -1161,18 +1161,31 @@ func testPromStorageUpdate(t *testing.T) {
 }
 
 func testPromReloadConfig(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	for _, tc := range []struct {
+		reloadStrategy monitoringv1.ReloadStrategyType
+	}{
+		{
+			reloadStrategy: monitoringv1.HTTPReloadStrategyType,
+		},
+		{
+			reloadStrategy: monitoringv1.ProcessSignalReloadStrategyType,
+		},
+	} {
+		tc := tc
+		t.Run(fmt.Sprintf("%s reload strategy", tc.reloadStrategy), func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	name := "test"
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorSelector = nil
-	p.Spec.PodMonitorSelector = nil
+			name := "test"
+			p := framework.MakeBasicPrometheus(ns, name, name, 1)
+			p.Spec.ServiceMonitorSelector = nil
+			p.Spec.PodMonitorSelector = nil
+			p.Spec.ReloadStrategy = ptr.To(tc.reloadStrategy)
 
-	firstConfig := `
+			firstConfig := `
 global:
   scrape_interval: 1m
 scrape_configs:
@@ -1183,43 +1196,43 @@ scrape_configs:
         - 111.111.111.111:9090
 `
 
-	var bufOne bytes.Buffer
-	if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
-		t.Fatal(err)
-	}
-	firstConfigCompressed := bufOne.Bytes()
+			var bufOne bytes.Buffer
+			if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
+				t.Fatal(err)
+			}
+			firstConfigCompressed := bufOne.Bytes()
 
-	cfg := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s", name),
-		},
-		Data: map[string][]byte{
-			"prometheus.yaml.gz": firstConfigCompressed,
-			"configmaps.json":    []byte("{}"),
-		},
-	}
+			cfg := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: fmt.Sprintf("prometheus-%s", name),
+				},
+				Data: map[string][]byte{
+					"prometheus.yaml.gz": firstConfigCompressed,
+					"configmaps.json":    []byte("{}"),
+				},
+			}
 
-	svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+			svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{}); err != nil {
+				t.Fatal(err)
+			}
 
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
-		t.Fatal(err)
-	}
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+				t.Fatal(err)
+			}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(err)
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(err)
+			} else {
+				testCtx.AddFinalizerFn(finalizerFn)
+			}
 
-	if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
-		t.Fatal(err)
-	}
+			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
+				t.Fatal(err)
+			}
 
-	secondConfig := `
+			secondConfig := `
 global:
   scrape_interval: 1m
 scrape_configs:
@@ -1231,24 +1244,26 @@ scrape_configs:
         - 111.111.111.112:9090
 `
 
-	var bufTwo bytes.Buffer
-	if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
-		t.Fatal(err)
-	}
-	secondConfigCompressed := bufTwo.Bytes()
+			var bufTwo bytes.Buffer
+			if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
+				t.Fatal(err)
+			}
+			secondConfigCompressed := bufTwo.Bytes()
 
-	cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), cfg.Name, metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(fmt.Errorf("could not retrieve previous secret: %w", err))
-	}
+			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), cfg.Name, metav1.GetOptions{})
+			if err != nil {
+				t.Fatal(fmt.Errorf("could not retrieve previous secret: %w", err))
+			}
 
-	cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+			cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
+				t.Fatal(err)
+			}
 
-	if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2); err != nil {
-		t.Fatal(err)
+			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }
 
@@ -2732,7 +2747,7 @@ func testPromGetAuthSecret(t *testing.T) {
 			},
 			serviceMonitor: func() *monitoringv1.ServiceMonitor {
 				sm := framework.MakeBasicServiceMonitor(name)
-				sm.Spec.Endpoints[0].BearerTokenSecret = &v1.SecretKeySelector{
+				sm.Spec.Endpoints[0].BearerTokenSecret = &v1.SecretKeySelector{ //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},

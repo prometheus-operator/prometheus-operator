@@ -17,12 +17,12 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
@@ -33,11 +33,14 @@ import (
 )
 
 func main() {
-	versionutil.RegisterFlags()
+	fs := flag.CommandLine
+	versionutil.RegisterFlags(fs)
 
 	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule ConfigMap")
 	var ruleCRDSDestination = flag.String("rule-crds-destination", "", "destination new crds should be created in")
-	flag.Parse()
+
+	// No need to check for errors because Parse would exit on error.
+	_ = fs.Parse(os.Args[1:])
 
 	if versionutil.ShouldPrintVersion() {
 		versionutil.Print(os.Stdout, "po-rule-migration")
@@ -102,10 +105,9 @@ func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
 		ruleSpec := monitoringv1.PrometheusRuleSpec{}
 
 		if err := k8sYAML.NewYAMLOrJSONDecoder(bytes.NewBufferString(content), 1000).Decode(&ruleSpec); err != nil {
-			return []monitoringv1.PrometheusRule{}, errors.Wrapf(
-				err,
-				"unmarshal rules file %v in  configmap '%v' in namespace '%v'",
-				name, cm.Name, cm.Namespace,
+			return []monitoringv1.PrometheusRule{}, fmt.Errorf(
+				"unmarshal rules file %v in  configmap '%v' in namespace '%v': %w",
+				name, cm.Name, cm.Namespace, err,
 			)
 		}
 

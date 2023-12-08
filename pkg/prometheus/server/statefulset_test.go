@@ -25,6 +25,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,7 +40,7 @@ import (
 )
 
 var (
-	defaultTestConfig = &operator.Config{
+	defaultTestConfig = &prompkg.Config{
 		LocalHost:                  "localhost",
 		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
@@ -48,7 +49,7 @@ var (
 )
 
 func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
@@ -874,7 +875,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 }
 
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
-	operatorConfig := &operator.Config{
+	operatorConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -926,7 +927,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
-	thanosBaseImageConfig := &operator.Config{
+	thanosBaseImageConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -1534,7 +1535,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 }
 
 func TestReplicasConfigurationWithSharding(t *testing.T) {
-	testConfig := &operator.Config{
+	testConfig := &prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1596,7 +1597,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 
 func TestSidecarResources(t *testing.T) {
 	operator.TestSidecarsResources(t, func(reloaderConfig operator.ContainerConfig) *appsv1.StatefulSet {
-		testConfig := &operator.Config{
+		testConfig := &prompkg.Config{
 			ReloaderConfig:             reloaderConfig,
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,
@@ -2069,6 +2070,83 @@ func TestConfigReloader(t *testing.T) {
 			for _, env := range c.Env {
 				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum)) {
 					t.Fatalf("expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+		}
+	}
+}
+
+func TestConfigReloaderWithSignal(t *testing.T) {
+	expectedShardNum := 0
+	logger := newLogger()
+	p := monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ReloadStrategy: func(r monitoringv1.ReloadStrategyType) *monitoringv1.ReloadStrategyType { return &r }(monitoringv1.ProcessSignalReloadStrategyType),
+			},
+		},
+	}
+
+	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	require.NoError(t, err)
+
+	sset, err := makeStatefulSet(
+		"test",
+		&p,
+		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
+		p.Spec.Retention,
+		p.Spec.RetentionSize,
+		p.Spec.Rules,
+		p.Spec.Query,
+		p.Spec.AllowOverlappingBlocks,
+		p.Spec.EnableAdminAPI,
+		p.Spec.QueryLogFile,
+		p.Spec.Thanos,
+		p.Spec.DisableCompaction,
+		defaultTestConfig,
+		cg,
+		nil,
+		"",
+		int32(expectedShardNum),
+		nil)
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-method=signal",
+		"--runtimeinfo-url=http://localhost:9090/api/v1/status/runtimeinfo",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		switch c.Name {
+		case "config-reloader":
+			require.Equal(t, expectedArgsConfigReloader, c.Args)
+			for _, env := range c.Env {
+				if env.Name == "SHARD" {
+					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+
+		case "prometheus":
+			require.NotContains(t, c.Args, "--web.enable-lifecycle")
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range sset.Spec.Template.Spec.InitContainers {
+		if c.Name == "init-config-reloader" {
+			require.Equal(t, expectedArgsInitConfigReloader, c.Args)
+			for _, env := range c.Env {
+				if env.Name == "SHARD" {
+					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
 				}
 			}
 		}
@@ -2804,5 +2882,179 @@ func TestPodHostNetworkConfig(t *testing.T) {
 
 	if sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
 		t.Fatalf("expected DNSPolicy configuration to match due to hostNetwork but failed")
+	}
+}
+
+func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+					WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+					WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenDeleted to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted)
+	}
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
+	}
+}
+
+func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+		tsc  v1.TopologySpreadConstraint
+	}{
+		{
+			name: "without labelSelector and additionalLabels",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+							},
+						},
+					},
+				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+			},
+		},
+		{
+			name: "with labelSelector and without additionalLabels",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "prometheus",
+					},
+				},
+			},
+		},
+		{
+			name: "with labelSelector and additionalLabels as ShardAndNameResource",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app":                           "prometheus",
+						"app.kubernetes.io/instance":    "test",
+						"app.kubernetes.io/managed-by":  "prometheus-operator",
+						"prometheus":                    "test",
+						prompkg.ShardLabelName:          "0",
+						prompkg.PrometheusNameLabelName: "test",
+						prompkg.PrometheusK8sLabelName:  "prometheus",
+					},
+				},
+			},
+		},
+		{
+			name: "with labelSelector and additionalLabels as ResourceName",
+			spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+						{
+							AdditionalLabelSelectors: ptr.To(monitoringv1.ResourceNameLabelSelector),
+							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
+								MaxSkew:           1,
+								TopologyKey:       "kubernetes.io/hostname",
+								WhenUnsatisfiable: v1.DoNotSchedule,
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app": "prometheus",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			tsc: v1.TopologySpreadConstraint{
+				MaxSkew:           1,
+				TopologyKey:       "kubernetes.io/hostname",
+				WhenUnsatisfiable: v1.DoNotSchedule,
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app":                           "prometheus",
+						"app.kubernetes.io/instance":    "test",
+						"app.kubernetes.io/managed-by":  "prometheus-operator",
+						"prometheus":                    "test",
+						prompkg.PrometheusNameLabelName: "test",
+						prompkg.PrometheusK8sLabelName:  "prometheus",
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sts, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns-test",
+				},
+				Spec: tc.spec,
+			})
+
+			require.NoError(t, err)
+
+			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
+			assert.Equal(t, tc.tsc, sts.Spec.Template.Spec.TopologySpreadConstraints[0])
+		})
 	}
 }

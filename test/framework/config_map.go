@@ -16,9 +16,9 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,7 +68,10 @@ func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) 
 		return true, nil
 	})
 
-	return configMap, errors.Wrapf(err, "waiting for ConfigMap '%v' in namespace '%v'", name, ns)
+	if err != nil {
+		return nil, fmt.Errorf("waiting for ConfigMap '%v' in namespace '%v': %w", name, ns, err)
+	}
+	return configMap, nil
 }
 
 func (f *Framework) WaitForConfigMapNotExist(ctx context.Context, ns, name string) error {
@@ -89,5 +92,8 @@ func (f *Framework) WaitForConfigMapNotExist(ctx context.Context, ns, name strin
 		return false, nil
 	})
 
-	return errors.Wrapf(err, "waiting for ConfigMap '%v' in namespace '%v' to not exist", name, ns)
+	if err != nil {
+		return fmt.Errorf("waiting for ConfigMap '%v' in namespace '%v' to not exist: %w", name, ns, err)
+	}
+	return nil
 }

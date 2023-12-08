@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
@@ -66,7 +65,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	if p == nil {
 		p = &monitoringv1.Prometheus{}
 	}
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stderr), level.AllowWarn())
+	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
 	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
@@ -297,7 +296,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 						MatchNames: []string{"test1", "test2"},
 					},
 					AttachMetadata: &monitoringv1.AttachMetadata{
-						Node: true,
+						Node: ptr.To(true),
 					},
 				},
 			},
@@ -406,7 +405,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 				MatchNames: []string{"test"},
 			},
 			AttachMetadata: &monitoringv1.AttachMetadata{
-				Node: true,
+				Node: ptr.To(true),
 			},
 		},
 	}
@@ -832,7 +831,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				BasicAuth:       &monitoringv1.BasicAuth{},
 				BearerToken:     "bearer_token",
 				BearerTokenFile: "bearer_token_file",
-				TLSConfig:       nil,
 			},
 			&assets.Store{
 				BasicAuthAssets: map[string]assets.BasicAuthCredentials{
@@ -1199,7 +1197,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 						Namespace:   "default",
 						Port:        intstr.FromString("web"),
 						APIVersion:  "v2",
-						EnableHttp2: swag.Bool(tc.enableHTTP2),
+						EnableHttp2: ptr.To(tc.enableHTTP2),
 					},
 				},
 			}
@@ -1815,7 +1813,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: swag.Bool(false),
+							HonorTimestamps: ptr.To(false),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -1860,7 +1858,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							HonorTimestamps: swag.Bool(false),
+							HonorTimestamps: ptr.To(false),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -1878,6 +1876,94 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	)
 	require.NoError(t, err)
 	golden.Assert(t, string(cfg), "SettingHonorTimestampsInPodMonitor.golden")
+}
+
+func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					TargetLabels: []string{"example", "env"},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							TrackTimestampsStaleness: ptr.To(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInServiceMonitor.golden")
+}
+
+func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
+	p := defaultPrometheus()
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		p.Spec.EvaluationInterval,
+		p.Spec.QueryLogFile,
+		p.Spec.RuleSelector,
+		p.Spec.Exemplars,
+		p.Spec.TSDB,
+		p.Spec.Alerting,
+		p.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodTargetLabels: []string{"example", "env"},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							TrackTimestampsStaleness: ptr.To(false),
+							Port:                     "web",
+							Interval:                 "30s",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInPodMonitor.golden")
 }
 
 func TestHonorTimestampsOverriding(t *testing.T) {
@@ -1904,7 +1990,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: swag.Bool(true),
+							HonorTimestamps: ptr.To(true),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -2856,22 +2942,22 @@ func TestHonorTimestamps(t *testing.T) {
 			Expected:                "{}\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(false),
+			UserHonorTimestamps:     ptr.To(false),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(false),
+			UserHonorTimestamps:     ptr.To(false),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(true),
+			UserHonorTimestamps:     ptr.To(true),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     swag.Bool(true),
+			UserHonorTimestamps:     ptr.To(true),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: true\n",
 		},
@@ -2889,6 +2975,43 @@ func TestHonorTimestamps(t *testing.T) {
 			})
 
 			hl, _ := yaml.Marshal(cg.AddHonorTimestamps(yaml.MapSlice{}, tc.UserHonorTimestamps))
+			require.Equal(t, tc.Expected, string(hl))
+		})
+	}
+}
+
+func TestTrackTimestampsStaleness(t *testing.T) {
+	type testCase struct {
+		UserTrackTimestampsStaleness *bool
+		Expected                     string
+	}
+
+	testCases := []testCase{
+		{
+			UserTrackTimestampsStaleness: nil,
+			Expected:                     "{}\n",
+		},
+		{
+			UserTrackTimestampsStaleness: ptr.To(false),
+			Expected:                     "track_timestamps_staleness: false\n",
+		},
+		{
+			UserTrackTimestampsStaleness: ptr.To(true),
+			Expected:                     "track_timestamps_staleness: true\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "2.48.0",
+					},
+				},
+			})
+
+			hl, _ := yaml.Marshal(cg.AddTrackTimestampsStaleness(yaml.MapSlice{}, tc.UserTrackTimestampsStaleness))
 			require.Equal(t, tc.Expected, string(hl))
 		})
 	}
@@ -3345,12 +3468,52 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
-					ManagedIdentity: monitoringv1.ManagedIdentity{
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
 						ClientID: "client-id",
 					},
 				},
 			},
 			golden: "RemoteWriteConfig_v2.45.0_1.golden",
+		},
+		{
+			version: "v2.48.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
+		},
+		{
+			version: "v2.47.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -3504,6 +3667,13 @@ func TestRemoteWriteConfig(t *testing.T) {
 					"remoteWrite/0": {
 						AccessKeyID: "access-key",
 						SecretKeyID: "secret-key",
+					},
+				}
+			}
+			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
+				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
+					"remoteWrite/0": {
+						ClientSecret: "secret-key",
 					},
 				}
 			}
@@ -4156,7 +4326,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(tc.followRedirects),
+							FollowRedirects: ptr.To(tc.followRedirects),
 						},
 					},
 				},
@@ -4234,7 +4404,7 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 						{
 							Port:            "web",
 							Interval:        "30s",
-							FollowRedirects: swag.Bool(tc.followRedirects),
+							FollowRedirects: ptr.To(tc.followRedirects),
 						},
 					},
 				},
@@ -4313,7 +4483,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(tc.enableHTTP2),
+							EnableHttp2: ptr.To(tc.enableHTTP2),
 						},
 					},
 				},
@@ -4373,7 +4543,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							FilterRunning: swag.Bool(false),
+							FilterRunning: ptr.To(false),
 							Port:          "test",
 						},
 					},
@@ -4436,7 +4606,7 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 						{
 							Port:        "web",
 							Interval:    "30s",
-							EnableHttp2: swag.Bool(tc.enableHTTP2),
+							EnableHttp2: ptr.To(tc.enableHTTP2),
 						},
 					},
 				},
@@ -4550,7 +4720,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_<_v2.39.0.golden",
+			golden: "TSDB_config_less_than_v2.39.0.golden",
 		},
 		{
 
@@ -4558,7 +4728,7 @@ func TestTSDBConfig(t *testing.T) {
 			tsdb: &monitoringv1.TSDBSpec{
 				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
 			},
-			golden: "TSDB_config_>=_v2.39.0.golden",
+			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -4821,6 +4991,19 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL:             "http://localhost:9100/sd.json",
 						RefreshInterval: &refreshInterval,
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -4836,6 +5019,24 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_K8SSD.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_selectors",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "node",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "node",
+								Label: "type=infra",
+								Field: "spec.unschedulable=false",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_K8SSD_with_Selectors.golden",
 		},
 		{
 			name: "metrics_path",
@@ -4872,6 +5073,13 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				HonorTimestamps: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorTimeStamp.golden",
+		},
+		{
+			name: "track_timestamps_staleness",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TrackTimestampsStaleness: ptr.To(true),
+			},
+			golden: "ScrapeConfigSpecConfig_TrackTimestampsStaleness.golden",
 		},
 		{
 			name: "honor_labels",
@@ -5040,6 +5248,47 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_NonEmptyMetricRelabelConfig.golden",
 		},
 		{
+			name: "proxy_settings",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
+		},
+		{
+			name: "proxy_settings_incompatible_prometheus_version",
+			patchProm: func(p *monitoringv1.Prometheus) {
+				p.Spec.CommonPrometheusFields.Version = "v2.42.0"
+			},
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettingsIncompatiblePrometheusVersion.golden",
+		},
+		{
 			name: "dns_sd_config-srv-record",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
@@ -5081,6 +5330,35 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			cg := mustNewConfigGenerator(t, p)
+
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
+				"scrapeconfig/default/testscrapeconfig1": {
+					Username: "scrape-bob",
+					Password: "scrape-alice",
+				},
+				"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
+					Username: "http-sd-bob",
+					Password: "http-sd-alice",
+				},
+			}
+			store.TokenAssets = map[string]assets.Token{
+				"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
+				"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
+			}
+
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
 				p.Spec.EvaluationInterval,
@@ -5094,22 +5372,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{
-						"scrapeconfig/default/testscrapeconfig1": {
-							Username: "scrape-bob",
-							Password: "scrape-alice",
-						},
-						"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
-							Username: "http-sd-bob",
-							Password: "http-sd-alice",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
-						"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
-					},
-				},
+				store,
 				nil,
 				nil,
 				nil,
@@ -5157,17 +5420,19 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							"service": "service_name",
 							"name":    "node_name",
 						},
-						AllowStale:           ptr.To(false),
-						RefreshInterval:      (*monitoringv1.Duration)(ptr.To("30s")),
-						ProxyUrl:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string]v1.SecretKeySelector{
-							"header": {
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "foo",
+						AllowStale:      ptr.To(false),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
 								},
-								Key: "proxy-header",
 							},
 						},
 						FollowRedirects: ptr.To(true),
@@ -5491,6 +5756,185 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				scs,
 				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "azure-client-secret",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"clientSecret": []byte("my-secret"),
+			},
+		},
+	)
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "azure_sd_config_valid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To("OAuth"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-client-secret",
+							},
+							Key: "clientSecret",
+						},
+						ResourceGroup:   ptr.To("my-resource-group"),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid.golden",
+		},
+		{
+			name: "azure_sd_config_invalid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "wrong-secret-name",
+							},
+							Key: "clientSecret",
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "azure_sd_config_empty",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigEmpty.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "gce_sd_config_valid",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project:         "devops-dev",
+						Zone:            "us-west-1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Port:            ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_empty",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigEmpty.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				nil,
 				nil,
 				nil,
 				nil,

@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -47,6 +48,9 @@ const (
 	defaultDelayInterval = 1 * time.Second  // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
+
+	httpReloadMethod   = "http"
+	signalReloadMethod = "signal"
 
 	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
@@ -66,6 +70,9 @@ func main() {
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
+	reloadMethod := app.Flag("reload-method", "method used to reload the configuration").Default(httpReloadMethod).Enum(httpReloadMethod, signalReloadMethod)
+	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").Default("prometheus").String()
+
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
 		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
@@ -76,23 +83,32 @@ func main() {
 		"address on which to expose metrics (disabled when empty)").
 		String()
 
-	logFormat := app.Flag(
+	webConfig := app.Flag(
+		"web-config-file",
+		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
+	).Default("").String()
+
+	var logConfig logging.Config
+	app.Flag(
 		"log-format",
 		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", "))).
-		Default(logging.FormatLogFmt).String()
+		Default(logging.FormatLogFmt).StringVar(&logConfig.Format)
 
-	logLevel := app.Flag(
+	app.Flag(
 		"log-level",
 		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", "))).
-		Default(logging.LevelInfo).String()
+		Default(logging.LevelInfo).StringVar(&logConfig.Level)
 
-	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
+	reloadURL := app.Flag("reload-url", "URL to trigger the configuration").
 		Default("http://127.0.0.1:9090/-/reload").URL()
+
+	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
+		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stdout, err)
 		os.Exit(2)
 	}
 
@@ -101,9 +117,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger, err := logging.NewLogger(*logLevel, *logFormat)
+	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	err = web.Validate(*webConfig)
+	if err != nil {
+		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
+		os.Exit(2)
 	}
 
 	if createStatefulsetOrdinalFrom != nil {
@@ -127,22 +149,29 @@ func main() {
 	)
 
 	{
+		opts := reloader.Options{
+			CfgFile:       *cfgFile,
+			CfgOutputFile: *cfgSubstFile,
+			WatchedDirs:   *watchedDir,
+			DelayInterval: *delayInterval,
+			WatchInterval: *watchInterval,
+			RetryInterval: *retryInterval,
+		}
+
+		switch *reloadMethod {
+		case signalReloadMethod:
+			opts.RuntimeInfoURL = *runtimeInfoURL
+			opts.ProcessName = *processName
+		default:
+			opts.ReloadURL = *reloadURL
+			opts.HTTPClient = createHTTPClient(reloadTimeout)
+		}
+
 		rel := reloader.New(
 			logger,
 			r,
-			&reloader.Options{
-				ReloadURL:     *reloadURL,
-				CfgFile:       *cfgFile,
-				CfgOutputFile: *cfgSubstFile,
-				WatchedDirs:   *watchedDir,
-				DelayInterval: *delayInterval,
-				WatchInterval: *watchInterval,
-				RetryInterval: *retryInterval,
-			},
+			&opts,
 		)
-
-		client := createHTTPClient(reloadTimeout)
-		rel.SetHttpClient(client)
 
 		g.Add(func() error {
 			return rel.Watch(ctx)
@@ -158,11 +187,14 @@ func main() {
 			w.Write([]byte(`{"status":"up"}`))
 		})
 
-		srv := http.Server{Addr: *listenAddress}
+		srv := &http.Server{}
 
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
-			return srv.ListenAndServe()
+			return web.ListenAndServe(srv, &web.FlagConfig{
+				WebListenAddresses: &[]string{*listenAddress},
+				WebConfigFile:      webConfig,
+			}, logger)
 		}, func(error) {
 			srv.Close()
 		})
@@ -181,7 +213,7 @@ func main() {
 	}, func(error) {})
 
 	if err := g.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		level.Error(logger).Log("msg", "Failed to run", "err", err)
 		os.Exit(1)
 	}
 }

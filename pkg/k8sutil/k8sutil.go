@@ -79,7 +79,7 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	return false, nil
 }
 
-func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig, asUser string) (*rest.Config, error) {
+func NewClusterConfig(host string, tlsConfig rest.TLSClientConfig, asUser string) (*rest.Config, error) {
 	var cfg *rest.Config
 	var err error
 
@@ -104,8 +104,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 				return nil, fmt.Errorf("error parsing host url %s: %w", host, err)
 			}
 			if hostURL.Scheme == "https" {
-				cfg.TLSClientConfig = *tlsConfig
-				cfg.Insecure = tlsInsecure
+				cfg.TLSClientConfig = tlsConfig
 			}
 		}
 	}
