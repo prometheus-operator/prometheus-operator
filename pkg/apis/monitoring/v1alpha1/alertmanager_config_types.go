@@ -960,8 +960,8 @@ type Matcher struct {
 	// +optional
 	MatchType MatchType `json:"matchType,omitempty"`
 	// Whether to match on equality (false) or regular-expression (true).
-	// Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead.
 	// +optional
+	// Deprecated: for AlertManager >= v0.22.0, `matchType` should be used instead.
 	Regex bool `json:"regex,omitempty"`
 }
 

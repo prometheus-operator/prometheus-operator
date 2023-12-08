@@ -156,6 +156,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error {
 	var nonNilFields []string
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if am.BearerTokenFile != "" {
 		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
 	}

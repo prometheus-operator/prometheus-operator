@@ -200,8 +200,8 @@ type EmbeddedPersistentVolumeClaim struct {
 	// +optional
 	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 
-	// *Deprecated: this field is never set.*
 	// +optional
+	// Deprecated: this field is never set.
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 

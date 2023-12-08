@@ -3894,7 +3894,7 @@
                     "description": "Storage spec to specify how storage shall be used.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "*Deprecated: subPath usage will be removed in a future release.*",
+                        "description": "Deprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
@@ -4327,7 +4327,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "*Deprecated: this field is never set.*",
+                            "description": "Deprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",

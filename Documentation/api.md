@@ -165,8 +165,7 @@ string
 <td>
 <p>Tag of Alertmanager container image to be deployed. Defaults to the value of <code>version</code>.
 Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+Deprecated: use &lsquo;image&rsquo; instead. The image tag can be specified as part of the image URL.</p>
 </td>
 </tr>
 <tr>
@@ -180,8 +179,7 @@ string
 <p>SHA of Alertmanager container image to be deployed. Defaults to the value of <code>version</code>.
 Similar to a tag, but the SHA explicitly deploys an immutable container image.
 Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+Deprecated: use &lsquo;image&rsquo; instead. The image digest can be specified as part of the image URL.</p>
 </td>
 </tr>
 <tr>
@@ -193,7 +191,7 @@ string
 </td>
 <td>
 <p>Base image that is used to deploy pods, without tag.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+Deprecated: use &lsquo;image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -2568,7 +2566,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -2579,8 +2577,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
-as part of the image name.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -2591,8 +2588,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
-specified as part of the image name.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -2660,7 +2656,7 @@ Rules
 <p>Defines the list of PrometheusRule objects to which the namespace label
 enforcement doesn&rsquo;t apply.
 This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
-<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
+Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -2831,7 +2827,7 @@ bool
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query
 merge in Prometheus.</p>
-<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
+<p>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -4047,7 +4043,7 @@ string
 <td>
 <p>File to read bearer token for accessing apiserver.</p>
 <p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>bearerToken</code>.</p>
-<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
+<p>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4090,7 +4086,7 @@ string
 <td>
 <p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
-<p><em>Deprecated: this will be removed in a future release.</em></p>
+<p>Deprecated: this will be removed in a future release.</p>
 </td>
 </tr>
 </tbody>
@@ -4351,7 +4347,7 @@ string
 <td>
 <p>File to read bearer token for Alertmanager.</p>
 <p>Cannot be set at the same time as <code>basicAuth</code>, <code>authorization</code>, or <code>sigv4</code>.</p>
-<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
+<p>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -4622,8 +4618,7 @@ string
 <td>
 <p>Tag of Alertmanager container image to be deployed. Defaults to the value of <code>version</code>.
 Version is ignored if Tag is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image tag can be specified
-as part of the image URL.</p>
+Deprecated: use &lsquo;image&rsquo; instead. The image tag can be specified as part of the image URL.</p>
 </td>
 </tr>
 <tr>
@@ -4637,8 +4632,7 @@ string
 <p>SHA of Alertmanager container image to be deployed. Defaults to the value of <code>version</code>.
 Similar to a tag, but the SHA explicitly deploys an immutable container image.
 Version and Tag are ignored if SHA is set.
-Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image URL.</p>
+Deprecated: use &lsquo;image&rsquo; instead. The image digest can be specified as part of the image URL.</p>
 </td>
 </tr>
 <tr>
@@ -4650,7 +4644,7 @@ string
 </td>
 <td>
 <p>Base image that is used to deploy pods, without tag.
-Deprecated: use &lsquo;image&rsquo; instead</p>
+Deprecated: use &lsquo;image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -7579,7 +7573,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p><em>Deprecated: this field is never set.</em></p>
+<p>Deprecated: this field is never set.</p>
 </td>
 </tr>
 </tbody>
@@ -11066,7 +11060,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -11077,8 +11071,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified
-as part of the image name.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -11089,8 +11082,7 @@ string
 </em>
 </td>
 <td>
-<p><em>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be
-specified as part of the image name.</em></p>
+<p>Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -11158,7 +11150,7 @@ Rules
 <p>Defines the list of PrometheusRule objects to which the namespace label
 enforcement doesn&rsquo;t apply.
 This is only relevant when <code>spec.enforcedNamespaceLabel</code> is set to true.
-<em>Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</em></p>
+Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -11329,7 +11321,7 @@ bool
 <td>
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query
 merge in Prometheus.</p>
-<p><em>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</em></p>
+<p>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -12143,7 +12135,7 @@ string
 </td>
 <td>
 <p>File from which to read the bearer token for the URL.</p>
-<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
+<p>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12172,7 +12164,7 @@ string
 <td>
 <p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
-<p><em>Deprecated: this will be removed in a future release.</em></p>
+<p>Deprecated: this will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -12379,7 +12371,7 @@ string
 </td>
 <td>
 <p>File from which to read bearer token for the URL.</p>
-<p><em>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</em></p>
+<p>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12440,7 +12432,7 @@ string
 <td>
 <p><em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
-<p><em>Deprecated: this will be removed in a future release.</em></p>
+<p>Deprecated: this will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -13326,7 +13318,7 @@ bool
 </em>
 </td>
 <td>
-<p><em>Deprecated: subPath usage will be removed in a future release.</em></p>
+<p>Deprecated: subPath usage will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -14375,8 +14367,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p><em>Deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as
-part of the image name.</em></p>
+<p>Deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -14388,8 +14379,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p><em>Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified
-as part of the image name.</em></p>
+<p>Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -14401,7 +14391,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p><em>Deprecated: use &lsquo;image&rsquo; instead.</em></p>
+<p>Deprecated: use &lsquo;image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -14455,7 +14445,7 @@ bool
 </em>
 </td>
 <td>
-<p><em>Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</em></p>
+<p>Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -18822,7 +18812,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to match on equality (false) or regular-expression (true).
-Deprecated as of AlertManager &gt;= v0.22.0 where a user should use MatchType instead.</p>
+Deprecated: for AlertManager &gt;= v0.22.0, <code>matchType</code> should be used instead.</p>
 </td>
 </tr>
 </tbody>
