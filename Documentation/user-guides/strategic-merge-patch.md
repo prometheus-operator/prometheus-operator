@@ -99,3 +99,22 @@ spec:
     - sleep
     - "3600"
 ```
+
+## How to inject additional CLI arguments into the prometheus container
+
+The following manifest injects an additional CLI argument in the default
+Prometheus argument list. Note the use of `.spec.additionalArgs` in this
+example.
+Using `.spec.containers[*].args` directly would instead overwrite the container's
+`args` list completely, including the default arguments.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: additional-arguments
+spec:
+  additionalArgs:
+  - name: "scrape.timestamp-tolerance"
+    value: "15ms"
+```
