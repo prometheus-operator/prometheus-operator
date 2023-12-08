@@ -105,7 +105,7 @@ spec:
 The following manifest injects an additional CLI argument in the default
 Prometheus argument list. Note the use of `.spec.additionalArgs` in this
 example.
-Using `.spec.containers[*].args` directly would instead overwrite the containers
+Using `.spec.containers[*].args` directly would instead overwrite the container's
 `args` list completely, including the default arguments.
 
 ```yaml
