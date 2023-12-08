@@ -9,6 +9,7 @@ linters:
 
 issues:
   exclude-rules:
+  # Disable errcheck linter for test files.
   - path: _test.go
     linters:
     - errcheck

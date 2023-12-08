@@ -1040,11 +1040,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 			p.Spec.Retention,
 			p.Spec.RetentionSize,
 			p.Spec.Rules,
 			p.Spec.Query,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.AllowOverlappingBlocks,
 			p.Spec.EnableAdminAPI,
 			p.Spec.QueryLogFile,
@@ -1169,25 +1171,34 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 func logDeprecatedFields(logger log.Logger, p *monitoringv1.Prometheus) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.BaseImage != "" {
 		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.Tag != "" {
 		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.SHA != "" {
 		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 
 	if p.Spec.Thanos != nil {
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.BaseImage != "" {
 			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
+
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Tag != "" {
 			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
+
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.SHA != "" {
 			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}

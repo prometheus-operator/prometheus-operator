@@ -702,13 +702,11 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
 
-	// *Deprecated: use 'spec.image' instead.*
+	// Deprecated: use 'spec.image' instead.
 	BaseImage string `json:"baseImage,omitempty"`
-	// *Deprecated: use 'spec.image' instead. The image's tag can be specified
-	// as part of the image name.*
+	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	Tag string `json:"tag,omitempty"`
-	// *Deprecated: use 'spec.image' instead. The image's digest can be
-	// specified as part of the image name.*
+	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	SHA string `json:"sha,omitempty"`
 
 	// How long to retain the Prometheus data.
@@ -726,8 +724,8 @@ type PrometheusSpec struct {
 	// Defines the list of PrometheusRule objects to which the namespace label
 	// enforcement doesn't apply.
 	// This is only relevant when `spec.enforcedNamespaceLabel` is set to true.
-	// *Deprecated: use `spec.excludedFromEnforcement` instead.*
 	// +optional
+	// Deprecated: use `spec.excludedFromEnforcement` instead.
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// PrometheusRule objects to be selected for rule evaluation. An empty
 	// label selector matches all objects. A null label selector matches no
@@ -807,7 +805,7 @@ type PrometheusSpec struct {
 	// AllowOverlappingBlocks enables vertical compaction and vertical query
 	// merge in Prometheus.
 	//
-	// *Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.*
+	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 
 	// Exemplars related settings that are runtime reloadable.
@@ -921,7 +919,7 @@ type AlertingSpec struct {
 //
 // +k8s:openapi-gen=true
 type StorageSpec struct {
-	// *Deprecated: subPath usage will be removed in a future release.*
+	// Deprecated: subPath usage will be removed in a future release.
 	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
 	// EmptyDirVolumeSource to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
@@ -1001,16 +999,14 @@ type ThanosSpec struct {
 	// +optional
 	Version *string `json:"version,omitempty"`
 
-	// *Deprecated: use 'image' instead. The image's tag can be specified as
-	// part of the image name.*
 	// +optional
+	// Deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
 	Tag *string `json:"tag,omitempty"`
-	// *Deprecated: use 'image' instead.  The image digest can be specified
-	// as part of the image name.*
 	// +optional
+	// Deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
 	SHA *string `json:"sha,omitempty"`
-	// *Deprecated: use 'image' instead.*
 	// +optional
+	// Deprecated: use 'image' instead.
 	BaseImage *string `json:"baseImage,omitempty"`
 
 	// Defines the resources requests and limits of the Thanos sidecar.
@@ -1031,7 +1027,7 @@ type ThanosSpec struct {
 	// +optional
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 
-	// *Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.*
+	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// When true, the Thanos sidecar listens on the loopback interface instead
@@ -1183,7 +1179,7 @@ type RemoteWriteSpec struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// File from which to read bearer token for the URL.
 	//
-	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Authorization section for the URL.
 	//
@@ -1214,7 +1210,7 @@ type RemoteWriteSpec struct {
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//
-	// *Deprecated: this will be removed in a future release.*
+	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -1373,7 +1369,7 @@ type RemoteReadSpec struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// File from which to read the bearer token for the URL.
 	//
-	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Authorization section for the URL.
 	//
@@ -1387,7 +1383,7 @@ type RemoteReadSpec struct {
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//
-	// *Deprecated: this will be removed in a future release.*
+	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -1485,7 +1481,7 @@ type APIServerConfig struct {
 	//
 	// Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`.
 	//
-	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// TLS Config to use for the API server.
@@ -1504,7 +1500,7 @@ type APIServerConfig struct {
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//
-	// *Deprecated: this will be removed in a future release.*
+	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
 }
 
@@ -1542,7 +1538,7 @@ type AlertmanagerEndpoints struct {
 	//
 	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
 	//
-	// *Deprecated: this will be removed in a future release. Prefer using `authorization`.*
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.

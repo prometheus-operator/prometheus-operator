@@ -639,10 +639,12 @@ func createThanosContainer(
 		}
 
 		var grpcBindAddress, httpBindAddress string
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if thanos.ListenLocal || thanos.GRPCListenLocal {
 			grpcBindAddress = "127.0.0.1"
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if thanos.ListenLocal || thanos.HTTPListenLocal {
 			httpBindAddress = "127.0.0.1"
 		}

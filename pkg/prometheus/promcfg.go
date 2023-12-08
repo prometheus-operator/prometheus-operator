@@ -1551,10 +1551,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, "apiserver", store, apiserverConfig.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerTokenFile != "" {
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
@@ -1613,6 +1615,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
@@ -1745,10 +1748,12 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteRead/%d", i), store, spec.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
@@ -1887,10 +1892,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}

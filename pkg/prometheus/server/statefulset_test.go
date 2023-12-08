@@ -62,11 +62,13 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 	return makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -443,11 +445,13 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"volume-init-test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -900,11 +904,13 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -954,11 +960,13 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -1557,11 +1565,13 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -1612,11 +1622,13 @@ func TestSidecarResources(t *testing.T) {
 		sset, err := makeStatefulSet(
 			"test",
 			&p,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 			p.Spec.Retention,
 			p.Spec.RetentionSize,
 			p.Spec.Rules,
 			p.Spec.Query,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.AllowOverlappingBlocks,
 			p.Spec.EnableAdminAPI,
 			p.Spec.QueryLogFile,
@@ -2016,11 +2028,13 @@ func TestConfigReloader(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
@@ -2092,11 +2106,13 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
 		p.Spec.Retention,
 		p.Spec.RetentionSize,
 		p.Spec.Rules,
 		p.Spec.Query,
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
