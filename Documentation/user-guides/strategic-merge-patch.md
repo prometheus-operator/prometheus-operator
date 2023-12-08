@@ -100,7 +100,7 @@ spec:
     - "3600"
 ```
 
-## How to inject additional CLI arguments into the prometheus pods
+## How to inject additional CLI arguments into the prometheus container
 
 The following manifest injects an additional CLI argument in the default
 Prometheus argument list. Note the use of `.spec.additionalArgs` in this
