@@ -2528,6 +2528,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
 
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -2540,6 +2541,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	// Add scrape class relabelings if there is any.
 	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+
+	if sc.Spec.JobName != nil {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "job"},
+			{Key: "action", Value: "replace"},
+			{Key: "replacement", Value: sc.Spec.JobName},
+		})
+	}
 
 	if sc.Spec.HonorTimestamps != nil {
 		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)

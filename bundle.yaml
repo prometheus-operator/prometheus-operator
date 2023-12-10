@@ -39871,6 +39871,16 @@ spec:
                   - url
                   type: object
                 type: array
+              jobName:
+                description: |-
+                  The value of the `job` label assigned to the scraped metrics by default.
+
+
+                  The `job_name` field in the rendered scrape configuration is always controlled by the
+                  operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+                  `job` label is set by means of relabeling configs.
+                minLength: 1
+                type: string
               keepDroppedTargets:
                 description: |-
                   Per-scrape limit on the number of targets dropped by relabeling
