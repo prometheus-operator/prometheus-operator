@@ -1338,3 +1338,45 @@ func containsString(sub string) func(string) bool {
 func toPtr[T any](t T) *T {
 	return &t
 }
+
+func TestEnableFeatures(t *testing.T) {
+	tt := []struct {
+		name         string
+		features     []string
+		expectedFlag string
+	}{
+		{
+			name:         "EnableFeaturesWithOneFeature",
+			features:     []string{"classic-mode"},
+			expectedFlag: "--enable-feature=classic-mode",
+		},
+		{
+			name:         "EnableFeaturesWithMultipleFeatures",
+			features:     []string{"classic-mode", "receiver-name-in-metrics"},
+			expectedFlag: "--enable-feature=classic-mode,receiver-name-in-metrics",
+		},
+	}
+
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas:       toPtr(int32(1)),
+					EnableFeatures: test.features,
+				},
+			}, defaultTestConfig, nil)
+			require.NoError(t, err)
+
+			found := false
+			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
+				if flag == test.expectedFlag {
+					found = true
+				}
+			}
+
+			if !found {
+				t.Fatalf("Alertmanager enabled features are not correctly set. Expected flag: %s", test.expectedFlag)
+			}
+		})
+	}
+}

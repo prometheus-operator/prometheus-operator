@@ -742,6 +742,20 @@ bool
 If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Enable access to Alertmanager feature flags. By default, no features are enabled.
+Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -5197,6 +5211,20 @@ bool
 <em>(Optional)</em>
 <p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
 If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Enable access to Alertmanager feature flags. By default, no features are enabled.
+Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
 </td>
 </tr>
 </tbody>

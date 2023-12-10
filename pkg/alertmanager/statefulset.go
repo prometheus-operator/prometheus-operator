@@ -267,6 +267,10 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		amArgs = append(amArgs, "--web.external-url="+a.Spec.ExternalURL)
 	}
 
+	if len(a.Spec.EnableFeatures) > 0 {
+		amArgs = append(amArgs, fmt.Sprintf("--enable-feature=%v", strings.Join(a.Spec.EnableFeatures[:], ",")))
+	}
+
 	webRoutePrefix := "/"
 	if a.Spec.RoutePrefix != "" {
 		webRoutePrefix = a.Spec.RoutePrefix
