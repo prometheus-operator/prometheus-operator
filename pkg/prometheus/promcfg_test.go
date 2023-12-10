@@ -4960,6 +4960,13 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_Empty.golden",
 		},
 		{
+			name: "explicit_job_name",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: "explicit-test-scrape-config3",
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
+		},
+		{
 			name: "static_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
