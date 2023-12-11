@@ -87,6 +87,14 @@ spec:
 
 Any object references in the scrape class definition are assumed to refer to objects in the namespace of the `Prometheus` object.
 
+### Monitoring Resource
+
+If the monitor resource specifies a scrape class name that isn't defined in the Prometheus/PrometheusAgent object, then the scrape resource is rejected by the operator.
+
+This behavior is consistent with the behavior of monitor resources referencing a non-existing secret for bearer token authentication.
+
+To ensure users will have proper information about the error, the operator may (in the future) emit an event with the error message on the monitor resource and also update the status of the monitor resource with the error message.
+
 ### PodMonitor Resource
 
 Allow the user to select a scrape class which applies to all endpoints.
@@ -102,10 +110,6 @@ spec:
 ```
 
 If the `Monitor` resource has a `tlsConfig` field defined, the Operator will use a merge strategy to combine the `tlsConfig` fields from the PodMonitor object with the `tlsConfig` fields of the scrape class, the `tlsConfig` fields in the `PodMonitor` resource take precedence.
-
-If the resource specifies a scrape class name that isn't defined in the Prometheus/PrometheusAgent object, then the scrape resource is dropped by the operator.
-
-If the resource doesn't specify a scrape class name and the Prometheus/PrometheusAgent object defines a default scrape class, the operator will act as if the PodMonitor resource specified the default scrape class name.
 
 ### Probe Resource
 
@@ -134,7 +138,7 @@ spec:
 
 ### ScrapeConfig
 
-Allow the user to select a scrape class for the generic scrape configuration.
+Allow the user to select a scrape class for the whole scrape configuration.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
@@ -150,12 +154,6 @@ spec:
   fileSDConfig:
     [...]
 ```
-
-If the monitor resource specifies a scrape class name that isn't defined in the Prometheus/PrometheusAgent object, then the scrape resource is rejected by the operator.
-
-This behavior is consistent with the behavior of monitor resources referencing a non-existing secret for bearer token authentication.
-
-To ensure users will have proper information about the error, the operator may (in the future) emit an event with the error message on the monitor resource and also update the status of the monitor resource with the error message.
 
 ## Test Plan
 
