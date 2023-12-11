@@ -53,9 +53,9 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-// ConfigGenerator knows how to generate a Prometheus configuration which is
+// PrometheusConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
-type ConfigGenerator struct {
+type PrometheusConfigGenerator struct {
 	logger                 log.Logger
 	version                semver.Version
 	notCompatible          bool
@@ -63,8 +63,8 @@ type ConfigGenerator struct {
 	endpointSliceSupported bool
 }
 
-// NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+// NewPrometheusConfigGenerator creates a PrometheusConfigGenerator for the provided Prometheus resource.
+func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*PrometheusConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -81,7 +81,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
-	return &ConfigGenerator{
+	return &PrometheusConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
@@ -92,8 +92,8 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
-func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
-	return &ConfigGenerator{
+func (cg *PrometheusConfigGenerator) WithKeyVals(keyvals ...interface{}) *PrometheusConfigGenerator {
+	return &PrometheusConfigGenerator{
 		logger:                 log.WithSuffix(cg.logger, keyvals),
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
@@ -106,11 +106,11 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 // logging a warning message) if the Prometheus version is lesser than the
 // given version.
 // The method panics if version isn't a valid SemVer value.
-func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
+func (cg *PrometheusConfigGenerator) WithMinimumVersion(version string) *PrometheusConfigGenerator {
 	minVersion := semver.MustParse(version)
 
 	if cg.version.LT(minVersion) {
-		return &ConfigGenerator{
+		return &PrometheusConfigGenerator{
 			logger:                 log.WithSuffix(cg.logger, "minimum_version", version),
 			version:                cg.version,
 			notCompatible:          true,
@@ -126,11 +126,11 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 // logging a warning message) if the Prometheus version is greater than or
 // equal to the given version.
 // The method panics if version isn't a valid SemVer value.
-func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
+func (cg *PrometheusConfigGenerator) WithMaximumVersion(version string) *PrometheusConfigGenerator {
 	minVersion := semver.MustParse(version)
 
 	if cg.version.GTE(minVersion) {
-		return &ConfigGenerator{
+		return &PrometheusConfigGenerator{
 			logger:                 log.WithSuffix(cg.logger, "maximum_version", version),
 			version:                cg.version,
 			notCompatible:          true,
@@ -144,7 +144,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
 	if cg.notCompatible {
 		cg.Warn(k)
 		return m
@@ -155,7 +155,7 @@ func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{
 
 // AppendCommandlineArgument appends the name/v argument to the given []monitoringv1.Argument and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
+func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
 	if cg.notCompatible {
 		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
 		return m
@@ -165,12 +165,12 @@ func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, 
 }
 
 // IsCompatible return true or false depending if the version being used is compatible.
-func (cg *ConfigGenerator) IsCompatible() bool {
+func (cg *PrometheusConfigGenerator) IsCompatible() bool {
 	return !cg.notCompatible
 }
 
 // Warn logs a warning.
-func (cg *ConfigGenerator) Warn(field string) {
+func (cg *PrometheusConfigGenerator) Warn(field string) {
 	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
 }
 
@@ -214,7 +214,7 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
 	finalLimit := getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
@@ -232,7 +232,7 @@ func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit 
 // override applies.
 // For backwards compatibility with Prometheus <2.9.0 we don't set
 // honor_timestamps.
-func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	// Fast path.
 	if userHonorTimestamps == nil && !cpf.OverrideHonorTimestamps {
@@ -250,7 +250,7 @@ func (cg *ConfigGenerator) AddHonorTimestamps(cfg yaml.MapSlice, userHonorTimest
 // AddTrackTimestampsStaleness adds the track_timestamps_staleness field into scrape configurations.
 // For backwards compatibility with Prometheus <2.48.0 we don't set
 // track_timestamps_staleness.
-func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackTimestampsStaleness *bool) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackTimestampsStaleness *bool) yaml.MapSlice {
 	// Fast path.
 	if trackTimestampsStaleness == nil {
 		return cfg
@@ -261,7 +261,7 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
-func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
 	if cg.prom.GetCommonPrometheusFields().OverrideHonorLabels {
 		honorLabels = false
 	}
@@ -269,7 +269,7 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
 }
 
-func (cg *ConfigGenerator) EndpointSliceSupported() bool {
+func (cg *PrometheusConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
 }
 
@@ -338,7 +338,7 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	return cfg
 }
 
-func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
+func (cg *PrometheusConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
 	basicAuth *monitoringv1.BasicAuth,
@@ -355,7 +355,7 @@ func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
 }
 
-func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
+func (cg *PrometheusConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
 	sigv4 *monitoringv1.Sigv4,
@@ -384,7 +384,7 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
 }
 
-func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
+func (cg *PrometheusConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
@@ -411,7 +411,7 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
 }
 
-func (cg *ConfigGenerator) addAuthorizationToYaml(
+func (cg *PrometheusConfigGenerator) addAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
@@ -432,7 +432,7 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
 }
 
-func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	m := map[string]string{}
 	cpf := cg.prom.GetCommonPrometheusFields()
 	objMeta := cg.prom.GetObjectMeta()
@@ -468,7 +468,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func (cg *ConfigGenerator) addProxyConfigtoYaml(
+func (cg *PrometheusConfigGenerator) addProxyConfigtoYaml(
 	ctx context.Context,
 	cfg yaml.MapSlice,
 	namespace string,
@@ -530,7 +530,7 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 }
 
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
-func (cg *ConfigGenerator) GenerateServerConfiguration(
+func (cg *PrometheusConfigGenerator) GenerateServerConfiguration(
 	ctx context.Context,
 	evaluationInterval monitoringv1.Duration,
 	queryLogFile string,
@@ -631,7 +631,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *PrometheusConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
@@ -662,7 +662,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 	return cgStorage.AppendMapItem(cfg, "storage", storage), nil
 }
 
-func (cg *ConfigGenerator) appendAlertingConfig(
+func (cg *PrometheusConfigGenerator) appendAlertingConfig(
 	cfg yaml.MapSlice,
 	alerting *monitoringv1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
@@ -729,7 +729,7 @@ func initRelabelings() []yaml.MapSlice {
 	}
 }
 
-func (cg *ConfigGenerator) generatePodMonitorConfig(
+func (cg *PrometheusConfigGenerator) generatePodMonitorConfig(
 	m *monitoringv1.PodMonitor,
 	ep monitoringv1.PodMetricsEndpoint,
 	i int, apiserverConfig *monitoringv1.APIServerConfig,
@@ -958,7 +958,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 // generateProbeConfig builds the prometheus configuration for a probe. This function
 // assumes that it will never receive a probe with empty targets, since the
 // operator filters those in the validation step in SelectProbes().
-func (cg *ConfigGenerator) generateProbeConfig(
+func (cg *PrometheusConfigGenerator) generateProbeConfig(
 	m *monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.Store,
@@ -1189,7 +1189,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	return cfg
 }
 
-func (cg *ConfigGenerator) generateServiceMonitorConfig(
+func (cg *PrometheusConfigGenerator) generateServiceMonitorConfig(
 	m *monitoringv1.ServiceMonitor,
 	ep monitoringv1.Endpoint,
 	i int,
@@ -1486,7 +1486,7 @@ func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards 
 	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
 }
 
-func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
 	for i, relabeling := range relabelings {
 		for _, relabelItem := range relabeling {
 			if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
@@ -1556,7 +1556,7 @@ func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors.
-func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
+func (cg *PrometheusConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
 	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
@@ -1573,7 +1573,7 @@ type attachMetadataConfig struct {
 }
 
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
-func (cg *ConfigGenerator) generateK8SSDConfig(
+func (cg *PrometheusConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -1638,7 +1638,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
 	if alerting == nil || len(alerting.Alertmanagers) == 0 {
 		return nil
 	}
@@ -1716,7 +1716,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 	return alertmanagerConfigs
 }
 
-func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
+func (cg *PrometheusConfigGenerator) generateAdditionalScrapeConfigs(
 	additionalScrapeConfigs []byte,
 	shards int32,
 ) ([]yaml.MapSlice, error) {
@@ -1760,7 +1760,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	return addlScrapeConfigs, nil
 }
 
-func (cg *ConfigGenerator) generateRemoteReadConfig(
+func (cg *PrometheusConfigGenerator) generateRemoteReadConfig(
 	remoteRead []monitoringv1.RemoteReadSpec,
 	store *assets.Store,
 ) yaml.MapItem {
@@ -1833,7 +1833,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 	}
 }
 
-func (cg *ConfigGenerator) addOAuth2ToYaml(
+func (cg *PrometheusConfigGenerator) addOAuth2ToYaml(
 	cfg yaml.MapSlice,
 	oauth2 *monitoringv1.OAuth2,
 	tlsAssets map[string]assets.OAuth2Credentials,
@@ -1866,7 +1866,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
 
-func (cg *ConfigGenerator) generateRemoteWriteConfig(
+func (cg *PrometheusConfigGenerator) generateRemoteWriteConfig(
 	store *assets.Store,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
@@ -2052,7 +2052,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 	}
 }
 
-func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	slice = append(slice, yaml.MapItem{Key: "scrape_interval", Value: cpf.ScrapeInterval})
 
@@ -2065,7 +2065,7 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 	return slice
 }
 
-func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
 	if len(cpf.ScrapeProtocols) == 0 {
@@ -2075,11 +2075,11 @@ func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSl
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
 }
 
-func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
-func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	if cpf.BodySizeLimit != nil {
 		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.BodySizeLimit)
@@ -2106,7 +2106,7 @@ func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice
 	return slice
 }
 
-func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
 	slice = append(slice, yaml.MapItem{
 		Key:   "external_labels",
 		Value: cg.buildExternalLabels(),
@@ -2115,7 +2115,7 @@ func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSli
 	return slice
 }
 
-func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
 	if queryLogFile != "" {
 		slice = cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
 	}
@@ -2123,7 +2123,7 @@ func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile 
 	return slice
 }
 
-func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
+func (cg *PrometheusConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleFiles {
@@ -2138,7 +2138,7 @@ func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []stri
 	return slice
 }
 
-func (cg *ConfigGenerator) appendServiceMonitorConfigs(
+func (cg *PrometheusConfigGenerator) appendServiceMonitorConfigs(
 	slices []yaml.MapSlice,
 	serviceMonitors map[string]*monitoringv1.ServiceMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -2171,7 +2171,7 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	return slices
 }
 
-func (cg *ConfigGenerator) appendPodMonitorConfigs(
+func (cg *PrometheusConfigGenerator) appendPodMonitorConfigs(
 	slices []yaml.MapSlice,
 	podMonitors map[string]*monitoringv1.PodMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -2203,7 +2203,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	return slices
 }
 
-func (cg *ConfigGenerator) appendProbeConfigs(
+func (cg *PrometheusConfigGenerator) appendProbeConfigs(
 	slices []yaml.MapSlice,
 	probes map[string]*monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
@@ -2233,7 +2233,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	return slices
 }
 
-func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.MapSlice, additionalScrapeConfigs []byte, shards int32) ([]yaml.MapSlice, error) {
+func (cg *PrometheusConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.MapSlice, additionalScrapeConfigs []byte, shards int32) ([]yaml.MapSlice, error) {
 	addlScrapeConfigs, err := cg.generateAdditionalScrapeConfigs(additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, err
@@ -2243,7 +2243,7 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 }
 
 // GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
-func (cg *ConfigGenerator) GenerateAgentConfiguration(
+func (cg *PrometheusConfigGenerator) GenerateAgentConfiguration(
 	ctx context.Context,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
@@ -2311,7 +2311,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendScrapeConfigs(
+func (cg *PrometheusConfigGenerator) appendScrapeConfigs(
 	ctx context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
@@ -2341,7 +2341,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	return slices, nil
 }
 
-func (cg *ConfigGenerator) generateScrapeConfig(
+func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
@@ -3193,7 +3193,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	return cfg, nil
 }
 
-func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
+func (cg *PrometheusConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	cfg := yaml.MapSlice{}
 	objMeta := cg.prom.GetObjectMeta()
 

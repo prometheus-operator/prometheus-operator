@@ -60,7 +60,7 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 	}
 }
 
-func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
+func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *PrometheusConfigGenerator {
 	t.Helper()
 
 	if p == nil {
@@ -68,7 +68,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
+	cg, err := NewPrometheusConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
 
 	return cg

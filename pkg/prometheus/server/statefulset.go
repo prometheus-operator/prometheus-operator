@@ -98,7 +98,7 @@ func makeStatefulSet(
 	thanos *monitoringv1.ThanosSpec,
 	disableCompaction bool,
 	config *prompkg.Config,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
@@ -223,7 +223,7 @@ func makeStatefulSetSpec(
 	disableCompaction bool,
 	p monitoringv1.PrometheusInterface,
 	c *prompkg.Config,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
 	tlsSecrets *operator.ShardedSecret,
@@ -492,7 +492,7 @@ func makeStatefulSetSpec(
 // appendServerArgs appends arguments that are only valid for the Prometheus server.
 func appendServerArgs(
 	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
 	rules monitoringv1.Rules,

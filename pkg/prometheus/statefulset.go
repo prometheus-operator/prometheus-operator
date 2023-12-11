@@ -196,7 +196,7 @@ func queryLogFilePath(queryLogFile string) string {
 }
 
 // BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.
-func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) []monitoringv1.Argument {
+func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *PrometheusConfigGenerator) []monitoringv1.Argument {
 	promArgs := []monitoringv1.Argument{
 		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
 		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
@@ -353,7 +353,7 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 	return volName
 }
 
-func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator) v1.ProbeHandler {
+func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *PrometheusConfigGenerator) v1.ProbeHandler {
 	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
 	handler := v1.ProbeHandler{}
 	if cpf.ListenLocal {
@@ -386,7 +386,7 @@ func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, web
 	return handler
 }
 
-func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) (map[string]string, map[string]string) {
+func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *PrometheusConfigGenerator) (map[string]string, map[string]string) {
 	podAnnotations := map[string]string{
 		"kubectl.kubernetes.io/default-container": "prometheus",
 	}
