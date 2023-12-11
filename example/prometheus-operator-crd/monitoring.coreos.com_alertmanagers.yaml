@@ -1572,7 +1572,7 @@ spec:
                 type: boolean
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.
-                  Deprecated: use ''image'' instead'
+                  Deprecated: use ''image'' instead.'
                 type: string
               clusterAdvertiseAddress:
                 description: 'ClusterAdvertiseAddress is the explicit address to advertise
@@ -4596,7 +4596,7 @@ spec:
                 description: 'SHA of Alertmanager container image to be deployed.
                   Defaults to the value of `version`. Similar to a tag, but the SHA
                   explicitly deploys an immutable container image. Version and Tag
-                  are ignored if SHA is set. Deprecated: use ''image'' instead.  The
+                  are ignored if SHA is set. Deprecated: use ''image'' instead. The
                   image digest can be specified as part of the image URL.'
                 type: string
               storage:
@@ -4604,8 +4604,8 @@ spec:
                   by the Alertmanager instances.
                 properties:
                   disableMountSubPath:
-                    description: '*Deprecated: subPath usage will be removed in a
-                      future release.*'
+                    description: 'Deprecated: subPath usage will be removed in a future
+                      release.'
                     type: boolean
                   emptyDir:
                     description: 'EmptyDirVolumeSource to be used by the StatefulSet.
@@ -5157,7 +5157,7 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: '*Deprecated: this field is never set.*'
+                        description: 'Deprecated: this field is never set.'
                         properties:
                           accessModes:
                             description: 'accessModes contains the actual access modes
@@ -5302,7 +5302,7 @@ spec:
               tag:
                 description: 'Tag of Alertmanager container image to be deployed.
                   Defaults to the value of `version`. Version is ignored if Tag is
-                  set. Deprecated: use ''image'' instead.  The image tag can be specified
+                  set. Deprecated: use ''image'' instead. The image tag can be specified
                   as part of the image URL.'
                 type: string
               tolerations:

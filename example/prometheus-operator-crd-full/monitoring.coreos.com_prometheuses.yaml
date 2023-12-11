@@ -1099,8 +1099,8 @@ spec:
                         bearerTokenFile:
                           description: "File to read bearer token for Alertmanager.
                             \n Cannot be set at the same time as `basicAuth`, `authorization`,
-                            or `sigv4`. \n *Deprecated: this will be removed in a
-                            future release. Prefer using `authorization`.*"
+                            or `sigv4`. \n Deprecated: this will be removed in a future
+                            release. Prefer using `authorization`."
                           type: string
                         enableHttp2:
                           description: Whether to enable HTTP2.
@@ -1341,9 +1341,9 @@ spec:
                 type: object
               allowOverlappingBlocks:
                 description: "AllowOverlappingBlocks enables vertical compaction and
-                  vertical query merge in Prometheus. \n *Deprecated: this flag has
+                  vertical query merge in Prometheus. \n Deprecated: this flag has
                   no effect for Prometheus >= 2.39.0 where overlapping blocks are
-                  enabled by default.*"
+                  enabled by default."
                 type: boolean
               apiserverConfig:
                 description: 'APIServerConfig allows specifying a host and auth methods
@@ -1434,13 +1434,13 @@ spec:
                   bearerToken:
                     description: "*Warning: this field shouldn't be used because the
                       token value appears in clear-text. Prefer using `authorization`.*
-                      \n *Deprecated: this will be removed in a future release.*"
+                      \n Deprecated: this will be removed in a future release."
                     type: string
                   bearerTokenFile:
                     description: "File to read bearer token for accessing apiserver.
                       \n Cannot be set at the same time as `basicAuth`, `authorization`,
-                      or `bearerToken`. \n *Deprecated: this will be removed in a
-                      future release. Prefer using `authorization`.*"
+                      or `bearerToken`. \n Deprecated: this will be removed in a future
+                      release. Prefer using `authorization`."
                     type: string
                   host:
                     description: Kubernetes API address consisting of a hostname or
@@ -1594,7 +1594,7 @@ spec:
                     type: boolean
                 type: object
               baseImage:
-                description: '*Deprecated: use ''spec.image'' instead.*'
+                description: 'Deprecated: use ''spec.image'' instead.'
                 type: string
               bodySizeLimit:
                 description: BodySizeLimit defines per-scrape on response body size.
@@ -4800,8 +4800,8 @@ spec:
               prometheusRulesExcludedFromEnforce:
                 description: 'Defines the list of PrometheusRule objects to which
                   the namespace label enforcement doesn''t apply. This is only relevant
-                  when `spec.enforcedNamespaceLabel` is set to true. *Deprecated:
-                  use `spec.excludedFromEnforcement` instead.*'
+                  when `spec.enforcedNamespaceLabel` is set to true. Deprecated: use
+                  `spec.excludedFromEnforcement` instead.'
                 items:
                   description: PrometheusRuleExcludeConfig enables users to configure
                     excluded PrometheusRule names and their namespaces to be ignored
@@ -4951,12 +4951,12 @@ spec:
                     bearerToken:
                       description: "*Warning: this field shouldn't be used because
                         the token value appears in clear-text. Prefer using `authorization`.*
-                        \n *Deprecated: this will be removed in a future release.*"
+                        \n Deprecated: this will be removed in a future release."
                       type: string
                     bearerTokenFile:
                       description: "File from which to read the bearer token for the
-                        URL. \n *Deprecated: this will be removed in a future release.
-                        Prefer using `authorization`.*"
+                        URL. \n Deprecated: this will be removed in a future release.
+                        Prefer using `authorization`."
                       type: string
                     filterExternalLabels:
                       description: "Whether to use the external labels as selectors
@@ -5387,12 +5387,12 @@ spec:
                     bearerToken:
                       description: "*Warning: this field shouldn't be used because
                         the token value appears in clear-text. Prefer using `authorization`.*
-                        \n *Deprecated: this will be removed in a future release.*"
+                        \n Deprecated: this will be removed in a future release."
                       type: string
                     bearerTokenFile:
                       description: "File from which to read bearer token for the URL.
-                        \n *Deprecated: this will be removed in a future release.
-                        Prefer using `authorization`.*"
+                        \n Deprecated: this will be removed in a future release. Prefer
+                        using `authorization`."
                       type: string
                     headers:
                       additionalProperties:
@@ -6438,8 +6438,8 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               sha:
-                description: '*Deprecated: use ''spec.image'' instead. The image''s
-                  digest can be specified as part of the image name.*'
+                description: 'Deprecated: use ''spec.image'' instead. The image''s
+                  digest can be specified as part of the image name.'
                 type: string
               shards:
                 description: "EXPERIMENTAL: Number of shards to distribute targets
@@ -6458,8 +6458,8 @@ spec:
                 description: Storage defines the storage used by Prometheus.
                 properties:
                   disableMountSubPath:
-                    description: '*Deprecated: subPath usage will be removed in a
-                      future release.*'
+                    description: 'Deprecated: subPath usage will be removed in a future
+                      release.'
                     type: boolean
                   emptyDir:
                     description: 'EmptyDirVolumeSource to be used by the StatefulSet.
@@ -7011,7 +7011,7 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: '*Deprecated: this field is never set.*'
+                        description: 'Deprecated: this field is never set.'
                         properties:
                           accessModes:
                             description: 'accessModes contains the actual access modes
@@ -7154,8 +7154,8 @@ spec:
                     type: object
                 type: object
               tag:
-                description: '*Deprecated: use ''spec.image'' instead. The image''s
-                  tag can be specified as part of the image name.*'
+                description: 'Deprecated: use ''spec.image'' instead. The image''s
+                  tag can be specified as part of the image name.'
                 type: string
               targetLimit:
                 description: TargetLimit defines a limit on the number of scraped
@@ -7192,7 +7192,7 @@ spec:
                       type: object
                     type: array
                   baseImage:
-                    description: '*Deprecated: use ''image'' instead.*'
+                    description: 'Deprecated: use ''image'' instead.'
                     type: string
                   blockSize:
                     default: 2h
@@ -7369,8 +7369,8 @@ spec:
                       when the operator was released."
                     type: string
                   listenLocal:
-                    description: '*Deprecated: use `grpcListenLocal` and `httpListenLocal`
-                      instead.*'
+                    description: 'Deprecated: use `grpcListenLocal` and `httpListenLocal`
+                      instead.'
                     type: boolean
                   logFormat:
                     description: Log format for the Thanos sidecar.
@@ -7477,12 +7477,12 @@ spec:
                         type: object
                     type: object
                   sha:
-                    description: '*Deprecated: use ''image'' instead.  The image digest
-                      can be specified as part of the image name.*'
+                    description: 'Deprecated: use ''image'' instead.  The image digest
+                      can be specified as part of the image name.'
                     type: string
                   tag:
-                    description: '*Deprecated: use ''image'' instead. The image''s
-                      tag can be specified as part of the image name.*'
+                    description: 'Deprecated: use ''image'' instead. The image''s
+                      tag can be specified as as part of the image name.'
                     type: string
                   tracingConfig:
                     description: "Defines the tracing configuration for the Thanos

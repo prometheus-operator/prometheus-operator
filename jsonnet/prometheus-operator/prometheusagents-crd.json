@@ -877,11 +877,11 @@
                         "type": "object"
                       },
                       "bearerToken": {
-                        "description": "*Warning: this field shouldn't be used because the token value appears in clear-text. Prefer using `authorization`.* \n *Deprecated: this will be removed in a future release.*",
+                        "description": "*Warning: this field shouldn't be used because the token value appears in clear-text. Prefer using `authorization`.* \n Deprecated: this will be removed in a future release.",
                         "type": "string"
                       },
                       "bearerTokenFile": {
-                        "description": "File to read bearer token for accessing apiserver. \n Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`. \n *Deprecated: this will be removed in a future release. Prefer using `authorization`.*",
+                        "description": "File to read bearer token for accessing apiserver. \n Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`. \n Deprecated: this will be removed in a future release. Prefer using `authorization`.",
                         "type": "string"
                       },
                       "host": {
@@ -4058,11 +4058,11 @@
                           "type": "object"
                         },
                         "bearerToken": {
-                          "description": "*Warning: this field shouldn't be used because the token value appears in clear-text. Prefer using `authorization`.* \n *Deprecated: this will be removed in a future release.*",
+                          "description": "*Warning: this field shouldn't be used because the token value appears in clear-text. Prefer using `authorization`.* \n Deprecated: this will be removed in a future release.",
                           "type": "string"
                         },
                         "bearerTokenFile": {
-                          "description": "File from which to read bearer token for the URL. \n *Deprecated: this will be removed in a future release. Prefer using `authorization`.*",
+                          "description": "File from which to read bearer token for the URL. \n Deprecated: this will be removed in a future release. Prefer using `authorization`.",
                           "type": "string"
                         },
                         "headers": {
@@ -4943,7 +4943,7 @@
                     "description": "Storage defines the storage used by Prometheus.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "*Deprecated: subPath usage will be removed in a future release.*",
+                        "description": "Deprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
@@ -5376,7 +5376,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "*Deprecated: this field is never set.*",
+                            "description": "Deprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
