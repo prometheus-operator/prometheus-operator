@@ -155,7 +155,7 @@ If the monitor resource specifies a scrape class name that isn't defined in the 
 
 This behavior is consistent with the behavior of monitor resources referencing a non-existing secret for bearer token authentication.
 
-To ensure users will have proper information about the error, the operator will emit an event with the error message on the monitor resource and also update the status of the monitor resource with the error message.
+To ensure users will have proper information about the error, the operator may (in the future) emit an event with the error message on the monitor resource and also update the status of the monitor resource with the error message.
 
 ## Test Plan
 
