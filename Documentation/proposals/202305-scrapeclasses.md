@@ -120,7 +120,7 @@ spec:
 
 ### ServiceMonitor Resource
 
-Allow the user to select a scrape class for each endpoint.
+Allow the user to select a scrape class for all endpoints.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
