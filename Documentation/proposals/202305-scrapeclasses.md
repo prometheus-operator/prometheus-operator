@@ -58,7 +58,7 @@ It is proposed that the `Prometheus` and `PrometheusAgent` resources contain a n
 The rationale for defining scrape classes inline is that, in practice, the TLS file paths are closely related to the `volumeMounts`
 of the `Prometheus` spec. An alternative is outlined later, of factoring the class definitions into a separate resource.
 
-Define a scrape classes for use by the monitors, one class may be designated as the default class.
+One (and only one) scrape class may be designated as the default class.
 
 When a resource defines several default scrape classes, it should fail the reconciliation.
 
