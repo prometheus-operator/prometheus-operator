@@ -1583,6 +1583,9 @@ spec:
                 description: Interval between gossip attempts.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              clusterLabel:
+                description: Gossip with same ClusterLabels only.
+                type: string
               clusterPeerTimeout:
                 description: Timeout for cluster peering.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
@@ -7334,6 +7337,8 @@ spec:
                     - keySecret
                     type: object
                 type: object
+            required:
+            - clusterLabel
             type: object
           status:
             description: 'Most recent observed status of the Alertmanager cluster.
