@@ -1,0 +1,8 @@
+- url: http://example.com
+  remote_timeout: 30s
+  azuread:
+    oauth:
+      client_id: 00000000-0000-0000-0000-000000000000
+      client_secret: secret-key
+      tenant_id: 00000000-a12b-3cd4-e56f-000000000000
+    cloud: AzureGovernment

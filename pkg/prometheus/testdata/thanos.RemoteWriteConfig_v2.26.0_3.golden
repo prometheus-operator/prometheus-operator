@@ -1,0 +1,2 @@
+- url: http://example.com
+  remote_timeout: 1s

@@ -20,6 +20,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
@@ -3376,16 +3377,16 @@ func TestRemoteReadConfig(t *testing.T) {
 }
 
 func TestRemoteWriteConfig(t *testing.T) {
-	sendNativeHistograms := true
-	enableHTTP2 := false
 	for _, tc := range []struct {
-		version     string
-		remoteWrite monitoringv1.RemoteWriteSpec
-		golden      string
-		expectedErr error
+		version       string
+		thanosVersion string
+		remoteWrite   monitoringv1.RemoteWriteSpec
+		golden        string
+		expectedErr   error
 	}{
 		{
-			version: "v2.22.0",
+			version:       "v2.22.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
@@ -3406,7 +3407,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.22.0_1.golden",
 		},
 		{
-			version: "v2.23.0",
+			version:       "v2.23.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
@@ -3427,7 +3429,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.23.0_1.golden",
 		},
 		{
-			version: "v2.23.0",
+			version:       "v2.23.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
@@ -3447,7 +3450,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.23.0_2.golden",
 		},
 		{
-			version: "v2.10.0",
+			version:       "v2.10.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
@@ -3468,7 +3472,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.10.0_1.golden",
 		},
 		{
-			version: "v2.27.1",
+			version:       "v2.27.1",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
@@ -3480,7 +3485,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.27.1_1.golden",
 		},
 		{
-			version: "v2.45.0",
+			version:       "v2.45.0",
+			thanosVersion: "0.32.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
@@ -3493,7 +3499,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.45.0_1.golden",
 		},
 		{
-			version: "v2.48.0",
+			version:       "v2.48.0",
+			thanosVersion: "0.32.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
@@ -3513,7 +3520,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
 		},
 		{
-			version: "v2.47.0",
+			version:       "v2.47.0",
+			thanosVersion: "0.32.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
@@ -3533,7 +3541,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
-			version: "v2.26.0",
+			version:       "v2.26.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				Authorization: &monitoringv1.Authorization{
@@ -3549,7 +3558,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.26.0_2.golden",
 		},
 		{
-			version: "v2.26.0",
+			version:       "v2.26.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{
@@ -3587,7 +3597,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_3.golden",
 		},
 		{
-			version: "v2.26.0",
+			version:       "v2.26.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
 				RemoteTimeout: "1s",
@@ -3596,7 +3607,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.26.0_3.golden",
 		},
 		{
-			version: "v2.26.0",
+			version:       "v2.26.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
 				Sigv4:         &monitoringv1.Sigv4{},
@@ -3605,7 +3617,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.26.0_4.golden",
 		},
 		{
-			version: "v2.30.0",
+			version:       "v2.30.0",
+			thanosVersion: "0.24.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				QueueConfig: &monitoringv1.QueueConfig{
@@ -3623,10 +3636,11 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.30.0_2.golden",
 		},
 		{
-			version: "v2.43.0",
+			version:       "v2.43.0",
+			thanosVersion: "0.32.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:                  "http://example.com",
-				SendNativeHistograms: &sendNativeHistograms,
+				SendNativeHistograms: ptr.To(true),
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -3642,11 +3656,12 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.43.0_2.golden",
 		},
 		{
-			version: "v2.39.0",
+			version:       "v2.39.0",
+			thanosVersion: "0.29.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:                  "http://example.com",
-				SendNativeHistograms: &sendNativeHistograms,
-				EnableHttp2:          &enableHTTP2,
+				EnableHttp2:          ptr.To(false),
+				SendNativeHistograms: ptr.To(true),
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -3696,32 +3711,50 @@ func TestRemoteWriteConfig(t *testing.T) {
 				}
 			}
 
-			cg := mustNewConfigGenerator(t, p)
-			cfg, err := cg.GenerateServerConfiguration(
-				context.Background(),
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
-				nil,
-				nil,
-				nil,
-				nil,
-				store,
-				nil,
-				nil,
-				nil,
-				nil)
-			if tc.expectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.expectedErr.Error(), err.Error())
-				return
-			}
-			require.NoError(t, err)
-			golden.Assert(t, string(cfg), tc.golden)
+			t.Run("prometheus", func(t *testing.T) {
+				cg := mustNewConfigGenerator(t, p)
+				cfg, err := cg.GenerateServerConfiguration(
+					context.Background(),
+					p.Spec.EvaluationInterval,
+					p.Spec.QueryLogFile,
+					p.Spec.RuleSelector,
+					p.Spec.Exemplars,
+					p.Spec.TSDB,
+					p.Spec.Alerting,
+					p.Spec.RemoteRead,
+					nil,
+					nil,
+					nil,
+					nil,
+					store,
+					nil,
+					nil,
+					nil,
+					nil)
+				if tc.expectedErr != nil {
+					require.Error(t, err)
+					require.Equal(t, tc.expectedErr.Error(), err.Error())
+					return
+				}
+				require.NoError(t, err)
+				golden.Assert(t, string(cfg), tc.golden)
+			})
+
+			t.Run("thanos", func(t *testing.T) {
+				if tc.thanosVersion == "" {
+					t.Skip()
+				}
+				logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+
+				cg, err := newConfigGeneratorWithVersionMap(log.With(logger, "test", t.Name()), tc.thanosVersion, prometheusToThanosVersion)
+				require.NoError(t, err)
+
+				rw := GenerateRemoteWriteConfig(cg, []monitoringv1.RemoteWriteSpec{tc.remoteWrite}, "test", store)
+				cfg, err := yaml.Marshal(rw)
+
+				require.NoError(t, err)
+				golden.Assert(t, string(cfg), fmt.Sprintf("thanos.%s", tc.golden))
+			})
 		})
 	}
 }
@@ -6670,6 +6703,44 @@ func TestTracingConfig(t *testing.T) {
 				require.NoError(t, err)
 			}
 			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestPrometheusToThanosVersion(t *testing.T) {
+	for _, tc := range []struct {
+		v   string
+		exp *string
+	}{
+		{
+			v:   "2.0.0",
+			exp: ptr.To("0.24.0"),
+		},
+		{
+			v:   "2.32.0",
+			exp: ptr.To("0.24.0"),
+		},
+		{
+			v:   "2.33.0",
+			exp: ptr.To("0.25.0"),
+		},
+		{
+			v:   "2.33.5",
+			exp: ptr.To("0.26.0"),
+		},
+		{
+			v:   "3.0.0",
+			exp: nil,
+		},
+	} {
+		t.Run(tc.v, func(t *testing.T) {
+			got := prometheusToThanosVersion(semver.MustParse(tc.v))
+			if tc.exp == nil {
+				require.Nil(t, got)
+				return
+			}
+			require.NotNil(t, got)
+			require.Equal(t, *tc.exp, got.String())
 		})
 	}
 }

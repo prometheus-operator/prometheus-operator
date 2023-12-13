@@ -67,13 +67,24 @@ type ConfigGenerator interface {
 type genericConfigGenerator struct {
 	logger        log.Logger
 	version       semver.Version
+	mapFn         func(semver.Version) *semver.Version
 	notCompatible bool
 }
 
 var _ = ConfigGenerator(&genericConfigGenerator{})
 
 // NewGenericConfigGenerator creates a new ConfigGenerator.
-func NewConfigGenerator(logger log.Logger, version string) (*genericConfigGenerator, error) {
+func newConfigGenerator(logger log.Logger, version string) (*genericConfigGenerator, error) {
+	return newConfigGeneratorWithVersionMap(
+		logger,
+		version,
+		func(v semver.Version) *semver.Version {
+			return &v
+		},
+	)
+}
+
+func newConfigGeneratorWithVersionMap(logger log.Logger, version string, mapFn func(semver.Version) *semver.Version) (*genericConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -86,6 +97,7 @@ func NewConfigGenerator(logger log.Logger, version string) (*genericConfigGenera
 	return &genericConfigGenerator{
 		logger:  log.WithSuffix(logger, "version", semVersion),
 		version: semVersion,
+		mapFn:   mapFn,
 	}, nil
 }
 
@@ -97,6 +109,7 @@ func (cg *genericConfigGenerator) WithKeyVals(keyvals ...interface{}) ConfigGene
 		logger:        log.WithSuffix(cg.logger, keyvals),
 		version:       cg.version,
 		notCompatible: cg.notCompatible,
+		mapFn:         cg.mapFn,
 	}
 }
 
@@ -105,13 +118,14 @@ func (cg *genericConfigGenerator) WithKeyVals(keyvals ...interface{}) ConfigGene
 // given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *genericConfigGenerator) WithMinimumVersion(version string) ConfigGenerator {
-	minVersion := semver.MustParse(version)
+	minVersion := cg.mapFn(semver.MustParse(version))
 
-	if cg.version.LT(minVersion) {
+	if minVersion == nil || cg.version.LT(*minVersion) {
 		return &genericConfigGenerator{
-			logger:        log.WithSuffix(cg.logger, "minimum_version", version),
+			logger:        log.WithSuffix(cg.logger, "minimum_version", minVersion.String()),
 			version:       cg.version,
 			notCompatible: true,
+			mapFn:         cg.mapFn,
 		}
 	}
 
@@ -123,13 +137,14 @@ func (cg *genericConfigGenerator) WithMinimumVersion(version string) ConfigGener
 // equal to the given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *genericConfigGenerator) WithMaximumVersion(version string) ConfigGenerator {
-	minVersion := semver.MustParse(version)
+	maxVersion := cg.mapFn(semver.MustParse(version))
 
-	if cg.version.GTE(minVersion) {
+	if maxVersion != nil && cg.version.GTE(*maxVersion) {
 		return &genericConfigGenerator{
-			logger:        log.WithSuffix(cg.logger, "maximum_version", version),
+			logger:        log.WithSuffix(cg.logger, "maximum_version", maxVersion.String()),
 			version:       cg.version,
 			notCompatible: true,
+			mapFn:         cg.mapFn,
 		}
 	}
 
@@ -176,7 +191,7 @@ type PrometheusConfigGenerator struct {
 
 // NewPrometheusConfigGenerator creates a PrometheusConfigGenerator for the provided Prometheus resource.
 func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*PrometheusConfigGenerator, error) {
-	cg, err := NewConfigGenerator(logger, operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion))
+	cg, err := newConfigGenerator(logger, operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion))
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +248,73 @@ func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.
 	}
 
 	return append(m, argument)
+}
+
+var thanosVersions = []struct {
+	thanos     semver.Version
+	prometheus semver.Version
+}{
+	{
+		// ThanosRuler supports remote-write starting with v0.24.0.
+		thanos:     semver.MustParse("0.24.0"),
+		prometheus: semver.MustParse("2.32.0"),
+	},
+	{
+		thanos:     semver.MustParse("0.25.0"),
+		prometheus: semver.MustParse("2.32.0"),
+	},
+	{
+		thanos:     semver.MustParse("0.26.0"),
+		prometheus: semver.MustParse("2.33.5"),
+	},
+	{
+		thanos:     semver.MustParse("0.27.0"),
+		prometheus: semver.MustParse("2.33.5"),
+	},
+	{
+		thanos:     semver.MustParse("0.28.0"),
+		prometheus: semver.MustParse("2.38.0"),
+	},
+	{
+		thanos:     semver.MustParse("0.29.0"),
+		prometheus: semver.MustParse("2.39.1"),
+	},
+	{
+		thanos:     semver.MustParse("0.30.0"),
+		prometheus: semver.MustParse("2.40.7"),
+	},
+	{
+		thanos:     semver.MustParse("0.31.0"),
+		prometheus: semver.MustParse("2.42.0"),
+	},
+	{
+		thanos:     semver.MustParse("0.32.0"),
+		prometheus: semver.MustParse("2.48.0"),
+	},
+	{
+		thanos:     semver.MustParse("0.33.0"),
+		prometheus: semver.MustParse("2.48.0"),
+	},
+}
+
+func prometheusToThanosVersion(v semver.Version) *semver.Version {
+	if thanosVersions[len(thanosVersions)-1].prometheus.LT(v) {
+		return nil
+	}
+
+	thanosVersion := &thanosVersions[0].thanos
+	for i, _ := range thanosVersions {
+		switch {
+		case thanosVersions[i].prometheus.Equals(v):
+			return &thanosVersions[i].thanos
+		case thanosVersions[i].prometheus.GT(v):
+			return thanosVersion
+		}
+
+		thanosVersion = &thanosVersions[i].thanos
+	}
+
+	return thanosVersion
 }
 
 type limitKey struct {
