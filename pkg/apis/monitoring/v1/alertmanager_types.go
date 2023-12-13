@@ -207,7 +207,7 @@ type AlertmanagerSpec struct {
 	// Interval between gossip attempts.
 	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
 	// Gossip with same ClusterLabels only.
-	ClusterLabel string `json:"clusterLabel,lomitempty"`
+	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// Interval between pushpull attempts.
 	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
 	// Timeout for cluster peering.
