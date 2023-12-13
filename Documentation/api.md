@@ -582,6 +582,18 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the identifier that uniquely identifies the Alertmanager cluster.
+You should only set it when the Alertmanager cluster includes more than one Alertmanager replicas.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterPushpullInterval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GoDuration">
@@ -5031,6 +5043,18 @@ GoDuration
 </td>
 <td>
 <p>Interval between gossip attempts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the identifier that uniquely identifies the Alertmanager cluster.
+You should only set it when the Alertmanager cluster includes more than one Alertmanager replicas.</p>
 </td>
 </tr>
 <tr>

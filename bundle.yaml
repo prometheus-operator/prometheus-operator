@@ -7305,6 +7305,11 @@ spec:
                 description: Interval between gossip attempts.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              clusterLabel:
+                description: Defines the identifier that uniquely identifies the Alertmanager
+                  cluster. You should only set it when the Alertmanager cluster includes
+                  more than one Alertmanager replicas.
+                type: string
               clusterPeerTimeout:
                 description: Timeout for cluster peering.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
