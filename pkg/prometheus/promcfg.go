@@ -224,17 +224,6 @@ func (cg *PrometheusConfigGenerator) WithMaximumVersion(version string) *Prometh
 	}
 }
 
-// AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
-// the updated slice.
-//func (cg *PrometheusConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
-//if cg.IsCompatible() {
-//cg.Warn(k)
-//return m
-//}
-
-//return append(m, yaml.MapItem{Key: k, Value: v})
-//}
-
 // AppendCommandlineArgument appends the name/v argument to the given []monitoringv1.Argument and returns
 // the updated slice.
 func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
@@ -245,16 +234,6 @@ func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.
 
 	return append(m, argument)
 }
-
-// IsCompatible return true or false depending if the version being used is compatible.
-//func (cg *PrometheusConfigGenerator) IsCompatible() bool {
-//return !cg.notCompatible
-//}
-
-// Warn logs a warning.
-//func (cg *PrometheusConfigGenerator) Warn(field string) {
-//	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
-//}
 
 type limitKey struct {
 	specField       string
@@ -2612,9 +2591,9 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 				Value: strings.ToLower(string(config.Role)),
 			})
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = addBasicAuthToYaml(cg.ConfigGenerator, configs[i], assetStoreKey, store, config.BasicAuth)
+			configs[i] = addSafeAuthorizationToYaml(cg.ConfigGenerator, configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = addOAuth2ToYaml(cg.ConfigGenerator, configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
