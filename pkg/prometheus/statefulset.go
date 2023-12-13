@@ -391,7 +391,7 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *PrometheusCon
 		"kubectl.kubernetes.io/default-container": "prometheus",
 	}
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
+		"app.kubernetes.io/version": cg.Version(),
 	}
 
 	if cpf.PodMetadata != nil {

@@ -305,7 +305,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 		}
 	} else if cpf.Web != nil {
-		webConfigGenerator.Warn("web.config.file")
+		webConfigGenerator.WarnNotSupported("web.config.file")
 	}
 
 	// The /-/ready handler returns OK only after the TSDB initialization has

@@ -53,14 +53,27 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-type ConfigGenerator struct {
+type ConfigGenerator interface {
+	WithKeyVals(keyvals ...interface{}) ConfigGenerator
+	WithMinimumVersion(string) ConfigGenerator
+	WithMaximumVersion(string) ConfigGenerator
+	AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice
+	IsCompatible() bool
+	WarnNotSupported(string)
+	Logger() log.Logger
+	Version() string
+}
+
+type genericConfigGenerator struct {
 	logger        log.Logger
 	version       semver.Version
 	notCompatible bool
 }
 
-// NewConfigGenerator creates a new ConfigGenerator.
-func NewConfigGenerator(logger log.Logger, version string) (*ConfigGenerator, error) {
+var _ = ConfigGenerator(&genericConfigGenerator{})
+
+// NewGenericConfigGenerator creates a new ConfigGenerator.
+func NewConfigGenerator(logger log.Logger, version string) (*genericConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -70,7 +83,7 @@ func NewConfigGenerator(logger log.Logger, version string) (*ConfigGenerator, er
 		return nil, fmt.Errorf("failed to parse version: %w", err)
 	}
 
-	return &ConfigGenerator{
+	return &genericConfigGenerator{
 		logger:  log.WithSuffix(logger, "version", semVersion),
 		version: semVersion,
 	}, nil
@@ -79,8 +92,8 @@ func NewConfigGenerator(logger log.Logger, version string) (*ConfigGenerator, er
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
-func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
-	return &ConfigGenerator{
+func (cg *genericConfigGenerator) WithKeyVals(keyvals ...interface{}) ConfigGenerator {
+	return &genericConfigGenerator{
 		logger:        log.WithSuffix(cg.logger, keyvals),
 		version:       cg.version,
 		notCompatible: cg.notCompatible,
@@ -91,11 +104,11 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 // logging a warning message) if the registered version is lesser than the
 // given version.
 // The method panics if version isn't a valid SemVer value.
-func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
+func (cg *genericConfigGenerator) WithMinimumVersion(version string) ConfigGenerator {
 	minVersion := semver.MustParse(version)
 
 	if cg.version.LT(minVersion) {
-		return &ConfigGenerator{
+		return &genericConfigGenerator{
 			logger:        log.WithSuffix(cg.logger, "minimum_version", version),
 			version:       cg.version,
 			notCompatible: true,
@@ -109,11 +122,11 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 // logging a warning message) if the registered version is greater than or
 // equal to the given version.
 // The method panics if version isn't a valid SemVer value.
-func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
+func (cg *genericConfigGenerator) WithMaximumVersion(version string) ConfigGenerator {
 	minVersion := semver.MustParse(version)
 
 	if cg.version.GTE(minVersion) {
-		return &ConfigGenerator{
+		return &genericConfigGenerator{
 			logger:        log.WithSuffix(cg.logger, "maximum_version", version),
 			version:       cg.version,
 			notCompatible: true,
@@ -125,9 +138,9 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+func (cg *genericConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
 	if cg.notCompatible {
-		cg.Warn(k)
+		cg.WarnNotSupported(k)
 		return m
 	}
 
@@ -135,19 +148,28 @@ func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{
 }
 
 // IsCompatible return true or false depending if the version being used is compatible
-func (cg *ConfigGenerator) IsCompatible() bool {
+func (cg *genericConfigGenerator) IsCompatible() bool {
 	return !cg.notCompatible
 }
 
-// Warn logs a warning.
-func (cg *ConfigGenerator) Warn(field string) {
+func (cg *genericConfigGenerator) Version() string {
+	return cg.version.String()
+}
+
+// WarnNotSupported logs a warning message about the field not being supported.
+func (cg *genericConfigGenerator) WarnNotSupported(field string) {
 	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by the current version", field))
+}
+
+// Debug logs a debug message.
+func (cg *genericConfigGenerator) Logger() log.Logger {
+	return cg.logger
 }
 
 // PrometheusConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type PrometheusConfigGenerator struct {
-	*ConfigGenerator
+	ConfigGenerator
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
 }
@@ -204,20 +226,20 @@ func (cg *PrometheusConfigGenerator) WithMaximumVersion(version string) *Prometh
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *PrometheusConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
-	if cg.notCompatible {
-		cg.Warn(k)
-		return m
-	}
+//func (cg *PrometheusConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+//if cg.IsCompatible() {
+//cg.Warn(k)
+//return m
+//}
 
-	return append(m, yaml.MapItem{Key: k, Value: v})
-}
+//return append(m, yaml.MapItem{Key: k, Value: v})
+//}
 
 // AppendCommandlineArgument appends the name/v argument to the given []monitoringv1.Argument and returns
 // the updated slice.
 func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
-	if cg.notCompatible {
-		level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
+	if !cg.IsCompatible() {
+		level.Warn(cg.Logger()).Log("msg", fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
 		return m
 	}
 
@@ -330,7 +352,7 @@ func (cg *PrometheusConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabe
 }
 
 func (cg *PrometheusConfigGenerator) EndpointSliceSupported() bool {
-	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
+	return cg.WithMinimumVersion("2.21.0").IsCompatible() && cg.endpointSliceSupported
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
@@ -519,7 +541,7 @@ func (cg *PrometheusConfigGenerator) buildExternalLabels() yaml.MapSlice {
 
 	for k, v := range cpf.ExternalLabels {
 		if _, found := m[k]; found {
-			level.Warn(cg.logger).Log("msg", "ignoring external label because it is a reserved key", "key", k)
+			level.Warn(cg.Logger()).Log("msg", "ignoring external label because it is a reserved key", "key", k)
 			continue
 		}
 		m[k] = v
@@ -918,7 +940,7 @@ func (cg *PrometheusConfigGenerator) generatePodMonitorConfig(
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
+		level.Warn(cg.Logger()).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -1550,7 +1572,7 @@ func (cg *PrometheusConfigGenerator) generateAddressShardingRelabelingRulesIfMis
 	for i, relabeling := range relabelings {
 		for _, relabelItem := range relabeling {
 			if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
-				level.Debug(cg.logger).Log("msg", "found existing hashmod relabeling rule, skipping", "idx", i)
+				level.Debug(cg.Logger()).Log("msg", "found existing hashmod relabeling rule, skipping", "idx", i)
 				return relabelings
 			}
 		}
@@ -2653,7 +2675,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 				case "endpoints", "endpointslice":
 					configs[i] = cg.WithMinimumVersion("2.37.0").AppendMapItem(configs[i], "attach_metadata", config.AttachMetadata)
 				default:
-					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring attachMetadata not supported by Prometheus for role: %s", config.Role))
+					level.Warn(cg.Logger()).Log("msg", fmt.Sprintf("ignoring attachMetadata not supported by Prometheus for role: %s", config.Role))
 				}
 			}
 		}
