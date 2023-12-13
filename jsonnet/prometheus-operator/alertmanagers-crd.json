@@ -1461,7 +1461,7 @@
                     "type": "string"
                   },
                   "clusterLabel": {
-                    "description": "Gossip with same ClusterLabels only.",
+                    "description": "Defines the identifier that uniquely identifies the Alertmanager cluster. You should only set it when the Alertmanager cluster includes several Alertmanager objects.",
                     "type": "string"
                   },
                   "clusterPeerTimeout": {

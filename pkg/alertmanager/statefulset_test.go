@@ -1193,41 +1193,52 @@ func TestClusterLabel(t *testing.T) {
 		scenario                string
 		version                 string
 		expectedClusterLabelArg bool
-		clusterLabel            string
+		customClusterLabel      string
 	}{{
-		scenario:                "--cluster.label not set by default for version >= v0.26.0",
+		scenario:                "--cluster.label set by default for version >= v0.26.0",
 		version:                 "0.26.0",
-		expectedClusterLabelArg: false,
+		expectedClusterLabelArg: true,
+	}, {
+		scenario:                "--cluster.label set if speficfied explicity",
+		version:                 "0.26.0",
+		expectedClusterLabelArg: true,
+		customClusterLabel:      "custom.cluster",
 	}, {
 		scenario:                "no --cluster.label set for older versions",
 		version:                 "0.25.0",
 		expectedClusterLabelArg: false,
-	}, {
-		scenario:                "--cluster.label set if specified in spec.ClusterLabel and version >= v0.26.0",
-		version:                 "0.26.0",
-		expectedClusterLabelArg: true,
-		clusterLabel:            "custom.cluster",
 	}}
 
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{
-				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas:     toPtr(int32(1)),
-					Version:      ts.version,
-					ClusterLabel: ts.clusterLabel,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "alertmanager",
+					Namespace: "monitoring",
 				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: toPtr(int32(1)),
+					Version:  ts.version,
+				},
+			}
+
+			if ts.customClusterLabel != "" {
+				a.Spec.ClusterLabel = &ts.customClusterLabel
 			}
 
 			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
-			if !ts.expectedClusterLabelArg {
-				require.NotContains(t, args, "--cluster.label")
+			if ts.expectedClusterLabelArg {
+				if ts.customClusterLabel != "" {
+					require.Contains(t, args, "--cluster.label=custom.cluster")
+					return
+				}
+				require.Contains(t, args, "--cluster.label=monitoring/alertmanager")
 				return
 			}
-			require.Contains(t, args, "--cluster.label=custom.cluster")
+			require.NotContains(t, args, "--cluster.label")
 		})
 	}
 }
