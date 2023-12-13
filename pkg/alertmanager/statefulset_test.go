@@ -1232,7 +1232,7 @@ func TestClusterLabel(t *testing.T) {
 			args := ss.Template.Spec.Containers[0].Args
 			if ts.expectedClusterLabelArg {
 				if ts.customClusterLabel != "" {
-					require.Contains(t, args, "--cluster.label=custom.cluster")
+					require.Contains(t, args, fmt.Sprintf("--cluster.label=%s", ts.customClusterLabel))
 					return
 				}
 				require.Contains(t, args, "--cluster.label=monitoring/alertmanager")

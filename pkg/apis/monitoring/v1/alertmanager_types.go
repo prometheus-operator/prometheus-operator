@@ -207,7 +207,7 @@ type AlertmanagerSpec struct {
 	// Interval between gossip attempts.
 	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
 	// Defines the identifier that uniquely identifies the Alertmanager cluster.
-	// You should only set it when the Alertmanager cluster includes several Alertmanager objects.
+	// You should only set it when the Alertmanager cluster includes more than one Alertmanager replicas.
 	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// Interval between pushpull attempts.
 	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
