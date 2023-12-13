@@ -697,8 +697,12 @@ func (cg *PrometheusConfigGenerator) GenerateServerConfiguration(
 	}
 
 	// Remote write config
-	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, generateRemoteWriteConfig(cg.ConfigGenerator, cpf.RemoteWrite, cg.prom.GetObjectMeta().GetNamespace(), store))
+	rws := GenerateRemoteWriteConfig(cg.ConfigGenerator, cpf.RemoteWrite, cg.prom.GetObjectMeta().GetNamespace(), store)
+	if len(rws) > 0 {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "remote_write",
+			Value: rws,
+		})
 	}
 
 	// Remote read config
@@ -1955,12 +1959,12 @@ func addOAuth2ToYaml(
 	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
 
-func generateRemoteWriteConfig(
+func GenerateRemoteWriteConfig(
 	cg ConfigGenerator,
 	remoteWrite []monitoringv1.RemoteWriteSpec,
 	namespace string,
 	store *assets.Store,
-) yaml.MapItem {
+) []yaml.MapSlice {
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range remoteWrite {
@@ -2136,10 +2140,7 @@ func generateRemoteWriteConfig(
 		cfgs = append(cfgs, cfg)
 	}
 
-	return yaml.MapItem{
-		Key:   "remote_write",
-		Value: cfgs,
-	}
+	return cfgs
 }
 
 func (cg *PrometheusConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSlice {
@@ -2385,8 +2386,12 @@ func (cg *PrometheusConfigGenerator) GenerateAgentConfiguration(
 	})
 
 	// Remote write config
-	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, generateRemoteWriteConfig(cg.ConfigGenerator, cpf.RemoteWrite, cg.prom.GetObjectMeta().GetNamespace(), store))
+	rws := GenerateRemoteWriteConfig(cg.ConfigGenerator, cpf.RemoteWrite, cg.prom.GetObjectMeta().GetNamespace(), store)
+	if len(rws) > 0 {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "remote_write",
+			Value: rws,
+		})
 	}
 
 	if cpf.TracingConfig != nil {
