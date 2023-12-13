@@ -808,6 +808,20 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p.Status = *pStatus
 
+	selectorLabels := map[string]string{
+		"app.kubernetes.io/name":       "prometheus-agent",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   p.Name,
+	}
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
+	}
+	p.Status.Selector = selector.String()
+	if p.Spec.Shards != nil {
+		p.Status.Shards = *p.Spec.Shards
+	}
+
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
 	}

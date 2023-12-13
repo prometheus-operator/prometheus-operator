@@ -53,6 +53,7 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.shards,statuspath=.status.shards,selectorpath=.status.sele
 
 // PrometheusAgent defines a Prometheus agent deployment.
 type PrometheusAgent struct {

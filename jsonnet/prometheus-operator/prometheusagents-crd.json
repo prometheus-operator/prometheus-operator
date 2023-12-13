@@ -7480,6 +7480,10 @@
                     "format": "int32",
                     "type": "integer"
                   },
+                  "selector": {
+                    "description": "The selector used to match the pods targeted by this Prometheus resource.",
+                    "type": "string"
+                  },
                   "shardStatuses": {
                     "description": "The list has one entry per shard. Each entry provides a summary of the shard status.",
                     "items": {
@@ -7524,6 +7528,11 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "shards": {
+                    "description": "Shards is the most recently observed number of shards.",
+                    "format": "int32",
+                    "type": "integer"
+                  },
                   "unavailableReplicas": {
                     "description": "Total number of unavailable pods targeted by this Prometheus deployment.",
                     "format": "int32",
@@ -7554,6 +7563,11 @@
         "served": true,
         "storage": true,
         "subresources": {
+          "scale": {
+            "labelSelectorPath": ".status.sele",
+            "specReplicasPath": ".spec.shards",
+            "statusReplicasPath": ".status.shards"
+          },
           "status": {}
         }
       }
