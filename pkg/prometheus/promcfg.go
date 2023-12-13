@@ -53,50 +53,126 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-// PrometheusConfigGenerator knows how to generate a Prometheus configuration which is
-// compatible with a given Prometheus version.
-type PrometheusConfigGenerator struct {
-	logger                 log.Logger
-	version                semver.Version
-	notCompatible          bool
-	prom                   monitoringv1.PrometheusInterface
-	endpointSliceSupported bool
+type ConfigGenerator struct {
+	logger        log.Logger
+	version       semver.Version
+	notCompatible bool
 }
 
-// NewPrometheusConfigGenerator creates a PrometheusConfigGenerator for the provided Prometheus resource.
-func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*PrometheusConfigGenerator, error) {
+// NewConfigGenerator creates a new ConfigGenerator.
+func NewConfigGenerator(logger log.Logger, version string) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
+	semVersion, err := semver.ParseTolerant(version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
+		return nil, fmt.Errorf("failed to parse version: %w", err)
 	}
 
-	if version.Major != 2 {
-		return nil, fmt.Errorf("unsupported Prometheus major version %s: %w", version, err)
-	}
-
-	logger = log.WithSuffix(logger, "version", promVersion)
-
-	return &PrometheusConfigGenerator{
-		logger:                 logger,
-		version:                version,
-		prom:                   p,
-		endpointSliceSupported: endpointSliceSupported,
+	return &ConfigGenerator{
+		logger:  log.WithSuffix(logger, "version", semVersion),
+		version: semVersion,
 	}, nil
 }
 
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
+	return &ConfigGenerator{
+		logger:        log.WithSuffix(cg.logger, keyvals),
+		version:       cg.version,
+		notCompatible: cg.notCompatible,
+	}
+}
+
+// WithMinimumVersion returns a new ConfigGenerator that does nothing (except
+// logging a warning message) if the registered version is lesser than the
+// given version.
+// The method panics if version isn't a valid SemVer value.
+func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
+	minVersion := semver.MustParse(version)
+
+	if cg.version.LT(minVersion) {
+		return &ConfigGenerator{
+			logger:        log.WithSuffix(cg.logger, "minimum_version", version),
+			version:       cg.version,
+			notCompatible: true,
+		}
+	}
+
+	return cg
+}
+
+// WithMaximumVersion returns a new ConfigGenerator that does nothing (except
+// logging a warning message) if the registered version is greater than or
+// equal to the given version.
+// The method panics if version isn't a valid SemVer value.
+func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
+	minVersion := semver.MustParse(version)
+
+	if cg.version.GTE(minVersion) {
+		return &ConfigGenerator{
+			logger:        log.WithSuffix(cg.logger, "maximum_version", version),
+			version:       cg.version,
+			notCompatible: true,
+		}
+	}
+
+	return cg
+}
+
+// AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
+// the updated slice.
+func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+	if cg.notCompatible {
+		cg.Warn(k)
+		return m
+	}
+
+	return append(m, yaml.MapItem{Key: k, Value: v})
+}
+
+// IsCompatible return true or false depending if the version being used is compatible
+func (cg *ConfigGenerator) IsCompatible() bool {
+	return !cg.notCompatible
+}
+
+// Warn logs a warning.
+func (cg *ConfigGenerator) Warn(field string) {
+	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by the current version", field))
+}
+
+// PrometheusConfigGenerator knows how to generate a Prometheus configuration which is
+// compatible with a given Prometheus version.
+type PrometheusConfigGenerator struct {
+	*ConfigGenerator
+	prom                   monitoringv1.PrometheusInterface
+	endpointSliceSupported bool
+}
+
+// NewPrometheusConfigGenerator creates a PrometheusConfigGenerator for the provided Prometheus resource.
+func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*PrometheusConfigGenerator, error) {
+	cg, err := NewConfigGenerator(logger, operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion))
+	if err != nil {
+		return nil, err
+	}
+
+	if cg.version.Major != 2 {
+		return nil, fmt.Errorf("unsupported Prometheus major version %s: %w", cg.version, err)
+	}
+
+	return &PrometheusConfigGenerator{
+		ConfigGenerator:        cg,
+		prom:                   p,
+		endpointSliceSupported: endpointSliceSupported,
+	}, nil
+}
+
 func (cg *PrometheusConfigGenerator) WithKeyVals(keyvals ...interface{}) *PrometheusConfigGenerator {
 	return &PrometheusConfigGenerator{
-		logger:                 log.WithSuffix(cg.logger, keyvals),
-		version:                cg.version,
-		notCompatible:          cg.notCompatible,
+		ConfigGenerator:        cg.ConfigGenerator.WithKeyVals(keyvals...),
 		prom:                   cg.prom,
 		endpointSliceSupported: cg.endpointSliceSupported,
 	}
@@ -107,19 +183,11 @@ func (cg *PrometheusConfigGenerator) WithKeyVals(keyvals ...interface{}) *Promet
 // given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *PrometheusConfigGenerator) WithMinimumVersion(version string) *PrometheusConfigGenerator {
-	minVersion := semver.MustParse(version)
-
-	if cg.version.LT(minVersion) {
-		return &PrometheusConfigGenerator{
-			logger:                 log.WithSuffix(cg.logger, "minimum_version", version),
-			version:                cg.version,
-			notCompatible:          true,
-			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
-		}
+	return &PrometheusConfigGenerator{
+		ConfigGenerator:        cg.ConfigGenerator.WithMinimumVersion(version),
+		prom:                   cg.prom,
+		endpointSliceSupported: cg.endpointSliceSupported,
 	}
-
-	return cg
 }
 
 // WithMaximumVersion returns a new ConfigGenerator that does nothing (except
@@ -127,19 +195,11 @@ func (cg *PrometheusConfigGenerator) WithMinimumVersion(version string) *Prometh
 // equal to the given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *PrometheusConfigGenerator) WithMaximumVersion(version string) *PrometheusConfigGenerator {
-	minVersion := semver.MustParse(version)
-
-	if cg.version.GTE(minVersion) {
-		return &PrometheusConfigGenerator{
-			logger:                 log.WithSuffix(cg.logger, "maximum_version", version),
-			version:                cg.version,
-			notCompatible:          true,
-			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
-		}
+	return &PrometheusConfigGenerator{
+		ConfigGenerator:        cg.ConfigGenerator.WithMaximumVersion(version),
+		prom:                   cg.prom,
+		endpointSliceSupported: cg.endpointSliceSupported,
 	}
-
-	return cg
 }
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
@@ -165,14 +225,14 @@ func (cg *PrometheusConfigGenerator) AppendCommandlineArgument(m []monitoringv1.
 }
 
 // IsCompatible return true or false depending if the version being used is compatible.
-func (cg *PrometheusConfigGenerator) IsCompatible() bool {
-	return !cg.notCompatible
-}
+//func (cg *PrometheusConfigGenerator) IsCompatible() bool {
+//return !cg.notCompatible
+//}
 
 // Warn logs a warning.
-func (cg *PrometheusConfigGenerator) Warn(field string) {
-	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
-}
+//func (cg *PrometheusConfigGenerator) Warn(field string) {
+//	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by Prometheus", field))
+//}
 
 type limitKey struct {
 	specField       string
