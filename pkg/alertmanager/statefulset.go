@@ -315,9 +315,11 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 	// any traffic that is not meant for the cluster.
 	// Specify ClusterLabel in case you are in need of sorting out Alertmanager traffic.
 	if version.GTE(semver.MustParse("0.26.0")) {
-		if a.Spec.ClusterLabel != "" {
-			amArgs = append(amArgs, fmt.Sprintf("--cluster.label=%s", a.Spec.ClusterLabel))
+		clusterLabel := fmt.Sprintf("%s/%s", a.Namespace, a.Name)
+		if a.Spec.ClusterLabel != nil {
+			clusterLabel = *a.Spec.ClusterLabel
 		}
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.label=%s", clusterLabel))
 	}
 
 	isHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0"))
