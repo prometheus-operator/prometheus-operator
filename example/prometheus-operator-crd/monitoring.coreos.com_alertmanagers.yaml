@@ -7337,8 +7337,6 @@ spec:
                     - keySecret
                     type: object
                 type: object
-            required:
-            - clusterLabel
             type: object
           status:
             description: 'Most recent observed status of the Alertmanager cluster.

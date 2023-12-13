@@ -6448,9 +6448,6 @@
                     "type": "object"
                   }
                 },
-                "required": [
-                  "clusterLabel"
-                ],
                 "type": "object"
               },
               "status": {
