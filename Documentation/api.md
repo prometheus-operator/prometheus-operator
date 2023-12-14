@@ -3790,8 +3790,11 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;,
-and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds seconds minutes hours days weeks years).</p>
+<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
+seconds minutes hours days weeks years).</p>
+<p>The field has no effect when remote-write is configured since the Ruler
+operates in stateless mode.</p>
 </td>
 </tr>
 <tr>
@@ -4008,6 +4011,21 @@ by the given ThanosRuler version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.
+When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
 </td>
 </tr>
 </table>
@@ -12382,7 +12400,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 <p>RemoteWriteSpec defines the configuration to write samples from Prometheus
@@ -14176,8 +14194,11 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;,
-and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds seconds minutes hours days weeks years).</p>
+<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
+seconds minutes hours days weeks years).</p>
+<p>The field has no effect when remote-write is configured since the Ruler
+operates in stateless mode.</p>
 </td>
 </tr>
 <tr>
@@ -14394,6 +14415,21 @@ by the given ThanosRuler version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.
+When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
 </td>
 </tr>
 </tbody>

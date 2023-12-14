@@ -177,10 +177,17 @@ type ThanosRulerSpec struct {
 	// Interval between consecutive evaluations.
 	// +kubebuilder:default:="15s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
-	// Time duration ThanosRuler shall retain data for. Default is '24h',
-	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
+
+	// Time duration ThanosRuler shall retain data for. Default is '24h', and
+	// must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
+	// seconds minutes hours days weeks years).
+	//
+	// The field has no effect when remote-write is configured since the Ruler
+	// operates in stateless mode.
+	//
 	// +kubebuilder:default:="24h"
 	Retention Duration `json:"retention,omitempty"`
+
 	// Containers allows injecting additional containers or modifying operator generated
 	// containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
 	// to change the behavior of an operator generated container. Containers described here modify
@@ -250,6 +257,12 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+
+	// Defines the list of remote write configurations.
+	// When the list isn't empty, the ruler is configured with stateless mode.
+	//
+	// +optional
+	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
