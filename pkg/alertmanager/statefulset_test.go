@@ -1199,7 +1199,7 @@ func TestClusterLabel(t *testing.T) {
 		version:                 "0.26.0",
 		expectedClusterLabelArg: true,
 	}, {
-		scenario:                "--cluster.label set if speficfied explicity",
+		scenario:                "--cluster.label set if specified explicitly",
 		version:                 "0.26.0",
 		expectedClusterLabelArg: true,
 		customClusterLabel:      "custom.cluster",

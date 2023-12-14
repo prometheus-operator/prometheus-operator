@@ -313,7 +313,6 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 	// connects with cluster A.
 	// --cluster.label flag was introduced in alertmanager v0.26, this helps to block
 	// any traffic that is not meant for the cluster.
-	// Specify ClusterLabel in case you are in need of sorting out Alertmanager traffic.
 	if version.GTE(semver.MustParse("0.26.0")) {
 		clusterLabel := fmt.Sprintf("%s/%s", a.Namespace, a.Name)
 		if a.Spec.ClusterLabel != nil {
