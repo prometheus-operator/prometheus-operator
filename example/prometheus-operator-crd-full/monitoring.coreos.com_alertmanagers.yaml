@@ -1586,7 +1586,7 @@ spec:
                 description: Defines the identifier that uniquely identifies the Alertmanager
                   cluster. You should only set it when the Alertmanager cluster includes
                   Alertmanager instances which are external to this Alertmanager resource.
-                  In practice, the addressed of the external instances are provided
+                  In practice, the addresses of the external instances are provided
                   via the `.spec.additionalPeers` field.
                 type: string
               clusterPeerTimeout:

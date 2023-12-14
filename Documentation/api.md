@@ -589,7 +589,7 @@ string
 </td>
 <td>
 <p>Defines the identifier that uniquely identifies the Alertmanager cluster.
-You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addressed of the external instances are provided via the <code>.spec.additionalPeers</code> field.</p>
+You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the <code>.spec.additionalPeers</code> field.</p>
 </td>
 </tr>
 <tr>
@@ -5054,7 +5054,7 @@ string
 </td>
 <td>
 <p>Defines the identifier that uniquely identifies the Alertmanager cluster.
-You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addressed of the external instances are provided via the <code>.spec.additionalPeers</code> field.</p>
+You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the <code>.spec.additionalPeers</code> field.</p>
 </td>
 </tr>
 <tr>
