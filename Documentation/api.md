@@ -7,7 +7,7 @@ menu: "operator"
 weight: 211
 toc: true
 ---
-> This page is automatically generated with `gen-crd-api-reference-docs`.
+> This page is automatically generated with `crd-ref-docs`.
 <p>Packages:</p>
 <ul>
 <li>

@@ -1,7 +1,7 @@
 This directory contains the configuration and templates for generating the
 HTML/MarkDown documentation of the Prometheus operator's custom resource
 definitions. It uses the
-[gen-crd-api-reference-docs](https://github.com/ahmetb/gen-crd-api-reference-docs)
+[crd-ref-docs](https://github.com/elastic/crd-ref-docs)
 project.
 
 ## Building
