@@ -19,8 +19,6 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
@@ -34,10 +32,9 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 // would change the statefulset definition and thereby force Prometheus to
 // restart.
 func shouldReturnAtLeastOneConfigMap(t *testing.T) {
-	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
-	configMaps, err := makeRulesConfigMaps(p, ruleFiles)
+	configMaps, err := makeRulesConfigMaps(ruleFiles)
 	if err != nil {
 		t.Fatalf("expected no error but got: %v", err.Error())
 	}
@@ -49,25 +46,23 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 
 func shouldErrorOnTooLargeRuleFile(t *testing.T) {
 	expectedError := "rule file 'my-rule-file' is too large for a single Kubernetes ConfigMap"
-	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
 	ruleFiles["my-rule-file"] = strings.Repeat("a", v1.MaxSecretSize+1)
 
-	_, err := makeRulesConfigMaps(p, ruleFiles)
+	_, err := makeRulesConfigMaps(ruleFiles)
 	if err == nil || err.Error() != expectedError {
 		t.Fatalf("expected makeRulesConfigMaps to return error '%v' but got '%v'", expectedError, err)
 	}
 }
 
 func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
-	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
 	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
 	ruleFiles["second"] = "a"
 
-	configMaps, err := makeRulesConfigMaps(p, ruleFiles)
+	configMaps, err := makeRulesConfigMaps(ruleFiles)
 	if err != nil {
 		t.Fatalf("expected no error but got: %v", err)
 	}

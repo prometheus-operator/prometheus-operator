@@ -111,7 +111,14 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return currentConfigMapNames, nil
 	}
 
-	newConfigMaps, err := makeRulesConfigMaps(t, newRules)
+	newConfigMaps, err := makeRulesConfigMaps(
+		newRules,
+		operator.WithOwner(t),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithLabels(o.config.Labels),
+		operator.WithLabels(map[string]string{labelThanosRulerName: t.Name}),
+		operator.WithName(thanosRuleConfigMapName(t.Name)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make rules ConfigMaps: %w", err)
 	}
@@ -200,7 +207,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -235,7 +242,7 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 
 	ruleFileConfigMaps := []v1.ConfigMap{}
 	for i, bucket := range buckets {
-		cm := makeRulesConfigMap(t, bucket)
+		cm := makeRulesConfigMap(bucket, opts...)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
@@ -252,31 +259,15 @@ func bucketSize(bucket map[string]string) int {
 	return totalSize
 }
 
-func makeRulesConfigMap(t *monitoringv1.ThanosRuler, ruleFiles map[string]string) v1.ConfigMap {
-	boolTrue := true
+func makeRulesConfigMap(ruleFiles map[string]string, opts ...operator.BuildOption) v1.ConfigMap {
+	cm := v1.ConfigMap{Data: ruleFiles}
 
-	labels := map[string]string{labelThanosRulerName: t.Name}
-	for k, v := range managedByOperatorLabels {
-		labels[k] = v
-	}
+	operator.BuildObject[*v1.ConfigMap](
+		&cm,
+		opts...,
+	)
 
-	return v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   thanosRuleConfigMapName(t.Name),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         t.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               t.Kind,
-					Name:               t.Name,
-					UID:                t.UID,
-				},
-			},
-		},
-		Data: ruleFiles,
-	}
+	return cm
 }
 
 func thanosRuleConfigMapName(name string) string {

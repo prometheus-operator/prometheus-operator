@@ -816,8 +816,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
-	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
-	template := prompkg.NewTLSAssetSecret(p, labels)
+	template := prompkg.NewTLSAssetSecret(p, c.config)
 
 	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p))
 
@@ -837,8 +836,6 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitor
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
-	boolTrue := true
-
 	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
 		fields = p.Spec.Web.WebConfigFileFields
@@ -853,19 +850,15 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	ownerReference := metav1.OwnerReference{
-		APIVersion:         p.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               p.Kind,
-		Name:               p.Name,
-		UID:                p.UID,
-	}
-	secretAnnotations := c.config.Annotations
-	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
+	s := &v1.Secret{}
+	operator.BuildObject[*v1.Secret](
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithOwner(p),
+	)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
 	}
 
