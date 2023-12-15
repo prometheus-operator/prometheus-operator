@@ -1655,6 +1655,74 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "OpenStack SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "Instance",
+						Region: "RegionOne",
+						Password: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						ApplicationCredentialSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key2",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "OpenStack SD config with invalid secret ref for password",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Password: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "invalid",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "OpenStack SD config with invalid secret ref for application credentials",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						ApplicationCredentialSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key3",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "OpenStack SD config with no secret ref provided",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected: true,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(

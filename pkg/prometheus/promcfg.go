@@ -2758,6 +2758,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
+
 				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
 					Secret: config.AccessKey,
 				})
@@ -2949,6 +2950,152 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "gce_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// OpenStackSDConfig
+	if len(sc.Spec.OpenStackSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.OpenStackSDConfigs))
+		for i, config := range sc.Spec.OpenStackSDConfigs {
+			configs[i] = []yaml.MapItem{
+				{
+					Key:   "role",
+					Value: strings.ToLower(config.Role),
+				},
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "region",
+				Value: config.Region,
+			})
+
+			if config.IdentityEndpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "identity_endpoint",
+					Value: config.IdentityEndpoint,
+				})
+			}
+
+			if config.Username != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "username",
+					Value: config.Username,
+				})
+			}
+
+			if config.UserID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "userid",
+					Value: config.UserID,
+				})
+			}
+
+			if config.Password != nil {
+				password, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.Password,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.Password.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "password",
+					Value: password,
+				})
+			}
+
+			if config.DomainName != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "domain_name",
+					Value: config.DomainName,
+				})
+			}
+
+			if config.DomainID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "domain_id",
+					Value: config.DomainID,
+				})
+			}
+
+			if config.ProjectName != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "project_name",
+					Value: config.ProjectName,
+				})
+			}
+
+			if config.ProjectID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "project_id",
+					Value: config.ProjectID,
+				})
+			}
+
+			if config.ApplicationCredentialName != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "application_credential_name",
+					Value: config.ApplicationCredentialName,
+				})
+			}
+
+			if config.ApplicationCredentialID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "application_credential_id",
+					Value: config.ApplicationCredentialID,
+				})
+			}
+
+			if config.ApplicationCredentialSecret != nil {
+				secret, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.ApplicationCredentialSecret,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.ApplicationCredentialSecret.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "application_credential_secret",
+					Value: secret,
+				})
+			}
+
+			if config.AllTenants != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "all_tenants",
+					Value: config.AllTenants,
+				})
+			}
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.Availability != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "availability",
+					Value: config.Availability,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "openstack_sd_configs",
 			Value: configs,
 		})
 	}
