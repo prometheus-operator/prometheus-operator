@@ -744,6 +744,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateOpenStackSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("openstackSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -882,6 +887,23 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ClientSecret); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.OpenStackSDConfigs {
+		if config.Password != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.Password); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		if config.ApplicationCredentialSecret != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationCredentialSecret); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
 		}
 	}
 	return nil

@@ -1326,6 +1326,276 @@
                     "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
                     "type": "string"
                   },
+                  "openstackSDConfigs": {
+                    "description": "OpenStackSDConfigs defines a list of OpenStack service discovery configurations.",
+                    "items": {
+                      "description": "OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config",
+                      "properties": {
+                        "allTenants": {
+                          "description": "Whether the service discovery should list all instances for all projects. It is only relevant for the 'instance' role and usually requires admin permissions.",
+                          "type": "boolean"
+                        },
+                        "applicationCredentialId": {
+                          "description": "ApplicationCredentialID",
+                          "type": "string"
+                        },
+                        "applicationCredentialName": {
+                          "description": "The ApplicationCredentialID or ApplicationCredentialName fields are required if using an application credential to authenticate. Some providers allow you to create an application credential to authenticate rather than a password.",
+                          "type": "string"
+                        },
+                        "applicationCredentialSecret": {
+                          "description": "The applicationCredentialSecret field is required if using an application credential to authenticate.",
+                          "properties": {
+                            "key": {
+                              "description": "The key of the secret to select from.  Must be a valid secret key.",
+                              "type": "string"
+                            },
+                            "name": {
+                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "type": "string"
+                            },
+                            "optional": {
+                              "description": "Specify whether the Secret or its key must be defined",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "key"
+                          ],
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
+                        },
+                        "availability": {
+                          "description": "Availability of the endpoint to connect to.",
+                          "enum": [
+                            "Public",
+                            "public",
+                            "Admin",
+                            "admin",
+                            "Internal",
+                            "internal"
+                          ],
+                          "type": "string"
+                        },
+                        "domainID": {
+                          "description": "DomainID",
+                          "type": "string"
+                        },
+                        "domainName": {
+                          "description": "At most one of domainId and domainName must be provided if using username with Identity V3. Otherwise, either are optional.",
+                          "type": "string"
+                        },
+                        "identityEndpoint": {
+                          "description": "IdentityEndpoint specifies the HTTP endpoint that is required to work with the Identity API of the appropriate version.",
+                          "type": "string"
+                        },
+                        "password": {
+                          "description": "Password for the Identity V2 and V3 APIs. Consult with your provider's control panel to discover your account's preferred method of authentication.",
+                          "properties": {
+                            "key": {
+                              "description": "The key of the secret to select from.  Must be a valid secret key.",
+                              "type": "string"
+                            },
+                            "name": {
+                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "type": "string"
+                            },
+                            "optional": {
+                              "description": "Specify whether the Secret or its key must be defined",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "key"
+                          ],
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
+                        },
+                        "port": {
+                          "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
+                          "type": "integer"
+                        },
+                        "projectID": {
+                          "description": "ProjectID",
+                          "type": "string"
+                        },
+                        "projectName": {
+                          "description": "The ProjectId and ProjectName fields are optional for the Identity V2 API. Some providers allow you to specify a ProjectName instead of the ProjectId. Some require both. Your provider's authentication policies will determine how these fields influence authentication.",
+                          "type": "string"
+                        },
+                        "refreshInterval": {
+                          "description": "Refresh interval to re-read the instance list.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                          "type": "string"
+                        },
+                        "region": {
+                          "description": "The OpenStack Region.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "role": {
+                          "description": "The OpenStack role of entities that should be discovered.",
+                          "enum": [
+                            "Instance",
+                            "instance",
+                            "Hypervisor",
+                            "hypervisor"
+                          ],
+                          "type": "string"
+                        },
+                        "tlsConfig": {
+                          "description": "TLS configuration applying to the target HTTP endpoint.",
+                          "properties": {
+                            "ca": {
+                              "description": "Certificate authority used when verifying server certificates.",
+                              "properties": {
+                                "configMap": {
+                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key to select.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the ConfigMap or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "secret": {
+                                  "description": "Secret containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "cert": {
+                              "description": "Client certificate to present when doing client-authentication.",
+                              "properties": {
+                                "configMap": {
+                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key to select.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the ConfigMap or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "secret": {
+                                  "description": "Secret containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "insecureSkipVerify": {
+                              "description": "Disable target certificate validation.",
+                              "type": "boolean"
+                            },
+                            "keySecret": {
+                              "description": "Secret containing the client key file for the targets.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "serverName": {
+                              "description": "Used to verify the hostname for the targets.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "userid": {
+                          "description": "UserID",
+                          "type": "string"
+                        },
+                        "username": {
+                          "description": "Username is required if using Identity V2 API. Consult with your provider's control panel to discover your account's username. In Identity V3, either userid or a combination of username and domainId or domainName are needed",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "region",
+                        "role"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "params": {
                     "additionalProperties": {
                       "items": {

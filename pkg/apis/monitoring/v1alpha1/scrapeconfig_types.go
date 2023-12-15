@@ -123,6 +123,9 @@ type ScrapeConfigSpec struct {
 	// GCESDConfigs defines a list of GCE service discovery configurations.
 	// +optional
 	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
+	// OpenStackSDConfigs defines a list of OpenStack service discovery configurations.
+	// +optional
+	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -477,6 +480,84 @@ type GCESDConfig struct {
 	// The tag separator is used to separate the tags on concatenation
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
+}
+
+// OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
+// +k8s:openapi-gen=true
+type OpenStackSDConfig struct {
+	// The OpenStack role of entities that should be discovered.
+	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor
+	// +required
+	Role string `json:"role"`
+	// The OpenStack Region.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Region string `json:"region"`
+	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
+	// the Identity API of the appropriate version.
+	// +optional
+	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
+	// Username is required if using Identity V2 API. Consult with your provider's
+	// control panel to discover your account's username.
+	// In Identity V3, either userid or a combination of username
+	// and domainId or domainName are needed
+	// +optional
+	Username *string `json:"username,omitempty"`
+	// UserID
+	// +optional
+	UserID *string `json:"userid,omitempty"`
+	// Password for the Identity V2 and V3 APIs. Consult with your provider's
+	// control panel to discover your account's preferred method of authentication.
+	// +optional
+	Password *corev1.SecretKeySelector `json:"password,omitempty"`
+	// At most one of domainId and domainName must be provided if using username
+	// with Identity V3. Otherwise, either are optional.
+	// +optional
+	DomainName *string `json:"domainName,omitempty"`
+	// DomainID
+	// +optional
+	DomainID *string `json:"domainID,omitempty"`
+	// The ProjectId and ProjectName fields are optional for the Identity V2 API.
+	// Some providers allow you to specify a ProjectName instead of the ProjectId.
+	// Some require both. Your provider's authentication policies will determine
+	// how these fields influence authentication.
+	// +optional
+	ProjectName *string `json:"projectName,omitempty"`
+	//  ProjectID
+	// +optional
+	ProjectID *string `json:"projectID,omitempty"`
+	// The ApplicationCredentialID or ApplicationCredentialName fields are
+	// required if using an application credential to authenticate. Some providers
+	// allow you to create an application credential to authenticate rather than a
+	// password.
+	// +optional
+	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
+	// ApplicationCredentialID
+	// +optional
+	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
+	// The applicationCredentialSecret field is required if using an application
+	// credential to authenticate.
+	// +optional
+	ApplicationCredentialSecret *corev1.SecretKeySelector `json:"applicationCredentialSecret,omitempty"`
+	// Whether the service discovery should list all instances for all projects.
+	// It is only relevant for the 'instance' role and usually requires admin permissions.
+	// +optional
+	AllTenants *bool `json:"allTenants,omitempty"`
+	// Refresh interval to re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +optional
+	Port *int `json:"port"`
+	// Availability of the endpoint to connect to.
+	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
+	// +optional
+	Availability *string `json:"availability,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 type ProxyConfig struct {
