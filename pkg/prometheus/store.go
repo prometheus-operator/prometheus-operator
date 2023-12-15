@@ -23,7 +23,6 @@ import (
 )
 
 func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace string, remotes []monv1.RemoteWriteSpec) error {
-
 	for i, remote := range remotes {
 		if err := ValidateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)

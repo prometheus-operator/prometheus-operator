@@ -50,7 +50,13 @@ var (
 	minReplicas int32 = 1
 )
 
-func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(
+	tr *monitoringv1.ThanosRuler,
+	config Config,
+	rulerConfigSecret *v1.Secret,
+	ruleConfigMapNames []string,
+	inputHash string,
+) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = v1.ResourceList{}
@@ -59,7 +65,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames)
+	spec, err := makeStatefulSetSpec(tr, config, rulerConfigSecret, ruleConfigMapNames)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +142,12 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	return statefulset, nil
 }
 
-func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(
+	tr *monitoringv1.ThanosRuler,
+	config Config,
+	rulerConfigSecret *v1.Secret,
+	ruleConfigMapNames []string,
+) (*appsv1.StatefulSetSpec, error) {
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
@@ -278,6 +289,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.AlertQueryURL != "" {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.query-url", Value: tr.Spec.AlertQueryURL})
 	}
+
+	fullPath := mountSecret(
+		&v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: rulerConfigSecret.Name,
+			},
+			Key: configKey,
+		},
+		"thanos-ruler-config",
+		&trVolumes, &trVolumeMounts,
+	)
+	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "remote-write.config-file", Value: fullPath})
 
 	containerArgs, err := operator.BuildArgs(trCLIArgs, tr.Spec.AdditionalArgs)
 	if err != nil {

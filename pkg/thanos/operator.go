@@ -20,10 +20,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,19 +39,24 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 const (
 	resyncPeriod     = 5 * time.Minute
 	thanosRulerLabel = "thanos-ruler"
 	controllerName   = "thanos-controller"
+	configKey        = "remote-write.yaml"
 )
+
+var minVersionWithRemoteWrite = semver.MustParse("0.24.0")
 
 // Operator manages life cycle of Thanos deployments and
 // monitoring configurations.
@@ -542,6 +549,18 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	// TODO(simonpasquier): generate TLS assets secret and mount it into the statefulset.
+	assetStore := assets.NewStore(o.kclient.CoreV1(), o.kclient.CoreV1())
+	cg, err := prompkg.NewThanosConfigGenerator(logger, tr.Spec.Version)
+	if err != nil {
+		return err
+	}
+
+	rulerConfigSecret, err := o.createOrUpdateRulerConfigSecret(ctx, cg, assetStore, tr)
+	if err != nil {
+		return err
+	}
+
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
 	if err != nil {
 		return err
@@ -561,7 +580,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
+		sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, "")
 		if err != nil {
 			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
@@ -578,12 +597,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, rulerConfigSecret, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -693,12 +712,17 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, s *v1.Secret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
 	// it may be modified by external actors.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
 	ss.RevisionHistoryLimit = nil
+
+	var rcs map[string][]byte
+	if s != nil {
+		rcs = s.Data
+	}
 
 	hash, err := hashstructure.Hash(struct {
 		ThanosRulerLabels      map[string]string
@@ -707,6 +731,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config                 Config
 		StatefulSetSpec        appsv1.StatefulSetSpec
 		RuleConfigMaps         []string `hash:"set"`
+		RuleConfigSecret       map[string][]byte
 	}{
 		ThanosRulerLabels:      tr.Labels,
 		ThanosRulerAnnotations: tr.Annotations,
@@ -714,6 +739,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config:                 c,
 		StatefulSetSpec:        ss,
 		RuleConfigMaps:         ruleConfigMapNames,
+		RuleConfigSecret:       rcs,
 	},
 		nil,
 	)
@@ -816,4 +842,58 @@ func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv
 	}
 
 	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
+}
+
+func (o *Operator) createOrUpdateRulerConfigSecret(
+	ctx context.Context,
+	cg prompkg.ConfigGenerator,
+	store *assets.Store,
+	tr *monitoringv1.ThanosRuler,
+) (*v1.Secret, error) {
+	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())
+
+	s := &v1.Secret{
+		Data: map[string][]byte{},
+	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithName(fmt.Sprintf("%s-config", prefixedName(tr.GetName()))),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithLabels(o.config.Labels),
+		operator.WithOwner(tr),
+	)
+
+	var rwConfig []byte
+	if len(tr.Spec.RemoteWrite) > 0 {
+		if semver.MustParse(cg.Version()).LT(minVersionWithRemoteWrite) {
+			level.Warn(cg.Logger()).Log("msg", "ignoring remote-write configuration not supported by the current version", "min_version", minVersionWithRemoteWrite.String())
+			return nil, nil
+		}
+
+		if err := prompkg.AddRemoteWritesToStore(ctx, store, tr.GetNamespace(), tr.Spec.RemoteWrite); err != nil {
+			return nil, err
+		}
+
+		var err error
+		rwConfig, err = yaml.Marshal(
+			prompkg.GenerateRemoteWriteConfig(
+				cg,
+				tr.Spec.RemoteWrite,
+				tr.GetNamespace(),
+				store,
+			),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal remoete-write configuration: %w", err)
+		}
+	}
+	s.Data[configKey] = rwConfig
+
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+	if err != nil {
+		return nil, err
+	}
+
+	return sClient.Get(ctx, s.Name, metav1.GetOptions{})
 }

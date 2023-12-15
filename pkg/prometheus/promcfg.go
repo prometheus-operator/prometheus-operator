@@ -191,7 +191,10 @@ type PrometheusConfigGenerator struct {
 
 // NewPrometheusConfigGenerator creates a PrometheusConfigGenerator for the provided Prometheus resource.
 func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*PrometheusConfigGenerator, error) {
-	cg, err := newConfigGenerator(logger, operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion))
+	cg, err := newConfigGenerator(
+		logger,
+		operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -315,6 +318,14 @@ func prometheusToThanosVersion(v semver.Version) *semver.Version {
 	}
 
 	return thanosVersion
+}
+
+func NewThanosConfigGenerator(logger log.Logger, version string) (ConfigGenerator, error) {
+	return newConfigGeneratorWithVersionMap(
+		logger,
+		operator.StringValOrDefault(version, operator.DefaultThanosVersion),
+		prometheusToThanosVersion,
+	)
 }
 
 type limitKey struct {
