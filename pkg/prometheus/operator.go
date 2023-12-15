@@ -85,28 +85,20 @@ func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name 
 	return fmt.Sprintf("%s-%s-shard-%d", prefix(p), name, shard)
 }
 
-func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]string) *v1.Secret {
-	objMeta := p.GetObjectMeta()
-	typeMeta := p.GetTypeMeta()
-
-	boolTrue := true
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   TLSAssetsSecretName(p),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
-		},
+func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {
+	s := &v1.Secret{
 		Data: map[string][]byte{},
 	}
+
+	operator.BuildObject[*v1.Secret](
+		s,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithOwner(p),
+		operator.WithName(TLSAssetsSecretName(p)),
+	)
+
+	return s
 }
 
 // ValidateRemoteWriteSpec checks that mutually exclusive configurations are not

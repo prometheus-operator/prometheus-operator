@@ -52,11 +52,6 @@ const (
 )
 
 var (
-	managedByOperatorLabel      = "managed-by"
-	managedByOperatorLabelValue = "prometheus-operator"
-	ManagedByOperatorLabels     = map[string]string{
-		managedByOperatorLabel: managedByOperatorLabelValue,
-	}
 	ShardLabelName                = "operator.prometheus.io/shard"
 	PrometheusNameLabelName       = "operator.prometheus.io/name"
 	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
@@ -126,26 +121,21 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, 
 		return nil, err
 	}
 
-	objMeta := p.GetObjectMeta()
-	typeMeta := p.GetTypeMeta()
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        ConfigSecretName(p),
-			Annotations: config.Annotations,
-			Labels:      config.Labels.Merge(ManagedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion:         typeMeta.APIVersion,
-				BlockOwnerDeletion: ptr.To(true),
-				Controller:         ptr.To(true),
-				Kind:               typeMeta.Kind,
-				Name:               objMeta.GetName(),
-				UID:                objMeta.GetUID(),
-			}},
-		},
+	s := &v1.Secret{
 		Data: map[string][]byte{
 			ConfigFilename: promConfig,
 		},
-	}, nil
+	}
+
+	operator.BuildObject[*v1.Secret](
+		s,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithOwner(p),
+		operator.WithName(ConfigSecretName(p)),
+	)
+
+	return s, nil
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {

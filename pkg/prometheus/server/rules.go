@@ -110,7 +110,14 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return currentConfigMapNames, nil
 	}
 
-	newConfigMaps, err := makeRulesConfigMaps(p, newRules)
+	newConfigMaps, err := makeRulesConfigMaps(
+		newRules,
+		operator.WithOwner(p),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithLabels(c.config.Labels),
+		operator.WithLabels(map[string]string{prompkg.LabelPrometheusName: p.Name}),
+		operator.WithName(prometheusRuleConfigMapName(p.Name)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make rules ConfigMaps: %w", err)
 	}
@@ -199,7 +206,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -234,7 +241,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 
 	ruleFileConfigMaps := []v1.ConfigMap{}
 	for i, bucket := range buckets {
-		cm := makeRulesConfigMap(p, bucket)
+		cm := makeRulesConfigMap(bucket, opts...)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
@@ -251,31 +258,17 @@ func bucketSize(bucket map[string]string) int {
 	return totalSize
 }
 
-func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
-	boolTrue := true
-
-	labels := map[string]string{prompkg.LabelPrometheusName: p.Name}
-	for k, v := range prompkg.ManagedByOperatorLabels {
-		labels[k] = v
-	}
-
-	return v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   prometheusRuleConfigMapName(p.Name),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         p.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               p.Kind,
-					Name:               p.Name,
-					UID:                p.UID,
-				},
-			},
-		},
+func makeRulesConfigMap(ruleFiles map[string]string, opts ...operator.BuildOption) v1.ConfigMap {
+	cm := v1.ConfigMap{
 		Data: ruleFiles,
 	}
+
+	operator.BuildObject[*v1.ConfigMap](
+		&cm,
+		opts...,
+	)
+
+	return cm
 }
 
 func prometheusRuleConfigMapName(prometheusName string) string {

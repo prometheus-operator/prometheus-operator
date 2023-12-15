@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -36,10 +37,13 @@ const (
 type PrometheusInterface interface {
 	metav1.ObjectMetaAccessor
 	GetTypeMeta() metav1.TypeMeta
+	GroupVersionKind() schema.GroupVersionKind
 	GetCommonPrometheusFields() CommonPrometheusFields
 	SetCommonPrometheusFields(CommonPrometheusFields)
 	GetStatus() PrometheusStatus
 }
+
+var _ = PrometheusInterface(&Prometheus{})
 
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 	return l.Spec.CommonPrometheusFields
