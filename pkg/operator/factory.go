@@ -29,7 +29,7 @@ type BuildOption func(metav1.ObjectMetaAccessor)
 
 type Owner interface {
 	metav1.ObjectMetaAccessor
-	GroupVersionKind() schema.GroupVersionKind
+	schema.ObjectKind
 }
 
 func WithOwner(owner Owner) BuildOption {

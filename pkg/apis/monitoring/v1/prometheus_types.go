@@ -36,10 +36,11 @@ const (
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
 	metav1.ObjectMetaAccessor
-	GetTypeMeta() metav1.TypeMeta
-	GroupVersionKind() schema.GroupVersionKind
+	schema.ObjectKind
+
 	GetCommonPrometheusFields() CommonPrometheusFields
 	SetCommonPrometheusFields(CommonPrometheusFields)
+
 	GetStatus() PrometheusStatus
 }
 
@@ -51,10 +52,6 @@ func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 
 func (l *Prometheus) SetCommonPrometheusFields(f CommonPrometheusFields) {
 	l.Spec.CommonPrometheusFields = f
-}
-
-func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
-	return l.TypeMeta
 }
 
 func (l *Prometheus) GetStatus() PrometheusStatus {
