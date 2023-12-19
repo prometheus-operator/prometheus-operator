@@ -29,7 +29,6 @@ type BuildOption func(metav1.ObjectMetaAccessor)
 
 type Owner interface {
 	metav1.ObjectMetaAccessor
-	// GetTypeMeta() metav1.TypeMeta
 	GroupVersionKind() schema.GroupVersionKind
 }
 
@@ -39,14 +38,12 @@ func WithOwner(owner Owner) BuildOption {
 			append(
 				o.GetObjectMeta().GetOwnerReferences(),
 				metav1.OwnerReference{
-					//APIVersion:         owner.GetTypeMeta().APIVersion,
 					APIVersion:         owner.GroupVersionKind().GroupVersion().String(),
 					BlockOwnerDeletion: ptr.To(true),
 					Controller:         ptr.To(true),
-					//Kind:               owner.GetTypeMeta().Kind,
-					Kind: owner.GroupVersionKind().Kind,
-					Name: owner.GetObjectMeta().GetName(),
-					UID:  owner.GetObjectMeta().GetUID(),
+					Kind:               owner.GroupVersionKind().Kind,
+					Name:               owner.GetObjectMeta().GetName(),
+					UID:                owner.GetObjectMeta().GetUID(),
 				},
 			),
 		)

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/go-kit/log"
@@ -111,12 +110,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	}
 
 	newConfigMaps, err := makeRulesConfigMaps(
+		p,
 		newRules,
-		operator.WithOwner(p),
 		operator.WithAnnotations(c.config.Annotations),
 		operator.WithLabels(c.config.Labels),
-		operator.WithLabels(map[string]string{prompkg.LabelPrometheusName: p.Name}),
-		operator.WithName(prometheusRuleConfigMapName(p.Name)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make rules ConfigMaps: %w", err)
@@ -206,7 +203,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -241,8 +238,21 @@ func makeRulesConfigMaps(ruleFiles map[string]string, opts ...operator.BuildOpti
 
 	ruleFileConfigMaps := []v1.ConfigMap{}
 	for i, bucket := range buckets {
-		cm := makeRulesConfigMap(bucket, opts...)
-		cm.Name = cm.Name + "-" + strconv.Itoa(i)
+		cm := v1.ConfigMap{
+			Data: bucket,
+		}
+
+		operator.BuildObject[*v1.ConfigMap](
+			&cm,
+			opts...,
+		)
+		operator.BuildObject[*v1.ConfigMap](
+			&cm,
+			operator.WithLabels(map[string]string{prompkg.LabelPrometheusName: p.Name}),
+			operator.WithName(fmt.Sprintf("prometheus-%s-rulefiles-%d", p.Name, i)),
+			operator.WithOwner(p),
+		)
+
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
 
@@ -256,21 +266,4 @@ func bucketSize(bucket map[string]string) int {
 	}
 
 	return totalSize
-}
-
-func makeRulesConfigMap(ruleFiles map[string]string, opts ...operator.BuildOption) v1.ConfigMap {
-	cm := v1.ConfigMap{
-		Data: ruleFiles,
-	}
-
-	operator.BuildObject[*v1.ConfigMap](
-		&cm,
-		opts...,
-	)
-
-	return cm
-}
-
-func prometheusRuleConfigMapName(prometheusName string) string {
-	return "prometheus-" + prometheusName + "-rulefiles"
 }
