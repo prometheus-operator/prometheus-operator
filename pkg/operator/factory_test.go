@@ -28,10 +28,6 @@ type fakeOwner struct {
 	metav1.ObjectMeta
 }
 
-func (f *fakeOwner) GetTypeMeta() metav1.TypeMeta {
-	return f.TypeMeta
-}
-
 var _ = Owner(&fakeOwner{})
 
 func TestBuildObject(t *testing.T) {
