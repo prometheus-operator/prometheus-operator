@@ -235,6 +235,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackSDConfig"):
+		return &monitoringv1alpha1.OpenStackSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfig"):
 		return &monitoringv1alpha1.OpsGenieConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):
