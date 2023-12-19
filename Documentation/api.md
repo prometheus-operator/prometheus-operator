@@ -2560,6 +2560,19 @@ If not specified, the configuration is reloaded using the /-/reload HTTP endpoin
 </tr>
 <tr>
 <td>
+<code>maximumStartupDurationSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -6938,6 +6951,19 @@ ReloadStrategyType
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>maximumStartupDurationSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -11050,6 +11076,19 @@ ReloadStrategyType
 <em>(Optional)</em>
 <p>Defines the strategy used to reload the Prometheus configuration.
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maximumStartupDurationSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -16599,6 +16638,19 @@ ReloadStrategyType
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>maximumStartupDurationSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -21028,6 +21080,19 @@ ReloadStrategyType
 <em>(Optional)</em>
 <p>Defines the strategy used to reload the Prometheus configuration.
 If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maximumStartupDurationSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
 </tbody>

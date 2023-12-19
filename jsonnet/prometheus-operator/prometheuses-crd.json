@@ -4070,6 +4070,12 @@
                     ],
                     "type": "string"
                   },
+                  "maximumStartupDurationSeconds": {
+                    "description": "Defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete. If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).",
+                    "format": "int32",
+                    "minimum": 60,
+                    "type": "integer"
+                  },
                   "minReadySeconds": {
                     "description": "Minimum number of seconds for which a newly created Pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) \n This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
                     "format": "int32",

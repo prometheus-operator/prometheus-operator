@@ -103,6 +103,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LabelValueLengthLimit                *uint64                                                 `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets                   *uint64                                                 `json:"keepDroppedTargets,omitempty"`
 	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
+	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -781,5 +782,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value 
 // If called multiple times, the ReloadStrategy field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithReloadStrategy(value monitoringv1.ReloadStrategyType) *CommonPrometheusFieldsApplyConfiguration {
 	b.ReloadStrategy = &value
+	return b
+}
+
+// WithMaximumStartupDurationSeconds sets the MaximumStartupDurationSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaximumStartupDurationSeconds field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithMaximumStartupDurationSeconds(value int32) *CommonPrometheusFieldsApplyConfiguration {
+	b.MaximumStartupDurationSeconds = &value
 	return b
 }

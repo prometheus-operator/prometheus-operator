@@ -317,11 +317,12 @@ func makeStatefulSetSpec(
 	// We don't want to use the /-/healthy handler here because it returns OK as
 	// soon as the web server is started (irrespective of the WAL replay).
 	readyProbeHandler := prompkg.ProbeHandler("/-/ready", cpf, webConfigGenerator)
+	startupPeriodSeconds, startupFailureThreshold := prompkg.GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
 	startupProbe := &v1.Probe{
 		ProbeHandler:     readyProbeHandler,
 		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    15,
-		FailureThreshold: 60,
+		PeriodSeconds:    startupPeriodSeconds,
+		FailureThreshold: startupFailureThreshold,
 	}
 
 	readinessProbe := &v1.Probe{
