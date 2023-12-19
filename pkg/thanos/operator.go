@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
@@ -69,6 +70,7 @@ type Operator struct {
 	nsRuleInf        cache.SharedIndexInformer
 
 	metrics             *operator.Metrics
+	eventRecorder       record.EventRecorder
 	reconciliations     *operator.ReconciliationTracker
 	canReadStorageClass bool
 
@@ -112,7 +114,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mclient:             mclient,
 		logger:              logger,
 		accessor:            operator.NewAccessor(logger),
-		metrics:             operator.NewMetrics(client, r),
+		metrics:             operator.NewMetrics(r),
+		eventRecorder:       operator.NewEventRecorder(client, "thanos-controller"),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{

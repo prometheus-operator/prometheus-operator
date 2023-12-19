@@ -206,9 +206,6 @@ type Metrics struct {
 	// mtx protects all fields below.
 	mtx       sync.RWMutex
 	resources map[resourceKey]map[string]int
-
-	// Emit events for critical metric changes.
-	Recorder record.EventRecorder
 }
 
 type resourceKey struct {
@@ -217,17 +214,7 @@ type resourceKey struct {
 }
 
 // NewMetrics initializes operator metrics and registers them with the given registerer.
-func NewMetrics(client kubernetes.Interface, r prometheus.Registerer) *Metrics {
-
-	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartStructuredLogging(0)
-
-	// Exclude initialization when testing.
-	if client != nil {
-		eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
-	}
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "prometheus-operator"})
-
+func NewMetrics(r prometheus.Registerer) *Metrics {
 	m := Metrics{
 		reg: r,
 		triggerByCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -261,8 +248,6 @@ func NewMetrics(client kubernetes.Interface, r prometheus.Registerer) *Metrics {
 		}),
 
 		resources: make(map[resourceKey]map[string]int),
-
-		Recorder: recorder,
 	}
 
 	m.reg.MustRegister(
@@ -277,6 +262,19 @@ func NewMetrics(client kubernetes.Interface, r prometheus.Registerer) *Metrics {
 	)
 
 	return &m
+}
+
+func NewEventRecorder(client kubernetes.Interface, component string) record.EventRecorder {
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartStructuredLogging(0)
+
+	// Exclude initialization when testing.
+	if client != nil {
+		eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
+	}
+
+	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: component})
 }
 
 // StsDeleteCreateCounter returns a counter to track statefulset's recreations.

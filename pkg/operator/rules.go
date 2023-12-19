@@ -43,15 +43,16 @@ const (
 )
 
 type PrometheusRuleSelector struct {
-	ruleFormat   RuleConfigurationFormat
-	version      semver.Version
-	ruleSelector labels.Selector
-	nsLabeler    *namespacelabeler.Labeler
-	ruleInformer *informers.ForResource
-	logger       log.Logger
+	ruleFormat    RuleConfigurationFormat
+	version       semver.Version
+	ruleSelector  labels.Selector
+	nsLabeler     *namespacelabeler.Labeler
+	ruleInformer  *informers.ForResource
+	eventRecorder record.EventRecorder
+	logger        log.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, logger log.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger log.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -63,12 +64,13 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 	}
 
 	return &PrometheusRuleSelector{
-		ruleFormat:   ruleFormat,
-		version:      componentVersion,
-		ruleSelector: ruleSelector,
-		nsLabeler:    nsLabeler,
-		ruleInformer: ruleInformer,
-		logger:       logger,
+		ruleFormat:    ruleFormat,
+		version:       componentVersion,
+		ruleSelector:  ruleSelector,
+		nsLabeler:     nsLabeler,
+		ruleInformer:  ruleInformer,
+		eventRecorder: eventRecorder,
+		logger:        logger,
 	}, nil
 }
 
@@ -168,7 +170,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 
 // Select selects PrometheusRules and translates them into native Prometheus/Thanos configurations.
 // The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(recorder record.EventRecorder, namespaces []string) (map[string]string, int, error) {
+func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -205,7 +207,11 @@ func (prs *PrometheusRuleSelector) Select(recorder record.EventRecorder, namespa
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			recorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %q/%q was rejected due to invalid configuration: %v", promRule.Namespace, promRule.Name, err)
+			if prs.canEmitEvents {
+				prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			} else {
+				level.Debug(prs.logger).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
+			}
 			continue
 		}
 

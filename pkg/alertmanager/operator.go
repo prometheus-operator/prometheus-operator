@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
@@ -101,6 +102,7 @@ type Operator struct {
 	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
+	eventRecorder   record.EventRecorder
 	reconciliations *operator.ReconciliationTracker
 
 	canReadStorageClass bool
@@ -137,7 +139,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:             operator.NewMetrics(client, r),
+		metrics:             operator.NewMetrics(r),
+		eventRecorder:       operator.NewEventRecorder(client, "alertmanager-controller"),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 
@@ -1086,7 +1089,11 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.metrics.Recorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %q/%q was rejected due to invalid configuration: %v", amc.GetNamespace(), amc.GetName(), err)
+			if c.canEmitEvents {
+				c.eventRecorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			} else {
+				level.Debug(c.logger).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
+			}
 			continue
 		}
 

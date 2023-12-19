@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -576,7 +577,8 @@ func TestSelectProbes(t *testing.T) {
 				&monitoringv1.Prometheus{},
 				nil,
 				nil,
-				operator.NewMetrics(nil, prometheus.NewPedanticRegistry()),
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			probe := &monitoringv1.Probe{
@@ -969,7 +971,8 @@ func TestSelectServiceMonitors(t *testing.T) {
 				&monitoringv1.Prometheus{},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
-				operator.NewMetrics(nil, prometheus.NewPedanticRegistry()),
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			sm := &monitoringv1.ServiceMonitor{
@@ -1069,7 +1072,8 @@ func TestSelectPodMonitors(t *testing.T) {
 				&monitoringv1.Prometheus{},
 				nil,
 				nil,
-				operator.NewMetrics(nil, prometheus.NewPedanticRegistry()),
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			pm := &monitoringv1.PodMonitor{
@@ -1757,7 +1761,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
-				operator.NewMetrics(nil, prometheus.NewPedanticRegistry()),
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			sc := &monitoringv1alpha1.ScrapeConfig{

@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -79,6 +80,7 @@ type Operator struct {
 	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
+	eventRecorder   record.EventRecorder
 	reconciliations *operator.ReconciliationTracker
 	statusReporter  prompkg.StatusReporter
 
@@ -122,7 +124,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},
-		metrics:         operator.NewMetrics(client, r),
+		metrics:         operator.NewMetrics(r),
+		eventRecorder:   operator.NewEventRecorder(client, "prometheus-controller"),
 		reconciliations: &operator.ReconciliationTracker{},
 
 		scrapeConfigSupported: scrapeConfigSupported,
@@ -1285,7 +1288,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
