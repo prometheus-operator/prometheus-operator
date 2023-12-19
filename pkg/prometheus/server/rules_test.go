@@ -19,6 +19,9 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
@@ -34,7 +37,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	ruleFiles := map[string]string{}
 
-	configMaps, err := makeRulesConfigMaps(ruleFiles)
+	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
 	if err != nil {
 		t.Fatalf("expected no error but got: %v", err.Error())
 	}
@@ -50,7 +53,7 @@ func shouldErrorOnTooLargeRuleFile(t *testing.T) {
 
 	ruleFiles["my-rule-file"] = strings.Repeat("a", v1.MaxSecretSize+1)
 
-	_, err := makeRulesConfigMaps(ruleFiles)
+	_, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
 	if err == nil || err.Error() != expectedError {
 		t.Fatalf("expected makeRulesConfigMaps to return error '%v' but got '%v'", expectedError, err)
 	}
@@ -62,7 +65,7 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
 	ruleFiles["second"] = "a"
 
-	configMaps, err := makeRulesConfigMaps(ruleFiles)
+	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
 	if err != nil {
 		t.Fatalf("expected no error but got: %v", err)
 	}
