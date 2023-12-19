@@ -8,13 +8,16 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   kubernetes_sd_configs:
   - role: node
-    proxy_url: http://no-proxy.com
-    no_proxy: 0.0.0.0
-    proxy_from_environment: true
-    proxy_connect_header:
-      header: value
-    follow_redirects: true
-    enable_http2: true
+    oauth2:
+      client_id: client-id
+      client_secret: client-secret
+      token_url: http://test.url
+      scopes:
+      - scope 1
+      - scope 2
+      endpoint_params:
+        param1: value1
+        param2: value2
   relabel_configs:
   - source_labels:
     - job

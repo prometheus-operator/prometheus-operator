@@ -34,6 +34,28 @@ type Target string
 // +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
 type SDFile string
 
+// NamespaceDiscovery is the configuration for discovering
+// Kubernetes namespaces.
+type NamespaceDiscovery struct {
+	// Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.
+	// +optional
+	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
+	// List of namespaces where to watch for resources.
+	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	// +optional
+	Names []string `json:"names,omitempty"`
+}
+
+type AttachMetadata struct {
+	// Attaches node metadata to discovered targets.
+	// When set to true, Prometheus must have the `get` permission on the
+	// `Nodes` objects.
+	// Only valid for Pod, Endpoint and Endpointslice roles.
+	//
+	// +optional
+	Node *bool `json:"node,omitempty"`
+}
+
 // EC2Filter is the configuration for filtering EC2 instances.
 type EC2Filter struct {
 	Name   string   `json:"name"`
@@ -258,9 +280,48 @@ type HTTPSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 // +k8s:openapi-gen=true
 type KubernetesSDConfig struct {
+	// The API server address consisting of a hostname or IP address followed
+	// by an optional port number.
+	// If left empty, Prometheus is assumed to run inside
+	// of the cluster. It will discover API servers automatically and use the pod's
+	// CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+	// +optional
+	APIServer *string `json:"apiServer,omitempty"`
 	// Role of the Kubernetes entities that should be discovered.
 	// +required
 	Role Role `json:"role"`
+	// BasicAuth information to use on every scrape request.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header to use on every scrape request.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration to use on every scrape request.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.
+	// +optional
+	Namespaces *NamespaceDiscovery `json:"namespaces,omitempty"`
+	// Optional metadata to attach to discovered targets.
+	// It requires Prometheus >= v2.35.0 for `pod` role and
+	// Prometheus >= v2.37.0 for `endpoints` and `endpointslice` roles.
+	// +optional
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 	// Selector to select objects.
 	// +optional
 	// +listType=map
