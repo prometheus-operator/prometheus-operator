@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -283,4 +284,22 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	)
 
 	return &pStatus, nil
+}
+
+func MakeSelectorLabels(p monitoringv1.PrometheusInterface) map[string]string {
+	name := p.GetObjectMeta().GetName()
+	labelMap := map[string]string{
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+		PrometheusNameLabelName:        name,
+	}
+	switch p.(type) {
+	case *monitoringv1.Prometheus:
+		labelMap["app.kubernetes.io/name"] = "prometheus"
+		labelMap["prometheus"] = name
+	case *monitoringv1alpha1.PrometheusAgent:
+		labelMap["app.kubernetes.io/name"] = "prometheus-agent"
+	default:
+	}
+	return labelMap
 }
