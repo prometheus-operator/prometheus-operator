@@ -819,18 +819,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p.Status = *pStatus
 
-	if c.scaleSubresourceSupported {
-		selectorLabels := map[string]string{
-			"app.kubernetes.io/name":       "prometheus-agent",
-			"app.kubernetes.io/managed-by": "prometheus-operator",
-			"app.kubernetes.io/instance":   p.Name,
-		}
-		selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
-		if err != nil {
-			return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
-		}
-		p.Status.Selector = selector.String()
-		p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
+	selectorLabels := makeSelectorLabels(p.Name)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
 	}
 	p.Status.Selector = selector.String()
 	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
@@ -1242,5 +1234,14 @@ func ListOptions(name string) metav1.ListOptions {
 			"app.kubernetes.io/managed-by": "prometheus-operator",
 			"app.kubernetes.io/instance":   name,
 		})).String(),
+	}
+}
+
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":        "prometheus-agent",
+		"app.kubernetes.io/managed-by":  "prometheus-operator",
+		"app.kubernetes.io/instance":    name,
+		prompkg.PrometheusNameLabelName: name,
 	}
 }

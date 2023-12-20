@@ -154,7 +154,6 @@ func makeStatefulSetSpec(
 	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
-	promName := p.GetObjectMeta().GetName()
 
 	pImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(cpf.Image, ""),
@@ -249,13 +248,8 @@ func makeStatefulSetSpec(
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	podSelectorLabels := map[string]string{
-		"app.kubernetes.io/name":        "prometheus-agent",
-		"app.kubernetes.io/managed-by":  "prometheus-operator",
-		"app.kubernetes.io/instance":    promName,
-		prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
-		prompkg.PrometheusNameLabelName: promName,
-	}
+	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
+	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
 	for k, v := range podSelectorLabels {
 		podLabels[k] = v
