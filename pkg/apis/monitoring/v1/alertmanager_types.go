@@ -206,6 +206,9 @@ type AlertmanagerSpec struct {
 	ClusterAdvertiseAddress string `json:"clusterAdvertiseAddress,omitempty"`
 	// Interval between gossip attempts.
 	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
+	// Defines the identifier that uniquely identifies the Alertmanager cluster.
+	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
+	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// Interval between pushpull attempts.
 	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
 	// Timeout for cluster peering.

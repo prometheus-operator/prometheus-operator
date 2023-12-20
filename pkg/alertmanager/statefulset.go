@@ -313,10 +313,12 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 	// connects with cluster A.
 	// --cluster.label flag was introduced in alertmanager v0.26, this helps to block
 	// any traffic that is not meant for the cluster.
-	// The value is hardcoded and the value is guaranteed to be unique in a given cluster but
-	// if there's a use case, we can consider a new field in the CRD.
 	if version.GTE(semver.MustParse("0.26.0")) {
-		amArgs = append(amArgs, fmt.Sprintf("--cluster.label=%s/%s", a.Namespace, a.Name))
+		clusterLabel := fmt.Sprintf("%s/%s", a.Namespace, a.Name)
+		if a.Spec.ClusterLabel != nil {
+			clusterLabel = *a.Spec.ClusterLabel
+		}
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.label=%s", clusterLabel))
 	}
 
 	isHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0"))
