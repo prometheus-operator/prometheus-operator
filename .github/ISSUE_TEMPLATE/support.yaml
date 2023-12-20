@@ -1,0 +1,108 @@
+name: ✋ Support
+description: Support needed with Prometheus Operator
+labels: ["kind/support", "needs-triage"]
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Note:** This repository is about prometheus-operator itself, if you have questions about:
+            - kube-prometheus setup, go to [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus)
+            - helm installation, go to [kube-prometheus-stack-helm-chart](https://github.com/prometheus-community/helm-charts)
+- type: markdown
+  attributes:
+    value: |
+      Are you aware that we have documentation at [our website](https://prometheus-operator.dev)? There's a chance you'll find answers faster over there 🙂
+- type: textarea
+  attributes:
+    label: What happened?
+    description: A concise description of what you're experiencing.
+    value: |
+      ## Description
+
+      ## Steps to Reproduce
+
+      ## Expected Result
+
+      ## Actual Result
+
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Prometheus Operator Version
+    description: |
+      Provide the prometheus-operator version used
+      This will be automatically formatted into code, so no need for backticks.
+    placeholder: |
+        - Prometheus Operator version (please provide operator version and not kube-prometheus/helm chart version):
+          ```console
+          Try kubectl -n <namespace> describe deployment/prometheus-operator
+          # paste output here
+          ```
+    render: shell
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Kubernetes Version
+    description: |
+      Paste the output of `kubectl version -o yaml`
+      This will be automatically formatted into code, so no need for backticks.
+    render: yaml
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: Kubernetes Cluster Type
+    description:  Select Kubernetes cluster type
+    options:
+        - kind
+        - minikube
+        - kubeadm
+        - OpenShift
+        - EKS
+        - GKE
+        - AKS
+        - Rancher
+        - Other (please comment)
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: How did you deploy Prometheus-Operator?
+    description: |
+      Select the method how you deployed prometheus-operator
+    options:
+      - prometheus-operator/kube-prometheus
+      - helm chart:prometheus-community/kube-prometheus-stack
+      - yaml manifests
+      - Other (please comment)
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Manifests
+    description: |
+      Insert manifests relevant to the issue
+      This will be automatically formatted into code, so no need for backticks.
+    render: yaml
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: prometheus-operator log output
+    description: |
+      Please provide prometheus-operator log output
+      This will be automatically formatted into code, so no need for backticks.
+    render: shell
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Anything else?
+    description: |
+      Links? References? Anything that will give us more context about the issue you are encountering!
+
+      Tip: You can attach images or any other relevant log files by clicking this area to highlight it and then dragging files in.
+  validations:
+    required: false
