@@ -112,7 +112,7 @@ func makeStatefulSet(
 ) (*appsv1.StatefulSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
-	typeMeta := p.GetTypeMeta()
+	gvk := p.GroupVersionKind()
 
 	if cpf.PortName == "" {
 		cpf.PortName = prompkg.DefaultPortName
@@ -152,10 +152,10 @@ func makeStatefulSet(
 			Annotations: config.Annotations.Merge(annotations),
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					APIVersion:         typeMeta.APIVersion,
+					APIVersion:         gvk.GroupVersion().String(),
 					BlockOwnerDeletion: &boolTrue,
 					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
+					Kind:               gvk.Kind,
 					Name:               objMeta.GetName(),
 					UID:                objMeta.GetUID(),
 				},

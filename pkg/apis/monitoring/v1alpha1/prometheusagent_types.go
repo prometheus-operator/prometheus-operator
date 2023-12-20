@@ -34,10 +34,6 @@ func (l *PrometheusAgent) SetCommonPrometheusFields(f monitoringv1.CommonPrometh
 	l.Spec.CommonPrometheusFields = f
 }
 
-func (l *PrometheusAgent) GetTypeMeta() metav1.TypeMeta {
-	return l.TypeMeta
-}
-
 func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 	return l.Status
 }

@@ -46,12 +46,7 @@ const (
 )
 
 var (
-	minReplicas                 int32 = 1
-	managedByOperatorLabel            = "managed-by"
-	managedByOperatorLabelValue       = "prometheus-operator"
-	managedByOperatorLabels           = map[string]string{
-		managedByOperatorLabel: managedByOperatorLabelValue,
-	}
+	minReplicas int32 = 1
 )
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {

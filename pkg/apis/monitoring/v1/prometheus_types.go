@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -35,11 +36,15 @@ const (
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
 	metav1.ObjectMetaAccessor
-	GetTypeMeta() metav1.TypeMeta
+	schema.ObjectKind
+
 	GetCommonPrometheusFields() CommonPrometheusFields
 	SetCommonPrometheusFields(CommonPrometheusFields)
+
 	GetStatus() PrometheusStatus
 }
+
+var _ = PrometheusInterface(&Prometheus{})
 
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 	return l.Spec.CommonPrometheusFields
@@ -47,10 +52,6 @@ func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 
 func (l *Prometheus) SetCommonPrometheusFields(f CommonPrometheusFields) {
 	l.Spec.CommonPrometheusFields = f
-}
-
-func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
-	return l.TypeMeta
 }
 
 func (l *Prometheus) GetStatus() PrometheusStatus {

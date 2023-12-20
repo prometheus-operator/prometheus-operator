@@ -59,14 +59,6 @@ const (
 	resyncPeriod = 5 * time.Minute
 )
 
-var (
-	managedByOperatorLabel      = "managed-by"
-	managedByOperatorLabelValue = "prometheus-operator"
-	managedByOperatorLabels     = map[string]string{
-		managedByOperatorLabel: managedByOperatorLabelValue,
-	}
-)
-
 // Config defines the operator's parameters for the Alertmanager controller.
 // Whenever the value of one of these parameters is changed, it triggers an
 // update of the managed statefulsets.
@@ -984,27 +976,17 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
-	boolTrue := true
-	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
-
 	generatedConfigSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        generatedConfigSecretName(am.Name),
-			Annotations: c.config.Annotations,
-			Labels:      c.config.Labels.Merge(managedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         am.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               am.Kind,
-					Name:               am.Name,
-					UID:                am.UID,
-				},
-			},
-		},
 		Data: map[string][]byte{},
 	}
+
+	operator.UpdateObject(
+		generatedConfigSecret,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithOwner(am),
+		operator.WithName(generatedConfigSecretName(am.Name)),
+	)
 
 	for k, v := range additionalData {
 		generatedConfigSecret.Data[k] = v
@@ -1016,6 +998,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
+	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
 		return fmt.Errorf("failed to update generated config secret: %w", err)
@@ -1710,8 +1693,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*operator.ShardedSecret, error) {
-	labels := c.config.Labels.Merge(managedByOperatorLabels)
-	template := newTLSAssetSecret(am, labels)
+	template := c.newTLSAssetSecret(am)
 
 	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(am.Name))
 
@@ -1730,30 +1712,23 @@ func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monito
 	return sSecret, nil
 }
 
-func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) *v1.Secret {
-	boolTrue := true
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   tlsAssetsSecretName(am.Name),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         am.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               am.Kind,
-					Name:               am.Name,
-					UID:                am.UID,
-				},
-			},
-		},
+func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
+	s := &v1.Secret{
 		Data: make(map[string][]byte),
 	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithOwner(am),
+		operator.WithName(tlsAssetsSecretName(am.Name)),
+	)
+
+	return s
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	boolTrue := true
-
 	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
 		fields = a.Spec.Web.WebConfigFileFields
@@ -1768,19 +1743,15 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	secretClient := c.kclient.CoreV1().Secrets(a.Namespace)
-	ownerReference := metav1.OwnerReference{
-		APIVersion:         a.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               a.Kind,
-		Name:               a.Name,
-		UID:                a.UID,
-	}
-	secretAnnotations := c.config.Annotations
-	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithOwner(a),
+	)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
 	}
 
