@@ -127,7 +127,7 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, 
 		},
 	}
 
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		s,
 		operator.WithLabels(config.Labels),
 		operator.WithAnnotations(config.Annotations),

@@ -90,7 +90,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 		Data: map[string][]byte{},
 	}
 
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		s,
 		operator.WithLabels(config.Labels),
 		operator.WithAnnotations(config.Annotations),
