@@ -30,9 +30,9 @@ type fakeOwner struct {
 
 var _ = Owner(&fakeOwner{})
 
-func TestBuildObject(t *testing.T) {
+func TestUpdateObject(t *testing.T) {
 	for _, tc := range []struct {
-		opts []BuildOption
+		opts []ObjectOption
 		o    *v1.Secret
 
 		exp *v1.Secret
@@ -46,7 +46,7 @@ func TestBuildObject(t *testing.T) {
 			},
 		},
 		{
-			opts: []BuildOption{
+			opts: []ObjectOption{
 				WithLabels(map[string]string{"label1": "val1"}),
 				WithLabels(map[string]string{"label3": "val1"}),
 				WithLabels(map[string]string{"label3": "val3"}),
@@ -111,7 +111,7 @@ func TestBuildObject(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			BuildObject[*v1.Secret](tc.o, tc.opts...)
+			UpdateObject(tc.o, tc.opts...)
 
 			require.Equal(t, tc.exp, tc.o)
 		})

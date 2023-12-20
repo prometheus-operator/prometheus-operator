@@ -25,18 +25,18 @@ const (
 	managedByOperatorLabelValue = "prometheus-operator"
 )
 
-type BuildOption func(metav1.ObjectMetaAccessor)
+type ObjectOption func(metav1.Object)
 
 type Owner interface {
 	metav1.ObjectMetaAccessor
 	schema.ObjectKind
 }
 
-func WithOwner(owner Owner) BuildOption {
-	return func(o metav1.ObjectMetaAccessor) {
-		o.GetObjectMeta().SetOwnerReferences(
+func WithOwner(owner Owner) ObjectOption {
+	return func(o metav1.Object) {
+		o.SetOwnerReferences(
 			append(
-				o.GetObjectMeta().GetOwnerReferences(),
+				o.GetOwnerReferences(),
 				metav1.OwnerReference{
 					APIVersion:         owner.GroupVersionKind().GroupVersion().String(),
 					BlockOwnerDeletion: ptr.To(true),
@@ -50,33 +50,33 @@ func WithOwner(owner Owner) BuildOption {
 	}
 }
 
-func WithName(name string) BuildOption {
-	return func(o metav1.ObjectMetaAccessor) {
-		o.GetObjectMeta().SetName(name)
+func WithName(name string) ObjectOption {
+	return func(o metav1.Object) {
+		o.SetName(name)
 	}
 }
 
-func WithLabels(labels map[string]string) BuildOption {
-	return func(o metav1.ObjectMetaAccessor) {
+func WithLabels(labels map[string]string) ObjectOption {
+	return func(o metav1.Object) {
 		l := Map{}
 		l = l.Merge(labels)
-		l = l.Merge(o.GetObjectMeta().GetLabels())
+		l = l.Merge(o.GetLabels())
 
-		o.GetObjectMeta().SetLabels(l)
+		o.SetLabels(l)
 	}
 }
 
-func WithAnnotations(annotations map[string]string) BuildOption {
-	return func(o metav1.ObjectMetaAccessor) {
+func WithAnnotations(annotations map[string]string) ObjectOption {
+	return func(o metav1.Object) {
 		a := Map{}
 		a = a.Merge(annotations)
-		a = a.Merge(o.GetObjectMeta().GetAnnotations())
+		a = a.Merge(o.GetAnnotations())
 
-		o.GetObjectMeta().SetAnnotations(a)
+		o.SetAnnotations(a)
 	}
 }
 
-func BuildObject[T metav1.ObjectMetaAccessor](o T, opts ...BuildOption) {
+func UpdateObject(o metav1.Object, opts ...ObjectOption) {
 	WithLabels(map[string]string{managedByOperatorLabel: managedByOperatorLabelValue})(o)
 
 	for _, opt := range opts {

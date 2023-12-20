@@ -203,7 +203,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string, opts ...operator.ObjectOption) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -242,11 +242,11 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 			Data: bucket,
 		}
 
-		operator.BuildObject[*v1.ConfigMap](
+		operator.UpdateObject(
 			&cm,
 			opts...,
 		)
-		operator.BuildObject[*v1.ConfigMap](
+		operator.UpdateObject(
 			&cm,
 			operator.WithLabels(map[string]string{prompkg.LabelPrometheusName: p.Name}),
 			operator.WithName(fmt.Sprintf("prometheus-%s-rulefiles-%d", p.Name, i)),

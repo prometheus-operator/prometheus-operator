@@ -851,7 +851,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	s := &v1.Secret{}
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),

@@ -980,7 +980,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		Data: map[string][]byte{},
 	}
 
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		generatedConfigSecret,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
@@ -1717,7 +1717,7 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 		Data: make(map[string][]byte),
 	}
 
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
@@ -1744,7 +1744,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	}
 
 	s := &v1.Secret{}
-	operator.BuildObject[*v1.Secret](
+	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),

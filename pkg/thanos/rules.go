@@ -204,7 +204,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]string, opts ...operator.BuildOption) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]string, opts ...operator.ObjectOption) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -241,11 +241,11 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 	for i, bucket := range buckets {
 		cm := v1.ConfigMap{Data: bucket}
 
-		operator.BuildObject[*v1.ConfigMap](
+		operator.UpdateObject(
 			&cm,
 			opts...,
 		)
-		operator.BuildObject[*v1.ConfigMap](
+		operator.UpdateObject(
 			&cm,
 			operator.WithName(fmt.Sprintf("thanos-ruler-%s-rulefiles-%d", t.Name, i)),
 			operator.WithOwner(t),
