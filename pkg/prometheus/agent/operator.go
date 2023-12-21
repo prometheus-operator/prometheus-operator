@@ -51,6 +51,7 @@ import (
 
 const (
 	resyncPeriod = 5 * time.Minute
+	OperatorName = "prometheusagentcontroller"
 )
 
 // Operator manages life cycle of Prometheus agent deployments and

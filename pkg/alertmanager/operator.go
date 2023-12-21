@@ -58,6 +58,7 @@ import (
 
 const (
 	resyncPeriod = 5 * time.Minute
+	OperatorName = "alertmanageroperator"
 )
 
 var (
