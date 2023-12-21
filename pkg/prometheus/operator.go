@@ -94,7 +94,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 		s,
 		operator.WithLabels(config.Labels),
 		operator.WithAnnotations(config.Annotations),
-		operator.WithOwner(p),
+		operator.WithManagingOwner(p),
 		operator.WithName(TLSAssetsSecretName(p)),
 	)
 

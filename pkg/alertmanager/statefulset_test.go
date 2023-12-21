@@ -59,7 +59,8 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 
 	expectedStatefulSetLabels := map[string]string{
-		"testlabel": "testlabelvalue",
+		"testlabel":  "testlabelvalue",
+		"managed-by": "prometheus-operator",
 	}
 
 	expectedPodLabels := map[string]string{

@@ -104,6 +104,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"operator.prometheus.io/name":  "",
 		"operator.prometheus.io/shard": "0",
 		"operator.prometheus.io/mode":  "server",
+		"managed-by":                   "prometheus-operator",
 	}
 
 	expectedPodLabels := map[string]string{

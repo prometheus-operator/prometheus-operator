@@ -984,7 +984,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		generatedConfigSecret,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
-		operator.WithOwner(am),
+		operator.WithManagingOwner(am),
 		operator.WithName(generatedConfigSecretName(am.Name)),
 	)
 
@@ -1721,7 +1721,7 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
-		operator.WithOwner(am),
+		operator.WithManagingOwner(am),
 		operator.WithName(tlsAssetsSecretName(am.Name)),
 	)
 
@@ -1748,7 +1748,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
-		operator.WithOwner(a),
+		operator.WithManagingOwner(a),
 	)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
