@@ -132,7 +132,7 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, 
 		s,
 		operator.WithLabels(config.Labels),
 		operator.WithAnnotations(config.Annotations),
-		operator.WithOwner(p),
+		operator.WithManagingOwner(p),
 		operator.WithName(ConfigSecretName(p)),
 	)
 

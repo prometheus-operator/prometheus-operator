@@ -44,7 +44,8 @@ var (
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	labels := map[string]string{
-		"testlabel": "testlabelvalue",
+		"testlabel":  "testlabelvalue",
+		"managed-by": "prometheus-operator",
 	}
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",

@@ -250,7 +250,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 			&cm,
 			operator.WithLabels(map[string]string{prompkg.LabelPrometheusName: p.Name}),
 			operator.WithName(fmt.Sprintf("prometheus-%s-rulefiles-%d", p.Name, i)),
-			operator.WithOwner(p),
+			operator.WithManagingOwner(p),
 		)
 
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
