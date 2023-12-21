@@ -2278,12 +2278,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
 ) (yaml.MapSlice, error) {
-	isJobNameSet := sc.Spec.JobName != ""
-	jobName := sc.Spec.JobName
-
-	if !isJobNameSet {
-		jobName = fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
-	}
+	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
 
 	cfg := yaml.MapSlice{
 		{
@@ -2295,6 +2290,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cpf := cg.prom.GetCommonPrometheusFields()
 	relabelings := initRelabelings()
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+
+	if sc.Spec.JobName != "" {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "scrapeJob"},
+			{Key: "action", Value: "replace"},
+			{Key: "replacement", Value: sc.Spec.JobName},
+		})
+		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+	}
 
 	if sc.Spec.HonorTimestamps != nil {
 		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)

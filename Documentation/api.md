@@ -16695,6 +16695,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The job name assigned to scraped metrics by default.</p>
 </td>
 </tr>
@@ -21624,6 +21625,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The job name assigned to scraped metrics by default.</p>
 </td>
 </tr>
