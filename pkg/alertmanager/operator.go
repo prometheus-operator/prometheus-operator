@@ -102,8 +102,9 @@ type Operator struct {
 	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
-	eventRecorder   record.EventRecorder
 	reconciliations *operator.ReconciliationTracker
+
+	eventRecorder record.EventRecorder
 
 	canReadStorageClass bool
 
@@ -111,7 +112,7 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass, canEmitEvents bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -130,6 +131,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	// All the metrics exposed by the controller get the controller="alertmanager" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
 
+	var eventsClient kubernetes.Interface
+	if canEmitEvents {
+		eventsClient = client
+	}
+
 	o := &Operator{
 		kclient:    client,
 		mdClient:   mdClient,
@@ -140,8 +146,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		accessor: operator.NewAccessor(logger),
 
 		metrics:             operator.NewMetrics(r),
-		eventRecorder:       operator.NewEventRecorder(client, "alertmanager-controller"),
 		reconciliations:     &operator.ReconciliationTracker{},
+		eventRecorder:       operator.NewEventRecorder(eventsClient, OperatorName),
 		canReadStorageClass: canReadStorageClass,
 
 		config: Config{
@@ -1089,11 +1095,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			if c.canEmitEvents {
-				c.eventRecorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
-			} else {
-				level.Debug(c.logger).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 

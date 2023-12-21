@@ -43,13 +43,15 @@ const (
 )
 
 type PrometheusRuleSelector struct {
-	ruleFormat    RuleConfigurationFormat
-	version       semver.Version
-	ruleSelector  labels.Selector
-	nsLabeler     *namespacelabeler.Labeler
-	ruleInformer  *informers.ForResource
+	ruleFormat   RuleConfigurationFormat
+	version      semver.Version
+	ruleSelector labels.Selector
+	nsLabeler    *namespacelabeler.Labeler
+	ruleInformer *informers.ForResource
+
 	eventRecorder record.EventRecorder
-	logger        log.Logger
+
+	logger log.Logger
 }
 
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger log.Logger) (*PrometheusRuleSelector, error) {
@@ -207,11 +209,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			if prs.canEmitEvents {
-				prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
-			} else {
-				level.Debug(prs.logger).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 

@@ -78,7 +78,6 @@ type Operator struct {
 	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
-	eventRecorder   record.EventRecorder
 	reconciliations *operator.ReconciliationTracker
 
 	config                 prompkg.Config
@@ -86,11 +85,13 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
+	eventRecorder record.EventRecorder
+
 	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass, canEmitEvents bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -109,6 +110,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
+	var eventsClient kubernetes.Interface
+	if canEmitEvents {
+		eventsClient = client
+	}
+
 	o := &Operator{
 		kclient:  client,
 		mdClient: mdClient,
@@ -123,10 +129,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                     c.Labels,
 		},
 		metrics:               operator.NewMetrics(r),
-		eventRecorder:         operator.NewEventRecorder(client, "prometheus-agent-controller"),
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
+		eventRecorder:         operator.NewEventRecorder(eventsClient, OperatorName),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,

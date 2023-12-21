@@ -48,8 +48,9 @@ type ResourceSelector struct {
 	store              *assets.Store
 	namespaceInformers cache.SharedIndexInformer
 	metrics            *operator.Metrics
-	eventRecorder      record.EventRecorder
 	accessor           *operator.Accessor
+
+	eventRecorder record.EventRecorder
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -177,11 +178,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
-			if rs.canEmitEvents {
-				rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, "InvalidConfiguration", "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
-			} else {
-				level.Debug(rs.l).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, "InvalidConfiguration", "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 			continue
 		}
 
@@ -431,11 +428,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
-			if rs.canEmitEvents {
-				rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, "InvalidConfiguration", "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
-			} else {
-				level.Debug(rs.l).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, "InvalidConfiguration", "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
 			continue
 		}
 
@@ -517,11 +510,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
-			if rs.canEmitEvents {
-				rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, "InvalidConfiguration", "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
-			} else {
-				level.Debug(rs.l).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, "InvalidConfiguration", "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
 		}
 
 		if err = probe.Spec.Targets.Validate(); err != nil {
@@ -684,11 +673,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
-			if rs.canEmitEvents {
-				rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, "InvalidConfiguration", "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
-			} else {
-				level.Debug(rs.l).Log("msg", "skipping event emission for InvalidConfiguration due to missing RBAC permissions")
-			}
+			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, "InvalidConfiguration", "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
