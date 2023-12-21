@@ -97,6 +97,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
 	// The job name assigned to scraped metrics by default.
+	// +optional
 	JobName string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
