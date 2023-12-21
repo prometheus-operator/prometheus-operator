@@ -855,7 +855,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		s,
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
-		operator.WithOwner(p),
+		operator.WithManagingOwner(p),
 	)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), s); err != nil {

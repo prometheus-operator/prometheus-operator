@@ -32,7 +32,25 @@ type Owner interface {
 	schema.ObjectKind
 }
 
+// WithOwner adds the given owner to the list of owner references.
 func WithOwner(owner Owner) ObjectOption {
+	return func(o metav1.Object) {
+		o.SetOwnerReferences(
+			append(
+				o.GetOwnerReferences(),
+				metav1.OwnerReference{
+					APIVersion: owner.GroupVersionKind().GroupVersion().String(),
+					Kind:       owner.GroupVersionKind().Kind,
+					Name:       owner.GetObjectMeta().GetName(),
+					UID:        owner.GetObjectMeta().GetUID(),
+				},
+			),
+		)
+	}
+}
+
+// WithManagingOwner adds the given owner as a managing controller.
+func WithManagingOwner(owner Owner) ObjectOption {
 	return func(o metav1.Object) {
 		o.SetOwnerReferences(
 			append(
@@ -50,12 +68,15 @@ func WithOwner(owner Owner) ObjectOption {
 	}
 }
 
+// WithName updates the name of the object.
 func WithName(name string) ObjectOption {
 	return func(o metav1.Object) {
 		o.SetName(name)
 	}
 }
 
+// WithLabels merges the given labels with the existing object's labels.
+// The given labels take precedence over the existing ones.
 func WithLabels(labels map[string]string) ObjectOption {
 	return func(o metav1.Object) {
 		l := Map{}
@@ -66,6 +87,8 @@ func WithLabels(labels map[string]string) ObjectOption {
 	}
 }
 
+// WithAnnotations merges the given annotations with the existing object's annotations.
+// The given annotations take precedence over the existing ones.
 func WithAnnotations(annotations map[string]string) ObjectOption {
 	return func(o metav1.Object) {
 		a := Map{}
@@ -76,6 +99,7 @@ func WithAnnotations(annotations map[string]string) ObjectOption {
 	}
 }
 
+// UpdateObject updates the object with the provided options.
 func UpdateObject(o metav1.Object, opts ...ObjectOption) {
 	WithLabels(map[string]string{managedByOperatorLabel: managedByOperatorLabelValue})(o)
 

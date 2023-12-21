@@ -51,7 +51,7 @@ func TestUpdateObject(t *testing.T) {
 				WithLabels(map[string]string{"label3": "val1"}),
 				WithLabels(map[string]string{"label3": "val3"}),
 				WithAnnotations(map[string]string{"annotation1": "val1"}),
-				WithOwner(
+				WithManagingOwner(
 					&fakeOwner{
 						metav1.TypeMeta{
 							Kind:       "Prometheus",

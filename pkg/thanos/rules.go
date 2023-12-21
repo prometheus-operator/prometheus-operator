@@ -248,7 +248,7 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 		operator.UpdateObject(
 			&cm,
 			operator.WithName(fmt.Sprintf("thanos-ruler-%s-rulefiles-%d", t.Name, i)),
-			operator.WithOwner(t),
+			operator.WithManagingOwner(t),
 			operator.WithLabels(map[string]string{labelThanosRulerName: t.Name}),
 		)
 
