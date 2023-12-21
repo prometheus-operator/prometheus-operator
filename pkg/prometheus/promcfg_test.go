@@ -4967,6 +4967,22 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
 		},
 		{
+			name: "explicit_job_name_with_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: "explicit-test-scrape-config5",
+				RelabelConfigs: []*monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						Regex:        "(.+)(?::d+)",
+						Replacement:  "$1:9537",
+						SourceLabels: []monitoringv1.LabelName{"__address__"},
+						TargetLabel:  "__address__",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobNameAndRelabelConfig.golden",
+		},
+		{
 			name: "static_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{

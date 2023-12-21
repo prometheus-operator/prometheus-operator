@@ -2297,7 +2297,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			{Key: "action", Value: "replace"},
 			{Key: "replacement", Value: sc.Spec.JobName},
 		})
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
 
 	if sc.Spec.HonorTimestamps != nil {
@@ -2330,6 +2329,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.RelabelConfigs != nil {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
+	}
+
+	if sc.Spec.JobName != "" || sc.Spec.RelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
 
