@@ -1000,7 +1000,7 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-				Resources: v1.ResourceRequirements{
+				Resources: v1.VolumeResourceRequirements{
 					Requests: v1.ResourceList{
 						v1.ResourceStorage: resource.MustParse("200Mi"),
 					},
@@ -1075,7 +1075,7 @@ func testPromStorageUpdate(t *testing.T) {
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 						Spec: v1.PersistentVolumeClaimSpec{
 							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-							Resources: v1.ResourceRequirements{
+							Resources: v1.VolumeResourceRequirements{
 								Requests: v1.ResourceList{
 									v1.ResourceStorage: resource.MustParse("200Mi"),
 								},
@@ -1125,7 +1125,7 @@ func testPromStorageUpdate(t *testing.T) {
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 						Spec: v1.PersistentVolumeClaimSpec{
 							StorageClassName: ptr.To("unknown-storage-class"),
-							Resources: v1.ResourceRequirements{
+							Resources: v1.VolumeResourceRequirements{
 								Requests: v1.ResourceList{
 									v1.ResourceStorage: resource.MustParse("200Mi"),
 								},
