@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -380,8 +381,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	boolFalse := false
-	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "thanos-ruler",
@@ -394,8 +393,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Ports:                    ports,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: &boolFalse,
-				ReadOnlyRootFilesystem:   &boolTrue,
+				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   ptr.To(true),
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
 				},
@@ -407,8 +406,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
-
-	terminationGracePeriod := int64(120)
 
 	var minReadySeconds int32
 	if tr.Spec.MinReadySeconds != nil {
@@ -437,7 +434,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				NodeSelector:                  tr.Spec.NodeSelector,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
-				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				TerminationGracePeriodSeconds: ptr.To(int64(120)),
 				Containers:                    containers,
 				InitContainers:                tr.Spec.InitContainers,
 				Volumes:                       trVolumes,

@@ -153,9 +153,6 @@ func makeStatefulSetSpec(
 	shard int32,
 	tlsAssetSecrets []string,
 ) (*appsv1.StatefulSetSpec, error) {
-	// Prometheus may take quite long to shut down to checkpoint existing data.
-	// Allow up to 10 minutes for clean termination.
-	terminationGracePeriod := int64(600)
 	cpf := p.GetCommonPrometheusFields()
 	promName := p.GetObjectMeta().GetName()
 
@@ -363,15 +360,17 @@ func makeStatefulSetSpec(
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
-				Containers:                    containers,
-				InitContainers:                initContainers,
-				SecurityContext:               cpf.SecurityContext,
-				ServiceAccountName:            cpf.ServiceAccountName,
-				AutomountServiceAccountToken:  ptr.To(true),
-				NodeSelector:                  cpf.NodeSelector,
-				PriorityClassName:             cpf.PriorityClassName,
-				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				ShareProcessNamespace:        prompkg.ShareProcessNamespace(p),
+				Containers:                   containers,
+				InitContainers:               initContainers,
+				SecurityContext:              cpf.SecurityContext,
+				ServiceAccountName:           cpf.ServiceAccountName,
+				AutomountServiceAccountToken: ptr.To(true),
+				NodeSelector:                 cpf.NodeSelector,
+				PriorityClassName:            cpf.PriorityClassName,
+				// Prometheus may take quite long to shut down to checkpoint existing data.
+				// Allow up to 10 minutes for clean termination.
+				TerminationGracePeriodSeconds: ptr.To(int64(600)),
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
