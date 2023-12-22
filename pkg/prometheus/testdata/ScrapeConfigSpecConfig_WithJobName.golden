@@ -10,6 +10,6 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-  - target_label: scrapeJob
+  - target_label: job
     action: replace
     replacement: explicit-test-scrape-config3

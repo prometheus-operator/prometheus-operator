@@ -2293,7 +2293,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.JobName != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "target_label", Value: "scrapeJob"},
+			{Key: "target_label", Value: "job"},
 			{Key: "action", Value: "replace"},
 			{Key: "replacement", Value: sc.Spec.JobName},
 		})
