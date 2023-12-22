@@ -478,7 +478,7 @@ func testTRCheckStorageClass(t *testing.T) {
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 					Spec: v1.PersistentVolumeClaimSpec{
 						StorageClassName: ptr.To("unknown-storage-class"),
-						Resources: v1.ResourceRequirements{
+						Resources: v1.VolumeResourceRequirements{
 							Requests: v1.ResourceList{
 								v1.ResourceStorage: resource.MustParse("200Mi"),
 							},
