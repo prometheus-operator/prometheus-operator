@@ -22,6 +22,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -257,8 +258,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		})
 	}
 
-	boolFalse := false
-	boolTrue := true
 	c := v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
@@ -271,8 +270,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
 		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: &boolFalse,
-			ReadOnlyRootFilesystem:   &boolTrue,
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
 			Capabilities: &v1.Capabilities{
 				Drop: []v1.Capability{"ALL"},
 			},
