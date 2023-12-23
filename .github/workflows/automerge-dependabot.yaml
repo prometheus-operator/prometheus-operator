@@ -15,24 +15,6 @@ jobs:
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Checkout
-        if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PROM_OP_BOT_PAT }}
-          ref: ${{ github.event.pull_request.head.ref }}
-      - name: Generate Documentation/compatibility.md
-        if: contains(steps.metadata.outputs.dependency-names, 'k8s.io/api')
-        run: |
-          export GITHUB_TOKEN="${{ secrets.PROM_OP_BOT_PAT }}"
-          make generate --always-make
-          if ! git diff --exit-code; then
-            git config --global user.email "prom-op-bot@users.noreply.github.com"
-            git config --global user.name "Prometheus Operator Bot"
-            git add Documentation/compatibility.md
-            git commit -s -m "Generate Documentation/compatibility.md"
-            git push
-          fi
       - name: Enable auto-merge for Dependabot PRs
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
         run: |
