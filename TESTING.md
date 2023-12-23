@@ -82,18 +82,14 @@ https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf87
 
 As shown above, particular test suites can be skipped with Environment Variables. You can also look at our [CI pipeline as example](https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/.github/workflows/e2e.yaml#L85-L94). Altough we always run all tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
 
-Currently, the environment variables below can be used to skip particular end-to-end tests:
+We've also have Makefile targets configured to run only specific end-to-end tests:
 
-```
-EXCLUDE_ALERTMANAGER_TESTS
-EXCLUDE_PROMETHEUS_TESTS
-EXCLUDE_PROMETHEUS_ALL_NS_TESTS
-EXCLUDE_THANOSRULER_TESTS
-EXCLUDE_OPERATOR_UPGRADE_TESTS
-EXCLUDE_PROMETHEUS_UPGRADE_TESTS
-```
-
-Tests are skipped as long as their corresponding environment variable is not an empty string.
+* `make test-e2e-alertmanager` - Will run Alertmanager tests.
+* `make test-e2e-thanos-ruler` - Will run Thanos-Ruler tests.
+* `make test-e2e-prometheus` - Will run Prometheus tests with limited namespace permissions.
+* `make test-e2e-prometheus-all-namespaces` - Will run regular Prometheus tests.
+* `make test-e2e-operator-upgrade` - Will validate that a monitoring stack managed by the previous version of Prometheus-Operator will continue to work after an upgrade to the current version.
+* `make test-e2e-prometheus-upgrade` - Will validate that a series of Prometheus versions can be sequentially upgraded.
 
 ### Running just a particular end-to-end test
 
