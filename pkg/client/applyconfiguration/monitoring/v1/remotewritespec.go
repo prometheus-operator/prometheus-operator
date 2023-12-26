@@ -41,6 +41,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
 	QueueConfig          *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
 	MetadataConfig       *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
+	EnableHttp2          *bool                             `json:"enableHttp2,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs an declarative configuration of the RemoteWriteSpec type for use with
@@ -201,5 +202,13 @@ func (b *RemoteWriteSpecApplyConfiguration) WithQueueConfig(value *QueueConfigAp
 // If called multiple times, the MetadataConfig field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithMetadataConfig(value *MetadataConfigApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.MetadataConfig = value
+	return b
+}
+
+// WithEnableHttp2 sets the EnableHttp2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHttp2 field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithEnableHttp2(value bool) *RemoteWriteSpecApplyConfiguration {
+	b.EnableHttp2 = &value
 	return b
 }

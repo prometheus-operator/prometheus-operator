@@ -5403,6 +5403,9 @@ spec:
                         \n Deprecated: this will be removed in a future release. Prefer
                         using `authorization`."
                       type: string
+                    enableHttp2:
+                      description: Whether to enable HTTP2.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
