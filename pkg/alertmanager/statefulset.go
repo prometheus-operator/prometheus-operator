@@ -581,6 +581,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		})
 	}
 
+	var configReloaderWebConfigFile string
 	watchedDirectories := []string{alertmanagerConfigDir}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
@@ -670,8 +671,10 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			return nil, err
 		}
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
+		configReloaderWebConfigFile = confArg.Value
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	}
 
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
@@ -728,6 +731,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 			operator.ConfigFile(path.Join(alertmanagerConfigDir, alertmanagerConfigFileCompressed)),
 			operator.ConfigEnvsubstFile(path.Join(alertmanagerConfigOutDir, alertmanagerConfigEnvsubstFilename)),
 			operator.ImagePullPolicy(a.Spec.ImagePullPolicy),

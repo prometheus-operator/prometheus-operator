@@ -3905,7 +3905,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 			}
 		}
 
-		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -3916,7 +3916,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 			return false, nil
 		}
 
-		thanosSidecarPrometheusUp, err := framework.GetMetricVal(context.Background(), ns, podName, "10902", "thanos_sidecar_prometheus_up")
+		thanosSidecarPrometheusUp, err := framework.GetMetricVal(context.Background(), "http", ns, podName, "10902", "thanos_sidecar_prometheus_up")
 		if err != nil {
 			pollErr = err
 			return false, nil
