@@ -165,19 +165,23 @@ func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, s
 	return p, nil
 }
 
-// TODO(arthursens): Use UpdateScale() instead of PatchPrometheusAgentShardsAndWaitUntilReady() once we have a
-// working UpdateScale() implementation.
-func (f *Framework) ScalePrometheusAgentShardsAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1alpha1.PrometheusAgent, error) {
-	return f.PatchPrometheusAgentAndWaitUntilReady(
-		ctx,
-		name,
-		ns,
-		monitoringv1alpha1.PrometheusAgentSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Shards: ptr.To(shards),
-			},
-		},
-	)
+func (f *Framework) ScalePrometheusAgentAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1alpha1.PrometheusAgent, error) {
+	pAgentClient := f.MonClientV1alpha1.PrometheusAgents(ns)
+	scale, err := pAgentClient.GetScale(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get prometheus agent %s/%s scale: %w", ns, name, err)
+	}
+	scale.Spec.Replicas = shards
+
+	_, err = pAgentClient.UpdateScale(ctx, name, scale, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to scale prometheus agent %s/%s: %w", ns, name, err)
+	}
+	p, err := pAgentClient.Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get prometheus agent %s/%s: %w", ns, name, err)
+	}
+	return f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
 }
 
 func (f *Framework) PatchPrometheusAgentAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1alpha1.PrometheusAgentSpec) (*monitoringv1alpha1.PrometheusAgent, error) {

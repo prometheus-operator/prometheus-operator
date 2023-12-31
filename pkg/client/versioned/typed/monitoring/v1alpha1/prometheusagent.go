@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -50,6 +51,9 @@ type PrometheusAgentInterface interface {
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error)
 	Apply(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
 	ApplyStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
+	GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
+
 	PrometheusAgentExpansion
 }
 
@@ -248,6 +252,35 @@ func (c *prometheusAgents) ApplyStatus(ctx context.Context, prometheusAgent *mon
 		SubResource("status").
 		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// GetScale takes name of the prometheusAgent, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
+func (c *prometheusAgents) GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("prometheusagents").
+		Name(prometheusAgentName).
+		SubResource("scale").
+		VersionedParams(&options, scheme.ParameterCodec).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *prometheusAgents) UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("prometheusagents").
+		Name(prometheusAgentName).
+		SubResource("scale").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(scale).
 		Do(ctx).
 		Into(result)
 	return
