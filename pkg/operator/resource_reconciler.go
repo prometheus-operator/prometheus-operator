@@ -74,6 +74,8 @@ type ResourceReconciler struct {
 	reconcileTotal    prometheus.Counter
 	reconcileErrors   prometheus.Counter
 	reconcileDuration prometheus.Histogram
+	statusTotal       prometheus.Counter
+	statusErrors      prometheus.Counter
 
 	metrics ReconcilerMetrics
 
@@ -113,7 +115,17 @@ func NewResourceReconciler(
 		Buckets: []float64{.1, .5, 1, 5, 10},
 	})
 
-	reg.MustRegister(reconcileTotal, reconcileErrors, reconcileDuration)
+	statusTotal := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_status_update_operations_total",
+		Help: "Total number of update operations to status subresources",
+	})
+
+	statusErrors := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_status_update_errors_total",
+		Help: "Number of errors that occurred during update operations to status subresources",
+	})
+
+	reg.MustRegister(reconcileTotal, reconcileErrors, reconcileDuration, statusTotal, statusErrors)
 
 	qname := strings.ToLower(kind)
 
@@ -131,6 +143,8 @@ func NewResourceReconciler(
 		reconcileTotal:    reconcileTotal,
 		reconcileErrors:   reconcileErrors,
 		reconcileDuration: reconcileDuration,
+		statusTotal:       statusTotal,
+		statusErrors:      statusErrors,
 		metrics:           metrics,
 
 		reconcileQ: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname),
@@ -417,12 +431,14 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 	key := item.(string)
 	defer rr.statusQ.Done(key)
 
+	rr.statusTotal.Inc()
 	err := rr.syncer.UpdateStatus(ctx, key)
 	if err == nil {
 		rr.statusQ.Forget(key)
 		return true
 	}
 
+	rr.statusErrors.Inc()
 	utilruntime.HandleError(fmt.Errorf("status %q failed: %w", key, err))
 	rr.statusQ.AddRateLimited(key)
 
