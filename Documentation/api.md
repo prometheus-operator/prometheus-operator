@@ -12582,6 +12582,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>

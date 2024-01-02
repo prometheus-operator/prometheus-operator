@@ -1258,6 +1258,7 @@ type RemoteWriteSpec struct {
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 
 	// Whether to enable HTTP2.
+	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 }
 
