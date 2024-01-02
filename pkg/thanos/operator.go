@@ -877,13 +877,15 @@ func (o *Operator) createOrUpdateRulerConfigSecret(
 
 		var err error
 		rwConfig, err = yaml.Marshal(
-			prompkg.GenerateRemoteWriteConfig(
-				cg,
-				tr.Spec.RemoteWrite,
-				tr.GetNamespace(),
-				store,
-			),
-		)
+			[]yaml.MapItem{{
+				Key: "remote_write",
+				Value: prompkg.GenerateRemoteWriteConfig(
+					cg,
+					tr.Spec.RemoteWrite,
+					tr.GetNamespace(),
+					store,
+				),
+			}})
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal remoete-write configuration: %w", err)
 		}
