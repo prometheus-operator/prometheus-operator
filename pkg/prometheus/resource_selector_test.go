@@ -421,9 +421,10 @@ func TestValidateRelabelConfig(t *testing.T) {
 
 func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.ProbeSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.ProbeSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "url starting with http",
@@ -570,6 +571,23 @@ func TestSelectProbes(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "inexistent scrape class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig = nil
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
@@ -595,6 +613,11 @@ func TestSelectProbes(t *testing.T) {
 					},
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				probe.Spec.ScrapeClass = tc.scrapeClass
+			}
+
 			tc.updateSpec(&probe.Spec)
 
 			probes, err := rs.SelectProbes(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -710,9 +733,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.ServiceMonitorSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.ServiceMonitorSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid metric relabeling config",
@@ -939,6 +963,13 @@ func TestSelectServiceMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "Inexistent Scrape Class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -982,6 +1013,11 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{},
 			}
+
+			if tc.scrapeClass != nil {
+				sm.Spec.ScrapeClass = tc.scrapeClass
+			}
+
 			tc.updateSpec(&sm.Spec)
 
 			sms, err := rs.SelectServiceMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -1001,9 +1037,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 func TestSelectPodMonitors(t *testing.T) {
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.PodMonitorSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.PodMonitorSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid metric relabeling config",
@@ -1065,6 +1102,13 @@ func TestSelectPodMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "Inexistent Scrape Class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
@@ -1082,6 +1126,11 @@ func TestSelectPodMonitors(t *testing.T) {
 					Namespace: "test",
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				pm.Spec.ScrapeClass = tc.scrapeClass
+			}
+
 			tc.updateSpec(&pm.Spec)
 
 			sms, err := rs.SelectPodMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -1109,9 +1158,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
 	require.NoError(t, err)
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1alpha1.ScrapeConfigSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1alpha1.ScrapeConfigSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid relabeling config",
@@ -1979,6 +2029,19 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "Inexistent Scrape Class",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    false,
+			scrapeClass: ptr.To("inexistent"),
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -2027,6 +2090,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					Namespace: "test",
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				sc.Spec.ScrapeClass = tc.scrapeClass
+			}
+
 			tc.updateSpec(&sc.Spec)
 
 			sms, err := rs.SelectScrapeConfigs(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {

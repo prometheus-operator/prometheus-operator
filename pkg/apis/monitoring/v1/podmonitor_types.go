@@ -131,6 +131,10 @@ type PodMonitorSpec struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+
+	// The scrape class to apply.
+	// +optional
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 // PodMonitorList is a list of PodMonitors.

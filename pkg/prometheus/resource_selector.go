@@ -121,6 +121,10 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
 
+		if sm.Spec.ScrapeClass != nil {
+			err = validateScrapeClass(rs.p, *sm.Spec.ScrapeClass)
+		}
+
 		for i, endpoint := range sm.Spec.Endpoints {
 			// If denied by Prometheus spec, filter out all service monitors that access
 			// the file system.
@@ -323,6 +327,20 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	return nil
 }
 
+func validateScrapeClass(p monitoringv1.PrometheusInterface, sc string) error {
+	if sc == "" {
+		return nil
+	}
+
+	for _, c := range p.GetCommonPrometheusFields().ScrapeClasses {
+		if c.Name == sc {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", sc)
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -376,6 +394,10 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
+
+		if pm.Spec.ScrapeClass != nil {
+			err = validateScrapeClass(rs.p, *pm.Spec.ScrapeClass)
+		}
 
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
@@ -511,6 +533,12 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
+		}
+
+		if probe.Spec.ScrapeClass != nil {
+			err = validateScrapeClass(rs.p, *probe.Spec.ScrapeClass)
+			rejectFn(probe, err)
+			continue
 		}
 
 		if err = probe.Spec.Targets.Validate(); err != nil {
@@ -674,6 +702,12 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
+		}
+
+		if sc.Spec.ScrapeClass != nil {
+			err = validateScrapeClass(rs.p, *sc.Spec.ScrapeClass)
+			rejectFn(sc, err)
+			continue
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {

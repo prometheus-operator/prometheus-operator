@@ -43,6 +43,7 @@ type ProbeSpecApplyConfiguration struct {
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                              `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets    *uint64                              `json:"keepDroppedTargets,omitempty"`
+	ScrapeClass           *string                              `json:"scrapeClass,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs an declarative configuration of the ProbeSpec type for use with
@@ -207,5 +208,13 @@ func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *P
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ProbeSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
+	return b
+}
+
+// WithScrapeClass sets the ScrapeClass field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClass field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithScrapeClass(value string) *ProbeSpecApplyConfiguration {
+	b.ScrapeClass = &value
 	return b
 }

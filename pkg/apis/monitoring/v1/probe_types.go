@@ -113,6 +113,10 @@ type ProbeSpec struct {
 	//
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+
+	// The scrape class to apply.
+	// +optional
+	ScrapeClass *string `json:"scrapeClass,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.
