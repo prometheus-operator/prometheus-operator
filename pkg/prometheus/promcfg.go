@@ -1943,6 +1943,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
 		}
 
+		if spec.EnableHttp2 != nil {
+			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *spec.EnableHttp2)
+		}
+
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}
 

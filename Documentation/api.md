@@ -12574,6 +12574,18 @@ MetadataConfig
 <p>MetadataConfig configures the sending of series metadata to the remote storage.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Rule">Rule

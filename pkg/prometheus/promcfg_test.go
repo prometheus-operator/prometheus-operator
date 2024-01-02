@@ -3362,6 +3362,7 @@ func TestRemoteReadConfig(t *testing.T) {
 
 func TestRemoteWriteConfig(t *testing.T) {
 	sendNativeHistograms := true
+	enableHTTP2 := false
 	for _, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
@@ -3630,6 +3631,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:                  "http://example.com",
 				SendNativeHistograms: &sendNativeHistograms,
+				EnableHttp2:          &enableHTTP2,
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
