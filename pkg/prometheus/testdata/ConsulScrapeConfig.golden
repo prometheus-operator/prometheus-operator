@@ -31,3 +31,7 @@ scrape_configs:
       header: value
     follow_redirects: true
     enable_http2: true
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

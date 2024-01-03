@@ -14,3 +14,7 @@ scrape_configs:
     basic_auth:
       username: http-sd-bob
       password: http-sd-alice
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

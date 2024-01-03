@@ -11,3 +11,7 @@ scrape_configs:
       username: consul-sd-bob
       password: consul-sd-alice
     server: localhost:8500
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

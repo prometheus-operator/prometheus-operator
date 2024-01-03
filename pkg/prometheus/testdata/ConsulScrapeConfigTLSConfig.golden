@@ -13,3 +13,7 @@ scrape_configs:
       cert_file: /etc/prometheus/certs/secret_default_secret-cert_
       key_file: /etc/prometheus/certs/secret_default_secret_key
     server: localhost:8500
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
