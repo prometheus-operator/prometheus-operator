@@ -306,7 +306,7 @@ func prometheusToThanosVersion(v semver.Version) *semver.Version {
 	}
 
 	thanosVersion := &thanosVersions[0].thanos
-	for i, _ := range thanosVersions {
+	for i := range thanosVersions {
 		switch {
 		case thanosVersions[i].prometheus.Equals(v):
 			return &thanosVersions[i].thanos
