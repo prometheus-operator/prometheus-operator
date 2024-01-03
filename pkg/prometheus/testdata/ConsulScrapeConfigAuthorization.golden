@@ -11,3 +11,7 @@ scrape_configs:
       type: Bearer
       credentials: authorization
     server: localhost:8500
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

@@ -7,3 +7,7 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   honor_labels: true
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

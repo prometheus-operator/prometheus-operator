@@ -15,3 +15,7 @@ scrape_configs:
     domain_name: devops-project-1
     refresh_interval: 30s
     port: 9100
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

@@ -2338,14 +2338,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
 	}
 
-	if sc.Spec.RelabelConfigs != nil {
-		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
-	}
-
-	if sc.Spec.JobName != "" || sc.Spec.RelabelConfigs != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-	}
-
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
 	}
@@ -3107,6 +3099,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
+
+	if sc.Spec.RelabelConfigs != nil {
+		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
+	}
+
+	// No need to check for the length because relabelings should always have
+	// at least one item.
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	return cfg, nil
 }

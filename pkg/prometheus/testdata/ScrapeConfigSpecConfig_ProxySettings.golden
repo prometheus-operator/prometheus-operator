@@ -11,3 +11,7 @@ scrape_configs:
   proxy_from_environment: false
   proxy_connect_header:
     header: value
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
