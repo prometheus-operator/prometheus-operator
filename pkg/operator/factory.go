@@ -75,6 +75,13 @@ func WithName(name string) ObjectOption {
 	}
 }
 
+// WithNamespace updates the namespace of the object.
+func WithNamespace(namespace string) ObjectOption {
+	return func(o metav1.Object) {
+		o.SetNamespace(namespace)
+	}
+}
+
 // WithLabels merges the given labels with the existing object's labels.
 // The given labels take precedence over the existing ones.
 func WithLabels(labels map[string]string) ObjectOption {

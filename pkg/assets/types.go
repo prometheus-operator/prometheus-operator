@@ -36,6 +36,10 @@ type Token string
 // certificates.
 type TLSAsset string
 
+func (ta TLSAsset) Bytes() []byte {
+	return []byte(ta)
+}
+
 // SigV4Credentials represents a pair of AWS credentials to be used in the Sigv4
 // protocol for remote write to AWS Managed Prometheus.
 type SigV4Credentials struct {

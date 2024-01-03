@@ -24,6 +24,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
@@ -207,12 +208,12 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			c := prompkg.Config{}
 
-			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{})
+			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, nil, appsv1.StatefulSetSpec{})
+			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -228,7 +229,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 				t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
 			}
 
-			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, nil, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
+			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
 			if err != nil {
 				t.Fatal(err)
 			}

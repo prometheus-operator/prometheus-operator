@@ -15,10 +15,13 @@
 package operator
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestShardedSecret(t *testing.T) {
@@ -77,16 +80,22 @@ func TestShardedSecret(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			template := &v1.Secret{}
-			s := NewShardedSecret(template, namePrefix)
+			template := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: namePrefix,
+				},
+			}
+			s := NewShardedSecret(template)
 			for k, v := range tc.input {
-				s.AppendData(k, v)
+				b := &strings.Builder{}
+				b.WriteString(k)
+				s.Append(b, bytes.NewBuffer(v))
 			}
 			secrets := s.shard()
 			if len(secrets) != tc.expectShards {
 				t.Errorf("sharding failed: got %d shards; want %d", len(secrets), tc.expectShards)
 			}
-			if diff := cmp.Diff(tc.expectShardNames, s.ShardNames()); diff != "" {
+			if diff := cmp.Diff(tc.expectShardNames, s.SecretNames()); diff != "" {
 				t.Errorf("ShardNames() mismatch (-want +got):\n%s", diff)
 			}
 		})
