@@ -3172,3 +3172,33 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 		Value: cfg,
 	}, nil
 }
+
+func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig, store *assets.Store, namespace string) error {
+	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
+	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
+	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
+
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
+			return fmt.Errorf("header[%s]: %w", k, err)
+		}
+	}
+
+	return nil
+}
