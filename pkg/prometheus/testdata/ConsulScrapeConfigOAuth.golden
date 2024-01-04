@@ -18,3 +18,7 @@ scrape_configs:
         param1: value1
         param2: value2
     server: localhost:8500
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

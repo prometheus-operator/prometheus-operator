@@ -16,3 +16,7 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: true
       ca_file: /etc/prometheus/certs/secret_default_secret-ca-http_
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

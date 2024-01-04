@@ -12,3 +12,7 @@ scrape_configs:
     - role: node
       label: type=infra
       field: spec.unschedulable=false
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

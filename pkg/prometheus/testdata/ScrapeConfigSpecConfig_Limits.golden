@@ -11,3 +11,7 @@ scrape_configs:
   label_limit: 50
   label_name_length_limit: 40
   label_value_length_limit: 30
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
