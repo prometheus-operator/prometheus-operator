@@ -15,16 +15,10 @@
 package v1alpha1
 
 import (
-	"context"
-	"fmt"
-
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
-
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
 const (
@@ -590,29 +584,4 @@ type ProxyConfig struct {
 	// +optional
 	// +mapType:=atomic
 	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
-}
-
-func (pc *ProxyConfig) Validate(ctx context.Context, store *assets.Store, namespace string) error {
-	proxyFromEnvironmentDefined := pc.ProxyFromEnvironment != nil && *pc.ProxyFromEnvironment
-	proxyURLDefined := pc.ProxyURL != nil && *pc.ProxyURL != ""
-	noProxyDefined := pc.NoProxy != nil && *pc.NoProxy != ""
-	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
-		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
-	}
-	if proxyFromEnvironmentDefined && proxyURLDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
-	}
-	if proxyFromEnvironmentDefined && noProxyDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
-	}
-	if !proxyURLDefined && noProxyDefined {
-		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
-	}
-
-	for k, v := range pc.ProxyConnectHeader {
-		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
-			return fmt.Errorf("header[%s]: %w", k, err)
-		}
-	}
-	return nil
 }
