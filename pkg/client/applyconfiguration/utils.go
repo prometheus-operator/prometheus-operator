@@ -205,6 +205,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.ConsulSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DayOfMonthRange"):
 		return &monitoringv1alpha1.DayOfMonthRangeApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DigitalOceanSDConfig"):
+		return &monitoringv1alpha1.DigitalOceanSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DiscordConfig"):
 		return &monitoringv1alpha1.DiscordConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DNSSDConfig"):

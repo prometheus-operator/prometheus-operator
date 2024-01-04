@@ -758,6 +758,10 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateDigitalOceanSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("digitalOceanSDConfigs: %w", err))
+			continue
+		}
 		res[scName] = sc
 	}
 
@@ -945,5 +949,31 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 			}
 		}
 	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.DigitalOceanSDConfigs {
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if config.ProxyConfig != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return nil
 }
