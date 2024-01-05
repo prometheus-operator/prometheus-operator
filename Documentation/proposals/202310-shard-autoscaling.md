@@ -115,7 +115,7 @@ If a retention time is defined, the deletion logic is controlled by an annotatio
 operator.prometheus.io/deletion-timestamp: X
 ```
 
-On scale downs, the configuration of all shards would be re-arranged to make sure the Prometheus that was scaled down doesn't scrape any metrics anymore, but it would still be available for queries.
+On scale downs, the configuration of all shards will be re-arranged to make sure that the "scaled-down" Prometheus pods don't scrape targets anymore but they will still be available for queries.
 
 When the deletion timestamp set in the annotation is reached, the Operator will trigger the deletion of the statefulset associated with the shard.
 
