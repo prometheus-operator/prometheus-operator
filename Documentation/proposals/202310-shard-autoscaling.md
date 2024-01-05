@@ -117,7 +117,7 @@ operator.prometheus.io/deletion-timestamp: X
 
 On scale downs, the configuration of all shards would be re-arranged to make sure the Prometheus that was scaled down doesn't scrape any metrics anymore, but it would still be available for queries.
 
-When the current time finally surpasses the one in the annotation, the Operator will finally trigger the deletion of the statefulset associated with the shard.
+When the deletion timestamp set in the annotation is reached, the Operator will trigger the deletion of the statefulset associated with the shard.
 
 ### Scaling up after scaling down
 
