@@ -121,7 +121,7 @@ When the deletion timestamp set in the annotation is reached, the Operator will 
 
 ### Scaling up after scaling down
 
-If a scale-up event happens while Prometheus Servers that were marked for deletion are still running, the already running Prometheus will be unmarked and the configuration of the shard pool will be reloaded as usual.
+If a scale-up event happens while the Prometheus pods marked for deletion are still running, the annotation will be removed and the scrape targets will be redistributed to all active shards.
 
 We intentionally don't want to spin up new instances while others that are marked for deletion are still running as shard names and containers' environment variables that configure each shard's target group will be too complex to coordinate.
 
