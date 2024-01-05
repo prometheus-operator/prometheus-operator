@@ -71,7 +71,7 @@ Today, there are a few strategies to measure the load of Prometheus instances.
 
 - Prometheus Servers: `rate(prometheus_engine_query_samples_total[5m])`
 
-These are all data that could be configured as input for different Horizontal Pod Autoscalers, but how does HPAs knows if the amount of shard is bigger/lower than desired?
+These are all data that could be configured as input for different Horizontal Pod Autoscalers, but how do HPAs know if the amount of shard is bigger/lower than desired?
 
 ## Scale subresource
 
