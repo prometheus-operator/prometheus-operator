@@ -107,7 +107,7 @@ spec:
 
 Inspired by the [StatefulSet API](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention), when setting `.shardRetentionPolicy.whenScaled` is set to `Delete` the operator would simply delete the underlying StatefulSet on the spot, not caring about the data stored in that particular shard. Although not the safest approach, it is exactly the current behavior, and changing it might surprise a lot of users.
 
-If `.shardRetentionPolicy.whenScaled` is set to `Retain` Prometheus-Operator will keep the shard running for a customizable period of time. By default, the Operator will keep the Shard for the whole retention period, or forever if only size-based retention is defined. Alternatively, the user can choose a customized retention period.
+If `.shardRetentionPolicy.whenScaled` is set to `Retain` Prometheus-Operator will keep the shard running for a customizable period of time. By default, the Operator will keep the Shard for the whole retention period, or forever if only size-based retention is defined. Alternatively, the user can define a custom retention period.
 
 If a retention time is defined, the deletion logic is controlled by an annotation present on the StatefulSet:
 
